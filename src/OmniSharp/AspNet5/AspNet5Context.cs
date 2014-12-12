@@ -12,13 +12,13 @@ namespace OmniSharp.AspNet5
 
         public string HostId { get; private set; }
 
-        public int DesignTimeHostPort { get; set; }
+        public int DesignTimeHostPort { get; private set; }
 
-        public Dictionary<string, int> ProjectContextMapping { get; set; }
+        public Dictionary<string, int> ProjectContextMapping { get; private set; }
 
-        public Dictionary<int, ProjectState> Projects { get; set; }
+        public Dictionary<int, Project> Projects { get; private set; }
 
-        public Dictionary<ProjectId, FrameworkState> WorkspaceMapping { get; set; }
+        public Dictionary<ProjectId, FrameworkProject> WorkspaceMapping { get; private set; }
 
         public ProcessingQueue Connection { get; set; }
 
@@ -27,8 +27,8 @@ namespace OmniSharp.AspNet5
             HostId = Guid.NewGuid().ToString();
             DesignTimeHostPort = 1334;
             ProjectContextMapping = new Dictionary<string, int>();
-            Projects = new Dictionary<int, ProjectState>();
-            WorkspaceMapping = new Dictionary<ProjectId, FrameworkState>();
+            Projects = new Dictionary<int, Project>();
+            WorkspaceMapping = new Dictionary<ProjectId, FrameworkProject>();
         }
 
         public bool TryAddProject(string projectFile, out int contextId)
@@ -43,7 +43,7 @@ namespace OmniSharp.AspNet5
 
             // Create a mapping from path to contextid and back
             ProjectContextMapping[projectFile] = contextId;
-            Projects[contextId] = new ProjectState
+            Projects[contextId] = new Project
             {
                 Path = projectFile,
                 ContextId = contextId

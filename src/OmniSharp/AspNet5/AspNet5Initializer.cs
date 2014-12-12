@@ -53,7 +53,7 @@ namespace OmniSharp.AspNet5
 
                 _logger.WriteInformation("Connected");
 
-                context.Connection = new ProcessingQueue(networkStream);
+                context.Connection = new ProcessingQueue(networkStream, _logger);
 
                 context.Connection.OnReceive += m =>
                 {
@@ -76,7 +76,7 @@ namespace OmniSharp.AspNet5
 
                             var frameworkProject = project.ProjectsByFramework.GetOrAdd(framework.FrameworkName, _ =>
                             {
-                                return new FrameworkState(project);
+                                return new FrameworkProject(project);
                             });
 
                             var id = frameworkProject.ProjectId;
@@ -115,7 +115,7 @@ namespace OmniSharp.AspNet5
                         // Remove old projects
                         foreach (var frameworkName in unprocessed)
                         {
-                            FrameworkState frameworkProject;
+                            FrameworkProject frameworkProject;
                             project.ProjectsByFramework.TryRemove(frameworkName, out frameworkProject);
                             _workspace.RemoveProject(frameworkProject.ProjectId);
                         }
@@ -175,7 +175,7 @@ namespace OmniSharp.AspNet5
                             var referencedProject = referencedProjectState.ProjectsByFramework.GetOrAdd(projectReference.Framework.FrameworkName,
                                 _ =>
                                 {
-                                    return new FrameworkState(referencedProjectState);
+                                    return new FrameworkProject(referencedProjectState);
                                 });
 
                             var projectReferenceId = referencedProject.ProjectId;
@@ -505,9 +505,9 @@ namespace OmniSharp.AspNet5
 
             public Dictionary<string, int> ProjectContextMapping { get; set; }
 
-            public Dictionary<int, ProjectState> Projects { get; set; }
+            public Dictionary<int, Project> Projects { get; set; }
 
-            public Dictionary<ProjectId, FrameworkState> WorkspaceMapping { get; set; }
+            public Dictionary<ProjectId, FrameworkProject> WorkspaceMapping { get; set; }
 
             public ProcessingQueue Connection { get; set; }
 
@@ -516,8 +516,8 @@ namespace OmniSharp.AspNet5
                 HostId = Guid.NewGuid().ToString();
                 DesignTimeHostPort = 1334;
                 ProjectContextMapping = new Dictionary<string, int>();
-                Projects = new Dictionary<int, ProjectState>();
-                WorkspaceMapping = new Dictionary<ProjectId, FrameworkState>();
+                Projects = new Dictionary<int, Project>();
+                WorkspaceMapping = new Dictionary<ProjectId, FrameworkProject>();
             }
 
             public bool TryAddProject(string projectFile, out int contextId)
@@ -532,7 +532,7 @@ namespace OmniSharp.AspNet5
 
                 // Create a mapping from path to contextid and back
                 ProjectContextMapping[projectFile] = contextId;
-                Projects[contextId] = new ProjectState
+                Projects[contextId] = new Project
                 {
                     Path = projectFile,
                     ContextId = contextId

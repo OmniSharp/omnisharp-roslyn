@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.AspNet5
 {
-    public class FrameworkState
+    public class FrameworkProject
     {
         public ProjectId ProjectId { get; set; }
 
@@ -20,11 +20,11 @@ namespace OmniSharp.AspNet5
 
         public List<ProjectId> PendingProjectReferences { get; set; }
 
-        public ProjectState ProjectState { get; private set; }
+        public Project ProjectState { get; private set; }
 
         public bool Loaded { get; set; }
 
-        public FrameworkState(ProjectState projectState)
+        public FrameworkProject(Project projectState)
         {
             ProjectState = projectState;
             ProjectId = ProjectId.CreateNewId();
