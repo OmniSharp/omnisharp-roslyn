@@ -515,7 +515,7 @@ namespace OmniSharp.AspNet5
             {
                 HostId = Guid.NewGuid().ToString();
                 DesignTimeHostPort = 1334;
-                ProjectContextMapping = new Dictionary<string, int>();
+                ProjectContextMapping = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 Projects = new Dictionary<int, Project>();
                 WorkspaceMapping = new Dictionary<ProjectId, FrameworkProject>();
             }
