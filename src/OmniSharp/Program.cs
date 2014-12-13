@@ -2,6 +2,7 @@
 using System.Linq;
 using System.IO;
 using OmniSharp.Services;
+using Microsoft.Framework.Logging;
 
 namespace OmniSharp
 {
@@ -24,6 +25,8 @@ namespace OmniSharp
 
             string applicationRoot = null;
             int? serverPort = null;
+            var traceType = TraceType.Information;
+
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -39,9 +42,13 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     serverPort = int.Parse((string)enumerator.Current);
                 }
+                else if (arg == "-v")
+                {
+                    traceType = TraceType.Verbose;
+                }
             }
 
-            var program = new Microsoft.AspNet.Hosting.Program(new WrappedServiceProvider(_serviceProvider, applicationRoot));
+            var program = new Microsoft.AspNet.Hosting.Program(new WrappedServiceProvider(_serviceProvider, applicationRoot, traceType));
             var mergedArgs = new[] { "--server", "Kestrel", "--server.urls", "http://localhost:" + serverPort };
             program.Main(mergedArgs);
         }
@@ -52,10 +59,10 @@ namespace OmniSharp
             private readonly IServiceProvider _sp;
             private readonly OmnisharpEnvironment _environment;
 
-            public WrappedServiceProvider(IServiceProvider sp, string applicationRoot)
+            public WrappedServiceProvider(IServiceProvider sp, string applicationRoot, TraceType traceType)
             {
                 _sp = sp;
-                _environment = new OmnisharpEnvironment(applicationRoot);
+                _environment = new OmnisharpEnvironment(applicationRoot, traceType);
             }
 
             public object GetService(Type serviceType)

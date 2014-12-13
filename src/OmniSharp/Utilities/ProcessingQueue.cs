@@ -34,7 +34,11 @@ namespace OmniSharp
         {
             lock (_writer)
             {
-                Logger.WriteVerbose(string.Format("[ProcessingQueue]: Post({0})", message.MessageType));
+                if (Logger.IsEnabled(TraceType.Verbose))
+                {
+                    Logger.WriteVerbose(string.Format("[ProcessingQueue]: Post({0})", message));
+                }
+
                 _writer.Write(JsonConvert.SerializeObject(message));
             }
         }
@@ -46,7 +50,12 @@ namespace OmniSharp
                 try
                 {
                     var message = JsonConvert.DeserializeObject<Message>(_reader.ReadString());
-                    Logger.WriteVerbose(string.Format("[ProcessingQueue]: Receive ({0})", message.MessageType));
+
+                    if (Logger.IsEnabled(TraceType.Verbose))
+                    {
+                        Logger.WriteVerbose(string.Format("[ProcessingQueue]: Receive ({0})", message));
+                    }
+
                     OnReceive(message);
                 }
                 catch (IOException)

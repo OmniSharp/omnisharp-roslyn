@@ -18,15 +18,16 @@ namespace OmniSharp
 
             // Add the omnisharp workspace to the container
             services.AddInstance(new OmnisharpWorkspace());
-            
+
             // Add the initializer for ASP.NET 5 projects
             services.AddSingleton<IWorkspaceInitializer, AspNet5Initializer>();
         }
 
-        public void Configure(IApplicationBuilder app, 
-                              ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app,
+                              ILoggerFactory loggerFactory,
+                              IOmnisharpEnvironment env)
         {
-            loggerFactory.AddConsole();
+            loggerFactory.AddConsole((category, type) => env.TraceType <= type);
 
             app.UseMvc();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Framework.Logging;
 
 namespace OmniSharp
 {
@@ -10,12 +11,7 @@ namespace OmniSharp
 
         private readonly FileSystemWatcher _watcher;
 
-        internal FileWatcher()
-        {
-
-        }
-
-        public FileWatcher(string path)
+        public FileWatcher(string path, ILogger logger)
         {
             _watcher = new FileSystemWatcher(path);
             _watcher.IncludeSubdirectories = true;
@@ -25,7 +21,11 @@ namespace OmniSharp
             _watcher.Renamed += OnRenamed;
             _watcher.Deleted += OnWatcherChanged;
             _watcher.Created += OnWatcherChanged;
+
+            Logger = logger;
         }
+
+        public ILogger Logger { get; private set; }
 
         public event Action<string, WatcherChangeTypes> OnChanged;
         
@@ -50,11 +50,11 @@ namespace OmniSharp
             {
                 if (oldPath != null)
                 {
-                    Console.WriteLine("{0} -> {1}", oldPath, newPath);
+                    Logger.WriteVerbose(string.Format("{0} -> {1}", oldPath, newPath));
                 }
                 else
                 {
-                    Console.WriteLine("{0} -> {1}", changeType, newPath);
+                    Logger.WriteVerbose(string.Format("{0} -> {1}", changeType, newPath));
                 }
 
                 if (OnChanged != null)

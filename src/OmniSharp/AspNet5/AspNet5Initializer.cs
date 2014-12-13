@@ -41,7 +41,8 @@ namespace OmniSharp.AspNet5
             context.RuntimePath = GetRuntimePath();
 
             var wh = new ManualResetEventSlim();
-            var watcher = new FileWatcher(_env.SolutionRoot);
+            var watcher = new FileWatcher(_env.SolutionRoot, _logger);
+
             watcher.OnChanged += (path, changeType) => OnDependenciesChanged(context, path, changeType);
 
             StartRuntime(context.RuntimePath, context.HostId, context.DesignTimeHostPort, () =>
@@ -380,7 +381,7 @@ namespace OmniSharp.AspNet5
 
         private void ScanForAspNet5Projects(AspNet5Context context, FileWatcher watcher)
         {
-            _logger.WriteInformation(string.Format("Scanning {0} for ASP.NET 5 projects", _env.SolutionRoot));
+            _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.SolutionRoot));
 
             foreach (var projectFile in Directory.EnumerateFiles(_env.SolutionRoot, "project.json", SearchOption.AllDirectories))
             {
@@ -408,7 +409,7 @@ namespace OmniSharp.AspNet5
                 });
 
                 watcher.WatchFile(projectFile);
-                _logger.WriteInformation(string.Format("Detected {0}", projectFile));
+                _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
             }
         }
 
@@ -445,14 +446,16 @@ namespace OmniSharp.AspNet5
 
             if (kreProcess.HasExited)
             {
-                _logger.WriteVerbose(string.Format("Child process failed with {0}", kreProcess.ExitCode));
+                _logger.WriteError(string.Format("Child process failed with {0}", kreProcess.ExitCode));
                 return;
             }
+
+            _logger.WriteInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, kreProcess.Id));
 
             kreProcess.EnableRaisingEvents = true;
             kreProcess.Exited += (sender, e) =>
             {
-                _logger.WriteWarning("Process crash trying again");
+                _logger.WriteWarning("Process ended. Restarting");
 
                 Thread.Sleep(1000);
 
