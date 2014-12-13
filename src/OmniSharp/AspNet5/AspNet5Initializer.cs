@@ -41,7 +41,7 @@ namespace OmniSharp.AspNet5
             context.RuntimePath = GetRuntimePath();
 
             var wh = new ManualResetEventSlim();
-            var watcher = new FileWatcher(_env.SolutionRoot, _logger);
+            var watcher = new FileWatcher(_env.Path, _logger);
 
             watcher.OnChanged += (path, changeType) => OnDependenciesChanged(context, path, changeType);
 
@@ -381,9 +381,9 @@ namespace OmniSharp.AspNet5
 
         private void ScanForAspNet5Projects(AspNet5Context context, FileWatcher watcher)
         {
-            _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.SolutionRoot));
+            _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
 
-            foreach (var projectFile in Directory.EnumerateFiles(_env.SolutionRoot, "project.json", SearchOption.AllDirectories))
+            foreach (var projectFile in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
             {
                 int contextId;
                 if (!context.TryAddProject(projectFile, out contextId))

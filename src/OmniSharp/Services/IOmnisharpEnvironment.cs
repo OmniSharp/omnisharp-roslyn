@@ -6,6 +6,7 @@ namespace OmniSharp.Services
     public interface IOmnisharpEnvironment
     {
         TraceType TraceType { get; }
-        string SolutionRoot { get; }
+        string Path { get; }
+        string SolutionFilePath { get; }
     }
 }
