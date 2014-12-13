@@ -20,13 +20,13 @@ namespace OmniSharp.AspNet5
 
         public List<ProjectId> PendingProjectReferences { get; set; }
 
-        public Project ProjectState { get; private set; }
+        public Project Project { get; private set; }
 
         public bool Loaded { get; set; }
 
-        public FrameworkProject(Project projectState)
+        public FrameworkProject(Project project)
         {
-            ProjectState = projectState;
+            Project = project;
             ProjectId = ProjectId.CreateNewId();
             Documents = new Dictionary<string, DocumentId>();
             FileReferences = new Dictionary<string, MetadataReference>();

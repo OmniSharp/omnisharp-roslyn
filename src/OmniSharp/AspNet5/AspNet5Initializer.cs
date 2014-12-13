@@ -169,16 +169,16 @@ namespace OmniSharp.AspNet5
                             }
 
                             var projectReferenceContextId = context.ProjectContextMapping[projectReference.Path];
-                            
-                            var referencedProjectState = context.Projects[projectReferenceContextId];
 
-                            var referencedProject = referencedProjectState.ProjectsByFramework.GetOrAdd(projectReference.Framework.FrameworkName,
+                            var referencedProject = context.Projects[projectReferenceContextId];
+
+                            var referencedFrameworkProject = referencedProject.ProjectsByFramework.GetOrAdd(projectReference.Framework.FrameworkName,
                                 _ =>
                                 {
-                                    return new FrameworkProject(referencedProjectState);
+                                    return new FrameworkProject(referencedProject);
                                 });
 
-                            var projectReferenceId = referencedProject.ProjectId;
+                            var projectReferenceId = referencedFrameworkProject.ProjectId;
 
                             if (_workspace.CurrentSolution.ContainsProject(projectReferenceId))
                             {
@@ -186,12 +186,13 @@ namespace OmniSharp.AspNet5
                             }
                             else
                             {
-                                lock (referencedProject.PendingProjectReferences)
+                                lock (referencedFrameworkProject.PendingProjectReferences)
                                 {
-                                    referencedProject.PendingProjectReferences.Add(projectId);
+                                    referencedFrameworkProject.PendingProjectReferences.Add(projectId);
                                 }
                             }
-                            referencedProject.ProjectDependeees.Add(project.Path);
+
+                            referencedFrameworkProject.ProjectDependeees.Add(project.Path);
 
                             frameworkProject.ProjectReferences[projectReference.Path] = projectReferenceId;
                         }
