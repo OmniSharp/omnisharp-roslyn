@@ -95,10 +95,6 @@ namespace OmniSharp
 
                 completions = symbols.Select(s => new AutoCompleteResponse { CompletionText = s.Name, DisplayText = s.Name });
             }
-            else
-            {
-                return new HttpNotFoundResult();
-            }
 
             return new ObjectResult(completions);
         }
