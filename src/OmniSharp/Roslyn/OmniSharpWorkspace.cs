@@ -1,9 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models;
 
 namespace OmniSharp
 {
@@ -67,5 +70,16 @@ namespace OmniSharp
         {
             OnDocumentTextChanged(documentId, text, PreservationMode.PreserveIdentity);
         }
+
+        public void EnsureBufferUpdated(Request request)
+        {
+            foreach (var documentId in this.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
+            {
+                var buffer = Encoding.UTF8.GetBytes(request.Buffer);
+                var sourceText = SourceText.From(new MemoryStream(buffer), encoding: Encoding.UTF8);
+                this.OnDocumentChanged(documentId, sourceText);
+            }
+        }
+
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -26,7 +24,7 @@ namespace OmniSharp
         [HttpPost("gotodefinition")]
         public async Task<IActionResult> GotoDefinition([FromBody]Request request)
         {
-            EnsureBufferUpdated(request);
+            _workspace.EnsureBufferUpdated(request);
 
             var quickFixes = new List<QuickFix>();
 
@@ -56,7 +54,7 @@ namespace OmniSharp
         [HttpPost("codecheck")]
         public async Task<IActionResult> CodeCheck([FromBody]Request request)
         {
-            EnsureBufferUpdated(request);
+            _workspace.EnsureBufferUpdated(request);
 
             var quickFixes = new List<QuickFix>();
 
@@ -80,7 +78,7 @@ namespace OmniSharp
         {
             var completions = Enumerable.Empty<AutoCompleteResponse>();
 
-            EnsureBufferUpdated(request);
+            _workspace.EnsureBufferUpdated(request);
 
             var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
 
@@ -97,16 +95,6 @@ namespace OmniSharp
             }
 
             return new ObjectResult(completions);
-        }
-
-        private void EnsureBufferUpdated(Request request)
-        {
-            foreach (var documentId in _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
-            {
-                var buffer = Encoding.UTF8.GetBytes(request.Buffer);
-                var sourceText = SourceText.From(new MemoryStream(buffer), encoding: Encoding.UTF8);
-                _workspace.OnDocumentChanged(documentId, sourceText);
-            }
         }
 
         private static QuickFix MakeQuickFix(Diagnostic diagnostic)
