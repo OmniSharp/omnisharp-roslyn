@@ -81,5 +81,9 @@ namespace OmniSharp
             }
         }
 
+        protected override void ChangedDocumentText(DocumentId id, SourceText text)
+        {
+            OnDocumentChanged(id, text);
+        }
     }
 }
