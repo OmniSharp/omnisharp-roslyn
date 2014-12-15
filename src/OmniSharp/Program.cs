@@ -3,6 +3,13 @@ using System.Linq;
 using System.IO;
 using OmniSharp.Services;
 using Microsoft.Framework.Logging;
+using Microsoft.AspNet.Hosting;
+using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.DependencyInjection.Fallback;
+using Microsoft.Framework.Runtime;
+using Microsoft.Framework.DependencyInjection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace OmniSharp
 {
@@ -49,33 +56,57 @@ namespace OmniSharp
             }
 
             var environment = new OmnisharpEnvironment(applicationRoot, serverPort, traceType);
+            var hostingEnv = new HostingEnvironment { EnvironmentName = "Development" };
 
-            var program = new Microsoft.AspNet.Hosting.Program(new WrappedServiceProvider(_serviceProvider, environment));
-            var mergedArgs = new[] { "--server", "Kestrel", "--server.urls", "http://localhost:" + serverPort };
-            program.Main(mergedArgs);
-        }
+            var config = new Configuration();
+            config.Set("server.urls", "http://localhost:" + serverPort);
 
-        // Wrap the service provider to provide the omnisharp services
-        private class WrappedServiceProvider : IServiceProvider
-        {
-            private readonly IServiceProvider _sp;
-            private readonly OmnisharpEnvironment _environment;
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.Add(HostingServices.GetDefaultServices(config));
+            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
+            serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
 
-            public WrappedServiceProvider(IServiceProvider sp, OmnisharpEnvironment environment)
+            var services = serviceCollection
+                .BuildServiceProvider(_serviceProvider);
+
+            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
+
+            var context = new HostingContext()
             {
-                _sp = sp;
-                _environment = environment;
-            }
+                Services = services,
+                Configuration = config,
+                ServerName = "Kestrel",
+                ApplicationName = appEnv.ApplicationName,
+                EnvironmentName = hostingEnv.EnvironmentName,
+            };
 
-            public object GetService(Type serviceType)
+            var engine = services.GetRequiredService<IHostingEngine>();
+            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
+            var shutdownHandle = new ManualResetEventSlim(false);
+
+            var serverShutdown = engine.Start(context);
+
+            appShutdownService.ShutdownRequested.Register(() =>
             {
-                if (serviceType == typeof(IOmnisharpEnvironment))
-                {
-                    return _environment;
-                }
+                serverShutdown.Dispose();
+                shutdownHandle.Set();
+            });
 
-                return _sp.GetService(serviceType);
-            }
+#if ASPNETCORE50
+            var ignored = Task.Run(() =>
+            {
+                Console.WriteLine("Started");
+                Console.ReadLine();
+                appShutdownService.RequestShutdown();
+            });
+#else
+            Console.CancelKeyPress += (sender, e)=>
+            {
+                appShutdownService.RequestShutdown();
+            };
+#endif
+
+            shutdownHandle.Wait();
         }
     }
 }
