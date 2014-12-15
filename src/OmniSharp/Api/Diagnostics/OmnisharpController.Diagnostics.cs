@@ -12,7 +12,7 @@ namespace OmniSharp
         [HttpPost("codecheck")]
         public async Task<IActionResult> CodeCheck([FromBody]Request request)
         {
-            EnsureBufferUpdated(request);
+            _workspace.EnsureBufferUpdated(request);
 
             var quickFixes = new List<QuickFix>();
 

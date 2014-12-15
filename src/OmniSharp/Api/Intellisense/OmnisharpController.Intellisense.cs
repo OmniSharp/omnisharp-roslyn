@@ -13,7 +13,7 @@ namespace OmniSharp
         [HttpPost("autocomplete")]
         public async Task<IActionResult> AutoComplete([FromBody]Request request)
         {
-            EnsureBufferUpdated(request);
+            _workspace.EnsureBufferUpdated(request);
 
             var completions = Enumerable.Empty<AutoCompleteResponse>();
             
