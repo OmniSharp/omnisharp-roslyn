@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
+using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
@@ -27,7 +28,12 @@ namespace OmniSharp
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env)
         {
-            loggerFactory.AddConsole((category, type) => env.TraceType <= type);
+            loggerFactory.AddConsole((category, type) => 
+                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase)) && 
+                env.TraceType <= type);
+            
+            app.UseErrorHandler("/error");
 
             app.UseMvc();
 
