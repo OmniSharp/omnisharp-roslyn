@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Tests", "test\OmniSharp.Tests\OmniSharp.Tests.kproj", "{9485FB0D-D105-4E11-8689-97613144D165}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Tests", "tests\OmniSharp.Tests\OmniSharp.Tests.kproj", "{9485FB0D-D105-4E11-8689-97613144D165}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
