@@ -42,11 +42,11 @@ namespace Microsoft.CodeAnalysis.MSBuild
                 throw new ArgumentException();
             }
 
-            this.headerLines = headerLines.ToList().AsReadOnly();
+            this.headerLines = headerLines.ToList();
             this.visualStudioVersionLineOpt = visualStudioVersionLineOpt;
             this.minimumVisualStudioVersionLineOpt = minimumVisualStudioVersionLineOpt;
-            this.projectBlocks = projectBlocks.ToList().AsReadOnly();
-            this.globalSectionBlocks = globalSectionBlocks.ToList().AsReadOnly();
+            this.projectBlocks = projectBlocks.ToList();
+            this.globalSectionBlocks = globalSectionBlocks.ToList();
         }
 
         public IEnumerable<string> HeaderLines

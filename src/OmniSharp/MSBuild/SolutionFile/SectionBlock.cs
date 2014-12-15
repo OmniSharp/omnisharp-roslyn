@@ -46,7 +46,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
             this.type = type;
             this.parenthesizedName = parenthesizedName;
             this.value = value;
-            this.keyValuePairs = keyValuePairs.ToList().AsReadOnly();
+            this.keyValuePairs = keyValuePairs.ToList();
         }
 
         public string Type

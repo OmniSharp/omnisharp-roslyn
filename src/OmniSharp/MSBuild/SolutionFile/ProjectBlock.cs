@@ -34,7 +34,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
             this.projectName = projectName;
             this.projectPath = projectPath;
             this.projectGuid = projectGuid;
-            this.projectSections = projectSections.ToList().AsReadOnly();
+            this.projectSections = projectSections.ToList();
         }
 
         public Guid ProjectTypeGuid
