@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Http;
+using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
@@ -30,6 +31,10 @@ namespace OmniSharp
 
             // Add the omnisharp workspace to the container
             services.AddInstance(new OmnisharpWorkspace());
+
+            // Caching
+            services.AddSingleton<IMemoryCache, MemoryCache>();
+            services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
 
             // Add the initializer for ASP.NET 5 projects
             services.AddSingleton<IWorkspaceInitializer, AspNet5Initializer>();

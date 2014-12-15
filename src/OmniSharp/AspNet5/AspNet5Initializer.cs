@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,16 +27,21 @@ namespace OmniSharp.AspNet5
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
+        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly DesignTimeHostManager _designTimeHostManager;
 
         public AspNet5Initializer(OmnisharpWorkspace workspace,
                                   IOmnisharpEnvironment env,
                                   IOptions<OmniSharpOptions> optionsAccessor,
-                                  ILoggerFactory loggerFactory)
+                                  ILoggerFactory loggerFactory,
+                                  IMetadataFileReferenceCache metadataFileReferenceCache)
         {
             _workspace = workspace;
             _env = env;
             _options = optionsAccessor.Options;
             _logger = loggerFactory.Create<AspNet5Initializer>();
+            _metadataFileReferenceCache = metadataFileReferenceCache;
+            _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
         }
 
         public void Initalize()
@@ -47,7 +51,7 @@ namespace OmniSharp.AspNet5
 
             var wh = new ManualResetEventSlim();
 
-            StartDesignTimeHost(context.RuntimePath, context.HostId, port =>
+            _designTimeHostManager.Start(context.RuntimePath, context.HostId, port =>
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
@@ -148,7 +152,7 @@ namespace OmniSharp.AspNet5
                                 continue;
                             }
 
-                            var metadataReference = MetadataReference.CreateFromFile(file);
+                            var metadataReference = _metadataFileReferenceCache.GetMetadataReference(file);
                             frameworkProject.FileReferences[file] = metadataReference;
                             metadataReferences.Add(metadataReference);
                         }
@@ -334,15 +338,6 @@ namespace OmniSharp.AspNet5
             //};
         }
 
-        private static int GetFreePort()
-        {
-            var l = new TcpListener(IPAddress.Loopback, 0);
-            l.Start();
-            int port = ((IPEndPoint)l.LocalEndpoint).Port;
-            l.Stop();
-            return port;
-        }
-
         private static void TriggerDependeees(AspNet5Context context, string path)
         {
             var seen = new HashSet<string>();
@@ -416,58 +411,6 @@ namespace OmniSharp.AspNet5
 
                 _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
             }
-        }
-
-        private void StartDesignTimeHost(string runtimePath, string hostId, Action<int> onConnected)
-        {
-            int port = GetFreePort();
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = Path.Combine(runtimePath, "bin", "klr"),
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                Arguments = string.Format(@"{0} {1} {2} {3}",
-                                          Path.Combine(runtimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll"),
-                                          port,
-                                          Process.GetCurrentProcess().Id,
-                                          hostId),
-            };
-
-#if ASPNET50
-            psi.EnvironmentVariables["KRE_APPBASE"] = Directory.GetCurrentDirectory();
-#else
-            psi.Environment["KRE_APPBASE"] = Directory.GetCurrentDirectory();
-#endif
-
-            _logger.WriteVerbose(psi.FileName + " " + psi.Arguments);
-
-            var kreProcess = Process.Start(psi);
-
-            // Wait a little bit for it to conncet before firing the callback
-            Thread.Sleep(1000);
-
-            if (kreProcess.HasExited)
-            {
-                // REVIEW: Should we quit here or retry?
-                _logger.WriteError(string.Format("Failed to launch DesignTimeHost. Process exited with code {0}.", kreProcess.ExitCode));
-                return;
-            }
-
-            _logger.WriteInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, kreProcess.Id));
-
-            kreProcess.EnableRaisingEvents = true;
-            kreProcess.Exited += (sender, e) =>
-            {
-                _logger.WriteWarning("Process ended. Restarting");
-
-                Thread.Sleep(1000);
-
-                StartDesignTimeHost(runtimePath, hostId, onConnected);
-            };
-
-            onConnected(port);
         }
 
         private static Task ConnectAsync(Socket socket, IPEndPoint endPoint)
