@@ -51,10 +51,14 @@ namespace OmniSharp
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) ||
                  string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase)) && 
                 env.TraceType <= type);
+
+            var logger = loggerFactory.Create<Startup>();
             
             app.UseErrorHandler("/error");
 
             app.UseMvc();
+
+            logger.WriteInformation(string.Format("Omnisharp server running on port '{0}' at location '{1}'.", env.Port, env.Path));
 
             // Initialize everything!
             var initializers = app.ApplicationServices.GetRequiredService<IEnumerable<IWorkspaceInitializer>>();

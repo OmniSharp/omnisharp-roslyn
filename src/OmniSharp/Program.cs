@@ -23,8 +23,8 @@ namespace OmniSharp
                 return;
             }
 
-            string applicationRoot = null;
-            int? serverPort = null;
+            var applicationRoot = Directory.GetCurrentDirectory();
+            var serverPort = 2000;
             var traceType = TraceType.Information;
 
             var enumerator = args.GetEnumerator();
@@ -48,7 +48,9 @@ namespace OmniSharp
                 }
             }
 
-            var program = new Microsoft.AspNet.Hosting.Program(new WrappedServiceProvider(_serviceProvider, applicationRoot, traceType));
+            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, traceType);
+
+            var program = new Microsoft.AspNet.Hosting.Program(new WrappedServiceProvider(_serviceProvider, environment));
             var mergedArgs = new[] { "--server", "Kestrel", "--server.urls", "http://localhost:" + serverPort };
             program.Main(mergedArgs);
         }
@@ -59,10 +61,10 @@ namespace OmniSharp
             private readonly IServiceProvider _sp;
             private readonly OmnisharpEnvironment _environment;
 
-            public WrappedServiceProvider(IServiceProvider sp, string applicationRoot, TraceType traceType)
+            public WrappedServiceProvider(IServiceProvider sp, OmnisharpEnvironment environment)
             {
                 _sp = sp;
-                _environment = new OmnisharpEnvironment(applicationRoot, traceType);
+                _environment = environment;
             }
 
             public object GetService(Type serviceType)
