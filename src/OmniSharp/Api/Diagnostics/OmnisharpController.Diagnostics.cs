@@ -15,7 +15,7 @@ namespace OmniSharp
             EnsureBufferUpdated(request);
 
             var quickFixes = new List<QuickFix>();
-            
+
             var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
 
             var documentId = documentIds.FirstOrDefault();
@@ -37,9 +37,9 @@ namespace OmniSharp
             var quickFix = new QuickFix();
             quickFix.FileName = span.Path;
             quickFix.Line = span.StartLinePosition.Line + 1;
-            quickFix.Column = span.StartLinePosition.Character;
+            quickFix.Column = span.StartLinePosition.Character + 1;
             quickFix.EndLine = span.EndLinePosition.Line + 1;
-            quickFix.EndColumn = span.EndLinePosition.Character;
+            quickFix.EndColumn = span.EndLinePosition.Character + 1;
             quickFix.Text = diagnostic.GetMessage();
             quickFix.LogLevel = diagnostic.Severity.ToString();
 
