@@ -329,26 +329,13 @@ namespace OmniSharp.AspNet5
             //};
         }
 
-        private int GetFreePort()
+        private static int GetFreePort()
         {
-            for (int port = 1334; port <= 8081; port++)
-            {
-                try
-                {
-                    using (var listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                    {
-                        listenSocket.Bind(new IPEndPoint(IPAddress.Loopback, port));
-                        listenSocket.Listen(10);
-                        return port;
-                    }
-                }
-                catch
-                {
-
-                }
-            }
-
-            return 1334;
+            var l = new TcpListener(IPAddress.Loopback, 0);
+            l.Start();
+            int port = ((IPEndPoint)l.LocalEndpoint).Port;
+            l.Stop();
+            return port;
         }
 
         private static void OnDependenciesChanged(AspNet5Context context, string path, WatcherChangeTypes changeType)
