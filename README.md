@@ -1,6 +1,8 @@
 omnisharp-roslyn
 ================
+[![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)
 
+https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master
 Omnisharp based on roslyn workspaces
 
 This currently requires kre version - 1.0.0-beta1 (beta2 doesn't work)
