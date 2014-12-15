@@ -73,11 +73,11 @@ namespace OmniSharp
 
         public void EnsureBufferUpdated(Request request)
         {
-            foreach (var documentId in this.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
+            foreach (var documentId in CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
             {
                 var buffer = Encoding.UTF8.GetBytes(request.Buffer);
                 var sourceText = SourceText.From(new MemoryStream(buffer), encoding: Encoding.UTF8);
-                this.OnDocumentChanged(documentId, sourceText);
+                OnDocumentChanged(documentId, sourceText);
             }
         }
 
