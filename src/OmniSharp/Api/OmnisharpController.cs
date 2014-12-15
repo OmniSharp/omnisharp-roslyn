@@ -100,7 +100,7 @@ namespace OmniSharp
         [HttpPost("rename")]
         public async Task<IActionResult> Rename([FromBody]RenameRequest request)
         {
-            EnsureBufferUpdated(request);
+            _workspace.EnsureBufferUpdated(request);
 
             var response = new RenameResponse();
 
@@ -155,16 +155,6 @@ namespace OmniSharp
             response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
             return response;
-        }
-
-        private void EnsureBufferUpdated(Request request)
-        {
-            foreach (var documentId in _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
-            {
-                var buffer = Encoding.UTF8.GetBytes(request.Buffer);
-                var sourceText = SourceText.From(new MemoryStream(buffer), encoding: Encoding.UTF8);
-                _workspace.OnDocumentChanged(documentId, sourceText);
-            }
         }
 
         private static QuickFix MakeQuickFix(Diagnostic diagnostic)
