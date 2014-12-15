@@ -17,7 +17,6 @@
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
     <DevelopmentServerPort>0</DevelopmentServerPort>
-    <CommandLineArguments>-s "C:\dev\git\ProjectK\Universe\Logging" -p 8083</CommandLineArguments>
     <DebugTarget>OmniSharp</DebugTarget>
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\AspNet\Microsoft.Web.AspNet.targets" Condition="'$(VSToolsPath)' != ''" />

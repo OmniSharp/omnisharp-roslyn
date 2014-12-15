@@ -3,25 +3,39 @@ using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Http;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Logging.Console;
 using OmniSharp.AspNet5;
+using OmniSharp.Options;
 using OmniSharp.Services;
 
 namespace OmniSharp
 {
     public class Startup
     {
+        public Startup()
+        {
+            Configuration = new Configuration()
+                .AddJsonFile("config.json")
+                .AddEnvironmentVariables();
+        }
+
+        public IConfiguration Configuration { get; private set; }
+
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc(Configuration);
 
             // Add the omnisharp workspace to the container
             services.AddInstance(new OmnisharpWorkspace());
 
             // Add the initializer for ASP.NET 5 projects
             services.AddSingleton<IWorkspaceInitializer, AspNet5Initializer>();
+
+            // Setup the options from configuration
+            services.Configure<OmniSharpOptions>(Configuration);
         }
 
         public void Configure(IApplicationBuilder app,

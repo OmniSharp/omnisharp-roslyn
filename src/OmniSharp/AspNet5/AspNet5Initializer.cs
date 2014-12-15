@@ -15,7 +15,9 @@ using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Options;
 using OmniSharp.Services;
 
 namespace OmniSharp.AspNet5
@@ -24,14 +26,17 @@ namespace OmniSharp.AspNet5
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _env;
+        private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
 
         public AspNet5Initializer(OmnisharpWorkspace workspace,
                                   IOmnisharpEnvironment env,
+                                  IOptions<OmniSharpOptions> optionsAccessor,
                                   ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _env = env;
+            _options = optionsAccessor.Options;
             _logger = loggerFactory.Create<AspNet5Initializer>();
         }
 
@@ -41,9 +46,6 @@ namespace OmniSharp.AspNet5
             context.RuntimePath = GetRuntimePath();
 
             var wh = new ManualResetEventSlim();
-            var watcher = new FileWatcher(_env.Path, _logger);
-
-            watcher.OnChanged += (path, changeType) => OnDependenciesChanged(context, path, changeType);
 
             StartDesignTimeHost(context.RuntimePath, context.HostId, port =>
             {
@@ -66,7 +68,7 @@ namespace OmniSharp.AspNet5
 
                         if (val.GlobalJsonPath != null)
                         {
-                            watcher.WatchFile(val.GlobalJsonPath);
+                            // watcher.WatchFile(val.GlobalJsonPath);
                         }
 
                         var unprocessed = project.ProjectsByFramework.Keys.ToList();
@@ -305,7 +307,7 @@ namespace OmniSharp.AspNet5
                 context.Connection.Start();
 
                 // Scan for the projects
-                ScanForAspNet5Projects(context, watcher);
+                ScanForAspNet5Projects(context);
             });
 
             wh.Wait();
@@ -336,14 +338,6 @@ namespace OmniSharp.AspNet5
             int port = ((IPEndPoint)l.LocalEndpoint).Port;
             l.Stop();
             return port;
-        }
-
-        private static void OnDependenciesChanged(AspNet5Context context, string path, WatcherChangeTypes changeType)
-        {
-            // A -> B -> C
-            // If C changes, trigger B and A
-
-            TriggerDependeees(context, path);
         }
 
         private static void TriggerDependeees(AspNet5Context context, string path)
@@ -388,7 +382,7 @@ namespace OmniSharp.AspNet5
             }
         }
 
-        private void ScanForAspNet5Projects(AspNet5Context context, FileWatcher watcher)
+        private void ScanForAspNet5Projects(AspNet5Context context)
         {
             _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
 
@@ -417,7 +411,6 @@ namespace OmniSharp.AspNet5
                     HostId = context.HostId
                 });
 
-                watcher.WatchFile(projectFile);
                 _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
             }
         }
@@ -487,11 +480,13 @@ namespace OmniSharp.AspNet5
 
             var aliasDirectory = Path.Combine(kreHome, "alias");
 
-            var aliasFiles = new[] { "default.alias", "default.txt" };
+            _logger.WriteInformation(string.Format("Using configured alias {0}", _options.AspNet5.Alias));
+
+            var aliasFiles = new[] { "{0}.alias", "{0}.txt" };
 
             foreach (var shortAliasFile in aliasFiles)
             {
-                var aliasFile = Path.Combine(aliasDirectory, shortAliasFile);
+                var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, _options.AspNet5.Alias));
 
                 if (File.Exists(aliasFile))
                 {
