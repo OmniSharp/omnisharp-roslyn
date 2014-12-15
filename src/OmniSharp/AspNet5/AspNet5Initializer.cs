@@ -66,20 +66,21 @@ namespace OmniSharp.AspNet5
                     {
                         var val = m.Payload.ToObject<ProjectMessage>();
 
-                        if (val.GlobalJsonPath != null)
-                        {
-                            // watcher.WatchFile(val.GlobalJsonPath);
-                        }
+                        project.Name = val.Name;
+                        project.GlobalJsonPath = val.GlobalJsonPath;
+                        project.Configurations = val.Configurations;
+                        project.Commands = val.Commands;
+                        project.ProjectSearchPaths = val.ProjectSearchPaths;
 
                         var unprocessed = project.ProjectsByFramework.Keys.ToList();
 
-                        foreach (var framework in val.Frameworks)
+                        foreach (var frameworkData in val.Frameworks)
                         {
-                            unprocessed.Remove(framework.FrameworkName);
+                            unprocessed.Remove(frameworkData.FrameworkName);
 
-                            var frameworkProject = project.ProjectsByFramework.GetOrAdd(framework.FrameworkName, _ =>
+                            var frameworkProject = project.ProjectsByFramework.GetOrAdd(frameworkData.FrameworkName, framework =>
                             {
-                                return new FrameworkProject(project);
+                                return new FrameworkProject(project, framework);
                             });
 
                             var id = frameworkProject.ProjectId;
@@ -93,7 +94,7 @@ namespace OmniSharp.AspNet5
                                 var projectInfo = ProjectInfo.Create(
                                         id,
                                         VersionStamp.Create(),
-                                        val.Name + "+" + framework.ShortName,
+                                        val.Name + "+" + frameworkData.ShortName,
                                         val.Name,
                                         LanguageNames.CSharp);
 
@@ -176,9 +177,9 @@ namespace OmniSharp.AspNet5
                             var referencedProject = context.Projects[projectReferenceContextId];
 
                             var referencedFrameworkProject = referencedProject.ProjectsByFramework.GetOrAdd(projectReference.Framework.FrameworkName,
-                                _ =>
+                                framework =>
                                 {
-                                    return new FrameworkProject(referencedProject);
+                                    return new FrameworkProject(referencedProject, framework);
                                 });
 
                             var projectReferenceId = referencedFrameworkProject.ProjectId;
@@ -195,7 +196,7 @@ namespace OmniSharp.AspNet5
                                 }
                             }
 
-                            referencedFrameworkProject.ProjectDependeees.Add(project.Path);
+                            referencedFrameworkProject.ProjectDependeees[project.Path] = projectId;
 
                             frameworkProject.ProjectReferences[projectReference.Path] = projectReferenceId;
                         }
@@ -214,6 +215,8 @@ namespace OmniSharp.AspNet5
                         {
                             _workspace.RemoveProjectReference(projectId, new Microsoft.CodeAnalysis.ProjectReference(pair.Value));
                             frameworkProject.ProjectReferences.Remove(pair.Key);
+
+                            // TODO: Update the dependee's list
                         }
 
                         foreach (var pair in removedFileReferences)
@@ -364,7 +367,7 @@ namespace OmniSharp.AspNet5
 
                     foreach (var frameworkProject in context.Projects[contextId].ProjectsByFramework.Values)
                     {
-                        foreach (var dependee in frameworkProject.ProjectDependeees)
+                        foreach (var dependee in frameworkProject.ProjectDependeees.Keys)
                         {
                             stack.Push(dependee);
                         }

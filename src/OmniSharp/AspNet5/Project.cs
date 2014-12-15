@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace OmniSharp.AspNet5
 {
@@ -9,11 +10,26 @@ namespace OmniSharp.AspNet5
 
         public string Path { get; set; }
 
+        public string Name { get; set; }
+
+        public IList<string> Configurations { get; set; }
+
+        public IDictionary<string, string> Commands { get; set; }
+
+        public IList<string> ProjectSearchPaths { get; set; }
+
+        public string GlobalJsonPath { get; set; }
+
         public ConcurrentDictionary<string, FrameworkProject> ProjectsByFramework { get; private set; }
 
         public Project()
         {
             ProjectsByFramework = new ConcurrentDictionary<string, FrameworkProject>();
+        }
+
+        public override string ToString()
+        {
+            return Name + " (" + Path + ")";
         }
     }
 }
