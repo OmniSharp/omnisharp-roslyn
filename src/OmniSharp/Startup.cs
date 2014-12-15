@@ -38,7 +38,8 @@ namespace OmniSharp
 
             // Add the initializer for ASP.NET 5 projects
             services.AddSingleton<IWorkspaceInitializer, AspNet5Initializer>();
-
+            //services.AddSingleton<IWorkspaceInitializer, MSBuild.MSBuildInitializer>();
+            
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
         }
