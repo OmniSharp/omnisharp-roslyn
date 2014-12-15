@@ -1,6 +1,6 @@
 omnisharp-roslyn
 ================
-[![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)
+[![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)]
 
 https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master
 Omnisharp based on roslyn workspaces
