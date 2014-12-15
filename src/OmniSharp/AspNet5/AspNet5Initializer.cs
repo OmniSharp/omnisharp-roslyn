@@ -45,10 +45,10 @@ namespace OmniSharp.AspNet5
 
             watcher.OnChanged += (path, changeType) => OnDependenciesChanged(context, path, changeType);
 
-            StartRuntime(context.RuntimePath, context.HostId, context.DesignTimeHostPort, () =>
+            StartDesignTimeHost(context.RuntimePath, context.HostId, port =>
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                socket.Connect(new IPEndPoint(IPAddress.Loopback, context.DesignTimeHostPort));
+                socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
 
                 var networkStream = new NetworkStream(socket);
 
@@ -329,6 +329,28 @@ namespace OmniSharp.AspNet5
             //};
         }
 
+        private int GetFreePort()
+        {
+            for (int port = 1334; port <= 8081; port++)
+            {
+                try
+                {
+                    using (var listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                    {
+                        listenSocket.Bind(new IPEndPoint(IPAddress.Loopback, port));
+                        listenSocket.Listen(10);
+                        return port;
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+
+            return 1334;
+        }
+
         private static void OnDependenciesChanged(AspNet5Context context, string path, WatcherChangeTypes changeType)
         {
             // A -> B -> C
@@ -413,11 +435,10 @@ namespace OmniSharp.AspNet5
             }
         }
 
-        private void StartRuntime(string runtimePath,
-                                  string hostId,
-                                  int port,
-                                  Action OnStart)
+        private void StartDesignTimeHost(string runtimePath, string hostId, Action<int> onConnected)
         {
+            int port = GetFreePort();
+
             var psi = new ProcessStartInfo
             {
                 FileName = Path.Combine(runtimePath, "bin", "klr"),
@@ -446,7 +467,8 @@ namespace OmniSharp.AspNet5
 
             if (kreProcess.HasExited)
             {
-                _logger.WriteError(string.Format("Child process failed with {0}", kreProcess.ExitCode));
+                // REVIEW: Should we quit here or retry?
+                _logger.WriteError(string.Format("Failed to launch DesignTimeHost. Process exited with code {0}.", kreProcess.ExitCode));
                 return;
             }
 
@@ -459,10 +481,10 @@ namespace OmniSharp.AspNet5
 
                 Thread.Sleep(1000);
 
-                StartRuntime(runtimePath, hostId, port, OnStart);
+                StartDesignTimeHost(runtimePath, hostId, onConnected);
             };
 
-            OnStart();
+            onConnected(port);
         }
 
         private static Task ConnectAsync(Socket socket, IPEndPoint endPoint)

@@ -12,8 +12,6 @@ namespace OmniSharp.AspNet5
 
         public string HostId { get; private set; }
 
-        public int DesignTimeHostPort { get; private set; }
-
         public Dictionary<string, int> ProjectContextMapping { get; private set; }
 
         public Dictionary<int, Project> Projects { get; private set; }
@@ -25,7 +23,6 @@ namespace OmniSharp.AspNet5
         public AspNet5Context()
         {
             HostId = Guid.NewGuid().ToString();
-            DesignTimeHostPort = 1334;
             ProjectContextMapping = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             Projects = new Dictionary<int, Project>();
             WorkspaceMapping = new Dictionary<ProjectId, FrameworkProject>();
