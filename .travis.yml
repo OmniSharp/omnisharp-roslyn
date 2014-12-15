@@ -1,0 +1,6 @@
+language: csharp
+sudo: false  # use the new container-based infrastructure
+install: curl -sSL https://raw.githubusercontent.com/aspnet/Home/master/kvminstall.sh | sh && source ~/.kre/kvm/kvm.sh && kvm upgrade
+script:
+  - kpm restore
+  - . ./build.sh
