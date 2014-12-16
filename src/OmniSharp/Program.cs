@@ -58,8 +58,8 @@ namespace OmniSharp
             var environment = new OmnisharpEnvironment(applicationRoot, serverPort, traceType);
             var hostingEnv = new HostingEnvironment { EnvironmentName = "Development" };
 
-            var config = new Configuration();
-            config.Set("server.urls", "http://localhost:" + serverPort);
+            var config = new Configuration()
+                .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var serviceCollection = new ServiceCollection();
             serviceCollection.Add(HostingServices.GetDefaultServices(config));
