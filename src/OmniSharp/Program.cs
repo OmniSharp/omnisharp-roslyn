@@ -24,12 +24,6 @@ namespace OmniSharp
 
         public void Main(string[] args)
         {
-            if (args.Length < 1)
-            {
-                Console.WriteLine("Usage: Omnisharp [-s /path/to/sln] [-p port]");
-                return;
-            }
-
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
             var traceType = TraceType.Information;
