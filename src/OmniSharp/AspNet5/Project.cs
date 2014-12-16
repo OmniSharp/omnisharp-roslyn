@@ -22,6 +22,8 @@ namespace OmniSharp.AspNet5
 
         public ConcurrentDictionary<string, FrameworkProject> ProjectsByFramework { get; private set; }
 
+        public bool InitializeSent { get; set; }
+
         public Project()
         {
             ProjectsByFramework = new ConcurrentDictionary<string, FrameworkProject>();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -48,6 +49,13 @@ namespace OmniSharp.AspNet5
         {
             var context = new AspNet5Context();
             context.RuntimePath = GetRuntimePath();
+            
+            if (!ScanForProjects(context))
+            {
+                // No ASP.NET 5 projects found so do nothing
+                _logger.WriteInformation("No ASP.NET 5 projects found");
+                return;
+            }
 
             var wh = new ManualResetEventSlim();
 
@@ -313,8 +321,8 @@ namespace OmniSharp.AspNet5
                 // Start the message channel
                 context.Connection.Start();
 
-                // Scan for the projects
-                ScanForAspNet5Projects(context);
+                // Initialize the ASP.NET 5 projects
+                Initialize(context);
             });
 
             wh.Wait();
@@ -380,9 +388,41 @@ namespace OmniSharp.AspNet5
             }
         }
 
-        private void ScanForAspNet5Projects(AspNet5Context context)
+        private void Initialize(AspNet5Context context)
+        {
+            foreach (var project in context.Projects.Values)
+            {
+                if (project.InitializeSent)
+                {
+                    continue;
+                }
+
+                var projectDirectory = Path.GetDirectoryName(project.Path).TrimEnd(Path.DirectorySeparatorChar);
+
+                // Send an InitializeMessage for each project
+                var initializeMessage = new InitializeMessage
+                {
+                    ProjectFolder = projectDirectory,
+                };
+
+                // Initialize this project
+                context.Connection.Post(new Message
+                {
+                    ContextId = project.ContextId,
+                    MessageType = "Initialize",
+                    Payload = JToken.FromObject(initializeMessage),
+                    HostId = context.HostId
+                });
+
+                project.InitializeSent = true;
+            }
+        }
+
+        private bool ScanForProjects(AspNet5Context context)
         {
             _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
+
+            var anyProjects = false;
 
             foreach (var projectFile in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
             {
@@ -392,25 +432,12 @@ namespace OmniSharp.AspNet5
                     continue;
                 }
 
-                string projectPath = Path.GetDirectoryName(projectFile).TrimEnd(Path.DirectorySeparatorChar);
-
-                // Send an InitializeMessage for each project
-                var initializeMessage = new InitializeMessage
-                {
-                    ProjectFolder = projectPath,
-                };
-
-                // Initialize this project
-                context.Connection.Post(new Message
-                {
-                    ContextId = contextId,
-                    MessageType = "Initialize",
-                    Payload = JToken.FromObject(initializeMessage),
-                    HostId = context.HostId
-                });
-
                 _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
+
+                anyProjects = true;
             }
+
+            return anyProjects;
         }
 
         private static Task ConnectAsync(Socket socket, IPEndPoint endPoint)
