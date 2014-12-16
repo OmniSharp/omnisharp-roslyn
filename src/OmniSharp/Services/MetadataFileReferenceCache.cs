@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.Logging;
@@ -23,14 +24,20 @@ namespace OmniSharp.Services
         {
             var cacheKey = _cacheKeyPrefix + path.ToLowerInvariant();
 
-            return _cache.GetOrSet(cacheKey, ctx =>
+            var metadata = _cache.GetOrSet(cacheKey, ctx =>
             {
                 _logger.WriteVerbose(string.Format("Cache miss {0}", path));
 
                 ctx.AddExpirationTrigger(new FileWriteTimeTrigger(path));
 
-                return MetadataReference.CreateFromFile(path);
+                using (var stream = File.OpenRead(path))
+                {
+                    var moduleMetadata = ModuleMetadata.CreateFromStream(stream, PEStreamOptions.PrefetchMetadata);
+                    return AssemblyMetadata.Create(moduleMetadata);
+                }
             });
+
+            return metadata.GetReference();
         }
 
         private class FileWriteTimeTrigger : IExpirationTrigger
