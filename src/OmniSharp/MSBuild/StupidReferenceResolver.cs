@@ -59,22 +59,32 @@ namespace OmniSharp.MSBuild
         };
     }
 
-    public class StupidReferenceResolver : IReferenceResolver
+    public class StupidReferenceResolver
     {
-        public MetadataReference Resolve(string name)
+        private string _projectDirectory;
+
+        public StupidReferenceResolver(string projectDirectory)
         {
-            var path = FindAssembly(name);
-            return path != null ? MetadataReference.CreateFromFile(path) : null;
+            _projectDirectory = projectDirectory;
         }
 
-        public string FindAssembly(string evaluatedInclude)
-        {
+        public string Resolve(string evaluatedInclude, string hintPath = null)
+        {   
             if (evaluatedInclude.IndexOf(',') >= 0)
             {
                 evaluatedInclude = evaluatedInclude.Substring(0, evaluatedInclude.IndexOf(','));
             }
 
-            string directAssemblyFile = (evaluatedInclude + ".dll");
+            if(!string.IsNullOrWhiteSpace(hintPath))
+            {
+                var hintedAssemblyFile = Path.Combine(_projectDirectory, hintPath);
+                if(File.Exists(hintedAssemblyFile))
+                {
+                    return hintedAssemblyFile;
+                }
+            }
+
+            string directAssemblyFile = evaluatedInclude + ".dll";
             if (File.Exists(directAssemblyFile))
             {
                 return directAssemblyFile;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -59,37 +60,52 @@ namespace OmniSharp.MSBuild.ProjectFile
 
     public class ProjectFile
     {
-        private Project _project;
+        public ProjectId ProjectId { get; private set; }
 
-        public Guid ProjectId { get; private set; }
+        public Guid Id { get; private set; }
 
         public string Name { get; private set; }
 
-        public string Path { get; private set; }
+        public string Filepath { get; private set; }
 
-        public ProjectFileInfo Info {
-            get
-            {
-                var references = new List<string>();
-                references.Add("mscorlib");
-                references.AddRange(_project.GetItems("References").Select(item => item.EvaluatedInclude));
+        public string AssemblyName { get; private set; }
 
-                var ret = new ProjectFileInfo(ProjectId, Name, Path,
-                    _project.GetPropertyValue("AssemblyName"),
-                    _project.GetItems("Compile").Select(item => item.EvaluatedInclude),
-                    references);
+        public IEnumerable<string> SourceFiles { get; private set; }
 
-                return ret;
-            }
-        }
+        public IEnumerable<Tuple<Guid, string>> ProjectReferences { get; private set; }
 
-        public ProjectFile(Guid projectId, string name, string path)
+        public IEnumerable<Tuple<string, string>> References { get; private set; }
+
+        public ProjectFile(Guid id, string name, string path)
         {
-            _project = new Project(path);
-            ProjectId = projectId;
+        ProjectId = ProjectId.CreateNewId();
+            Id = id;
             Name = name;
-            Path = path;
-        }
+            Filepath = path;
 
+            var directory = Path.GetDirectoryName(path);
+            var project = new Project(path);
+
+            AssemblyName = project.GetPropertyValue("AssemblyName");
+
+            SourceFiles = project.GetItems("Compile").Select(item => {
+                // todo - support glob patterns
+                return Path.Combine(directory, item.EvaluatedInclude);
+            });
+
+            ProjectReferences = project.GetItems("ProjectReference").Select(item =>
+            {
+                return Tuple.Create(Guid.Parse(item.GetMetadataValue("Project")), item.GetMetadataValue("Name"));
+            });
+
+            var references = new List<Tuple<string, string>>();
+            references.Add(Tuple.Create<string, string>("mscorlib", null));
+            references.AddRange(project.GetItems("Reference").Select(item => {
+                return item.HasMetadata("HintPath") 
+                    ? Tuple.Create(item.EvaluatedInclude, item.GetMetadataValue("HintPath")) 
+                    : Tuple.Create(item.EvaluatedInclude, (string) null);   
+            }));
+            References = references;
+        }
     }
 }
