@@ -157,7 +157,6 @@ namespace OmniSharp.MSBuild
                     ProjectFileInfo projectReferenceInfo;
                     if (projectMap.TryGetValue(projectReferencePath, out projectReferenceInfo))
                     {
-                        projectFileInfo.References.Remove(projectReferenceInfo.TargetPath);
                         var reference = new ProjectReference(projectReferenceInfo.WorkspaceId);
 
                         if (unusedProjectReferences.Remove(reference))

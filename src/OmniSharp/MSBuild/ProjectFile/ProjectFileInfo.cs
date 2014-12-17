@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 
 #if ASPNET50
 using Microsoft.Build.BuildEngine;
+using Microsoft.Build.Evaluation;
 #endif
 
 namespace OmniSharp.MSBuild.ProjectFile
@@ -41,61 +42,115 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> ProjectReferences { get; private set; }
 
+        private static bool IsMono
+        {
+            get
+            {
+                return Type.GetType("Mono.Runtime") != null;
+            }
+        }
+
         public static ProjectFileInfo Create(string solutionDirectory, string projectFilePath)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
 
 #if ASPNET50
-#pragma warning disable CS0618
-            var engine = Engine.GlobalEngine;
-#pragma warning restore CS0618
-            // engine.RegisterLogger(new ConsoleLogger());
-
-            var propertyGroup = new BuildPropertyGroup();
-            propertyGroup.SetProperty("Configuration", "Debug");
-            propertyGroup.SetProperty("DesignTimeBuild", "true");
-            propertyGroup.SetProperty("BuildProjectReferences", "false");
-            // Dump entire assembly reference closure
-            propertyGroup.SetProperty("_ResolveReferenceDependencies", "true");
-            propertyGroup.SetProperty("SolutionDir", solutionDirectory + Path.DirectorySeparatorChar);
-
-            // propertyGroup.SetProperty("MSBUILDENABLEALLPROPERTYFUNCTIONS", "1");
-
-            engine.GlobalProperties = propertyGroup;
-
-            var project = engine.CreateNewProject();
-            project.Load(projectFilePath);
-            var buildResult = engine.BuildProjectFile(projectFilePath, new[] { "ResolveReferences" }, propertyGroup, null, BuildSettings.None, null);
-
-            if (!buildResult)
+            if (IsMono)
             {
-                return null;
+                var collection = new ProjectCollection();
+                collection.SetGlobalProperty("DesignTimeBuild", "true");
+                collection.SetGlobalProperty("BuildProjectReferences", "false");
+                collection.SetGlobalProperty("_ResolveReferenceDependencies", "true");
+                collection.SetGlobalProperty("SolutionDir", solutionDirectory + Path.DirectorySeparatorChar);
+                var project = collection.LoadProject(projectFilePath);
+                var projectInstance = project.CreateProjectInstance();
+                var buildResult = projectInstance.Build("ResolveReferences", loggers: null);
+
+                if (!buildResult)
+                {
+                    return null;
+                }
+
+                projectFileInfo.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
+                projectFileInfo.Name = projectInstance.GetPropertyValue("ProjectName");
+                projectFileInfo.TargetFramework = new FrameworkName(projectInstance.GetPropertyValue("TargetFrameworkMoniker"));
+                projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
+                projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
+
+                projectFileInfo.SourceFiles =
+                    projectInstance.GetItems("Compile")
+                                   .Select(p => p.GetMetadataValue("FullPath"))
+                                   .ToList();
+
+                projectFileInfo.References =
+                    projectInstance.GetItems("ReferencePath")
+                                   .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
+                                   .Select(p => p.GetMetadataValue("FullPath"))
+                                   .ToList();
+
+                projectFileInfo.ProjectReferences =
+                    projectInstance.GetItems("ProjectReference")
+                                   .Select(p => p.GetMetadataValue("FullPath"))
+                                   .ToList();
             }
+            else
+            {
+                // On mono we need to use this API since the ProjectCollection
+                // isn't fully implemented
+#pragma warning disable CS0618
+                var engine = Engine.GlobalEngine;
+                // engine.DefaultToolsVersion = "4.0";
+#pragma warning restore CS0618
+                // engine.RegisterLogger(new ConsoleLogger());
 
-            var itemsLookup = project.EvaluatedItems.OfType<BuildItem>()
-                                                    .ToLookup(g => g.Name);
+                var propertyGroup = new BuildPropertyGroup();
+                propertyGroup.SetProperty("DesignTimeBuild", "true");
+                propertyGroup.SetProperty("BuildProjectReferences", "false");
+                // Dump entire assembly reference closure
+                propertyGroup.SetProperty("_ResolveReferenceDependencies", "true");
+                propertyGroup.SetProperty("SolutionDir", solutionDirectory + Path.DirectorySeparatorChar);
 
-            var properties = project.EvaluatedProperties.OfType<BuildProperty>()
-                                                        .ToDictionary(p => p.Name);
+                // propertyGroup.SetProperty("MSBUILDENABLEALLPROPERTYFUNCTIONS", "1");
 
-            projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
-            projectFileInfo.Name = properties["ProjectName"].FinalValue;
-            projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);
-            projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
-            projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
+                engine.GlobalProperties = propertyGroup;
 
-            projectFileInfo.SourceFiles = itemsLookup["Compile"]
-                .Select(b => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, b.FinalItemSpec)))
-                .ToList();
+                var project = engine.CreateNewProject();
+                project.Load(projectFilePath);
+                var buildResult = engine.BuildProjectFile(projectFilePath, new[] { "ResolveReferences" }, propertyGroup, null, BuildSettings.None, null);
 
-            projectFileInfo.References = itemsLookup["ReferencePath"]
-                .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
-                .ToList();
+                if (!buildResult)
+                {
+                    return null;
+                }
 
-            projectFileInfo.ProjectReferences = itemsLookup["ProjectReference"]
-                .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
-                .ToList();
+                var itemsLookup = project.EvaluatedItems.OfType<BuildItem>()
+                                                        .ToLookup(g => g.Name);
+
+                var properties = project.EvaluatedProperties.OfType<BuildProperty>()
+                                                            .ToDictionary(p => p.Name);
+
+                projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
+                projectFileInfo.Name = properties["ProjectName"].FinalValue;
+                projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);
+                projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
+                projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
+
+                // REVIEW: FullPath here returns the wrong physical path, we need to figure out
+                // why. We must be setting up something incorrectly
+                projectFileInfo.SourceFiles = itemsLookup["Compile"]
+                    .Select(b => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, b.FinalItemSpec)))
+                    .ToList();
+
+                projectFileInfo.References = itemsLookup["ReferencePath"]
+                    .Where(p => !p.HasMetadata("Project"))
+                    .Select(p => p.GetEvaluatedMetadata("FullPath"))
+                    .ToList();
+
+                projectFileInfo.ProjectReferences = itemsLookup["ProjectReference"]
+                    .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
+                    .ToList();
+            }
 #else
             // TODO: Shell out to msbuild/xbuild here?
 #endif
