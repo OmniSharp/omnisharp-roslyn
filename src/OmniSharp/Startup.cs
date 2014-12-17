@@ -9,6 +9,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Logging.Console;
 using OmniSharp.AspNet5;
+using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -55,7 +56,9 @@ namespace OmniSharp
                 env.TraceType <= type);
 
             var logger = loggerFactory.Create<Startup>();
-            
+
+            app.UseRequestLogging();
+
             app.UseErrorHandler("/error");
 
             app.UseMvc();
