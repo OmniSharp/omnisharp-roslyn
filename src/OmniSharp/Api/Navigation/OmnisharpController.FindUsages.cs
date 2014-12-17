@@ -59,7 +59,7 @@ namespace OmniSharp
             {
                 Text = text.Trim(),
                 FileName = path,
-                Line =  + 1,
+                Line = line + 1,
                 Column = lineSpan.StartLinePosition.Character + 1
             };
         }
