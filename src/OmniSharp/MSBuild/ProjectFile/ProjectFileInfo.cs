@@ -58,11 +58,15 @@ namespace OmniSharp.MSBuild.ProjectFile
 #if ASPNET50
             if (!IsMono)
             {
-                var collection = new ProjectCollection();
-                collection.SetGlobalProperty("DesignTimeBuild", "true");
-                collection.SetGlobalProperty("BuildProjectReferences", "false");
-                collection.SetGlobalProperty("_ResolveReferenceDependencies", "true");
-                collection.SetGlobalProperty("SolutionDir", solutionDirectory + Path.DirectorySeparatorChar);
+                var properties = new Dictionary<string, string>
+                {
+                    { "DesignTimeBuild", "true" },
+                    { "BuildProjectReferences", "false" },
+                    { "_ResolveReferenceDependencies", "true" },
+                    { "SolutionDir", solutionDirectory + Path.DirectorySeparatorChar }
+                };
+
+                var collection = new ProjectCollection(properties);
                 var project = collection.LoadProject(projectFilePath);
                 var projectInstance = project.CreateProjectInstance();
                 var buildResult = projectInstance.Build("ResolveReferences", loggers: null);
