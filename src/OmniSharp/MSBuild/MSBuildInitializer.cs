@@ -83,7 +83,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                var projectFilePath = Path.GetFullPath(Path.Combine(_env.Path, block.ProjectPath));
+                var projectFilePath = Path.GetFullPath(Path.GetFullPath(Path.Combine(_env.Path, block.ProjectPath.Replace('\\', Path.DirectorySeparatorChar))));
 
                 _logger.WriteInformation(string.Format("Loading project from '{0}'.", projectFilePath));
 
@@ -91,7 +91,7 @@ namespace OmniSharp.MSBuild
 
                 try
                 {
-                    projectFileInfo = ProjectFileInfo.Create(_env.Path, projectFilePath);
+                    projectFileInfo = ProjectFileInfo.Create(_logger, _env.Path, projectFilePath);
 
                     if (projectFileInfo == null)
                     {

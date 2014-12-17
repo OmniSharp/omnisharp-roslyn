@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
+using Microsoft.Framework.Logging;
 
 #if ASPNET50
 using Microsoft.Build.BuildEngine;
@@ -50,7 +51,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
-        public static ProjectFileInfo Create(string solutionDirectory, string projectFilePath)
+        public static ProjectFileInfo Create(ILogger logger, string solutionDirectory, string projectFilePath)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
@@ -133,9 +134,9 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var properties = project.EvaluatedProperties.OfType<BuildProperty>()
                                                             .ToDictionary(p => p.Name);
-
+                                                            
                 projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
-                projectFileInfo.Name = properties["ProjectName"].FinalValue;
+                projectFileInfo.Name = Path.GetFileNameWithoutExtension(projectFilePath);
                 projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);
                 projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
@@ -148,7 +149,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 projectFileInfo.References = itemsLookup["ReferencePath"]
                     .Where(p => !p.HasMetadata("Project"))
-                    .Select(p => p.GetEvaluatedMetadata("FullPath"))
+                    .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                     .ToList();
 
                 projectFileInfo.ProjectReferences = itemsLookup["ProjectReference"]
