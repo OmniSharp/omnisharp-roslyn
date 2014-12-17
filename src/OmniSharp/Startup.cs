@@ -27,12 +27,16 @@ namespace OmniSharp
 
         public IConfiguration Configuration { get; private set; }
 
+        public OmnisharpWorkspace Workspace { get; set; }
+
         public void ConfigureServices(IServiceCollection services)
         {
+            Workspace = new OmnisharpWorkspace();
+
             services.AddMvc(Configuration);
 
             // Add the omnisharp workspace to the container
-            services.AddInstance(new OmnisharpWorkspace());
+            services.AddInstance(Workspace);
 
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
@@ -72,6 +76,9 @@ namespace OmniSharp
             {
                 initializer.Initalize();
             }
+
+            // Mark the workspace as initialized
+            Workspace.Initialized = true;
 
             // This is temporary so that plugins work
             Console.WriteLine("Solution has finished loading");

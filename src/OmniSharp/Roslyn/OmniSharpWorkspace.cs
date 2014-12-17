@@ -11,6 +11,8 @@ namespace OmniSharp
 {
     public class OmnisharpWorkspace : Workspace
     {
+        public bool Initialized { get; set; }
+
         public OmnisharpWorkspace() : base(MefHostServices.DefaultHost, "Custom")
         {
         }
