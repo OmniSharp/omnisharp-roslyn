@@ -1,126 +1,157 @@
-﻿using Microsoft.Framework.Logging;
-using OmniSharp.Services;
-using Microsoft.CodeAnalysis;
-using System.IO;
-using Microsoft.CodeAnalysis.MSBuild;
-using System.Linq;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.Logging;
+using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
     public class MSBuildInitializer : IWorkspaceInitializer
     {
         private readonly OmnisharpWorkspace _workspace;
-        private readonly IMetadataFileReferenceCache _referenceCache;
+        private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IOmnisharpEnvironment _env;
         private readonly ILogger _logger;
 
-        private readonly IDictionary<Guid, ProjectFile.ProjectFile> _projects = new Dictionary<Guid, ProjectFile.ProjectFile>();
+        private static readonly Guid[] _supportsProjectTypes = new[] {
+            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
+        };
 
         public MSBuildInitializer(OmnisharpWorkspace workspace,
-                                  IMetadataFileReferenceCache referenceCache,
                                   IOmnisharpEnvironment env,
-                                  ILoggerFactory loggerFactory)
+                                  ILoggerFactory loggerFactory,
+                                  IMetadataFileReferenceCache metadataReferenceCache)
         {
             _workspace = workspace;
-            _referenceCache = referenceCache;
+            _metadataReferenceCache = metadataReferenceCache;
             _env = env;
             _logger = loggerFactory.Create<MSBuildInitializer>();
         }
 
         public void Initalize()
         {
-            if (string.IsNullOrWhiteSpace(_env.SolutionFilePath))
+            var solutionFilePath = _env.SolutionFilePath;
+
+            if (string.IsNullOrEmpty(solutionFilePath))
             {
-                _logger.WriteVerbose("NO solution file found");
-                return;
+                var solutions = Directory.GetFiles(_env.Path, "*.sln");
+
+                switch (solutions.Length)
+                {
+                    case 0:
+                        _logger.WriteInformation(string.Format("No solution files found in '{0}'", _env.Path));
+                        break;
+                    case 1:
+                        solutionFilePath = solutions[0];
+                        break;
+                    default:
+                        _logger.WriteError("Could not determine solution file");
+                        return;
+                }
             }
 
-            var sln = SolutionFile.Parse(new StringReader(File.ReadAllText(_env.SolutionFilePath)));
-            var unusedProjects = new HashSet<Guid>(_projects.Keys);
-            var slnDirectory = Path.GetDirectoryName(_env.SolutionFilePath);
+            SolutionFile solutionFile = null;
 
-            foreach (var block in sln.ProjectBlocks)
+            using (var stream = File.OpenRead(solutionFilePath))
+            using (var reader = new StreamReader(stream))
             {
-                if(_projects.ContainsKey(block.ProjectGuid))
+                solutionFile = SolutionFile.Parse(reader);
+            }
+
+            _logger.WriteInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
+
+            var projectMap = new Dictionary<string, ProjectFileInfo>();
+
+            foreach (var block in solutionFile.ProjectBlocks)
+            {
+                if (!_supportsProjectTypes.Contains(block.ProjectTypeGuid))
                 {
+                    _logger.WriteWarning("Skipped unsupported project type '{0}'", block.ProjectPath);
+                    continue;
+                }
+                
+                var projectFilePath = Path.GetFullPath(Path.Combine(_env.Path, block.ProjectPath));
+
+                _logger.WriteInformation(string.Format("Loading project from '{0}'.", projectFilePath));
+
+                ProjectFileInfo projectFileInfo = null;
+
+                try
+                {
+                    projectFileInfo = ProjectFileInfo.Create(_env.Path, projectFilePath);
+
+                    if (projectFileInfo == null)
+                    {
+                        _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath));
+                        continue;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
                     continue;
                 }
 
-                var proj = new ProjectFile.ProjectFile(block.ProjectGuid, block.ProjectName, Path.Combine(slnDirectory, block.ProjectPath));
-                _workspace.AddProject(ProjectInfo.Create(proj.ProjectId, VersionStamp.Create(), proj.Name, proj.AssemblyName, LanguageNames.CSharp, proj.Filepath));
-                _projects.Add(proj.Id, proj);
-            }
+                var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
+                                                     VersionStamp.Create(),
+                                                     projectFileInfo.Name,
+                                                     projectFileInfo.AssemblyName,
+                                                     LanguageNames.CSharp,
+                                                     projectFileInfo.ProjectFilePath);
 
-            foreach (var block in sln.ProjectBlocks)
-            {
-                unusedProjects.Remove(block.ProjectGuid);
-                var proj = _projects[block.ProjectGuid];
-                var project = _workspace.CurrentSolution.GetProject(proj.ProjectId);
-
-                // documents
-                var unusedDocuments = project.Documents.ToDictionary(d => d.FilePath, d => d.Id);
-                foreach(var file in proj.SourceFiles)
+                var docInfos = new List<DocumentInfo>();
+                foreach (var file in projectFileInfo.SourceFiles)
                 {
-                    if(unusedDocuments.Remove(file))
+                    using (var stream = File.OpenRead(file))
                     {
-                        continue;
+                        var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
+                        var id = DocumentId.CreateNewId(projectInfo.Id);
+                        var version = VersionStamp.Create();
+
+                        var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
+
+                        docInfos.Add(DocumentInfo.Create(id, file, filePath: file, loader: loader));
                     }
-                    _workspace.AddDocument(DocumentInfo.Create(
-                        DocumentId.CreateNewId(project.Id),
-                        Path.GetFileName(file),
-                        null,
-                        SourceCodeKind.Regular,
-                        null,
-                        file));
-                }
-                foreach(var unused in unusedDocuments)
-                {
-                    _workspace.RemoveDocument(unused.Value);
                 }
 
+                projectInfo = projectInfo.WithDocuments(docInfos);
 
-                // project references
-                var unusedProjectReferences = new HashSet<ProjectReference>(project.ProjectReferences);
-                foreach(var reference in proj.ProjectReferences)
-                {
-                    var projectReference = new ProjectReference(_projects[reference.Item1].ProjectId);
-                    unusedProjectReferences.Remove(projectReference);
-                    _workspace.AddProjectReference(project.Id, projectReference);
-                }
-                foreach(var unused in unusedProjectReferences)
-                {
-                    _workspace.RemoveProjectReference(project.Id, unused);
-                }
+                _workspace.AddProject(projectInfo);
 
-
-                // references 
-                var unusedReferences = new HashSet<MetadataReference>(project.MetadataReferences);
-                var resolver = new StupidReferenceResolver(Path.GetDirectoryName(proj.Filepath));
-                foreach (var reference in proj.References)
-                {
-                    var assemblyPath = resolver.Resolve(reference.Item1, reference.Item2);
-                    if (assemblyPath == null)
-                    {
-                        _logger.WriteWarning("FAILED to resolve assembly: " + reference.Item1);
-                        continue;
-                    }
-                    var metadatReference = _referenceCache.GetMetadataReference(assemblyPath);
-                    _workspace.AddMetadataReference(project.Id, metadatReference);
-                    unusedReferences.Remove(metadatReference);
-                }
-
-                _logger.WriteVerbose(string.Format("Added project [{0}]", project.Name));
+                projectFileInfo.WorkspaceId = projectInfo.Id;
+                projectMap[projectFileInfo.ProjectFilePath] = projectFileInfo;
             }
 
-            // removed projects
-            foreach(var id in unusedProjects)
+            foreach (var project in projectMap.Values)
             {
-                _workspace.RemoveProject(_projects[id].ProjectId);
-                _projects.Remove(id);
+                var references = project.References.ToList();
+
+                foreach (var projectReferencePath in project.ProjectReferences)
+                {
+                    ProjectFileInfo projectReferenceInfo;
+                    if (projectMap.TryGetValue(projectReferencePath, out projectReferenceInfo))
+                    {
+                        _workspace.AddProjectReference(project.WorkspaceId, new ProjectReference(projectReferenceInfo.WorkspaceId));
+                        references.Remove(projectReferenceInfo.TargetPath);
+                    }
+                    else
+                    {
+                        _logger.WriteWarning(string.Format("Unable to resolve project reference '{0}' for '{1}'.", projectReferencePath, project.ProjectFilePath));
+                    }
+                }
+
+                foreach (var reference in references)
+                {
+                    _workspace.AddMetadataReference(project.WorkspaceId, _metadataReferenceCache.GetMetadataReference(reference));
+                }
             }
+
         }
     }
 }
