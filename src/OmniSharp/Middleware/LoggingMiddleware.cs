@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
@@ -21,29 +20,33 @@ namespace OmniSharp.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            var stream = context.Response.Body;
-            Stopwatch stopwatch = null;
-            if (_logger.IsEnabled(TraceType.Verbose))
-            {
-                stopwatch = Stopwatch.StartNew();
-                LogRequest(context);
+            var responseBody = context.Response.Body;
+            var requestBody = context.Request.Body;
 
+            if (_logger.IsEnabled(TraceType.Information))
+            {
                 // TODO: Add the feature interface to disable this memory stream
                 // when we add signalr
                 context.Response.Body = new MemoryStream();
+                context.Request.Body = new MemoryStream();
+
+                await requestBody.CopyToAsync(context.Request.Body);
+
+                LogRequest(context);
+
             }
 
+            var stopwatch = Stopwatch.StartNew();
             await _next(context);
+            stopwatch.Stop();
 
-            if (_logger.IsEnabled(TraceType.Verbose))
+            if (_logger.IsEnabled(TraceType.Information))
             {
                 LogResponse(context);
 
-                // Copy stuff to the real body
-                await context.Response.Body.CopyToAsync(stream);
+                await context.Response.Body.CopyToAsync(responseBody);
 
-                stopwatch.Stop();
-                _logger.WriteVerbose(context.Request.Path + " " + stopwatch.ElapsedMilliseconds + "ms");
+                _logger.WriteVerbose(context.Request.Path + ": " + context.Response.StatusCode + " " + stopwatch.ElapsedMilliseconds + "ms");
             }
         }
 
@@ -61,22 +64,25 @@ namespace OmniSharp.Middleware
                 }
             }
 
+            context.Request.Body.Position = 0;
+
             _logger.WriteVerbose("************  Body ************");
-            using (var reader = new StreamReader(context.Request.Body))
-            {
-                var content = reader.ReadToEnd();
-                _logger.WriteVerbose(content);
-            }
+            var reader = new StreamReader(context.Request.Body);
+            var content = reader.ReadToEnd();
+            _logger.WriteVerbose(content);
+
+            context.Request.Body.Position = 0;
         }
 
         private void LogResponse(HttpContext context)
         {
             _logger.WriteVerbose("************  Response ************ ");
 
+            context.Response.Body.Position = 0;
+
             var reader = new StreamReader(context.Response.Body);
             var content = reader.ReadToEnd();
             _logger.WriteVerbose(content);
-
             context.Response.Body.Position = 0;
         }
     }
