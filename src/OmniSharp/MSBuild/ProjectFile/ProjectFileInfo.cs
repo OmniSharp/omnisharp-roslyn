@@ -56,7 +56,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             projectFileInfo.ProjectFilePath = projectFilePath;
 
 #if ASPNET50
-            if (IsMono)
+            if (!IsMono)
             {
                 var collection = new ProjectCollection();
                 collection.SetGlobalProperty("DesignTimeBuild", "true");
