@@ -1,10 +1,11 @@
-﻿using System.IO;
+using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using System.Linq;
+
 
 namespace OmniSharp
 {
