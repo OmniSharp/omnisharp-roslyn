@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -49,9 +49,9 @@ namespace OmniSharp
 
         private QuickFix GetQuickFix(Location location)
         {
-            var path = location.GetLineSpan().Path;
-            var document = _workspace.GetDocument(path);
             var lineSpan = location.GetLineSpan();
+            var path = lineSpan.Path;
+            var document = _workspace.GetDocument(path);
             var line = lineSpan.StartLinePosition.Line;
             var text = document.GetSyntaxTreeAsync().Result.GetText().Lines[line].ToString();
             
