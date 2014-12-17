@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
-
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -18,8 +17,7 @@ namespace OmniSharp
 
             var quickFixes = new List<QuickFix>();
 
-            var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
-            var documentId = documentIds.FirstOrDefault();
+            var documentId = _workspace.GetDocumentId(request.FileName);
             var response = new GotoDefinitionResponse();
             if (documentId != null)
             {

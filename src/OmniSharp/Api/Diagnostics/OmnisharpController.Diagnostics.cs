@@ -16,9 +16,7 @@ namespace OmniSharp
 
             var quickFixes = new List<QuickFix>();
 
-            var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
-
-            var documentId = documentIds.FirstOrDefault();
+            var documentId = _workspace.GetDocumentId(request.FileName);
 
             if (documentId != null)
             {

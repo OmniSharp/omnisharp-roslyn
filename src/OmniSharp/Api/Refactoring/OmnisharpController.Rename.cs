@@ -19,9 +19,7 @@ namespace OmniSharp
 
             var response = new RenameResponse();
 
-            var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
-
-            var documentId = documentIds.FirstOrDefault();
+            var documentId = _workspace.GetDocumentId(request.FileName);
             if (documentId != null)
             {
                 var document = _workspace.CurrentSolution.GetDocument(documentId);

@@ -1,12 +1,10 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using System.Linq;
 
 namespace OmniSharp
 {
@@ -21,12 +19,12 @@ namespace OmniSharp
             OnProjectAdded(projectInfo);
         }
 
-        public new void AddProjectReference(ProjectId projectId, Microsoft.CodeAnalysis.ProjectReference projectReference)
+        public new void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
         {
             OnProjectReferenceAdded(projectId, projectReference);
         }
 
-        public new void RemoveProjectReference(ProjectId projectId, Microsoft.CodeAnalysis.ProjectReference projectReference)
+        public new void RemoveProjectReference(ProjectId projectId, ProjectReference projectReference)
         {
             OnProjectReferenceRemoved(projectId, projectReference);
         }
@@ -79,6 +77,18 @@ namespace OmniSharp
                 var sourceText = SourceText.From(new MemoryStream(buffer), encoding: Encoding.UTF8);
                 OnDocumentChanged(documentId, sourceText);
             }
+        }
+
+        public DocumentId GetDocumentId(string filePath)
+        {
+            var documentIds = CurrentSolution.GetDocumentIdsWithFilePath(filePath);
+            return documentIds.FirstOrDefault();
+        }
+
+        public Document GetDocument(string filePath)
+        {
+            var documentId = GetDocumentId(filePath);
+            return CurrentSolution.GetDocument(documentId);
         }
 
         protected override void ChangedDocumentText(DocumentId id, SourceText text)
