@@ -35,11 +35,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public string TargetPath { get; private set; }
 
-        public IEnumerable<string> SourceFiles { get; private set; }
+        public IList<string> SourceFiles { get; private set; }
 
-        public IEnumerable<string> References { get; private set; }
+        public IList<string> References { get; set; }
 
-        public IEnumerable<string> ProjectReferences { get; private set; }
+        public IList<string> ProjectReferences { get; private set; }
 
         public static ProjectFileInfo Create(string solutionDirectory, string projectFilePath)
         {
@@ -89,7 +89,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 .Select(b => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, b.FinalItemSpec)))
                 .ToList();
 
-            // TODO: Remove project references
             projectFileInfo.References = itemsLookup["ReferencePath"]
                 .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                 .ToList();
