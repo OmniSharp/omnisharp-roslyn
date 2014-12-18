@@ -11,8 +11,8 @@ namespace OmniSharp
     
     public partial class OmnisharpController
     {
-        [HttpPost("findusages")]
-        public async Task<IActionResult> FindUsages([FromBody]Request request)
+        [HttpPost("findimplementations")]
+        public async Task<IActionResult> FindImplementations([FromBody]Request request)
         {
             _workspace.EnsureBufferUpdated(request);
 
@@ -24,19 +24,13 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
-                var usages = await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+                var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
 
                 var quickFixes = new List<QuickFix>();
 
-                foreach (var usage in usages)
+                foreach (var implementation in implementations)
                 {
-                    foreach (var location in usage.Locations)
-                    {
-                        AddQuickFix(quickFixes, location.Location);
-                    }
-
-                    foreach (var location in usage.Definition.Locations)
+                    foreach (var location in implementation.Locations)
                     {
                         AddQuickFix(quickFixes, location);
                     }

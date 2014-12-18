@@ -18,7 +18,7 @@ namespace OmniSharp.Models
             set
             {
                 _fileName = value;
-            }
+           } 
         }
     }
 }
