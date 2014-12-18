@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -42,7 +43,7 @@ namespace OmniSharp
                     }
                 }
 
-                response = new QuickFixResponse(_quickFixes);
+                response = new QuickFixResponse(_quickFixes.OrderBy(q => q.FileName).ThenBy(q => q.Line));
             }
 
             return new ObjectResult(response);
