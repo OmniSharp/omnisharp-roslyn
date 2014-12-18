@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -74,6 +74,11 @@ namespace OmniSharp
 
         public void EnsureBufferUpdated(Request request)
         {
+            if(request.Buffer == null || request.FileName == null)
+            {
+                return;
+            }
+
             foreach (var documentId in CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
             {
                 var buffer = Encoding.UTF8.GetBytes(request.Buffer);
