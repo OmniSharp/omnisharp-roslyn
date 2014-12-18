@@ -5,6 +5,12 @@ namespace OmniSharp
 {
     public partial class OmnisharpController
     {
+        [HttpPost("checkalivestatus")]
+        public bool CheckAliveStatus()
+        {
+            return true;
+        }
+
         [HttpPost("checkreadystatus")]
         public bool CheckReadyStatus()
         {
