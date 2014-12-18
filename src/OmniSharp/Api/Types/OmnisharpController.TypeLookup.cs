@@ -24,7 +24,11 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 response.Type = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                response.Documentation = symbol.GetDocumentationCommentXml();
+
+                if (request.IncludeDocumentation)
+                {
+                    response.Documentation = symbol.GetDocumentationCommentXml();
+                }
             }
             return new ObjectResult(response);
         }
