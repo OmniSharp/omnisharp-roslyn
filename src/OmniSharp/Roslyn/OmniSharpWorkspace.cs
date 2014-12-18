@@ -96,6 +96,10 @@ namespace OmniSharp
         public Document GetDocument(string filePath)
         {
             var documentId = GetDocumentId(filePath);
+            if(documentId == null)
+            {
+                return null;
+            }
             return CurrentSolution.GetDocument(documentId);
         }
 

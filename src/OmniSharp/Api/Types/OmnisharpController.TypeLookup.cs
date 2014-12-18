@@ -14,11 +14,10 @@ namespace OmniSharp
         {
             _workspace.EnsureBufferUpdated(request);
 
-            var documentId = _workspace.GetDocumentId(request.FileName);
+            var document = _workspace.GetDocument(request.FileName);
             var response = new TypeLookupResponse();
-            if (documentId != null)
+            if (document != null)
             {
-                var document = _workspace.CurrentSolution.GetDocument(documentId);
                 var semanticModel = await document.GetSemanticModelAsync();
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));

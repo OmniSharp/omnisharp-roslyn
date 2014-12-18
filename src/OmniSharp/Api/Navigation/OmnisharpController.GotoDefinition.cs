@@ -17,11 +17,10 @@ namespace OmniSharp
 
             var quickFixes = new List<QuickFix>();
 
-            var documentId = _workspace.GetDocumentId(request.FileName);
+            var document = _workspace.GetDocument(request.FileName);
             var response = new GotoDefinitionResponse();
-            if (documentId != null)
+            if (document != null)
             {
-                var document = _workspace.CurrentSolution.GetDocument(documentId);
                 var semanticModel = await document.GetSemanticModelAsync();
                 var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
