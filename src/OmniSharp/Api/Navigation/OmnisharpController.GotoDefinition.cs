@@ -26,13 +26,17 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                var lineSpan = symbol.Locations.First().GetMappedLineSpan();
-                response = new GotoDefinitionResponse
+                
+                if (symbol != null)
                 {
-                    FileName = lineSpan.Path,
-                    Line = lineSpan.StartLinePosition.Line + 1,
-                    Column = lineSpan.StartLinePosition.Character + 1
-                };
+                    var lineSpan = symbol.Locations.First().GetMappedLineSpan();
+                    response = new GotoDefinitionResponse
+                    {
+                        FileName = lineSpan.Path,
+                        Line = lineSpan.StartLinePosition.Line + 1,
+                        Column = lineSpan.StartLinePosition.Character + 1
+                    };
+                }
             }
 
             return new ObjectResult(response);
