@@ -10,6 +10,7 @@ namespace OmniSharp
 {
     public partial class OmnisharpController
     {
+        private List<QuickFix> _quickFixes = new List<QuickFix>();
         [HttpPost("findusages")]
         public async Task<IActionResult> FindUsages([FromBody]Request request)
         {
@@ -25,44 +26,47 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
-                var usages = await SymbolFinder.FindReferencesAsync(definition, _workspace.CurrentSolution);
-                var quickFixes = new List<QuickFix>();
+                var usages = await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+                
 
                 foreach (var usage in usages)
                 {
                     foreach (var location in usage.Locations)
                     {
-                        quickFixes.Add(await GetQuickFix(location.Location));
+                        AddQuickFix(location.Location);
                     }
 
                     foreach (var location in usage.Definition.Locations)
                     {
-                        quickFixes.Add(await GetQuickFix(location));
+                        AddQuickFix(location);
                     }
                 }
 
-                response = new QuickFixResponse(quickFixes);
+                response = new QuickFixResponse(_quickFixes);
             }
 
             return new ObjectResult(response);
         }
 
-        private async Task<QuickFix> GetQuickFix(Location location)
+        private async void AddQuickFix(Location location)
         {
-            var lineSpan = location.GetLineSpan();
-            var path = lineSpan.Path;
-            var document = _workspace.GetDocument(path);
-            var line = lineSpan.StartLinePosition.Line;
-            var syntaxTree = await document.GetSyntaxTreeAsync();
-            var text = syntaxTree.GetText().Lines[line].ToString();
-            
-            return new QuickFix
+            if (location.IsInSource)
             {
-                Text = text.Trim(),
-                FileName = path,
-                Line = line + 1,
-                Column = lineSpan.StartLinePosition.Character + 1
-            };
+                var lineSpan = location.GetLineSpan();
+                var path = lineSpan.Path;
+                var document = _workspace.GetDocument(path);
+                var line = lineSpan.StartLinePosition.Line;
+                var syntaxTree = await document.GetSyntaxTreeAsync();
+                var text = syntaxTree.GetText().Lines[line].ToString();
+
+                _quickFixes.Add(new QuickFix
+                {
+                    Text = text.Trim(),
+                    FileName = path,
+                    Line = line + 1,
+                    Column = lineSpan.StartLinePosition.Character + 1
+                });
+            }
         }
     }
 }
