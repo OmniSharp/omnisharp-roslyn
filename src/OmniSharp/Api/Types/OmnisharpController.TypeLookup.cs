@@ -24,7 +24,15 @@ namespace OmniSharp
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 if (symbol != null)
                 {
-                    response.Type = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    if(symbol.Kind == SymbolKind.NamedType)
+                    {
+                        response.Type = symbol.ContainingNamespace.ToDisplayString() + "." 
+                                        + symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
+                    else
+                    {
+                        response.Type = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
 
                     if (request.IncludeDocumentation)
                     {
