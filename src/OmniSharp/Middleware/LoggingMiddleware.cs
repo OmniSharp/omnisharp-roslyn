@@ -46,8 +46,8 @@ namespace OmniSharp.Middleware
 
                 await context.Response.Body.CopyToAsync(responseBody);
 
-                _logger.WriteVerbose(context.Request.Path + ": " + context.Response.StatusCode + " " + stopwatch.ElapsedMilliseconds + "ms");
             }
+            _logger.WriteInformation(context.Request.Path + ": " + context.Response.StatusCode + " " + stopwatch.ElapsedMilliseconds + "ms");
         }
 
         private void LogRequest(HttpContext context)
