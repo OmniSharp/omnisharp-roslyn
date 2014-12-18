@@ -43,7 +43,8 @@ namespace OmniSharp
             response.CompletionText = symbol.Name;
             // TODO: Do something more intelligent here
             response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-
+            response.Description = symbol.GetDocumentationCommentXml();
+            
             return response;
         }
     }

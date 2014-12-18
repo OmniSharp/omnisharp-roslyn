@@ -4,6 +4,7 @@ using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.Logging;
+using OmniSharp.Roslyn;
 
 namespace OmniSharp.Services
 {
@@ -36,6 +37,12 @@ namespace OmniSharp.Services
                     return AssemblyMetadata.Create(moduleMetadata);
                 }
             });
+
+            var documentationFile = Path.ChangeExtension(path, ".xml");
+            if (File.Exists(documentationFile))
+            {
+                return metadata.GetReference(new XmlDocumentationProvider(documentationFile));
+            }
 
             return metadata.GetReference();
         }
