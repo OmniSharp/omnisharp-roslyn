@@ -32,12 +32,12 @@ namespace OmniSharp
                 {
                     foreach (var location in usage.Locations)
                     {
-                        quickFixes.Add(GetQuickFix(location.Location));
+                        quickFixes.Add(await GetQuickFix(location.Location));
                     }
 
                     foreach (var location in usage.Definition.Locations)
                     {
-                        quickFixes.Add(GetQuickFix(location));
+                        quickFixes.Add(await GetQuickFix(location));
                     }
                 }
 
@@ -47,13 +47,14 @@ namespace OmniSharp
             return new ObjectResult(response);
         }
 
-        private QuickFix GetQuickFix(Location location)
+        private async Task<QuickFix> GetQuickFix(Location location)
         {
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
             var document = _workspace.GetDocument(path);
             var line = lineSpan.StartLinePosition.Line;
-            var text = document.GetSyntaxTreeAsync().Result.GetText().Lines[line].ToString();
+            var syntaxTree = await document.GetSyntaxTreeAsync();
+            var text = syntaxTree.GetText().Lines[line].ToString();
             
             return new QuickFix
             {
