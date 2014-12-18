@@ -25,7 +25,7 @@ namespace OmniSharp
                 var semanticModel = await document.GetSemanticModelAsync();
                 var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 var lineSpan = symbol.Locations.First().GetMappedLineSpan();
                 response = new GotoDefinitionResponse

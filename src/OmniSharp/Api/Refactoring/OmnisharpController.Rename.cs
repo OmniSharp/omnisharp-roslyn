@@ -24,7 +24,7 @@ namespace OmniSharp
             {
                 var document = _workspace.CurrentSolution.GetDocument(documentId);
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
 
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position);
                 Solution solution = _workspace.CurrentSolution;

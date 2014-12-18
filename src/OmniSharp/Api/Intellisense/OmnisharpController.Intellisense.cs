@@ -18,14 +18,15 @@ namespace OmniSharp
             var completions = Enumerable.Empty<AutoCompleteResponse>();
             
             var documentId = _workspace.GetDocumentId(request.FileName);
+            
             if (documentId != null)
             {
                 var document = _workspace.CurrentSolution.GetDocument(documentId);
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-
+                
                 completions = symbols.Select(MakeAutoCompleteResponse);
             }
             else
