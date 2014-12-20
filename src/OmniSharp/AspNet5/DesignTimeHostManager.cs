@@ -12,6 +12,10 @@ namespace OmniSharp.AspNet5
     {
         private readonly ILogger _logger;
 
+        private readonly object _processLock = new object();
+        private Process _designTimeHostProcess;
+        private bool _stopped;
+
         public DesignTimeHostManager(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.Create<DesignTimeHostManager>();
@@ -23,54 +27,84 @@ namespace OmniSharp.AspNet5
 
         public void Start(string runtimePath, string hostId, Action<int> onConnected)
         {
-            int port = GetFreePort();
-
-            var psi = new ProcessStartInfo
+            lock (_processLock)
             {
-                FileName = Path.Combine(runtimePath, "bin", "klr"),
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                Arguments = string.Format(@"{0} {1} {2} {3}",
-                                          Path.Combine(runtimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll"),
-                                          port,
-                                          Process.GetCurrentProcess().Id,
-                                          hostId),
-            };
+                if (_stopped)
+                {
+                    return;
+                }
+
+                int port = GetFreePort();
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = Path.Combine(runtimePath, "bin", "klr"),
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardError = true,
+                    Arguments = string.Format(@"{0} {1} {2} {3}",
+                                              Path.Combine(runtimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll"),
+                                              port,
+                                              Process.GetCurrentProcess().Id,
+                                              hostId),
+                };
 
 #if ASPNET50
-            psi.EnvironmentVariables["KRE_APPBASE"] = Directory.GetCurrentDirectory();
+                psi.EnvironmentVariables["KRE_APPBASE"] = Directory.GetCurrentDirectory();
 #else
             psi.Environment["KRE_APPBASE"] = Directory.GetCurrentDirectory();
 #endif
 
-            _logger.WriteVerbose(psi.FileName + " " + psi.Arguments);
+                _logger.WriteVerbose(psi.FileName + " " + psi.Arguments);
 
-            var kreProcess = Process.Start(psi);
+                _designTimeHostProcess = Process.Start(psi);
 
-            // Wait a little bit for it to conncet before firing the callback
-            Thread.Sleep(1000);
+                // Wait a little bit for it to conncet before firing the callback
+                Thread.Sleep(1000);
 
-            if (kreProcess.HasExited)
-            {
-                // REVIEW: Should we quit here or retry?
-                _logger.WriteError(string.Format("Failed to launch DesignTimeHost. Process exited with code {0}.", kreProcess.ExitCode));
-                return;
+                if (_designTimeHostProcess.HasExited)
+                {
+                    // REVIEW: Should we quit here or retry?
+                    _logger.WriteError(string.Format("Failed to launch DesignTimeHost. Process exited with code {0}.", _designTimeHostProcess.ExitCode));
+                    return;
+                }
+
+                _logger.WriteInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, _designTimeHostProcess.Id));
+
+                _designTimeHostProcess.EnableRaisingEvents = true;
+                _designTimeHostProcess.Exited += (sender, e) =>
+                {
+                    _logger.WriteWarning("Design time host process ended");
+
+                    Thread.Sleep(DelayBeforeRestart);
+
+                    Start(runtimePath, hostId, onConnected);
+                };
+
+                onConnected(port);
             }
+        }
 
-            _logger.WriteInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, kreProcess.Id));
-
-            kreProcess.EnableRaisingEvents = true;
-            kreProcess.Exited += (sender, e) =>
+        public void Stop()
+        {
+            lock (_processLock)
             {
-                _logger.WriteWarning("Process ended. Restarting");
+                if (_stopped)
+                {
+                    return;
+                }
 
-                Thread.Sleep(DelayBeforeRestart);
+                _stopped = true;
 
-                Start(runtimePath, hostId, onConnected);
-            };
+                if (_designTimeHostProcess != null)
+                {
+                    _logger.WriteInformation("Shutting down DesignTimeHost");
 
-            onConnected(port);
+                    _designTimeHostProcess.Kill();
+                    _designTimeHostProcess.WaitForExit(1000);
+                    _designTimeHostProcess = null;
+                }
+            }
         }
 
         private static int GetFreePort()
