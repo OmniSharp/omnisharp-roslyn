@@ -11,7 +11,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("findimplementations")]
-        public async Task<IActionResult> FindImplementations([FromBody]Request request)
+        public async Task<QuickFixResponse> FindImplementations([FromBody]Request request)
         {
             _workspace.EnsureBufferUpdated(request);
 
@@ -40,7 +40,7 @@ namespace OmniSharp
                                                             .ThenBy(q => q.Column));
             }
             
-            return new ObjectResult(response);
+            return response;
         }
     }
 }

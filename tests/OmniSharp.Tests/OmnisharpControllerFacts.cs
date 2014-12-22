@@ -1,13 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
-using Xunit;
 using Microsoft.CodeAnalysis.Text;
-using System;
+using Xunit;
 
 namespace OmniSharp.Tests
 {
     public class OmnisharpControllerFacts
     {
-
         private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out OmnisharpController controller, out DocumentInfo document, string filename, string contents)
         {
             workspace = new OmnisharpWorkspace();
@@ -102,7 +100,6 @@ namespace OmniSharp.Tests
             });
             sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
             Assert.Equal("interface C {}", sourceText.ToString());
-
         }
     }
 }
