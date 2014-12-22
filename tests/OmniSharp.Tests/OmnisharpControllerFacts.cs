@@ -42,7 +42,7 @@ namespace OmniSharp.Tests
             sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            controller.UpdateBuffer(new Models.Request() { Buffer = "// c" });
+            controller.UpdateBuffer(new Models.Request() { Buffer = "// c", FileName = "some_other_file.cs" });
             sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
