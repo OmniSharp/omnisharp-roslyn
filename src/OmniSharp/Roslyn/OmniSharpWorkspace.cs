@@ -79,10 +79,9 @@ namespace OmniSharp
                 return;
             }
 
+            var sourceText = SourceText.From(request.Buffer);
             foreach (var documentId in CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
             {
-                var buffer = Encoding.UTF8.GetBytes(request.Buffer);
-                var sourceText = SourceText.From(new MemoryStream(buffer), encoding: Encoding.UTF8);
                 OnDocumentChanged(documentId, sourceText);
             }
         }
