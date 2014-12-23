@@ -14,7 +14,7 @@ namespace OmniSharp.Tests
 
             Assert.Equal(@"foo.sln", environment.SolutionFilePath);
             Assert.Equal(@"", environment.Path);
-            Assert.Equal(1000, environment.Port);
+            Assert.Equal(10000, environment.Port);
         }
 
         [Fact]
