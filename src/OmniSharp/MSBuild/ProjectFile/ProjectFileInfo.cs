@@ -105,7 +105,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 // isn't fully implemented
 #pragma warning disable CS0618
                 var engine = Engine.GlobalEngine;
-                // engine.DefaultToolsVersion = "4.0";
+                engine.DefaultToolsVersion = "4.0";
 #pragma warning restore CS0618
                 // engine.RegisterLogger(new ConsoleLogger());
 
