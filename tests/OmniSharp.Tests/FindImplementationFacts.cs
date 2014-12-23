@@ -51,5 +51,25 @@ namespace OmniSharp.Tests
             Assert.Equal("SomeMethod", symbol.Name);
             Assert.Equal("SomeClass", symbol.ContainingType.Name);
         }
+
+        [Fact]
+        public async void CanFindOverride()
+        {
+            var source = @"
+                public class BaseClass { public abstract Some$Method() {} }
+                public class SomeClass : BaseClass
+                {
+                    public override SomeMethod() {}
+                }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var controller = new OmnisharpController(workspace);
+            var request = CreateRequest(source);
+            var implementations = await controller.FindImplementations(request);
+            var result = implementations.QuickFixes.First();
+            var symbol = await TestHelpers.SymbolFromQuickFix(workspace, result);
+            Assert.Equal("SomeMethod", symbol.Name);
+            Assert.Equal("SomeClass", symbol.ContainingType.Name);
+        }
     }
 }

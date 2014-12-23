@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
@@ -27,20 +28,26 @@ namespace OmniSharp
 
                 var quickFixes = new List<QuickFix>();
 
-                foreach (var implementation in implementations)
-                {
-                    foreach (var location in implementation.Locations)
-                    {
-                        AddQuickFix(quickFixes, location);
-                    }
-                }
-
+                AddQuickFixes(quickFixes, implementations);
+                var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution); 
+                AddQuickFixes(quickFixes, overrides);
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));
             }
             
             return response;
+        }
+
+        private void AddQuickFixes(ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols)
+        {
+            foreach (var symbol in symbols)
+            {
+                foreach (var location in symbol.Locations)
+                {
+                    AddQuickFix(quickFixes, location);
+                }
+            }
         }
     }
 }
