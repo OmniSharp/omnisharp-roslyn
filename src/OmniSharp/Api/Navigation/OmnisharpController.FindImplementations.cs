@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
@@ -24,13 +26,17 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
-
                 var quickFixes = new List<QuickFix>();
-
+                
+                var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
                 AddQuickFixes(quickFixes, implementations);
+
                 var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution); 
                 AddQuickFixes(quickFixes, overrides);
+
+                var derivedTypes = await GetDerivedTypes(symbol);
+                AddQuickFixes(quickFixes, derivedTypes);
+
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));
@@ -41,12 +47,44 @@ namespace OmniSharp
 
         private void AddQuickFixes(ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols)
         {
-            foreach (var symbol in symbols)
+            foreach(var symbol in symbols)
             {
-                foreach (var location in symbol.Locations)
+                foreach(var location in symbol.Locations)
                 {
                     AddQuickFix(quickFixes, location);
                 }
+            }
+        }
+
+        private async Task<IEnumerable<ISymbol>> GetDerivedTypes(ISymbol typeSymbol)
+        {
+            var derivedTypes = new List<INamedTypeSymbol>();
+            if(typeSymbol is INamedTypeSymbol)
+            {
+                var projects = _workspace.CurrentSolution.Projects;
+                foreach(var project in projects)
+                {
+                    var compilation = await project.GetCompilationAsync();
+                    var types = compilation.GlobalNamespace.GetTypeMembers();
+                    foreach(var type in types)
+                    {
+                        if(GetBaseTypes(type).Contains(typeSymbol))
+                        {
+                            derivedTypes.Add(type);
+                        }
+                    }
+                }
+            }
+            return derivedTypes;
+        }
+        
+        private IEnumerable<INamedTypeSymbol> GetBaseTypes(ITypeSymbol type)
+        {
+            var current = type.BaseType;
+            while (current != null)
+            {
+                yield return current;
+                current = current.BaseType;
             }
         }
     }

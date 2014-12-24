@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
@@ -68,6 +68,16 @@ namespace OmniSharp.Tests
             var position = sourceText.Lines.GetPosition(new LinePosition(result.Line - 1, result.Column - 1));
             var semanticModel = await document.GetSemanticModelAsync();
             return SymbolFinder.FindSymbolAtPosition(semanticModel, position, workspace);
+        }
+
+        public static async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixes(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
+        {
+            var symbols = new List<ISymbol>();
+            foreach(var quickfix in quickFixes)
+            {
+                symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix)); 
+            }
+            return symbols;
         }
     }
 }
