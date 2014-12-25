@@ -68,18 +68,6 @@ namespace OmniSharp.Tests
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        [Fact]
-        public async void CanFindSubclassForTypeNotInSource()
-        {
-            var source = @"
-                public class SomeClass : str$ing {}";
-
-            var implementations = await FindImplementations(source);
-            var implementation = implementations.First();
-
-            Assert.Equal("SomeClass", implementation.Name);
-        }
-
         private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
