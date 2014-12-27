@@ -10,10 +10,10 @@ namespace OmniSharp.Tests
         [Fact]
         public void OmnisharpEnvironmentSetsPathsCorrectly()
         {
-            var environment = new OmnisharpEnvironment(@"c:\foo\src\foo.sln", 1000, TraceType.Information);
+            var environment = new OmnisharpEnvironment(@"foo.sln", 1000, TraceType.Information);
 
-            Assert.Equal(@"c:\foo\src\foo.sln", environment.SolutionFilePath);
-            Assert.Equal(@"c:\foo\src", environment.Path);
+            Assert.Equal(@"foo.sln", environment.SolutionFilePath);
+            Assert.Equal(@"", environment.Path);
             Assert.Equal(1000, environment.Port);
         }
 

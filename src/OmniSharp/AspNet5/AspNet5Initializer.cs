@@ -16,6 +16,7 @@ using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
+using Microsoft.Framework.Runtime;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -30,12 +31,13 @@ namespace OmniSharp.AspNet5
         private readonly ILogger _logger;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly DesignTimeHostManager _designTimeHostManager;
-
+        
         public AspNet5Initializer(OmnisharpWorkspace workspace,
                                   IOmnisharpEnvironment env,
                                   IOptions<OmniSharpOptions> optionsAccessor,
                                   ILoggerFactory loggerFactory,
-                                  IMetadataFileReferenceCache metadataFileReferenceCache)
+                                  IMetadataFileReferenceCache metadataFileReferenceCache,
+                                  IApplicationShutdown shutdown)
         {
             _workspace = workspace;
             _env = env;
@@ -43,6 +45,8 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5Initializer>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
+
+            shutdown.ShutdownRequested.Register(OnShutdown);
         }
 
         public void Initalize()
@@ -344,6 +348,11 @@ namespace OmniSharp.AspNet5
             //        TriggerDependeees(context, frameworkProject.ProjectState.Path);
             //    }
             //};
+        }
+
+        private void OnShutdown()
+        {
+            _designTimeHostManager.Stop();
         }
 
         private static void TriggerDependeees(AspNet5Context context, string path)
