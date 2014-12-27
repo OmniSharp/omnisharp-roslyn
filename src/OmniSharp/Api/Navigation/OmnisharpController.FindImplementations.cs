@@ -27,7 +27,7 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                var  quickFixes = new List<QuickFix>();
+                var quickFixes = new List<QuickFix>();
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
                 AddQuickFixes(quickFixes, implementations);
