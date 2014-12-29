@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using System.Reflection;
 
 namespace OmniSharp.Tests
 {
@@ -47,18 +49,27 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
         {
             var workspace = new OmnisharpWorkspace();
-
-            var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
-                                                 "ProjectName", "AssemblyName", LanguageNames.CSharp, "project.json");
+            var projectId = ProjectId.CreateNewId();
+            var versionStamp = VersionStamp.Create();
+            var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
+            var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
+            var references = new [] { mscorlib, systemCore };
+            var projectInfo = ProjectInfo.Create(projectId, versionStamp,
+                                                 "ProjectName", "AssemblyName",
+                                                 LanguageNames.CSharp, "project.json", metadataReferences: references);
 
             var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), fileName,
                 null, SourceCodeKind.Regular,
-                TextLoader.From(TextAndVersion.Create(SourceText.From(source), VersionStamp.Create())),
-                fileName);
+                TextLoader.From(TextAndVersion.Create(SourceText.From(source), versionStamp)), fileName);
 
             workspace.AddProject(projectInfo);
             workspace.AddDocument(document);
             return workspace;
+        }
+
+        private static Assembly AssemblyFromType(Type type)
+        {
+            return type.GetTypeInfo().Assembly;
         }
 
         public static async Task<ISymbol> SymbolFromQuickFix(OmnisharpWorkspace workspace, QuickFix result)
