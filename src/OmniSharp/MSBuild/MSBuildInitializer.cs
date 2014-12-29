@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
@@ -176,6 +177,32 @@ namespace OmniSharp.MSBuild
                 foreach (var unused in unusedProjectReferences)
                 {
                     _workspace.RemoveProjectReference(project.Id, unused);
+                }
+
+                var unusedAnalyzers = new Dictionary<string, AnalyzerReference>(project.AnalyzerReferences.ToDictionary(a => a.FullPath));
+
+                foreach (var analyzerPath in projectFileInfo.Analyzers)
+                {
+                    if (!File.Exists(analyzerPath))
+                    {
+                        _logger.WriteWarning(string.Format("Unable to resolve assembly '{0}'", analyzerPath));
+                    }
+                    else
+                    {
+                        if (unusedAnalyzers.Remove(analyzerPath))
+                        {
+                            continue;
+                        }
+#if ASPNET50
+                        var analyzerReference = new AnalyzerFileReference(analyzerPath);
+                        project.AddAnalyzerReference(analyzerReference);
+#endif
+                    }
+                }
+
+                foreach (var analyzerReference in unusedAnalyzers.Values)
+                {
+                    project.RemoveAnalyzerReference(analyzerReference);
                 }
 
                 var unusedReferences = new HashSet<MetadataReference>(project.MetadataReferences);

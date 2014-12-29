@@ -39,9 +39,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> SourceFiles { get; private set; }
 
-        public IList<string> References { get; set; }
+        public IList<string> References { get; private set; }
 
         public IList<string> ProjectReferences { get; private set; }
+
+        public IList<string> Analyzers { get; private set; }
 
         private static bool IsMono
         {
@@ -96,6 +98,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 projectFileInfo.ProjectReferences =
                     projectInstance.GetItems("ProjectReference")
+                                   .Select(p => p.GetMetadataValue("FullPath"))
+                                   .ToList();
+
+                projectFileInfo.Analyzers =
+                    projectInstance.GetItems("Analyzer")
                                    .Select(p => p.GetMetadataValue("FullPath"))
                                    .ToList();
             }
@@ -153,6 +160,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                     .ToList();
 
                 projectFileInfo.ProjectReferences = itemsLookup["ProjectReference"]
+                    .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
+                    .ToList();
+
+                projectFileInfo.Analyzers = itemsLookup["Analyzer"]
                     .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                     .ToList();
             }
