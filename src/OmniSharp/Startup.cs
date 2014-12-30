@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
-using Microsoft.AspNet.Http;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -38,6 +37,10 @@ namespace OmniSharp
             // Add the omnisharp workspace to the container
             services.AddInstance(Workspace);
 
+            // Add the AspNet5Context
+            var context = new AspNet5Context();
+            services.AddInstance(context);
+
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
@@ -45,7 +48,10 @@ namespace OmniSharp
             // Add the initializer for ASP.NET 5 projects
             services.AddSingleton<IWorkspaceInitializer, AspNet5Initializer>();
             services.AddSingleton<IWorkspaceInitializer, MSBuildInitializer>();
-            
+
+            // Add test command providers
+            services.AddSingleton<ITestCommandProvider, AspNet5TestCommandProvider>();
+
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
         }
@@ -54,9 +60,9 @@ namespace OmniSharp
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env)
         {
-            loggerFactory.AddConsole((category, type) => 
+            loggerFactory.AddConsole((category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase)) && 
+                 string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase)) &&
                 env.TraceType <= type);
 
             var logger = loggerFactory.Create<Startup>();

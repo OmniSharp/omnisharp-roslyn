@@ -27,6 +27,7 @@ namespace OmniSharp.AspNet5
         public Project()
         {
             ProjectsByFramework = new ConcurrentDictionary<string, FrameworkProject>();
+            Commands = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
 
         public override string ToString()

@@ -10,7 +10,7 @@ namespace OmniSharp.Tests
     public class FindImplementationFacts
     {
         [Fact]
-        public async void CanFindInterfaceTypeImplementation()
+        public async Task CanFindInterfaceTypeImplementation()
         {
             var source = @"
                 public interface Som$eInterface {}
@@ -23,7 +23,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async void CanFindInterfaceMethodImplementation()
+        public async Task CanFindInterfaceMethodImplementation()
         {
             var source = @"
                 public interface SomeInterface { void Some$Method(); }
@@ -33,13 +33,12 @@ namespace OmniSharp.Tests
 
             var implementations = await FindImplementations(source);
             var implementation = implementations.First();
-
             Assert.Equal("SomeMethod", implementation.Name);
             Assert.Equal("SomeClass", implementation.ContainingType.Name);
         }
 
         [Fact]
-        public async void CanFindOverride()
+        public async Task CanFindOverride()
         {
             var source = @"
                 public class BaseClass { public abstract Some$Method() {} }
@@ -56,7 +55,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async void CanFindSubclass()
+        public async Task CanFindSubclass()
         {
             var source = @"
                 public class BaseClass {}

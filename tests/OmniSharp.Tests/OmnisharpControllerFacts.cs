@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
 
@@ -24,7 +25,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async void UpdateBuffer_HandlesVoidRequest()
+        public async Task UpdateBuffer_HandlesVoidRequest()
         {
             OmnisharpWorkspace workspace;
             OmnisharpController controller;
@@ -55,7 +56,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async void ChangeBuffer_InsertRemoveChanges()
+        public async Task ChangeBuffer_InsertRemoveChanges()
         {
             OmnisharpWorkspace workspace;
             OmnisharpController controller;

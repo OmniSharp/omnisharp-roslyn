@@ -49,7 +49,7 @@ namespace OmniSharp.Tests
             var workspace = new OmnisharpWorkspace();
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
-                "ProjectName", "AssemblyName", LanguageNames.CSharp);
+                                                 "ProjectName", "AssemblyName", LanguageNames.CSharp, "project.json");
 
             var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), fileName,
                 null, SourceCodeKind.Regular,

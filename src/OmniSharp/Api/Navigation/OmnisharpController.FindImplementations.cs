@@ -30,7 +30,6 @@ namespace OmniSharp
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
                 AddQuickFixes(quickFixes, implementations);
-
                 var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
                 AddQuickFixes(quickFixes, overrides);
 

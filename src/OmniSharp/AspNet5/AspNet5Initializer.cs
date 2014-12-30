@@ -31,13 +31,15 @@ namespace OmniSharp.AspNet5
         private readonly ILogger _logger;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly DesignTimeHostManager _designTimeHostManager;
+        private readonly AspNet5Context _context;
         
         public AspNet5Initializer(OmnisharpWorkspace workspace,
                                   IOmnisharpEnvironment env,
                                   IOptions<OmniSharpOptions> optionsAccessor,
                                   ILoggerFactory loggerFactory,
                                   IMetadataFileReferenceCache metadataFileReferenceCache,
-                                  IApplicationShutdown shutdown)
+                                  IApplicationShutdown shutdown,
+                                  AspNet5Context context)
         {
             _workspace = workspace;
             _env = env;
@@ -45,16 +47,16 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5Initializer>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
-
+            _context = context;
+            
             shutdown.ShutdownRequested.Register(OnShutdown);
         }
 
         public void Initalize()
         {
-            var context = new AspNet5Context();
-            context.RuntimePath = GetRuntimePath();
+            _context.RuntimePath = GetRuntimePath();
             
-            if (!ScanForProjects(context))
+            if (!ScanForProjects(_context))
             {
                 // No ASP.NET 5 projects found so do nothing
                 _logger.WriteInformation("No ASP.NET 5 projects found");
@@ -63,7 +65,7 @@ namespace OmniSharp.AspNet5
 
             var wh = new ManualResetEventSlim();
 
-            _designTimeHostManager.Start(context.RuntimePath, context.HostId, port =>
+            _designTimeHostManager.Start(_context.RuntimePath, _context.HostId, port =>
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
@@ -72,11 +74,11 @@ namespace OmniSharp.AspNet5
 
                 _logger.WriteInformation("Connected");
 
-                context.Connection = new ProcessingQueue(networkStream, _logger);
+                _context.Connection = new ProcessingQueue(networkStream, _logger);
 
-                context.Connection.OnReceive += m =>
+                _context.Connection.OnReceive += m =>
                 {
-                    var project = context.Projects[m.ContextId];
+                    var project = _context.Projects[m.ContextId];
 
                     if (m.MessageType == "ProjectInformation")
                     {
@@ -112,10 +114,11 @@ namespace OmniSharp.AspNet5
                                         VersionStamp.Create(),
                                         val.Name + "+" + frameworkData.ShortName,
                                         val.Name,
-                                        LanguageNames.CSharp);
+                                        LanguageNames.CSharp,
+                                        project.Path);
 
                                 _workspace.AddProject(projectInfo);
-                                context.WorkspaceMapping[id] = frameworkProject;
+                                _context.WorkspaceMapping[id] = frameworkProject;
                             }
 
                             lock (frameworkProject.PendingProjectReferences)
@@ -188,9 +191,9 @@ namespace OmniSharp.AspNet5
                                 continue;
                             }
 
-                            var projectReferenceContextId = context.ProjectContextMapping[projectReference.Path];
+                            var projectReferenceContextId = _context.ProjectContextMapping[projectReference.Path];
 
-                            var referencedProject = context.Projects[projectReferenceContextId];
+                            var referencedProject = _context.Projects[projectReferenceContextId];
 
                             var referencedFrameworkProject = referencedProject.ProjectsByFramework.GetOrAdd(projectReference.Framework.FrameworkName,
                                 framework =>
@@ -323,10 +326,10 @@ namespace OmniSharp.AspNet5
                 };
 
                 // Start the message channel
-                context.Connection.Start();
+                _context.Connection.Start();
 
                 // Initialize the ASP.NET 5 projects
-                Initialize(context);
+                Initialize(_context);
             });
 
             wh.Wait();

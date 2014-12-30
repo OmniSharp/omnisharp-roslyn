@@ -25,7 +25,7 @@ namespace OmniSharp
             };
         }
 
-        private async void AddQuickFix(ICollection<QuickFix> quickFixes, Location location)
+        private async Task AddQuickFix(ICollection<QuickFix> quickFixes, Location location)
         {
             if (location.IsInSource)
             {

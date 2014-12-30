@@ -1,9 +1,6 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
@@ -19,7 +16,6 @@ namespace OmniSharp
             var response = new CodeFormatResponse();
 
             var documentId = _workspace.GetDocumentId(request.FileName);
-
             if (documentId != null)
             {
                 var document = _workspace.CurrentSolution.GetDocument(documentId);
@@ -28,7 +24,7 @@ namespace OmniSharp
                 var model = await document.GetSemanticModelAsync();
 
                 document = await Formatter.FormatAsync(document);
-
+                
                 if (_workspace.TryApplyChanges(document.Project.Solution))
                 {
                     response.Buffer = (await document.GetTextAsync()).ToString();
