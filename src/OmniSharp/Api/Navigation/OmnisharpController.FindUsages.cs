@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
@@ -27,21 +28,23 @@ namespace OmniSharp
                 var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
                 var usages = await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
 
-                var quickFixes = new List<QuickFix>();
+                var locations = new HashSet<Location>();
 
                 foreach (var usage in usages)
                 {
                     foreach (var location in usage.Locations)
                     {
-                        AddQuickFix(quickFixes, location.Location);
+                        locations.Add(location.Location);
                     }
 
                     foreach (var location in usage.Definition.Locations)
                     {
-                        AddQuickFix(quickFixes, location);
+                        locations.Add(location);
                     }
                 }
+                var quickFixTasks = locations.Select(async l => await GetQuickFix(l));
 
+                var quickFixes = await Task.WhenAll(quickFixTasks);
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));
