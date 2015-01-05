@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
@@ -27,7 +28,7 @@ namespace OmniSharp
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
  
-                foreach (var symbol in symbols.Where(s => s.Name.ToLower().StartsWith(request.WordToComplete.ToLower())))
+                foreach (var symbol in symbols.Where(s => s.Name.StartsWith(request.WordToComplete, StringComparison.OrdinalIgnoreCase)))
                 {
                     completions.Add(MakeAutoCompleteResponse(request, symbol));
                     var typeSymbol = symbol as INamedTypeSymbol;
