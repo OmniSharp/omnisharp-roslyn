@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -15,24 +16,20 @@ namespace OmniSharp
         {
             _workspace.EnsureBufferUpdated(request);
 
-            var completions = Enumerable.Empty<AutoCompleteResponse>();
-            
-            var document = _workspace.GetDocument(request.FileName);
-            
-            if (document != null)
+            var completions = new List<AutoCompleteResponse>();
+
+            var documents = _workspace.GetDocuments(request.FileName);
+
+            foreach (var document in documents)
             {
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-                
-                completions = symbols.Select(MakeAutoCompleteResponse);
-            }
-            else
-            {
-                return new HttpNotFoundResult();
-            }
 
+                completions.AddRange(symbols.Select(MakeAutoCompleteResponse));
+            }
+            
             return new ObjectResult(completions);
         }
 
@@ -43,7 +40,7 @@ namespace OmniSharp
             // TODO: Do something more intelligent here
             response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             response.Description = symbol.GetDocumentationCommentXml();
-            
+
             return response;
         }
     }
