@@ -16,9 +16,9 @@ namespace OmniSharp
 
             var quickFixes = new List<QuickFix>();
 
-            var document = _workspace.GetDocument(request.FileName);
+            var documents = _workspace.GetDocuments(request.FileName);
 
-            if (document != null)
+            foreach (var document in documents)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
 

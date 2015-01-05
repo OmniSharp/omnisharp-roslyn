@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -90,6 +91,11 @@ namespace OmniSharp
         {
             var documentIds = CurrentSolution.GetDocumentIdsWithFilePath(filePath);
             return documentIds.FirstOrDefault();
+        }
+        
+        public IEnumerable<Document> GetDocuments(string filePath)
+        {
+            return CurrentSolution.GetDocumentIdsWithFilePath(filePath).Select(id => CurrentSolution.GetDocument(id));
         }
 
         public Document GetDocument(string filePath)
