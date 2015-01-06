@@ -169,6 +169,24 @@ namespace OmniSharp.Tests
             ContainsSnippet("System$0", completions);
         }
 
+        [Fact]
+        public async Task Can_complete_variable()
+        {
+            var source = @"
+                public class Class1
+                {
+                    public Class1()
+                    {
+                        var aVariable = 1;
+                        av$
+                    }
+                }
+            ";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsSnippet("aVariable$0", completions);
+        }
+
         private void ContainsSnippet(string expected, IEnumerable<string> completions)
         {
             if (!completions.Contains(expected))

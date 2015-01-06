@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+
 public class SnippetGenerator
 {
     public SnippetGenerator(bool includeMarkers)
@@ -21,7 +22,8 @@ public class SnippetGenerator
                                             ^ SymbolDisplayMemberOptions.IncludeContainingType
                                             ^ SymbolDisplayMemberOptions.IncludeType);
 
-        var methodSymbol = symbol as IMethodSymbol;
+        var symbolKind = symbol.Kind;
+        
         if (IsConstructor(symbol))
         {
             // only the containing type contains the type parameters
@@ -33,9 +35,13 @@ public class SnippetGenerator
         }
         else
         {
-            if (methodSymbol != null)
+            if (symbol.Kind == SymbolKind.Method)
             {
-                RenderMethodSymbol(methodSymbol);
+                RenderMethodSymbol(symbol as IMethodSymbol);
+            }
+            else if (symbol.Kind == SymbolKind.Local)
+            {
+                _sb.Append(symbol.Name);
             }
             else
             {
