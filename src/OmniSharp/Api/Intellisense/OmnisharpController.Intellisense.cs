@@ -27,7 +27,7 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
- 
+                
                 foreach (var symbol in symbols.Where(s => s.Name.StartsWith(request.WordToComplete, StringComparison.OrdinalIgnoreCase)))
                 {
                     completions.Add(MakeAutoCompleteResponse(request, symbol));
@@ -49,8 +49,10 @@ namespace OmniSharp
         {
             var response = new AutoCompleteResponse();
             response.CompletionText = symbol.Name;
+            
             // TODO: Do something more intelligent here
-            response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+                                           + " - Contained in " + symbol.ContainingAssembly.Name;
 
             if (request.WantDocumentationForEveryCompletionResult)
             {
@@ -63,6 +65,12 @@ namespace OmniSharp
                 if (methodSymbol != null)
                 {
                     response.ReturnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                }
+
+                var propertySymbol = symbol as IPropertySymbol;
+                if (symbol is IPropertySymbol)
+                {
+                    response.ReturnType = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
                 }
             }
 
