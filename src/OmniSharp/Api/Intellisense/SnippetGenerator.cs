@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
-
 public class SnippetGenerator
 {
     public SnippetGenerator(bool includeMarkers)

@@ -160,6 +160,15 @@ namespace OmniSharp.Tests
 
         }
 
+        [Fact]
+        public async Task Can_complete_namespace()
+        {
+            var source = @"using Sys$";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsSnippet("System$0", completions);
+        }
+
         private void ContainsSnippet(string expected, IEnumerable<string> completions)
         {
             if (!completions.Contains(expected))

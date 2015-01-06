@@ -1,5 +1,3 @@
-using OmniSharp;
-
 namespace OmniSharp.Models
 {
     public class TestCommandRequest : Request

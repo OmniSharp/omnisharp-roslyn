@@ -49,10 +49,9 @@ namespace OmniSharp
         {
             var response = new AutoCompleteResponse();
             response.CompletionText = symbol.Name;
-            
+
             // TODO: Do something more intelligent here
-            response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
-                                           + " - Contained in " + symbol.ContainingAssembly.Name;
+            response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
             if (request.WantDocumentationForEveryCompletionResult)
             {
