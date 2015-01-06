@@ -29,12 +29,12 @@ namespace OmniSharp
                 var quickFixes = new List<QuickFix>();
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
-                AddQuickFixes(quickFixes, implementations);
+                await AddQuickFixes(quickFixes, implementations);
                 var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
-                AddQuickFixes(quickFixes, overrides);
+                await AddQuickFixes(quickFixes, overrides);
 
                 var derivedTypes = await GetDerivedTypes(symbol);
-                AddQuickFixes(quickFixes, derivedTypes);
+                await AddQuickFixes(quickFixes, derivedTypes);
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
@@ -44,13 +44,13 @@ namespace OmniSharp
             return response;
         }
 
-        private void AddQuickFixes(ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols)
+        private async Task AddQuickFixes(ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols)
         {
             foreach (var symbol in symbols)
             {
                 foreach (var location in symbol.Locations)
                 {
-                    AddQuickFix(quickFixes, location);
+                    await AddQuickFix(quickFixes, location);
                 }
             }
         }
