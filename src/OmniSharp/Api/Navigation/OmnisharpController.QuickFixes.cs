@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using System.Collections.Generic;
@@ -9,6 +10,9 @@ namespace OmniSharp
     {
         private async Task<QuickFix> GetQuickFix(Location location)
         {
+            if (!location.IsInSource)
+                throw new Exception("Location is not in the source tree");
+            
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
             var document = _workspace.GetDocument(path);

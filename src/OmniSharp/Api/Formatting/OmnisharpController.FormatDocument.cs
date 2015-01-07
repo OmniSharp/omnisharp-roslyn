@@ -22,9 +22,7 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
-
                 document = await Formatter.FormatAsync(document);
-                
                 if (_workspace.TryApplyChanges(document.Project.Solution))
                 {
                     response.Buffer = (await document.GetTextAsync()).ToString();
