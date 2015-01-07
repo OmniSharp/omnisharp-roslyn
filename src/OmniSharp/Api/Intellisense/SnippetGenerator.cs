@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp
 {
@@ -80,6 +82,10 @@ namespace OmniSharp
             var parts = methodSymbol.ToDisplayParts(_format);
             // render everything starting from the opening parens
             RenderDisplayParts(methodSymbol, parts.SkipWhile(p => p.ToString() != "("));
+            if (methodSymbol.ReturnsVoid)
+            {
+                _sb.Append(";");
+            }
         }
 
         private IEnumerable<ISymbol> NonInferredTypeArguments(IMethodSymbol methodSymbol)

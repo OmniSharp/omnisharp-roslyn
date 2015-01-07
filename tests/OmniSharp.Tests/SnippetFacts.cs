@@ -187,6 +187,24 @@ namespace OmniSharp.Tests
             ContainsSnippet("aVariable$0", completions);
         }
 
+        [Fact]
+        public async Task Void_methods_end_with_semicolons()
+        {
+            var source = @"
+                using System;
+                public class Class1
+                {
+                    public Class1()
+                    {
+                        Console.WriteLi$
+                    }
+                }
+            ";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsSnippet("WriteLine();$0", completions);
+        }
+
         private void ContainsSnippet(string expected, IEnumerable<string> completions)
         {
             if (!completions.Contains(expected))
