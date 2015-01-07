@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp
 {
@@ -42,7 +41,7 @@ namespace OmniSharp
                 {
                     RenderMethodSymbol(symbol as IMethodSymbol);
                 }
-                else if (symbol.Kind == SymbolKind.Local)
+                else if (symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter)
                 {
                     _sb.Append(symbol.Name);
                 }

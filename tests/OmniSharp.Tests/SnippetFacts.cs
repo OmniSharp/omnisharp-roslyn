@@ -205,6 +205,27 @@ namespace OmniSharp.Tests
             ContainsSnippet("WriteLine();$0", completions);
         }
 
+        [Fact]
+        public async Task Can_complete_parameter()
+        {
+            var source = @"
+                public class Class1
+                {
+                    public Class1()
+                    {
+                    }
+                    public Class2(Class1 class1)
+                    {
+                        clas$
+                    }
+                }
+            ";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsSnippet("class1$0", completions);
+        }
+
+
         private void ContainsSnippet(string expected, IEnumerable<string> completions)
         {
             if (!completions.Contains(expected))
