@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -20,7 +19,6 @@ namespace OmniSharp
             {
                 var document = _workspace.CurrentSolution.GetDocument(documentId);
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 document = await Formatter.FormatAsync(document);
                 if (_workspace.TryApplyChanges(document.Project.Solution))
