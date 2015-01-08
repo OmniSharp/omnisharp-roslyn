@@ -26,6 +26,11 @@ namespace OmniSharp
                 var document = _workspace.CurrentSolution.GetDocument(documentId);
                 document = await Formatter.FormatAsync(document, options);
                 response.Buffer = (await document.GetTextAsync()).ToString();
+                
+                // workaround: https://roslyn.codeplex.com/workitem/484
+                if(_options.FormattingOptions.NewLine == "\n") {
+                    response.Buffer = response.Buffer.Replace("\r\n", "\n");
+                }
             }
             else
             {
