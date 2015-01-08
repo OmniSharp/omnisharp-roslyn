@@ -70,7 +70,7 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace);
+            var controller = new OmnisharpController(workspace, null);
             var request = CreateRequest(source);
             var implementations = await controller.FindImplementations(request);
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
