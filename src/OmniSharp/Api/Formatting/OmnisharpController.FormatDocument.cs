@@ -12,12 +12,12 @@ namespace OmniSharp
         public async Task<IActionResult> CodeFormat([FromBody]Request request)
         {
             _workspace.EnsureBufferUpdated(request);
-            
+
             var options = _workspace.Options
                 .WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, _options.FormattingOptions.NewLine)
                 .WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, _options.FormattingOptions.UseTabs)
                 .WithChangedOption(FormattingOptions.TabSize, LanguageNames.CSharp, _options.FormattingOptions.TabSize);
-            
+
             var response = new CodeFormatResponse();
 
             var documentId = _workspace.GetDocumentId(request.FileName);
@@ -26,9 +26,10 @@ namespace OmniSharp
                 var document = _workspace.CurrentSolution.GetDocument(documentId);
                 document = await Formatter.FormatAsync(document, options);
                 response.Buffer = (await document.GetTextAsync()).ToString();
-                
+
                 // workaround: https://roslyn.codeplex.com/workitem/484
-                if(_options.FormattingOptions.NewLine == "\n") {
+                if (_options.FormattingOptions.NewLine == "\n")
+                {
                     response.Buffer = response.Buffer.Replace("\r\n", "\n");
                 }
             }
