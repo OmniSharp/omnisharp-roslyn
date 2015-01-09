@@ -45,7 +45,7 @@ namespace OmniSharp.Tests
                      }";
             
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("Get<${1:SomeType}>()$0", completions);
+            ContainsSnippet("Get<${1:SomeType}>()$0 : string", completions);
         }
 
         [Fact]
@@ -63,8 +63,8 @@ namespace OmniSharp.Tests
                 }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("First()$0", completions);
-            ContainsSnippet("FirstOrDefault(${1:Func<string, bool> predicate})$0", completions);
+            ContainsSnippet("First()$0 : string", completions);
+            ContainsSnippet("FirstOrDefault(${1:Func<string, bool> predicate})$0 : string", completions);
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace OmniSharp.Tests
                      }";
             
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("Select(${1:Func<KeyValuePair<string, object>, TResult> selector})$0", completions);
+            ContainsSnippet("Select(${1:Func<KeyValuePair<string, object>, TResult> selector})$0 : IEnumerable<TResult>", completions);
         }
 
         [Fact]
@@ -100,7 +100,7 @@ namespace OmniSharp.Tests
                  }";
             
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("someField$0", completions);
+            ContainsSnippet("someField$0 : int", completions);
         }
 
         [Fact]
@@ -184,7 +184,7 @@ namespace OmniSharp.Tests
             ";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("aVariable$0", completions);
+            ContainsSnippet("aVariable$0 : int", completions);
         }
 
         [Fact]
@@ -202,7 +202,7 @@ namespace OmniSharp.Tests
             ";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("WriteLine();$0", completions);
+            ContainsSnippet("WriteLine();$0 : void", completions);
         }
 
         [Fact]
@@ -222,7 +222,7 @@ namespace OmniSharp.Tests
             ";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsSnippet("class1$0", completions);
+            ContainsSnippet("class1$0 : Class1", completions);
         }
 
 
@@ -246,7 +246,17 @@ namespace OmniSharp.Tests
             var request = CreateRequest(source);
             var response = await controller.AutoComplete(request);
             var completions = ((ObjectResult)response).Value as IEnumerable<AutoCompleteResponse>;
-            return completions.Select(completion => completion.Snippet);
+            return completions.Select(completion => BuildCompletion(completion));
+        }
+
+        private string BuildCompletion(AutoCompleteResponse completion)
+        {
+            string result = completion.Snippet;
+            if(completion.ReturnType != null)
+            {
+                result += " : " + completion.ReturnType;
+            }
+            return result;
         }
 
         private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs")
@@ -259,7 +269,8 @@ namespace OmniSharp.Tests
                 FileName = fileName,
                 Buffer = source.Replace("$", ""),
                 WordToComplete = GetPartialWord(source),
-                WantSnippet = true
+                WantSnippet = true,
+                WantReturnType = true
             };
         }
 

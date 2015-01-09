@@ -27,7 +27,7 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-                
+
                 foreach (var symbol in symbols.Where(s => s.Name.StartsWith(request.WordToComplete, StringComparison.OrdinalIgnoreCase)))
                 {
                     completions.Add(MakeAutoCompleteResponse(request, symbol));
@@ -41,7 +41,7 @@ namespace OmniSharp
                     }
                 }
             }
-            
+
             return new ObjectResult(completions);
         }
 
@@ -63,13 +63,36 @@ namespace OmniSharp
                 var methodSymbol = symbol as IMethodSymbol;
                 if (methodSymbol != null)
                 {
-                    response.ReturnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    if (methodSymbol.MethodKind != MethodKind.Constructor)
+                    {
+                        response.ReturnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
                 }
-
-                var propertySymbol = symbol as IPropertySymbol;
-                if (symbol is IPropertySymbol)
+                else
                 {
-                    response.ReturnType = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    var propertySymbol = symbol as IPropertySymbol;
+                    if (propertySymbol != null)
+                    {
+                        response.ReturnType = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
+
+                    var localSymbol = symbol as ILocalSymbol;
+                    if (localSymbol != null)
+                    {
+                        response.ReturnType = localSymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
+
+                    var parameterSymbol = symbol as IParameterSymbol;
+                    if (parameterSymbol != null)
+                    {
+                        response.ReturnType = parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
+
+                    var fieldSymbol = symbol as IFieldSymbol;
+                    if (fieldSymbol != null)
+                    {
+                        response.ReturnType = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                    }
                 }
             }
 
