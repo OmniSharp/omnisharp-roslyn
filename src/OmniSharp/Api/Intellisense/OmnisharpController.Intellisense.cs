@@ -60,40 +60,7 @@ namespace OmniSharp
 
             if (request.WantReturnType)
             {
-                var methodSymbol = symbol as IMethodSymbol;
-                if (methodSymbol != null)
-                {
-                    if (methodSymbol.MethodKind != MethodKind.Constructor)
-                    {
-                        response.ReturnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                    }
-                }
-                else
-                {
-                    var propertySymbol = symbol as IPropertySymbol;
-                    if (propertySymbol != null)
-                    {
-                        response.ReturnType = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                    }
-
-                    var localSymbol = symbol as ILocalSymbol;
-                    if (localSymbol != null)
-                    {
-                        response.ReturnType = localSymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                    }
-
-                    var parameterSymbol = symbol as IParameterSymbol;
-                    if (parameterSymbol != null)
-                    {
-                        response.ReturnType = parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                    }
-
-                    var fieldSymbol = symbol as IFieldSymbol;
-                    if (fieldSymbol != null)
-                    {
-                        response.ReturnType = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                    }
-                }
+                response.ReturnType = ReturnTypeFormatter.GetReturnType(symbol);
             }
 
             if (request.WantSnippet)
@@ -108,5 +75,6 @@ namespace OmniSharp
 
             return response;
         }
+
     }
 }

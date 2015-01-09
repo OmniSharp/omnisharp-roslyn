@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.IO;
 using OmniSharp.Services;
 using Microsoft.Framework.Logging;
@@ -9,7 +8,6 @@ using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.DependencyInjection;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace OmniSharp
 {
@@ -27,7 +25,7 @@ namespace OmniSharp
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
             var traceType = TraceType.Information;
-
+            
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
