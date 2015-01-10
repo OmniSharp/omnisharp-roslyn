@@ -8,15 +8,15 @@ namespace OmniSharp
 {
     public class SnippetGenerator
     {
-        public SnippetGenerator(bool includeMarkers)
-        {
-            _includeMarkers = includeMarkers;
-        }
-
         private bool _includeMarkers;
         private int _counter = 1;
         private StringBuilder _sb = new StringBuilder();
         private SymbolDisplayFormat _format;
+
+        public SnippetGenerator(bool includeMarkers)
+        {
+            _includeMarkers = includeMarkers;
+        }
 
         public string GenerateSnippet(ISymbol symbol)
         {

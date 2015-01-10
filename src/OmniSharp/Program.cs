@@ -8,6 +8,7 @@ using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.DependencyInjection;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace OmniSharp
 {
