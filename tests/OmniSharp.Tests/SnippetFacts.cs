@@ -242,7 +242,7 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<string>> FindCompletionsAsync(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace);
+            var controller = new OmnisharpController(workspace, null);
             var request = CreateRequest(source);
             var response = await controller.AutoComplete(request);
             var completions = ((ObjectResult)response).Value as IEnumerable<AutoCompleteResponse>;
