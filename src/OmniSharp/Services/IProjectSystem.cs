@@ -2,7 +2,7 @@
 
 namespace OmniSharp.Services
 {
-    public interface IWorkspaceInitializer
+    public interface IProjectSystem
     {
         void Initalize();
     }

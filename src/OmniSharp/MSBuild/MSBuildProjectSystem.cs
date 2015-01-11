@@ -13,7 +13,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
-    public class MSBuildInitializer : IWorkspaceInitializer
+    public class MSBuildProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IMetadataFileReferenceCache _metadataReferenceCache;
@@ -26,15 +26,15 @@ namespace OmniSharp.MSBuild
 
         private readonly Dictionary<Guid, ProjectId> _projectMap = new Dictionary<Guid, ProjectId>();
 
-        public MSBuildInitializer(OmnisharpWorkspace workspace,
-                                  IOmnisharpEnvironment env,
-                                  ILoggerFactory loggerFactory,
-                                  IMetadataFileReferenceCache metadataReferenceCache)
+        public MSBuildProjectSystem(OmnisharpWorkspace workspace,
+                                    IOmnisharpEnvironment env,
+                                    ILoggerFactory loggerFactory,
+                                    IMetadataFileReferenceCache metadataReferenceCache)
         {
             _workspace = workspace;
             _metadataReferenceCache = metadataReferenceCache;
             _env = env;
-            _logger = loggerFactory.Create<MSBuildInitializer>();
+            _logger = loggerFactory.Create<MSBuildProjectSystem>();
         }
 
         public void Initalize()

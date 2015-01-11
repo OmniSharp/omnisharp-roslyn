@@ -1,7 +1,6 @@
 using Microsoft.CodeAnalysis;
-using OmniSharp.AspNet5;
 
-namespace OmniSharp
+namespace OmniSharp.AspNet5
 {
     public class AspNet5TestCommandProvider : ITestCommandProvider
     {

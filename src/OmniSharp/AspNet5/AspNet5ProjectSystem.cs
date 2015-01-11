@@ -23,7 +23,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.AspNet5
 {
-    public class AspNet5Initializer : IWorkspaceInitializer
+    public class AspNet5ProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _env;
@@ -32,31 +32,31 @@ namespace OmniSharp.AspNet5
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly DesignTimeHostManager _designTimeHostManager;
         private readonly AspNet5Context _context;
-        
-        public AspNet5Initializer(OmnisharpWorkspace workspace,
-                                  IOmnisharpEnvironment env,
-                                  IOptions<OmniSharpOptions> optionsAccessor,
-                                  ILoggerFactory loggerFactory,
-                                  IMetadataFileReferenceCache metadataFileReferenceCache,
-                                  IApplicationShutdown shutdown,
-                                  AspNet5Context context)
+
+        public AspNet5ProjectSystem(OmnisharpWorkspace workspace,
+                                    IOmnisharpEnvironment env,
+                                    IOptions<OmniSharpOptions> optionsAccessor,
+                                    ILoggerFactory loggerFactory,
+                                    IMetadataFileReferenceCache metadataFileReferenceCache,
+                                    IApplicationShutdown shutdown,
+                                    AspNet5Context context)
         {
             _workspace = workspace;
             _env = env;
             _options = optionsAccessor.Options;
-            _logger = loggerFactory.Create<AspNet5Initializer>();
+            _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
             _context = context;
-            
+
             shutdown.ShutdownRequested.Register(OnShutdown);
         }
 
         public void Initalize()
         {
             _context.RuntimePath = GetRuntimePath();
-            
-            if (!ScanForProjects(_context))
+
+            if (!ScanForProjects())
             {
                 // No ASP.NET 5 projects found so do nothing
                 _logger.WriteInformation("No ASP.NET 5 projects found");
@@ -329,7 +329,7 @@ namespace OmniSharp.AspNet5
                 _context.Connection.Start();
 
                 // Initialize the ASP.NET 5 projects
-                Initialize(_context);
+                Initialize();
             });
 
             wh.Wait();
@@ -400,9 +400,9 @@ namespace OmniSharp.AspNet5
             }
         }
 
-        private void Initialize(AspNet5Context context)
+        private void Initialize()
         {
-            foreach (var project in context.Projects.Values)
+            foreach (var project in _context.Projects.Values)
             {
                 if (project.InitializeSent)
                 {
@@ -418,19 +418,19 @@ namespace OmniSharp.AspNet5
                 };
 
                 // Initialize this project
-                context.Connection.Post(new Message
+                _context.Connection.Post(new Message
                 {
                     ContextId = project.ContextId,
                     MessageType = "Initialize",
                     Payload = JToken.FromObject(initializeMessage),
-                    HostId = context.HostId
+                    HostId = _context.HostId
                 });
 
                 project.InitializeSent = true;
             }
         }
 
-        private bool ScanForProjects(AspNet5Context context)
+        private bool ScanForProjects()
         {
             _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
 
@@ -439,7 +439,7 @@ namespace OmniSharp.AspNet5
             foreach (var projectFile in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
             {
                 int contextId;
-                if (!context.TryAddProject(projectFile, out contextId))
+                if (!_context.TryAddProject(projectFile, out contextId))
                 {
                     continue;
                 }

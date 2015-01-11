@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
+using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -34,6 +35,11 @@ namespace OmniSharp
 
             services.AddMvc(Configuration);
 
+            services.Configure<MvcOptions>(opt =>
+            {
+                opt.OutputFormatters.RemoveAll(r => r.Instance is XmlOutputFormatter);
+            });
+
             // Add the omnisharp workspace to the container
             services.AddInstance(Workspace);
 
@@ -45,9 +51,9 @@ namespace OmniSharp
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
 
-            // Add the initializer for ASP.NET 5 projects
-            services.AddSingleton<IWorkspaceInitializer, AspNet5Initializer>();
-            services.AddSingleton<IWorkspaceInitializer, MSBuildInitializer>();
+            // Add the project systems
+            services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
+            services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
             // Add test command providers
             services.AddSingleton<ITestCommandProvider, AspNet5TestCommandProvider>();
@@ -76,11 +82,11 @@ namespace OmniSharp
             logger.WriteInformation(string.Format("Omnisharp server running on port '{0}' at location '{1}'.", env.Port, env.Path));
 
             // Initialize everything!
-            var initializers = app.ApplicationServices.GetRequiredService<IEnumerable<IWorkspaceInitializer>>();
+            var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
 
-            foreach (var initializer in initializers)
+            foreach (var projectSystem in projectSystems)
             {
-                initializer.Initalize();
+                projectSystem.Initalize();
             }
 
             // Mark the workspace as initialized
