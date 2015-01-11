@@ -24,17 +24,19 @@ namespace OmniSharp.MSBuild
             new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
         };
 
-        private readonly Dictionary<Guid, ProjectId> _projectMap = new Dictionary<Guid, ProjectId>();
+        private readonly MSBuildContext _context;
 
         public MSBuildProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
                                     ILoggerFactory loggerFactory,
-                                    IMetadataFileReferenceCache metadataReferenceCache)
+                                    IMetadataFileReferenceCache metadataReferenceCache,
+                                    MSBuildContext context)
         {
             _workspace = workspace;
             _metadataReferenceCache = metadataReferenceCache;
             _env = env;
             _logger = loggerFactory.Create<MSBuildProjectSystem>();
+            _context = context;
         }
 
         public void Initalize()
@@ -61,6 +63,8 @@ namespace OmniSharp.MSBuild
 
             SolutionFile solutionFile = null;
 
+            _context.SolutionPath = solutionFilePath;
+
             using (var stream = File.OpenRead(solutionFilePath))
             using (var reader = new StreamReader(stream))
             {
@@ -68,8 +72,6 @@ namespace OmniSharp.MSBuild
             }
 
             _logger.WriteInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
-
-            var projectMap = new Dictionary<string, ProjectFileInfo>();
 
             foreach (var block in solutionFile.ProjectBlocks)
             {
@@ -79,7 +81,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                if (_projectMap.ContainsKey(block.ProjectGuid))
+                if (_context.ProjectGuidToWorkspaceMapping.ContainsKey(block.ProjectGuid))
                 {
                     continue;
                 }
@@ -116,12 +118,12 @@ namespace OmniSharp.MSBuild
                 _workspace.AddProject(projectInfo);
 
                 projectFileInfo.WorkspaceId = projectInfo.Id;
-                projectMap[projectFileInfo.ProjectFilePath] = projectFileInfo;
 
-                _projectMap[block.ProjectGuid] = projectInfo.Id;
+                _context.Projects[projectFileInfo.ProjectFilePath] = projectFileInfo;
+                _context.ProjectGuidToWorkspaceMapping[block.ProjectGuid] = projectInfo.Id;
             }
 
-            foreach (var projectFileInfo in projectMap.Values)
+            foreach (var projectFileInfo in _context.Projects.Values)
             {
                 var project = _workspace.CurrentSolution.GetProject(projectFileInfo.WorkspaceId);
 
@@ -156,7 +158,7 @@ namespace OmniSharp.MSBuild
                 foreach (var projectReferencePath in projectFileInfo.ProjectReferences)
                 {
                     ProjectFileInfo projectReferenceInfo;
-                    if (projectMap.TryGetValue(projectReferencePath, out projectReferenceInfo))
+                    if (_context.Projects.TryGetValue(projectReferencePath, out projectReferenceInfo))
                     {
                         var reference = new ProjectReference(projectReferenceInfo.WorkspaceId);
 

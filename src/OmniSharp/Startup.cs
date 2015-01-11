@@ -43,15 +43,14 @@ namespace OmniSharp
             // Add the omnisharp workspace to the container
             services.AddInstance(Workspace);
 
-            // Add the AspNet5Context
-            var context = new AspNet5Context();
-            services.AddInstance(context);
-
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
 
             // Add the project systems
+            services.AddInstance(new AspNet5Context());
+            services.AddInstance(new MSBuildContext());
+
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 

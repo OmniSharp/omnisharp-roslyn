@@ -89,7 +89,7 @@ namespace OmniSharp.AspNet5
                         project.Configurations = val.Configurations;
                         project.Commands = val.Commands;
                         project.ProjectSearchPaths = val.ProjectSearchPaths;
-
+                        
                         var unprocessed = project.ProjectsByFramework.Keys.ToList();
 
                         foreach (var frameworkData in val.Frameworks)
