@@ -92,8 +92,8 @@ namespace OmniSharp
         {
             AsChild(node, node.Declaration.Variables.First().Identifier.Text);
         }
-        
-        public override void VisitEventFieldDeclaration(EventFieldDeclarationSyntax node) 
+
+        public override void VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
         {
             AsChild(node, node.Declaration.Variables.First().Identifier.Text);
         }
