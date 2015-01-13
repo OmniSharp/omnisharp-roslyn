@@ -30,14 +30,13 @@ namespace OmniSharp
 
                 foreach (var symbol in symbols.Where(s => s.Name.StartsWith(request.WordToComplete, StringComparison.OrdinalIgnoreCase)))
                 {
-                    completions.Add(MakeAutoCompleteResponse(request, symbol));
-                    var typeSymbol = symbol as INamedTypeSymbol;
-                    if (typeSymbol != null)
+                    if (request.WantSnippet)
                     {
-                        foreach (var ctor in typeSymbol.InstanceConstructors)
-                        {
-                            completions.Add(MakeAutoCompleteResponse(request, ctor));
-                        }
+                        completions.AddRange(MakeSnippetedResponses(request, symbol));
+                    }
+                    else
+                    {
+                        completions.Add(MakeAutoCompleteResponse(request, symbol));
                     }
                 }
             }
@@ -45,7 +44,33 @@ namespace OmniSharp
             return new ObjectResult(completions);
         }
 
-        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol)
+        {
+            var completions = new List<AutoCompleteResponse>();
+            var methodSymbol = symbol as IMethodSymbol;
+            if (methodSymbol != null)
+            {
+                if (methodSymbol.Parameters.Any(p => p.IsOptional))
+                {
+                    completions.Add(MakeAutoCompleteResponse(request, symbol, false));
+                }
+                completions.Add(MakeAutoCompleteResponse(request, symbol));
+                return completions;
+            }
+            var typeSymbol = symbol as INamedTypeSymbol;
+            if (typeSymbol != null)
+            {
+                completions.Add(MakeAutoCompleteResponse(request, symbol));
+                foreach (var ctor in typeSymbol.InstanceConstructors)
+                {
+                    completions.Add(MakeAutoCompleteResponse(request, ctor));
+                }
+                return completions;
+            }
+            return new[] { MakeAutoCompleteResponse(request, symbol) };
+        }
+
+        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, bool includeOptionalParams = true)
         {
             var response = new AutoCompleteResponse();
             response.CompletionText = symbol.Name;
@@ -65,16 +90,21 @@ namespace OmniSharp
 
             if (request.WantSnippet)
             {
-                response.Snippet = new SnippetGenerator(true).GenerateSnippet(symbol);
+                var snippetGenerator = new SnippetGenerator();
+                snippetGenerator.IncludeMarkers = true;
+                snippetGenerator.IncludeOptionalParameters = includeOptionalParams;
+                response.Snippet = snippetGenerator.GenerateSnippet(symbol);
             }
 
             if (request.WantMethodHeader)
             {
-                response.MethodHeader = new SnippetGenerator(false).GenerateSnippet(symbol);
+                var snippetGenerator = new SnippetGenerator();
+                snippetGenerator.IncludeMarkers = false;
+                snippetGenerator.IncludeOptionalParameters = includeOptionalParams;
+                response.MethodHeader = snippetGenerator.GenerateSnippet(symbol);
             }
 
             return response;
         }
-
     }
 }

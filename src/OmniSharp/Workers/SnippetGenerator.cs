@@ -8,15 +8,12 @@ namespace OmniSharp
 {
     public class SnippetGenerator
     {
-        private bool _includeMarkers;
         private int _counter = 1;
         private StringBuilder _sb = new StringBuilder();
         private SymbolDisplayFormat _format;
 
-        public SnippetGenerator(bool includeMarkers)
-        {
-            _includeMarkers = includeMarkers;
-        }
+        public bool IncludeMarkers { get; set; }
+        public bool IncludeOptionalParameters { get; set; }
 
         public string GenerateSnippet(ISymbol symbol)
         {
@@ -32,7 +29,7 @@ namespace OmniSharp
                 RenderDisplayParts(symbol, parts);
                 parts = symbol.ToDisplayParts(_format);
                 // render everything starting from the opening parens
-                RenderDisplayParts(symbol, parts.SkipWhile(p => p.Kind != SymbolDisplayPartKind.Punctuation));
+                RenderParameters(symbol as IMethodSymbol);
             }
             else
             {
@@ -51,7 +48,7 @@ namespace OmniSharp
                     RenderDisplayParts(symbol, parts);
                 }
             }
-            if (_includeMarkers)
+            if (IncludeMarkers)
             {
                 _sb.Append("$0");
             }
@@ -71,6 +68,7 @@ namespace OmniSharp
                     RenderSnippetStartMarker();
                     _sb.Append(arg);
                     RenderSnippetEndMarker();
+                    
                     if (arg != last)
                     {
                         _sb.Append(", ");
@@ -80,11 +78,39 @@ namespace OmniSharp
             }
             var parts = methodSymbol.ToDisplayParts(_format);
             // render everything starting from the opening parens
-            RenderDisplayParts(methodSymbol, parts.SkipWhile(p => p.ToString() != "("));
+            RenderParameters(methodSymbol);
             if (methodSymbol.ReturnsVoid)
             {
                 _sb.Append(";");
             }
+        }
+
+        private void RenderParameters(IMethodSymbol methodSymbol)
+        {
+            IEnumerable<IParameterSymbol> parameters = methodSymbol.Parameters;
+
+            if (!IncludeOptionalParameters)
+            {
+                parameters = parameters.Where(p => !p.IsOptional);
+            }
+            _sb.Append("(");
+
+            if (parameters.Any())
+            {
+                var last = parameters.Last();
+                foreach (var parameter in parameters)
+                {
+                    RenderSnippetStartMarker();
+                    _sb.Append(parameter.ToDisplayString(_format));
+                    RenderSnippetEndMarker();
+
+                    if (parameter != last)
+                    {
+                        _sb.Append(", ");
+                    }
+                }
+            }
+            _sb.Append(")");
         }
 
         private IEnumerable<ISymbol> NonInferredTypeArguments(IMethodSymbol methodSymbol)
@@ -113,29 +139,29 @@ namespace OmniSharp
 
         private IEnumerable<ISymbol> ParameterTypes(IMethodSymbol methodSymbol)
         {
-            foreach (var p in methodSymbol.Parameters)
+            foreach (var parameter in methodSymbol.Parameters)
             {
-                var types = ExplodeTypes(p.Type);
-                foreach (var t in types)
+                var types = ExplodeTypes(parameter.Type);
+                foreach (var type in types)
                 {
-                    yield return t;
+                    yield return type;
                 }
             }
         }
 
         private IEnumerable<ISymbol> ExplodeTypes(ISymbol symbol)
         {
-            var t = symbol as INamedTypeSymbol;
-            if (t != null)
+            var typeSymbol = symbol as INamedTypeSymbol;
+            if (typeSymbol != null)
             {
-                var typeParams = t.TypeArguments;
+                var typeParams = typeSymbol.TypeArguments;
 
-                foreach (var tp in typeParams)
+                foreach (var typeParam in typeParams)
                 {
-                    var e = ExplodeTypes(tp);
-                    foreach (var et in e)
+                    var explodedTypes = ExplodeTypes(typeParam);
+                    foreach (var type in explodedTypes)
                     {
-                        yield return et;
+                        yield return type;
                     }
                 }
             }
@@ -150,7 +176,7 @@ namespace OmniSharp
 
         private void RenderSnippetStartMarker()
         {
-            if (_includeMarkers)
+            if (IncludeMarkers)
             {
                 _sb.Append("${");
                 _sb.Append(_counter++);
@@ -160,7 +186,7 @@ namespace OmniSharp
 
         private void RenderSnippetEndMarker()
         {
-            if (_includeMarkers)
+            if (IncludeMarkers)
             {
                 _sb.Append("}");
             }
@@ -181,40 +207,7 @@ namespace OmniSharp
                 }
                 else
                 {
-                    string displayPart = part.ToString();
-                    var methodSymbol = symbol as IMethodSymbol;
-                    if (methodSymbol != null && methodSymbol.Parameters.Any())
-                    {
-                        if (part.Kind == SymbolDisplayPartKind.Punctuation &&
-                            displayPart == "(")
-                        {
-                            _sb.Append(displayPart);
-                            RenderSnippetStartMarker();
-                            writingParameter = true;
-                        }
-                        else if (writingParameter &&
-                            part.Kind == SymbolDisplayPartKind.Punctuation
-                                 && (displayPart == ")" || (displayPart == "," && lastPart.Kind == SymbolDisplayPartKind.ParameterName)))
-                        {
-                            RenderSnippetEndMarker();
-                            _sb.Append(displayPart);
-                            writingParameter = false;
-                        }
-                        else
-                        {
-                            _sb.Append(displayPart);
-                        }
-
-                        if (displayPart == " " && !writingParameter)
-                        {
-                            RenderSnippetStartMarker();
-                            writingParameter = true;
-                        }
-                    }
-                    else
-                    {
-                        _sb.Append(displayPart);
-                    }
+                    _sb.Append(part.ToString());
                 }
                 lastPart = part;
             }

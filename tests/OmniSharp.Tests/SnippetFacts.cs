@@ -225,6 +225,26 @@ namespace OmniSharp.Tests
             ContainsSnippet("class1$0 : Class1", completions);
         }
 
+        [Fact]
+        public async Task Returns_method_without_optional_params()
+        {
+            var source = @"
+                public class Class1
+                {
+                    public void OptionalParam(int i, string s = null)
+                    {
+                    }
+                    public void DoSomething()
+                    {
+                        Opt$
+                    }
+                }
+            ";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsSnippet("OptionalParam(${1:int i});$0 : void", completions);
+            ContainsSnippet("OptionalParam(${1:int i}, ${2:string s = null});$0 : void", completions);
+        }
 
         private void ContainsSnippet(string expected, IEnumerable<string> completions)
         {
