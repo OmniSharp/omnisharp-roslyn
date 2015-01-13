@@ -21,14 +21,13 @@ namespace OmniSharp
             _format = _format.WithMemberOptions(_format.MemberOptions
                                                 ^ SymbolDisplayMemberOptions.IncludeContainingType
                                                 ^ SymbolDisplayMemberOptions.IncludeType);
-
+            
             if (IsConstructor(symbol))
             {
                 // only the containing type contains the type parameters
                 var parts = symbol.ContainingType.ToDisplayParts(_format);
                 RenderDisplayParts(symbol, parts);
                 parts = symbol.ToDisplayParts(_format);
-                // render everything starting from the opening parens
                 RenderParameters(symbol as IMethodSymbol);
             }
             else
@@ -59,6 +58,7 @@ namespace OmniSharp
         {
             var nonInferredTypeArguments = NonInferredTypeArguments(methodSymbol);
             _sb.Append(methodSymbol.Name);
+            
             if (nonInferredTypeArguments.Any())
             {
                 _sb.Append("<");
@@ -76,8 +76,7 @@ namespace OmniSharp
                 }
                 _sb.Append(">");
             }
-            var parts = methodSymbol.ToDisplayParts(_format);
-            // render everything starting from the opening parens
+            
             RenderParameters(methodSymbol);
             if (methodSymbol.ReturnsVoid)
             {
@@ -194,12 +193,9 @@ namespace OmniSharp
 
         private void RenderDisplayParts(ISymbol symbol, IEnumerable<SymbolDisplayPart> parts)
         {
-            bool writingParameter = false;
-            var lastPart = default(SymbolDisplayPart);
-
             foreach (var part in parts)
             {
-                if (!writingParameter && part.Kind == SymbolDisplayPartKind.TypeParameterName)
+                if (part.Kind == SymbolDisplayPartKind.TypeParameterName)
                 {
                     RenderSnippetStartMarker();
                     _sb.Append(part.ToString());
@@ -209,7 +205,6 @@ namespace OmniSharp
                 {
                     _sb.Append(part.ToString());
                 }
-                lastPart = part;
             }
         }
     }
