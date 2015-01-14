@@ -25,7 +25,9 @@ namespace OmniSharp
                 Text = text.Trim(),
                 FileName = path,
                 Line = line + 1,
-                Column = lineSpan.StartLinePosition.Character + 1
+                Column = lineSpan.StartLinePosition.Character + 1,
+                EndLine = lineSpan.EndLinePosition.Line + 1,
+                EndColumn = lineSpan.EndLinePosition.Character + 1
             };
         }
 
