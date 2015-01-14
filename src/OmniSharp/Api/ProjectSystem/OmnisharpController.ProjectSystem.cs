@@ -16,6 +16,7 @@ namespace OmniSharp
             _msbuildContext = msbuildContext;
         }
 
+        [HttpPost("/projects")]
         [HttpGet("/projects")]
         public WorkspaceInformationResponse ProjectInformation()
         {
