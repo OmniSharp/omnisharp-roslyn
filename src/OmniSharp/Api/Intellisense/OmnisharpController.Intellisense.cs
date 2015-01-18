@@ -27,6 +27,19 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
+                var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
+                var keywordHandler = new KeywordContextHandler();
+                var keywords = keywordHandler.Get(context, model, position);
+
+                foreach (var keyword in keywords)
+                {
+                    completions.Add(new AutoCompleteResponse
+                    {
+                        CompletionText = keyword,
+                        DisplayText = keyword,
+                        Snippet = keyword
+                    });
+                }
 
                 foreach (var symbol in symbols.Where(s => s.Name.StartsWith(request.WordToComplete, StringComparison.OrdinalIgnoreCase)))
                 {
