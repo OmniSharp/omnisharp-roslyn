@@ -55,7 +55,14 @@ namespace OmniSharp.AspNet5
         public void Initalize()
         {
             _context.RuntimePath = GetRuntimePath();
-
+            
+            if (_context.RuntimePath == null) 
+            {
+                // There is no default k found so do nothing
+                _logger.WriteInformation("No default KRE found");
+                return;
+            }
+            
             if (!ScanForProjects())
             {
                 // No ASP.NET 5 projects found so do nothing
@@ -483,7 +490,7 @@ namespace OmniSharp.AspNet5
                 }
             }
 
-            throw new InvalidOperationException("Unable to locate default alias");
+            return null;
         }
     }
 }
