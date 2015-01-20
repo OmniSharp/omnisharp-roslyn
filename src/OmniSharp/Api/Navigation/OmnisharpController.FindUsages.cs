@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 namespace OmniSharp
 {
@@ -30,7 +31,7 @@ namespace OmniSharp
 
                 var locations = new HashSet<Location>();
 
-                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName))
+                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
                 {
                     foreach (var location in usage.Locations)
                     {
