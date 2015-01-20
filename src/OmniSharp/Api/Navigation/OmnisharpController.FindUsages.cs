@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 namespace OmniSharp
 {
@@ -13,7 +14,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("findusages")]
-        public async Task<IActionResult> FindUsages([FromBody]Request request)
+        public async Task<QuickFixResponse> FindUsages([FromBody]Request request)
         {
             _workspace.EnsureBufferUpdated(request);
 
@@ -30,7 +31,7 @@ namespace OmniSharp
 
                 var locations = new HashSet<Location>();
 
-                foreach (var usage in usages)
+                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
                 {
                     foreach (var location in usage.Locations)
                     {
@@ -51,7 +52,7 @@ namespace OmniSharp
                                                             .ThenBy(q => q.Column));
             }
             
-            return new ObjectResult(response);
+            return response;
         }
     }
 }
