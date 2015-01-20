@@ -1,17 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using OmniSharp.Models;
 
 namespace OmniSharp.Tests
 {
     public class FindReferencesFacts
     {
-
         [Fact]
         public async Task CanFindReferencesOfLocalVariable()
         {
@@ -27,7 +22,6 @@ namespace OmniSharp.Tests
                 }";
 
             var usages = await FindUsages(source);
-
             Assert.Equal(2, usages.QuickFixes.Count());
         }
 
@@ -44,14 +38,13 @@ namespace OmniSharp.Tests
                 }";
 
             var usages = await FindUsages(source);
-
             Assert.Equal(2, usages.QuickFixes.Count());
         }
 
         [Fact]
         public async Task CanFindReferencesOfField()
         {
-            var source = @"    public class Foo
+            var source = @"public class Foo
                 {
                     public string p$rop;
                 }
@@ -66,7 +59,6 @@ namespace OmniSharp.Tests
                 }";
 
             var usages = await FindUsages(source);
-
             Assert.Equal(2, usages.QuickFixes.Count());
         }
 
@@ -75,7 +67,7 @@ namespace OmniSharp.Tests
         {
             //better to be safe than sorry, didn't wanna lump this in with the methods
 
-            var source = @"    public class Foo
+            var source = @"public class Foo
                 {
                     public F$oo() {}
                 }
@@ -88,14 +80,13 @@ namespace OmniSharp.Tests
                     }
                 }";
             var usages = await FindUsages(source);
-
-            Assert.Equal(2,usages.QuickFixes.Count());
+            Assert.Equal(2, usages.QuickFixes.Count());
         }
 
         [Fact]
         public async Task CanFindReferencesOfMethod()
         {
-            var source = @"    public class Foo
+            var source = @"public class Foo
                 {
                     public void b$ar() { }
                 }
@@ -114,7 +105,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfPublicAutoProperty()
         {
-            var source = @"    public class Foo
+            var source = @"public class Foo
                 {
                     public string p$rop {get;set;}
                 }
@@ -135,7 +126,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfClass()
         {
-            var source = @"    public class F$oo
+            var source = @"public class F$oo
                 {
                     public string prop {get;set;}
                 }
@@ -152,7 +143,6 @@ namespace OmniSharp.Tests
             var usages = await FindUsages(source);
             Assert.Equal(2, usages.QuickFixes.Count());
         }
-
 
         private Request CreateRequest(string source, string fileName = "dummy.cs")
         {
@@ -174,5 +164,4 @@ namespace OmniSharp.Tests
             return await controller.FindUsages(request);
         }
     }
-
 }
