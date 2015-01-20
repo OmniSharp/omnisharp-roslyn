@@ -6,7 +6,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using Microsoft.CodeAnalysis.Shared.Extensions;
 
 namespace OmniSharp
 {
