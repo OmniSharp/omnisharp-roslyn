@@ -9,6 +9,8 @@ using Microsoft.Framework.Runtime;
 using Microsoft.Framework.DependencyInjection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Framework.DependencyInjection.ServiceLookup;
+using System.Collections.Generic;
 
 namespace OmniSharp
 {
@@ -25,8 +27,8 @@ namespace OmniSharp
         {
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
-            var traceType = TraceType.Information;
-            
+            var logLevel = LogLevel.Information;
+
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -44,25 +46,24 @@ namespace OmniSharp
                 }
                 else if (arg == "-v")
                 {
-                    traceType = TraceType.Verbose;
+                    logLevel = LogLevel.Verbose;
                 }
             }
 
-            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, traceType);
-            var hostingEnv = new HostingEnvironment { EnvironmentName = "Development" };
-
             var config = new Configuration()
-                .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(HostingServices.GetDefaultServices(config));
+            var serviceCollection = HostingServices.Create(_serviceProvider,config);
+            
+            var appEnv = _serviceProvider.GetRequiredService<IApplicationEnvironment>();
+            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
+            var hostingEnv = new HostingEnvironment(appEnv, new List<IConfigureHostingEnvironment>()) { EnvironmentName = "Development" };
+
+            serviceCollection.AddHosting();
             serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
             serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
 
-            var services = serviceCollection
-                .BuildServiceProvider(_serviceProvider);
-
-            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
+            var services = serviceCollection.BuildServiceProvider();
 
             var context = new HostingContext()
             {
@@ -93,7 +94,7 @@ namespace OmniSharp
                 appShutdownService.RequestShutdown();
             });
 #else
-            Console.CancelKeyPress += (sender, e)=>
+            Console.CancelKeyPress += (sender, e) =>
             {
                 appShutdownService.RequestShutdown();
             };

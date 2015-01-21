@@ -1,13 +1,13 @@
 ﻿{
     "version": "1.0.0-*",
     "dependencies": {
-        "Kestrel": "1.0.0-beta1",
-        "Microsoft.AspNet.Mvc": "6.0.0-beta1",
-        "Microsoft.AspNet.Diagnostics": "1.0.0-beta1",
-        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta1-20141031-01",
-        "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-beta1-20141031-01",
-        "Microsoft.Framework.Logging.Console": "1.0.0-beta1",
-        "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta1",
+        "Kestrel": "1.0.0-beta2",
+        "Microsoft.AspNet.Mvc": "6.0.0-beta2",
+        "Microsoft.AspNet.Diagnostics": "1.0.0-beta2",
+        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta2",
+        "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-beta2",
+        "Microsoft.Framework.Logging.Console": "1.0.0-beta2",
+        "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta2",
         "Microsoft.Framework.Cache.Memory": "1.0.0-beta1",
         "Microsoft.Composition": "1.0.27"
     },
