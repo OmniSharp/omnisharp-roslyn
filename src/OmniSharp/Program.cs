@@ -25,8 +25,8 @@ namespace OmniSharp
         {
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
-            var traceType = TraceType.Information;
-            
+            var logLevel = LogLevel.Information;
+
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -44,25 +44,22 @@ namespace OmniSharp
                 }
                 else if (arg == "-v")
                 {
-                    traceType = TraceType.Verbose;
+                    logLevel = LogLevel.Verbose;
                 }
             }
-
-            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, traceType);
-            var hostingEnv = new HostingEnvironment { EnvironmentName = "Development" };
-
+            var serviceCollection = new ServiceCollection();
             var config = new Configuration()
                 .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(HostingServices.GetDefaultServices(config));
-            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
-            serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
+            serviceCollection.AddHosting(config);
 
-            var services = serviceCollection
-                .BuildServiceProvider(_serviceProvider);
+            var services = serviceCollection.BuildServiceProvider();
 
             var appEnv = services.GetRequiredService<IApplicationEnvironment>();
+
+            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
+            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
+
 
             var context = new HostingContext()
             {
@@ -70,7 +67,7 @@ namespace OmniSharp
                 Configuration = config,
                 ServerName = "Kestrel",
                 ApplicationName = appEnv.ApplicationName,
-                EnvironmentName = hostingEnv.EnvironmentName,
+                EnvironmentName = "Development",
             };
 
             var engine = services.GetRequiredService<IHostingEngine>();
@@ -93,7 +90,7 @@ namespace OmniSharp
                 appShutdownService.RequestShutdown();
             });
 #else
-            Console.CancelKeyPress += (sender, e)=>
+            Console.CancelKeyPress += (sender, e) =>
             {
                 appShutdownService.RequestShutdown();
             };

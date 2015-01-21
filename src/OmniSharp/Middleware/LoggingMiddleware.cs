@@ -23,7 +23,7 @@ namespace OmniSharp.Middleware
             var responseBody = context.Response.Body;
             var requestBody = context.Request.Body;
 
-            if (_logger.IsEnabled(TraceType.Verbose))
+            if (_logger.IsEnabled(LogLevel.Verbose))
             {
                 // TODO: Add the feature interface to disable this memory stream
                 // when we add signalr
@@ -40,7 +40,7 @@ namespace OmniSharp.Middleware
             await _next(context);
             stopwatch.Stop();
 
-            if (_logger.IsEnabled(TraceType.Verbose))
+            if (_logger.IsEnabled(LogLevel.Verbose))
             {
                 LogResponse(context);
 
