@@ -60,7 +60,23 @@ namespace OmniSharp.AspNet5
                 _designTimeHostProcess = Process.Start(psi);
 
                 // Wait a little bit for it to conncet before firing the callback
-                Thread.Sleep(1000);
+                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+                {
+                    var t1 = DateTime.UtcNow;
+                    var dthTimeout = TimeSpan.FromSeconds(4);
+                    while (!socket.Connected && DateTime.UtcNow - t1 < dthTimeout)
+                    {
+                        Thread.Sleep(500);
+                        try
+                        {
+                            socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
+                        }
+                        catch (SocketException)
+                        {
+                            // this happens when the DTH isn't listening yet
+                        }
+                    }
+                }
 
                 if (_designTimeHostProcess.HasExited)
                 {
