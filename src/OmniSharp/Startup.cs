@@ -33,6 +33,10 @@ namespace OmniSharp
         {
             Workspace = new OmnisharpWorkspace();
 
+            // This is super hacky by it's the easiest way to flow serivces from the 
+            // hosting layer, this needs to be easier
+            services.AddInstance<IOmnisharpEnvironment>(Program.Environment);
+
             services.AddMvc(Configuration);
 
             services.Configure<MvcOptions>(opt =>

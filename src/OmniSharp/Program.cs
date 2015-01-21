@@ -10,13 +10,14 @@ using Microsoft.Framework.DependencyInjection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Framework.DependencyInjection.ServiceLookup;
-using System.Collections.Generic;
 
 namespace OmniSharp
 {
     public class Program
     {
         private readonly IServiceProvider _serviceProvider;
+
+        public static OmnisharpEnvironment Environment { get; set; }
 
         public Program(IServiceProvider serviceProvider)
         {
@@ -50,20 +51,16 @@ namespace OmniSharp
                 }
             }
 
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
+
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = HostingServices.Create(_serviceProvider,config);
-            
-            var appEnv = _serviceProvider.GetRequiredService<IApplicationEnvironment>();
-            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
-            var hostingEnv = new HostingEnvironment(appEnv, new List<IConfigureHostingEnvironment>()) { EnvironmentName = "Development" };
-
-            serviceCollection.AddHosting();
-            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
-            serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
+            var serviceCollection = HostingServices.Create(_serviceProvider, config);
 
             var services = serviceCollection.BuildServiceProvider();
+            var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
+            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
 
             var context = new HostingContext()
             {
@@ -75,7 +72,7 @@ namespace OmniSharp
             };
 
             var engine = services.GetRequiredService<IHostingEngine>();
-            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
+            var appShutdownService = services.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEventSlim(false);
 
             var serverShutdown = engine.Start(context);
