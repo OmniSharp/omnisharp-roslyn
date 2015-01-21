@@ -9,6 +9,8 @@ using Microsoft.Framework.Runtime;
 using Microsoft.Framework.DependencyInjection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Framework.DependencyInjection.ServiceLookup;
+using System.Collections.Generic;
 
 namespace OmniSharp
 {
@@ -47,19 +49,21 @@ namespace OmniSharp
                     logLevel = LogLevel.Verbose;
                 }
             }
-            var serviceCollection = new ServiceCollection();
-            var config = new Configuration()
-                .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            serviceCollection.AddHosting(config);
+            var config = new Configuration()
+             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+
+            var serviceCollection = HostingServices.Create(_serviceProvider,config);
+            
+            var appEnv = _serviceProvider.GetRequiredService<IApplicationEnvironment>();
+            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
+            var hostingEnv = new HostingEnvironment(appEnv, new List<IConfigureHostingEnvironment>()) { EnvironmentName = "Development" };
+
+            serviceCollection.AddHosting();
+            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
+            serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
 
             var services = serviceCollection.BuildServiceProvider();
-
-            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
-
-            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
-            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
-
 
             var context = new HostingContext()
             {
@@ -67,7 +71,7 @@ namespace OmniSharp
                 Configuration = config,
                 ServerName = "Kestrel",
                 ApplicationName = appEnv.ApplicationName,
-                EnvironmentName = "Development",
+                EnvironmentName = hostingEnv.EnvironmentName,
             };
 
             var engine = services.GetRequiredService<IHostingEngine>();
