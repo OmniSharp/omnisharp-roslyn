@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using OmniSharp.Services;
 using Microsoft.Framework.Logging;
 using Microsoft.AspNet.Hosting;
@@ -7,7 +9,6 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.DependencyInjection;
-using System.Threading;
 
 namespace OmniSharp
 {
