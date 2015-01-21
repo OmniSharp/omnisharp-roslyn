@@ -3,7 +3,7 @@
     "dependencies": {
         "OmniSharp": "1.0.0-*",
         "Xunit.KRunner": "1.0.0-beta1",
-        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta1-20141031-01"
+        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta2"
     },
     "commands": {
         "test": "Xunit.KRunner"
