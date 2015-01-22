@@ -17,6 +17,7 @@ using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Microsoft.Framework.Runtime;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -55,14 +56,14 @@ namespace OmniSharp.AspNet5
         public void Initalize()
         {
             _context.RuntimePath = GetRuntimePath();
-            
-            if (_context.RuntimePath == null) 
+
+            if (_context.RuntimePath == null)
             {
                 // There is no default k found so do nothing
                 _logger.WriteInformation("No default KRE found");
                 return;
             }
-            
+
             if (!ScanForProjects())
             {
                 // No ASP.NET 5 projects found so do nothing
@@ -96,7 +97,7 @@ namespace OmniSharp.AspNet5
                         project.Configurations = val.Configurations;
                         project.Commands = val.Commands;
                         project.ProjectSearchPaths = val.ProjectSearchPaths;
-                        
+
                         var unprocessed = project.ProjectsByFramework.Keys.ToList();
 
                         foreach (var frameworkData in val.Frameworks)
@@ -466,31 +467,100 @@ namespace OmniSharp.AspNet5
 
         private string GetRuntimePath()
         {
+            var versionOrAlias = GetRuntimeVersionOrAlias();
+
+            string runtimeVersion;
+            var runtimePath = GetRuntimePathFromVersionOrAlias(versionOrAlias, out runtimeVersion);
+
+            if (string.IsNullOrEmpty(runtimePath))
+            {
+                return null;
+            }
+
+            if (!Directory.Exists(runtimePath))
+            {
+                _logger.WriteError("The specified runtime path '{0}'. Does not exist. Try installing it with kvm install '{1}'.", versionOrAlias, runtimeVersion);
+                return null;
+            }
+
+            return runtimePath;
+        }
+
+        private string GetRuntimePathFromVersionOrAlias(string versionOrAlias, out string version)
+        {
+            version = null;
+
             var home = Environment.GetEnvironmentVariable("HOME") ?? Environment.GetEnvironmentVariable("USERPROFILE");
 
             var kreHome = Path.Combine(home, ".kre");
 
             var aliasDirectory = Path.Combine(kreHome, "alias");
 
-            _logger.WriteInformation(string.Format("Using configured alias {0}", _options.AspNet5.Alias));
-
             var aliasFiles = new[] { "{0}.alias", "{0}.txt" };
 
             foreach (var shortAliasFile in aliasFiles)
             {
-                var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, _options.AspNet5.Alias));
+                var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, versionOrAlias));
 
                 if (File.Exists(aliasFile))
                 {
-                    var version = File.ReadAllText(aliasFile).Trim();
+                    _logger.WriteInformation(string.Format("Using configured alias {0}", versionOrAlias));
+
+                    version = File.ReadAllText(aliasFile).Trim();
 
                     _logger.WriteInformation(string.Format("Using KRE version '{0}'.", version));
 
                     return Path.Combine(kreHome, "packages", version);
                 }
+                else
+                {
+                    version = versionOrAlias;
+
+                    _logger.WriteInformation(string.Format("Using configured version {0}", versionOrAlias));
+
+                    return Path.Combine(kreHome, "packages", string.Format("KRE-CLR-x86.{0}", versionOrAlias));
+                }
             }
 
             return null;
+        }
+
+        private string GetRuntimeVersionOrAlias()
+        {
+            var root = ResolveRootDirectory(_env.Path);
+
+            var globalJson = Path.Combine(root, "global.json");
+
+            if (File.Exists(globalJson))
+            {
+                _logger.WriteInformation("Looking for sdk version in '{0}'.", globalJson);
+
+                using (var stream = File.OpenRead(globalJson))
+                {
+                    var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
+                    return obj["sdk"]?["version"]?.Value<string>();
+                }
+            }
+
+            return _options.AspNet5.Alias;
+        }
+
+        public static string ResolveRootDirectory(string projectPath)
+        {
+            var di = new DirectoryInfo(projectPath);
+
+            while (di.Parent != null)
+            {
+                if (di.EnumerateFiles("global.json").Any())
+                {
+                    return di.FullName;
+                }
+
+                di = di.Parent;
+            }
+
+            // If we don't find any files then make the project folder the root
+            return projectPath;
         }
     }
 }
