@@ -475,7 +475,7 @@ namespace OmniSharp.AspNet5
 
         private string GetRuntimePath()
         {
-            var versionOrAlias = GetRuntimeVersionOrAlias();
+            var versionOrAlias = GetRuntimeVersionOrAlias() ?? _options.AspNet5.Alias ?? "default";
 
             string runtimeVersion;
             var runtimePath = GetRuntimePathFromVersionOrAlias(versionOrAlias, out runtimeVersion);
@@ -555,7 +555,7 @@ namespace OmniSharp.AspNet5
                 }
             }
 
-            return _options.AspNet5.Alias;
+            return null;
         }
 
         public static string ResolveRootDirectory(string projectPath)
