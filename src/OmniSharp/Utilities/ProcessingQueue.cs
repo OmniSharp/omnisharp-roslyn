@@ -34,7 +34,7 @@ namespace OmniSharp
         {
             lock (_writer)
             {
-                if (Logger.IsEnabled(TraceType.Verbose))
+                if (Logger.IsEnabled(LogLevel.Verbose))
                 {
                     Logger.WriteVerbose(string.Format("[ProcessingQueue]: Post({0})", message));
                 }
@@ -51,7 +51,7 @@ namespace OmniSharp
                 {
                     var message = JsonConvert.DeserializeObject<Message>(_reader.ReadString());
 
-                    if (Logger.IsEnabled(TraceType.Verbose))
+                    if (Logger.IsEnabled(LogLevel.Verbose))
                     {
                         Logger.WriteVerbose(string.Format("[ProcessingQueue]: Receive ({0})", message));
                     }

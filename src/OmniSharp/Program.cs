@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using OmniSharp.Services;
 using Microsoft.Framework.Logging;
 using Microsoft.AspNet.Hosting;
@@ -7,14 +9,14 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Runtime;
 using Microsoft.Framework.DependencyInjection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace OmniSharp
 {
     public class Program
     {
         private readonly IServiceProvider _serviceProvider;
+
+        public static OmnisharpEnvironment Environment { get; set; }
 
         public Program(IServiceProvider serviceProvider)
         {
@@ -25,8 +27,8 @@ namespace OmniSharp
         {
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
-            var traceType = TraceType.Information;
-            
+            var logLevel = LogLevel.Information;
+
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -44,24 +46,19 @@ namespace OmniSharp
                 }
                 else if (arg == "-v")
                 {
-                    traceType = TraceType.Verbose;
+                    logLevel = LogLevel.Verbose;
                 }
             }
 
-            var environment = new OmnisharpEnvironment(applicationRoot, serverPort, traceType);
-            var hostingEnv = new HostingEnvironment { EnvironmentName = "Development" };
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
 
             var config = new Configuration()
-                .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.Add(HostingServices.GetDefaultServices(config));
-            serviceCollection.AddInstance<IOmnisharpEnvironment>(environment);
-            serviceCollection.AddInstance<IHostingEnvironment>(hostingEnv);
+            var serviceCollection = HostingServices.Create(_serviceProvider, config);
 
-            var services = serviceCollection
-                .BuildServiceProvider(_serviceProvider);
-
+            var services = serviceCollection.BuildServiceProvider();
+            var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
             var appEnv = services.GetRequiredService<IApplicationEnvironment>();
 
             var context = new HostingContext()
@@ -74,7 +71,7 @@ namespace OmniSharp
             };
 
             var engine = services.GetRequiredService<IHostingEngine>();
-            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
+            var appShutdownService = services.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEventSlim(false);
 
             var serverShutdown = engine.Start(context);
@@ -93,7 +90,7 @@ namespace OmniSharp
                 appShutdownService.RequestShutdown();
             });
 #else
-            Console.CancelKeyPress += (sender, e)=>
+            Console.CancelKeyPress += (sender, e) =>
             {
                 appShutdownService.RequestShutdown();
             };

@@ -5,7 +5,7 @@ omnisharp-roslyn
 
 Omnisharp based on roslyn workspaces
 
-This currently requires kre version - 1.0.0-beta1 (beta2 doesn't work)
+This currently requires kre version - 1.0.0-beta2
 
 Run the server with ```./scripts/Omnisharp -s /path/to/project -p portnumber```
 

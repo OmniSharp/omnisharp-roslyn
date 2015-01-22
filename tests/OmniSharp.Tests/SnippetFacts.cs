@@ -226,6 +226,15 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
+        public async Task Can_return_keywords()
+        {
+            var source = @"usin$";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsSnippet("using", completions);
+        }
+
+        [Fact]
         public async Task Returns_method_without_optional_params()
         {
             var source = @"
