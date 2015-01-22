@@ -53,6 +53,14 @@ namespace OmniSharp.AspNet5
             shutdown.ShutdownRequested.Register(OnShutdown);
         }
 
+        private static bool IsMono
+        {
+            get
+            {
+                return Type.GetType("Mono.Runtime") != null;
+            }
+        }
+
         public void Initalize()
         {
             _context.RuntimePath = GetRuntimePath();
@@ -498,6 +506,7 @@ namespace OmniSharp.AspNet5
 
             var aliasFiles = new[] { "{0}.alias", "{0}.txt" };
 
+            // Check alias first
             foreach (var shortAliasFile in aliasFiles)
             {
                 var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, versionOrAlias));
@@ -512,17 +521,21 @@ namespace OmniSharp.AspNet5
 
                     return Path.Combine(kreHome, "packages", version);
                 }
-                else
-                {
-                    version = versionOrAlias;
-
-                    _logger.WriteInformation(string.Format("Using configured version {0}", versionOrAlias));
-
-                    return Path.Combine(kreHome, "packages", string.Format("KRE-CLR-x86.{0}", versionOrAlias));
-                }
             }
 
-            return null;
+            // There was no alias, look for the input as a version
+            version = versionOrAlias;
+
+            _logger.WriteInformation(string.Format("Using configured version {0}", versionOrAlias));
+
+            if (IsMono)
+            {
+                return Path.Combine(kreHome, "packages", string.Format("KRE-Mono.{0}", versionOrAlias));
+            }
+            else
+            {
+                return Path.Combine(kreHome, "packages", string.Format("KRE-CLR-x86.{0}", versionOrAlias));
+            }
         }
 
         private string GetRuntimeVersionOrAlias()
@@ -562,5 +575,6 @@ namespace OmniSharp.AspNet5
             // If we don't find any files then make the project folder the root
             return projectPath;
         }
+
     }
 }
