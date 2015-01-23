@@ -9,6 +9,8 @@ namespace OmniSharp.AspNet5
         private int _contextId;
 
         public string RuntimePath { get; set; }
+        
+        public int DesignTimeHostPort { get; set; }
 
         public string HostId { get; private set; }
 

@@ -52,10 +52,12 @@ namespace OmniSharp.Models
             });
 
             RuntimePath = context.RuntimePath;
+            DesignTimeHostPort = context.DesignTimeHostPort; 
         }
 
         public IEnumerable<AspNet5Project> Projects { get; }
         public string RuntimePath { get; }
+        public int DesignTimeHostPort { get; }
     }
 
     public class MSBuildProject

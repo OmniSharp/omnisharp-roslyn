@@ -89,6 +89,8 @@ namespace OmniSharp.AspNet5
                 var networkStream = new NetworkStream(socket);
 
                 _logger.WriteInformation("Connected");
+                
+                _context.DesignTimeHostPort = port;
 
                 _context.Connection = new ProcessingQueue(networkStream, _logger);
 
