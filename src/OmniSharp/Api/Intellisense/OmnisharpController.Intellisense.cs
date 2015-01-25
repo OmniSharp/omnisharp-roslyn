@@ -14,7 +14,7 @@ namespace OmniSharp
     {
         private HashSet<AutoCompleteResponse> _completions
             = new HashSet<AutoCompleteResponse>();
-        
+
         [HttpPost("autocomplete")]
         public async Task<IActionResult> AutoComplete([FromBody]AutoCompleteRequest request)
         {
@@ -28,13 +28,13 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-                AddKeywords(model, position);
-                
+                AddKeywords(model, position, request.WantKind);
+
                 foreach (var symbol in symbols.Where(s => IsValidCompletion(request.WordToComplete, s.Name)))
                 {
                     if (request.WantSnippet)
                     {
-                        foreach(var completion in MakeSnippetedResponses(request, symbol))
+                        foreach (var completion in MakeSnippetedResponses(request, symbol))
                         {
                             _completions.Add(completion);
                         }
@@ -54,7 +54,7 @@ namespace OmniSharp
             return suggestion.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void AddKeywords(SemanticModel model, int position)
+        private void AddKeywords(SemanticModel model, int position, bool wantKind)
         {
             var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
             var keywordHandler = new KeywordContextHandler();
@@ -63,14 +63,15 @@ namespace OmniSharp
             foreach (var keyword in keywords)
             {
                 _completions.Add(new AutoCompleteResponse
-                                 {
-                                     CompletionText = keyword,
-                                     DisplayText = keyword,
-                                     Snippet = keyword
-                                 });
+                {
+                    CompletionText = keyword,
+                    DisplayText = keyword,
+                    Snippet = keyword,
+                    Kind = wantKind ? "Keyword" : null
+                });
             }
         }
-        
+
         private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol)
         {
             var completions = new List<AutoCompleteResponse>();
@@ -113,6 +114,11 @@ namespace OmniSharp
             if (request.WantReturnType)
             {
                 response.ReturnType = ReturnTypeFormatter.GetReturnType(symbol);
+            }
+
+            if (request.WantKind)
+            {
+                response.Kind = Enum.GetName(symbol.Kind.GetType(), symbol.Kind);
             }
 
             if (request.WantSnippet)

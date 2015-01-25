@@ -42,5 +42,10 @@ namespace OmniSharp.Models
         /// Returns the return type 
         /// </summary>
         public bool WantReturnType { get; set; }
+
+        /// <summary>
+        /// Returns the kind (i.e Method, Property, Field)
+        /// </summary>
+        public bool WantKind { get; set; }
     }
 }
