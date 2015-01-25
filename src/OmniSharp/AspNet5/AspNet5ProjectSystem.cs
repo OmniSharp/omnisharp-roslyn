@@ -92,7 +92,7 @@ namespace OmniSharp.AspNet5
                 var networkStream = new NetworkStream(socket);
 
                 _logger.WriteInformation("Connected");
-                
+
                 _context.DesignTimeHostPort = port;
 
                 _context.Connection = new ProcessingQueue(networkStream, _logger);
@@ -212,7 +212,11 @@ namespace OmniSharp.AspNet5
                                 continue;
                             }
 
-                            var projectReferenceContextId = _context.ProjectContextMapping[projectReference.Path];
+                            int projectReferenceContextId;
+                            if (!_context.ProjectContextMapping.TryGetValue(projectReference.Path, out projectReferenceContextId))
+                            {
+                                projectReferenceContextId = AddProject(projectReference.Path);
+                            }
 
                             var referencedProject = _context.Projects[projectReferenceContextId];
 
@@ -451,6 +455,35 @@ namespace OmniSharp.AspNet5
             }
         }
 
+        private int AddProject(string projectFile)
+        {
+            Project project;
+            if (!_context.TryAddProject(projectFile, out project))
+            {
+                return project.ContextId;
+            }
+
+            _watcher.Watch(projectFile, TriggerDependeees);
+
+            // Send an InitializeMessage for each project
+            var initializeMessage = new InitializeMessage
+            {
+                ProjectFolder = Path.GetDirectoryName(projectFile),
+            };
+
+            // Initialize this project
+            _context.Connection.Post(new Message
+            {
+                ContextId = project.ContextId,
+                MessageType = "Initialize",
+                Payload = JToken.FromObject(initializeMessage),
+                HostId = _context.HostId
+            });
+
+            project.InitializeSent = true;
+            return project.ContextId;
+        }
+
         private bool ScanForProjects()
         {
             _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
@@ -459,8 +492,8 @@ namespace OmniSharp.AspNet5
 
             foreach (var projectFile in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
             {
-                int contextId;
-                if (!_context.TryAddProject(projectFile, out contextId))
+                Project project;
+                if (!_context.TryAddProject(projectFile, out project))
                 {
                     continue;
                 }

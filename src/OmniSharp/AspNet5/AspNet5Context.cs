@@ -30,23 +30,26 @@ namespace OmniSharp.AspNet5
             WorkspaceMapping = new Dictionary<ProjectId, FrameworkProject>();
         }
 
-        public bool TryAddProject(string projectFile, out int contextId)
+        public bool TryAddProject(string projectFile, out Project project)
         {
-            contextId = -1;
+            project = null;
             if (ProjectContextMapping.ContainsKey(projectFile))
             {
                 return false;
             }
 
-            contextId = ++_contextId;
+            var contextId = ++_contextId;
 
             // Create a mapping from path to contextid and back
             ProjectContextMapping[projectFile] = contextId;
-            Projects[contextId] = new Project
+
+            project = new Project
             {
                 Path = projectFile,
                 ContextId = contextId
             };
+
+            Projects[contextId] = project;
 
             return true;
         }
