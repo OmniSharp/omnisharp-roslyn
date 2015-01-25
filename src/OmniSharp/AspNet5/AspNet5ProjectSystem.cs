@@ -33,6 +33,7 @@ namespace OmniSharp.AspNet5
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly DesignTimeHostManager _designTimeHostManager;
         private readonly AspNet5Context _context;
+        private readonly IFileSystemWatcher _watcher;
 
         public AspNet5ProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
@@ -40,6 +41,7 @@ namespace OmniSharp.AspNet5
                                     ILoggerFactory loggerFactory,
                                     IMetadataFileReferenceCache metadataFileReferenceCache,
                                     IApplicationShutdown shutdown,
+                                    IFileSystemWatcher watcher,
                                     AspNet5Context context)
         {
             _workspace = workspace;
@@ -49,6 +51,7 @@ namespace OmniSharp.AspNet5
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
             _context = context;
+            _watcher = watcher;
 
             shutdown.ShutdownRequested.Register(OnShutdown);
         }
@@ -376,7 +379,7 @@ namespace OmniSharp.AspNet5
             _designTimeHostManager.Stop();
         }
 
-        private static void TriggerDependeees(AspNet5Context context, string path)
+        private void TriggerDependeees(string path)
         {
             var seen = new HashSet<string>();
             var results = new HashSet<int>();
@@ -394,11 +397,11 @@ namespace OmniSharp.AspNet5
                 }
 
                 int contextId;
-                if (context.ProjectContextMapping.TryGetValue(projectPath, out contextId))
+                if (_context.ProjectContextMapping.TryGetValue(projectPath, out contextId))
                 {
                     results.Add(contextId);
 
-                    foreach (var frameworkProject in context.Projects[contextId].ProjectsByFramework.Values)
+                    foreach (var frameworkProject in _context.Projects[contextId].ProjectsByFramework.Values)
                     {
                         foreach (var dependee in frameworkProject.ProjectDependeees.Keys)
                         {
@@ -411,10 +414,10 @@ namespace OmniSharp.AspNet5
             foreach (var contextId in results)
             {
                 var message = new Message();
-                message.HostId = context.HostId;
+                message.HostId = _context.HostId;
                 message.ContextId = contextId;
                 message.MessageType = "FilesChanged";
-                context.Connection.Post(message);
+                _context.Connection.Post(message);
             }
         }
 
@@ -463,6 +466,8 @@ namespace OmniSharp.AspNet5
                 }
 
                 _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
+
+                _watcher.Watch(projectFile, TriggerDependeees);
 
                 anyProjects = true;
             }
