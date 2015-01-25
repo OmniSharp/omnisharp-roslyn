@@ -21,6 +21,7 @@ namespace OmniSharp
             var response = new CodeFormatResponse();
 
             var documentId = _workspace.GetDocumentId(request.FileName);
+
             if (documentId != null)
             {
                 var document = _workspace.CurrentSolution.GetDocument(documentId);

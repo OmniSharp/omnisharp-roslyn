@@ -9,5 +9,18 @@
         public string MethodHeader { get; set; }
         public string ReturnType { get; set; }
         public string Snippet { get; set; }
+
+        public override bool Equals(object other)
+        {
+            var otherResponse = other as AutoCompleteResponse;
+            return otherResponse.DisplayText == DisplayText
+                && otherResponse.Snippet == Snippet;
+        }
+
+        public override int GetHashCode()
+        {
+            return 17 * DisplayText.GetHashCode()
+                 + 31 * Snippet.GetHashCode();
+        }
     }
 }

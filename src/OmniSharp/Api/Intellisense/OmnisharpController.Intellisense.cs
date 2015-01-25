@@ -12,12 +12,13 @@ namespace OmniSharp
 {
     public partial class OmnisharpController
     {
+        private HashSet<AutoCompleteResponse> _completions
+            = new HashSet<AutoCompleteResponse>();
+        
         [HttpPost("autocomplete")]
         public async Task<IActionResult> AutoComplete([FromBody]AutoCompleteRequest request)
         {
             _workspace.EnsureBufferUpdated(request);
-
-            var completions = new List<AutoCompleteResponse>();
 
             var documents = _workspace.GetDocuments(request.FileName);
 
@@ -27,36 +28,49 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-                var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
-                var keywordHandler = new KeywordContextHandler();
-                var keywords = keywordHandler.Get(context, model, position);
-
-                foreach (var keyword in keywords)
-                {
-                    completions.Add(new AutoCompleteResponse
-                    {
-                        CompletionText = keyword,
-                        DisplayText = keyword,
-                        Snippet = keyword
-                    });
-                }
-
-                foreach (var symbol in symbols.Where(s => s.Name.StartsWith(request.WordToComplete, StringComparison.OrdinalIgnoreCase)))
+                AddKeywords(model, position);
+                
+                foreach (var symbol in symbols.Where(s => IsValidCompletion(request.WordToComplete, s.Name)))
                 {
                     if (request.WantSnippet)
                     {
-                        completions.AddRange(MakeSnippetedResponses(request, symbol));
+                        foreach(var completion in MakeSnippetedResponses(request, symbol))
+                        {
+                            _completions.Add(completion);
+                        }
                     }
                     else
                     {
-                        completions.Add(MakeAutoCompleteResponse(request, symbol));
+                        _completions.Add(MakeAutoCompleteResponse(request, symbol));
                     }
                 }
             }
 
-            return new ObjectResult(completions);
+            return new ObjectResult(_completions.OrderBy(c => c.DisplayText));
         }
 
+        private bool IsValidCompletion(string wordToComplete, string suggestion)
+        {
+            return suggestion.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void AddKeywords(SemanticModel model, int position)
+        {
+            var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
+            var keywordHandler = new KeywordContextHandler();
+            var keywords = keywordHandler.Get(context, model, position);
+
+            foreach (var keyword in keywords)
+            {
+                _completions.Add(new AutoCompleteResponse
+                                 {
+                                     CompletionText = keyword,
+                                     DisplayText = keyword,
+                                     Snippet = keyword
+                                 });
+            }
+        }
+        
         private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol)
         {
             var completions = new List<AutoCompleteResponse>();
