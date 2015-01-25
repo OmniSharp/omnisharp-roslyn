@@ -1,4 +1,5 @@
-﻿namespace OmniSharp.Models
+﻿
+namespace OmniSharp.Models
 {
     public class AutoCompleteResponse
     {
@@ -9,6 +10,7 @@
         public string MethodHeader { get; set; }
         public string ReturnType { get; set; }
         public string Snippet { get; set; }
+        public string Kind { get; set; }
 
         public override bool Equals(object other)
         {
