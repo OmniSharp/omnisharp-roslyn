@@ -21,8 +21,14 @@ namespace OmniSharp.Models
 
         public override int GetHashCode()
         {
-            return 17 * DisplayText.GetHashCode()
-                 + 31 * Snippet.GetHashCode();
+            var hashCode = 17 * DisplayText.GetHashCode();
+
+            if (Snippet != null)
+            {
+                hashCode += 31 * Snippet.GetHashCode();
+            }
+
+            return hashCode;
         }
     }
 }
