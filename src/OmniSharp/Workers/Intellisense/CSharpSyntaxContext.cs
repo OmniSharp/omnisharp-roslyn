@@ -16,7 +16,7 @@ namespace OmniSharp
         internal const string CACSharpAsmName = ", Microsoft.CodeAnalysis.CSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
     }
 
-    class CSharpSyntaxContext
+    public class CSharpSyntaxContext
     {
         readonly static Type typeInfo;
         readonly static MethodInfo createContextMethod;
@@ -140,12 +140,12 @@ namespace OmniSharp
             syntaxTreeProperty = typeInfo.GetProperty("SyntaxTree");
         }
 
-        CSharpSyntaxContext(object instance)
+        private CSharpSyntaxContext(object instance)
         {
             this.instance = instance;
         }
 
-        internal static CSharpSyntaxContext CreateContext(Workspace workspace, SemanticModel semanticModel, int position, CancellationToken cancellationToken = default(CancellationToken))
+        public static CSharpSyntaxContext CreateContext(Workspace workspace, SemanticModel semanticModel, int position, CancellationToken cancellationToken = default(CancellationToken))
         {
             return new CSharpSyntaxContext(createContextMethod.Invoke(null, new object[] { workspace, semanticModel, position, cancellationToken }));
         }

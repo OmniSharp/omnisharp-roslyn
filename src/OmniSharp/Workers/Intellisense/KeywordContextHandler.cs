@@ -35,7 +35,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp
 {
-    class KeywordContextHandler
+    public class KeywordContextHandler
     {
         public IEnumerable<string> Get(CSharpSyntaxContext ctx, SemanticModel semanticModel, int offset, CancellationToken cancellationToken = default(CancellationToken))
         {

@@ -29,12 +29,8 @@ namespace OmniSharp
             var ret = new Node();
             ret.ChildNodes = new List<Node>();
             ret.Kind = node.CSharpKind().ToString();
-            ret.Location = new QuickFix();
-            ret.Location.Text = text;
-            ret.Location.Line = 1 + node.GetLocation().GetLineSpan().StartLinePosition.Line;
-            ret.Location.Column = 1 + node.GetLocation().GetLineSpan().StartLinePosition.Character;
-            ret.Location.EndLine = 1 + node.GetLocation().GetLineSpan().EndLinePosition.Line;
-            ret.Location.EndColumn = 1 + node.GetLocation().GetLineSpan().EndLinePosition.Character;
+            ret.Location = node.GetLocation();
+            ret.Text = text;
             return ret;
         }
 

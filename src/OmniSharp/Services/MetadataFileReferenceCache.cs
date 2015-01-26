@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Cache.Memory;
+using Microsoft.Framework.Expiration.Interfaces;
 using Microsoft.Framework.Logging;
 using OmniSharp.Roslyn;
 

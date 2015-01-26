@@ -10,5 +10,5 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 
 export MONO_MANAGED_WATCHER=1
-export KRE_APPBASE=$DIR/../src/OmniSharp
+export KRE_APPBASE=$DIR/../src/Omnisharp.Http
 $HOME/.kre/packages/KRE-Mono.1.0.0-beta2/bin/k run "$@"
