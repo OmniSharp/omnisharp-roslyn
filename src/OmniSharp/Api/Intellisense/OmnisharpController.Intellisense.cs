@@ -28,7 +28,7 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-                AddKeywords(model, position, request.WantKind);
+                AddKeywords(model, position, request.WantKind, request.WordToComplete);
 
                 foreach (var symbol in symbols.Where(s => IsValidCompletion(request.WordToComplete, s.Name)))
                 {
@@ -54,13 +54,13 @@ namespace OmniSharp
             return suggestion.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void AddKeywords(SemanticModel model, int position, bool wantKind)
+        private void AddKeywords(SemanticModel model, int position, bool wantKind, string wordToComplete)
         {
             var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
             var keywordHandler = new KeywordContextHandler();
             var keywords = keywordHandler.Get(context, model, position);
 
-            foreach (var keyword in keywords)
+            foreach (var keyword in keywords.Where(k => IsValidCompletion(wordToComplete, k)))
             {
                 _completions.Add(new AutoCompleteResponse
                 {
