@@ -13,7 +13,7 @@
         "Microsoft.Composition": "1.0.27"
     },
     "commands": {
-        "OmniSharp": "run"
+        "omnisharp": "run"
     },
     "frameworks": {
         "aspnet50": {

@@ -25,5 +25,5 @@ nuget.exe
 *.*sdf
 *.ipch
 *.sln.ide
-/src/OmniSharp/Properties/debugSettings.json
-/tests/OmniSharp.Tests/Properties/debugSettings.json
+debugSettings.json
+buildlog
