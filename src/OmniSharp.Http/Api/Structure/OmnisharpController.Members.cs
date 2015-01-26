@@ -36,7 +36,7 @@ namespace OmniSharp
             {
                 var node = stack[0];
                 stack.Remove(node);
-                ret.Add(node.Location);
+                ret.Add(node.AsQuickFix());
                 stack.AddRange(node.ChildNodes);
             }
             return new ObjectResult(ret);

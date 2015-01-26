@@ -72,15 +72,15 @@ namespace OmniSharp
             OnDocumentTextChanged(documentId, text, PreservationMode.PreserveIdentity);
         }
 
-        public void EnsureBufferUpdated(Request request)
+        public void EnsureBufferUpdated(string buffer, string fileName)
         {
-            if(request.Buffer == null || request.FileName == null)
+            if(buffer == null || fileName == null)
             {
                 return;
             }
 
-            var sourceText = SourceText.From(request.Buffer);
-            foreach (var documentId in CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
+            var sourceText = SourceText.From(buffer);
+            foreach (var documentId in CurrentSolution.GetDocumentIdsWithFilePath(fileName))
             {
                 OnDocumentChanged(documentId, sourceText);
             }

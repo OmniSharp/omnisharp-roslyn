@@ -1,24 +1,26 @@
 ﻿{
     "version": "1.0.0-*",
     "dependencies": {
-        "Kestrel": "1.0.0-beta2",
-        "Microsoft.AspNet.Mvc": "6.0.0-beta2",
-        "Microsoft.AspNet.Diagnostics": "1.0.0-beta2",
         "Microsoft.CodeAnalysis.CSharp": "1.0.0-beta2",
         "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta2",
         "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-beta2",
         "Microsoft.Framework.Logging.Console": "1.0.0-beta2",
-        "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta2",
-        "Microsoft.Framework.Cache.Memory": "1.0.0-beta1",
-        "Microsoft.Composition": "1.0.27"
-    },
-    "commands": {
-        "OmniSharp": "run"
+        "Microsoft.Framework.Cache.Memory": "1.0.0-beta2",
+        "Microsoft.Composition": "1.0.27",
+        "Newtonsoft.Json": "6.0.6"
     },
     "frameworks": {
         "aspnet50": {
             "frameworkAssemblies": {
+                "System.Collections": "",
+                "System.Runtime": "",
+                "System.IO": "",
+                "System.Text.Encoding": "",
                 "System.Globalization": "",
+                "System.Threading": "",
+                "System.Threading.Tasks": "",
+                "System.Xml": "",
+                "System.Xml.Linq": "",
                 "Microsoft.Build": "",
                 "Microsoft.Build.Engine": "",
                 "Microsoft.Build.Framework": ""
@@ -26,7 +28,20 @@
         },
         "aspnetcore50": {
             "dependencies": {
+                "Microsoft.CSharp": "4.0.0-beta-22231",
+                "System.Diagnostics.Tools": "4.0.0-beta-22231",
+                "System.Xml.XDocument": "4.0.0-beta-22231",
+                "System.Runtime": "4.0.20-beta-22231",
+                "System.IO": "4.0.10-beta-22231",
+                "System.IO.FileSystem": "4.0.0-beta-22231",
                 "System.IO.FileSystem.Watcher": "4.0.0-beta-22231",
+                "System.Text.Encoding": "4.0.10-beta-22231",
+                "System.Collections": "4.0.10-beta-22231",
+                "System.ObjectModel": "4.0.10-beta-22231",
+                "System.Linq": "4.0.0-beta-22231",
+                "System.Threading": "4.0.10-beta-22231",
+                "System.Threading.Thread": "4.0.0-beta-22231",
+                "System.Threading.Tasks": "4.0.10-beta-22231",
                 "System.Net.Sockets": "4.0.0-beta-22231",
                 "System.Diagnostics.Process": "4.0.0-beta-22231"
             }

@@ -46,7 +46,7 @@ namespace OmniSharp
 
             // Add the omnisharp workspace to the container
             services.AddInstance(Workspace);
-
+            
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
