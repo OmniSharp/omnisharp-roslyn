@@ -40,7 +40,7 @@ namespace OmniSharp
             }
             else
             {
-                ret.Location.Line = location.GetLineSpan().StartLinePosition.Line;
+                ret.Location.Line = 1 + location.GetLineSpan().StartLinePosition.Line;
                 ret.Location.Column = 1 + location.GetLineSpan().StartLinePosition.Character;
                 ret.Location.EndLine = 1 + location.GetLineSpan().EndLinePosition.Line;
                 ret.Location.EndColumn = 1 + location.GetLineSpan().EndLinePosition.Character;
