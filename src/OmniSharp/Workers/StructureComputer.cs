@@ -27,28 +27,19 @@ namespace OmniSharp
         private Node AsNode(SyntaxNode node, string text, Location location)
         {
             var ret = new Node();
+            var lineSpan = location.GetLineSpan();
             ret.ChildNodes = new List<Node>();
             ret.Kind = node.CSharpKind().ToString();
             ret.Location = new QuickFix();
             ret.Location.Text = text;
-            if (location == null)
-            {
-                ret.Location.Line = 1 + node.GetLocation().GetLineSpan().StartLinePosition.Line;
-                ret.Location.Column = 1 + node.GetLocation().GetLineSpan().StartLinePosition.Character;
-                ret.Location.EndLine = 1 + node.GetLocation().GetLineSpan().EndLinePosition.Line;
-                ret.Location.EndColumn = 1 + node.GetLocation().GetLineSpan().EndLinePosition.Character;
-            }
-            else
-            {
-                ret.Location.Line = 1 + location.GetLineSpan().StartLinePosition.Line;
-                ret.Location.Column = 1 + location.GetLineSpan().StartLinePosition.Character;
-                ret.Location.EndLine = 1 + location.GetLineSpan().EndLinePosition.Line;
-                ret.Location.EndColumn = 1 + location.GetLineSpan().EndLinePosition.Character;
-            }
+            ret.Location.Line = 1 + lineSpan.StartLinePosition.Line;
+            ret.Location.Column = 1 + lineSpan.StartLinePosition.Character;
+            ret.Location.EndLine = 1 + lineSpan.EndLinePosition.Line;
+            ret.Location.EndColumn = 1 + lineSpan.EndLinePosition.Character;
             return ret;
         }
 
-        private Node AsChild(SyntaxNode node, string text, Location location = null)
+        private Node AsChild(SyntaxNode node, string text, Location location)
         {
             var child = AsNode(node, text, location);
             var parent = _roots.Peek();
@@ -59,7 +50,7 @@ namespace OmniSharp
             return child;
         }
 
-        private Node AsParent(SyntaxNode node, string text, Action fn, Location location = null)
+        private Node AsParent(SyntaxNode node, string text, Action fn, Location location)
         {
             var child = AsChild(node, text, location);
             _roots.Push(child);
