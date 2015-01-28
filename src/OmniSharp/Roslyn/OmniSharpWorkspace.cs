@@ -111,5 +111,10 @@ namespace OmniSharp
         {
             OnDocumentChanged(id, text);
         }
+
+        public override bool CanApplyChange(ApplyChangesKind feature)
+        {
+            return true;
+        }
     }
 }
