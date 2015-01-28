@@ -26,35 +26,6 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task Rename_UpdatesWorkspace()
-        {
-            const string fileContent = @"using System;
-
-namespace OmniSharp.Models
-{
-    public class CodeFormatResponse
-    {
-        public string Buffer { get; set; }
-    }
-}";
-
-            OmnisharpWorkspace workspace;
-            OmnisharpController controller;
-            DocumentInfo document;
-            CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", fileContent);
-            var result = await controller.Rename(new Models.RenameRequest
-                        {
-                            Line = 7,
-                            Column = 27,
-                            RenameTo = "foo",
-                            FileName = "test.cs"
-                        });
-            var sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
-            Assert.Equal(result.Changes.First().Buffer, sourceText.ToString());
-            Assert.Equal(result.Changes.First().FileName, "test.cs");
-        }
-
-        [Fact]
         public async Task UpdateBuffer_HandlesVoidRequest()
         {
             OmnisharpWorkspace workspace;
