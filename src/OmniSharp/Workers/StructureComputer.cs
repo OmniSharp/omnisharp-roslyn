@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -9,19 +10,22 @@ namespace OmniSharp
 {
     public class StructureComputer : CSharpSyntaxWalker
     {
-        public static IEnumerable<Node> Compute(CSharpSyntaxNode node)
+        public static async Task<IEnumerable<Node>> Compute(IEnumerable<Document> documents)
         {
             var root = new Node() { ChildNodes = new List<Node>() };
-            new StructureComputer(node, root);
+            var visitor = new StructureComputer(root);
+            foreach (var document in documents)
+            {
+                ((CSharpSyntaxNode)await document.GetSyntaxRootAsync()).Accept(visitor);
+            }
             return root.ChildNodes;
         }
 
         private readonly Stack<Node> _roots = new Stack<Node>();
 
-        private StructureComputer(CSharpSyntaxNode node, Node root)
+        private StructureComputer(Node root)
         {
             _roots.Push(root);
-            node.Accept(this);
         }
 
         private Node AsNode(SyntaxNode node, string text, Location location)
@@ -42,12 +46,19 @@ namespace OmniSharp
         private Node AsChild(SyntaxNode node, string text, Location location)
         {
             var child = AsNode(node, text, location);
-            var parent = _roots.Peek();
-            var newChildNodes = new List<Node>();
-            newChildNodes.AddRange(parent.ChildNodes);
-            newChildNodes.Add(child);
-            parent.ChildNodes = newChildNodes;
-            return child;
+            var childNodes = ((List<Node>)_roots.Peek().ChildNodes);
+            // Prevent inserting the same node multiple times
+            // but make sure to insert them at the right spot
+            var idx = childNodes.BinarySearch(child);
+            if (idx < 0)
+            {
+                childNodes.Insert(~idx, child);
+                return child;
+            }
+            else
+            {
+                return childNodes[idx];
+            }
         }
 
         private Node AsParent(SyntaxNode node, string text, Action fn, Location location)

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
@@ -7,7 +8,7 @@ namespace OmniSharp.Tests
     public class StructureFacts
     {
         [Fact]
-        public async void SimpleClass()
+        public async Task SimpleClass()
         {
             var source =
                 @"public class Far {
@@ -15,16 +16,15 @@ namespace OmniSharp.Tests
 				}";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
-            var root = await workspace.GetDocument("d.cs").GetSyntaxRootAsync();
 
-            var nodes = StructureComputer.Compute((CSharpSyntaxNode)root);
+            var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
             Assert.Equal("Far", nodes.First().Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
         }
 
         [Fact]
-        public async void ClassWithMembers()
+        public async Task ClassWithMembers()
         {
             var source =
                 @"public class Far {
@@ -35,9 +35,8 @@ namespace OmniSharp.Tests
 				}";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
-            var root = await workspace.GetDocument("d.cs").GetSyntaxRootAsync();
 
-            var nodes = StructureComputer.Compute((CSharpSyntaxNode)root);
+            var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
             Assert.Equal("Far", nodes.First().Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
@@ -52,7 +51,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async void SimpleInterface()
+        public async Task SimpleInterface()
         {
             var source =
                 @"public interface Far {
@@ -60,9 +59,8 @@ namespace OmniSharp.Tests
 				}";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
-            var root = await workspace.GetDocument("d.cs").GetSyntaxRootAsync();
 
-            var nodes = StructureComputer.Compute((CSharpSyntaxNode)root);
+            var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
             Assert.Equal("Far", nodes.First().Location.Text);
             Assert.Equal(SyntaxKind.InterfaceDeclaration.ToString(), nodes.First().Kind);
