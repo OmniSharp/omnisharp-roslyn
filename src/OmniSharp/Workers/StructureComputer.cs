@@ -16,12 +16,21 @@ namespace OmniSharp
             var visitor = new StructureComputer(root);
             foreach (var document in documents)
             {
+                visitor.CurrentFramework = GetFramework(document);
                 ((CSharpSyntaxNode)await document.GetSyntaxRootAsync()).Accept(visitor);
             }
             return root.ChildNodes;
         }
 
+        private static string GetFramework(Document document)
+        {
+            var idx = document.Project.Name.IndexOf('+');
+            return document.Project.Name.Substring(idx + 1);
+        }
+
         private readonly Stack<Node> _roots = new Stack<Node>();
+
+        private string CurrentFramework { get; set; }
 
         private StructureComputer(Node root)
         {
@@ -32,6 +41,7 @@ namespace OmniSharp
         {
             var ret = new Node();
             var lineSpan = location.GetLineSpan();
+            ret.Frameworks = new List<string>();
             ret.ChildNodes = new List<Node>();
             ret.Kind = node.CSharpKind().ToString();
             ret.Location = new QuickFix();
@@ -52,11 +62,13 @@ namespace OmniSharp
             var idx = childNodes.BinarySearch(child);
             if (idx < 0)
             {
+                ((List<string>)child.Frameworks).Add(CurrentFramework);
                 childNodes.Insert(~idx, child);
                 return child;
             }
             else
             {
+                ((List<string>)childNodes[idx].Frameworks).Add(CurrentFramework);
                 return childNodes[idx];
             }
         }

@@ -11,6 +11,8 @@ namespace OmniSharp.Models
 
         public string Kind { get; set; }
 
+        public IEnumerable<string> Frameworks { get; set; }
+
         public int CompareTo(Node other)
         {
             if (other.Location.Line < Location.Line)
