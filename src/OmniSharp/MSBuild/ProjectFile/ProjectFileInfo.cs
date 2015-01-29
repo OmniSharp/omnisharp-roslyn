@@ -45,21 +45,13 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> Analyzers { get; private set; }
 
-        private static bool IsMono
-        {
-            get
-            {
-                return Type.GetType("Mono.Runtime") != null;
-            }
-        }
-
         public static ProjectFileInfo Create(ILogger logger, string solutionDirectory, string projectFilePath)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
 
 #if ASPNET50
-            if (!IsMono)
+            if (!PlatformHelper.IsMono)
             {
                 var properties = new Dictionary<string, string>
                 {

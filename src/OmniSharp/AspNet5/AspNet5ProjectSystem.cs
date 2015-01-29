@@ -56,14 +56,6 @@ namespace OmniSharp.AspNet5
             shutdown.ShutdownRequested.Register(OnShutdown);
         }
 
-        private static bool IsMono
-        {
-            get
-            {
-                return Type.GetType("Mono.Runtime") != null;
-            }
-        }
-
         public void Initalize()
         {
             _context.RuntimePath = GetRuntimePath();
@@ -568,7 +560,7 @@ namespace OmniSharp.AspNet5
 
             _logger.WriteInformation(string.Format("Using configured version {0}", versionOrAlias));
 
-            if (IsMono)
+            if (PlatformHelper.IsMono)
             {
                 return Path.Combine(kreHome, "packages", string.Format("KRE-Mono.{0}", versionOrAlias));
             }
