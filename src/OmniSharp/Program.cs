@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,8 @@ namespace OmniSharp
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
             var logLevel = LogLevel.Information;
-
+            var hostPID = -1;
+            
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -47,6 +49,11 @@ namespace OmniSharp
                 else if (arg == "-v")
                 {
                     logLevel = LogLevel.Verbose;
+                }
+                else if (arg == "--hostPID")
+                {
+                    enumerator.MoveNext();
+                    hostPID = int.Parse((string)enumerator.Current);
                 }
             }
 
@@ -95,7 +102,18 @@ namespace OmniSharp
                 appShutdownService.RequestShutdown();
             };
 #endif
-
+            // In mono 3.10, the Exited event fires immediately, so the
+            // caller will need to terminate this process.
+            if (hostPID != -1 && !PlatformHelper.IsMono)
+            {
+                var hostProcess = Process.GetProcessById(hostPID);
+                hostProcess.EnableRaisingEvents = true;
+                hostProcess.Exited += (s, e) =>
+                {
+                    appShutdownService.RequestShutdown();
+                };
+            }
+            
             shutdownHandle.Wait();
         }
     }
