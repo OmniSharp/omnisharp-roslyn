@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Xunit;
 using OmniSharp.Models;
 
@@ -274,7 +273,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var request = CreateRequest(source);
             var response = await controller.AutoComplete(request);
-            var completions = ((ObjectResult)response).Value as IEnumerable<AutoCompleteResponse>;
+            var completions = response as IEnumerable<AutoCompleteResponse>;
             return completions.Select(completion => BuildCompletion(completion));
         }
 
