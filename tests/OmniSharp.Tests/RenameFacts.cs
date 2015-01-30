@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
-using System;
+﻿using OmniSharp.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,8 +42,23 @@ namespace OmniSharp.Tests
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
+
+            //compare workspace change with response
             Assert.Equal(result.Changes.First().Buffer, sourceText.ToString());
+
+            //check that response refers to correct modified file
             Assert.Equal(result.Changes.First().FileName, "test.cs");
+
+            //check response for change
+            Assert.Equal(@"using System;
+
+                        namespace OmniSharp.Models
+                        {
+                            public class foo
+                            {
+                                public string Buffer { get; set; }
+                            }
+                        }", result.Changes.First().Buffer);
         }
 
         [Fact]
@@ -64,11 +77,25 @@ namespace OmniSharp.Tests
             var source1Text = await workspace.CurrentSolution.GetDocument(doc1Id).GetTextAsync();
             var source2Text = await workspace.CurrentSolution.GetDocument(doc2Id).GetTextAsync();
 
+            //compare workspace change with response for file 1
             Assert.Equal(result.Changes.ElementAt(0).Buffer, source1Text.ToString());
+
+            //check that response refers to modified file 1
             Assert.Equal(result.Changes.ElementAt(0).FileName, "test1.cs");
 
+            //check response for change in file 1
+            Assert.Equal(@"public class xxx {}", result.Changes.ElementAt(0).Buffer);
+
+            //compare workspace change with response for file 2
             Assert.Equal(result.Changes.ElementAt(1).Buffer, source2Text.ToString());
+
+            //check that response refers to modified file 2
             Assert.Equal(result.Changes.ElementAt(1).FileName, "test2.cs");
+
+            //check response for change in file 2
+            Assert.Equal(@"public class Bar {
+                                    public xxx Property {get; set;}
+                                }", result.Changes.ElementAt(1).Buffer);
         }
 
         [Fact]
@@ -77,7 +104,6 @@ namespace OmniSharp.Tests
             const string fileContent = "class f$oo{}";
             var workspace = TestHelpers.CreateSimpleWorkspace(fileContent);
 
-            var controller = new OmnisharpController(workspace, null);
             var result = await SendRequest(workspace, "xxx", "test.cs", fileContent); 
 
             Assert.Equal(0, result.Changes.Count());
