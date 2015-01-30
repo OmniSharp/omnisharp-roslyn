@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
-using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -11,26 +10,16 @@ namespace OmniSharp
         [HttpPost("currentfilemembersastree")]
         public async Task<IActionResult> MembersAsTree([FromBody]Request request)
         {
-            var document = _workspace.GetDocument(request.FileName);
-            if (document == null)
-            {
-                return new HttpNotFoundResult();
-            }
             return new ObjectResult(new
             {
-                TopLevelTypeDefinitions = StructureComputer.Compute((CSharpSyntaxNode)await document.GetSyntaxRootAsync())
+                TopLevelTypeDefinitions = await StructureComputer.Compute(_workspace.GetDocuments(request.FileName))
             });
         }
 
         [HttpPost("currentfilemembersasflat")]
         public async Task<IActionResult> MembersAsFlat([FromBody]Request request)
         {
-            var document = _workspace.GetDocument(request.FileName);
-            if (document == null)
-            {
-                return new HttpNotFoundResult();
-            }
-            var stack = new List<Node>(StructureComputer.Compute((CSharpSyntaxNode)await document.GetSyntaxRootAsync()));
+            var stack = new List<FileMemberElement>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
             var ret = new List<QuickFix>();
             while (stack.Count > 0)
             {

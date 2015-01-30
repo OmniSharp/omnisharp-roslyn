@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -9,26 +10,33 @@ namespace OmniSharp
 {
     public class StructureComputer : CSharpSyntaxWalker
     {
-        public static IEnumerable<Node> Compute(CSharpSyntaxNode node)
+        public static async Task<IEnumerable<FileMemberElement>> Compute(IEnumerable<Document> documents)
         {
-            var root = new Node() { ChildNodes = new List<Node>() };
-            new StructureComputer(node, root);
+            var root = new FileMemberElement() { ChildNodes = new List<FileMemberElement>() };
+            var visitor = new StructureComputer(root);
+            foreach (var document in documents)
+            {
+                visitor.CurrentProject = document.Project.Name;
+                ((CSharpSyntaxNode)await document.GetSyntaxRootAsync()).Accept(visitor);
+            }
             return root.ChildNodes;
         }
 
-        private readonly Stack<Node> _roots = new Stack<Node>();
+        private readonly Stack<FileMemberElement> _roots = new Stack<FileMemberElement>();
 
-        private StructureComputer(CSharpSyntaxNode node, Node root)
+        private string CurrentProject { get; set; }
+
+        private StructureComputer(FileMemberElement root)
         {
             _roots.Push(root);
-            node.Accept(this);
         }
 
-        private Node AsNode(SyntaxNode node, string text, Location location)
+        private FileMemberElement AsNode(SyntaxNode node, string text, Location location)
         {
-            var ret = new Node();
+            var ret = new FileMemberElement();
             var lineSpan = location.GetLineSpan();
-            ret.ChildNodes = new List<Node>();
+            ret.Projects = new List<string>();
+            ret.ChildNodes = new List<FileMemberElement>();
             ret.Kind = node.CSharpKind().ToString();
             ret.Location = new QuickFix();
             ret.Location.Text = text;
@@ -39,18 +47,27 @@ namespace OmniSharp
             return ret;
         }
 
-        private Node AsChild(SyntaxNode node, string text, Location location)
+        private FileMemberElement AsChild(SyntaxNode node, string text, Location location)
         {
             var child = AsNode(node, text, location);
-            var parent = _roots.Peek();
-            var newChildNodes = new List<Node>();
-            newChildNodes.AddRange(parent.ChildNodes);
-            newChildNodes.Add(child);
-            parent.ChildNodes = newChildNodes;
-            return child;
+            var childNodes = ((List<FileMemberElement>)_roots.Peek().ChildNodes);
+            // Prevent inserting the same node multiple times
+            // but make sure to insert them at the right spot
+            var idx = childNodes.BinarySearch(child);
+            if (idx < 0)
+            {
+                ((List<string>)child.Projects).Add(CurrentProject);
+                childNodes.Insert(~idx, child);
+                return child;
+            }
+            else
+            {
+                ((List<string>)childNodes[idx].Projects).Add(CurrentProject);
+                return childNodes[idx];
+            }
         }
 
-        private Node AsParent(SyntaxNode node, string text, Action fn, Location location)
+        private FileMemberElement AsParent(SyntaxNode node, string text, Action fn, Location location)
         {
             var child = AsChild(node, text, location);
             _roots.Push(child);
