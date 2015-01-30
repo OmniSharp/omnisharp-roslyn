@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 namespace OmniSharp.Models
 {
-    public class Node : IComparable<Node>
+    public class FileMemberElement : IComparable<FileMemberElement>
     {
-        public IEnumerable<Node> ChildNodes { get; set; }
+        public IEnumerable<FileMemberElement> ChildNodes { get; set; }
 
         public QuickFix Location { get; set; }
 
         public string Kind { get; set; }
 
-        public IEnumerable<string> Frameworks { get; set; }
+        public IEnumerable<string> Projects { get; set; }
 
-        public int CompareTo(Node other)
+        public int CompareTo(FileMemberElement other)
         {
             if (other.Location.Line < Location.Line)
             {
@@ -59,7 +59,7 @@ namespace OmniSharp.Models
 
         public override bool Equals(object other)
         {
-            var node = other as Node;
+            var node = other as FileMemberElement;
             return node != null
                 && node.Location.Line == Location.Line
                 && node.Location.Column == Location.Column

@@ -19,7 +19,7 @@ namespace OmniSharp
         [HttpPost("currentfilemembersasflat")]
         public async Task<IActionResult> MembersAsFlat([FromBody]Request request)
         {
-            var stack = new List<Node>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
+            var stack = new List<FileMemberElement>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
             var ret = new List<QuickFix>();
             while (stack.Count > 0)
             {
