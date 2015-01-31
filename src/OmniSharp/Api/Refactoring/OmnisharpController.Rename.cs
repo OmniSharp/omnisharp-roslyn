@@ -13,7 +13,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("rename")]
-        public async Task<IActionResult> Rename([FromBody]RenameRequest request)
+        public async Task<RenameResponse> Rename([FromBody]RenameRequest request)
         {
             _workspace.EnsureBufferUpdated(request);
 
@@ -56,7 +56,7 @@ namespace OmniSharp
                 }
             }
 
-            return new ObjectResult(response);
+            return response;
         }
     }
 }

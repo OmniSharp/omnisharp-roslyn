@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
+using System.Linq;
 
 namespace OmniSharp.Tests
 {
