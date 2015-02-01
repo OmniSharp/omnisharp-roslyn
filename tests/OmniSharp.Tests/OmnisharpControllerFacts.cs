@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
-using System.Linq;
 
 namespace OmniSharp.Tests
 {
