@@ -22,7 +22,19 @@ namespace OmniSharp
             {
                 var semanticModel = await document.GetSemanticModelAsync();
 
-                quickFixes.AddRange(semanticModel.GetDiagnostics().Select(MakeQuickFix));
+                foreach (var quickFix in semanticModel.GetDiagnostics().Select(MakeQuickFix))
+                {
+                    var existingQuickFix = quickFixes.FirstOrDefault(q => q.Equals(quickFix));
+                    if (existingQuickFix == null)
+                    {
+                        quickFix.Projects.Add(document.Project.Name);
+                        quickFixes.Add(quickFix);
+                    }
+                    else
+                    {
+                        existingQuickFix.Projects.Add(document.Project.Name);
+                    }
+                }
             }
 
             return new ObjectResult(new { QuickFixes = quickFixes });
