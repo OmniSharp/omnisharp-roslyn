@@ -36,15 +36,21 @@ namespace OmniSharp.Models
                 && Text == quickFix.Text;
         }
 
-        public override int GetHashCode()
+        public override int GetHashCode()   
         {
-            return LogLevel.GetHashCode()
-                ^ FileName.GetHashCode()
-                ^ Line.GetHashCode()
-                ^ Column.GetHashCode()
-                ^ EndLine.GetHashCode()
-                ^ EndColumn.GetHashCode()
-                ^ Text.GetHashCode();
+            unchecked
+            {
+                var hash = 17;
+
+                hash = hash * 23 + LogLevel.GetHashCode();
+                hash = hash * 23 + FileName.GetHashCode();
+                hash = hash * 23 + Line.GetHashCode();
+                hash = hash * 23 + Column.GetHashCode();
+                hash = hash * 23 + EndLine.GetHashCode();
+                hash = hash * 23 + EndColumn.GetHashCode();
+                hash = hash * 23 + Text.GetHashCode();
+                return hash;
+            }
         }
     }
 }
