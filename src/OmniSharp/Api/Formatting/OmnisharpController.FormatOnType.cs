@@ -42,20 +42,24 @@ namespace OmniSharp
             // Instead of formatting the target node, we annotate the target node and format the
             // whole compilation unit and -using an annotation- find the formatted node in the
             // new syntax tree. That way we get the proper indentation for free.
-            var linePositionSpan = tree.GetText().Lines.GetLinePositionSpan(target.FullSpan);
             var annotation = new SyntaxAnnotation("formatOnTypeHelper");
             var newRoot = tree.GetRoot().ReplaceNode(target, target.WithAdditionalAnnotations(annotation));
             var formatted = Formatter.Format(newRoot, _workspace, options);
             
-            var nodes = formatted.GetAnnotatedNodes(annotation);
-            if(nodes.Count() != 1) 
+            var node = formatted.GetAnnotatedNodes(annotation).FirstOrDefault();
+            if(node == null) 
             {
                 // todo@jo - use an assert?
                 return ret;
             }
             
+            var linePositionSpan = tree.GetText().Lines.GetLinePositionSpan(target.FullSpan);
+            var newText = node.ToFullString();
+            // workaround: https://roslyn.codeplex.com/workitem/484
+            newText = newText.Replace("\r\n", _options.FormattingOptions.NewLine); 
+            
             edits.Add(new TextEdit(
-                nodes.First().ToFullString().Replace("\r\n", _options.FormattingOptions.NewLine), // workaround: https://roslyn.codeplex.com/workitem/484
+                newText,
                 linePositionSpan.Start, 
                 linePositionSpan.End));
 
@@ -73,12 +77,7 @@ namespace OmniSharp
             {
                 // ; -> use the statement
                 case SyntaxKind.SemicolonToken:
-                    var candiate = token.Parent;
-                    if(candiate.CSharpKind() == SyntaxKind.EmptyStatement) {
-                        return null;
-                    } else {
-                        return candiate;
-                    }
+                    return token.Parent;
                     
                 // } -> use the parent of the {}-block
                 case SyntaxKind.CloseBraceToken:
