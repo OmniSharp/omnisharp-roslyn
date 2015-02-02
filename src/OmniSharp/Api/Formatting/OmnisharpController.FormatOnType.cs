@@ -14,12 +14,12 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("formatOnType")]
-        public async Task<IActionResult> FormatOnType([FromBody]Request request)
+        public async Task<FormatRangeResponse> FormatOnType([FromBody]Request request)
         {
             _workspace.EnsureBufferUpdated(request);
             
             var edits = new List<TextEdit>();
-            var ret = new ObjectResult(new FormatRangeResponse() { Edits = edits });
+            var ret = new FormatRangeResponse() { Edits = edits };
 
             var options = _workspace.Options
                 .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp, _options.FormattingOptions.NewLine)
@@ -66,7 +66,7 @@ namespace OmniSharp
             return ret;
         }
 
-        private SyntaxNode FindFormatTarget(SyntaxTree tree, LinePosition linePosition)
+        private static SyntaxNode FindFormatTarget(SyntaxTree tree, LinePosition linePosition)
         {
             // todo@jo - refine this
             var position = tree.GetText().Lines.GetPosition(linePosition);
