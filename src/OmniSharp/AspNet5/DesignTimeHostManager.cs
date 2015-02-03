@@ -88,14 +88,14 @@ namespace OmniSharp.AspNet5
                 _logger.WriteInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, _designTimeHostProcess.Id));
 
                 _designTimeHostProcess.EnableRaisingEvents = true;
-                _designTimeHostProcess.Exited += (sender, e) =>
+                _designTimeHostProcess.OnExit(() =>
                 {
                     _logger.WriteWarning("Design time host process ended");
 
                     Thread.Sleep(DelayBeforeRestart);
 
                     Start(runtimePath, hostId, onConnected);
-                };
+                });
 
                 onConnected(port);
             }
@@ -117,7 +117,6 @@ namespace OmniSharp.AspNet5
                     _logger.WriteInformation("Shutting down DesignTimeHost");
 
                     _designTimeHostProcess.Kill();
-                    _designTimeHostProcess.WaitForExit(1000);
                     _designTimeHostProcess = null;
                 }
             }

@@ -57,7 +57,7 @@ namespace OmniSharp
                 }
             }
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, logLevel);
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel);
 
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
@@ -102,16 +102,12 @@ namespace OmniSharp
                 appShutdownService.RequestShutdown();
             };
 #endif
-            // In mono 3.10, the Exited event fires immediately, so the
-            // caller will need to terminate this process.
-            if (hostPID != -1 && !PlatformHelper.IsMono)
+
+            if (hostPID != -1)
             {
                 var hostProcess = Process.GetProcessById(hostPID);
                 hostProcess.EnableRaisingEvents = true;
-                hostProcess.Exited += (s, e) =>
-                {
-                    appShutdownService.RequestShutdown();
-                };
+                hostProcess.OnExit(() => appShutdownService.RequestShutdown());
             }
             
             shutdownHandle.Wait();

@@ -85,7 +85,7 @@ namespace OmniSharp
 
             app.UseMvc();
 
-            logger.WriteInformation(string.Format("Omnisharp server running on port '{0}' at location '{1}'.", env.Port, env.Path));
+            logger.WriteInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
 
             // Initialize everything!
             var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
