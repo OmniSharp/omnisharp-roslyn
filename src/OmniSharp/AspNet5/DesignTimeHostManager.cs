@@ -19,8 +19,6 @@ namespace OmniSharp.AspNet5
         public DesignTimeHostManager(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.Create<DesignTimeHostManager>();
-
-            DelayBeforeRestart = TimeSpan.FromSeconds(1000);
         }
 
         public TimeSpan DelayBeforeRestart { get; set; }
@@ -33,7 +31,7 @@ namespace OmniSharp.AspNet5
                 {
                     return;
                 }
-
+                
                 int port = GetFreePort();
 
                 var psi = new ProcessStartInfo
@@ -52,7 +50,7 @@ namespace OmniSharp.AspNet5
 #if ASPNET50
                 psi.EnvironmentVariables["KRE_APPBASE"] = Directory.GetCurrentDirectory();
 #else
-            psi.Environment["KRE_APPBASE"] = Directory.GetCurrentDirectory();
+                psi.Environment["KRE_APPBASE"] = Directory.GetCurrentDirectory();
 #endif
 
                 _logger.WriteVerbose(psi.FileName + " " + psi.Arguments);
@@ -91,8 +89,6 @@ namespace OmniSharp.AspNet5
                 _designTimeHostProcess.OnExit(() =>
                 {
                     _logger.WriteWarning("Design time host process ended");
-
-                    Thread.Sleep(DelayBeforeRestart);
 
                     Start(runtimePath, hostId, onConnected);
                 });
