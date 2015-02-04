@@ -16,7 +16,7 @@ using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
-using Microsoft.Framework.Runtime;
+using Microsoft.AspNet.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
@@ -40,7 +40,7 @@ namespace OmniSharp.AspNet5
                                     IOptions<OmniSharpOptions> optionsAccessor,
                                     ILoggerFactory loggerFactory,
                                     IMetadataFileReferenceCache metadataFileReferenceCache,
-                                    IApplicationShutdown shutdown,
+                                    IApplicationLifetime lifetime,
                                     IFileSystemWatcher watcher,
                                     AspNet5Context context)
         {
@@ -53,7 +53,7 @@ namespace OmniSharp.AspNet5
             _context = context;
             _watcher = watcher;
 
-            shutdown.ShutdownRequested.Register(OnShutdown);
+            lifetime.ApplicationStopping.Register(OnShutdown);
         }
 
         public void Initalize()

@@ -112,7 +112,7 @@ namespace OmniSharp.AspNet5
                 {
                     _logger.WriteInformation("Shutting down DesignTimeHost");
 
-                    _designTimeHostProcess.Kill();
+                    _designTimeHostProcess.KillAll();
                     _designTimeHostProcess = null;
                 }
             }

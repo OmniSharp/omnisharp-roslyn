@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
+using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
@@ -29,9 +30,14 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime)
         {
             Workspace = new OmnisharpWorkspace();
+
+
+            // Working around another bad bug in ASP.NET 5
+            // https://github.com/aspnet/Hosting/issues/151
+            services.AddInstance(liftime);
 
             // This is super hacky by it's the easiest way to flow serivces from the 
             // hosting layer, this needs to be easier
