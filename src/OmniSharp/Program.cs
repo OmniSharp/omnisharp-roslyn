@@ -105,9 +105,18 @@ namespace OmniSharp
 
             if (hostPID != -1)
             {
-                var hostProcess = Process.GetProcessById(hostPID);
-                hostProcess.EnableRaisingEvents = true;
-                hostProcess.OnExit(() => appShutdownService.RequestShutdown());
+                try
+                {
+                    var hostProcess = Process.GetProcessById(hostPID);
+                    hostProcess.EnableRaisingEvents = true;
+                    hostProcess.OnExit(() => appShutdownService.RequestShutdown());
+                }
+                catch 
+                {
+                    // If the process dies before we get here then request shutdown
+                    // immediately
+                    appShutdownService.RequestShutdown();
+                }
             }
             
             shutdownHandle.Wait();
