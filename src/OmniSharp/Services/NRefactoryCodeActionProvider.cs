@@ -14,6 +14,7 @@ namespace OmniSharp.Services
     {
         public IEnumerable<CodeRefactoringProvider> GetProviders()
         {
+            //todo , replace this with the nrefactory filtered list of providers
             var types = Assembly.GetAssembly(typeof(UseVarKeywordAction))
                                 .GetTypes()
                                 .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t));

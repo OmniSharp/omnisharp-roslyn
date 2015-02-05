@@ -73,6 +73,8 @@ namespace OmniSharp
 #if ASPNET50
             // Add the code action provider
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
+#else
+            services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
 #endif
 
             // Setup the options from configuration
