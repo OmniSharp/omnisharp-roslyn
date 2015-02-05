@@ -63,6 +63,7 @@ namespace OmniSharp
             //todo, handle context creation issues
             return null;
         }
+
         private async Task GetContextualCodeActions(CodeRefactoringContext? context)
         {
             if (_codeActionProvider != null)
