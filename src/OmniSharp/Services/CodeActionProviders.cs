@@ -1,4 +1,6 @@
-﻿using ICSharpCode.NRefactory6.CSharp.Refactoring;
+﻿#if ASPNET50
+using ICSharpCode.NRefactory6.CSharp.Refactoring;
+#endif
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using System;
 using System.Collections.Generic;
@@ -7,6 +9,7 @@ using System.Reflection;
 
 namespace OmniSharp.Services
 {
+#if ASPNET50
     public class CodeActionProviders
     {
         public IEnumerable<CodeRefactoringProvider> GetProviders()
@@ -25,4 +28,5 @@ namespace OmniSharp.Services
             return providers;
         }
     }
+#endif
 }

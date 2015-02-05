@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace OmniSharp
 {
-#if ASPNET50
     public partial class OmnisharpController
     {
         [HttpPost("getcodeactions")]
@@ -57,6 +56,8 @@ namespace OmniSharp
         }
         private async Task GetContextualCodeActions(CodeRefactoringContext? context)
         {
+            //todo : interface the code action provider and inject it, for now, ifdef all the things :D
+#if ASPNET50
             var providers = new CodeActionProviders().GetProviders();
             if (context.HasValue)
             {
@@ -69,7 +70,10 @@ namespace OmniSharp
                     catch (Exception) { }
                 }
             }
-        }
-    }
+#else
+            await Task.FromResult(0);
 #endif
+        }
+
+    }
 }
