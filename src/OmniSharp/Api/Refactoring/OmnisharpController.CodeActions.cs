@@ -20,7 +20,7 @@ namespace OmniSharp
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
-            await GetContextualCodeActions(request, context);
+            await GetContextualCodeActions(context);
             return new GetCodeActionsResponse() { CodeActions = actions.Select(a => a.Title) };
         }
 
@@ -29,7 +29,7 @@ namespace OmniSharp
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
-            await GetContextualCodeActions(request,context);
+            await GetContextualCodeActions(context);
             if (request.CodeAction > actions.Count())
                 return new RunCodeActionResponse();
 
@@ -55,7 +55,7 @@ namespace OmniSharp
             //todo, handle context creation issues
             return null;
         }
-        private async Task GetContextualCodeActions(CodeActionRequest request, CodeRefactoringContext? context)
+        private async Task GetContextualCodeActions(CodeRefactoringContext? context)
         {
             var providers = new CodeActionProviders().GetProviders();
             if (context.HasValue)
