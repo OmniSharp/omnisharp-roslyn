@@ -12,8 +12,17 @@ using System.Threading.Tasks;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    public class CodeActionController
     {
+        private OmnisharpWorkspace _workspace;
+        private ICodeActionProvider _codeActionProvider;
+
+        public CodeActionController(OmnisharpWorkspace workspace, ICodeActionProvider provider)
+        {
+            _workspace = workspace;
+            _codeActionProvider = provider;
+        }
+
         [HttpPost("getcodeactions")]
         public async Task<GetCodeActionsResponse> GetCodeActions([FromBody]CodeActionRequest request)
         {
@@ -56,23 +65,22 @@ namespace OmniSharp
         }
         private async Task GetContextualCodeActions(CodeRefactoringContext? context)
         {
-            //todo : interface the code action provider and inject it, for now, ifdef all the things :D
-#if ASPNET50
-            var providers = new CodeActionProviders().GetProviders();
-            if (context.HasValue)
+            if (_codeActionProvider != null)
             {
-                foreach (var provider in providers)
+                var providers = _codeActionProvider.GetProviders();
+                if (context.HasValue)
                 {
-                    try
+                    foreach (var codeActionProvider in providers)
                     {
-                        await provider.ComputeRefactoringsAsync(context.Value);
+                        //remove this try catch once the Missing Method stuff subsides.
+                        try
+                        {
+                            await codeActionProvider.ComputeRefactoringsAsync(context.Value);
+                        }
+                        catch (Exception) { }
                     }
-                    catch (Exception) { }
                 }
             }
-#else
-            await Task.FromResult(0);
-#endif
         }
 
     }

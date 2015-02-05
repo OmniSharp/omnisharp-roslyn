@@ -10,7 +10,7 @@ using System.Reflection;
 namespace OmniSharp.Services
 {
 #if ASPNET50
-    public class CodeActionProviders
+    public class NRefactoryCodeActionProvider : ICodeActionProvider
     {
         public IEnumerable<CodeRefactoringProvider> GetProviders()
         {
