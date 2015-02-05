@@ -550,13 +550,13 @@ namespace OmniSharp.AspNet5
             yield return Path.Combine(home, ".kre");
         }
 
-        private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string runtimePath, string versionOrAlias)
+        private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string versionOrAlias, string runtimePath)
         {
             // New format
-            yield return GetRuntimePathFromVersionOrAlias(runtimePath, versionOrAlias, ".k", "kre-mono.{0}", "kre-clr-win-x86.{0}", "runtimes");
+            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".k", "kre-mono.{0}", "kre-clr-win-x86.{0}", "runtimes");
 
             // Old format
-            yield return GetRuntimePathFromVersionOrAlias(runtimePath, versionOrAlias, ".kre", "KRE-Mono.{0}", "KRE-CLR-x86.{0}", "packages");
+            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".kre", "KRE-Mono.{0}", "KRE-CLR-x86.{0}", "packages");
         }
 
         private string GetRuntimePathFromVersionOrAlias(string versionOrAlias,
