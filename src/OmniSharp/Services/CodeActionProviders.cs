@@ -1,0 +1,28 @@
+﻿using ICSharpCode.NRefactory6.CSharp.Refactoring;
+using Microsoft.CodeAnalysis.CodeRefactorings;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+
+namespace OmniSharp.Services
+{
+    public class CodeActionProviders
+    {
+        public IEnumerable<CodeRefactoringProvider> GetProviders()
+        {
+            var types = Assembly.GetAssembly(typeof(UseVarKeywordAction))
+                                .GetTypes()
+                                .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t));
+
+            IEnumerable<CodeRefactoringProvider> providers =
+                types
+                    .Where(type => !type.IsInterface
+                            && !type.IsAbstract
+                            && !type.ContainsGenericParameters) //TODO: handle providers with generic params 
+                    .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
+
+            return providers;
+        }
+    }
+}
