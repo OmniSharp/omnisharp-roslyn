@@ -15,12 +15,12 @@ namespace OmniSharp
     public class CodeActionController
     {
         private OmnisharpWorkspace _workspace;
-        private ICodeActionProvider _codeActionProvider;
+        private IEnumerable<ICodeActionProvider> _codeActionProviders;
 
-        public CodeActionController(OmnisharpWorkspace workspace, ICodeActionProvider provider)
+        public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
-            _codeActionProvider = provider;
+            _codeActionProviders = providers;
         }
 
         [HttpPost("getcodeactions")]
@@ -66,21 +66,25 @@ namespace OmniSharp
 
         private async Task GetContextualCodeActions(CodeRefactoringContext? context)
         {
-            if (_codeActionProvider != null)
+            if (_codeActionProviders != null)
             {
-                var providers = _codeActionProvider.GetProviders();
-                if (context.HasValue)
+                foreach(var cap in _codeActionProviders)
                 {
-                    foreach (var codeActionProvider in providers)
+                    var providers = cap.GetProviders();
+                    if (context.HasValue)
                     {
-                        //remove this try catch once the Missing Method stuff subsides.
-                        try
+                        foreach (var codeActionProvider in providers)
                         {
-                            await codeActionProvider.ComputeRefactoringsAsync(context.Value);
+                            //remove this try catch once the Missing Method stuff subsides.
+                            try
+                            {
+                                await codeActionProvider.ComputeRefactoringsAsync(context.Value);
+                            }
+                            catch (Exception) { }
                         }
-                        catch (Exception) { }
                     }
                 }
+               
             }
         }
 

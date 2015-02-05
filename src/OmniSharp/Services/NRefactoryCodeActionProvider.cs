@@ -9,7 +9,7 @@
 
 //namespace OmniSharp.Services
 //{
-//#if ASPNET50
+//#if NR6
 //    public class NRefactoryCodeActionProvider : ICodeActionProvider
 //    {
 //        public IEnumerable<CodeRefactoringProvider> GetProviders()
