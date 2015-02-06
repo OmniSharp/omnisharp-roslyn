@@ -1,21 +1,21 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace OmniSharp
 {
     public class CodeActionController
     {
-        private OmnisharpWorkspace _workspace;
-        private IEnumerable<ICodeActionProvider> _codeActionProviders;
+        private readonly OmnisharpWorkspace _workspace;
+        private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
         public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
         {
@@ -38,25 +38,24 @@ namespace OmniSharp
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
             await GetContextualCodeActions(context);
-            
+
             if (request.CodeAction > actions.Count())
             {
                 return new RunCodeActionResponse();
             }
 
             var action = actions.ElementAt(request.CodeAction);
-            
-            //this line fails \/ ;(
-            /* var preview = await action.GetPreviewOperationsAsync(CancellationToken.None);
-            
-            foreach(var p in preview)
+
+            var operations = await action.GetOperationsAsync(CancellationToken.None);
+
+            foreach (var o in operations)
             {
-                p.Apply(_workspace, CancellationToken.None);
-            }*/
+                o.Apply(_workspace, CancellationToken.None);
+            }
 
             // return the new document
-            var sourceText = await context.Value.Document.GetTextAsync();
-            
+            var sourceText = await _workspace.CurrentSolution.GetDocument(context.Value.Document.Id).GetTextAsync();
+
             return new RunCodeActionResponse { Text = sourceText.ToString() };
         }
 
