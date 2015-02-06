@@ -38,15 +38,25 @@ namespace OmniSharp
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
             await GetContextualCodeActions(context);
+            
             if (request.CodeAction > actions.Count())
+            {
                 return new RunCodeActionResponse();
+            }
 
             var action = actions.ElementAt(request.CodeAction);
+            
             //this line fails \/ ;(
-            var preview = await action.GetPreviewOperationsAsync(CancellationToken.None);
+            /* var preview = await action.GetPreviewOperationsAsync(CancellationToken.None);
+            
+            foreach(var p in preview)
+            {
+                p.Apply(_workspace, CancellationToken.None);
+            }*/
 
-            //return the new document
+            // return the new document
             var sourceText = await context.Value.Document.GetTextAsync();
+            
             return new RunCodeActionResponse { Text = sourceText.ToString() };
         }
 
@@ -58,33 +68,31 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var location = new TextSpan(position, 1);
-                return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), new System.Threading.CancellationToken());
+                return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
             }
+
             //todo, handle context creation issues
             return null;
         }
 
         private async Task GetContextualCodeActions(CodeRefactoringContext? context)
         {
+            if (!context.HasValue)
+            {
+                return;
+            }
+
             if (_codeActionProviders != null)
             {
-                foreach(var cap in _codeActionProviders)
+                foreach (var provider in _codeActionProviders)
                 {
-                    var providers = cap.GetProviders();
-                    if (context.HasValue)
+                    var providers = provider.GetProviders();
+
+                    foreach (var codeActionProvider in providers)
                     {
-                        foreach (var codeActionProvider in providers)
-                        {
-                            //remove this try catch once the Missing Method stuff subsides.
-                            try
-                            {
-                                await codeActionProvider.ComputeRefactoringsAsync(context.Value);
-                            }
-                            catch (Exception) { }
-                        }
+                        await codeActionProvider.ComputeRefactoringsAsync(context.Value);
                     }
                 }
-               
             }
         }
 

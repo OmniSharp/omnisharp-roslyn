@@ -71,7 +71,11 @@ namespace OmniSharp
             services.AddSingleton<ITestCommandProvider, AspNet5TestCommandProvider>();
 
             // Add the code action provider
-            services.AddSingleton<IEnumerable<ICodeActionProvider>>((_) => new[] { new EmptyCodeActionProvider() });
+            services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
+            
+#if ASPNET50
+            services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
+#endif
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);

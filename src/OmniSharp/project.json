@@ -10,7 +10,7 @@
         "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-beta2",
         "Microsoft.Framework.Logging.Console": "1.0.0-beta2",
         "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta2",
-        "Microsoft.Framework.Cache.Memory": "1.0.0-beta1",
+        "Microsoft.Framework.Cache.Memory": "1.0.0-beta2",
         "Microsoft.Composition": "1.0.27"
     },
     "commands": {
@@ -18,6 +18,9 @@
     },
     "frameworks": {
         "aspnet50": {
+            "dependencies": {
+               "ICSharpCode.NRefactory": "6.0.0-alpha2"  
+            },
             "frameworkAssemblies": {
                 "System.Globalization": "",
                 "Microsoft.Build": "",
