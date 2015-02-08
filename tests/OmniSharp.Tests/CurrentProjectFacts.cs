@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using OmniSharp.Models;
-using Xunit;
 using OmniSharp.AspNet5;
+using OmniSharp.Models;
+using System.Collections.Generic;
+using Xunit;
 
 namespace OmniSharp.Tests
 {
@@ -48,6 +48,5 @@ namespace OmniSharp.Tests
                 Buffer = source
             };
         }
-
     }
 }
