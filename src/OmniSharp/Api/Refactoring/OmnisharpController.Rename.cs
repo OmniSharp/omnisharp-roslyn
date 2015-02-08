@@ -15,8 +15,6 @@ namespace OmniSharp
         [HttpPost("rename")]
         public async Task<RenameResponse> Rename([FromBody]RenameRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var response = new RenameResponse();
 
             var document = _workspace.GetDocument(request.FileName);

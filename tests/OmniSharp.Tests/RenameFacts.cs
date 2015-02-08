@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using OmniSharp.Filters;
 using OmniSharp.Models;
 
 namespace OmniSharp.Tests
@@ -20,6 +21,9 @@ namespace OmniSharp.Tests
                 FileName = filename,
                 Buffer = fileContent.Replace("$", "")
             };
+
+            var bufferFilter = new UpdateBufferFilter(workspace);
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
 
             return await controller.Rename(request);
         }

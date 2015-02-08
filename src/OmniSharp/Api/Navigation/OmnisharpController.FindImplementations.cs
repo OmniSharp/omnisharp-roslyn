@@ -15,8 +15,6 @@ namespace OmniSharp
         [HttpPost("findimplementations")]
         public async Task<QuickFixResponse> FindImplementations([FromBody]Request request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
 
