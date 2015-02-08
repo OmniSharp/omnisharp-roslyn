@@ -6,13 +6,11 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Filters;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    [TypeFilter(typeof(UpdateBufferFilter))]
     public class CodeActionController
     {
         private readonly OmnisharpWorkspace _workspace;

@@ -7,12 +7,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Filters;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    [TypeFilter(typeof(UpdateBufferFilter))]
     public class TestCommandController
     {
         private OmnisharpWorkspace _workspace;

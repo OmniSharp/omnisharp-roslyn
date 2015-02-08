@@ -10,6 +10,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Logging.Console;
 using OmniSharp.AspNet5;
+using OmniSharp.Filters;
 using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -48,6 +49,7 @@ namespace OmniSharp
             services.Configure<MvcOptions>(opt =>
             {
                 opt.OutputFormatters.RemoveAll(r => r.Instance is XmlOutputFormatter);
+                opt.Filters.Add(new UpdateBufferFilter(Workspace));
             });
 
             // Add the omnisharp workspace to the container

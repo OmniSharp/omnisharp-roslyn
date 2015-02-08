@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.OptionsModel;
-using OmniSharp.Filters;
 using OmniSharp.Options;
 
 namespace OmniSharp
 {
     [Route("/")]
-    [TypeFilter(typeof(UpdateBufferFilter))]
     public partial class OmnisharpController
     {
         private readonly OmnisharpWorkspace _workspace;
