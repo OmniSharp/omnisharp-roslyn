@@ -31,6 +31,7 @@ namespace OmniSharp.Tests
             var projectCounter = 1;
             context.Projects.Add(projectCounter, new Project
             {
+                Name = "ProjectName",
                 Path = "project.json",
                 Commands = { { "kestrel", "Microsoft.AspNet.Hosting --server Kestrel" } }
             });
