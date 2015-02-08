@@ -8,9 +8,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Filters;
 
 namespace OmniSharp
 {
+    [TypeFilter(typeof(UpdateBufferFilter))]
     public class TestCommandController
     {
         private OmnisharpWorkspace _workspace;
@@ -26,8 +28,6 @@ namespace OmniSharp
         [HttpPost("gettestcontext")]
         public async Task<GetTestCommandResponse> GetTestCommand([FromBody]TestCommandRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var quickFixes = new List<QuickFix>();
 
             var document = _workspace.GetDocument(request.FileName);

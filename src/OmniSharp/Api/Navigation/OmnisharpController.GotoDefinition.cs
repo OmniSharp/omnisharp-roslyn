@@ -13,8 +13,6 @@ namespace OmniSharp
         [HttpPost("gotodefinition")]
         public async Task<IActionResult> GotoDefinition([FromBody]Request request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var quickFixes = new List<QuickFix>();
 
             var document = _workspace.GetDocument(request.FileName);

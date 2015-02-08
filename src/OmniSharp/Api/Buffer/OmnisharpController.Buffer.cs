@@ -10,7 +10,6 @@ namespace OmniSharp
         [HttpPost("updatebuffer")]
         public ObjectResult UpdateBuffer([FromBody]Request request)
         {
-            _workspace.EnsureBufferUpdated(request);
             return new ObjectResult(true);
         }
 

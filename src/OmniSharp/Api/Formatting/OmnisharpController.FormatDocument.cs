@@ -11,8 +11,6 @@ namespace OmniSharp
         [HttpPost("codeformat")]
         public async Task<IActionResult> CodeFormat([FromBody]Request request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var options = _workspace.Options
                 .WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, _options.FormattingOptions.NewLine)
                 .WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, _options.FormattingOptions.UseTabs)

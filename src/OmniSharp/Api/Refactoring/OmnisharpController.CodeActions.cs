@@ -9,9 +9,11 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Services;
+using OmniSharp.Filters;
 
 namespace OmniSharp
 {
+    [TypeFilter(typeof(UpdateBufferFilter))]
     public class CodeActionController
     {
         private readonly OmnisharpWorkspace _workspace;
@@ -26,7 +28,6 @@ namespace OmniSharp
         [HttpPost("getcodeactions")]
         public async Task<GetCodeActionsResponse> GetCodeActions([FromBody]CodeActionRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
             await GetContextualCodeActions(context);
@@ -36,7 +37,6 @@ namespace OmniSharp
         [HttpPost("runcodeaction")]
         public async Task<RunCodeActionResponse> RunCodeAction([FromBody]CodeActionRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
             await GetContextualCodeActions(context);

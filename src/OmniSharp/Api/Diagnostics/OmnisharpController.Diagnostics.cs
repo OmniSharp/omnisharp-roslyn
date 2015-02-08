@@ -12,8 +12,6 @@ namespace OmniSharp
         [HttpPost("codecheck")]
         public async Task<IActionResult> CodeCheck([FromBody]Request request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var quickFixes = new List<QuickFix>();
 
             var documents = _workspace.GetDocuments(request.FileName);
