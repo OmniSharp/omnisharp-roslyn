@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Xunit;
 using OmniSharp.Models;
+using OmniSharp.Filters;
 
 namespace OmniSharp.Tests
 {
@@ -161,6 +162,8 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
             var controller = new OmnisharpController(workspace, null);
             var request = CreateRequest(source);
+            var bufferFilter = new UpdateBufferFilter(workspace);
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
             return await controller.FindUsages(request);
         }
     }
