@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNet.Mvc;
 using OmniSharp.Models;
-using System;
-using System.Linq;
 
 namespace OmniSharp.Filters
 {

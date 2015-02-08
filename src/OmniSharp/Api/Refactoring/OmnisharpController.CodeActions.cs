@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,9 +6,9 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Filters;
 using OmniSharp.Models;
 using OmniSharp.Services;
-using OmniSharp.Filters;
 
 namespace OmniSharp
 {

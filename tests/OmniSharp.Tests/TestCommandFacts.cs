@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Xunit;
 using OmniSharp.AspNet5;
-using OmniSharp.Models;
 using OmniSharp.Filters;
+using OmniSharp.Models;
 
 namespace OmniSharp.Tests
 {

@@ -7,8 +7,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Models;
 using OmniSharp.Filters;
+using OmniSharp.Models;
 
 namespace OmniSharp
 {

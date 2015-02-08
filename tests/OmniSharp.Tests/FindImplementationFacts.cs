@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
 using Xunit;
 using OmniSharp.Filters;
+using OmniSharp.Models;
 
 namespace OmniSharp.Tests
 {

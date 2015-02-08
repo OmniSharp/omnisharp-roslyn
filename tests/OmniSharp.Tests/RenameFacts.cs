@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using OmniSharp.Models;
 using OmniSharp.Filters;
+using OmniSharp.Models;
 
 namespace OmniSharp.Tests
 {

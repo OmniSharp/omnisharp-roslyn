@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNet.Mvc;
-using Microsoft.CodeAnalysis.CSharp;
-using OmniSharp.Filters;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
+using OmniSharp.Filters;
 
 namespace OmniSharp.Tests
 {
