@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-
-
 using OmniSharp.Models;
 using Xunit;
 using OmniSharp.AspNet5;
