@@ -20,7 +20,7 @@ namespace OmniSharp
         }
 
 
-        [HttpPost("whereami")]
+        [HttpPost("project")]
         public CurrentProjectResponse CurrentProject([FromBody]Request request)
         {
             var response = new CurrentProjectResponse();
