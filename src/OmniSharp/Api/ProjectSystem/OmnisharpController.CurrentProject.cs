@@ -19,8 +19,7 @@ namespace OmniSharp
             _workspace = workspace;
         }
 
-
-        [HttpPost("project")]
+        [HttpPost("currentprojectcommands")]
         public CurrentProjectResponse CurrentProject([FromBody]Request request)
         {
             var response = new CurrentProjectResponse();
