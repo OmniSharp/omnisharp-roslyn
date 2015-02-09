@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
 using Xunit;
+using OmniSharp.Filters;
+using OmniSharp.Models;
 
 namespace OmniSharp.Tests
 {
@@ -72,6 +73,8 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
             var controller = new OmnisharpController(workspace, null);
             var request = CreateRequest(source);
+            var bufferFilter = new UpdateBufferFilter(workspace);
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
             var implementations = await controller.FindImplementations(request);
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
         }

@@ -10,6 +10,10 @@
     },
     "frameworks": {
         "aspnet50": { },
-        "aspnetcore50": { }
+        "aspnetcore50": {
+            "dependencies": {
+                "System.Collections": ""
+            }
+        }
     }
 }

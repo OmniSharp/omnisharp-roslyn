@@ -16,7 +16,7 @@ using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
-using Microsoft.Framework.Runtime;
+using Microsoft.AspNet.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
@@ -40,7 +40,7 @@ namespace OmniSharp.AspNet5
                                     IOptions<OmniSharpOptions> optionsAccessor,
                                     ILoggerFactory loggerFactory,
                                     IMetadataFileReferenceCache metadataFileReferenceCache,
-                                    IApplicationShutdown shutdown,
+                                    IApplicationLifetime lifetime,
                                     IFileSystemWatcher watcher,
                                     AspNet5Context context)
         {
@@ -53,7 +53,7 @@ namespace OmniSharp.AspNet5
             _context = context;
             _watcher = watcher;
 
-            shutdown.ShutdownRequested.Register(OnShutdown);
+            lifetime.ApplicationStopping.Register(OnShutdown);
         }
 
         public void Initalize()
@@ -508,33 +508,70 @@ namespace OmniSharp.AspNet5
         private string GetRuntimePath()
         {
             var versionOrAlias = GetRuntimeVersionOrAlias() ?? _options.AspNet5.Alias ?? "default";
-
-            string runtimeVersion;
-            var runtimePath = GetRuntimePathFromVersionOrAlias(versionOrAlias, out runtimeVersion);
-
-            if (string.IsNullOrEmpty(runtimePath))
+            var seachedLocations = new List<string>();
+            
+            foreach (var location in GetRuntimeLocations())
             {
-                return null;
+                var paths = GetRuntimePathsFromVersionOrAlias(versionOrAlias, location);
+
+                foreach (var path in paths)
+                {
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        continue;
+                    }
+
+                    if (Directory.Exists(path))
+                    {
+                        _logger.WriteInformation(string.Format("Using KRE '{0}'.", path));
+                        return path;
+                    }
+                    
+                    seachedLocations.Add(path);
+                }
             }
 
-            if (!Directory.Exists(runtimePath))
-            {
-                _logger.WriteError("The specified runtime path '{0}'. Does not exist. Try installing it with kvm install '{1}'.", versionOrAlias, runtimeVersion);
-                return null;
-            }
+            _logger.WriteError("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
 
-            return runtimePath;
+            return null;
         }
 
-        private string GetRuntimePathFromVersionOrAlias(string versionOrAlias, out string version)
+        private IEnumerable<string> GetRuntimeLocations()
         {
-            version = null;
+            yield return Environment.GetEnvironmentVariable("KRE_HOME");
 
-            var home = Environment.GetEnvironmentVariable("HOME") ?? Environment.GetEnvironmentVariable("USERPROFILE");
+            var home = Environment.GetEnvironmentVariable("HOME") ??
+                       Environment.GetEnvironmentVariable("USERPROFILE");
 
-            var kreHome = Path.Combine(home, ".kre");
+            // New path
+            yield return Path.Combine(home, ".k");
 
-            var aliasDirectory = Path.Combine(kreHome, "alias");
+            // Old path
+            yield return Path.Combine(home, ".kre");
+        }
+
+        private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string versionOrAlias, string runtimePath)
+        {
+            // New format
+            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".k", "kre-mono.{0}", "kre-clr-win-x86.{0}", "runtimes");
+
+            // Old format
+            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".kre", "KRE-Mono.{0}", "KRE-CLR-x86.{0}", "packages");
+        }
+
+        private string GetRuntimePathFromVersionOrAlias(string versionOrAlias,
+                                                        string runtimeHome,
+                                                        string sdkFolder,
+                                                        string monoFormat,
+                                                        string windowsFormat,
+                                                        string runtimeFolder)
+        {
+            if (string.IsNullOrEmpty(runtimeHome))
+            {
+                return null;
+            }
+
+            var aliasDirectory = Path.Combine(runtimeHome, "alias");
 
             var aliasFiles = new[] { "{0}.alias", "{0}.txt" };
 
@@ -545,28 +582,22 @@ namespace OmniSharp.AspNet5
 
                 if (File.Exists(aliasFile))
                 {
-                    _logger.WriteInformation(string.Format("Using configured alias {0}", versionOrAlias));
+                    var fullName = File.ReadAllText(aliasFile).Trim();
 
-                    version = File.ReadAllText(aliasFile).Trim();
-
-                    _logger.WriteInformation(string.Format("Using KRE version '{0}'.", version));
-
-                    return Path.Combine(kreHome, "packages", version);
+                    return Path.Combine(runtimeHome, runtimeFolder, fullName);
                 }
             }
 
             // There was no alias, look for the input as a version
-            version = versionOrAlias;
-
-            _logger.WriteInformation(string.Format("Using configured version {0}", versionOrAlias));
+            var version = versionOrAlias;
 
             if (PlatformHelper.IsMono)
             {
-                return Path.Combine(kreHome, "packages", string.Format("KRE-Mono.{0}", versionOrAlias));
+                return Path.Combine(runtimeHome, runtimeFolder, string.Format(monoFormat, versionOrAlias));
             }
             else
             {
-                return Path.Combine(kreHome, "packages", string.Format("KRE-CLR-x86.{0}", versionOrAlias));
+                return Path.Combine(runtimeHome, runtimeFolder, string.Format(windowsFormat, versionOrAlias));
             }
         }
 

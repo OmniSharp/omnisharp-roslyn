@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using System.Reflection;
 
 namespace OmniSharp.Tests
 {
@@ -48,22 +49,32 @@ namespace OmniSharp.Tests
 
         public static OmnisharpWorkspace CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
         {
+            return CreateSimpleWorkspace(new Dictionary<string, string> { { fileName, source } });
+        }
+
+        public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
+        {
             var workspace = new OmnisharpWorkspace();
             var projectId = ProjectId.CreateNewId();
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
             var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
-            var references = new [] { mscorlib, systemCore };
+            var references = new[] { mscorlib, systemCore };
             var projectInfo = ProjectInfo.Create(projectId, versionStamp,
                                                  "ProjectName", "AssemblyName",
                                                  LanguageNames.CSharp, "project.json", metadataReferences: references);
 
-            var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), fileName,
-                null, SourceCodeKind.Regular,
-                TextLoader.From(TextAndVersion.Create(SourceText.From(source), versionStamp)), fileName);
-
             workspace.AddProject(projectInfo);
-            workspace.AddDocument(document);
+
+            foreach (var file in sourceFiles)
+            {
+                var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), file.Key,
+                    null, SourceCodeKind.Regular,
+                    TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
+
+                workspace.AddDocument(document);
+            }
+
             return workspace;
         }
 
@@ -89,6 +100,13 @@ namespace OmniSharp.Tests
                 symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix)); 
             }
             return symbols;
+        }
+
+        public static ActionExecutingContext CreateActionExecutingContext(Request req)
+        {
+            var actionContext = new ActionContext(null, null, null);
+            var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilter>(), new Dictionary<string, object> { { "request", req} });
+            return actionExecutingContext;
         }
     }
 }

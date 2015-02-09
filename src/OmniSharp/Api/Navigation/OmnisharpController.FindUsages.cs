@@ -9,14 +9,11 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    
     public partial class OmnisharpController
     {
         [HttpPost("findusages")]
         public async Task<QuickFixResponse> FindUsages([FromBody]Request request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
             if (document != null)

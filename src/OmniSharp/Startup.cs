@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
+using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
@@ -9,6 +10,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Logging.Console;
 using OmniSharp.AspNet5;
+using OmniSharp.Filters;
 using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -29,9 +31,14 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime)
         {
             Workspace = new OmnisharpWorkspace();
+
+
+            // Working around another bad bug in ASP.NET 5
+            // https://github.com/aspnet/Hosting/issues/151
+            services.AddInstance(liftime);
 
             // This is super hacky by it's the easiest way to flow serivces from the 
             // hosting layer, this needs to be easier
@@ -42,6 +49,7 @@ namespace OmniSharp
             services.Configure<MvcOptions>(opt =>
             {
                 opt.OutputFormatters.RemoveAll(r => r.Instance is XmlOutputFormatter);
+                opt.Filters.Add(new UpdateBufferFilter(Workspace));
             });
 
             // Add the omnisharp workspace to the container
@@ -64,6 +72,13 @@ namespace OmniSharp
             // Add test command providers
             services.AddSingleton<ITestCommandProvider, AspNet5TestCommandProvider>();
 
+            // Add the code action provider
+            services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
+            
+#if ASPNET50
+            services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
+#endif
+
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
         }
@@ -85,7 +100,7 @@ namespace OmniSharp
 
             app.UseMvc();
 
-            logger.WriteInformation(string.Format("Omnisharp server running on port '{0}' at location '{1}'.", env.Port, env.Path));
+            logger.WriteInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
 
             // Initialize everything!
             var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();

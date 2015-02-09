@@ -7,6 +7,7 @@ namespace OmniSharp.Services
     {
         LogLevel TraceType { get; }
         int Port { get; }
+        int HostPID { get; }
         string Path { get; }
         string SolutionFilePath { get; }
     }

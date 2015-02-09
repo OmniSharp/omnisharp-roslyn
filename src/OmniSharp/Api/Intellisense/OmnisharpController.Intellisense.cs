@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Extensions;
 
 namespace OmniSharp
 {
@@ -16,21 +17,23 @@ namespace OmniSharp
             = new HashSet<AutoCompleteResponse>();
 
         [HttpPost("autocomplete")]
-        public async Task<IActionResult> AutoComplete([FromBody]AutoCompleteRequest request)
+        public async Task<IEnumerable<AutoCompleteResponse>> AutoComplete([FromBody]AutoCompleteRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var documents = _workspace.GetDocuments(request.FileName);
-
+            var wordToComplete = request.WordToComplete;
+            
             foreach (var document in documents)
             {
+                
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
+                
+                AddKeywords(model, position, request.WantKind, wordToComplete);
+                
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-                AddKeywords(model, position, request.WantKind, request.WordToComplete);
 
-                foreach (var symbol in symbols.Where(s => IsValidCompletion(request.WordToComplete, s.Name)))
+                foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
                 {
                     if (request.WantSnippet)
                     {
@@ -45,22 +48,22 @@ namespace OmniSharp
                     }
                 }
             }
-
-            return new ObjectResult(_completions.OrderBy(c => c.DisplayText));
+            
+            return _completions
+                .OrderByDescending(c => c.CompletionText.IsValidCompletionStartsWithExactCase(wordToComplete))
+                .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
+                .ThenByDescending(c => c.CompletionText.IsCamelCaseMatch(wordToComplete))
+                .ThenByDescending(c => c.CompletionText.IsSubsequenceMatch(wordToComplete))
+                .ThenBy(c => c.CompletionText);
         }
-
-        private bool IsValidCompletion(string wordToComplete, string suggestion)
-        {
-            return suggestion.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase);
-        }
-
+        
         private void AddKeywords(SemanticModel model, int position, bool wantKind, string wordToComplete)
         {
             var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
             var keywordHandler = new KeywordContextHandler();
             var keywords = keywordHandler.Get(context, model, position);
 
-            foreach (var keyword in keywords.Where(k => IsValidCompletion(wordToComplete, k)))
+            foreach (var keyword in keywords.Where(k => k.IsValidCompletionFor(wordToComplete)))
             {
                 _completions.Add(new AutoCompleteResponse
                 {
@@ -89,6 +92,7 @@ namespace OmniSharp
             if (typeSymbol != null)
             {
                 completions.Add(MakeAutoCompleteResponse(request, symbol));
+                
                 foreach (var ctor in typeSymbol.InstanceConstructors)
                 {
                     completions.Add(MakeAutoCompleteResponse(request, ctor));

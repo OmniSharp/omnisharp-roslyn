@@ -26,8 +26,6 @@ namespace OmniSharp
         [HttpPost("gettestcontext")]
         public async Task<GetTestCommandResponse> GetTestCommand([FromBody]TestCommandRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var quickFixes = new List<QuickFix>();
 
             var document = _workspace.GetDocument(request.FileName);
