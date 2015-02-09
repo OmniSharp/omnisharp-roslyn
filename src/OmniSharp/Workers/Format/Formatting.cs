@@ -20,12 +20,12 @@ namespace OmniSharp
                 return Enumerable.Empty<TextChange>();
             }
 
-            //  Instead of formatting the target node, we annotate the target node and format the
+            // Instead of formatting the target node, we annotate the target node and format the
             // whole compilation unit and -using an annotation- find the formatted node in the
             // new syntax tree. That way we get the proper indentation for free.
             var annotation = new SyntaxAnnotation("formatOnTypeHelper");
             var newRoot = tree.GetRoot().ReplaceNode(target, target.WithAdditionalAnnotations(annotation));
-            var formatted = Formatter.Format(newRoot, workspace, options);
+            var formatted = Formatter.Format(newRoot, target.FullSpan, workspace, options);
 
             var node = formatted.GetAnnotatedNodes(annotation).FirstOrDefault();
             if (node == null)
