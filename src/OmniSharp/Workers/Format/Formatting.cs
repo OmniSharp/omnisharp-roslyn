@@ -34,40 +34,28 @@ namespace OmniSharp
 
     public class Formatting
     {
-        public static async Task<IEnumerable<TextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position)
+        public static async Task<IEnumerable<TextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
         {
             var tree = await document.GetSyntaxTreeAsync();
-            var target = FindFormatTarget(tree, position);
 
-            if (target == null)
+            if (character == '\n')
             {
-                return Enumerable.Empty<TextChange>();
+                // format previous line on new line
+                var lines = (await document.GetTextAsync()).Lines;
+                var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
+                return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
             }
-
-            var changes = FormatterReflect.GetFormattedTextChanges(tree.GetRoot(), target.FullSpan, workspace, options);
-            var lines = tree.GetText().Lines;
-            var result = changes.Select(change =>
+            else if(character == '}' || character == ';')
             {
-                var linePositionSpan = lines.GetLinePositionSpan(change.Span);
-                var newText = EnsureProperNewLine(change.NewText, options);
-
-                return new TextChange()
+                // format after ; and }
+                var node = FindFormatTarget(tree, position);
+                if (node != null)
                 {
-                    NewText = newText,
-                    StartLine = linePositionSpan.Start.Line + 1,
-                    StartColumn = linePositionSpan.Start.Character + 1,
-                    EndLine = linePositionSpan.End.Line + 1,
-                    EndColumn = linePositionSpan.End.Character + 1
-                };
-            });
-            return result;
-        }
-
-        private static string EnsureProperNewLine(string text, OptionSet options)
-        {
-            // workaround: https://roslyn.codeplex.com/workitem/484
-            var option = options.GetOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp);
-            return text.Replace("\r\n", option);
+                    return await GetFormattingChangesForRange(workspace, options, document, node.FullSpan.Start, node.FullSpan.End);
+                }
+            }
+            
+            return Enumerable.Empty<TextChange>();
         }
 
         public static SyntaxNode FindFormatTarget(SyntaxTree tree, int position)
@@ -92,6 +80,43 @@ namespace OmniSharp
             }
 
             return null;
+        }
+
+        public static async Task<IEnumerable<TextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
+        {
+            var tree = await document.GetSyntaxTreeAsync();
+            var changes = FormatterReflect.GetFormattedTextChanges(tree.GetRoot(), TextSpan.FromBounds(start, end), workspace, options);
+            var lines = tree.GetText().Lines;
+            var result = changes.Select(change =>
+            {
+                var linePositionSpan = lines.GetLinePositionSpan(change.Span);
+                var newText = EnsureProperNewLine(change.NewText, options);
+
+                return new TextChange()
+                {
+                    NewText = newText,
+                    StartLine = linePositionSpan.Start.Line + 1,
+                    StartColumn = linePositionSpan.Start.Character + 1,
+                    EndLine = linePositionSpan.End.Line + 1,
+                    EndColumn = linePositionSpan.End.Character + 1
+                };
+            });
+            return result;
+        }
+
+        public static async Task<string> GetFormattedDocument(Workspace workspace, OptionSet options, Document document)
+        {
+            var formattedDocument = await Formatter.FormatAsync(document, options);
+            var newText = (await formattedDocument.GetTextAsync()).ToString();
+            newText = EnsureProperNewLine(newText, options);
+            return newText;
+        }
+
+        private static string EnsureProperNewLine(string text, OptionSet options)
+        {
+            // workaround: https://github.com/dotnet/roslyn/issues/202
+            var option = options.GetOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp);
+            return text.Replace("\r\n", option);
         }
     }
 }

@@ -4,6 +4,6 @@ namespace OmniSharp.Models
 {
     public class FormatRangeResponse
     {
-        public IEnumerable<TextChange> Edits { get; set; }
+        public IEnumerable<TextChange> Changes { get; set; }
     }
 }
