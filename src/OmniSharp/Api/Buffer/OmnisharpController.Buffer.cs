@@ -24,7 +24,7 @@ namespace OmniSharp
                 var endOffset = sourceText.Lines.GetPosition(new LinePosition(request.EndLine - 1, request.EndColumn - 1));
 
                 sourceText = sourceText.WithChanges(new[] {
-                    new TextChange(new TextSpan(startOffset, endOffset - startOffset), request.NewText)
+                    new Microsoft.CodeAnalysis.Text.TextChange(new TextSpan(startOffset, endOffset - startOffset), request.NewText)
                 });
 
                 _workspace.OnDocumentChanged(documentId, sourceText);
