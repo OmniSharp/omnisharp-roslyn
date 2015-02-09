@@ -43,7 +43,10 @@ namespace OmniSharp
                 // format previous line on new line
                 var lines = (await document.GetTextAsync()).Lines;
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
+                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span))) 
+                {
+                    return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
+                }
             }
             else if(character == '}' || character == ';')
             {
