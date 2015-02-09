@@ -22,7 +22,7 @@ namespace OmniSharp
 
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
             var position = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-            var changes = await Formatting.GetFormattingChangesAfterKeystroke(_workspace, Options(), document, position, request.Char);
+            var changes = await Formatting.GetFormattingChangesAfterKeystroke(_workspace, Options, document, position, request.Char);
 
             return new FormatRangeResponse()
             {
@@ -44,7 +44,7 @@ namespace OmniSharp
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
             var start = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
             var end = lines.GetPosition(new LinePosition(request.EndLine - 1, request.EndColumn - 1));
-            var changes = await Formatting.GetFormattingChangesForRange(_workspace, Options(), document, start, end);
+            var changes = await Formatting.GetFormattingChangesForRange(_workspace, Options, document, start, end);
 
             return new FormatRangeResponse()
             {
@@ -63,19 +63,21 @@ namespace OmniSharp
                 return null;
             }
 
-            var newText = await Formatting.GetFormattedDocument(_workspace, Options(), document);
+            var newText = await Formatting.GetFormattedDocument(_workspace, Options, document);
             return new CodeFormatResponse()
             {
                 Buffer = newText
             };
         }
 
-        private OptionSet Options()
+        private OptionSet Options
         {
-            return _workspace.Options
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp, _options.FormattingOptions.NewLine)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.UseTabs, LanguageNames.CSharp, _options.FormattingOptions.UseTabs)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.TabSize, LanguageNames.CSharp, _options.FormattingOptions.TabSize);
+            get {
+                return _workspace.Options
+                    .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp, _options.FormattingOptions.NewLine)
+                    .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.UseTabs, LanguageNames.CSharp, _options.FormattingOptions.UseTabs)
+                    .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.TabSize, LanguageNames.CSharp, _options.FormattingOptions.TabSize);
+            }
         }
     }
 }
