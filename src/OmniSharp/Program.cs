@@ -79,7 +79,7 @@ namespace OmniSharp
 
             var engine = services.GetRequiredService<IHostingEngine>();
             var appShutdownService = services.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEventSlim(false);
+            var shutdownHandle = new ManualResetEvent(false);
 
             var serverShutdown = engine.Start(context);
 
@@ -119,7 +119,7 @@ namespace OmniSharp
                 }
             }
             
-            shutdownHandle.Wait();
+            shutdownHandle.WaitOne();
         }
     }
 }
