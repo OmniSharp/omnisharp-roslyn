@@ -3,20 +3,16 @@ using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
-using Microsoft.Framework.Runtime;
+using Newtonsoft.Json;
 using OmniSharp.AspNet5;
 using OmniSharp.MSBuild;
+using OmniSharp.Models;
+using OmniSharp.Options;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Protocol;
 using System;
 using System.IO;
-using System.Threading;
-using System.Collections.Generic;
-using OmniSharp.Options;
-using Newtonsoft.Json;
-using OmniSharp.Stdio.Protocol;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using OmniSharp.Models;
 
 namespace OmniSharp.Stdio
 {
@@ -80,73 +76,49 @@ namespace OmniSharp.Stdio
             msbuildProjectSystem.Initalize();
             workspace.Initialized = true;
 
-            var controller1 = new OmnisharpController(workspace, omnisharpOptions);
-            var controller2 = new ProjectSystemController(aspContext, msbuildContext);
-
-            var regExpQuickInfo = new Regex(@"^quickinfo (\d+) (\d+) (.*)$");
-            var gotoDefinitionBuffer = new Regex(@"^definition (\d+) (\d+) (.*)$");
-
-            Console.WriteLine("Ready");
+            var controller = new OmnisharpController(workspace, omnisharpOptions);
 
             while (true)
             {
-                var readLine = Console.ReadLine();
-                MatchCollection match;
-                ResponsePacket res = null;
+                var line = Console.ReadLine();
+                RequestPacket req = JsonConvert.DeserializeObject<RequestPacket>(line);
+                ResponsePacket res = req.Reply(null);
+                res.Success = true;
 
-                if ((match = regExpQuickInfo.Matches(readLine)).Count > 0)
+                switch(req.Command)
                 {
-                    var line = int.Parse(match[0].Groups[1].Value);
-                    var column = int.Parse(match[0].Groups[2].Value);
-                    var filename = match[0].Groups[3].Value;
-
-                    var item = await controller1.TypeLookup(new Models.TypeLookupRequest()
-                    {
-                        FileName = filename,
-                        Line = line,
-                        Column = column,
-                        IncludeDocumentation = true
-                    });
-
-                    res = new ResponsePacket()
-                    {
-                        Command = "quickinfo",
-                        Running = true,
-                        Success = true,
-                        Request_seq = 0,
-                        Body = item
-                    };
-
-                }
-                else if((match = gotoDefinitionBuffer.Matches(readLine)).Count > 0)
-                {
-                    var line = int.Parse(match[0].Groups[1].Value);
-                    var column = int.Parse(match[0].Groups[2].Value);
-                    var filename = match[0].Groups[3].Value;
-                    var item = await controller1.GotoDefinition(new Request()
-                    {
-                        FileName = filename,
-                        Line = line,
-                        Column = column
-                    });
-
-                    res = new ResponsePacket()
-                    {
-                        Command = "definition",
-                        Running = true,
-                        Success = true, 
-                        Request_seq = 0, 
-                        Body = item
-                    };
-                }
-                else
-                {
-                    Console.WriteLine(string.Format("?{0}", readLine));
+                    case "typelookup":
+                        res.Body = await controller.TypeLookup(new TypeLookupRequest()
+                        {
+                            IncludeDocumentation = true,
+                            Line = req.Arguments.Line,
+                            Column = req.Arguments.Column,
+                            FileName = req.Arguments.FileName
+                        });
+                        break;
+                    case "gotodefinition":
+                        res.Body = await controller.GotoDefinition(new Request()
+                        {
+                            Line = req.Arguments.Line,
+                            Column = req.Arguments.Column,
+                            FileName = req.Arguments.FileName
+                        });
+                        break;
+                    case "autocomplete":
+                        res.Body = await controller.AutoComplete(new AutoCompleteRequest()
+                        {
+                            Line = req.Arguments.Line,
+                            Column = req.Arguments.Column,
+                            FileName = req.Arguments.FileName
+                        });
+                        break;
+                    default:
+                        res.Success = false;
+                        res.Message = "Unknown command";
+                        break;
                 }
 
-                if (res != null) {
-                    Console.WriteLine(JsonConvert.SerializeObject(res));
-                }
+                Console.WriteLine(res);
             }
         }
     }
