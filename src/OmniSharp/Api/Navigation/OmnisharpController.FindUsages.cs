@@ -37,7 +37,9 @@ namespace OmniSharp
                         locations.Add(location.Location);
                     }
 
-                    var definitionLocations = usage.Definition.Locations.Where(loc => loc.IsInSource);
+                    var definitionLocations = usage.Definition.Locations
+                        .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
+                        
                     foreach (var location in definitionLocations)
                     {
                         locations.Add(location);

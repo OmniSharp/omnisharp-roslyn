@@ -167,6 +167,21 @@ namespace OmniSharp.Tests
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(1).FileName);
         }
+        
+        [Fact]
+        public async Task DontFindDefinitionInAnotherFile()
+        {
+            var sourceA = @"public class Bar : F$oo {}";
+            var sourceB = @"public class Foo {
+                public Foo Clone() {
+                    return null;
+                }
+            }";
+
+            var usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", true);
+            Assert.Equal(1, usages.QuickFixes.Count());
+            Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+        }
 
         private FindUsagesRequest CreateRequest(string source, string fileName = "dummy.cs")
         {
