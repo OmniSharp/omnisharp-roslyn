@@ -1,21 +1,55 @@
 ﻿using Microsoft.AspNet.Hosting;
+using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json;
-using OmniSharp.AspNet5;
-using OmniSharp.MSBuild;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
 using System;
+using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.DependencyInjection.Fallback;
+using System.Reflection;
 
 namespace OmniSharp.Stdio
 {
+
+    static class Controllers
+    {
+        public readonly static IDictionary<string, MethodInfo> Routes;
+
+        public readonly static IEnumerable<Type> Types;
+
+        static Controllers()
+        {
+            Types = new[] {
+                typeof(OmnisharpController),
+                typeof(ProjectSystemController),
+                typeof(CodeActionController)
+            };
+            Routes = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var type in Types)
+            {
+                foreach (var method in type.GetMethods())
+                {
+                    var attribute = method.GetCustomAttribute<HttpPostAttribute>();
+                    if (attribute != null)
+                    {
+                        Routes[attribute.Template.TrimStart('/')] = method;
+                    }
+                }
+            }
+        }
+    }
+    
     public class Program
     {
         private readonly IServiceProvider _serviceProvider;
@@ -57,65 +91,102 @@ namespace OmniSharp.Stdio
             var memoryCacheOptions = new OptionsManager<MemoryCacheOptions>(new[] { new ConfigureFromConfigurationOptions<MemoryCacheOptions>(config) });
 
             var env = new OmnisharpEnvironment(applicationRoot, -1, hostPID, logLevel);
-            var watcher = new FileSystemWatcherWrapper(env);
-            var workspace = new OmnisharpWorkspace();
+
+            OmniSharp.Program.Environment = new OmnisharpEnvironment(applicationRoot, -1, hostPID, logLevel);
+
+            var services = new ServiceCollection();
             var lifetime = new ApplicationLifetime();
-            var loggerFactory = new LoggerFactory();
-            var memoryCache = new MemoryCache(memoryCacheOptions);
-            var metadataFileReferenceCache = new MetadataFileReferenceCache(memoryCache, loggerFactory);
 
-            var aspContext = new AspNet5Context();
-            var aspProjectSystem = new AspNet5ProjectSystem(workspace, env, omnisharpOptions, 
-                loggerFactory, metadataFileReferenceCache, lifetime, watcher, aspContext);
+            services.AddSingleton<ILoggerFactory, LoggerFactory>();
 
-            var msbuildContext = new MSBuildContext();
-            var msbuildProjectSystem = new MSBuildProjectSystem(workspace, env, loggerFactory, 
-                metadataFileReferenceCache, watcher, msbuildContext);
+            var startup = new OmniSharp.Startup();
+            startup.ConfigureServices(services, lifetime);
 
-            aspProjectSystem.Initalize();
-            msbuildProjectSystem.Initalize();
-            workspace.Initialized = true;
+            // register controllers
+            foreach(var type in Controllers.Types)
+            {
+                services.AddTransient(type);
+                Console.WriteLine(string.Format("Added controller -> {0}", type.Name));
+            }
 
-            var controller = new OmnisharpController(workspace, omnisharpOptions);
+            var provider = services.BuildServiceProvider();
+
+            var projectSystems = provider.GetRequiredService<IEnumerable<IProjectSystem>>();
+            foreach (var projectSystem in projectSystems)
+            {
+                projectSystem.Initalize();
+            }
+
+            // Mark the workspace as initialized
+            startup.Workspace.Initialized = true;
+
+            Console.WriteLine("Reading from Stdin");
 
             while (true)
             {
-                var line = Console.ReadLine();
-                RequestPacket req = JsonConvert.DeserializeObject<RequestPacket>(line);
-                ResponsePacket res = req.Reply(null);
-                res.Success = true;
-
-                switch(req.Command)
+                RequestPacket req;
+                try
                 {
-                    case "typelookup":
-                        res.Body = await controller.TypeLookup(new TypeLookupRequest()
+                    var line = Console.ReadLine();
+                    req = JsonConvert.DeserializeObject<RequestPacket>(line);
+                }
+                catch (Exception e)
+                {
+                    // Todo@jo - error event
+                    Console.WriteLine(e);
+                    continue;
+                }
+
+                ResponsePacket res = req.Reply(null);
+                MethodInfo target;
+
+                if (Controllers.Routes.TryGetValue(res.Command, out target))
+                {
+                    try
+                    {
+                        res.Success = true;
+                        res.Running = true;
+
+                        var controller = provider.GetRequiredService(target.DeclaringType);
+                        object result = null;
+                        if(target.GetParameters().Length == 1)
                         {
-                            IncludeDocumentation = true,
-                            Line = req.Arguments.Line,
-                            Column = req.Arguments.Column,
-                            FileName = req.Arguments.FileName
-                        });
-                        break;
-                    case "gotodefinition":
-                        res.Body = await controller.GotoDefinition(new Request()
+                            // hack!
+                            var body = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(req.Arguments), target.GetParameters()[0].ParameterType);
+                            result = target.Invoke(controller, new object[] { body });
+                        }
+                        else if(target.GetParameters().Length == 0)
                         {
-                            Line = req.Arguments.Line,
-                            Column = req.Arguments.Column,
-                            FileName = req.Arguments.FileName
-                        });
-                        break;
-                    case "autocomplete":
-                        res.Body = await controller.AutoComplete(new AutoCompleteRequest()
+                            result = target.Invoke(controller, new object[] { });
+                        }
+                        else
                         {
-                            Line = req.Arguments.Line,
-                            Column = req.Arguments.Column,
-                            FileName = req.Arguments.FileName
-                        });
-                        break;
-                    default:
+                            res.Success = false;
+                            res.Message = target.ToString();
+                        }
+
+                        if(result is Task)
+                        {
+                            var task = (Task) result;
+                            task.Wait();
+                            res.Body = task.GetType().GetProperty("Result").GetValue(task);
+                        }
+                        else
+                        {
+                            res.Body = result;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
                         res.Success = false;
-                        res.Message = "Unknown command";
-                        break;
+                        res.Message = e.ToString();
+                    }
+                }
+                else
+                {
+                    res.Success = false;
+                    res.Message = "Unknown command";
                 }
 
                 Console.WriteLine(res);
