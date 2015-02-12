@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
@@ -12,7 +13,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("findusages")]
-        public async Task<QuickFixResponse> FindUsages([FromBody]Request request)
+        public async Task<QuickFixResponse> FindUsages([FromBody]FindUsagesRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
@@ -23,7 +24,9 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
-                var usages = await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+                var usages = request.OnlyThisFile
+                    ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
+                    : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
 
                 var locations = new HashSet<Location>();
 
@@ -34,7 +37,9 @@ namespace OmniSharp
                         locations.Add(location.Location);
                     }
 
-                    var definitionLocations = usage.Definition.Locations.Where(loc => loc.IsInSource);
+                    var definitionLocations = usage.Definition.Locations
+                        .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
+                        
                     foreach (var location in definitionLocations)
                     {
                         locations.Add(location);
