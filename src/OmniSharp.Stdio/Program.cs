@@ -59,7 +59,7 @@ namespace OmniSharp.Stdio
             _serviceProvider = serviceProvider;
         }
 
-        public async Task Main(string[] args)
+        public void Main(string[] args)
         {
             var applicationRoot = Directory.GetCurrentDirectory();
             var logLevel = LogLevel.Information;
@@ -136,11 +136,19 @@ namespace OmniSharp.Stdio
                     Console.WriteLine(e);
                     continue;
                 }
+                
+                 HandleRequest(req, provider);
+            }
+        }
 
+        private void HandleRequest(RequestPacket req, IServiceProvider provider)
+        {
+            Task.Factory.StartNew(async () =>
+            {
                 ResponsePacket res = req.Reply(null);
                 MethodInfo target;
-
-                if (Controllers.Routes.TryGetValue(res.Command, out target))
+    
+                if (Controllers.Routes.TryGetValue(req.Command, out target))
                 {
                     try
                     {
@@ -149,13 +157,13 @@ namespace OmniSharp.Stdio
 
                         var controller = provider.GetRequiredService(target.DeclaringType);
                         object result = null;
-                        if(target.GetParameters().Length == 1)
+                        if (target.GetParameters().Length == 1)
                         {
                             // hack!
                             var body = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(req.Arguments), target.GetParameters()[0].ParameterType);
                             result = target.Invoke(controller, new object[] { body });
                         }
-                        else if(target.GetParameters().Length == 0)
+                        else if (target.GetParameters().Length == 0)
                         {
                             result = target.Invoke(controller, new object[] { });
                         }
@@ -164,11 +172,11 @@ namespace OmniSharp.Stdio
                             res.Success = false;
                             res.Message = target.ToString();
                         }
-
-                        if(result is Task)
+                        
+                        if (result is Task)
                         {
-                            var task = (Task) result;
-                            task.Wait();
+                            var task = (Task)result;
+                            await task;
                             res.Body = task.GetType().GetProperty("Result").GetValue(task);
                         }
                         else
@@ -188,9 +196,8 @@ namespace OmniSharp.Stdio
                     res.Success = false;
                     res.Message = "Unknown command";
                 }
-
                 Console.WriteLine(res);
-            }
+            });
         }
     }
 }
