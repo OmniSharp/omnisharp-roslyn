@@ -13,13 +13,13 @@ namespace OmniSharp.MSBuild
 
         public ProjectFileInfo GetProject(string path)
         {
-            ProjectFileInfo p;
-            if (!Projects.TryGetValue(path, out p))
+            ProjectFileInfo projectFileInfo;
+            if (!Projects.TryGetValue(path, out projectFileInfo))
             {
                 return null;
             }
 
-            return p;
+            return projectFileInfo;
         }
     }
 }

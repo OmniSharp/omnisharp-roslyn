@@ -14,15 +14,15 @@ namespace OmniSharp.Models
         public IList<string> Frameworks { get; set; }
         public string GlobalJsonPath { get; set; }
 
-        public AspNet5Project(Project p)
+        public AspNet5Project(Project project)
         {
-            Path = p.Path;
-            Name = p.Name;
-            Commands = p.Commands;
-            Configurations = p.Configurations;
-            GlobalJsonPath = p.GlobalJsonPath;
-            ProjectSearchPaths = p.ProjectSearchPaths;
-            Frameworks = p.ProjectsByFramework.Keys.ToList();
+            Path = project.Path;
+            Name = project.Name;
+            Commands = project.Commands;
+            Configurations = project.Configurations;
+            GlobalJsonPath = project.GlobalJsonPath;
+            ProjectSearchPaths = project.ProjectSearchPaths;
+            Frameworks = project.ProjectsByFramework.Keys.ToList();
         }
     }
 }
