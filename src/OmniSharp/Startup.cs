@@ -16,6 +16,7 @@ using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
+using OmniSharp.ScriptCs;
 using OmniSharp.Services;
 using OmniSharp.Settings;
 using OmniSharp.Stdio.Logging;
