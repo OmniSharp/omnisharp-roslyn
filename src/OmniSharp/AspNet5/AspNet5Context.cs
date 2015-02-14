@@ -9,7 +9,7 @@ namespace OmniSharp.AspNet5
         private int _contextId;
 
         public string RuntimePath { get; set; }
-        
+
         public int DesignTimeHostPort { get; set; }
 
         public string HostId { get; private set; }
@@ -54,15 +54,15 @@ namespace OmniSharp.AspNet5
             return true;
         }
 
-		public Project GetProject(string path)
-		{
-			int contextId;
-			if (!ProjectContextMapping.TryGetValue(path, out contextId))
-			{
-				return null;
-			}
+        public Project GetProject(string path)
+        {
+            int contextId;
+            if (!ProjectContextMapping.TryGetValue(path, out contextId))
+            {
+                return null;
+            }
 
-			return Projects[contextId];
-		}
-	}
+            return Projects[contextId];
+        }
+    }
 }
