@@ -36,8 +36,8 @@ namespace OmniSharp
         {
             var document = _workspace.GetDocument(request.FileName);
 
-            ProjectFileInfo msBuildContextProject = _msbuildContext.GetProject(document.Project.FilePath);
-            Project aspNet5ContextProject = _aspnet5Context.GetProject(document.Project.FilePath);
+            var msBuildContextProject = _msbuildContext.GetProject(document.Project.FilePath);
+            var aspNet5ContextProject = _aspnet5Context.GetProject(document.Project.FilePath);
 
             MSBuildProject msBuildProjectItem = null;
             AspNet5Project aspNet5ProjectItem = null;
