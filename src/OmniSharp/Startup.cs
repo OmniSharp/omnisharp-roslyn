@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Builder;
@@ -79,6 +79,7 @@ namespace OmniSharp
 
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
+            services.AddSingleton<IProjectSystem, ScriptCsProjectSystem>();
 
             // Add the file watcher
             services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();

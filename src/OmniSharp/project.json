@@ -24,7 +24,8 @@
                "ICSharpCode.NRefactory": "6.0.0-alpha3"  
             },
             "frameworkAssemblies": {
-                "System.Globalization": "",
+				"System.Globalization": "",
+				"System.Reflection":  "",
                 "Microsoft.Build": "",
                 "Microsoft.Build.Engine": "",
                 "Microsoft.Build.Framework": ""
