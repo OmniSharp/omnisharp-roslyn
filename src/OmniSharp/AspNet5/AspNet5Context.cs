@@ -53,5 +53,16 @@ namespace OmniSharp.AspNet5
 
             return true;
         }
-    }
+
+		public Project GetProject(string path)
+		{
+			int contextId;
+			if (!ProjectContextMapping.TryGetValue(path, out contextId))
+			{
+				return null;
+			}
+
+			return Projects[contextId];
+		}
+	}
 }
