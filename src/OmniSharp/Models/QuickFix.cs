@@ -36,7 +36,7 @@ namespace OmniSharp.Models
                 && Text == quickFix.Text;
         }
 
-        public override int GetHashCode()   
+        public override int GetHashCode()
         {
             unchecked
             {
