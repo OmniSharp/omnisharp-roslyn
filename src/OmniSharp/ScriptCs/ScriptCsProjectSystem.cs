@@ -75,18 +75,14 @@ namespace OmniSharp.ScriptCs
                 LogManager.Adapter = new ConsoleOutLoggerFactoryAdapter();
                 var scriptcsLogger = LogManager.GetCurrentClassLogger();
 
+                //todo: initialize assembly redirects or not?
                 //var initializationServices = new InitializationServices(scriptcsLogger);
                 //initializationServices.GetAppDomainAssemblyResolver().Initialize();
 
                 var scriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), scriptcsLogger).
                     LogLevel(LogLevel.Info).Cache(false).Repl(false).ScriptName(csxPath).ScriptEngine<NullScriptEngine>();
 
-                                _scriptServices = scriptServicesBuilder.Build();
-
-
-                var runtimeField = typeof(ScriptServicesBuilder).GetField("_runtimeServices", BindingFlags.NonPublic |
-                                              BindingFlags.Instance);
-                var autofacContainer = ((RuntimeServices)runtimeField.GetValue(scriptServicesBuilder)).Container;
+                _scriptServices = scriptServicesBuilder.Build();
 
                 var mscorlib = MetadataReference.CreateFromAssembly(typeof(object).GetTypeInfo().Assembly);
                 var systemCore = MetadataReference.CreateFromAssembly(typeof(Enumerable).GetTypeInfo().Assembly);
@@ -107,11 +103,13 @@ namespace OmniSharp.ScriptCs
                 ImportReferences(references, assemblyPaths);
 
                 //script packs
-                //var scriptPacks = _scriptServices.ScriptPackResolver.GetPacks().ToList();
-                var scriptPackTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).
-                    Where(t => t.GetInterfaces().Any(i => i.FullName == "ScriptCs.Contracts.IScriptPack")).ToArray();
+                var scriptPacks = _scriptServices.ScriptPackResolver.GetPacks().ToList();
 
-                usings.AddRange(scriptPackTypes.Select(x => x.Namespace));
+                //hack: alternative to use if we have problems with scriptcs.contracts versions
+                //var scriptPackTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).
+                //    Where(t => t.GetInterfaces().Any(i => i.FullName == "ScriptCs.Contracts.IScriptPack")).ToArray();
+
+                //usings.AddRange(scriptPackTypes.Select(x => x.Namespace));
 
                 //foreach (var scriptPackType in scriptPackTypes)
                 //{
@@ -125,17 +123,17 @@ namespace OmniSharp.ScriptCs
                 //    }
                 //}
 
-                //if (scriptPacks != null && scriptPacks.Any())
-                //{
-                //    var scriptPackSession = new ScriptPackSession(scriptPacks, new string[0]);
-                //    scriptPackSession.InitializePacks();
+                if (scriptPacks != null && scriptPacks.Any())
+                {
+                    var scriptPackSession = new ScriptPackSession(scriptPacks, new string[0]);
+                    scriptPackSession.InitializePacks();
 
-                //    //script pack references
-                //    ImportReferences(references, scriptPackSession.References);
+                    //script pack references
+                    ImportReferences(references, scriptPackSession.References);
 
-                //    //script pack usings
-                //    usings.AddRange(scriptPackSession.Namespaces);
-                //}
+                    //script pack usings
+                    usings.AddRange(scriptPackSession.Namespaces);
+                }
 
                 var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse,
 SourceCodeKind.Script);
