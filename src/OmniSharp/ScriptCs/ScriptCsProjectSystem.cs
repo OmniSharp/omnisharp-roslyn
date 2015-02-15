@@ -38,7 +38,7 @@ namespace OmniSharp.ScriptCs
                 _logger.WriteInformation(string.Format("Using CSX files at '{0}'.", csxPath));
 
                 var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse,
-    SourceCodeKind.Script, null);
+    SourceCodeKind.Script);
                 var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
 
                 var fs = new FileSystem();
@@ -52,7 +52,8 @@ namespace OmniSharp.ScriptCs
 
                 var mscorlib = MetadataReference.CreateFromAssembly(typeof(object).GetTypeInfo().Assembly);
                 var systemCore = MetadataReference.CreateFromAssembly(typeof(Enumerable).GetTypeInfo().Assembly);
-                var references = new List<MetadataReference> { mscorlib, systemCore };
+                var scriptcsContracts = MetadataReference.CreateFromAssembly(typeof(IScriptHost).Assembly);
+                var references = new List<MetadataReference> { mscorlib, systemCore, scriptcsContracts };
 
                 var baseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
                 foreach (var importedReference in processResult.References)
@@ -69,7 +70,7 @@ namespace OmniSharp.ScriptCs
 
                 var projectId = ProjectId.CreateNewId("ScriptCs");
                 var project = ProjectInfo.Create(projectId, VersionStamp.Create(), "ScriptCs", "ScriptCs.dll", LanguageNames.CSharp, null, null,
-                                                        compilationOptions, parseOptions, null, null, references, null, null, true, null); //todo add refs & host object
+                                                        compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost)); //todo add refs & host object
                 _workspace.AddProject(project);
 
                 AddFile(csxPath, projectId);
