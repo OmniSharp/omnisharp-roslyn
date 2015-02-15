@@ -17,6 +17,7 @@ namespace OmniSharp.Tests
             Assert.Equal("OmniSharp", projectName);
             Assert.Equal("project.json", path);
         }
+
         private string GetProjectName(string source = "")
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
@@ -26,6 +27,7 @@ namespace OmniSharp.Tests
             var response = controller.CurrentProject(request);
             return response.AspNet5Project.Name;
         }
+        
         private string GetPath(string source = "")
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
@@ -35,6 +37,7 @@ namespace OmniSharp.Tests
             var response = controller.CurrentProject(request);
             return response.AspNet5Project.Path;
         }
+        
         private IDictionary<string, string> GetCommands(string source = "")
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
