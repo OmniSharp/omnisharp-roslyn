@@ -141,15 +141,21 @@ SourceCodeKind.Script);
 
                 var projectId = ProjectId.CreateNewId("ScriptCs");
                 var project = ProjectInfo.Create(projectId, VersionStamp.Create(), "ScriptCs", "ScriptCs.dll", LanguageNames.CSharp, null, null,
-                                                        compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost)); //todo add refs & host object
+                                                        compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
                 _workspace.AddProject(project);
 
                 AddFile(csxPath, projectId);
 
-                //foreach (var filePath in processResult.LoadedScripts.Distinct())
-                //{
-                //    AddFile(filePath, projectId);
-                //}
+                foreach (var filePath in processResult.LoadedScripts.Distinct().Except(new[] { csxPath }))
+                {
+                    var loadedFileProjectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
+                    var loadedFileSubmissionProject = ProjectInfo.Create(loadedFileProjectId, VersionStamp.Create(), "ScriptCs", "ScriptCs.dll", LanguageNames.CSharp, null, null,
+                                        compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
+
+                    _workspace.AddProject(loadedFileSubmissionProject);
+                    AddFile(filePath, loadedFileProjectId);
+                    _workspace.AddProjectReference(projectId, new ProjectReference(loadedFileProjectId));
+                }
             }
             else
             {
