@@ -12,8 +12,6 @@ using Microsoft.Framework.Logging;
 using OmniSharp.Models;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
-using Microsoft.CodeAnalysis.CSharp;
-using System.Reflection;
 
 namespace OmniSharp.MSBuild
 {

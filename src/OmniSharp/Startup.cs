@@ -80,7 +80,10 @@ namespace OmniSharp
 
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
-            services.AddSingleton<IProjectSystem, ScriptCsProjectSystem>();
+
+#if ASPNET50
+            services.AddSingleton<IProjectSystem, OmniSharp.ScriptCs.ScriptCsProjectSystem>();
+#endif
 
             // Add the file watcher
             services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
