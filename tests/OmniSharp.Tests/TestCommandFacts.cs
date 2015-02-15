@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Xunit;
 using OmniSharp.AspNet5;
+using OmniSharp.Filters;
 using OmniSharp.Models;
 
 namespace OmniSharp.Tests
@@ -151,6 +151,8 @@ namespace OmniSharp.Tests
             var testCommandProviders = new[] { new AspNet5TestCommandProvider(context) };
             var controller = new TestCommandController(workspace, testCommandProviders);
             var request = CreateRequest(source);
+            var bufferFilter = new UpdateBufferFilter(workspace);
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
             return await controller.GetTestCommand(request);
         }
 

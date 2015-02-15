@@ -12,8 +12,6 @@ namespace OmniSharp
         [HttpPost("typelookup")]
         public async Task<IActionResult> TypeLookup([FromBody]TypeLookupRequest request)
         {
-            _workspace.EnsureBufferUpdated(request);
-
             var document = _workspace.GetDocument(request.FileName);
             var response = new TypeLookupResponse();
             if (document != null)

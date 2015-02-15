@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using OmniSharp.Filters;
 using OmniSharp.Models;
 
 namespace OmniSharp.Tests
@@ -144,23 +146,69 @@ namespace OmniSharp.Tests
             Assert.Equal(2, usages.QuickFixes.Count());
         }
 
-        private Request CreateRequest(string source, string fileName = "dummy.cs")
+        [Fact]
+        public async Task LimitReferenceSearchToThisFile()
+        {
+            var sourceA = @"public class F$oo {
+                public Foo Clone() {
+                    return null;
+                }
+            }";
+            var sourceB = @"public class Bar : Foo {}";
+
+            var usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", false);
+            Assert.Equal(3, usages.QuickFixes.Count());
+            Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+            Assert.Equal("a.cs", usages.QuickFixes.ElementAt(1).FileName);
+            Assert.Equal("b.cs", usages.QuickFixes.ElementAt(2).FileName);
+            
+            usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", true);
+            Assert.Equal(2, usages.QuickFixes.Count());
+            Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+            Assert.Equal("a.cs", usages.QuickFixes.ElementAt(1).FileName);
+        }
+        
+        [Fact]
+        public async Task DontFindDefinitionInAnotherFile()
+        {
+            var sourceA = @"public class Bar : F$oo {}";
+            var sourceB = @"public class Foo {
+                public Foo Clone() {
+                    return null;
+                }
+            }";
+
+            var usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", true);
+            Assert.Equal(1, usages.QuickFixes.Count());
+            Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+        }
+
+        private FindUsagesRequest CreateRequest(string source, string fileName = "dummy.cs")
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new Request
+            return new FindUsagesRequest
             {
                 Line = lineColumn.Line,
                 Column = lineColumn.Column,
                 FileName = fileName,
-                Buffer = source.Replace("$", "")
+                Buffer = source.Replace("$", ""),
+                OnlyThisFile = false
             };
         }
 
         private async Task<QuickFixResponse> FindUsages(string source)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            return await FindUsages(new Dictionary<string, string> { { "dummy.cs", source }}, "dummy.cs", false);
+        }
+
+        private async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile)
+        {
+            var workspace = TestHelpers.CreateSimpleWorkspace(sources);
             var controller = new OmnisharpController(workspace, null);
-            var request = CreateRequest(source);
+            var request = CreateRequest(sources[currentFile], currentFile);
+            request.OnlyThisFile = onlyThisFile;
+            var bufferFilter = new UpdateBufferFilter(workspace);
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
             return await controller.FindUsages(request);
         }
     }

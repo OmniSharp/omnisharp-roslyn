@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
@@ -23,37 +22,6 @@ namespace OmniSharp.Tests
 
             workspace.AddProject(projectInfo);
             workspace.AddDocument(document);
-        }
-
-        [Fact]
-        public async Task UpdateBuffer_HandlesVoidRequest()
-        {
-            OmnisharpWorkspace workspace;
-            OmnisharpController controller;
-            DocumentInfo document;
-            CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", "class C {}");
-            
-            // ignore void buffers
-            controller.UpdateBuffer(new Models.Request() { });
-            var sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
-            Assert.Equal("class C {}", sourceText.ToString());
-
-            controller.UpdateBuffer(new Models.Request() { FileName = "test.cs" });
-            sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
-            Assert.Equal("class C {}", sourceText.ToString());
-
-            controller.UpdateBuffer(new Models.Request() { Buffer = "// c", FileName = "some_other_file.cs" });
-            sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
-            Assert.Equal("class C {}", sourceText.ToString());
-
-            // valid updates
-            controller.UpdateBuffer(new Models.Request() { FileName = "test.cs", Buffer = "interface I {}" });
-            sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
-            Assert.Equal("interface I {}", sourceText.ToString());
-
-            controller.UpdateBuffer(new Models.Request() { FileName = "test.cs", Buffer = "" });
-            sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
-            Assert.Equal("", sourceText.ToString());
         }
 
         [Fact]

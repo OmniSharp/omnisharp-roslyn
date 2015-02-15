@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using System.Reflection;
 
 namespace OmniSharp.Tests
 {
@@ -99,6 +100,13 @@ namespace OmniSharp.Tests
                 symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix)); 
             }
             return symbols;
+        }
+
+        public static ActionExecutingContext CreateActionExecutingContext(Request req)
+        {
+            var actionContext = new ActionContext(null, null, null);
+            var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilter>(), new Dictionary<string, object> { { "request", req} });
+            return actionExecutingContext;
         }
     }
 }
