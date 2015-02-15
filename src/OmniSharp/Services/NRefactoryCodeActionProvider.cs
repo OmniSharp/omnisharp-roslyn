@@ -1,9 +1,9 @@
 ﻿#if ASPNET50
-using ICSharpCode.NRefactory6.CSharp.Refactoring;
-using Microsoft.CodeAnalysis.CodeRefactorings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ICSharpCode.NRefactory6.CSharp.Refactoring;
+using Microsoft.CodeAnalysis.CodeRefactorings;
 
 namespace OmniSharp.Services
 {
@@ -14,7 +14,7 @@ namespace OmniSharp.Services
             // todo , replace this with the nrefactory filtered list of providers
             var types = typeof(UseVarKeywordAction)
                                 .Assembly
-								.GetExportedTypes()
+                                .GetExportedTypes()
                                 .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t));
 
             IEnumerable<CodeRefactoringProvider> providers =

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OmniSharp.Services
+﻿namespace OmniSharp.Services
 {
     public interface IProjectSystem
     {

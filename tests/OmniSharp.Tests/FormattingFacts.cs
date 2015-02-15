@@ -1,11 +1,10 @@
 using System;
-using Xunit;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
 using OmniSharp.Models;
+using Xunit;
 
 namespace OmniSharp.Tests
 {
@@ -23,24 +22,24 @@ namespace OmniSharp.Tests
 
             AssertFormatTargetKind(SyntaxKind.MethodDeclaration, @"
 class C {
-	public void M(){}$
+    public void M(){}$
 }");
             AssertFormatTargetKind(SyntaxKind.ObjectInitializerExpression, @"
 class C {
-	public void M(){
-	
-		new T() {
-			A = 6,
-			B = 7
-		}$
-	}
+    public void M(){
+    
+        new T() {
+            A = 6,
+            B = 7
+        }$
+    }
 }");
             AssertFormatTargetKind(SyntaxKind.ForStatement, @"
 class C {
-	public void M ()
-	{
-		for(;;){}$
-	}
+    public void M ()
+    {
+        for(;;){}$
+    }
 }");
         }
 
@@ -50,43 +49,43 @@ class C {
 
             AssertFormatTargetKind(SyntaxKind.FieldDeclaration, @"
 class C {
-	private int F;$
+    private int F;$
 }");
             AssertFormatTargetKind(SyntaxKind.LocalDeclarationStatement, @"
 class C {
-	public void M()
-	{
-		var a = 1234;$
-	}
+    public void M()
+    {
+        var a = 1234;$
+    }
 }");
             AssertFormatTargetKind(SyntaxKind.ReturnStatement, @"
 class C {
-	public int M()
-	{
-		return 1234;$
-	}
+    public int M()
+    {
+        return 1234;$
+    }
 }");
 
             AssertFormatTargetKind(SyntaxKind.ForStatement, @"
 class C {
-	public void M ()
-	{
-		for(var i = 0;$)
-	}
+    public void M ()
+    {
+        for(var i = 0;$)
+    }
 }");
             AssertFormatTargetKind(SyntaxKind.ForStatement, @"
 class C {
-	public void M ()
-	{
-		for(var i = 0;$) {}
-	}
+    public void M ()
+    {
+        for(var i = 0;$) {}
+    }
 }");
             AssertFormatTargetKind(SyntaxKind.ForStatement, @"
 class C {
-	public void M ()
-	{
-		for(var i = 0; i < 8;$)
-	}
+    public void M ()
+    {
+        for(var i = 0; i < 8;$)
+    }
 }");
         }
 
