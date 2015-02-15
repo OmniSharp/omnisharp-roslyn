@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
-using System.Collections.Generic;
 
 namespace OmniSharp
 {

@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using System.Threading.Tasks;
 
 namespace OmniSharp
 {

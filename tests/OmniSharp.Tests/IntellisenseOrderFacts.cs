@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Xunit;
 using OmniSharp.Models;
+using Xunit;
 
 namespace OmniSharp.Tests
 {
