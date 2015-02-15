@@ -15,7 +15,7 @@ namespace OmniSharp.Tests
             Assert.Equal(1, commands.Count);
         }
 
-        private IDictionary<string, string> GetCommands(string source = "dummy.cs")
+        private IDictionary<string, string> GetCommands(string source = "")
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
             var aspnet5Context = GetAspNet5Context();
@@ -35,10 +35,11 @@ namespace OmniSharp.Tests
             var projectCounter = 1;
             context.Projects.Add(projectCounter, new Project
             {
-                Name = "ProjectName",
+                Name = "OmniSharp",
                 Path = "project.json",
                 Commands = { { "kestrel", "Microsoft.AspNet.Hosting --server Kestrel" } }
             });
+            context.ProjectContextMapping.Add("project.json", 1);
 
             return context;
         }
