@@ -1,7 +1,6 @@
-﻿using OmniSharp.MSBuild;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using OmniSharp.MSBuild;
 
 namespace OmniSharp.Models
 {

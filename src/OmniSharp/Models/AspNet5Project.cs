@@ -1,6 +1,6 @@
-﻿using OmniSharp.AspNet5;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using OmniSharp.AspNet5;
 
 namespace OmniSharp.Models
 {

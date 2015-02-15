@@ -1,5 +1,5 @@
-﻿using OmniSharp.MSBuild.ProjectFile;
-using System;
+﻿using System;
+using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.Models
 {

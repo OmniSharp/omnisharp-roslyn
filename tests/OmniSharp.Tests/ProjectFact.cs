@@ -1,6 +1,6 @@
-﻿using OmniSharp.AspNet5;
+﻿using System.Collections.Generic;
+using OmniSharp.AspNet5;
 using OmniSharp.Models;
-using System.Collections.Generic;
 using Xunit;
 
 namespace OmniSharp.Tests
