@@ -10,13 +10,11 @@ namespace OmniSharp.Tests
     {
         AspNet5Context _context;
         OmnisharpWorkspace _workspace;
-        // int _projectCounter;
 
         public CurrentProjectFacts()
         {
             _context = new AspNet5Context();
             _workspace = new OmnisharpWorkspace();
-            // _projectCounter = 1;
         }
 
         [Fact]
@@ -43,21 +41,10 @@ namespace OmniSharp.Tests
             return response.AspNet5Project;
         }
 
-        private AspNet5.Project GetProject(string projectPath)
-        {
-            return new AspNet5.Project
-            {
-                Name = "OmniSharp",
-                Path = projectPath,
-                Commands = { { "kestrel", "Microsoft.AspNet.Hosting --server Kestrel" } }
-            };
-        }
-
         private AspNet5.Project CreateProjectWithSourceFile(string projectPath, string documentPath)
         {
             AspNet5.Project project;
             _context.TryAddProject(projectPath, out project);
-            // var project = GetProject(projectPath);
             var projectId = ProjectId.CreateNewId();
             var versionStamp = VersionStamp.Create();
             var projectInfo = ProjectInfo.Create(projectId, versionStamp,
@@ -68,70 +55,7 @@ namespace OmniSharp.Tests
 
             _workspace.AddProject(projectInfo);
             _workspace.AddDocument(document);
-            // _context.Projects.Add(_projectCounter, project);
-            // _context.ProjectContextMapping.Add(project.Path, _projectCounter);
-            // _projectCounter++;
-            // return project;
             return project;
         }
-
-        /*
-
-        private string GetProjectName(string source = "")
-        {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var aspnet5Context = GetAspNet5Context();
-            var controller = new ProjectSystemController(aspnet5Context, null, workspace);
-            var request = CreateRequest(source);
-            var response = controller.CurrentProject(request);
-            return response.AspNet5Project.Name;
-        }
-        
-        private string GetPath(string source = "")
-        {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var aspnet5Context = GetAspNet5Context();
-            var controller = new ProjectSystemController(aspnet5Context, null, workspace);
-            var request = CreateRequest(source);
-            var response = controller.CurrentProject(request);
-            return response.AspNet5Project.Path;
-        }
-        
-        private IDictionary<string, string> GetCommands(string source = "")
-        {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var aspnet5Context = GetAspNet5Context();
-            var controller = new ProjectSystemController(aspnet5Context, null, workspace);
-            var request = CreateRequest(source);
-            var response = controller.CurrentProject(request);
-            return response.AspNet5Project.Commands;
-        }
-
-        private AspNet5Context GetAspNet5Context()
-        {
-            var context = new AspNet5Context();
-            var projectCounter = 1;
-            context.Projects.Add(projectCounter, new AspNet5.Project
-            {
-                Name = "OmniSharp",
-                Path = "project.json",
-                Commands = { { "kestrel", "Microsoft.AspNet.Hosting --server Kestrel" } }
-            });
-            context.ProjectContextMapping.Add("project.json", 1);
-
-            return context;
-        }
-
-        private Request CreateRequest(string source, string fileName = "dummy.cs")
-        {
-            return new Request
-            {
-                Line = 0,
-                Column = 0,
-                FileName = fileName,
-                Buffer = source
-            };
-        }
-        */
     }
 }
