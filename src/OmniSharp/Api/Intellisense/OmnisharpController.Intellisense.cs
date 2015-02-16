@@ -6,8 +6,8 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Models;
 using OmniSharp.Extensions;
+using OmniSharp.Models;
 
 namespace OmniSharp
 {

@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 
 namespace OmniSharp
@@ -90,21 +90,23 @@ namespace OmniSharp
             var tree = await document.GetSyntaxTreeAsync();
             var changes = FormatterReflect.GetFormattedTextChanges(tree.GetRoot(), TextSpan.FromBounds(start, end), workspace, options);
             var lines = tree.GetText().Lines;
-            var result = changes.Select(change =>
-            {
-                var linePositionSpan = lines.GetLinePositionSpan(change.Span);
-                var newText = EnsureProperNewLine(change.NewText, options);
 
-                return new TextChange()
+            return changes
+                .OrderByDescending(change => change.Span)
+                .Select(change =>
                 {
-                    NewText = newText,
-                    StartLine = linePositionSpan.Start.Line + 1,
-                    StartColumn = linePositionSpan.Start.Character + 1,
-                    EndLine = linePositionSpan.End.Line + 1,
-                    EndColumn = linePositionSpan.End.Character + 1
-                };
-            });
-            return result;
+                    var linePositionSpan = lines.GetLinePositionSpan(change.Span);
+                    var newText = EnsureProperNewLine(change.NewText, options);
+
+                    return new TextChange()
+                    {
+                        NewText = newText,
+                        StartLine = linePositionSpan.Start.Line + 1,
+                        StartColumn = linePositionSpan.Start.Character + 1,
+                        EndLine = linePositionSpan.End.Line + 1,
+                        EndColumn = linePositionSpan.End.Character + 1
+                    };
+                });
         }
 
         public static async Task<string> GetFormattedDocument(Workspace workspace, OptionSet options, Document document)
