@@ -1,22 +1,20 @@
-﻿using Microsoft.AspNet.Hosting;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.Cache.Memory;
 using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json;
-using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
-using System;
-using System.Linq;
-using System.IO;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.DependencyInjection.Fallback;
-using System.Reflection;
 
 namespace OmniSharp.Stdio
 {
@@ -49,7 +47,7 @@ namespace OmniSharp.Stdio
             }
         }
     }
-    
+
     public class Program
     {
         private readonly IServiceProvider _serviceProvider;
@@ -136,7 +134,7 @@ namespace OmniSharp.Stdio
                     Console.WriteLine(e);
                     continue;
                 }
-                
+
                  HandleRequest(req, provider);
             }
         }
@@ -147,7 +145,7 @@ namespace OmniSharp.Stdio
             {
                 ResponsePacket res = req.Reply(null);
                 MethodInfo target;
-    
+
                 if (Controllers.Routes.TryGetValue(req.Command, out target))
                 {
                     try
@@ -172,7 +170,7 @@ namespace OmniSharp.Stdio
                             res.Success = false;
                             res.Message = target.ToString();
                         }
-                        
+
                         if (result is Task)
                         {
                             var task = (Task)result;
