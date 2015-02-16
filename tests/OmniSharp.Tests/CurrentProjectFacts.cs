@@ -8,8 +8,8 @@ namespace OmniSharp.Tests
 {
     public class CurrentProjectFacts
     {
-        AspNet5Context _context;
-        OmnisharpWorkspace _workspace;
+        private readonly AspNet5Context _context;
+        private readonly OmnisharpWorkspace _workspace;
 
         public CurrentProjectFacts()
         {
@@ -25,7 +25,14 @@ namespace OmniSharp.Tests
             var project3 = CreateProjectWithSourceFile("project3.json", "file3.cs");
 
             var project = GetProjectContainingSourceFile("file2.cs");
-            Assert.Same(new AspNet5Project(project2), project);
+
+            var expectedProject = new AspNet5Project(project2);
+
+            Assert.Equal(expectedProject.GlobalJsonPath, project.GlobalJsonPath);
+            Assert.Equal(expectedProject.Name, project.Name);
+            Assert.Equal(expectedProject.Path, project.Path);
+            Assert.Equal(expectedProject.Commands.Count, project.Commands.Count);
+            Assert.Equal(expectedProject.Frameworks.Count, project.Frameworks.Count);
         }
 
         private AspNet5Project GetProjectContainingSourceFile(string name)
