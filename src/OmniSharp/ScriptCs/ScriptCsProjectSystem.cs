@@ -16,37 +16,10 @@ using LogLevel = ScriptCs.Contracts.LogLevel;
 using System;
 using Common.Logging.Simple;
 using Autofac;
+using ScriptCs.Contracts.Exceptions;
 
 namespace OmniSharp.ScriptCs
 {
-    public class NullScriptEngine : IScriptEngine
-    {
-        public string BaseDirectory
-        {
-            get;
-
-            set;
-        }
-
-        public string CacheDirectory
-        {
-            get;
-
-            set;
-        }
-
-        public string FileName
-        {
-            get;
-            set;
-        }
-
-        public ScriptResult Execute(string code, string[] scriptArgs, AssemblyReferences references, IEnumerable<string> namespaces, ScriptPackSession scriptPackSession)
-        {
-            return new ScriptResult();
-        }
-    }
-
     public class ScriptCsProjectSystem : IProjectSystem
     {
         private static string baseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
@@ -66,100 +39,99 @@ namespace OmniSharp.ScriptCs
         {
             _logger.WriteInformation(string.Format("Detecting CSX files in '{0}'.", _env.Path));
 
-            //temp hack, only work with files like foo.csx - starting with F
-            var csxPath = Directory.GetFiles(_env.Path, "*.csx").FirstOrDefault(x => Path.GetFileName(x).StartsWith("f"));
-            if (csxPath != null)
+            var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.TopDirectoryOnly);
+
+            if (allCsxFiles.Length == 0)
             {
-                _logger.WriteInformation(string.Format("Using CSX files at '{0}'.", csxPath));
-
-                LogManager.Adapter = new ConsoleOutLoggerFactoryAdapter();
-                var scriptcsLogger = LogManager.GetCurrentClassLogger();
-
-                //todo: initialize assembly redirects or not?
-                //var initializationServices = new InitializationServices(scriptcsLogger);
-                //initializationServices.GetAppDomainAssemblyResolver().Initialize();
-
-                var scriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), scriptcsLogger).
-                    LogLevel(LogLevel.Info).Cache(false).Repl(false).ScriptName(csxPath).ScriptEngine<NullScriptEngine>();
-
-                _scriptServices = scriptServicesBuilder.Build();
-
-                var mscorlib = MetadataReference.CreateFromAssembly(typeof(object).GetTypeInfo().Assembly);
-                var systemCore = MetadataReference.CreateFromAssembly(typeof(Enumerable).GetTypeInfo().Assembly);
-                var scriptcsContracts = MetadataReference.CreateFromAssembly(typeof(IScriptHost).Assembly);
-                var references = new List<MetadataReference> { mscorlib, systemCore, scriptcsContracts };
-                var usings = new List<string>();
-
-                var processResult = _scriptServices.FilePreProcessor.ProcessFile(csxPath);
-
-                //file usings
-                usings.AddRange(processResult.Namespaces);
-
-                //#r references
-                ImportReferences(references, processResult.References);
-
-                var assemblyPaths = _scriptServices.AssemblyResolver.GetAssemblyPaths(_env.Path);
-                //nuget references
-                ImportReferences(references, assemblyPaths);
-
-                //script packs
-                var scriptPacks = _scriptServices.ScriptPackResolver.GetPacks().ToList();
-
-                //hack: alternative to use if we have problems with scriptcs.contracts versions
-                //var scriptPackTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).
-                //    Where(t => t.GetInterfaces().Any(i => i.FullName == "ScriptCs.Contracts.IScriptPack")).ToArray();
-
-                //usings.AddRange(scriptPackTypes.Select(x => x.Namespace));
-
-                //foreach (var scriptPackType in scriptPackTypes)
-                //{
-                //    try
-                //    {
-                //        scriptPacks.Add(Activator.CreateInstance(scriptPackType) as IScriptPack);
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        scriptcsLogger.Error("Error activiatig script pack", e);
-                //    }
-                //}
-
-                if (scriptPacks != null && scriptPacks.Any())
-                {
-                    var scriptPackSession = new ScriptPackSession(scriptPacks, new string[0]);
-                    scriptPackSession.InitializePacks();
-
-                    //script pack references
-                    ImportReferences(references, scriptPackSession.References);
-
-                    //script pack usings
-                    usings.AddRange(scriptPackSession.Namespaces);
-                }
-
-                var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse,
-SourceCodeKind.Script);
-                var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: usings.Distinct());
-
-                var projectId = ProjectId.CreateNewId("ScriptCs");
-                var project = ProjectInfo.Create(projectId, VersionStamp.Create(), "ScriptCs", "ScriptCs.dll", LanguageNames.CSharp, null, null,
-                                                        compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
-                _workspace.AddProject(project);
-
-                AddFile(csxPath, projectId);
-
-                foreach (var filePath in processResult.LoadedScripts.Distinct().Except(new[] { csxPath }))
-                {
-                    var loadedFileProjectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
-                    var loadedFileSubmissionProject = ProjectInfo.Create(loadedFileProjectId, VersionStamp.Create(), "ScriptCs", "ScriptCs.dll", LanguageNames.CSharp, null, null,
-                                        compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
-
-                    _workspace.AddProject(loadedFileSubmissionProject);
-                    AddFile(filePath, loadedFileProjectId);
-                    _workspace.AddProjectReference(projectId, new ProjectReference(loadedFileProjectId));
-                }
+                _logger.WriteInformation("Could not find any CSX files");
+                return;
             }
-            else
+
+            _logger.WriteInformation(string.Format("Found {0} CSX files.", allCsxFiles.Length));
+            LogManager.Adapter = new ConsoleOutLoggerFactoryAdapter();
+
+            //todo: initialize assembly redirects or not?
+            //var initializationServices = new InitializationServices(scriptcsLogger);
+            //initializationServices.GetAppDomainAssemblyResolver().Initialize();
+
+            //script name is added here as a fake one (dir path not even a real file); this is OK though -> it forces MEF initialization
+            var scriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), LogManager.GetCurrentClassLogger()).
+                LogLevel(LogLevel.Info).Cache(false).Repl(false).ScriptName(_env.Path).ScriptEngine<NullScriptEngine>();
+
+            _scriptServices = scriptServicesBuilder.Build();
+
+            var mscorlib = MetadataReference.CreateFromAssembly(typeof(object).GetTypeInfo().Assembly);
+            var systemCore = MetadataReference.CreateFromAssembly(typeof(Enumerable).GetTypeInfo().Assembly);
+            var scriptcsContracts = MetadataReference.CreateFromAssembly(typeof(IScriptHost).Assembly);
+
+            var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
+
+            var scriptPacks = _scriptServices.ScriptPackResolver.GetPacks().ToList();
+            var assemblyPaths = _scriptServices.AssemblyResolver.GetAssemblyPaths(_env.Path);
+
+            foreach (var csxPath in allCsxFiles)
             {
-                _logger.WriteError("Could not find CSX files");
+                try
+                {
+                    var processResult = _scriptServices.FilePreProcessor.ProcessFile(csxPath);
+
+                    var references = new List<MetadataReference> { mscorlib, systemCore, scriptcsContracts };
+                    var usings = new List<string>(ScriptExecutor.DefaultNamespaces);
+
+                    //default references
+                    ImportReferences(references, ScriptExecutor.DefaultReferences);
+
+                    //file usings
+                    usings.AddRange(processResult.Namespaces);
+
+                    //#r references
+                    ImportReferences(references, processResult.References);
+
+                    //nuget references
+                    ImportReferences(references, assemblyPaths);
+
+                    //script packs
+                    if (scriptPacks != null && scriptPacks.Any())
+                    {
+                        var scriptPackSession = new ScriptPackSession(scriptPacks, new string[0]);
+                        scriptPackSession.InitializePacks();
+
+                        //script pack references
+                        ImportReferences(references, scriptPackSession.References);
+
+                        //script pack usings
+                        usings.AddRange(scriptPackSession.Namespaces);
+                    }
+
+                    var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: usings.Distinct());
+
+                    var fileName = Path.GetFileName(csxPath);
+
+                    var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
+                    var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, string.Format("{0}.dll", fileName), LanguageNames.CSharp, null, null,
+                                                            compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
+
+                    _workspace.AddProject(project);
+                    AddFile(csxPath, projectId);
+
+                    foreach (var filePath in processResult.LoadedScripts.Distinct().Except(new[] { csxPath }))
+                    {
+                        var loadedFileName = Path.GetFileName(filePath);
+
+                        var loadedFileProjectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
+                        var loadedFileSubmissionProject = ProjectInfo.Create(loadedFileProjectId, VersionStamp.Create(), string.Format("{0}-LoadedFrom-{1}", loadedFileName, fileName), string.Format("{0}-LoadedFrom-{1}.dll", loadedFileName, fileName), LanguageNames.CSharp, null, null,
+                                            compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
+
+                        _workspace.AddProject(loadedFileSubmissionProject);
+                        AddFile(filePath, loadedFileProjectId);
+                        _workspace.AddProjectReference(projectId, new ProjectReference(loadedFileProjectId));
+                    }
+
+                }
+                catch (InvalidDirectiveUseException ex)
+                {
+                    _logger.WriteError(string.Format("{0} will be ignored due to the following error: {1}", csxPath, ex.Message), ex);
+                }
             }
         }
 
