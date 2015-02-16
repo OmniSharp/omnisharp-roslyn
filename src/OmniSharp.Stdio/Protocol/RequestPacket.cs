@@ -8,24 +8,19 @@ namespace OmniSharp.Stdio.Protocol
     {
         private readonly JObject obj;
 
-        public string Command
-        {
-            get
-            {
-                return obj.GetValue("command", StringComparison.OrdinalIgnoreCase).Value<string>();
-            }
-        }
-        
+        public string Command { get; set; }
+
         public RequestPacket(string json) : base("request")
         {
             obj = JObject.Parse(json);
             Seq = obj.GetValue("seq", StringComparison.OrdinalIgnoreCase).Value<int>();
+            Command = obj.GetValue("command", StringComparison.OrdinalIgnoreCase).Value<string>();
         }
 
         public object Arguments(Type type)
         {
             var token = obj.GetValue("arguments", StringComparison.OrdinalIgnoreCase);
-            return token.HasValues ?
+            return token != null && token.HasValues ?
                 JsonConvert.DeserializeObject(token.ToString(), type)
                 : null;
         }

@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Framework.DependencyInjection;
 using OmniSharp.Stdio.Protocol;
@@ -10,80 +8,56 @@ namespace OmniSharp.Stdio.Transport
 {
     public class RequestHandler
     {
-        private readonly IServiceProvider provider;
-        private readonly TextReader input;
-        private readonly TextWriter output;
+        private readonly IServiceProvider _provider;
 
-        public RequestHandler(IServiceProvider provider, TextReader input, TextWriter output)
+        public RequestHandler(IServiceProvider provider)
         {
-            this.provider = provider;
-            this.input = input;
-            this.output = output;
+            this._provider = provider;
         }
 
-        public void Start(CancellationToken token)
+        public async Task<Packet> HandleRequest(string json)
         {
-            output.WriteLine(new EventPacket() {
-                Event = "started"
-            });
-
-            while (!token.IsCancellationRequested)
+            RequestPacket request;
+            try
             {
-                var line = input.ReadLine();
-                HandleLine(line);
+                request = new RequestPacket(json);
             }
-        }
-
-        private void HandleLine(string line)
-        {
-            Task.Factory.StartNew(async () =>
+            catch (Exception e)
             {
-                RequestPacket request;
+                return new EventPacket()
+                {
+                    Event = "error",
+                    Body = e.ToString()
+                };
+            }
+
+            var response = request.Reply();
+            var target = Controllers.LookUp(request.Command);
+
+            if (target != null)
+            {
                 try
                 {
-                    request = new RequestPacket(line);
+                    response.Body = await PerformRequest(target, request);
                 }
                 catch (Exception e)
                 {
-                    output.WriteLine(new EventPacket()
-                    {
-                        Event = "error",
-                        Body = e.ToString()
-                    });
-
-                    return;
-                }
-
-                var response = request.Reply();
-                var target = Controllers.LookUp(request.Command);
-                
-                if (target != null)
-                {
-                    try
-                    {
-                        response.Body = await PerformRequest(target, request);
-                    }
-                    catch (Exception e)
-                    {
-                        response.Success = false;
-                        response.Message = e.ToString();
-                    }
-                }
-                else
-                {
                     response.Success = false;
-                    response.Message = "Command not found";
-                    output.WriteLine(response);
+                    response.Message = e.ToString();
                 }
-                
-                // last but not least send the response
-                output.WriteLine(response);
-            });
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = "Command not found";
+            }
+
+            return response;
         }
 
         private async Task<object> PerformRequest(MethodInfo target, RequestPacket request)
         {
-            var receiver = provider.GetRequiredService(target.DeclaringType);
+            var receiver = _provider.GetRequiredService(target.DeclaringType);
             var parameters = target.GetParameters();
             var arguments = new object[parameters.Length];
             if (parameters.Length == 1)

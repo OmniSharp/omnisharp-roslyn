@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Transport;
 
 namespace OmniSharp.Stdio
@@ -56,19 +57,23 @@ namespace OmniSharp.Stdio
             var provider = services.BuildServiceProvider();
             startup.Configure(provider, provider.GetRequiredService<ILoggerFactory>(), OmniSharp.Program.Environment);
 
-            // shutdown buisness
             var appShutdownService = provider.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEvent(false);
-            appShutdownService.ShutdownRequested.Register(() =>
+            var handler = new RequestHandler(provider);
+
+            Console.WriteLine(new EventPacket()
             {
-                shutdownHandle.Set();
+                Event = "started"
             });
 
-            // start request handler
-            var handler = new RequestHandler(provider, Console.In, Console.Out);
-            handler.Start(appShutdownService.ShutdownRequested);
-
-            shutdownHandle.WaitOne();
+            while (!appShutdownService.ShutdownRequested.IsCancellationRequested)
+            {
+                var line = Console.ReadLine();
+                Task.Factory.StartNew(async () =>
+                {
+                    var response = await handler.HandleRequest(line);
+                    Console.WriteLine(response);
+                });
+            }
         }
     }
 }
