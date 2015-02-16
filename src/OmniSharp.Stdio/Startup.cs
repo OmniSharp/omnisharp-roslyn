@@ -5,6 +5,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Transport;
 
 namespace OmniSharp.Stdio
@@ -24,6 +25,11 @@ namespace OmniSharp.Stdio
                              ILoggerFactory loggerFactory,
                              IOmnisharpEnvironment env)
         {
+
+            loggerFactory.AddStdio((category, type) =>
+                category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) &&
+                env.TraceType <= type);
+
             var projectSystems = services.GetRequiredService<IEnumerable<IProjectSystem>>();
             foreach (var projectSystem in projectSystems)
             {
