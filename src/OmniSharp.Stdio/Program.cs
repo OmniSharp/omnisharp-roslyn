@@ -1,53 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.AspNet.Hosting;
-using Microsoft.AspNet.Mvc;
-using Microsoft.Framework.Cache.Memory;
-using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
-using Newtonsoft.Json;
-using OmniSharp.Options;
+using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Protocol;
+using OmniSharp.Stdio.Transport;
 
 namespace OmniSharp.Stdio
 {
-
-    static class Controllers
-    {
-        public readonly static IDictionary<string, MethodInfo> Routes;
-
-        public readonly static IEnumerable<Type> Types;
-
-        static Controllers()
-        {
-            Types = new[] {
-                typeof(OmnisharpController),
-                typeof(ProjectSystemController),
-                typeof(CodeActionController)
-            };
-            Routes = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var type in Types)
-            {
-                foreach (var method in type.GetMethods())
-                {
-                    var attribute = method.GetCustomAttribute<HttpPostAttribute>();
-                    if (attribute != null)
-                    {
-                        Routes[attribute.Template.TrimStart('/')] = method;
-                    }
-                }
-            }
-        }
-    }
-
     public class Program
     {
         private readonly IServiceProvider _serviceProvider;
@@ -84,118 +47,28 @@ namespace OmniSharp.Stdio
                 }
             }
 
-            var config = new Configuration().AddEnvironmentVariables().AddJsonFile("config.json");
-            var omnisharpOptions = new OptionsManager<OmniSharpOptions>(new[] { new ConfigureFromConfigurationOptions<OmniSharpOptions>(config) });
-            var memoryCacheOptions = new OptionsManager<MemoryCacheOptions>(new[] { new ConfigureFromConfigurationOptions<MemoryCacheOptions>(config) });
-
-            var env = new OmnisharpEnvironment(applicationRoot, -1, hostPID, logLevel);
-
             OmniSharp.Program.Environment = new OmnisharpEnvironment(applicationRoot, -1, hostPID, logLevel);
 
             var services = new ServiceCollection();
-            var lifetime = new ApplicationLifetime();
-
-            services.AddSingleton<ILoggerFactory, LoggerFactory>();
-
-            var startup = new OmniSharp.Startup();
-            startup.ConfigureServices(services, lifetime);
-
-            // register controllers
-            foreach(var type in Controllers.Types)
-            {
-                services.AddTransient(type);
-                Console.WriteLine(string.Format("Added controller -> {0}", type.Name));
-            }
+            var startup = new Startup();
+            startup.ConfigureServices(services, new ApplicationLifetime());
 
             var provider = services.BuildServiceProvider();
+            startup.Configure(provider, provider.GetRequiredService<ILoggerFactory>(), OmniSharp.Program.Environment);
 
-            var projectSystems = provider.GetRequiredService<IEnumerable<IProjectSystem>>();
-            foreach (var projectSystem in projectSystems)
+            // shutdown buisness
+            var appShutdownService = provider.GetRequiredService<IApplicationShutdown>();
+            var shutdownHandle = new ManualResetEvent(false);
+            appShutdownService.ShutdownRequested.Register(() =>
             {
-                projectSystem.Initalize();
-            }
-
-            // Mark the workspace as initialized
-            startup.Workspace.Initialized = true;
-
-            Console.WriteLine("Reading from Stdin");
-
-            while (true)
-            {
-                RequestPacket req;
-                try
-                {
-                    var line = Console.ReadLine();
-                    req = JsonConvert.DeserializeObject<RequestPacket>(line);
-                }
-                catch (Exception e)
-                {
-                    // Todo@jo - error event
-                    Console.WriteLine(e);
-                    continue;
-                }
-
-                 HandleRequest(req, provider);
-            }
-        }
-
-        private void HandleRequest(RequestPacket req, IServiceProvider provider)
-        {
-            Task.Factory.StartNew(async () =>
-            {
-                ResponsePacket res = req.Reply(null);
-                MethodInfo target;
-
-                if (Controllers.Routes.TryGetValue(req.Command, out target))
-                {
-                    try
-                    {
-                        res.Success = true;
-                        res.Running = true;
-
-                        var controller = provider.GetRequiredService(target.DeclaringType);
-                        object result = null;
-                        if (target.GetParameters().Length == 1)
-                        {
-                            // hack!
-                            var body = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(req.Arguments), target.GetParameters()[0].ParameterType);
-                            result = target.Invoke(controller, new object[] { body });
-                        }
-                        else if (target.GetParameters().Length == 0)
-                        {
-                            result = target.Invoke(controller, new object[] { });
-                        }
-                        else
-                        {
-                            res.Success = false;
-                            res.Message = target.ToString();
-                        }
-
-                        if (result is Task)
-                        {
-                            var task = (Task)result;
-                            await task;
-                            res.Body = task.GetType().GetProperty("Result").GetValue(task);
-                        }
-                        else
-                        {
-                            res.Body = result;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        res.Success = false;
-                        res.Message = e.ToString();
-                    }
-                }
-                else
-                {
-                    res.Success = false;
-                    res.Message = "Unknown command";
-                }
-                Console.WriteLine(res);
+                shutdownHandle.Set();
             });
+
+            // start request handler
+            var handler = new RequestHandler(provider, Console.In, Console.Out);
+            handler.Start(appShutdownService.ShutdownRequested);
+
+            shutdownHandle.WaitOne();
         }
     }
 }

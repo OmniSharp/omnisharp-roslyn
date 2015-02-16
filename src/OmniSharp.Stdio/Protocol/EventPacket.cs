@@ -6,6 +6,9 @@
 
         public object Body { get; set; }
 
-        public EventPacket() : base("event") { }
+        public EventPacket() : base("event")
+        {
+            Seq = _seqPool++;
+        }
     }
 }

@@ -5,6 +5,8 @@ namespace OmniSharp.Stdio.Protocol
 {
     public class Packet
     {
+        protected static int _seqPool = 1;
+
         private readonly string _type;
 
         public Packet(string type)

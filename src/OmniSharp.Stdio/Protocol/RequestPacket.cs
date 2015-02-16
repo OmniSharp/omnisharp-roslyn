@@ -1,26 +1,42 @@
 ﻿using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.Stdio.Protocol
 {
-    public class RequestPacket : Packet 
+    public class RequestPacket : Packet
     {
-        public string Command { get; set; }
+        private readonly JObject obj;
 
-        public dynamic Arguments { get; set; }
-
-        public T ArgumentsAs<T>()
+        public string Command
         {
-            return Convert.ChangeType(Arguments, typeof(T));
+            get
+            {
+                return obj.GetValue("command", StringComparison.OrdinalIgnoreCase).Value<string>();
+            }
+        }
+        
+        public RequestPacket(string json) : base("request")
+        {
+            obj = JObject.Parse(json);
+            Seq = obj.GetValue("seq", StringComparison.OrdinalIgnoreCase).Value<int>();
         }
 
-        public RequestPacket() : base("request") { }
+        public object Arguments(Type type)
+        {
+            var token = obj.GetValue("arguments", StringComparison.OrdinalIgnoreCase);
+            return token.HasValues ?
+                JsonConvert.DeserializeObject(token.ToString(), type)
+                : null;
+        }
 
-        public ResponsePacket Reply(object body)
+        public ResponsePacket Reply()
         {
             return new ResponsePacket()
             {
                 Request_seq = Seq,
-                Body = body,
+                Success = true,
+                Running = true,
                 Command = Command
             };
         }

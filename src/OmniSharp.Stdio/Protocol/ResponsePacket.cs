@@ -2,8 +2,6 @@
 {
     public class ResponsePacket : Packet
     {
-        private static int _seqPool = 1;
-
         public int Request_seq { get; set; }
 
         public string Command { get; set; }
