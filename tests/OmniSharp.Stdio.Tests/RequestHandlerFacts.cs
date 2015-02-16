@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.OptionsModel;
-using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Transport;
@@ -75,6 +70,26 @@ namespace OmniSharp.Stdio.Tests
             Assert.Equal(13, response.Request_seq);
             Assert.Equal("checkreadystatus", response.Command);
             Assert.IsType(typeof(bool), response.Body);
+        }
+        
+        [Fact]
+        public async Task ArgumentsCallbackIsCalled()
+        {
+            var workspace = TestHelpers.CreateSimpleWorkspace(@"class Far { }", "a.cs");
+            var services = new ServiceCollection();
+            services.AddInstance(workspace);
+            services.AddInstance(typeof(IOptions<OmniSharpOptions>), new OptionsManager<OmniSharpOptions>(new IConfigureOptions<OmniSharpOptions>[]{}));
+            services.AddControllers();
+
+            var called = false;
+            var handler = new RequestHandler(services.BuildServiceProvider(), arg =>
+            {
+                called = true;
+                return arg;
+            });
+            var response = await handler.HandleRequest(new RequestPacket(@"{""type"":""request"",""seq"":13,""command"":""typelookup"",""arguments"":{}}").ToString()) as ResponsePacket;
+
+            Assert.True(called);
         }
     }
 }

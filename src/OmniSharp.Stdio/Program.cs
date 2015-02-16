@@ -6,6 +6,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
+using OmniSharp.Models;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Transport;
@@ -58,7 +59,14 @@ namespace OmniSharp.Stdio
             startup.Configure(provider, provider.GetRequiredService<ILoggerFactory>(), OmniSharp.Program.Environment);
 
             var appShutdownService = provider.GetRequiredService<IApplicationShutdown>();
-            var handler = new RequestHandler(provider);
+            var handler = new RequestHandler(provider, arg =>
+            {
+                if (arg is Request)
+                {
+                    startup.Workspace.EnsureBufferUpdated((Request)arg);
+                }
+                return arg;
+            });
 
             Console.WriteLine(new EventPacket()
             {

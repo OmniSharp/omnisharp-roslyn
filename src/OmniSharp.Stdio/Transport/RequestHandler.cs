@@ -9,10 +9,12 @@ namespace OmniSharp.Stdio.Transport
     public class RequestHandler
     {
         private readonly IServiceProvider _provider;
+        private readonly Func<object, object> _filter;
 
-        public RequestHandler(IServiceProvider provider)
+        public RequestHandler(IServiceProvider provider, Func<object, object> filter = null)
         {
-            this._provider = provider;
+            _provider = provider;
+            _filter = filter;
         }
 
         public async Task<Packet> HandleRequest(string json)
@@ -62,7 +64,8 @@ namespace OmniSharp.Stdio.Transport
             var arguments = new object[parameters.Length];
             if (parameters.Length == 1)
             {
-                arguments[0] = request.Arguments(parameters[0].ParameterType);
+                var argument = request.Arguments(parameters[0].ParameterType);
+                arguments[0] = _filter != null ? _filter(argument) : argument;
             }
 
             var result = target.Invoke(receiver, arguments);
