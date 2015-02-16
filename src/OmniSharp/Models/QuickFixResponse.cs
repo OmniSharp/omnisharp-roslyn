@@ -4,7 +4,7 @@ namespace OmniSharp.Models
 {
     public class QuickFixResponse
     {
-        public QuickFixResponse(IEnumerable<QuickFix> quickFixes )
+        public QuickFixResponse(IEnumerable<QuickFix> quickFixes)
         {
             QuickFixes = quickFixes;
         }
