@@ -23,7 +23,7 @@ namespace OmniSharp
         }
 
         [HttpPost("getcodeactions")]
-        public async Task<GetCodeActionsResponse> GetCodeActions([FromBody]CodeActionRequest request)
+        public async Task<GetCodeActionsResponse> GetCodeActions(CodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
@@ -32,7 +32,7 @@ namespace OmniSharp
         }
 
         [HttpPost("runcodeaction")]
-        public async Task<RunCodeActionResponse> RunCodeAction([FromBody]CodeActionRequest request)
+        public async Task<RunCodeActionResponse> RunCodeAction(CodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);

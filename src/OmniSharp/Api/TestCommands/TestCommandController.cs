@@ -24,7 +24,7 @@ namespace OmniSharp
         }
 
         [HttpPost("gettestcontext")]
-        public async Task<GetTestCommandResponse> GetTestCommand([FromBody]TestCommandRequest request)
+        public async Task<GetTestCommandResponse> GetTestCommand(TestCommandRequest request)
         {
             var quickFixes = new List<QuickFix>();
 

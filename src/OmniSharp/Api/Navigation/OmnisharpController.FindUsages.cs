@@ -13,7 +13,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("findusages")]
-        public async Task<QuickFixResponse> FindUsages([FromBody]FindUsagesRequest request)
+        public async Task<QuickFixResponse> FindUsages(FindUsagesRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();

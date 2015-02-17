@@ -13,7 +13,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("findimplementations")]
-        public async Task<QuickFixResponse> FindImplementations([FromBody]Request request)
+        public async Task<QuickFixResponse> FindImplementations(Request request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
