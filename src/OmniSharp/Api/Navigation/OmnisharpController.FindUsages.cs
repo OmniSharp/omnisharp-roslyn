@@ -48,7 +48,9 @@ namespace OmniSharp
                 var quickFixTasks = locations.Select(async l => await GetQuickFix(l));
 
                 var quickFixes = await Task.WhenAll(quickFixTasks);
-                response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
+
+                response = new QuickFixResponse(quickFixes.Where(q => (!request.ExcludeThisLocation || q.Line != request.Line))
+                                                            .OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));
             }
