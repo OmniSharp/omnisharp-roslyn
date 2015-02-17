@@ -31,8 +31,7 @@ namespace OmniSharp
         }
 
         [HttpPost("/project")]
-        [HttpGet("/project")]
-        public ProjectInformationResponse CurrentProject(Request request)
+        public ProjectInformationResponse CurrentProject([FromBody]Request request)
         {
             var document = _workspace.GetDocument(request.FileName);
 
