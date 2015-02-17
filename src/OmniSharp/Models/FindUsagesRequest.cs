@@ -7,5 +7,6 @@ namespace OmniSharp.Models
         /// Only search for references in the current file
         /// </summary>
         public bool OnlyThisFile { get; set; }
+        public bool ExcludeThisLocation { get; set; }
     }
 }

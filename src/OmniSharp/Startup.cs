@@ -38,7 +38,6 @@ namespace OmniSharp
         {
             Workspace = new OmnisharpWorkspace();
 
-
             // Working around another bad bug in ASP.NET 5
             // https://github.com/aspnet/Hosting/issues/151
             services.AddInstance(liftime);
