@@ -10,7 +10,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("formatAfterKeystroke")]
-        public async Task<FormatRangeResponse> FormatAfterKeystroke([FromBody]FormatAfterKeystrokeRequest request)
+        public async Task<FormatRangeResponse> FormatAfterKeystroke(FormatAfterKeystrokeRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             if (document == null)
@@ -29,7 +29,7 @@ namespace OmniSharp
         }
 
         [HttpPost("formatRange")]
-        public async Task<FormatRangeResponse> FormatRange([FromBody]FormatRangeRequest request)
+        public async Task<FormatRangeResponse> FormatRange(FormatRangeRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             if (document == null)
@@ -49,7 +49,7 @@ namespace OmniSharp
         }
 
         [HttpPost("codeformat")]
-        public async Task<CodeFormatResponse> FormatDocument([FromBody]Request request)
+        public async Task<CodeFormatResponse> FormatDocument(Request request)
         {
             var document = _workspace.GetDocument(request.FileName);
             if (document == null)

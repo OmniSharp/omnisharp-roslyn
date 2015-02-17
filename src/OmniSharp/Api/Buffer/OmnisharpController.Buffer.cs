@@ -8,13 +8,13 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("updatebuffer")]
-        public ObjectResult UpdateBuffer([FromBody]Request request)
+        public ObjectResult UpdateBuffer(Request request)
         {
             return new ObjectResult(true);
         }
 
         [HttpPost("changebuffer")]
-        public async Task<ObjectResult> ChangeBuffer([FromBody]ChangeBufferRequest request)
+        public async Task<ObjectResult> ChangeBuffer(ChangeBufferRequest request)
         {
             foreach (var documentId in _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
             {

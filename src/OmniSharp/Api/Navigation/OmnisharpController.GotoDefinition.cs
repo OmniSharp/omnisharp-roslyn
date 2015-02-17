@@ -11,7 +11,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]
-        public async Task<IActionResult> GotoDefinition([FromBody]Request request)
+        public async Task<IActionResult> GotoDefinition(Request request)
         {
             var quickFixes = new List<QuickFix>();
 

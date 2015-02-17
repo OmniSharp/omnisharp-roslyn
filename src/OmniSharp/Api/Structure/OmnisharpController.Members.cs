@@ -8,7 +8,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("currentfilemembersastree")]
-        public async Task<IActionResult> MembersAsTree([FromBody]Request request)
+        public async Task<IActionResult> MembersAsTree(Request request)
         {
             return new ObjectResult(new
             {
@@ -17,7 +17,7 @@ namespace OmniSharp
         }
 
         [HttpPost("currentfilemembersasflat")]
-        public async Task<IActionResult> MembersAsFlat([FromBody]Request request)
+        public async Task<IActionResult> MembersAsFlat(Request request)
         {
             var stack = new List<FileMemberElement>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
             var ret = new List<QuickFix>();

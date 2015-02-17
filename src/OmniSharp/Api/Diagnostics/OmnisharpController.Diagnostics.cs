@@ -10,7 +10,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("codecheck")]
-        public async Task<IActionResult> CodeCheck([FromBody]Request request)
+        public async Task<IActionResult> CodeCheck(Request request)
         {
             var quickFixes = new List<QuickFix>();
 
