@@ -15,6 +15,7 @@ using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using OmniSharp.Settings;
 
 namespace OmniSharp
 {
@@ -49,6 +50,7 @@ namespace OmniSharp
             services.Configure<MvcOptions>(opt =>
             {
                 opt.OutputFormatters.RemoveAll(r => r.Instance is XmlOutputFormatter);
+                opt.ApplicationModelConventions.Add(new FromBodyApplicationModelConvention());
                 opt.Filters.Add(new UpdateBufferFilter(Workspace));
             });
 
