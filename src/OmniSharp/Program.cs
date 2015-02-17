@@ -30,6 +30,7 @@ namespace OmniSharp
             var serverPort = 2000;
             var logLevel = LogLevel.Information;
             var hostPID = -1;
+            var stdio = false;
             
             var enumerator = args.GetEnumerator();
 
@@ -55,6 +56,10 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     hostPID = int.Parse((string)enumerator.Current);
                 }
+                else if (arg == "--stdio")
+                {
+                    stdio = true;
+                }
             }
 
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel);
@@ -76,6 +81,12 @@ namespace OmniSharp
                 ApplicationName = appEnv.ApplicationName,
                 EnvironmentName = hostingEnv.EnvironmentName,
             };
+            
+            if (stdio)
+            {
+                context.ServerName = null;
+                context.ServerFactory = new Stdio.StdioServerFactory();
+            }
 
             var engine = services.GetRequiredService<IHostingEngine>();
             var appShutdownService = services.GetRequiredService<IApplicationShutdown>();
