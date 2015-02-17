@@ -55,8 +55,7 @@ namespace OmniSharp
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
-                                                            .ThenBy(q => q.Column)
-                                                            .Distinct());
+                                                            .ThenBy(q => q.Column));
             }
             
             return response;
