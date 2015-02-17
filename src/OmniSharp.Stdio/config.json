@@ -1,0 +1,10 @@
+﻿{
+    "aspnet5": {
+        "alias": "default"
+    },
+    "formattingOptions": {
+        "newLine": "\n",
+        "useTabs": false,
+        "tabSize": 4
+    }
+}

@@ -10,7 +10,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("typelookup")]
-        public async Task<IActionResult> TypeLookup([FromBody]TypeLookupRequest request)
+        public async Task<TypeLookupResponse> TypeLookup([FromBody]TypeLookupRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new TypeLookupResponse();
@@ -38,7 +38,7 @@ namespace OmniSharp
                     }
                 }
             }
-            return new ObjectResult(response);
+            return response;
         }
     }
 }

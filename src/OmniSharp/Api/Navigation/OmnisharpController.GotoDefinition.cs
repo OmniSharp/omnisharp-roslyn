@@ -11,7 +11,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]
-        public async Task<IActionResult> GotoDefinition([FromBody]Request request)
+        public async Task<GotoDefinitionResponse> GotoDefinition([FromBody]Request request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -37,7 +37,7 @@ namespace OmniSharp
                 }
             }
 
-            return new ObjectResult(response);
+            return response;
         }
     }
 }
