@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.HttpFeature;
-using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
@@ -64,10 +63,10 @@ namespace OmniSharp.Stdio
 
         private async Task HandleRequest(string json)
         {
-            var request = new RequestPacket(json);
+            var request = RequestPacket.Parse(json);
             var response = request.Reply();
 
-            using (var inputStream = request.ArgumentsAsStream())
+            using (var inputStream = request.ArgumentsStream)
             using (var outputStream = new StdioResponseStream(_output, response))
             {
                 try

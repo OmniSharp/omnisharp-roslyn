@@ -7,25 +7,28 @@ namespace OmniSharp.Stdio.Protocol
 {
     public class RequestPacket : Packet
     {
-        private readonly JObject _obj;
+        public static RequestPacket Parse(string json)
+        {
+            var obj = JObject.Parse(json);
+            var result = obj.ToObject<RequestPacket>();
+            
+            JToken arguments;
+            if (obj.TryGetValue("arguments", StringComparison.OrdinalIgnoreCase, out arguments))
+            {
+                result.ArgumentsStream = new MemoryStream(Encoding.UTF8.GetBytes(arguments.ToString()));
+            }
+            else
+            {
+                result.ArgumentsStream = Stream.Null;
+            }
+            return result;
+        }
 
         public string Command { get; set; }
 
-        public RequestPacket(string json) : base("request")
-        {
-            _obj = JObject.Parse(json);
-            Seq = _obj.GetValue("seq", StringComparison.OrdinalIgnoreCase).Value<int>();
-            Command = _obj.GetValue("command", StringComparison.OrdinalIgnoreCase).Value<string>();
-        }
+        public Stream ArgumentsStream { get; set; }
 
-        public Stream ArgumentsAsStream()
-        {
-            JToken token;
-            if (_obj.TryGetValue("arguments", StringComparison.OrdinalIgnoreCase, out token)) {
-                return new MemoryStream(Encoding.UTF8.GetBytes(token.ToString()));
-            }
-            return Stream.Null;
-        }
+        public RequestPacket() : base("request") { }
 
         public ResponsePacket Reply()
         {
