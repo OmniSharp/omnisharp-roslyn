@@ -55,16 +55,20 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
             var workspace = new OmnisharpWorkspace();
-            var projectId = ProjectId.CreateNewId();
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
             var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
             var references = new[] { mscorlib, systemCore };
-            var projectInfo = ProjectInfo.Create(projectId, versionStamp,
+            var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
                                                  "ProjectName", "AssemblyName",
                                                  LanguageNames.CSharp, "project.json", metadataReferences: references);
 
+            var secondProjectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
+                                                 "ProjectName2", "AssemblyName",
+                                                 LanguageNames.CSharp, "project.json", metadataReferences: references);
+
             workspace.AddProject(projectInfo);
+            workspace.AddProject(secondProjectInfo);
 
             foreach (var file in sourceFiles)
             {
@@ -72,7 +76,13 @@ namespace OmniSharp.Tests
                     null, SourceCodeKind.Regular,
                     TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
 
+                var secondDocument = DocumentInfo.Create(DocumentId.CreateNewId(secondProjectInfo.Id), file.Key,
+                    null, SourceCodeKind.Regular,
+                    TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
+
                 workspace.AddDocument(document);
+                workspace.AddDocument(secondDocument);
+                
             }
 
             return workspace;

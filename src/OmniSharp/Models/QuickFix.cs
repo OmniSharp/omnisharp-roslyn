@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace OmniSharp.Models
 {
@@ -33,7 +33,8 @@ namespace OmniSharp.Models
                 && Column == quickFix.Column
                 && EndLine == quickFix.EndLine
                 && EndColumn == quickFix.EndColumn
-                && Text == quickFix.Text;
+                && Text == quickFix.Text
+                && Enumerable.SequenceEqual(Projects, quickFix.Projects);
         }
 
         public override int GetHashCode()
@@ -49,6 +50,7 @@ namespace OmniSharp.Models
                 hash = hash * 23 + EndLine.GetHashCode();
                 hash = hash * 23 + EndColumn.GetHashCode();
                 hash = hash * 23 + Text.GetHashCode();
+                hash = hash * 23 + Projects.GetHashCode();
                 return hash;
             }
         }
