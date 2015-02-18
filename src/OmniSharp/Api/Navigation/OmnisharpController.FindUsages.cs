@@ -28,13 +28,22 @@ namespace OmniSharp
                     ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
                     : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
 
-                var locations = new HashSet<Location>();
-
+                var locations = new Dictionary<Location, HashSet<Project>>();
                 foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
                 {
                     foreach (var location in usage.Locations)
                     {
-                        locations.Add(location.Location);
+                        var first = locations.FirstOrDefault(l => l.Key.Equals(location.Location)).Key;
+                        if (first == null)
+                        {
+                            locations[location.Location] = new HashSet<Project>();
+                            first = location.Location;
+                        }
+                        else
+                        {
+                            int i = 0;
+                        }
+                        locations[first].Add(location.Document.Project);
                     }
 
                     if (!request.ExcludeThisLocation)
@@ -44,12 +53,24 @@ namespace OmniSharp
 
                         foreach (var location in definitionLocations)
                         {
-                            locations.Add(location);
+                            var first = locations.FirstOrDefault(l => l.Key.Equals(location)).Key;
+                            if (first == null)
+                            {
+                                locations[location] = new HashSet<Project>();
+                                first = location;
+                            }
+                            locations[first].Add(document.Project);
                         }
                     }
-                    
                 }
-                var quickFixTasks = locations.Select(async l => await GetQuickFix(l));
+
+                //there must be a better way to do this, but I can't think of it right now
+                var quickFixTasks = locations.Select(async l =>
+                {
+                    var quickFix = await GetQuickFix(l.Key);
+                    quickFix.Projects = l.Value.Select(project => project.Name).ToList();
+                    return quickFix;
+                });
 
                 var quickFixes = await Task.WhenAll(quickFixTasks);
 
@@ -57,7 +78,7 @@ namespace OmniSharp
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));
             }
-            
+
             return response;
         }
     }
