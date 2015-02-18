@@ -37,17 +37,22 @@ namespace OmniSharp
                         locations.Add(location.Location);
                     }
 
-                    var definitionLocations = usage.Definition.Locations
-                        .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
-                        
-                    foreach (var location in definitionLocations)
+                    if (!request.ExcludeThisLocation)
                     {
-                        locations.Add(location);
+                        var definitionLocations = usage.Definition.Locations
+                        .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
+
+                        foreach (var location in definitionLocations)
+                        {
+                            locations.Add(location);
+                        }
                     }
+                    
                 }
                 var quickFixTasks = locations.Select(async l => await GetQuickFix(l));
 
                 var quickFixes = await Task.WhenAll(quickFixTasks);
+
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));
