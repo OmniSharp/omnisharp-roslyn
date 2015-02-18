@@ -10,6 +10,7 @@ using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
@@ -68,6 +69,7 @@ namespace OmniSharp
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var serviceCollection = HostingServices.Create(_serviceProvider, config);
+            serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
             var services = serviceCollection.BuildServiceProvider();
             var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
@@ -85,7 +87,7 @@ namespace OmniSharp
             if (transportType == TransportType.Stdio)
             {
                 context.ServerName = null;
-                context.ServerFactory = new Stdio.StdioServerFactory();
+                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, services.GetRequiredService<ISharedTextWriter>());
             }
 
             var engine = services.GetRequiredService<IHostingEngine>();

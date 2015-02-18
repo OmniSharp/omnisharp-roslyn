@@ -1,17 +1,21 @@
 using System;
 using Microsoft.Framework.Logging;
 using OmniSharp.Stdio.Protocol;
+using OmniSharp.Stdio.Services;
+using System.Threading.Tasks;
 
 namespace OmniSharp.Stdio.Logging
 {
     internal class StdioLogger : ILogger
     {
         private readonly object _lock = new object();
+        private readonly ISharedTextWriter _writer;
         private readonly string _name;
         private readonly Func<string, LogLevel, bool> _filter;
 
-        internal StdioLogger(string name, Func<string, LogLevel, bool> filter)
+        internal StdioLogger(ISharedTextWriter writer, string name, Func<string, LogLevel, bool> filter)
         {
+            _writer = writer;
             _name = name;
             _filter = filter;
         }
@@ -66,7 +70,11 @@ namespace OmniSharp.Stdio.Logging
                 }
             };
 
-            Console.WriteLine(packet);
+            // don't block the logger
+            Task.Factory.StartNew(() =>
+            {
+                _writer.Use(writer => writer.WriteLine(packet));
+            });
         }
     }
 }

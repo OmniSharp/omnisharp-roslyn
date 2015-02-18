@@ -7,65 +7,68 @@ using Microsoft.AspNet.HttpFeature;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio
 {
     class StdioServer : IDisposable
     {
         private readonly TextReader _input;
-        private readonly TextWriter _output;
+        private readonly ISharedTextWriter _output;
         private readonly Func<object, Task> _next;
         private readonly CancellationTokenSource _cancellation;
 
-        public StdioServer(TextReader input, TextWriter output, Func<object, Task> next)
+        public StdioServer(TextReader input, ISharedTextWriter output, Func<object, Task> next)
         {
             _input = input;
             _output = output;
             _next = next;
             _cancellation = new CancellationTokenSource();
 
-            Run();
+            var ignored = Run();
         }
 
-        private void Run()
+        private async Task Run()
         {
-            Task.Factory.StartNew(async () =>
+            _output.Use(writer =>
             {
-                _output.WriteLine(new EventPacket() {
+                writer.WriteLine(new EventPacket()
+                {
                     Event = "started"
                 });
-    
-                while (!_cancellation.IsCancellationRequested)
-                {
-                    var line = await _input.ReadLineAsync();
-                    var ignored = Task.Factory.StartNew(async () =>
-                    {
-                        var packet = await HandleRequest(line);
-                        _output.WriteLine(packet);
-                    });
-                }
             });
+
+            while (!_cancellation.IsCancellationRequested)
+            {
+                var line = await _input.ReadLineAsync();
+                var ignored = Task.Factory.StartNew(async () =>
+                {
+                    try
+                    {
+                        await HandleRequest(line);
+                    }
+                    catch (Exception e)
+                    {
+                        _output.Use(writer =>
+                        {
+                            writer.Write(new EventPacket()
+                            {
+                                Event = "error",
+                                Body = e.ToString()
+                            });
+                        });
+                    }
+                });
+            }
         }
 
-        private async Task<Packet> HandleRequest(string json)
+        private async Task HandleRequest(string json)
         {
-            RequestPacket request;
-            try
-            {
-                request = new RequestPacket(json);
-            }
-            catch (Exception e)
-            {
-                return new EventPacket()
-                {
-                    Event = "error",
-                    Body = e.ToString()
-                };
-            }
-
+            var request = new RequestPacket(json);
             var response = request.Reply();
+
             using (var inputStream = request.ArgumentsAsStream())
-            using (var outputStream = new MemoryStream())
+            using (var outputStream = new StdioResponseStream(_output, response))
             {
                 try
                 {
@@ -80,25 +83,23 @@ namespace OmniSharp.Stdio
                     var collection = new FeatureCollection();
                     collection[typeof(IHttpRequestFeature)] = httpRequest;
                     collection[typeof(IHttpResponseFeature)] = httpResponse;
-                    
+
                     // hand off request to next layer
                     await _next(collection);
 
-                    if(httpResponse.StatusCode != 200)
+                    if (httpResponse.StatusCode != 200)
                     {
                         response.Success = false;
                     }
-
-                    var data = outputStream.ToArray();
-                    response.Body = new JRaw(System.Text.Encoding.UTF8.GetString(data));
                 }
                 catch (Exception e)
                 {
+                    // updating the response object here so that the ResponseStream
+                    // prints the latest state when being closed
                     response.Success = false;
                     response.Message = e.ToString();
                 }
             }
-            return response;
         }
 
         public void Dispose()
