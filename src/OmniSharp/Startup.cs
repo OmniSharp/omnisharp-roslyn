@@ -16,6 +16,7 @@ using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Settings;
+using OmniSharp.Stdio.Logging;
 
 namespace OmniSharp
 {
@@ -88,10 +89,18 @@ namespace OmniSharp
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env)
         {
-            loggerFactory.AddConsole((category, type) =>
-                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase)) &&
-                env.TraceType <= type);
+            Func<string, LogLevel, bool> logFilter = (category, type) =>
+                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
+                && env.TraceType <= type;
+                    
+            if (env.TransportType == TransportType.Stdio)
+            {
+                loggerFactory.AddStdio(logFilter);
+            }
+            else
+            {
+                loggerFactory.AddConsole(logFilter);
+            }
 
             var logger = loggerFactory.Create<Startup>();
 

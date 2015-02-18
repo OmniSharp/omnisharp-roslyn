@@ -30,8 +30,8 @@ namespace OmniSharp
             var serverPort = 2000;
             var logLevel = LogLevel.Information;
             var hostPID = -1;
-            var stdio = false;
-            
+            var transportType = TransportType.Http;
+
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -58,11 +58,11 @@ namespace OmniSharp
                 }
                 else if (arg == "--stdio")
                 {
-                    stdio = true;
+                    transportType = TransportType.Stdio;
                 }
             }
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel);
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType);
 
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
@@ -82,7 +82,7 @@ namespace OmniSharp
                 EnvironmentName = hostingEnv.EnvironmentName,
             };
             
-            if (stdio)
+            if (transportType == TransportType.Stdio)
             {
                 context.ServerName = null;
                 context.ServerFactory = new Stdio.StdioServerFactory();

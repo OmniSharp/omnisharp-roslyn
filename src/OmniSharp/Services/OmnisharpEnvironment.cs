@@ -5,7 +5,7 @@ namespace OmniSharp.Services
 {
     public class OmnisharpEnvironment : IOmnisharpEnvironment
     {
-        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType)
+        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType)
         {
             if (System.IO.Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {
@@ -20,6 +20,7 @@ namespace OmniSharp.Services
             Port = port;
             HostPID = hostPid;
             TraceType = traceType;
+            TransportType = transportType;
         }
 
         public LogLevel TraceType { get; }
@@ -31,5 +32,7 @@ namespace OmniSharp.Services
         public string Path { get; }
 
         public string SolutionFilePath { get; }
+
+        public TransportType TransportType { get; }
     }
 }
