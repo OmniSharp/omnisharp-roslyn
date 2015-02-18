@@ -1,7 +1,7 @@
 ﻿using System;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.Stdio.Protocol
 {

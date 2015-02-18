@@ -1,10 +1,10 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting.Server;
 using Microsoft.Framework.ConfigurationModel;
 using OmniSharp.Stdio.Services;
-using System.IO;
 
 namespace OmniSharp.Stdio
 {

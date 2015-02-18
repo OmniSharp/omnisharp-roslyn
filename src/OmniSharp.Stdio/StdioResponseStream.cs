@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
-using OmniSharp.Stdio.Protocol;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio

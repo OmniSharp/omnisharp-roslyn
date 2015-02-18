@@ -1,8 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Framework.Logging;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
-using System.Threading.Tasks;
 
 namespace OmniSharp.Stdio.Logging
 {
