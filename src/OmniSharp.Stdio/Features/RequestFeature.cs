@@ -2,22 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.HttpFeature;
-using OmniSharp.Stdio.Protocol;
 
 namespace OmniSharp.Stdio.Features
 {
     internal class RequestFeature : IHttpRequestFeature
     {
+        private string _path;
+
         public RequestFeature()
         {
             Body = Stream.Null;
             Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            Protocol = "HTTP/1.1";
+            Scheme = "http";
             Method = "POST";
             Path = "";
             PathBase = "";
-            Protocol = "HTTP/1.1";
             QueryString = "";
-            Scheme = "http";
         }
 
         public Stream Body { get; set; }
@@ -26,7 +27,28 @@ namespace OmniSharp.Stdio.Features
 
         public string Method { get; set; }
 
-        public string Path { get; set; }
+        public string Path
+        {
+            get
+            {
+                return _path;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    _path = value;
+                }
+                else if (value[0] != '/')
+                {
+                    _path = "/" + value;
+                }
+                else
+                {
+                    _path = value;
+                }
+            }
+        }
 
         public string PathBase { get; set; }
 

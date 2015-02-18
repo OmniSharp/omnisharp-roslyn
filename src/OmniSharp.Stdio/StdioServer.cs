@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.HttpFeature;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
@@ -15,34 +14,37 @@ namespace OmniSharp.Stdio
     {
         private readonly TextReader _input;
         private readonly TextWriter _output;
-        private readonly CancellationTokenSource _cancellation;
         private readonly Func<object, Task> _next;
+        private readonly CancellationTokenSource _cancellation;
 
         public StdioServer(TextReader input, TextWriter output, Func<object, Task> next)
         {
             _input = input;
             _output = output;
-            _cancellation = new CancellationTokenSource();
             _next = next;
+            _cancellation = new CancellationTokenSource();
 
-            Start();
+            Run();
         }
 
-        private void Start()
+        private void Run()
         {
-            _output.WriteLine(new EventPacket() {
-                Event = "started"
-            });
-
-            while (!_cancellation.IsCancellationRequested)
+            Task.Factory.StartNew(async () =>
             {
-                var line = _input.ReadLine();
-                var ignored = Task.Factory.StartNew(async () =>
-                {
-                    var packet = await HandleRequest(line);
-                    _output.WriteLine(packet);
+                _output.WriteLine(new EventPacket() {
+                    Event = "started"
                 });
-            }
+    
+                while (!_cancellation.IsCancellationRequested)
+                {
+                    var line = await _input.ReadLineAsync();
+                    var ignored = Task.Factory.StartNew(async () =>
+                    {
+                        var packet = await HandleRequest(line);
+                        _output.WriteLine(packet);
+                    });
+                }
+            });
         }
 
         private async Task<Packet> HandleRequest(string json)
@@ -62,27 +64,24 @@ namespace OmniSharp.Stdio
             }
 
             var response = request.Reply();
-
             using (var inputStream = request.ArgumentsAsStream())
             using (var outputStream = new MemoryStream())
             {
                 try
                 {
-                    var httpRequest = new RequestFeature()
-                    {
-                        Body = inputStream,
-                        Path = request.Command[0] == '/'
-                            ? request.Command
-                            : "/" + request.Command
-                    };
-                    var httpResponse = new ResponseFeature()
-                    {
-                        Body = outputStream
-                    };
+                    var httpRequest = new RequestFeature();
+                    httpRequest.Path = request.Command;
+                    httpRequest.Body = inputStream;
+                    httpRequest.Headers["Content-Type"] = new[] { "application/json" };
+
+                    var httpResponse = new ResponseFeature();
+                    httpResponse.Body = outputStream;
+
                     var collection = new FeatureCollection();
                     collection[typeof(IHttpRequestFeature)] = httpRequest;
                     collection[typeof(IHttpResponseFeature)] = httpResponse;
-
+                    
+                    // hand off request to next layer
                     await _next(collection);
 
                     if(httpResponse.StatusCode != 200)
@@ -99,7 +98,6 @@ namespace OmniSharp.Stdio
                     response.Message = e.ToString();
                 }
             }
-
             return response;
         }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Text;
@@ -22,11 +21,10 @@ namespace OmniSharp.Stdio.Protocol
         public Stream ArgumentsAsStream()
         {
             JToken token;
-
             if (_obj.TryGetValue("arguments", StringComparison.OrdinalIgnoreCase, out token)) {
                 return new MemoryStream(Encoding.UTF8.GetBytes(token.ToString()));
             }
-            return new MemoryStream();
+            return Stream.Null;
         }
 
         public ResponsePacket Reply()

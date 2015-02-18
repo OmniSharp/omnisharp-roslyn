@@ -8,19 +8,14 @@ namespace OmniSharp.Stdio
 {
     public class StdioServerFactory : IServerFactory
     {
-        private class ServerInformation : IServerInformation
-        {
-            public string Name { get { return nameof(StdioServer); } }
-        }
-
         public IServerInformation Initialize(IConfiguration configuration)
         {
-            return new ServerInformation();
+            return new StdioServerInforation();
         }
 
         public IDisposable Start(IServerInformation serverInformation, Func<object, Task> application)
         {
-            if (!(serverInformation.GetType() == typeof(ServerInformation)))
+            if (serverInformation.GetType() != typeof(StdioServerInforation))
             {
                 throw new ArgumentException("wrong server", "serverInformation");
             }
