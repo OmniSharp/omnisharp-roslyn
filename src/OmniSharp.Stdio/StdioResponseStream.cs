@@ -8,7 +8,7 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio
 {
-    internal class StdioResponseStream : Stream
+    public class StdioResponseStream : Stream
     {
         private readonly ISharedTextWriter _sharedWriter;
         private readonly ResponsePacket _response;
@@ -100,6 +100,8 @@ namespace OmniSharp.Stdio
                 _jsonWriter.WriteValue(_response.Request_seq);
                 _jsonWriter.WritePropertyName("type");
                 _jsonWriter.WriteValue(_response.Type);
+                _jsonWriter.WritePropertyName("command");
+                _jsonWriter.WriteValue(_response.Command);
                 _jsonWriter.WritePropertyName("running");
                 _jsonWriter.WriteValue(_response.Running);
                 _jsonWriter.WritePropertyName("success");

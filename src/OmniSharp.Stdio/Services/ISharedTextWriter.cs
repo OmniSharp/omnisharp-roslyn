@@ -7,6 +7,6 @@ namespace OmniSharp.Stdio.Services
     public interface ISharedTextWriter
     {
         void Use(Action<TextWriter> callback);
-        void Use(Func<TextWriter, Task> callback);
+        Task Use(Func<TextWriter, Task> callback);
     }
 }

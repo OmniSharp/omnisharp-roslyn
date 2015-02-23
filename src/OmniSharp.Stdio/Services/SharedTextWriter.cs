@@ -28,7 +28,7 @@ namespace OmniSharp.Stdio.Services
             }
         }
 
-        public void Use(Func<TextWriter, Task> callback)
+        public Task Use(Func<TextWriter, Task> callback)
         {
             Task task;
             try
@@ -38,12 +38,16 @@ namespace OmniSharp.Stdio.Services
 
                 // we wait for the task and when it is
                 // done we release the lock here
-                task.ContinueWith(_ =>
+                return task.ContinueWith(_ =>
                 {
                     _gate.Set();
                     if (task.Exception != null)
                     {
-                        throw task.Exception;
+                        return Task.FromException(task.Exception);
+                    }
+                    else
+                    {
+                        return Task.FromResult<object>(null);
                     }
                 });
             }
@@ -52,7 +56,7 @@ namespace OmniSharp.Stdio.Services
                 // in case the callback failed to return
                 // a proper task
                 _gate.Set();
-                throw e;
+                return Task.FromException(e);
             }
         }
     }
