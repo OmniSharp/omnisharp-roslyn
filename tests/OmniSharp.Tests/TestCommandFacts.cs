@@ -152,7 +152,7 @@ namespace OmniSharp.Tests
             var controller = new TestCommandController(workspace, testCommandProviders);
             var request = CreateRequest(source);
             var bufferFilter = new UpdateBufferFilter(workspace);
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
             return await controller.GetTestCommand(request);
         }
 

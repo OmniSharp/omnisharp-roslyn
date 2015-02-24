@@ -50,34 +50,34 @@ namespace OmniSharp
             }
             if (parent != null)
             {
-                if (parent.CSharpKind() == SyntaxKind.IdentifierName)
+                if (parent.Kind() == SyntaxKind.IdentifierName)
                 {
-                    if (ctx.LeftToken.Parent.CSharpKind() == SyntaxKind.IdentifierName &&
-                        parent.Parent != null && parent.Parent.CSharpKind() == SyntaxKind.ParenthesizedExpression ||
-                        ctx.LeftToken.Parent.CSharpKind() == SyntaxKind.CatchDeclaration)
+                    if (ctx.LeftToken.Parent.Kind() == SyntaxKind.IdentifierName &&
+                        parent.Parent != null && parent.Parent.Kind() == SyntaxKind.ParenthesizedExpression ||
+                        ctx.LeftToken.Parent.Kind() == SyntaxKind.CatchDeclaration)
                         return result;
                 }
-                if (parent.CSharpKind() == SyntaxKind.NamespaceDeclaration)
+                if (parent.Kind() == SyntaxKind.NamespaceDeclaration)
                 {
                     var decl = parent as NamespaceDeclarationSyntax;
                     if (decl.OpenBraceToken.Span.Length > 0 &&
                         decl.OpenBraceToken.SpanStart > ctx.TargetToken.SpanStart)
                         return result;
                 }
-                if (parent.CSharpKind() == SyntaxKind.ClassDeclaration ||
-                    parent.CSharpKind() == SyntaxKind.StructDeclaration ||
-                    parent.CSharpKind() == SyntaxKind.InterfaceDeclaration)
+                if (parent.Kind() == SyntaxKind.ClassDeclaration ||
+                    parent.Kind() == SyntaxKind.StructDeclaration ||
+                    parent.Kind() == SyntaxKind.InterfaceDeclaration)
                 {
                     foreach (var kw in typeLevelKeywords)
                         result.Add(kw);
                     return result;
                 }
-                if (parent.CSharpKind() == SyntaxKind.EnumDeclaration ||
-                    parent.CSharpKind() == SyntaxKind.DelegateDeclaration ||
-                    parent.CSharpKind() == SyntaxKind.PredefinedType ||
-                    parent.CSharpKind() == SyntaxKind.TypeParameterList ||
-                    parent.CSharpKind() == SyntaxKind.QualifiedName ||
-                    parent.CSharpKind() == SyntaxKind.SimpleMemberAccessExpression)
+                if (parent.Kind() == SyntaxKind.EnumDeclaration ||
+                    parent.Kind() == SyntaxKind.DelegateDeclaration ||
+                    parent.Kind() == SyntaxKind.PredefinedType ||
+                    parent.Kind() == SyntaxKind.TypeParameterList ||
+                    parent.Kind() == SyntaxKind.QualifiedName ||
+                    parent.Kind() == SyntaxKind.SimpleMemberAccessExpression)
                 {
                     return result;
                 }
@@ -119,12 +119,12 @@ namespace OmniSharp
                     return result;
                 }
             }
-            if (parent != null && parent.CSharpKind() == SyntaxKind.ArgumentList)
+            if (parent != null && parent.Kind() == SyntaxKind.ArgumentList)
             {
                 result.Add("out");
                 result.Add("ref");
             }
-            else if (parent != null && parent.CSharpKind() == SyntaxKind.ParameterList)
+            else if (parent != null && parent.Kind() == SyntaxKind.ParameterList)
             {
                 result.Add("out");
                 result.Add("ref");

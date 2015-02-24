@@ -99,7 +99,7 @@ class C {
             }
             else
             {
-                Assert.Equal(kind, target.CSharpKind());
+                Assert.Equal(kind, target.Kind());
             }
         }
 

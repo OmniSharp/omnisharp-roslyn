@@ -37,7 +37,7 @@ namespace OmniSharp
             var lineSpan = location.GetLineSpan();
             ret.Projects = new List<string>();
             ret.ChildNodes = new List<FileMemberElement>();
-            ret.Kind = node.CSharpKind().ToString();
+            ret.Kind = node.Kind().ToString();
             ret.Location = new QuickFix();
             ret.Location.Text = text;
             ret.Location.Line = 1 + lineSpan.StartLinePosition.Line;

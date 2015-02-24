@@ -74,7 +74,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var request = CreateRequest(source);
             var bufferFilter = new UpdateBufferFilter(workspace);
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
             var implementations = await controller.FindImplementations(request);
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
         }

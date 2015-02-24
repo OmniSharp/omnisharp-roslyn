@@ -21,24 +21,24 @@ namespace OmniSharp.Tests
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
 
             // ignore void buffers
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { }));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { }, null));
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { FileName = "test.cs" }));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { FileName = "test.cs" }, null));
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { Buffer = "// c", FileName = "some_other_file.cs" }));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { Buffer = "// c", FileName = "some_other_file.cs" }, null));
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
             // valid updates
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { FileName = "test.cs", Buffer = "interface I {}" }));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { FileName = "test.cs", Buffer = "interface I {}" }, null));
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("interface I {}", sourceText.ToString());
 
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { FileName = "test.cs", Buffer = "" }));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(new Models.Request() { FileName = "test.cs", Buffer = "" }, null));
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("", sourceText.ToString());
         }

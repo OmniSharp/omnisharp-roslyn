@@ -22,22 +22,22 @@ namespace OmniSharp
             OnProjectAdded(projectInfo);
         }
 
-        public new void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
+        public void AddProjectReference(ProjectId projectId, ProjectReference projectReference)
         {
             OnProjectReferenceAdded(projectId, projectReference);
         }
 
-        public new void RemoveProjectReference(ProjectId projectId, ProjectReference projectReference)
+        public void RemoveProjectReference(ProjectId projectId, ProjectReference projectReference)
         {
             OnProjectReferenceRemoved(projectId, projectReference);
         }
 
-        public new void AddMetadataReference(ProjectId projectId, MetadataReference metadataReference)
+        public void AddMetadataReference(ProjectId projectId, MetadataReference metadataReference)
         {
             OnMetadataReferenceAdded(projectId, metadataReference);
         }
 
-        public new void RemoveMetadataReference(ProjectId projectId, MetadataReference metadataReference)
+        public void RemoveMetadataReference(ProjectId projectId, MetadataReference metadataReference)
         {
             OnMetadataReferenceRemoved(projectId, metadataReference);
         }
@@ -47,7 +47,7 @@ namespace OmniSharp
             OnDocumentAdded(documentInfo);
         }
 
-        public new void RemoveDocument(DocumentId documentId)
+        public void RemoveDocument(DocumentId documentId)
         {
             OnDocumentRemoved(documentId);
         }
@@ -107,10 +107,10 @@ namespace OmniSharp
             return CurrentSolution.GetDocument(documentId);
         }
 
-        protected override void ChangedDocumentText(DocumentId id, SourceText text)
-        {
-            OnDocumentChanged(id, text);
-        }
+        //protected override void ChangedDocumentText(DocumentId id, SourceText text)
+        //{
+        //    OnDocumentChanged(id, text);
+        //}
 
         public override bool CanApplyChange(ApplyChangesKind feature)
         {
