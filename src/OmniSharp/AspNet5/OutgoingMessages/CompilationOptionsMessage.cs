@@ -8,7 +8,9 @@ namespace Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages
     {
         public FrameworkData Framework { get; set; }
 
+#pragma warning disable CS0436 // Type conflicts with imported type
         public CompilationSettings CompilationOptions { get; set; }
+#pragma warning restore CS0436 // Type conflicts with imported type
 
         public override bool Equals(object obj)
         {

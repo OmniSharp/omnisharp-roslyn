@@ -15,8 +15,9 @@ namespace Microsoft.Framework.Runtime.Roslyn
 
         public override bool Equals(object obj)
         {
+#pragma warning disable CS0436 // Type conflicts with imported type
             var settings = obj as CompilationSettings;
-
+#pragma warning restore CS0436 // Type conflicts with imported type
             return settings != null &&
                 LanguageVersion.Equals(settings.LanguageVersion) &&
                 Enumerable.SequenceEqual(Defines, settings.Defines) &&
