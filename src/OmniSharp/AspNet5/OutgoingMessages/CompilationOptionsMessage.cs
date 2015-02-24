@@ -1,4 +1,6 @@
-﻿using Microsoft.Framework.Runtime.Roslyn;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Framework.Runtime.Roslyn;
 
 namespace Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages
 {

@@ -6,6 +6,7 @@ namespace Microsoft.Framework.DesignTimeHost.Models.IncomingMessages
     public class InitializeMessage
     {
         public string Configuration { get; set; }
+
         public string ProjectFolder { get; set; }
     }
 }

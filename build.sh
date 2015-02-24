@@ -17,4 +17,4 @@ kpm bundle src/OmniSharp --no-source --out artifacts/build/omnisharp --runtime k
 grep "Build succeeded" buildlog
 
 # work around for kpm pack not preserving the executable flag on klr when copied
-chmod +x artifacts/build/omnisharp/approot/packages/KRE-Mono.1.0.0-beta3/bin/klr
+chmod +x artifacts/build/omnisharp/approot/packages/kre-mono.1.0.0-beta3/bin/klr
