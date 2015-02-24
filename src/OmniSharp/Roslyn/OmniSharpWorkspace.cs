@@ -107,11 +107,6 @@ namespace OmniSharp
             return CurrentSolution.GetDocument(documentId);
         }
 
-        //protected override void ChangedDocumentText(DocumentId id, SourceText text)
-        //{
-        //    OnDocumentChanged(id, text);
-        //}
-
         public override bool CanApplyChange(ApplyChangesKind feature)
         {
             return true;

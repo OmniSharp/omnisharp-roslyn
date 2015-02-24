@@ -49,8 +49,6 @@ namespace OmniSharp
 
             services.Configure<MvcOptions>(opt =>
             {
-                //not needed anymore due to https://github.com/aspnet/Mvc/issues/1841 ?
-                //opt.OutputFormatters.RemoveAll(r => r.Instance is XmlOutputFormatter);
                 opt.ApplicationModelConventions.Add(new FromBodyApplicationModelConvention());
                 opt.Filters.Add(new UpdateBufferFilter(Workspace));
             });
