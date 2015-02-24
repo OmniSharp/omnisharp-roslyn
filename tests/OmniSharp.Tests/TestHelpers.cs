@@ -102,7 +102,7 @@ namespace OmniSharp.Tests
             return symbols;
         }
 
-        public static ActionExecutingContext CreateActionExecutingContext(Request req, object controller)
+        public static ActionExecutingContext CreateActionExecutingContext(Request req, object controller = null)
         {
             var actionContext = new ActionContext(null, null, null);
             var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilter>(), new Dictionary<string, object> { { "request", req } }, controller);
