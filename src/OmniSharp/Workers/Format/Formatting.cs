@@ -65,7 +65,7 @@ namespace OmniSharp
         {
             // todo@jo - refine this
             var token = tree.GetRoot().FindToken(position);
-            var kind = token.CSharpKind();
+            var kind = token.Kind();
 
             switch (kind)
             {

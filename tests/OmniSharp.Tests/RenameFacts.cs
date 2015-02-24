@@ -23,7 +23,7 @@ namespace OmniSharp.Tests
             };
 
             var bufferFilter = new UpdateBufferFilter(workspace);
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request));
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
 
             return await controller.Rename(request);
         }
