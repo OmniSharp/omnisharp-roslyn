@@ -29,7 +29,20 @@ namespace OmniSharp.Extensions
             if (partial == string.Empty)
                 return true;
 
+            // Limit the number of results returned by making sure
+            // at least the first characters match.
+            // We can get far too many results back otherwise.
+            if (!FirstLetterMatches(partial, completion))
+            {
+                return false;
+            }
+
             return new string(completion.ToUpper().Intersect(partial.ToUpper()).ToArray()) == partial.ToUpper();
+        }
+
+        private static bool FirstLetterMatches(string word, string match) 
+        {
+            return char.ToLowerInvariant(word.First()) == char.ToLowerInvariant(match.First());
         }
     }
 }
