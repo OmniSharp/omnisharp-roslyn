@@ -10,4 +10,4 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 
 export KRE_APPBASE=$DIR/../src/OmniSharp
-$HOME/.kre/packages/KRE-Mono.1.0.0-beta3/bin/k run "$@"
+$HOME/.k/packages/KRE-Mono.1.0.0-beta3/bin/k run "$@"
