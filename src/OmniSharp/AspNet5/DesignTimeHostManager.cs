@@ -40,7 +40,7 @@ namespace OmniSharp.AspNet5
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,
-                    Arguments = string.Format(@"{0} {1} {2} {3}",
+                    Arguments = string.Format(@"""{0}"" {1} {2} {3}",
                                               Path.Combine(runtimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll"),
                                               port,
                                               Process.GetCurrentProcess().Id,
