@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.AspNet.Mvc;
 using OmniSharp.AspNet5;
 using OmniSharp.Models;
 using OmniSharp.MSBuild;
 using OmniSharp.Services;
-using System;
-using System.Collections.Generic;
 
 namespace OmniSharp
 {
