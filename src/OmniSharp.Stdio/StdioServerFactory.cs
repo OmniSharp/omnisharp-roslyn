@@ -21,12 +21,12 @@ namespace OmniSharp.Stdio
 
         public IServerInformation Initialize(IConfiguration configuration)
         {
-            return new StdioServerInforation();
+            return new StdioServerInformation();
         }
 
         public IDisposable Start(IServerInformation serverInformation, Func<object, Task> application)
         {
-            if (serverInformation.GetType() != typeof(StdioServerInforation))
+            if (serverInformation.GetType() != typeof(StdioServerInformation))
             {
                 throw new ArgumentException("wrong server", "serverInformation");
             }
