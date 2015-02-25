@@ -1,0 +1,19 @@
+﻿{
+  "version": "1.0.0-*",
+  "dependencies": {
+    "OmniSharp.Stdio": "1.0.0-*",
+    "Xunit.KRunner": "1.0.0-beta1",
+    "Newtonsoft.Json": "6.0.8"
+  },
+  "commands": {
+    "test": "Xunit.KRunner"
+  },
+  "frameworks": {
+    "aspnet50": { },
+    "aspnetcore50": {
+      "dependencies": {
+        "System.Console": "4.0.0-beta-22523"
+      }
+    }
+  }
+}
