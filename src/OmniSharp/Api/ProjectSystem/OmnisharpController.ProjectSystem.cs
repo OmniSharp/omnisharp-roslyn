@@ -61,7 +61,7 @@ namespace OmniSharp
             };
         }
 
-
+        [HttpPost("/reloadsolution")]
         [HttpGet("/reloadsolution")]
         public bool ReloadSolution()
         {
