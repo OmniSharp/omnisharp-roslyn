@@ -71,10 +71,7 @@ namespace OmniSharp.Stdio.Logging
             };
 
             // don't block the logger
-            Task.Factory.StartNew(() =>
-            {
-                _writer.Use(writer => writer.WriteLine(packet));
-            });
+            _writer.WriteLineAsync(packet);
         }
     }
 }

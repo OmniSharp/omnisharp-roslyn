@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Http.Interfaces;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
@@ -13,14 +15,14 @@ namespace OmniSharp.Stdio
     class StdioServer : IDisposable
     {
         private readonly TextReader _input;
-        private readonly ISharedTextWriter _output;
+        private readonly ISharedTextWriter _writer;
         private readonly Func<object, Task> _next;
         private readonly CancellationTokenSource _cancellation;
 
-        public StdioServer(TextReader input, ISharedTextWriter output, Func<object, Task> next)
+        public StdioServer(TextReader input, ISharedTextWriter writer, Func<object, Task> next)
         {
             _input = input;
-            _output = output;
+            _writer = writer;
             _next = next;
             _cancellation = new CancellationTokenSource();
 
@@ -29,17 +31,19 @@ namespace OmniSharp.Stdio
 
         private async Task Run()
         {
-            _output.Use(writer =>
+            _writer.WriteLine(new EventPacket()
             {
-                writer.WriteLine(new EventPacket()
-                {
-                    Event = "started"
-                });
+                Event = "started"
             });
 
             while (!_cancellation.IsCancellationRequested)
             {
                 var line = await _input.ReadLineAsync();
+                if (line == null)
+                {
+                    break;
+                }
+
                 var ignored = Task.Factory.StartNew(async () =>
                 {
                     try
@@ -48,13 +52,10 @@ namespace OmniSharp.Stdio
                     }
                     catch (Exception e)
                     {
-                        _output.Use(writer =>
+                        _writer.WriteLine(new EventPacket()
                         {
-                            writer.Write(new EventPacket()
-                            {
-                                Event = "error",
-                                Body = e.ToString()
-                            });
+                            Event = "error",
+                            Body = e.ToString()
                         });
                     }
                 });
@@ -67,7 +68,7 @@ namespace OmniSharp.Stdio
             var response = request.Reply();
 
             using (var inputStream = request.ArgumentsStream)
-            using (var outputStream = new StdioResponseStream(_output, response))
+            using (var outputStream = new MemoryStream())
             {
                 try
                 {
@@ -90,6 +91,10 @@ namespace OmniSharp.Stdio
                     {
                         response.Success = false;
                     }
+
+                    // HttpResponse stream becomes body as is
+                    var buffer = outputStream.ToArray();
+                    response.Body = new JRaw(new String(Encoding.UTF8.GetChars(buffer, 0, buffer.Length)));
                 }
                 catch (Exception e)
                 {
@@ -97,6 +102,11 @@ namespace OmniSharp.Stdio
                     // prints the latest state when being closed
                     response.Success = false;
                     response.Message = e.ToString();
+                }
+                finally
+                {
+                    // actually write it
+                    _writer.WriteLine(response);
                 }
             }
         }
