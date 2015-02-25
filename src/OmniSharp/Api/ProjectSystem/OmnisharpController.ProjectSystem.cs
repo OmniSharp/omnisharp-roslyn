@@ -65,16 +65,9 @@ namespace OmniSharp
         [HttpGet("/reloadsolution")]
         public bool ReloadSolution()
         {
-            try
+            foreach (var projectSystem in _projectSystems)
             {
-                foreach (var projectSystem in _projectSystems)
-                {
-                    projectSystem.Initalize();
-                }
-            }
-            catch (Exception e)
-            {
-                return false;
+                projectSystem.Initalize();
             }
             return true;
         }
