@@ -67,7 +67,9 @@ namespace OmniSharp.Stdio.Tests
                 var sharedWriter = new SharedTextWriter(writer);
                 Assert.ThrowsAsync(typeof(Exception), () => sharedWriter.Use(w =>
                 {
-                    return Task.FromException(new Exception());
+                    var source = new TaskCompletionSource<object>();
+                    source.SetException(new Exception());
+                    return source.Task;
                 }));
                 sharedWriter.Use(w =>
                 {

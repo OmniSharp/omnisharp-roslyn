@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.FeatureModel;
-using Microsoft.AspNet.HttpFeature;
+using Microsoft.AspNet.Http.Interfaces;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;

@@ -31,6 +31,7 @@ namespace OmniSharp.Stdio.Services
         public Task Use(Func<TextWriter, Task> callback)
         {
             Task task;
+            TaskCompletionSource<object> completion = new TaskCompletionSource<object>();
             try
             {
                 _gate.WaitOne();
@@ -43,12 +44,13 @@ namespace OmniSharp.Stdio.Services
                     _gate.Set();
                     if (task.Exception != null)
                     {
-                        return Task.FromException(task.Exception);
+                        completion.SetException(task.Exception);
                     }
                     else
                     {
-                        return Task.FromResult<object>(null);
+                        completion.SetResult(null);
                     }
+                    return completion.Task;
                 });
             }
             catch (Exception e)
@@ -56,7 +58,8 @@ namespace OmniSharp.Stdio.Services
                 // in case the callback failed to return
                 // a proper task
                 _gate.Set();
-                return Task.FromException(e);
+                completion.SetException(e);
+                return completion.Task;
             }
         }
     }
