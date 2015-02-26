@@ -19,7 +19,7 @@
     "frameworks": {
         "aspnet50": {
             "dependencies": {
-               "ICSharpCode.NRefactory": "6.0.0-alpha2"  
+               "ICSharpCode.NRefactory": "6.0.0-alpha3"  
             },
             "frameworkAssemblies": {
                 "System.Globalization": "",
