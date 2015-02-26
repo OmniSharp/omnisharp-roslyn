@@ -67,7 +67,7 @@ namespace OmniSharp
         {
             foreach (var projectSystem in _projectSystems)
             {
-                projectSystem.Initalize();
+                projectSystem.Reload();
             }
             return true;
         }

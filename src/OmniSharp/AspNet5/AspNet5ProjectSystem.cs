@@ -55,7 +55,7 @@ namespace OmniSharp.AspNet5
             lifetime.ApplicationStopping.Register(OnShutdown);
         }
 
-        public void Initalize()
+        public void Initialize()
         {
             _context.RuntimePath = GetRuntimePath();
 
@@ -345,7 +345,7 @@ namespace OmniSharp.AspNet5
                 _context.Connection.Start();
 
                 // Initialize the ASP.NET 5 projects
-                Initialize();
+                Startup();
             });
 
             wh.Wait();
@@ -416,7 +416,7 @@ namespace OmniSharp.AspNet5
             }
         }
 
-        private void Initialize()
+        private void Startup()
         {
             foreach (var project in _context.Projects.Values)
             {
@@ -508,7 +508,7 @@ namespace OmniSharp.AspNet5
         {
             var versionOrAlias = GetRuntimeVersionOrAlias() ?? _options.AspNet5.Alias ?? "default";
             var seachedLocations = new List<string>();
-            
+
             foreach (var location in GetRuntimeLocations())
             {
                 var paths = GetRuntimePathsFromVersionOrAlias(versionOrAlias, location);
@@ -525,7 +525,7 @@ namespace OmniSharp.AspNet5
                         _logger.WriteInformation(string.Format("Using KRE '{0}'.", path));
                         return path;
                     }
-                    
+
                     seachedLocations.Add(path);
                 }
             }
@@ -638,5 +638,24 @@ namespace OmniSharp.AspNet5
             return projectPath;
         }
 
+        public void Reload()
+        {
+            // clear projects collection
+            foreach (var projectId in _workspace.CurrentSolution.ProjectIds)
+            {
+                _workspace.RemoveProject(projectId);
+            }
+            // clear context
+            _context.Projects.Clear();
+            _context.ProjectContextMapping.Clear();
+
+            // get every projects
+            if (!ScanForProjects())
+            {
+                _logger.WriteInformation("No ASP.NET 5 projects found");
+            }
+
+            Startup();
+        }
     }
 }

@@ -42,7 +42,7 @@ namespace OmniSharp.MSBuild
             _context = context;
         }
 
-        public void Initalize()
+        public void Initialize()
         {
             var solutionFilePath = _env.SolutionFilePath;
 
@@ -275,6 +275,21 @@ namespace OmniSharp.MSBuild
             {
                 _workspace.RemoveMetadataReference(project.Id, reference);
             }
+        }
+
+        public void Reload()
+        {
+            // clear projects collection
+            foreach (var projectId in _workspace.CurrentSolution.ProjectIds)
+            {
+                _workspace.RemoveProject(projectId);
+            }
+
+            // clear context
+            _context.Projects.Clear();
+            _context.ProjectGuidToWorkspaceMapping.Clear();
+            
+            Initialize();
         }
     }
 }

@@ -108,7 +108,7 @@ namespace OmniSharp
 
             foreach (var projectSystem in projectSystems)
             {
-                projectSystem.Initalize();
+                projectSystem.Initialize();
             }
 
             // Mark the workspace as initialized
