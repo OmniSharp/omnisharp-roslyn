@@ -10,6 +10,7 @@ using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
@@ -30,7 +31,8 @@ namespace OmniSharp
             var serverPort = 2000;
             var logLevel = LogLevel.Information;
             var hostPID = -1;
-            
+            var transportType = TransportType.Http;
+
             var enumerator = args.GetEnumerator();
 
             while (enumerator.MoveNext())
@@ -55,14 +57,19 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     hostPID = int.Parse((string)enumerator.Current);
                 }
+                else if (arg == "--stdio")
+                {
+                    transportType = TransportType.Stdio;
+                }
             }
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel);
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType);
 
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var serviceCollection = HostingServices.Create(_serviceProvider, config);
+            serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
             var services = serviceCollection.BuildServiceProvider();
             var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
@@ -76,6 +83,12 @@ namespace OmniSharp
                 ApplicationName = appEnv.ApplicationName,
                 EnvironmentName = hostingEnv.EnvironmentName,
             };
+            
+            if (transportType == TransportType.Stdio)
+            {
+                context.ServerName = null;
+                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, services.GetRequiredService<ISharedTextWriter>());
+            }
 
             var engine = services.GetRequiredService<IHostingEngine>();
             var appShutdownService = services.GetRequiredService<IApplicationShutdown>();

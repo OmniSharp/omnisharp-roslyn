@@ -16,6 +16,8 @@ using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Settings;
+using OmniSharp.Stdio.Logging;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
@@ -32,7 +34,7 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime)
+        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime, ISharedTextWriter writer)
         {
             Workspace = new OmnisharpWorkspace();
 
@@ -40,6 +42,7 @@ namespace OmniSharp
             // Working around another bad bug in ASP.NET 5
             // https://github.com/aspnet/Hosting/issues/151
             services.AddInstance(liftime);
+            services.AddInstance(writer);
 
             // This is super hacky by it's the easiest way to flow serivces from the 
             // hosting layer, this needs to be easier
@@ -86,12 +89,21 @@ namespace OmniSharp
 
         public void Configure(IApplicationBuilder app,
                               ILoggerFactory loggerFactory,
-                              IOmnisharpEnvironment env)
+                              IOmnisharpEnvironment env,
+                              ISharedTextWriter writer)
         {
-            loggerFactory.AddConsole((category, type) =>
-                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase)) &&
-                env.TraceType <= type);
+            Func<string, LogLevel, bool> logFilter = (category, type) =>
+                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
+                && env.TraceType <= type;
+                    
+            if (env.TransportType == TransportType.Stdio)
+            {
+                loggerFactory.AddStdio(writer, logFilter);
+            }
+            else
+            {
+                loggerFactory.AddConsole(logFilter);
+            }
 
             var logger = loggerFactory.Create<Startup>();
 

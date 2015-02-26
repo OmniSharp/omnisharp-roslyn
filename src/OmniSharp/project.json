@@ -1,6 +1,7 @@
 {
     "version": "1.0.0-*",
     "dependencies": {
+        "OmniSharp.Stdio": "1.0.0-*",
         "Kestrel": "1.0.0-beta3",
         "Microsoft.AspNet.Mvc": "6.0.0-beta3",
         "Microsoft.AspNet.Diagnostics": "1.0.0-beta3",
