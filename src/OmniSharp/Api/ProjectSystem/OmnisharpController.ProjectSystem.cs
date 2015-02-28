@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.AspNet.Mvc;
 using OmniSharp.AspNet5;
 using OmniSharp.Models;
@@ -62,7 +61,6 @@ namespace OmniSharp
         }
 
         [HttpPost("/reloadsolution")]
-        [HttpGet("/reloadsolution")]
         public bool ReloadSolution()
         {
             foreach (var projectSystem in _projectSystems)

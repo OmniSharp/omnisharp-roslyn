@@ -345,7 +345,7 @@ namespace OmniSharp.AspNet5
                 _context.Connection.Start();
 
                 // Initialize the ASP.NET 5 projects
-                Startup();
+                Initialization();
             });
 
             wh.Wait();
@@ -416,7 +416,7 @@ namespace OmniSharp.AspNet5
             }
         }
 
-        private void Startup()
+        private void Initialization()
         {
             foreach (var project in _context.Projects.Values)
             {
@@ -655,7 +655,7 @@ namespace OmniSharp.AspNet5
                 _logger.WriteInformation("No ASP.NET 5 projects found");
             }
 
-            Startup();
+            Initialization();
         }
     }
 }
