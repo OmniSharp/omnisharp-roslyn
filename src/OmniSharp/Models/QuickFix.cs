@@ -43,14 +43,17 @@ namespace OmniSharp.Models
             {
                 var hash = 17;
 
-                hash = hash * 23 + LogLevel.GetHashCode();
-                hash = hash * 23 + FileName.GetHashCode();
+                hash = hash * 23 + (LogLevel?.GetHashCode()).GetValueOrDefault();
+                hash = hash * 23 + (FileName?.GetHashCode()).GetValueOrDefault();
                 hash = hash * 23 + Line.GetHashCode();
                 hash = hash * 23 + Column.GetHashCode();
                 hash = hash * 23 + EndLine.GetHashCode();
                 hash = hash * 23 + EndColumn.GetHashCode();
-                hash = hash * 23 + Text.GetHashCode();
-                hash = hash * 23 + Projects.GetHashCode();
+                hash = hash * 23 + (Text?.GetHashCode()).GetValueOrDefault();
+                foreach (var project in Projects)
+                {
+                    hash = hash * 23 + project.GetHashCode();
+                }
                 return hash;
             }
         }
