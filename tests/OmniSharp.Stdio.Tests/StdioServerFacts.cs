@@ -99,6 +99,42 @@ namespace OmniSharp.Stdio.Tests
 
             await writer.Completion;
         }
+        
+        [Fact]
+        public async Task ServerRepliesWithResponseWhenTaskDoesNotReturnAnything()
+        {
+            var request = new RequestPacket()
+            {
+                Seq = 21,
+                Command = "foo"
+            };
+
+            var writer = new TestTextWriter(new Action<string>[] {
+                value => {
+                    var packet = JsonConvert.DeserializeObject<EventPacket>(value);
+                    Assert.Equal("started", packet.Event);
+                },
+                value => {
+                    Assert.True(value.Contains("\"Body\":null"));
+                    // Deserialize is too relaxed...
+                    var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
+                    Assert.Equal(request.Seq, packet.Request_seq);
+                    Assert.Equal(request.Command, packet.Command);
+                    Assert.Equal(true, packet.Success);
+                    Assert.Equal(true, packet.Running);
+                    Assert.Null(packet.Message);
+                    Assert.Null(packet.Body);
+                }
+            });
+
+            var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
+            factory.Start(new StdioServerInformation(), features =>
+            {
+                return Task.WhenAll();
+            });
+
+            await writer.Completion;
+        }
 
         [Fact]
         public async Task ServerRepliesWithResponseWhenHandlerFails()

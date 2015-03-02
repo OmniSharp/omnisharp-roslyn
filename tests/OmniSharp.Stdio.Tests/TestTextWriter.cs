@@ -24,10 +24,18 @@ namespace OmniSharp.Stdio.Tests
 
         public void WriteLine(object value)
         {
-            _callbacks.Current(value.ToString());
-            if (!_callbacks.MoveNext())
+            try
             {
-                _completion.SetResult(null);
+                _callbacks.Current(value.ToString());
+                
+                if (!_callbacks.MoveNext())
+                {
+                    _completion.SetResult(null);
+                }
+            }
+            catch (Exception e)
+            {
+                _completion.SetException(e);
             }
         }
 

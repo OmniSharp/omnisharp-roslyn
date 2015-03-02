@@ -11,6 +11,16 @@ namespace OmniSharp.Stdio.Protocol
         {
             var obj = JObject.Parse(json);
             var result = obj.ToObject<RequestPacket>();
+
+            if (result.Seq <= 0)
+            {
+                throw new ArgumentException("invalid seq-value");
+            }
+            
+            if (string.IsNullOrWhiteSpace(result.Command))
+            {
+                throw new ArgumentException("missing command");
+            }
             
             JToken arguments;
             if (obj.TryGetValue("arguments", StringComparison.OrdinalIgnoreCase, out arguments))
