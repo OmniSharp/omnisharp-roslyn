@@ -94,7 +94,10 @@ namespace OmniSharp.Stdio
 
                     // HttpResponse stream becomes body as is
                     var buffer = outputStream.ToArray();
-                    response.Body = new JRaw(new String(Encoding.UTF8.GetChars(buffer, 0, buffer.Length)));
+                    if (buffer.Length > 0)
+                    {
+                        response.Body = new JRaw(new String(Encoding.UTF8.GetChars(buffer, 0, buffer.Length)));
+                    }
                 }
                 catch (Exception e)
                 {

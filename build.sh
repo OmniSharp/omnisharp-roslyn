@@ -10,6 +10,9 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd tests/OmniSharp.Tests
 k test
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+cd ../OmniSharp.Stdio.Tests
+k test
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd ../../
 kvm use 1.0.0-beta3
 kpm bundle src/OmniSharp --no-source --out artifacts/build/omnisharp --runtime kre-mono.1.0.0-beta3 2>&1 | tee buildlog
