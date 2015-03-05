@@ -9,7 +9,7 @@ namespace OmniSharp.Tests
 {
     public class RenameFacts
     {
-        private async Task<RenameResponse> SendRequest(OmnisharpWorkspace workspace, string renameTo, string filename, string fileContent)
+        private async Task<RenameResponse> SendRequest(OmnisharpWorkspace workspace, string renameTo, string filename, string fileContent, bool wantsTextChanges = false)
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(fileContent);
             var controller = new OmnisharpController(workspace, null);
@@ -19,7 +19,8 @@ namespace OmniSharp.Tests
                 Column = lineColumn.Column,
                 RenameTo = renameTo,
                 FileName = filename,
-                Buffer = fileContent.Replace("$", "")
+                Buffer = fileContent.Replace("$", ""),
+                WantsTextChanges = wantsTextChanges
             };
 
             var bufferFilter = new UpdateBufferFilter(workspace);
@@ -100,6 +101,35 @@ namespace OmniSharp.Tests
             Assert.Equal(@"public class Bar {
                                     public xxx Property {get; set;}
                                 }", result.Changes.ElementAt(1).Buffer);
+        }
+
+        [Fact]
+        public async Task Rename_UpdatesMultipleDocumentsIfNecessaryAndProducesTextChangesIfAsked()
+        {
+            const string file1 = "public class F$oo {}";
+            const string file2 = @"public class Bar {
+                                    public Foo Property {get; set;}
+                                }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { "test1.cs", file1 }, { "test2.cs", file2 } });
+            var result = await SendRequest(workspace, "xxx", "test1.cs", file1, true);
+
+            Assert.Equal(2, result.Changes.Count());
+            Assert.Equal(1, result.Changes.ElementAt(0).Changes.Count());
+
+            Assert.Null(result.Changes.ElementAt(0).Buffer);
+            Assert.Equal("xxx", result.Changes.ElementAt(0).Changes.First().NewText);
+            Assert.Equal(1, result.Changes.ElementAt(0).Changes.First().StartLine);
+            Assert.Equal(14, result.Changes.ElementAt(0).Changes.First().StartColumn);
+            Assert.Equal(1, result.Changes.ElementAt(0).Changes.First().EndLine);
+            Assert.Equal(17, result.Changes.ElementAt(0).Changes.First().EndColumn);
+
+            Assert.Null(result.Changes.ElementAt(1).Buffer);
+            Assert.Equal("xxx", result.Changes.ElementAt(1).Changes.First().NewText);
+            Assert.Equal(2, result.Changes.ElementAt(1).Changes.First().StartLine);
+            Assert.Equal(44, result.Changes.ElementAt(1).Changes.First().StartColumn);
+            Assert.Equal(2, result.Changes.ElementAt(1).Changes.First().EndLine);
+            Assert.Equal(47, result.Changes.ElementAt(1).Changes.First().EndColumn);
         }
 
         [Fact]
