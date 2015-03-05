@@ -39,9 +39,20 @@ namespace OmniSharp
                     foreach (var changedDocumentId in projectChange.GetChangedDocuments())
                     {
                         var changedDocument = solution.GetDocument(changedDocumentId);
-                        var changedText = await changedDocument.GetTextAsync();
-                        var modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath, changedText.ToString());
+                        var modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
 
+                        if (!request.WantsTextChanges)
+                        {
+                            var changedText = await changedDocument.GetTextAsync();
+                            modifiedFileResponse.Buffer = changedText.ToString();
+                        }
+                        else
+                        {
+                            var originalDocument = _workspace.CurrentSolution.GetDocument(changedDocumentId);
+                            var textChanges = await changedDocument.GetTextChangesAsync(originalDocument);
+                            modifiedFileResponse.Changes = await Models.TextChange.Convert(originalDocument, textChanges);
+                        }
+                        
                         changes.Add(modifiedFileResponse);
                     }
                 }

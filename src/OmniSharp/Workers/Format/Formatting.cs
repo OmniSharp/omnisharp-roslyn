@@ -34,7 +34,7 @@ namespace OmniSharp
 
     public class Formatting
     {
-        public static async Task<IEnumerable<TextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
+        public static async Task<IEnumerable<Models.TextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
         {
             var tree = await document.GetSyntaxTreeAsync();
 
@@ -43,7 +43,7 @@ namespace OmniSharp
                 // format previous line on new line
                 var lines = (await document.GetTextAsync()).Lines;
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span))) 
+                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
                 {
                     return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
                 }
@@ -57,8 +57,8 @@ namespace OmniSharp
                     return await GetFormattingChangesForRange(workspace, options, document, node.FullSpan.Start, node.FullSpan.End);
                 }
             }
-            
-            return Enumerable.Empty<TextChange>();
+
+            return Enumerable.Empty<Models.TextChange>();
         }
 
         public static SyntaxNode FindFormatTarget(SyntaxTree tree, int position)
@@ -85,7 +85,7 @@ namespace OmniSharp
             return null;
         }
 
-        public static async Task<IEnumerable<TextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
+        public static async Task<IEnumerable<Models.TextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
         {
             var tree = await document.GetSyntaxTreeAsync();
             var changes = FormatterReflect.GetFormattedTextChanges(tree.GetRoot(), TextSpan.FromBounds(start, end), workspace, options);
@@ -98,7 +98,7 @@ namespace OmniSharp
                     var linePositionSpan = lines.GetLinePositionSpan(change.Span);
                     var newText = EnsureProperNewLine(change.NewText, options);
 
-                    return new TextChange()
+                    return new Models.TextChange()
                     {
                         NewText = newText,
                         StartLine = linePositionSpan.Start.Line + 1,
