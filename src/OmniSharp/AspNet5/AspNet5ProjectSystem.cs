@@ -300,6 +300,8 @@ namespace OmniSharp.AspNet5
                         // The sources to feed to the language service
                         var val = m.Payload.ToObject<SourcesMessage>();
 
+                        project.SourceFiles = val.Files;
+
                         var frameworkProject = project.ProjectsByFramework[val.Framework.FrameworkName];
                         var projectId = frameworkProject.ProjectId;
 
@@ -453,8 +455,6 @@ namespace OmniSharp.AspNet5
             {
                 return project.ContextId;
             }
-
-            _watcher.Watch(projectFile, TriggerDependeees);
 
             // Send an InitializeMessage for each project
             var initializeMessage = new InitializeMessage

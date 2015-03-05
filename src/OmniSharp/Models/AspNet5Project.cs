@@ -13,6 +13,7 @@ namespace OmniSharp.Models
         public IList<string> ProjectSearchPaths { get; set; }
         public IList<string> Frameworks { get; set; }
         public string GlobalJsonPath { get; set; }
+        public IList<string> SourceFiles { get; set; }
 
         public AspNet5Project(Project project)
         {
@@ -23,6 +24,7 @@ namespace OmniSharp.Models
             GlobalJsonPath = project.GlobalJsonPath;
             ProjectSearchPaths = project.ProjectSearchPaths;
             Frameworks = project.ProjectsByFramework.Keys.ToList();
+            SourceFiles = project.SourceFiles;
         }
     }
 }
