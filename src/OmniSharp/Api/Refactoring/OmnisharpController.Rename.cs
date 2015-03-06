@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -27,7 +28,14 @@ namespace OmniSharp
 
                 if (symbol != null)
                 {
-                    solution = await Renamer.RenameSymbolAsync(solution, symbol, request.RenameTo, _workspace.Options);
+                    try
+                    {
+                        solution = await Renamer.RenameSymbolAsync(solution, symbol, request.RenameTo, _workspace.Options);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        response.ErrorMessage = e.Message;
+                    }
                 }
 
                 var changes = new List<ModifiedFileResponse>();
