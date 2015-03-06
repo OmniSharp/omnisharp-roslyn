@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models;
 
 namespace OmniSharp
 {
@@ -34,7 +35,7 @@ namespace OmniSharp
 
     public class Formatting
     {
-        public static async Task<IEnumerable<TextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
         {
             var tree = await document.GetSyntaxTreeAsync();
 
@@ -43,7 +44,7 @@ namespace OmniSharp
                 // format previous line on new line
                 var lines = (await document.GetTextAsync()).Lines;
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span))) 
+                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
                 {
                     return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
                 }
@@ -57,8 +58,8 @@ namespace OmniSharp
                     return await GetFormattingChangesForRange(workspace, options, document, node.FullSpan.Start, node.FullSpan.End);
                 }
             }
-            
-            return Enumerable.Empty<TextChange>();
+
+            return Enumerable.Empty<LinePositionSpanTextChange>();
         }
 
         public static SyntaxNode FindFormatTarget(SyntaxTree tree, int position)
@@ -85,28 +86,16 @@ namespace OmniSharp
             return null;
         }
 
-        public static async Task<IEnumerable<TextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
         {
             var tree = await document.GetSyntaxTreeAsync();
             var changes = FormatterReflect.GetFormattedTextChanges(tree.GetRoot(), TextSpan.FromBounds(start, end), workspace, options);
-            var lines = tree.GetText().Lines;
 
-            return changes
-                .OrderByDescending(change => change.Span)
-                .Select(change =>
-                {
-                    var linePositionSpan = lines.GetLinePositionSpan(change.Span);
-                    var newText = EnsureProperNewLine(change.NewText, options);
-
-                    return new TextChange()
-                    {
-                        NewText = newText,
-                        StartLine = linePositionSpan.Start.Line + 1,
-                        StartColumn = linePositionSpan.Start.Character + 1,
-                        EndLine = linePositionSpan.End.Line + 1,
-                        EndColumn = linePositionSpan.End.Character + 1
-                    };
-                });
+            return (await LinePositionSpanTextChange.Convert(document, changes)).Select(change =>
+            {
+                change.NewText = EnsureProperNewLine(change.NewText, options);
+                return change;
+            });
         }
 
         public static async Task<string> GetFormattedDocument(Workspace workspace, OptionSet options, Document document)

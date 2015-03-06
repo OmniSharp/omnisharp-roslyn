@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace OmniSharp.Models
 {
@@ -6,14 +6,13 @@ namespace OmniSharp.Models
     {
         public ModifiedFileResponse() { }
 
-        public ModifiedFileResponse(string fileName, string buffer)
+        public ModifiedFileResponse(string fileName)
         {
             FileName = fileName;
-            Buffer = buffer;
         }
 
         public string FileName { get; set; }
         public string Buffer { get; set; }
-
+        public IEnumerable<LinePositionSpanTextChange> Changes { get; set; }
     }
 }
