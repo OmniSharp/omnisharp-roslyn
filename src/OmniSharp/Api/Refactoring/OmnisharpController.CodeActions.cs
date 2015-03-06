@@ -52,10 +52,22 @@ namespace OmniSharp
                 o.Apply(_workspace, CancellationToken.None);
             }
 
-            // return the new document
-            var sourceText = await _workspace.CurrentSolution.GetDocument(context.Value.Document.Id).GetTextAsync();
+            var originalDocument = context.Value.Document;
+            var response = new RunCodeActionResponse();
+            if (!request.WantsTextChanges)
+            {
+                // return the new document
+                var sourceText = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextAsync();
+                response.Text = sourceText.ToString();
+            }
+            else
+            {
+                // return the text changes
+                var changes = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextChangesAsync(originalDocument);
+                response.Changes = await LinePositionSpanTextChange.Convert(originalDocument, changes);
+            }
 
-            return new RunCodeActionResponse { Text = sourceText.ToString() };
+            return response;
         }
 
         private async Task<CodeRefactoringContext?> GetContext(CodeActionRequest request, List<CodeAction> actionsDestination)

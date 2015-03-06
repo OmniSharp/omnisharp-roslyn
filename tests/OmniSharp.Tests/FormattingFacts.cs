@@ -127,8 +127,8 @@ class C {
     }
 }";
             await AssertTextChanges(source,
-                new TextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
-                new TextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " });
+                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
+                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " });
 
             source =
 @"class Program
@@ -138,9 +138,9 @@ class C {
     }
 }";
             await AssertTextChanges(source,
-                new TextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
-                new TextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " },
-                new TextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "\r\n" });
+                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
+                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " },
+                new LinePositionSpanTextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "\r\n" });
         }
 
         private static FormatRangeRequest NewRequest(string source)
@@ -160,7 +160,7 @@ class C {
             };
         }
 
-        private static async Task AssertTextChanges(string source, params TextChange[] expected)
+        private static async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
         {
             var request = NewRequest(source);
             var actual = await FormattingChangesForRange(request);
@@ -176,7 +176,7 @@ class C {
             }
         }
 
-        private static async Task<IEnumerable<TextChange>> FormattingChangesForRange(FormatRangeRequest req)
+        private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChangesForRange(FormatRangeRequest req)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
             var controller = new OmnisharpController(workspace, null);

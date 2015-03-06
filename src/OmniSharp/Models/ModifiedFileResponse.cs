@@ -13,6 +13,6 @@ namespace OmniSharp.Models
 
         public string FileName { get; set; }
         public string Buffer { get; set; }
-        public IEnumerable<TextChange> Changes { get; set; }
+        public IEnumerable<LinePositionSpanTextChange> Changes { get; set; }
     }
 }
