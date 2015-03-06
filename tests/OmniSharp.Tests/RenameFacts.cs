@@ -142,5 +142,25 @@ namespace OmniSharp.Tests
 
             Assert.Equal(0, result.Changes.Count());
         }
+
+        [Fact]
+        public async Task Rename_DoesNotExplodeWhenAttemptingToRenameALibrarySymbol()
+        {
+            const string fileContent = @"
+                using System;
+                public class Program
+                {
+                    public static void Main()
+                    {
+                        Console.Wri$te(1);
+                    }
+                }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var result = await SendRequest(workspace, "foo", "test.cs", fileContent);
+
+            Assert.Equal(0, result.Changes.Count());
+            Assert.NotNull(result.ErrorMessage);
+        }
     }
 }

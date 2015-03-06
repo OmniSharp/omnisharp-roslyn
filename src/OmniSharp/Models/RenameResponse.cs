@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace OmniSharp.Models
 {
@@ -11,5 +10,7 @@ namespace OmniSharp.Models
         }
 
         public IEnumerable<ModifiedFileResponse> Changes { get; set; }
+
+        public string ErrorMessage { get; set; }
     }
 }
