@@ -22,7 +22,7 @@
         "aspnet50": {
             "dependencies": {
                "ICSharpCode.NRefactory": "6.0.0-alpha3",  
-               "ScriptCs.Core": "0.13.2"
+               "ScriptCs.Hosting": "0.13.2"
             },
             "frameworkAssemblies": {
 				"System.Globalization": "",
