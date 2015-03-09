@@ -17,7 +17,7 @@ namespace OmniSharp.Tests
         {
             public int Line { get; private set; }
             public int Column { get; private set; }
-            
+
             public LineColumn(int line, int column)
             {
                 Line = line;
@@ -73,24 +73,28 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
             var workspace = new OmnisharpWorkspace();
-            var projectId = ProjectId.CreateNewId();
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
             var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
             var references = new[] { mscorlib, systemCore };
-            var projectInfo = ProjectInfo.Create(projectId, versionStamp,
-                                                 "ProjectName", "AssemblyName",
-                                                 LanguageNames.CSharp, "project.json", metadataReferences: references);
 
-            workspace.AddProject(projectInfo);
+            var projects = new[] { "aspnet50", "aspnetcore50" };
 
-            foreach (var file in sourceFiles)
+            foreach (var project in projects)
             {
-                var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), file.Key,
-                    null, SourceCodeKind.Regular,
-                    TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
+                var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
+                                                     "OmniSharp+" + project, "AssemblyName",
+                                                     LanguageNames.CSharp, "project.json", metadataReferences: references);
+                workspace.AddProject(projectInfo);
 
-                workspace.AddDocument(document);
+                foreach (var file in sourceFiles)
+                {
+                    var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), file.Key,
+                                                       null, SourceCodeKind.Regular,
+                                                       TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
+
+                    workspace.AddDocument(document);
+                }
             }
 
             return workspace;
@@ -113,9 +117,9 @@ namespace OmniSharp.Tests
         public static async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixes(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
         {
             var symbols = new List<ISymbol>();
-            foreach(var quickfix in quickFixes)
+            foreach (var quickfix in quickFixes)
             {
-                symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix)); 
+                symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix));
             }
             return symbols;
         }

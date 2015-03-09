@@ -28,7 +28,7 @@ namespace OmniSharp
                     ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
                     : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
 
-                var locations = new HashSet<Location>();
+                var locations = new List<Location>();
 
                 foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
                 {
@@ -37,22 +37,27 @@ namespace OmniSharp
                         locations.Add(location.Location);
                     }
 
-                    var definitionLocations = usage.Definition.Locations
-                        .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
-                        
-                    foreach (var location in definitionLocations)
+                    if (!request.ExcludeDefinition)
                     {
-                        locations.Add(location);
+                        var definitionLocations = usage.Definition.Locations
+                            .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
+
+                        foreach (var location in definitionLocations)
+                        {
+                            locations.Add(location);
+                        }
                     }
                 }
+
                 var quickFixTasks = locations.Select(async l => await GetQuickFix(l));
 
                 var quickFixes = await Task.WhenAll(quickFixTasks);
-                response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
-                                                            .ThenBy(q => q.Line)
-                                                            .ThenBy(q => q.Column));
+                response = new QuickFixResponse(quickFixes.Distinct()
+                                                .OrderBy(q => q.FileName)
+                                                .ThenBy(q => q.Line)
+                                                .ThenBy(q => q.Column));
             }
-            
+
             return response;
         }
     }
