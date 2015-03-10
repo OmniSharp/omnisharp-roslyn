@@ -39,7 +39,8 @@ namespace OmniSharp
             return
                 from name in namespaces
                 from type in name.GetTypeMembers()
-                from symbol in type.GetMembers()
+                from types in GetAllTypes(type)
+                from symbol in types.GetMembers()
                 from location in symbol.Locations
                 where symbol.CanBeReferencedByName
                 select ConvertSymbol(symbol, location);
@@ -53,6 +54,18 @@ namespace OmniSharp
                 foreach (var subNamespace in GetAllNamespaces(childNamespace))
                 {
                     yield return subNamespace;
+                }
+            }
+        }
+
+        private IEnumerable<INamedTypeSymbol> GetAllTypes(INamedTypeSymbol namedTypeSymbol)
+        {
+            yield return namedTypeSymbol;
+            foreach (var privateClass in namedTypeSymbol.GetTypeMembers())
+            {
+                foreach (var nestedClass in GetAllTypes(privateClass))
+                {
+                    yield return nestedClass;
                 }
             }
         }

@@ -24,18 +24,27 @@ namespace OmniSharp.Tests
                         }
                         private string Method() {}
                         private string Method(string param) {}
+
+                        private class Nested
+                        {
+                            private string NestedMethod() {}
+                        }
                     }
                 }";
 
             var usages = await FindSymbols(source);
-            var symbols = usages.QuickFixes.ToArray();
+            var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            Assert.Equal("_field", symbols[0].Text);
-            Assert.Equal("AutoProperty", symbols[1].Text);
-            Assert.Equal("Property", symbols[2].Text);
-            Assert.Equal("Method()", symbols[3].Text);
-            Assert.Equal("Method(string param)", symbols[4].Text);
-               
+            var expected = new[] {
+                "_field",
+                "AutoProperty",
+                "Property",
+                "Method()",
+                "Method(string param)",
+                "Nested",
+                "NestedMethod()"
+            };
+            Assert.Equal(expected, symbols);
         }
 
         private async Task<QuickFixResponse> FindSymbols(string source)
