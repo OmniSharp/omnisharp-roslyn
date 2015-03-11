@@ -1,8 +1,10 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.FindSymbols;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -12,60 +14,31 @@ namespace OmniSharp
         [HttpPost("findsymbols")]
         public async Task<QuickFixResponse> FindSymbols()
         {
-            var symbols = await GetSymbols();
-            return new QuickFixResponse(symbols);
+            Func<string, bool> isMatch = candidate => true;
+
+            return await FindSymbols(isMatch);
         }
 
-        private async Task<IEnumerable<QuickFix>> GetSymbols()
+        [HttpPost("findsymbolswithfilter")]
+        public async Task<QuickFixResponse> FindSymbols(FindSymbolsRequest request)
         {
-            var projects = _workspace.CurrentSolution.Projects;
+            Func<string, bool> isMatch =
+                candidate => candidate.IsValidCompletionFor(request.Filter);
 
-            var symbols = new List<QuickFix>();
-            foreach (var project in projects)
-            {
-                var compilation = await project.GetCompilationAsync();
-                symbols.AddRange(GetCompilationSymbols(compilation));
-            }
-            return symbols.Distinct();
+            return await FindSymbols(isMatch);
         }
 
-        private IEnumerable<QuickFix> GetCompilationSymbols(Compilation compilation)
+        private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
         {
-            var namespaces = GetAllNamespaces(compilation.Assembly.GlobalNamespace)
-                                .Where(n => n.Locations.Any(loc => loc.IsInSource));
+            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate);
 
-            return
-                from name in namespaces
-                from type in name.GetTypeMembers()
-                from types in GetAllTypes(type)
-                from symbol in types.GetMembers()
-                from location in symbol.Locations
-                where symbol.CanBeReferencedByName
-                select ConvertSymbol(symbol, location);
-        }
+            var quickFixes = (from symbol in symbols
+                              from location in symbol.Locations
+                              where symbol.CanBeReferencedByName
+                                 && symbol.Kind != SymbolKind.Namespace
+                              select ConvertSymbol(symbol, location)).Distinct();
 
-        private IEnumerable<INamespaceSymbol> GetAllNamespaces(INamespaceSymbol namespaceSymbol)
-        {
-            yield return namespaceSymbol;
-            foreach (var childNamespace in namespaceSymbol.GetNamespaceMembers())
-            {
-                foreach (var subNamespace in GetAllNamespaces(childNamespace))
-                {
-                    yield return subNamespace;
-                }
-            }
-        }
-
-        private IEnumerable<INamedTypeSymbol> GetAllTypes(INamedTypeSymbol namedTypeSymbol)
-        {
-            yield return namedTypeSymbol;
-            foreach (var privateClass in namedTypeSymbol.GetTypeMembers())
-            {
-                foreach (var nestedClass in GetAllTypes(privateClass))
-                {
-                    yield return nestedClass;
-                }
-            }
+            return new QuickFixResponse(quickFixes);
         }
 
         private QuickFix ConvertSymbol(ISymbol symbol, Location location)
