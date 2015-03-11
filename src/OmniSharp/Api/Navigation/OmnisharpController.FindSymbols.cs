@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-
 
 namespace OmniSharp
 {
