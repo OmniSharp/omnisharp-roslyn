@@ -104,7 +104,7 @@ namespace OmniSharp.Tests
                             get { return _field; }
                             set { _field = value; }
                         }
-                        private string Method() {}
+                        private void Method() {}
                         private string Method(string param) {}
 
                         private class Nested

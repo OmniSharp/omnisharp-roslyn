@@ -18,7 +18,7 @@ namespace OmniSharp
                 candidate => request != null
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
-            
+
             return await FindSymbols(isMatch);
         }
 
@@ -39,9 +39,13 @@ namespace OmniSharp
             var path = lineSpan.Path;
             var documents = _workspace.GetDocuments(path);
 
+            var format = SymbolDisplayFormat.MinimallyQualifiedFormat;
+            format = format.WithMemberOptions(format.MemberOptions
+                                              ^ SymbolDisplayMemberOptions.IncludeContainingType
+                                              ^ SymbolDisplayMemberOptions.IncludeType);
             return new SymbolLocation
             {
-                Text = new SnippetGenerator().GenerateSnippet(symbol),
+                Text = symbol.ToDisplayString(format),
                 Kind = Enum.GetName(symbol.Kind.GetType(), symbol.Kind),
                 FileName = path,
                 Line = lineSpan.StartLinePosition.Line + 1,
