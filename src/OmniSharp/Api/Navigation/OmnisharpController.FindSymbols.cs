@@ -24,12 +24,10 @@ namespace OmniSharp
 
         private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
         {
-            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate);
+            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
 
             var quickFixes = (from symbol in symbols
                               from location in symbol.Locations
-                              where symbol.CanBeReferencedByName
-                                 && symbol.Kind != SymbolKind.Namespace
                               select ConvertSymbol(symbol, location)).Distinct();
 
             return new QuickFixResponse(quickFixes);
