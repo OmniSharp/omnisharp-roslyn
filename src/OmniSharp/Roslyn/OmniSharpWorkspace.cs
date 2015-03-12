@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
@@ -13,8 +12,11 @@ namespace OmniSharp
     {
         public bool Initialized { get; set; }
 
+        public BufferManager BufferManager { get; private set; }
+
         public OmnisharpWorkspace() : base(MefHostServices.DefaultHost, "Custom")
         {
+            BufferManager = new BufferManager(this);
         }
 
         public void AddProject(ProjectInfo projectInfo)
@@ -70,20 +72,6 @@ namespace OmniSharp
         public void OnDocumentChanged(DocumentId documentId, SourceText text)
         {
             OnDocumentTextChanged(documentId, text, PreservationMode.PreserveIdentity);
-        }
-
-        public void EnsureBufferUpdated(Request request)
-        {
-            if(request.Buffer == null || request.FileName == null)
-            {
-                return;
-            }
-
-            var sourceText = SourceText.From(request.Buffer);
-            foreach (var documentId in CurrentSolution.GetDocumentIdsWithFilePath(request.FileName))
-            {
-                OnDocumentChanged(documentId, sourceText);
-            }
         }
 
         public DocumentId GetDocumentId(string filePath)

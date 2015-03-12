@@ -24,11 +24,7 @@ namespace OmniSharp.Filters
                 var request = context.ActionArguments.FirstOrDefault(arg => arg.Value is Request);
                 if (request.Value != null)
                 {
-                    var typedRequest = (Request)request.Value;
-                    if (typedRequest.Buffer != null && typedRequest.FileName != null)
-                    {
-                        _workspace.EnsureBufferUpdated(typedRequest);
-                    }
+                    _workspace.BufferManager.UpdateBuffer((Request)request.Value);
                 }
             }
         }
