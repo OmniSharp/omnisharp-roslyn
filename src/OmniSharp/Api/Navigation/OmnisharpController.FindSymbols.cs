@@ -12,19 +12,13 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("findsymbols")]
-        public async Task<QuickFixResponse> FindSymbols()
-        {
-            Func<string, bool> isMatch = candidate => true;
-
-            return await FindSymbols(isMatch);
-        }
-
-        [HttpPost("findsymbolswithfilter")]
-        public async Task<QuickFixResponse> FindSymbols(FindSymbolsRequest request)
+        public async Task<QuickFixResponse> FindSymbols(FindSymbolsRequest request = null)
         {
             Func<string, bool> isMatch =
-                candidate => candidate.IsValidCompletionFor(request.Filter);
-
+                candidate => request != null
+                ? candidate.IsValidCompletionFor(request.Filter)
+                : true;
+            
             return await FindSymbols(isMatch);
         }
 
