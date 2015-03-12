@@ -41,14 +41,13 @@ namespace OmniSharp
         private static QuickFix MakeQuickFix(Diagnostic diagnostic)
         {
             var span = diagnostic.Location.GetMappedLineSpan();
-            return new DiagnosticLocation {
-                
+            return new DiagnosticLocation
+            {
                 FileName = span.Path,
                 Line = span.StartLinePosition.Line + 1,
                 Column = span.StartLinePosition.Character + 1,
                 EndLine = span.EndLinePosition.Line + 1,
                 EndColumn = span.EndLinePosition.Character + 1,
-
                 Text = diagnostic.GetMessage(),
                 LogLevel = diagnostic.Severity.ToString()
             };
