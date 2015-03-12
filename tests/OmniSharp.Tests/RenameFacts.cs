@@ -133,14 +133,15 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task Rename_DoesNotUpdateAnythingWhenDocumentIsNotFound()
+        public async Task Rename_DoesTheRightThingWhenDocumentIsNotFound()
         {
             const string fileContent = "class f$oo{}";
             var workspace = TestHelpers.CreateSimpleWorkspace(fileContent);
 
-            var result = await SendRequest(workspace, "xxx", "test.cs", fileContent); 
+            var result = await SendRequest(workspace, "xxx", "test.cs", fileContent);
 
-            Assert.Equal(0, result.Changes.Count());
+            Assert.Equal(1, result.Changes.Count());
+            Assert.Equal("test.cs", result.Changes.ElementAt(0).FileName);
         }
 
         [Fact]
