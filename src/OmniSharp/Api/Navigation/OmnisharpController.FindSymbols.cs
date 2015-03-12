@@ -41,9 +41,10 @@ namespace OmniSharp
             var path = lineSpan.Path;
             var documents = _workspace.GetDocuments(path);
 
-            return new QuickFix
+            return new SymbolLocation
             {
                 Text = new SnippetGenerator().GenerateSnippet(symbol),
+                Kind = Enum.GetName(symbol.Kind.GetType(), symbol.Kind),
                 FileName = path,
                 Line = lineSpan.StartLinePosition.Line + 1,
                 Column = lineSpan.StartLinePosition.Character + 1,
