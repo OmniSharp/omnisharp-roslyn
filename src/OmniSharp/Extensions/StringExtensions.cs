@@ -42,6 +42,11 @@ namespace OmniSharp.Extensions
 
         private static bool FirstLetterMatches(string word, string match) 
         {
+            if(string.IsNullOrEmpty(match))
+            {
+                return false;
+            }
+
             return char.ToLowerInvariant(word.First()) == char.ToLowerInvariant(match.First());
         }
     }
