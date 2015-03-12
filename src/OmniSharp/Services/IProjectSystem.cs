@@ -2,6 +2,7 @@
 {
     public interface IProjectSystem
     {
-        void Initalize();
+        void Initialize();
+        void Reload();
     }
 }

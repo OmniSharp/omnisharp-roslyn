@@ -1,7 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.AspNet5;
 using OmniSharp.Models;
+using OmniSharp.Services;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -10,6 +12,7 @@ namespace OmniSharp.Tests
     {
         private readonly AspNet5Context _context;
         private readonly OmnisharpWorkspace _workspace;
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         public CurrentProjectFacts()
         {
@@ -37,7 +40,7 @@ namespace OmniSharp.Tests
 
         private AspNet5Project GetProjectContainingSourceFile(string name)
         {
-            var controller = new ProjectSystemController(_context, null, _workspace);
+            var controller = new ProjectSystemController(_context, null, _workspace, _projectSystems);
 
             var request = new Request
             {

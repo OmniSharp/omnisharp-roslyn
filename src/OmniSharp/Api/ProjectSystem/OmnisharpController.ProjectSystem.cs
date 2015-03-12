@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System.Collections.Generic;
+using Microsoft.AspNet.Mvc;
 using OmniSharp.AspNet5;
 using OmniSharp.Models;
 using OmniSharp.MSBuild;
-using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Services;
 
 namespace OmniSharp
 {
@@ -11,12 +12,14 @@ namespace OmniSharp
         private readonly AspNet5Context _aspnet5Context;
         private readonly OmnisharpWorkspace _workspace;
         private readonly MSBuildContext _msbuildContext;
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public ProjectSystemController(AspNet5Context aspnet5Context, MSBuildContext msbuildContext, OmnisharpWorkspace workspace)
+        public ProjectSystemController(AspNet5Context aspnet5Context, MSBuildContext msbuildContext, OmnisharpWorkspace workspace, IEnumerable<IProjectSystem> projectSystems)
         {
             _aspnet5Context = aspnet5Context;
             _msbuildContext = msbuildContext;
             _workspace = workspace;
+            _projectSystems = projectSystems;
         }
 
         [HttpPost("/projects")]
@@ -55,6 +58,16 @@ namespace OmniSharp
                 MsBuildProject = msBuildProjectItem,
                 AspNet5Project = aspNet5ProjectItem
             };
+        }
+
+        [HttpPost("/reloadsolution")]
+        public bool ReloadSolution()
+        {
+            foreach (var projectSystem in _projectSystems)
+            {
+                projectSystem.Reload();
+            }
+            return true;
         }
     }
 }
