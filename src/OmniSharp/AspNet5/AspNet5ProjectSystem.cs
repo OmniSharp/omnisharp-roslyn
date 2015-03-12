@@ -62,14 +62,14 @@ namespace OmniSharp.AspNet5
             if (_context.RuntimePath == null)
             {
                 // There is no default k found so do nothing
-                _logger.WriteInformation("No default KRE found");
+                _logger.WriteInformation("No default runtime found");
                 return;
             }
 
             if (!ScanForProjects())
             {
                 // No ASP.NET 5 projects found so do nothing
-                _logger.WriteInformation("No ASP.NET 5 projects found");
+                _logger.WriteInformation("No project.json based projects found");
                 return;
             }
 
@@ -522,7 +522,7 @@ namespace OmniSharp.AspNet5
 
                     if (Directory.Exists(path))
                     {
-                        _logger.WriteInformation(string.Format("Using KRE '{0}'.", path));
+                        _logger.WriteInformation(string.Format("Using runtime '{0}'.", path));
                         return path;
                     }
                     
@@ -537,11 +537,15 @@ namespace OmniSharp.AspNet5
 
         private IEnumerable<string> GetRuntimeLocations()
         {
+            yield return Environment.GetEnvironmentVariable("DNX_HOME");
             yield return Environment.GetEnvironmentVariable("KRE_HOME");
 
             var home = Environment.GetEnvironmentVariable("HOME") ??
                        Environment.GetEnvironmentVariable("USERPROFILE");
 
+            // Newer path
+            yield return Path.Combine(home, ".dnx");
+            
             // New path
             yield return Path.Combine(home, ".k");
 
@@ -551,6 +555,9 @@ namespace OmniSharp.AspNet5
 
         private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string versionOrAlias, string runtimePath)
         {
+            // Newer format
+            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".dnx", "dnx-mono.{0}", "dnx-clr-win-x86.{0}", "runtimes");
+            
             // New format
             yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".k", "kre-mono.{0}", "kre-clr-win-x86.{0}", "runtimes");
 
