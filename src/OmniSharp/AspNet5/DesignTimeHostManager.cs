@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -36,7 +37,7 @@ namespace OmniSharp.AspNet5
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = Path.Combine(runtimePath, "bin", "klr"),
+                    FileName = GetRuntimeExecutable(runtimePath),
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,
@@ -49,8 +50,10 @@ namespace OmniSharp.AspNet5
 
 #if ASPNET50
                 psi.EnvironmentVariables["KRE_APPBASE"] = Directory.GetCurrentDirectory();
+                psi.EnvironmentVariables["DNX_APPBASE"] = Directory.GetCurrentDirectory();
 #else
                 psi.Environment["KRE_APPBASE"] = Directory.GetCurrentDirectory();
+                psi.Environment["DNX_APPBASE"] = Directory.GetCurrentDirectory();
 #endif
 
                 _logger.WriteVerbose(psi.FileName + " " + psi.Arguments);
@@ -95,6 +98,14 @@ namespace OmniSharp.AspNet5
 
                 onConnected(port);
             }
+        }
+
+        private static string GetRuntimeExecutable(string runtimePath)
+        {
+            var newPath = Path.Combine(runtimePath, "bin", "dnx");
+            var oldPath = Path.Combine(runtimePath, "bin", "klr");
+
+            return new[] { newPath, oldPath }.First(File.Exists);
         }
 
         public void Stop()
