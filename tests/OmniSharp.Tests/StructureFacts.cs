@@ -12,8 +12,8 @@ namespace OmniSharp.Tests
         {
             var source =
                 @"public class Far {
-					
-				}";
+                    
+                }";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
 
@@ -28,11 +28,11 @@ namespace OmniSharp.Tests
         {
             var source =
                 @"public class Far {
-					private bool _b;
-					private bool B { get; set; }
-					public void M() { }
-					public event Action E;
-				}";
+                    private bool _b;
+                    private bool B { get; set; }
+                    public void M() { }
+                    public event Action E;
+                }";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
 
@@ -55,8 +55,8 @@ namespace OmniSharp.Tests
         {
             var source =
                 @"public interface Far {
-					
-				}";
+                    
+                }";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
 

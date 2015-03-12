@@ -2,7 +2,6 @@
 using OmniSharp.AspNet5;
 using OmniSharp.Models;
 using OmniSharp.MSBuild;
-using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp
 {
