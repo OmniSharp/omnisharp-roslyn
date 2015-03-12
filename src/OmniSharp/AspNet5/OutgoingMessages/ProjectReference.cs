@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages
+﻿namespace Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages
 {
     public class ProjectReference
     {

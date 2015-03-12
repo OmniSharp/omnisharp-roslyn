@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OmniSharp.Options
+﻿namespace OmniSharp.Options
 {
     public class AspNet5Options
     {
