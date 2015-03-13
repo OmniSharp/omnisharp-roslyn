@@ -73,18 +73,22 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
             var workspace = new OmnisharpWorkspace();
+            AddProjectToWorkspace(workspace, "project.json", new[] { "aspnet50", "aspnetcore50" }, sourceFiles);
+            return workspace;
+        }
+        
+        public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
+        {
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
             var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
             var references = new[] { mscorlib, systemCore };
 
-            var projects = new[] { "aspnet50", "aspnetcore50" };
-
-            foreach (var project in projects)
+            foreach (var framework in frameworks)
             {
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
-                                                     "OmniSharp+" + project, "AssemblyName",
-                                                     LanguageNames.CSharp, "project.json", metadataReferences: references);
+                                                     "OmniSharp+" + framework, "AssemblyName",
+                                                     LanguageNames.CSharp, filePath, metadataReferences: references);
                 workspace.AddProject(projectInfo);
 
                 foreach (var file in sourceFiles)
@@ -99,7 +103,7 @@ namespace OmniSharp.Tests
 
             return workspace;
         }
-
+        
         private static Assembly AssemblyFromType(Type type)
         {
             return type.GetTypeInfo().Assembly;

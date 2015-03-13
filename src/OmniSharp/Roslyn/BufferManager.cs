@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -81,11 +82,17 @@ namespace OmniSharp.Roslyn
                 return false;
             }
 
+            var projects = FindProjectsByFileName(fileName);
+            if (projects.Count() == 0)
+            {
+                return false;
+            }
+
             var sourceText = SourceText.From(fileContent);
             var documents = new List<DocumentInfo>();
-            foreach (var projectId in _workspace.CurrentSolution.ProjectIds)
+            foreach (var project in projects)
             {
-                var id = DocumentId.CreateNewId(projectId);
+                var id = DocumentId.CreateNewId(project.Id);
                 var version = VersionStamp.Create();
                 var document = DocumentInfo.Create(id, fileName, filePath: fileName, loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
 
@@ -104,6 +111,27 @@ namespace OmniSharp.Roslyn
                 _workspace.AddDocument(document);
             }
             return true;
+        }
+
+        private IEnumerable<Project> FindProjectsByFileName(string fileName)
+        {
+            var dirInfo = new FileInfo(fileName).Directory;
+            var candidates = _workspace.CurrentSolution.Projects
+                .GroupBy(project => new FileInfo(project.FilePath).Directory.FullName)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+
+            List<Project> projects = null;
+            while (dirInfo != null)
+            {
+                if (candidates.TryGetValue(dirInfo.FullName, out projects))
+                {
+                    return projects;
+                }
+
+                dirInfo = dirInfo.Parent;
+            }
+
+            return Enumerable.Empty<Project>();
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)
