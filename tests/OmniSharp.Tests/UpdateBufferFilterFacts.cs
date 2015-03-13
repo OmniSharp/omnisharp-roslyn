@@ -65,10 +65,6 @@ namespace OmniSharp.Tests
             Assert.NotNull(docId);
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
-
-
-            var project1 = workspace.CurrentSolution.Projects.First();
-
         }
 
         [Fact]
