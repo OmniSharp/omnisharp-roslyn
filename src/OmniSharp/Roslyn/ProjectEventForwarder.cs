@@ -28,7 +28,6 @@ namespace OmniSharp.Roslyn
 
         private void OnWorkspaceChanged(object source, WorkspaceChangeEventArgs args)
         {
-
             SimpleWorkspaceEvent e = null;
 
             switch (args.Kind)
