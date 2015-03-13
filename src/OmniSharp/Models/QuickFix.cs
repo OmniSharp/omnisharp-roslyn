@@ -10,7 +10,6 @@ namespace OmniSharp.Models
             Projects = new List<string>();
         }
 
-        public string LogLevel { get; set; }
         public string FileName { get; set; }
         public int Line { get; set; }
         public int Column { get; set; }
@@ -27,8 +26,8 @@ namespace OmniSharp.Models
                 return false;
             }
 
-            return LogLevel == quickFix.LogLevel
-                && FileName == quickFix.FileName
+            return 
+                FileName == quickFix.FileName
                 && Line == quickFix.Line
                 && Column == quickFix.Column
                 && EndLine == quickFix.EndLine
@@ -42,8 +41,6 @@ namespace OmniSharp.Models
             unchecked
             {
                 var hash = 17;
-
-                hash = hash * 23 + (LogLevel?.GetHashCode()).GetValueOrDefault();
                 hash = hash * 23 + (FileName?.GetHashCode()).GetValueOrDefault();
                 hash = hash * 23 + Line.GetHashCode();
                 hash = hash * 23 + Column.GetHashCode();

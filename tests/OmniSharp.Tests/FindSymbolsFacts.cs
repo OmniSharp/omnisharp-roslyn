@@ -49,7 +49,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task Can_find_symbols_using_filter()
+        public async Task Can_find_symbols_kinds()
         {
             var source = @"
                 namespace Some.Long.Namespace
@@ -64,6 +64,47 @@ namespace OmniSharp.Tests
                             set { _field = value; }
                         }
                         private string Method() {}
+                        private string Method(string param) {}
+
+                        private class Nested
+                        {
+                            private string NestedMethod() {}
+                        }
+                    }
+                }";
+
+            var usages = await FindSymbols(source);
+            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+
+            var expected = new[] {
+                "NamedType",
+                "Field",
+                "Property",
+                "Property",
+                "Method",
+                "Method",
+                "NamedType",
+                "Method"
+            };
+            Assert.Equal(expected, symbols);
+        }
+
+        [Fact]
+        public async Task Can_find_symbols_using_filter()
+        {
+            var source = @"
+                namespace Some.Long.Namespace
+                {
+                    public class Foo
+                    {
+                        private string _field = 0;
+                        private string AutoProperty { get; }
+                        private string Property
+                        {
+                            get { return _field; }
+                            set { _field = value; }
+                        }
+                        private void Method() {}
                         private string Method(string param) {}
 
                         private class Nested

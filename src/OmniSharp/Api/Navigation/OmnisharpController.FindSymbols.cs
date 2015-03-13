@@ -18,18 +18,16 @@ namespace OmniSharp
                 candidate => request != null
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
-            
+
             return await FindSymbols(isMatch);
         }
 
         private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
         {
-            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate);
+            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
 
             var quickFixes = (from symbol in symbols
                               from location in symbol.Locations
-                              where symbol.CanBeReferencedByName
-                                 && symbol.Kind != SymbolKind.Namespace
                               select ConvertSymbol(symbol, location)).Distinct();
 
             return new QuickFixResponse(quickFixes);
@@ -41,9 +39,14 @@ namespace OmniSharp
             var path = lineSpan.Path;
             var documents = _workspace.GetDocuments(path);
 
-            return new QuickFix
+            var format = SymbolDisplayFormat.MinimallyQualifiedFormat;
+            format = format.WithMemberOptions(format.MemberOptions
+                                              ^ SymbolDisplayMemberOptions.IncludeContainingType
+                                              ^ SymbolDisplayMemberOptions.IncludeType);
+            return new SymbolLocation
             {
-                Text = new SnippetGenerator().GenerateSnippet(symbol),
+                Text = symbol.ToDisplayString(format),
+                Kind = Enum.GetName(symbol.Kind.GetType(), symbol.Kind),
                 FileName = path,
                 Line = lineSpan.StartLinePosition.Line + 1,
                 Column = lineSpan.StartLinePosition.Character + 1,
