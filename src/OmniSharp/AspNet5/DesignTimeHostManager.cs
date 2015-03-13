@@ -34,7 +34,6 @@ namespace OmniSharp.AspNet5
                 }
 
                 int port = GetFreePort();
-
                 var psi = new ProcessStartInfo
                 {
                     FileName = GetRuntimeExecutable(runtimePath),
