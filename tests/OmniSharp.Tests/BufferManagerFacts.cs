@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.Models;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace OmniSharp.Tests
     public class BufferManagerFacts
     {
         [Fact]
-        public void UpdateBufferIgnoresVoidRequests()
+        public async Task UpdateBufferIgnoresVoidRequests()
         {
             var workspace = TestHelpers.CreateSimpleWorkspace("class C {}", "test.cs");
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
@@ -28,7 +29,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public void UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
+        public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
         {
             var workspace = GetWorkspaceWithProjects();
 
@@ -38,7 +39,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public void UpdateBufferFindsProjectBasedOnPath()
+        public async Task UpdateBufferFindsProjectBasedOnPath()
         {
             var workspace = GetWorkspaceWithProjects();
 
@@ -53,7 +54,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public void UpdateBufferFindsProjectBasedOnNearestPath()
+        public async Task UpdateBufferFindsProjectBasedOnNearestPath()
         {
             var workspace = new OmnisharpWorkspace();
 
