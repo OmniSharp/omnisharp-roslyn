@@ -32,9 +32,8 @@ namespace OmniSharp.AspNet5
                 {
                     return;
                 }
-                
-                int port = GetFreePort();
 
+                int port = GetFreePort();
                 var psi = new ProcessStartInfo
                 {
                     FileName = GetRuntimeExecutable(runtimePath),
@@ -103,9 +102,11 @@ namespace OmniSharp.AspNet5
         private static string GetRuntimeExecutable(string runtimePath)
         {
             var newPath = Path.Combine(runtimePath, "bin", "dnx");
+            var newPathExe = Path.Combine(runtimePath, "bin", "dnx.exe");
             var oldPath = Path.Combine(runtimePath, "bin", "klr");
+            var oldPathExe = Path.Combine(runtimePath, "bin", "klr.exe");
 
-            return new[] { newPath, oldPath }.First(File.Exists);
+            return new[] { newPath, newPathExe, oldPath, oldPathExe }.First(File.Exists);
         }
 
         public void Stop()
