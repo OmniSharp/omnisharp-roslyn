@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using OmniSharp.Models;
 using Xunit;
@@ -31,8 +32,8 @@ namespace OmniSharp.Tests
         {
             var workspace = GetWorkspaceWithProjects();
 
-            workspace.BufferManager.UpdateBuffer(new Request() { FileName = @"c:\some\path.cs", Buffer = "enum E {}" });
-            var documents = workspace.GetDocuments(@"c:\some\path.cs");
+            workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
+            var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
             Assert.Equal(0, documents.Count());
         }
 
@@ -41,13 +42,13 @@ namespace OmniSharp.Tests
         {
             var workspace = GetWorkspaceWithProjects();
 
-            workspace.BufferManager.UpdateBuffer(new Request() { FileName = @"c:\src\newFile.cs", Buffer = "enum E {}" });
-            var documents = workspace.GetDocuments(@"c:\src\newFile.cs");
+            workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
+            var documents = workspace.GetDocuments(Path.Combine("src", "newFile.cs"));
             Assert.Equal(2, documents.Count());
 
             foreach (var document in documents)
             {
-                Assert.Equal(@"c:\src\project.json", document.Project.FilePath);
+                Assert.Equal(Path.Combine("src", "project.json"), document.Project.FilePath);
             }
         }
 
@@ -56,24 +57,24 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmnisharpWorkspace();
 
-            TestHelpers.AddProjectToWorkspace(workspace, @"c:\src\root\foo.csproj",
+            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
                 new[] { "" },
-                new Dictionary<string, string>() { { @"c:\src\root\foo.cs", "class C1 {}" } });
+                new Dictionary<string, string>() { { Path.Combine("src", "root", "foo.cs"), "class C1 {}" } });
 
-            TestHelpers.AddProjectToWorkspace(workspace, @"c:\src\root\foo\bar\insane.csproj",
+            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
                 new[] { "" },
-                new Dictionary<string, string>() { { @"c:\src\root\foo\bar\nested\code.cs", "class C2 {}" } });
+                new Dictionary<string, string>() { { Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}" } });
 
-            workspace.BufferManager.UpdateBuffer(new Request() { FileName = @"c:\src\root\bar.cs", Buffer = "enum E {}" });
-            var documents = workspace.GetDocuments(@"c:\src\root\bar.cs");
+            workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
+            var documents = workspace.GetDocuments(Path.Combine("src", "root", "bar.cs"));
             Assert.Equal(1, documents.Count());
-            Assert.Equal(@"c:\src\root\foo.csproj", documents.ElementAt(0).Project.FilePath);
+            Assert.Equal(Path.Combine("src", "root", "foo.csproj"), documents.ElementAt(0).Project.FilePath);
             Assert.Equal(2, documents.ElementAt(0).Project.Documents.Count());
 
-            workspace.BufferManager.UpdateBuffer(new Request() { FileName = @"c:\src\root\foo\bar\nested\paths\dance.cs", Buffer = "enum E {}" });
-            documents = workspace.GetDocuments(@"c:\src\root\foo\bar\nested\paths\dance.cs");
+            workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"), Buffer = "enum E {}" });
+            documents = workspace.GetDocuments(Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"));
             Assert.Equal(1, documents.Count());
-            Assert.Equal(@"c:\src\root\foo\bar\insane.csproj", documents.ElementAt(0).Project.FilePath);
+            Assert.Equal(Path.Combine("src", "root", "foo", "bar", "insane.csproj"), documents.ElementAt(0).Project.FilePath);
             Assert.Equal(2, documents.ElementAt(0).Project.Documents.Count());
         }
 
@@ -81,13 +82,13 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmnisharpWorkspace();
 
-            TestHelpers.AddProjectToWorkspace(workspace, @"c:\src\project.json",
+            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
                 new[] { "aspnet50", "aspnet50core" },
-                new Dictionary<string, string>() { { @"c:\src\a.cs", "class C {}" } });
+                new Dictionary<string, string>() { { Path.Combine("src", "a.cs"), "class C {}" } });
 
-            TestHelpers.AddProjectToWorkspace(workspace, @"c:\test\project.json",
+            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("test", "project.json"),
                 new[] { "aspnet50", "aspnet50core" },
-                new Dictionary<string, string>() { { @"c:\test\b.cs", "class C {}" } });
+                new Dictionary<string, string>() { { Path.Combine("test", "b.cs"), "class C {}" } });
 
             Assert.Equal(4, workspace.CurrentSolution.Projects.Count());
             foreach (var project in workspace.CurrentSolution.Projects)
