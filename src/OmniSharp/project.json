@@ -12,7 +12,7 @@
         "Microsoft.Framework.Logging.Console": "1.0.0-beta3",
         "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta3",
         "Microsoft.Framework.Cache.Memory": "1.0.0-beta3",
-        "Microsoft.Composition": "1.0.27"
+        "Microsoft.Composition": "1.0.30"
     },
     "commands": {
         "omnisharp": "run"
