@@ -14,6 +14,7 @@ using OmniSharp.Filters;
 using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
+using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Settings;
 using OmniSharp.Stdio.Logging;
@@ -70,7 +71,7 @@ namespace OmniSharp
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
             // Add the file watcher
-            services.AddSingleton<IFileSystemWatcher, FileSystemWatcherWrapper>();
+            services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
 
             // Add test command providers
             services.AddSingleton<ITestCommandProvider, AspNet5TestCommandProvider>();
@@ -81,6 +82,17 @@ namespace OmniSharp
 #if ASPNET50
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
+
+            if (Program.Environment.TransportType == TransportType.Stdio)
+            {
+                services.AddSingleton<IEventEmitter, StdioEventEmitter>();
+            }
+            else
+            {
+                services.AddSingleton<IEventEmitter, NullEventEmitter>();
+            }
+
+            services.AddSingleton<ProjectEventForwarder, ProjectEventForwarder>();
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
@@ -113,10 +125,13 @@ namespace OmniSharp
             app.UseMvc();
 
             logger.WriteInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+            
+            // Forward workspace events
+            app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
 
             // Initialize everything!
             var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
-
+            
             foreach (var projectSystem in projectSystems)
             {
                 projectSystem.Initalize();

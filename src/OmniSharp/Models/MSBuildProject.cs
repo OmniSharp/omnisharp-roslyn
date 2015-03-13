@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.Models
@@ -10,6 +11,7 @@ namespace OmniSharp.Models
         public string AssemblyName { get; set; }
         public string TargetPath { get; set; }
         public string TargetFramework { get; set; }
+        public IList<string> SourceFiles { get; set; }
 
         public MSBuildProject(ProjectFileInfo p)
         {
@@ -18,6 +20,7 @@ namespace OmniSharp.Models
             TargetPath = p.TargetPath;
             ProjectGuid = p.ProjectId;
             TargetFramework = p.TargetFramework.ToString();
+            SourceFiles = p.SourceFiles;
         }
     }
 }

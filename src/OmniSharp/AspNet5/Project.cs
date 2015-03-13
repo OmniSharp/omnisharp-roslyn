@@ -24,6 +24,8 @@ namespace OmniSharp.AspNet5
 
         public bool InitializeSent { get; set; }
 
+        public IList<string> SourceFiles { get; set; }
+
         public Project()
         {
             ProjectsByFramework = new ConcurrentDictionary<string, FrameworkProject>();
