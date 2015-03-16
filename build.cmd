@@ -12,7 +12,7 @@ call kvm install 1.0.0-beta3
 call kvm use 1.0.0-beta3
 call kvm list
 rem set the runtime path because the above commands set \.k<space>\runtimes
-set PATH=%USERPROFILE%\.k\runtimes\kre-clr-win-x86.1.0.0-beta3\bin
+set PATH=%USERPROFILE%\.k\runtimes\kre-clr-win-x86.1.0.0-beta3\bin;%PATH%
 call kpm restore
 cd tests\OmniSharp.Tests
 k test
