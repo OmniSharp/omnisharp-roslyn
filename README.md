@@ -3,6 +3,7 @@ omnisharp-roslyn
 
 [![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)](https://travis-ci.org/OmniSharp/omnisharp-roslyn)
 
+[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/OmniSharp/omnisharp-roslyn?branch=master&svg=true)](https://ci.appveyor.com/project/nosami/omnisharp-roslyn)
 Omnisharp based on roslyn workspaces
 
 This currently requires kre version - 1.0.0-beta3.. and because the omnisharp server uses kestrel, you'll also need to make sure that you have libuv installed.
