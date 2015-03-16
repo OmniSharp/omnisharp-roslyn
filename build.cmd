@@ -12,10 +12,13 @@ call kvm use 1.0.0-beta3
 rem set the runtime path because the above commands set \.k<space>\runtimes
 set PATH=%USERPROFILE%\.k\runtimes\kre-clr-win-x86.1.0.0-beta3\bin;%PATH%
 call kpm restore
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd tests\OmniSharp.Tests
 call k test
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..\OmniSharp.Stdio.Tests
 call k test
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..\..
 call kpm bundle src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime kre-clr-win-x86.1.0.0-beta3
 
