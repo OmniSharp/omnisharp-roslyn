@@ -1,11 +1,15 @@
 @echo off
 
 pushd %~dp0
-set "KRE_NUGET_API_URL=https://www.nuget.org/api/v2"
-@powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/aspnet/Home/master/kvminstall.ps1'))"
+where kvm
 
-set PATH=%PATH%;%userprofile%\.k\bin
-set KRE_HOME=%USERPROFILE%\.k 
+if %errorlevel% neq 0 (
+    set "KRE_NUGET_API_URL=https://www.nuget.org/api/v2"
+    @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/aspnet/Home/master/kvminstall.ps1'))"
+
+    set PATH=%PATH%;%userprofile%\.k\bin
+    set KRE_HOME=%USERPROFILE%\.k 
+)
 
 call kvm install 1.0.0-beta3
 call kvm use 1.0.0-beta3
