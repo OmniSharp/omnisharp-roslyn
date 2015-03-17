@@ -12,7 +12,6 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :install
-echo "here"
 call kvm install 1.0.0-beta3
 call kvm use 1.0.0-beta3
 rem set the runtime path because the above commands set \.k<space>\runtimes
