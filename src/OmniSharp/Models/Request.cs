@@ -13,7 +13,7 @@ namespace OmniSharp.Models
         {
             get
             {
-                return _fileName.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+                return _fileName?.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
             set
             {
