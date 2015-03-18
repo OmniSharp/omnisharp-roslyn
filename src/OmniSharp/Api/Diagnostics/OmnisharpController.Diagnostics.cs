@@ -10,11 +10,13 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("codecheck")]
-        public async Task<IActionResult> CodeCheck(Request request)
+        public async Task<QuickFixResponse> CodeCheck(Request request)
         {
             var quickFixes = new List<QuickFix>();
 
-            var documents = _workspace.GetDocuments(request.FileName);
+            var documents = request.FileName != null
+                ? _workspace.GetDocuments(request.FileName)
+                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
             foreach (var document in documents)
             {
@@ -35,7 +37,7 @@ namespace OmniSharp
                 }
             }
 
-            return new ObjectResult(new { QuickFixes = quickFixes });
+            return new QuickFixResponse(quickFixes);
         }
 
         private static QuickFix MakeQuickFix(Diagnostic diagnostic)
