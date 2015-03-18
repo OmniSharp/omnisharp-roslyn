@@ -19,11 +19,8 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var quickFixes = await controller.CodeCheck(new Request() { FileName = "a.cs" });
 
-            Assert.Equal(2, quickFixes.QuickFixes.Count());
-            foreach (var quickFix in quickFixes.QuickFixes)
-            {
-                Assert.Equal("a.cs", quickFix.FileName);
-            }
+            Assert.Equal(1, quickFixes.QuickFixes.Count());
+            Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
         }
 
         [Fact]
@@ -38,7 +35,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var quickFixes = await controller.CodeCheck(new Request());
 
-            Assert.Equal(4, quickFixes.QuickFixes.Count());
+            Assert.Equal(2, quickFixes.QuickFixes.Count());
         }
     }
 }

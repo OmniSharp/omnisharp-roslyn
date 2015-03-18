@@ -26,14 +26,13 @@ namespace OmniSharp.Models
                 return false;
             }
 
-            return 
+            return
                 FileName == quickFix.FileName
                 && Line == quickFix.Line
                 && Column == quickFix.Column
                 && EndLine == quickFix.EndLine
                 && EndColumn == quickFix.EndColumn
-                && Text == quickFix.Text
-                && Enumerable.SequenceEqual(Projects, quickFix.Projects);
+                && Text == quickFix.Text;
         }
 
         public override int GetHashCode()
@@ -47,10 +46,6 @@ namespace OmniSharp.Models
                 hash = hash * 23 + EndLine.GetHashCode();
                 hash = hash * 23 + EndColumn.GetHashCode();
                 hash = hash * 23 + (Text?.GetHashCode()).GetValueOrDefault();
-                foreach (var project in Projects)
-                {
-                    hash = hash * 23 + project.GetHashCode();
-                }
                 return hash;
             }
         }
