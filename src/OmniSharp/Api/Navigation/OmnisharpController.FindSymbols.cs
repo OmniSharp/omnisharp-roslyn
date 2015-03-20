@@ -43,6 +43,9 @@ namespace OmniSharp
             format = format.WithMemberOptions(format.MemberOptions
                                               ^ SymbolDisplayMemberOptions.IncludeContainingType
                                               ^ SymbolDisplayMemberOptions.IncludeType);
+
+            format = format.WithKindOptions(SymbolDisplayKindOptions.None);
+
             return new SymbolLocation
             {
                 Text = symbol.ToDisplayString(format),
