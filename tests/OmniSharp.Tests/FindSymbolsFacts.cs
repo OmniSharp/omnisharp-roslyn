@@ -49,6 +49,25 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
+        public async Task Does_not_return_event_keyword()
+        {
+            var source = @"
+                public static class Game
+                {
+                    public static event GameEvent GameResumed;
+                }";
+
+            var usages = await FindSymbols(source);
+            var symbols = usages.QuickFixes.Select(q => q.Text);
+
+            var expected = new[] {
+                "Game",
+                "GameResumed"
+            };
+            Assert.Equal(expected, symbols);
+        }
+
+        [Fact]
         public async Task Can_find_symbols_kinds()
         {
             var source = @"
