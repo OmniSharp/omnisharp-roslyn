@@ -10,6 +10,86 @@ namespace OmniSharp.Tests
     public class IntellisenseFacts
     {
         [Fact]
+        public async Task DisplayText_is_correct_for_property()
+        {
+            var source =
+                @"public class Class1 {
+                    public int Foo { get; set; }
+                    public Class1()
+                        {
+                            Foo$
+                        }
+                    }";
+
+            var request = CreateRequest(source);
+            request.WantSnippet = true;
+
+            var completions = await FindCompletionsAsync(source, request);
+            ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo");
+        }
+
+        [Fact]
+        public async Task DisplayText_is_correct_for_variable()
+        {
+            var source =
+                @"public class Class1 {
+                    public Class1()
+                        {
+                            var foo = 1;
+                            foo$
+                        }
+                    }";
+
+            var request = CreateRequest(source);
+            request.WantSnippet = true;
+            
+            var completions = await FindCompletionsAsync(source, request);
+            ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "foo");
+        }
+
+        [Fact]
+        public async Task DisplayText_matches_snippet_for_snippet_response()
+        {
+            var source =
+                @"public class Class1 {
+                    public Class1()
+                        {
+                            Foo$
+                        }
+                    public void Foo(int bar = 1)
+                        {
+                        }
+                    }";
+
+            var request = CreateRequest(source);
+            request.WantSnippet = true;
+
+            var completions = await FindCompletionsAsync(source, request);
+            ContainsCompletions(completions.Select(c => c.DisplayText).Take(2), "Foo()", "Foo(int bar = 1)");
+        }
+
+        [Fact]
+        public async Task DisplayText_matches_snippet_for_non_snippet_response()
+        {
+            var source =
+                @"public class Class1 {
+                    public Class1()
+                        {
+                            Foo$
+                        }
+                    public void Foo(int bar = 1)
+                        {
+                        }
+                    }";
+
+            var request = CreateRequest(source);
+            request.WantSnippet = false;
+
+            var completions = await FindCompletionsAsync(source, request);
+            ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo(int bar = 1)");
+        }
+
+        [Fact]
         public async Task Returns_camel_case_completions()
         {
             var source =
@@ -21,7 +101,7 @@ namespace OmniSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions.Take(2), "WindowLeft", "WriteLine");
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(2), "WindowLeft", "WriteLine");
         }
 
         [Fact]
@@ -36,7 +116,7 @@ namespace OmniSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions.Take(1), "WriteLine");
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "WriteLine");
         }
         
         [Fact]
@@ -53,7 +133,7 @@ namespace OmniSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions, "myvar", "MyClass1");
+            ContainsCompletions(completions.Select(c => c.CompletionText), "myvar", "MyClass1");
         }
 
         [Fact]
@@ -70,7 +150,7 @@ namespace OmniSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions, "MyClass1", "myvar");
+            ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
         }
 
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
@@ -96,14 +176,19 @@ namespace OmniSharp.Tests
             Assert.Equal(expected, completions);
         }
 
-        private async Task<IEnumerable<string>> FindCompletionsAsync(string source)
+        private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
             var controller = new OmnisharpController(workspace, null);
-            var request = CreateRequest(source);
+
+            if (request == null)
+            {
+                request = CreateRequest(source);
+            }
+
             var response = await controller.AutoComplete(request);
             var completions = response as IEnumerable<AutoCompleteResponse>;
-            return completions.Select(completion => completion.CompletionText);
+            return completions;
         }
 
         private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs")

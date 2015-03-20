@@ -104,11 +104,15 @@ namespace OmniSharp
 
         private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, bool includeOptionalParams = true)
         {
+            var displayNameGenerator = new SnippetGenerator();
+            displayNameGenerator.IncludeMarkers = false;
+            displayNameGenerator.IncludeOptionalParameters = includeOptionalParams;
+
             var response = new AutoCompleteResponse();
             response.CompletionText = symbol.Name;
 
             // TODO: Do something more intelligent here
-            response.DisplayText = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            response.DisplayText = displayNameGenerator.Generate(symbol);
 
             if (request.WantDocumentationForEveryCompletionResult)
             {
@@ -130,15 +134,12 @@ namespace OmniSharp
                 var snippetGenerator = new SnippetGenerator();
                 snippetGenerator.IncludeMarkers = true;
                 snippetGenerator.IncludeOptionalParameters = includeOptionalParams;
-                response.Snippet = snippetGenerator.GenerateSnippet(symbol);
+                response.Snippet = snippetGenerator.Generate(symbol);
             }
 
             if (request.WantMethodHeader)
             {
-                var snippetGenerator = new SnippetGenerator();
-                snippetGenerator.IncludeMarkers = false;
-                snippetGenerator.IncludeOptionalParameters = includeOptionalParams;
-                response.MethodHeader = snippetGenerator.GenerateSnippet(symbol);
+                response.MethodHeader = displayNameGenerator.Generate(symbol);
             }
 
             return response;
