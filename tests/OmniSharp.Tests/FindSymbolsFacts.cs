@@ -77,16 +77,56 @@ namespace OmniSharp.Tests
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
 
             var expected = new[] {
-                "NamedType",
+                "Class",
                 "Field",
                 "Property",
                 "Property",
                 "Method",
                 "Method",
-                "NamedType",
+                "Class",
                 "Method"
             };
             Assert.Equal(expected, symbols);
+        }
+
+        [Fact]
+        public async Task Returns_interface_kind()
+        {
+            var source = @"public interface Foo {}";
+
+            var usages = await FindSymbols(source);
+            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+            Assert.Equal("Interface", symbols.First());
+        }
+
+        [Fact]
+        public async Task Returns_enum_kind()
+        {
+            var source = @"public enum Foo {}";
+
+            var usages = await FindSymbols(source);
+            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+            Assert.Equal("Enum", symbols.First());
+        }
+
+        [Fact]
+        public async Task Returns_struct_kind()
+        {
+            var source = @"public struct Foo {}";
+
+            var usages = await FindSymbols(source);
+            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+            Assert.Equal("Struct", symbols.First());
+        }
+
+        [Fact]
+        public async Task Returns_delegate_kind()
+        {
+            var source = @"public delegate void Foo();";
+
+            var usages = await FindSymbols(source);
+            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+            Assert.Equal("Delegate", symbols.First());
         }
 
         [Fact]

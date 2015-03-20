@@ -21,16 +21,16 @@ namespace OmniSharp
         {
             var documents = _workspace.GetDocuments(request.FileName);
             var wordToComplete = request.WordToComplete;
-            
+
             foreach (var document in documents)
             {
-                
+
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
-                
+
                 AddKeywords(model, position, request.WantKind, wordToComplete);
-                
+
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
 
                 foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
@@ -48,7 +48,7 @@ namespace OmniSharp
                     }
                 }
             }
-            
+
             return _completions
                 .OrderByDescending(c => c.CompletionText.IsValidCompletionStartsWithExactCase(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
@@ -56,7 +56,7 @@ namespace OmniSharp
                 .ThenByDescending(c => c.CompletionText.IsSubsequenceMatch(wordToComplete))
                 .ThenBy(c => c.CompletionText);
         }
-        
+
         private void AddKeywords(SemanticModel model, int position, bool wantKind, string wordToComplete)
         {
             var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
@@ -92,7 +92,7 @@ namespace OmniSharp
             if (typeSymbol != null)
             {
                 completions.Add(MakeAutoCompleteResponse(request, symbol));
-                
+
                 foreach (var ctor in typeSymbol.InstanceConstructors)
                 {
                     completions.Add(MakeAutoCompleteResponse(request, ctor));
@@ -122,7 +122,7 @@ namespace OmniSharp
 
             if (request.WantKind)
             {
-                response.Kind = Enum.GetName(symbol.Kind.GetType(), symbol.Kind);
+                response.Kind = symbol.GetKind();
             }
 
             if (request.WantSnippet)
