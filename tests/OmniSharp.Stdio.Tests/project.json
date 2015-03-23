@@ -2,11 +2,12 @@
   "version": "1.0.0-*",
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0-*",
-    "Xunit.KRunner": "1.0.0-beta1",
+    "xunit": "2.1.0-beta1-*",
+    "xunit.runner.aspnet": "2.1.0-beta1-*",
     "Newtonsoft.Json": "6.0.8"
   },
   "commands": {
-    "test": "Xunit.KRunner"
+    "test": "xunit.runner.aspnet"
   },
   "frameworks": {
     "aspnet50": { },

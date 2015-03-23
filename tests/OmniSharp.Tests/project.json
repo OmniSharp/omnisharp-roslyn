@@ -2,11 +2,12 @@
     "version": "1.0.0-*",
     "dependencies": {
         "OmniSharp": "1.0.0-*",
-        "Xunit.KRunner": "1.0.0-beta1",
+        "xunit": "2.1.0-beta1-*",
+        "xunit.runner.aspnet": "2.1.0-beta1-*",
         "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta3"
     },
     "commands": {
-        "test": "Xunit.KRunner"
+        "test": "xunit.runner.aspnet"
     },
     "frameworks": {
         "aspnet50": { },
