@@ -49,7 +49,7 @@ namespace OmniSharp
             return new SymbolLocation
             {
                 Text = symbol.ToDisplayString(format),
-                Kind = Enum.GetName(symbol.Kind.GetType(), symbol.Kind),
+                Kind = symbol.GetKind(),
                 FileName = path,
                 Line = lineSpan.StartLinePosition.Line + 1,
                 Column = lineSpan.StartLinePosition.Character + 1,
@@ -58,5 +58,6 @@ namespace OmniSharp
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
         }
+
     }
 }
