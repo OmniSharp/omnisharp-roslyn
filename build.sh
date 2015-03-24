@@ -8,10 +8,10 @@ kvm install 1.0.0-beta3
 kpm restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd tests/OmniSharp.Tests
-k test
+k test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd ../OmniSharp.Stdio.Tests
-k test
+k test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd ../../
 kvm use 1.0.0-beta3
