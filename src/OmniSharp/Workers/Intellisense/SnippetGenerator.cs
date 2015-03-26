@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,13 +15,13 @@ namespace OmniSharp
         public bool IncludeMarkers { get; set; }
         public bool IncludeOptionalParameters { get; set; }
 
-        public string GenerateSnippet(ISymbol symbol)
+        public string Generate(ISymbol symbol)
         {
             _format = SymbolDisplayFormat.MinimallyQualifiedFormat;
             _format = _format.WithMemberOptions(_format.MemberOptions
                                                 ^ SymbolDisplayMemberOptions.IncludeContainingType
                                                 ^ SymbolDisplayMemberOptions.IncludeType);
-            
+
             if (IsConstructor(symbol))
             {
                 // only the containing type contains the type parameters
@@ -46,10 +47,12 @@ namespace OmniSharp
                     RenderDisplayParts(symbol, parts);
                 }
             }
+
             if (IncludeMarkers)
             {
                 _sb.Append("$0");
             }
+
             return _sb.ToString();
         }
 
@@ -57,7 +60,7 @@ namespace OmniSharp
         {
             var nonInferredTypeArguments = NonInferredTypeArguments(methodSymbol);
             _sb.Append(methodSymbol.Name);
-            
+
             if (nonInferredTypeArguments.Any())
             {
                 _sb.Append("<");
@@ -67,7 +70,7 @@ namespace OmniSharp
                     RenderSnippetStartMarker();
                     _sb.Append(arg);
                     RenderSnippetEndMarker();
-                    
+
                     if (arg != last)
                     {
                         _sb.Append(", ");
@@ -75,9 +78,9 @@ namespace OmniSharp
                 }
                 _sb.Append(">");
             }
-            
+
             RenderParameters(methodSymbol);
-            if (methodSymbol.ReturnsVoid)
+            if (methodSymbol.ReturnsVoid && IncludeMarkers)
             {
                 _sb.Append(";");
             }
