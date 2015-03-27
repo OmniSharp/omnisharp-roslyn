@@ -42,7 +42,7 @@ namespace OmniSharp.Tests
 
             var request = CreateRequest(source);
             request.WantSnippet = true;
-            
+
             var completions = await FindCompletionsAsync(source, request);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "foo");
         }
@@ -118,7 +118,22 @@ namespace OmniSharp.Tests
             var completions = await FindCompletionsAsync(source);
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "WriteLine");
         }
-        
+
+        [Fact]
+        public async Task Returns_method_header()
+        {
+            var source =
+                @"public class Class1 {
+                    public Class1()
+                        {
+                            System.Console.wln$
+                        }
+                    }";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "WriteLine()");
+        }
+
         [Fact]
         public async Task Returns_variable_before_class()
         {
@@ -201,6 +216,7 @@ namespace OmniSharp.Tests
                 FileName = fileName,
                 Buffer = source.Replace("$", ""),
                 WordToComplete = GetPartialWord(source),
+                WantMethodHeader = true
             };
         }
 
