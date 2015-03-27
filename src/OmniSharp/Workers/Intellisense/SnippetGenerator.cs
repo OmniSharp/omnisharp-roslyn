@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,7 @@ namespace OmniSharp
     public class SnippetGenerator
     {
         private int _counter = 1;
-        private StringBuilder _sb = new StringBuilder();
+        private StringBuilder _sb;
         private SymbolDisplayFormat _format;
 
         public bool IncludeMarkers { get; set; }
@@ -17,6 +16,7 @@ namespace OmniSharp
 
         public string Generate(ISymbol symbol)
         {
+            _sb = new StringBuilder();
             _format = SymbolDisplayFormat.MinimallyQualifiedFormat;
             _format = _format.WithMemberOptions(_format.MemberOptions
                                                 ^ SymbolDisplayMemberOptions.IncludeContainingType
