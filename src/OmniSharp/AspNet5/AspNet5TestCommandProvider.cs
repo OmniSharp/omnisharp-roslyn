@@ -53,10 +53,11 @@ namespace OmniSharp.AspNet5
                     break;
                 case TestCommandType.Single:
                 case TestCommandType.Fixture:
-                    testCommand = "k test --test " + testsToRun;
+                    testCommand = "k test -method " + testsToRun;
                     break;
             }
-            return testCommand;
+            // workaround because xunit hangs on mono
+            return testCommand + " -parallel none";
         }
     }
 }

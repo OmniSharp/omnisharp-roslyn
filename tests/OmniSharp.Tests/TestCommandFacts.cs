@@ -21,7 +21,7 @@ namespace OmniSharp.Tests
 
             var testInfo = await GetTestCommandAsync(source);
 
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest -parallel none", testInfo.TestCommand);
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace OmniSharp.Tests
 
             var testInfo = await GetTestCommandAsync(source);
 
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest -parallel none", testInfo.TestCommand);
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace OmniSharp.Tests
 
             var testInfo = await GetTestCommandAsync(source);
 
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest -parallel none", testInfo.TestCommand);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace OmniSharp.Tests
                     }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest -parallel none", testInfo.TestCommand);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace OmniSharp.Tests
                     }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test Namespace.Something.TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method Namespace.Something.TestClass.ThisIsATest -parallel none", testInfo.TestCommand);
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace OmniSharp.Tests
                         }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test TestClass", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass -parallel none", testInfo.TestCommand);
         }
 
         [Fact]
@@ -132,7 +132,7 @@ namespace OmniSharp.Tests
                         }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test SomeNamespace.TestClass", testInfo.TestCommand);
+            Assert.Equal("k test -method SomeNamespace.TestClass -parallel none", testInfo.TestCommand);
         }
 
         private async Task<GetTestCommandResponse> GetTestCommandAsync(string source)
