@@ -173,6 +173,7 @@ class C {
                 Assert.Equal(expected[i].StartColumn, enumer.Current.StartColumn);
                 Assert.Equal(expected[i].EndLine, enumer.Current.EndLine);
                 Assert.Equal(expected[i].EndColumn, enumer.Current.EndColumn);
+                Assert.Equal(expected[i].NewText, enumer.Current.NewText);
             }
         }
 
