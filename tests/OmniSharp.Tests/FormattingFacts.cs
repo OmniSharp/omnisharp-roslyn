@@ -131,8 +131,12 @@ class C {
             await AssertTextChanges(source,
                 new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
                 new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " });
+        }
 
-            source =
+        [Fact]
+        public async Task TextChangesAreSortedLastFirst2()
+        {
+            var source =
 @"class Program
 {
     public static void Main()>{
