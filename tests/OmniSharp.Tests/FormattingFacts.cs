@@ -138,14 +138,14 @@ class C {
             var source =
 @"class Program
 {
-    public static void Main()>{
+>    public static void Main(){
        Thread.Sleep( 25000);<
     }
 }";
             await AssertTextChanges(source,
                 new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
                 new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " },
-                new LinePositionSpanTextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "\r\n" });
+                new LinePositionSpanTextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "    " });
         }
 
         private static FormatRangeRequest NewRequest(string source)
@@ -169,17 +169,17 @@ class C {
         {
             var request = NewRequest(source);
             var actual = await FormattingChangesForRange(request);
-            var enumer = actual.GetEnumerator();
+            var actualEnumer = actual.GetEnumerator();
 
             Assert.Equal(expected.Length, actual.Count());
 
-            for (var i = 0; enumer.MoveNext(); i++)
+            for (var i = 0; actualEnumer.MoveNext(); i++)
             {
-                Assert.Equal(expected[i].StartLine, enumer.Current.StartLine);
-                Assert.Equal(expected[i].StartColumn, enumer.Current.StartColumn);
-                Assert.Equal(expected[i].EndLine, enumer.Current.EndLine);
-                Assert.Equal(expected[i].EndColumn, enumer.Current.EndColumn);
-                Assert.Equal(expected[i].NewText, enumer.Current.NewText);
+                Assert.Equal(expected[i].StartLine, actualEnumer.Current.StartLine);
+                Assert.Equal(expected[i].StartColumn, actualEnumer.Current.StartColumn);
+                Assert.Equal(expected[i].EndLine, actualEnumer.Current.EndLine);
+                Assert.Equal(expected[i].EndColumn, actualEnumer.Current.EndColumn);
+                Assert.Equal(expected[i].NewText, actualEnumer.Current.NewText);
             }
         }
 
