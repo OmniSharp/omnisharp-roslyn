@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Framework.OptionsModel;
 using OmniSharp.Models;
-using OmniSharp.Options;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -119,7 +118,7 @@ class C {
 
 
         [Fact]
-        public async Task TextChangesAreSortedLastFirst()
+        public async Task TextChangesAreSortedLastFirstWhenFormattingOneLine()
         {
             var source = 
 @"class Program
@@ -134,7 +133,7 @@ class C {
         }
 
         [Fact]
-        public async Task TextChangesAreSortedLastFirst2()
+        public async Task TextChangesAreSortedLastFirstWhenFormattingTwoLines()
         {
             var source =
 @"class Program
@@ -172,6 +171,8 @@ class C {
             var actual = await FormattingChangesForRange(request);
             var enumer = actual.GetEnumerator();
 
+            Assert.Equal(expected.Length, actual.Count());
+
             for (var i = 0; enumer.MoveNext(); i++)
             {
                 Assert.Equal(expected[i].StartLine, enumer.Current.StartLine);
@@ -185,33 +186,9 @@ class C {
         private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChangesForRange(FormatRangeRequest req)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
-            var controller = new OmnisharpController(workspace, new OptionsAccessor());
+            var controller = new OmnisharpController(workspace, null);
             
             return (await controller.FormatRange(req)).Changes;
-        }
-
-        private class OptionsAccessor : IOptions<OmniSharpOptions>
-        {
-
-            private OmniSharpOptions _options = new OmniSharpOptions()
-            {
-                FormattingOptions = new FormattingOptions()
-                {
-                    NewLine = "\n",
-                    UseTabs = false,
-                    TabSize = 4
-                }
-            };
-
-            public OmniSharpOptions Options
-            {
-                get { return _options; }
-            }
-
-            public OmniSharpOptions GetNamedOptions(string name)
-            {
-                return _options;
-            }
         }
     }
 }
