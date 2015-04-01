@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -12,27 +10,6 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    // a little dance so that we can access the ```GetFormattedTextChanges``` method that is hidden by default.
-    // see: https://github.com/dotnet/roslyn/blob/b6484300dfafb43af0c27e542ec457a7583e1aa8/src/Workspaces/Core/Portable/Formatting/Formatter.cs#L309
-    static class FormatterReflect
-    {
-        private static readonly Type formatterType;
-        private static readonly MethodInfo formatMethod;
-
-        static FormatterReflect()
-        {
-            formatterType = typeof(Formatter);
-            formatMethod = formatterType.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-                .Where(method => method.Name == "GetFormattedTextChanges" && method.GetParameters().Count() == 6)
-                .FirstOrDefault();
-        }
-
-        public static IList<Microsoft.CodeAnalysis.Text.TextChange> GetFormattedTextChanges(SyntaxNode node, TextSpan span, Workspace workspace, OptionSet options = null)
-        {
-            return (IList<Microsoft.CodeAnalysis.Text.TextChange>)formatMethod.Invoke(null, new object[] { node, span, workspace, options, null, null });
-        }
-    }
-
     public class Formatting
     {
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
@@ -88,10 +65,10 @@ namespace OmniSharp
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
         {
-            var tree = await document.GetSyntaxTreeAsync();
-            var changes = FormatterReflect.GetFormattedTextChanges(tree.GetRoot(), TextSpan.FromBounds(start, end), workspace, options);
+            var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end));
+            var textChanges = await changedDocument.GetTextChangesAsync(document);
 
-            return (await LinePositionSpanTextChange.Convert(document, changes)).Select(change =>
+            return (await LinePositionSpanTextChange.Convert(document, textChanges)).Select(change =>
             {
                 change.NewText = EnsureProperNewLine(change.NewText, options);
                 return change;
