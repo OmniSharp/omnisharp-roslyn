@@ -333,6 +333,31 @@ namespace OmniSharp.Tests
             Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("ctor2"));
         }
 
+        [Fact]
+        public async Task SkipReceiverOfExtensionMethods()
+        {
+            var source =
+@"class Program
+{
+    public static void Main()
+    {
+        new Program().B($);
+    }
+    public Program()
+    {
+    }
+    public bool B(this Program p, int n)
+    {
+        return p.Foo() > n;
+    }
+}";
+
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(1, actual.Signatures.Count());
+            Assert.Equal(1, actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.Count());
+            Assert.Equal("n", actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.ElementAt(0).Name);
+        }
+
         private async Task<SignatureHelp> GetSignatureHelp(string source)
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);

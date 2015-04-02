@@ -114,14 +114,15 @@ namespace OmniSharp
 
         private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
         {
-            if (symbol.Parameters.Count() < types.Count())
+            var parameters = GetParameters(symbol);
+            if (parameters.Count() < types.Count())
             {
                 return int.MinValue;
             }
 
             var score = 0;
             var invocationEnum = types.GetEnumerator();
-            var definitionEnum = symbol.Parameters.GetEnumerator();
+            var definitionEnum = parameters.GetEnumerator();
             while (invocationEnum.MoveNext() && definitionEnum.MoveNext())
             {
                 if (invocationEnum.Current.ConvertedType == null)
@@ -149,12 +150,13 @@ namespace OmniSharp
                 signature.Name = symbol.ContainingType.Name;
                 signature.Label = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             }
-            else 
+            else
             {
                 signature.Name = symbol.Name;
                 signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             }
-            signature.Parameters = symbol.Parameters.Select(parameter =>
+
+            signature.Parameters = GetParameters(symbol).Select(parameter =>
             {
                 return new SignatureHelpParameter()
                 {
@@ -164,6 +166,18 @@ namespace OmniSharp
                 };
             });
             return signature;
+        }
+
+        private static IEnumerable<IParameterSymbol> GetParameters(IMethodSymbol methodSymbol)
+        {
+            if (!methodSymbol.IsExtensionMethod)
+            {
+                return methodSymbol.Parameters;
+            }
+            else
+            {
+                return methodSymbol.Parameters.RemoveAt(0);
+            }
         }
     }
 }
