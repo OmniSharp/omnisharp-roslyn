@@ -59,7 +59,13 @@ namespace OmniSharp
             }
             else if (!symbolInfo.CandidateSymbols.IsEmpty)
             {
+
+                // collect types of invocation to select overload
+                var typeInfos = invocation.ArgumentList.Arguments
+                    .Select(argument => semanticModel.GetTypeInfo(argument.Expression));
+
                 // method has overloads
+                var bestScore = int.MinValue;
                 var signatures = new List<SignatureHelpItem>();
                 foreach (var symbol in symbolInfo.CandidateSymbols)
                 {
@@ -68,9 +74,10 @@ namespace OmniSharp
                     {
                         continue;
                     }
-
-                    if (methodSymbol.Parameters.Count() >= signatureHelp.ActiveParameter)
+                    var thisScore = InvocationScore(methodSymbol, typeInfos);
+                    if (thisScore > bestScore)
                     {
+                        bestScore = thisScore;
                         signatureHelp.ActiveSignature = signatures.Count;
                     }
                     signatures.Add(BuildSignature(methodSymbol));
@@ -100,6 +107,34 @@ namespace OmniSharp
                 };
             });
             return signature;
+        }
+
+        private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
+        {
+            if (symbol.Parameters.Count() < types.Count())
+            {
+                return int.MinValue;
+            }
+
+            var score = 0;
+            var invocationEnum = types.GetEnumerator();
+            var definitionEnum = symbol.Parameters.GetEnumerator();
+            while (invocationEnum.MoveNext() && definitionEnum.MoveNext())
+            {
+                if (invocationEnum.Current.ConvertedType == null)
+                {
+                    // 1 point for having a parameter
+                    score += 1;
+                }
+                else if (invocationEnum.Current.ConvertedType.Equals(definitionEnum.Current.Type))
+                {
+                    // 2 points for having a parameter and being
+                    // the same type
+                    score += 2;
+                }
+            }
+
+            return score;
         }
 
         private async Task<InvocationExpressionSyntax> FindInvocationExpression(Document document, int position)

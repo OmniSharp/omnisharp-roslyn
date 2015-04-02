@@ -30,6 +30,16 @@ namespace OmniSharp.Tests
 }";
             actual = await GetSignatureHelp(source);
             Assert.Null(actual);
+            
+            source =
+@"class Program
+{
+    public static void Main(){
+        System.Console.Clear()$;
+    }
+}";
+            actual = await GetSignatureHelp(source);
+            Assert.Null(actual);
         }
 
         [Fact]
@@ -77,9 +87,93 @@ namespace OmniSharp.Tests
             Assert.Equal("Clear", actual.Signatures.ElementAt(0).Name);
             Assert.Equal(0, actual.Signatures.ElementAt(0).Parameters.Count());
         }
-
+    
         [Fact]
-        public async Task SignatureWithOverloads()
+        public async Task ActiveParameterIsBasedOnComma()
+        {
+            // 1st position, a
+            var source =
+@"class Program
+{
+    public static void Main(){
+        new Program().Foo(1$2, 
+    }
+    /// foo1
+    private int Foo(int one, int two, int three) 
+    {
+        return 3;
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(0, actual.ActiveParameter);
+            
+            // 1st position, b
+            source =
+@"class Program
+{
+    public static void Main(){
+        new Program().Foo(12 $) 
+    }
+    /// foo1
+    private int Foo(int one, int two, int three) 
+    {
+        return 3;
+    }
+}";
+            actual = await GetSignatureHelp(source);
+            Assert.Equal(0, actual.ActiveParameter);
+            
+            // 2nd position, a
+            source =
+@"class Program
+{
+    public static void Main(){
+        new Program().Foo(12, $ 
+    }
+    /// foo1
+    private int Foo(int one, int two, int three) 
+    {
+        return 3;
+    }
+}";
+            actual = await GetSignatureHelp(source);
+            Assert.Equal(1, actual.ActiveParameter);
+            
+            // 2nd position, b
+            source =
+@"class Program
+{
+    public static void Main(){
+        new Program().Foo(12, 1$ 
+    }
+    /// foo1
+    private int Foo(int one, int two, int three) 
+    {
+        return 3;
+    }
+}";
+            actual = await GetSignatureHelp(source);
+            Assert.Equal(1, actual.ActiveParameter);
+            
+            // 3rd position, a
+            source =
+@"class Program
+{
+    public static void Main(){
+        new Program().Foo(12, 1, $ 
+    }
+    /// foo1
+    private int Foo(int one, int two, int three) 
+    {
+        return 3;
+    }
+}";
+            actual = await GetSignatureHelp(source);
+            Assert.Equal(2, actual.ActiveParameter);
+        }
+        
+        [Fact]
+        public async Task ActiveSignatureIsBasedOnTypes()
         {
             var source =
 @"class Program
@@ -87,21 +181,51 @@ namespace OmniSharp.Tests
     public static void Main(){
         new Program().Foo(12, $
     }
-    
+    /// foo1
     private int Foo() 
     {
         return 3;
     }
-    
+    /// foo2
     private int Foo(int m, int n)
     {
         return m * Foo() * n;
     }
+    /// foo3
+    private int Foo(string m, int n)
+    {
+        return Foo(m.length, n);
+    }
 }";
             var actual = await GetSignatureHelp(source);
-            Assert.Equal(2, actual.Signatures.Count());
-            Assert.Equal(1, actual.ActiveParameter);
-            Assert.Equal(2, actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.Count());
+            Assert.Equal(3, actual.Signatures.Count());
+            Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo2"));
+            
+            source =
+@"class Program
+{
+    public static void Main(){
+        new Program().Foo(""d"", $
+    }
+    /// foo1
+    private int Foo() 
+    {
+        return 3;
+    }
+    /// foo2
+    private int Foo(int m, int n)
+    {
+        return m * Foo() * n;
+    }
+    /// foo3
+    private int Foo(string m, int n)
+    {
+        return Foo(m.length, n);
+    }
+}";
+            actual = await GetSignatureHelp(source);
+            Assert.Equal(3, actual.Signatures.Count());
+            Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo3"));
         }
 
         private async Task<SignatureHelp> GetSignatureHelp(string source)
