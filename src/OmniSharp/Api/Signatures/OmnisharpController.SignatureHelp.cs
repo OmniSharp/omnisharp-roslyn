@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
@@ -38,43 +37,69 @@ namespace OmniSharp
                 return null;
             }
 
-            var methodSymbol = await SymbolFinder.FindSymbolAtPositionAsync(document, invocation.Expression.Span.End) as IMethodSymbol;
-            if (methodSymbol == null)
+            var semanticModel = await document.GetSemanticModelAsync();
+            var signatureHelp = new SignatureHelp();
+
+            // define active parameter by position
+            foreach (var comma in invocation.ArgumentList.Arguments.GetSeparators())
             {
+                if (comma.Span.Start > position)
+                {
+                    break;
+                }
+                signatureHelp.ActiveParameter += 1;
+            }
+
+            var symbolInfo = semanticModel.GetSymbolInfo(invocation.Expression);
+            if (symbolInfo.Symbol is IMethodSymbol)
+            {
+                // method has no overloads
+                signatureHelp.ActiveSignature = 0;
+                signatureHelp.Signatures = new[] { BuildSignature(symbolInfo.Symbol as IMethodSymbol) };
+            }
+            else if (!symbolInfo.CandidateSymbols.IsEmpty)
+            {
+                // method has overloads
+                var signatures = new List<SignatureHelpItem>();
+                foreach (var symbol in symbolInfo.CandidateSymbols)
+                {
+                    var methodSymbol = symbol as IMethodSymbol;
+                    if (methodSymbol == null)
+                    {
+                        continue;
+                    }
+
+                    if (methodSymbol.Parameters.Count() >= signatureHelp.ActiveParameter)
+                    {
+                        signatureHelp.ActiveSignature = signatures.Count;
+                    }
+                    signatures.Add(BuildSignature(methodSymbol));
+                }
+                signatureHelp.Signatures = signatures;
+            }
+            else
+            {
+                // not a method symbol and no overloads
                 return null;
             }
 
-            var activeSymbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position);
-
-            return BuildSignatureHelp(methodSymbol, activeSymbol);
+            return signatureHelp;
         }
 
-        private SignatureHelp BuildSignatureHelp(IMethodSymbol methodSymbol, ISymbol parameterCandidate)
+        private SignatureHelpItem BuildSignature(IMethodSymbol symbol)
         {
-            var signatures = new List<SignatureHelpItem>();
-            foreach (var overload in methodSymbol.ContainingType.GetMembers(methodSymbol.Name))
+            var signature = new SignatureHelpItem();
+            signature.Name = symbol.Name;
+            signature.Documentation = symbol.GetDocumentationCommentXml();
+            signature.Parameters = symbol.Parameters.Select(parameter =>
             {
-                var methodOverload = (IMethodSymbol)overload;
-                var signatureItem = new SignatureHelpItem();
-                signatureItem.Name = methodOverload.Name;
-                signatureItem.Documentation = methodOverload.GetDocumentationCommentXml();
-                signatureItem.Parameters = methodOverload.Parameters.Select(parameter =>
+                return new SignatureHelpParameter()
                 {
-                    return new SignatureHelpParameter()
-                    {
-                        Name = parameter.Name,
-                        Type = parameter.ToDisplayString(),
-                        Documentation = parameter.GetDocumentationCommentXml()
-                    };
-                });
-
-                signatures.Add(signatureItem);
-            }
-
-            var signatureHelp = new SignatureHelp();
-            signatureHelp.Signatures = signatures;
-
-            return signatureHelp;
+                    Name = parameter.Name,
+                    Documentation = parameter.GetDocumentationCommentXml()
+                };
+            });
+            return signature;
         }
 
         private async Task<InvocationExpressionSyntax> FindInvocationExpression(Document document, int position)

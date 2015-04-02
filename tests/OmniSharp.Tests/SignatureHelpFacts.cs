@@ -72,18 +72,20 @@ namespace OmniSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(1, actual.Signatures.Count());
+            Assert.Equal(0, actual.ActiveParameter);
+            Assert.Equal(0, actual.ActiveSignature);
             Assert.Equal("Clear", actual.Signatures.ElementAt(0).Name);
             Assert.Equal(0, actual.Signatures.ElementAt(0).Parameters.Count());
         }
 
         [Fact]
-        public async Task SignaureWithOverloads()
+        public async Task SignatureWithOverloads()
         {
             var source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo($
+        new Program().Foo(12, $
     }
     
     private int Foo() 
@@ -91,13 +93,15 @@ namespace OmniSharp.Tests
         return 3;
     }
     
-    private int Foo(int m)
+    private int Foo(int m, int n)
     {
-        return m * Foo();
+        return m * Foo() * n;
     }
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(2, actual.Signatures.Count());
+            Assert.Equal(1, actual.ActiveParameter);
+            Assert.Equal(2, actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.Count());
         }
 
         private async Task<SignatureHelp> GetSignatureHelp(string source)
