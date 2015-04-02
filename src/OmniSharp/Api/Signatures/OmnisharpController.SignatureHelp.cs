@@ -30,18 +30,36 @@ namespace OmniSharp
         {
             var sourceText = await document.GetTextAsync();
             var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            var tree = await document.GetSyntaxTreeAsync();
+            var node = tree.GetRoot().FindToken(position).Parent;
 
-            var invocation = await FindInvocationExpression(document, position);
-            if (invocation == null)
+            while (node != null)
             {
-                return null;
+                var invocation = node as InvocationExpressionSyntax;
+                if (invocation != null && invocation.ArgumentList.FullSpan.IntersectsWith(position))
+                {
+                    return await GetSignatureHelp(document, invocation.Expression, invocation.ArgumentList, position);
+                }
+
+                var objectCreation = node as ObjectCreationExpressionSyntax;
+                if (objectCreation != null && objectCreation.ArgumentList.FullSpan.IntersectsWith(position))
+                {
+                    return await GetSignatureHelp(document, objectCreation, objectCreation.ArgumentList, position);
+                }
+
+                node = node.Parent;
             }
 
+            return null;
+        }
+
+        private async Task<SignatureHelp> GetSignatureHelp(Document document, SyntaxNode expression, ArgumentListSyntax argumentList, int position)
+        {
             var semanticModel = await document.GetSemanticModelAsync();
             var signatureHelp = new SignatureHelp();
 
             // define active parameter by position
-            foreach (var comma in invocation.ArgumentList.Arguments.GetSeparators())
+            foreach (var comma in argumentList.Arguments.GetSeparators())
             {
                 if (comma.Span.Start > position)
                 {
@@ -50,63 +68,48 @@ namespace OmniSharp
                 signatureHelp.ActiveParameter += 1;
             }
 
-            var symbolInfo = semanticModel.GetSymbolInfo(invocation.Expression);
-            if (symbolInfo.Symbol is IMethodSymbol)
-            {
-                // method has no overloads
-                signatureHelp.ActiveSignature = 0;
-                signatureHelp.Signatures = new[] { BuildSignature(symbolInfo.Symbol as IMethodSymbol) };
-            }
-            else if (!symbolInfo.CandidateSymbols.IsEmpty)
-            {
+            // collect types of invocation to select overload
+            var typeInfos = argumentList.Arguments
+                .Select(argument => semanticModel.GetTypeInfo(argument.Expression));
 
-                // collect types of invocation to select overload
-                var typeInfos = invocation.ArgumentList.Arguments
-                    .Select(argument => semanticModel.GetTypeInfo(argument.Expression));
-
-                // method has overloads
-                var bestScore = int.MinValue;
-                var signatures = new List<SignatureHelpItem>();
-                foreach (var symbol in symbolInfo.CandidateSymbols)
+            // process overloads
+            var bestScore = int.MinValue;
+            var signatures = new List<SignatureHelpItem>();
+            signatureHelp.Signatures = signatures;
+            foreach (var methodSymbol in GetMethodOverloads(semanticModel, expression))
+            {
+                var thisScore = InvocationScore(methodSymbol, typeInfos);
+                if (thisScore > bestScore)
                 {
-                    var methodSymbol = symbol as IMethodSymbol;
-                    if (methodSymbol == null)
-                    {
-                        continue;
-                    }
-                    var thisScore = InvocationScore(methodSymbol, typeInfos);
-                    if (thisScore > bestScore)
-                    {
-                        bestScore = thisScore;
-                        signatureHelp.ActiveSignature = signatures.Count;
-                    }
-                    signatures.Add(BuildSignature(methodSymbol));
+                    bestScore = thisScore;
+                    signatureHelp.ActiveSignature = signatures.Count;
                 }
-                signatureHelp.Signatures = signatures;
-            }
-            else
-            {
-                // not a method symbol and no overloads
-                return null;
+
+                signatures.Add(BuildSignature(methodSymbol));
             }
 
             return signatureHelp;
         }
 
-        private SignatureHelpItem BuildSignature(IMethodSymbol symbol)
+        private IEnumerable<IMethodSymbol> GetMethodOverloads(SemanticModel semanticModel, SyntaxNode node)
         {
-            var signature = new SignatureHelpItem();
-            signature.Name = symbol.Name;
-            signature.Documentation = symbol.GetDocumentationCommentXml();
-            signature.Parameters = symbol.Parameters.Select(parameter =>
+            ISymbol symbol = null;
+            var symbolInfo = semanticModel.GetSymbolInfo(node);
+            if (symbolInfo.Symbol != null)
             {
-                return new SignatureHelpParameter()
-                {
-                    Name = parameter.Name,
-                    Documentation = parameter.GetDocumentationCommentXml()
-                };
-            });
-            return signature;
+                symbol = symbolInfo.Symbol;
+            }
+            else if (!symbolInfo.CandidateSymbols.IsEmpty)
+            {
+                symbol = symbolInfo.CandidateSymbols.First();
+            }
+
+            if (symbol == null || symbol.ContainingType == null)
+            {
+                return new IMethodSymbol[] { };
+            }
+
+            return symbol.ContainingType.GetMembers(symbol.Name).OfType<IMethodSymbol>();
         }
 
         private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
@@ -137,22 +140,30 @@ namespace OmniSharp
             return score;
         }
 
-        private async Task<InvocationExpressionSyntax> FindInvocationExpression(Document document, int position)
+        private SignatureHelpItem BuildSignature(IMethodSymbol symbol)
         {
-            var tree = await document.GetSyntaxTreeAsync();
-            var node = tree.GetRoot().FindToken(position).Parent;
-
-            while (node != null)
+            var signature = new SignatureHelpItem();
+            signature.Documentation = symbol.GetDocumentationCommentXml();
+            if (symbol.MethodKind == MethodKind.Constructor)
             {
-                var invocation = node as InvocationExpressionSyntax;
-                if (invocation != null && invocation.ArgumentList.FullSpan.IntersectsWith(position))
-                {
-                    return invocation;
-                }
-                node = node.Parent;
+                signature.Name = symbol.ContainingType.Name;
+                signature.Label = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             }
-
-            return null;
+            else 
+            {
+                signature.Name = symbol.Name;
+                signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            }
+            signature.Parameters = symbol.Parameters.Select(parameter =>
+            {
+                return new SignatureHelpParameter()
+                {
+                    Name = parameter.Name,
+                    Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                    Documentation = parameter.GetDocumentationCommentXml()
+                };
+            });
+            return signature;
         }
     }
 }
