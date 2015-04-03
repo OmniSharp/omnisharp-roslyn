@@ -7,7 +7,6 @@ namespace OmniSharp.Tests
 {
     public class SignatureHelpFacts
     {
-
         [Fact]
         public async Task NoInvocationNoHelp()
         {

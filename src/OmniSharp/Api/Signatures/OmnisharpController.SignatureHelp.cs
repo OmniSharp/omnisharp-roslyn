@@ -11,7 +11,6 @@ namespace OmniSharp
 {
     public partial class OmnisharpController
     {
-
         [HttpPost("signatureHelp")]
         public async Task<SignatureHelp> GetSignatureHelp(Request request)
         {
