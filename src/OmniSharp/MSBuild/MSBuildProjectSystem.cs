@@ -58,6 +58,15 @@ namespace OmniSharp.MSBuild
                     case 1:
                         solutionFilePath = solutions[0];
                         break;
+                    case 2:
+                        var unitySolution = solutions.FirstOrDefault(s => s.EndsWith("-csharp.sln"));
+                        if (unitySolution != null)
+                        {
+                            solutionFilePath = unitySolution;
+                            break;
+                        }
+                        _logger.WriteError("Could not determine solution file");
+                        return;
                     default:
                         _logger.WriteError("Could not determine solution file");
                         return;
@@ -69,10 +78,10 @@ namespace OmniSharp.MSBuild
             _context.SolutionPath = solutionFilePath;
 
             using (var stream = File.OpenRead(solutionFilePath))
-            using (var reader = new StreamReader(stream))
-            {
-                solutionFile = SolutionFile.Parse(reader);
-            }
+                using (var reader = new StreamReader(stream))
+                {
+                    solutionFile = SolutionFile.Parse(reader);
+                }
 
             _logger.WriteInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
 
