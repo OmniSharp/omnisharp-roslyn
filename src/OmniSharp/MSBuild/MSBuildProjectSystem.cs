@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -49,27 +50,11 @@ namespace OmniSharp.MSBuild
             if (string.IsNullOrEmpty(solutionFilePath))
             {
                 var solutions = Directory.GetFiles(_env.Path, "*.sln");
-
-                switch (solutions.Length)
+                var solutionPicker = new SolutionPicker(_logger);
+                solutionFilePath = solutionPicker.ChooseSolution(_env.Path, solutions);
+                if (solutionFilePath == null)
                 {
-                    case 0:
-                        _logger.WriteInformation(string.Format("No solution files found in '{0}'", _env.Path));
-                        return;
-                    case 1:
-                        solutionFilePath = solutions[0];
-                        break;
-                    case 2:
-                        var unitySolution = solutions.FirstOrDefault(s => s.EndsWith("-csharp.sln"));
-                        if (unitySolution != null)
-                        {
-                            solutionFilePath = unitySolution;
-                            break;
-                        }
-                        _logger.WriteError("Could not determine solution file");
-                        return;
-                    default:
-                        _logger.WriteError("Could not determine solution file");
-                        return;
+                    return;
                 }
             }
 
@@ -78,10 +63,12 @@ namespace OmniSharp.MSBuild
             _context.SolutionPath = solutionFilePath;
 
             using (var stream = File.OpenRead(solutionFilePath))
+            {
                 using (var reader = new StreamReader(stream))
                 {
                     solutionFile = SolutionFile.Parse(reader);
                 }
+            }
 
             _logger.WriteInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
 
@@ -89,8 +76,11 @@ namespace OmniSharp.MSBuild
             {
                 if (!_supportsProjectTypes.Contains(block.ProjectTypeGuid))
                 {
-                    _logger.WriteWarning("Skipped unsupported project type '{0}'", block.ProjectPath);
-                    continue;
+                    if (UnityTypeGuid(block.ProjectName) != block.ProjectTypeGuid)
+                    {
+                        _logger.WriteWarning("Skipped unsupported project type '{0}'", block.ProjectPath);
+                        continue;
+                    }
                 }
 
                 if (_context.ProjectGuidToWorkspaceMapping.ContainsKey(block.ProjectGuid))
@@ -131,6 +121,22 @@ namespace OmniSharp.MSBuild
                 UpdateProject(projectFileInfo);
             }
 
+        }
+
+        private Guid UnityTypeGuid(string projectName)
+        {
+            var md5 = MD5.Create();
+            var bytes = Encoding.UTF8.GetBytes(projectName);
+            var hash = md5.ComputeHash(bytes);
+
+            var bigEndianHash = new[] {
+                hash[3], hash[2], hash[1], hash[0],
+                hash[5], hash[4],
+                hash[7], hash[6],
+                hash[8], hash[9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]
+            };
+
+            return new System.Guid(bigEndianHash);
         }
 
         private ProjectFileInfo CreateProject(string projectFilePath)
