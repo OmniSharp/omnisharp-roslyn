@@ -14,18 +14,65 @@ namespace OmniSharp
         [HttpPost("signatureHelp")]
         public async Task<SignatureHelp> GetSignatureHelp(Request request)
         {
+            var invocations = new List<InvocationContext>();
             foreach (var document in _workspace.GetDocuments(request.FileName))
             {
-                var response = await GetSignatureHelp(document, request);
-                if (response != null)
+                var invocation = await GetInvocation(document, request);
+                if (invocation != null)
                 {
-                    return response;
+                    invocations.Add(invocation);
                 }
             }
-            return null;
+
+            if (invocations.Count == 0)
+            {
+                return null;
+            }
+
+            var response = new SignatureHelp();
+
+            // define active parameter by position
+            foreach (var comma in invocations.First().ArgumentList.Arguments.GetSeparators())
+            {
+                if (comma.Span.Start > invocations.First().Position)
+                {
+                    break;
+                }
+                response.ActiveParameter += 1;
+            }
+
+            // process all signatures, define active signature by types
+            var signaturesSet = new HashSet<SignatureHelpItem>();
+            var bestScore = int.MinValue;
+            SignatureHelpItem bestScoredItem = null;
+
+            foreach (var invocation in invocations)
+            {
+                var types = invocation.ArgumentList.Arguments
+                    .Select(argument => invocation.SemanticModel.GetTypeInfo(argument.Expression));
+
+                foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
+                {
+                    var signature = BuildSignature(methodOverload);
+                    signaturesSet.Add(signature);
+
+                    var score = InvocationScore(methodOverload, types);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestScoredItem = signature;
+                    }
+                }
+            }
+
+            var signaturesList = signaturesSet.ToList();
+            response.Signatures = signaturesList;
+            response.ActiveSignature = signaturesList.IndexOf(bestScoredItem);
+
+            return response;
         }
 
-        private async Task<SignatureHelp> GetSignatureHelp(Document document, Request request)
+        private async Task<InvocationContext> GetInvocation(Document document, Request request)
         {
             var sourceText = await document.GetTextAsync();
             var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
@@ -37,57 +84,31 @@ namespace OmniSharp
                 var invocation = node as InvocationExpressionSyntax;
                 if (invocation != null && invocation.ArgumentList.FullSpan.IntersectsWith(position))
                 {
-                    return await GetSignatureHelp(document, invocation.Expression, invocation.ArgumentList, position);
+                    return new InvocationContext()
+                    {
+                        SemanticModel = await document.GetSemanticModelAsync(),
+                        Position = position,
+                        Receiver = invocation.Expression,
+                        ArgumentList = invocation.ArgumentList
+                    };
                 }
 
                 var objectCreation = node as ObjectCreationExpressionSyntax;
                 if (objectCreation != null && objectCreation.ArgumentList.FullSpan.IntersectsWith(position))
                 {
-                    return await GetSignatureHelp(document, objectCreation, objectCreation.ArgumentList, position);
+                    return new InvocationContext()
+                    {
+                        SemanticModel = await document.GetSemanticModelAsync(),
+                        Position = position,
+                        Receiver = objectCreation,
+                        ArgumentList = objectCreation.ArgumentList
+                    };
                 }
 
                 node = node.Parent;
             }
 
             return null;
-        }
-
-        private async Task<SignatureHelp> GetSignatureHelp(Document document, SyntaxNode expression, ArgumentListSyntax argumentList, int position)
-        {
-            var semanticModel = await document.GetSemanticModelAsync();
-            var signatureHelp = new SignatureHelp();
-
-            // define active parameter by position
-            foreach (var comma in argumentList.Arguments.GetSeparators())
-            {
-                if (comma.Span.Start > position)
-                {
-                    break;
-                }
-                signatureHelp.ActiveParameter += 1;
-            }
-
-            // collect types of invocation to select overload
-            var typeInfos = argumentList.Arguments
-                .Select(argument => semanticModel.GetTypeInfo(argument.Expression));
-
-            // process overloads
-            var bestScore = int.MinValue;
-            var signatures = new List<SignatureHelpItem>();
-            signatureHelp.Signatures = signatures;
-            foreach (var methodSymbol in GetMethodOverloads(semanticModel, expression))
-            {
-                var thisScore = InvocationScore(methodSymbol, typeInfos);
-                if (thisScore > bestScore)
-                {
-                    bestScore = thisScore;
-                    signatureHelp.ActiveSignature = signatures.Count;
-                }
-
-                signatures.Add(BuildSignature(methodSymbol));
-            }
-
-            return signatureHelp;
         }
 
         private IEnumerable<IMethodSymbol> GetMethodOverloads(SemanticModel semanticModel, SyntaxNode node)
