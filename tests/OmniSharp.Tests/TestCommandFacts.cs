@@ -21,7 +21,7 @@ namespace OmniSharp.Tests
 
             var testInfo = await GetTestCommandAsync(source);
 
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest", testInfo.TestCommand);
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace OmniSharp.Tests
 
             var testInfo = await GetTestCommandAsync(source);
 
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest", testInfo.TestCommand);
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace OmniSharp.Tests
 
             var testInfo = await GetTestCommandAsync(source);
 
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest", testInfo.TestCommand);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace OmniSharp.Tests
                     }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method TestClass.ThisIsATest", testInfo.TestCommand);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace OmniSharp.Tests
                     }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test Namespace.Something.TestClass.ThisIsATest", testInfo.TestCommand);
+            Assert.Equal("k test -method Namespace.Something.TestClass.ThisIsATest", testInfo.TestCommand);
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace OmniSharp.Tests
                         }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test TestClass", testInfo.TestCommand);
+            Assert.Equal("k test -class TestClass", testInfo.TestCommand);
         }
 
         [Fact]
@@ -132,15 +132,54 @@ namespace OmniSharp.Tests
                         }";
 
             var testInfo = await GetTestCommandAsync(source);
-            Assert.Equal("k test --test SomeNamespace.TestClass", testInfo.TestCommand);
+            Assert.Equal("k test -class SomeNamespace.TestClass", testInfo.TestCommand);
         }
 
-        private async Task<GetTestCommandResponse> GetTestCommandAsync(string source)
+        [Fact]
+        public async Task RunsTestFixture()
+        {
+            var source = @"
+                        public namespace SomeNamespace
+                        {
+                            public class TestClass
+                            {
+                                [Test]
+                                public void This$IsATest()
+                                {
+                                }
+                            }
+                        }";
+
+            var testInfo = await GetTestCommandAsync(source, TestCommandType.Fixture);
+            Assert.Equal("k test -class SomeNamespace.TestClass", testInfo.TestCommand);
+        }
+
+        [Fact]
+        public async Task RunsTestFixtureWithCursorAboveFixture()
+        {
+            var source = @"
+                        public namespace SomeNamespace
+                        {$
+                            public class TestClass
+                            {
+                                [Test]
+                                public void ThisIsATest()
+                                {
+                                }
+                            }
+                        }";
+
+            var testInfo = await GetTestCommandAsync(source, TestCommandType.Fixture);
+            Assert.Equal("k test -class SomeNamespace.TestClass", testInfo.TestCommand);
+        }
+
+        private async Task<GetTestCommandResponse> GetTestCommandAsync(string source, TestCommandType testType = TestCommandType.Single)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
             var context = new AspNet5Context();
             var projectName = "project.json";
             var projectCounter = 1;
+
             context.ProjectContextMapping.Add(projectName, projectCounter);
             context.Projects.Add(projectCounter, new Project
             {
@@ -150,23 +189,20 @@ namespace OmniSharp.Tests
 
             var testCommandProviders = new[] { new AspNet5TestCommandProvider(context) };
             var controller = new TestCommandController(workspace, testCommandProviders);
-            var request = CreateRequest(source);
-            var bufferFilter = new UpdateBufferFilter(workspace);
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
-            return await controller.GetTestCommand(request);
-        }
-
-        private TestCommandRequest CreateRequest(string source, string fileName = "dummy.cs")
-        {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new TestCommandRequest
+
+            var request = new TestCommandRequest
             {
                 Line = lineColumn.Line,
                 Column = lineColumn.Column,
-                FileName = fileName,
+                FileName = "dummy.cs",
                 Buffer = source.Replace("$", ""),
-                Type = TestCommandType.Single
+                Type = testType
             };
+
+            var bufferFilter = new UpdateBufferFilter(workspace);
+            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
+            return await controller.GetTestCommand(request);
         }
     }
 }
