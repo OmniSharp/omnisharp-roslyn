@@ -274,6 +274,7 @@ namespace OmniSharp.AspNet5
 
                         if (unreolvedDependencies.Any())
                         {
+                            _logger.WriteInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unreolvedDependencies.Select(d => d.Name)));
                             _packagesRestoreTool.Run(project);
                         }
                     }
