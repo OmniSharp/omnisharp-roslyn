@@ -269,12 +269,12 @@ namespace OmniSharp.AspNet5
                     else if (m.MessageType == "Dependencies")
                     {
                         var val = m.Payload.ToObject<DependenciesMessage>();
-                        var unreolvedDependencies = val.Dependencies.Values
+                        var unresolvedDependencies = val.Dependencies.Values
                             .Where(dep => dep.Type == "Unresolved");
 
-                        if (unreolvedDependencies.Any())
+                        if (unresolvedDependencies.Any())
                         {
-                            _logger.WriteInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unreolvedDependencies.Select(d => d.Name)));
+                            _logger.WriteInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unresolvedDependencies.Select(d => d.Name)));
                             _packagesRestoreTool.Run(project);
                         }
                     }
