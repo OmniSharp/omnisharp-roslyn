@@ -29,6 +29,7 @@ namespace OmniSharp.AspNet5
                 WorkingDirectory = Path.GetDirectoryName(project.Path),
                 CreateNoWindow = true,
                 UseShellExecute = false,
+                RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 Arguments = "restore"
             };
@@ -42,6 +43,7 @@ namespace OmniSharp.AspNet5
             }
             else
             {
+                ReadAndWriteOutput(restoreProcess, _logger);
                 restoreProcess.EnableRaisingEvents = true;
                 restoreProcess.OnExit(() =>
                 {
@@ -56,6 +58,26 @@ namespace OmniSharp.AspNet5
             }
 
             return tsc.Task;
+        }
+
+        private static void ReadAndWriteOutput(Process process, ILogger logger)
+        {
+            Task.Factory.StartNew(async () =>
+            {
+                string line;
+                while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+                {
+                    logger.WriteInformation(line);
+                }
+            });
+            Task.Factory.StartNew(async () =>
+            {
+                string line;
+                while ((line = await process.StandardError.ReadLineAsync()) != null)
+                {
+                    logger.WriteError(line);
+                }
+            });
         }
     }
 }
