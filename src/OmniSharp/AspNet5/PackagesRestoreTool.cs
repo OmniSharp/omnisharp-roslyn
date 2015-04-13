@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.Logging;
@@ -11,89 +11,60 @@ namespace OmniSharp.AspNet5
 {
     public class PackagesRestoreTool
     {
-        private readonly object _lock = new object();
         private readonly ILogger _logger;
         private readonly AspNet5Context _context;
         private readonly AspNet5Paths _paths;
-        private readonly IDictionary<string, Task<int>> _tasks;
+        private readonly object _lock;
+        private readonly IDictionary<string, AutoResetEvent> _gates;
+        private readonly SemaphoreSlim _semaphore;
 
         public PackagesRestoreTool(ILoggerFactory logger, AspNet5Context context, AspNet5Paths paths)
         {
             _logger = logger.Create<PackagesRestoreTool>();
             _context = context;
             _paths = paths;
-            _tasks = new Dictionary<string, Task<int>>();
+            _lock = new object();
+            _gates = new Dictionary<string, AutoResetEvent>();
+            _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
         }
 
         public void Run(Project project)
         {
-            var workingDir = GetWorkingDir(project);
-            var task = GetOrCreateRestoreTask(workingDir);
-
-            task.ContinueWith(finishedTask =>
+            AutoResetEvent gate;
+            lock (_lock)
             {
-                if (finishedTask.IsCanceled)
+                if (!_gates.TryGetValue(project.Path, out gate))
                 {
-                    return;
+                    gate = new AutoResetEvent(true);
+                    _gates.Add(project.Path, gate);
+                }
+            }
+
+            gate.WaitOne();
+            _semaphore.Wait();
+
+            TryStartRestore(Path.GetDirectoryName(project.Path), (didStart) =>
+            {
+                _semaphore.Release();
+                gate.Set();
+                lock (_lock)
+                {
+                    _gates.Remove(project.Path);
                 }
 
-                _context.Connection.Post(new Message()
+                if (didStart)
                 {
-                    ContextId = project.ContextId,
-                    MessageType = "RestoreComplete",
-                    HostId = _context.HostId
-                });
+                    _context.Connection.Post(new Message()
+                    {
+                        ContextId = project.ContextId,
+                        MessageType = "RestoreComplete",
+                        HostId = _context.HostId
+                    });
+                }
             });
         }
 
-        private Task<int> GetOrCreateRestoreTask(string workingDir)
-        {
-            lock (_lock)
-            {
-                Task<int> task;
-                if (_tasks.TryGetValue(workingDir, out task))
-                {
-                    return task;
-                }
-
-                Action<int> onRestoreDone = null;
-                var tokenBefore = ComputeToken(workingDir);
-                var tsc = new TaskCompletionSource<int>();
-                task = tsc.Task;
-
-                onRestoreDone = code =>
-                {
-                    var tokenAfter = ComputeToken(workingDir);
-                    if (!Enumerable.SequenceEqual(tokenBefore, tokenAfter))
-                    {
-                        // once again
-                        TryStartRestore(workingDir, onRestoreDone);
-                        return;
-                    }
-                    else
-                    {
-                        lock (_lock)
-                        {
-                            _tasks.Remove(workingDir);
-                        }
-                        tsc.SetResult(code);
-                    }
-                };
-
-                if (TryStartRestore(workingDir, onRestoreDone))
-                {
-                    _tasks[workingDir] = task;
-                }
-                else
-                {
-                    tsc.SetCanceled();
-                }
-
-                return task;
-            }
-        }
-
-        private bool TryStartRestore(string workingDir, Action<int> onDone)
+        private void TryStartRestore(string workingDir, Action<bool> onDone)
         {
             var psi = new ProcessStartInfo()
             {
@@ -112,28 +83,14 @@ namespace OmniSharp.AspNet5
             if (restoreProcess.HasExited)
             {
                 _logger.WriteError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
-                return false;
+                onDone(false);
             }
-
-            RedirectOutput(restoreProcess, _logger);
-
-            restoreProcess.EnableRaisingEvents = true;
-            restoreProcess.OnExit(() => onDone(restoreProcess.ExitCode));
-            return true;
-        }
-
-        private static string GetWorkingDir(Project project)
-        {
-            return project.GlobalJsonPath != null
-                ? Path.GetDirectoryName(project.GlobalJsonPath)
-                : Path.GetDirectoryName(project.Path);
-        }
-
-        private static IEnumerable<DateTime> ComputeToken(string dir)
-        {
-            return Directory.GetFiles(dir)
-                .Select(File.GetLastWriteTimeUtc)
-                .OrderBy(element => element);
+            else
+            {
+                RedirectOutput(restoreProcess, _logger);
+                restoreProcess.EnableRaisingEvents = true;
+                restoreProcess.OnExit(() => onDone(true));
+            }
         }
 
         private static void RedirectOutput(Process process, ILogger logger)
