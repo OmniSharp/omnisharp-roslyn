@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.Logging;
@@ -12,19 +11,21 @@ namespace OmniSharp.AspNet5
     {
         private readonly ILogger _logger;
         private readonly AspNet5Context _context;
+        private readonly AspNet5Paths _paths;
 
-        public PackagesRestoreTool(ILoggerFactory logger, AspNet5Context context)
+        public PackagesRestoreTool(ILoggerFactory logger, AspNet5Context context, AspNet5Paths paths)
         {
             _logger = logger.Create<PackagesRestoreTool>();
             _context = context;
+            _paths = paths;
         }
 
-        public Task<int> Run(string runtimePath, Project project)
+        public Task<int> Run(Project project)
         {
             var tsc = new TaskCompletionSource<int>();
             var psi = new ProcessStartInfo()
             {
-                FileName = GetRuntimeExecutable(runtimePath),
+                FileName = _paths.Dnu ?? _paths.Kpm,
                 WorkingDirectory = Path.GetDirectoryName(project.Path),
                 CreateNoWindow = true,
                 UseShellExecute = false,
@@ -55,16 +56,6 @@ namespace OmniSharp.AspNet5
             }
 
             return tsc.Task;
-        }
-
-        private static string GetRuntimeExecutable(string runtimePath)
-        {
-            var newPath = Path.Combine(runtimePath, "bin", "dnu");
-            var newPathCmd = Path.Combine(runtimePath, "bin", "dnu.cmd");
-            var oldPath = Path.Combine(runtimePath, "bin", "kpm");
-            var oldPathCmd = Path.Combine(runtimePath, "bin", "kpm.cmd");
-
-            return new[] { newPath, newPathCmd, oldPath, oldPathCmd }.First(File.Exists);
         }
     }
 }
