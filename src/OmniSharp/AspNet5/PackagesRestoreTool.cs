@@ -15,7 +15,7 @@ namespace OmniSharp.AspNet5
         private readonly AspNet5Context _context;
         private readonly AspNet5Paths _paths;
         private readonly object _lock;
-        private readonly IDictionary<string, AutoResetEvent> _gates;
+        private readonly IDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
         public PackagesRestoreTool(ILoggerFactory logger, AspNet5Context context, AspNet5Paths paths)
@@ -24,91 +24,68 @@ namespace OmniSharp.AspNet5
             _context = context;
             _paths = paths;
             _lock = new object();
-            _gates = new Dictionary<string, AutoResetEvent>();
+            _projectLocks = new Dictionary<string, object>();
             _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
         }
 
         public void Run(Project project)
         {
-            AutoResetEvent gate;
-            lock (_lock)
+            Task.Factory.StartNew(() =>
             {
-                if (!_gates.TryGetValue(project.Path, out gate))
-                {
-                    gate = new AutoResetEvent(true);
-                    _gates.Add(project.Path, gate);
-                }
-            }
-
-            gate.WaitOne();
-            _semaphore.Wait();
-
-            TryStartRestore(Path.GetDirectoryName(project.Path), (didStart) =>
-            {
-                _semaphore.Release();
-                gate.Set();
+                object projectLock;
                 lock (_lock)
                 {
-                    _gates.Remove(project.Path);
-                }
-
-                if (didStart)
-                {
-                    _context.Connection.Post(new Message()
+                    if (!_projectLocks.TryGetValue(project.Path, out projectLock))
                     {
-                        ContextId = project.ContextId,
-                        MessageType = "RestoreComplete",
-                        HostId = _context.HostId
-                    });
+                        projectLock = new object();
+                        _projectLocks.Add(project.Path, projectLock);
+                    }
                 }
-            });
-        }
 
-        private void TryStartRestore(string workingDir, Action<bool> onDone)
-        {
-            var psi = new ProcessStartInfo()
-            {
-                FileName = _paths.Dnu ?? _paths.Kpm,
-                WorkingDirectory = workingDir,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                Arguments = "restore"
-            };
-
-            _logger.WriteInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
-
-            var restoreProcess = Process.Start(psi);
-            if (restoreProcess.HasExited)
-            {
-                _logger.WriteError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
-                onDone(false);
-            }
-            else
-            {
-                RedirectOutput(restoreProcess, _logger);
-                restoreProcess.EnableRaisingEvents = true;
-                restoreProcess.OnExit(() => onDone(true));
-            }
-        }
-
-        private static void RedirectOutput(Process process, ILogger logger)
-        {
-            Task.Factory.StartNew(async () =>
-            {
-                string line;
-                while ((line = await process.StandardOutput.ReadLineAsync()) != null)
+                lock (projectLock)
                 {
-                    logger.WriteInformation(line);
-                }
-            });
-            Task.Factory.StartNew(async () =>
-            {
-                string line;
-                while ((line = await process.StandardError.ReadLineAsync()) != null)
-                {
-                    logger.WriteError(line);
+                    _semaphore.Wait();
+                    try
+                    {
+                        var psi = new ProcessStartInfo()
+                        {
+                            FileName = _paths.Dnu ?? _paths.Kpm,
+                            WorkingDirectory = Path.GetDirectoryName(project.Path),
+                            CreateNoWindow = true,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            Arguments = "restore"
+                        };
+
+                        _logger.WriteInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
+
+                        var restoreProcess = Process.Start(psi);
+                        if (restoreProcess.HasExited)
+                        {
+                            _logger.WriteError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
+                        }
+                        else
+                        {
+                            restoreProcess.OutputDataReceived += (sender, e) => _logger.WriteInformation(e.Data);
+                            restoreProcess.ErrorDataReceived += (sender, e) => _logger.WriteError(e.Data);
+                            restoreProcess.BeginOutputReadLine();
+                            restoreProcess.BeginErrorReadLine();
+                            restoreProcess.WaitForExit();
+
+                            _context.Connection.Post(new Message()
+                            {
+                                ContextId = project.ContextId,
+                                MessageType = "RestoreComplete",
+                                HostId = _context.HostId
+                            });
+                        }
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                        _projectLocks.Remove(project.Path);
+                    }
                 }
             });
         }
