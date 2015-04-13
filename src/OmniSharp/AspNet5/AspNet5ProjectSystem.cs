@@ -390,6 +390,13 @@ namespace OmniSharp.AspNet5
 
         private void TriggerDependeees(string path)
         {
+            // temp: run [dnu|kpm] restore when project.json changed
+            var project = _context.GetProject(path);
+            if (project != null)
+            {
+                _packagesRestoreTool.Run(project);
+            }
+
             var seen = new HashSet<string>();
             var results = new HashSet<int>();
             var stack = new Stack<string>();
