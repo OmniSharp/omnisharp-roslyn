@@ -31,6 +31,7 @@ namespace OmniSharp.AspNet5
         private readonly ILogger _logger;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly DesignTimeHostManager _designTimeHostManager;
+        private readonly PackagesRestoreTool _packagesRestoreTool;
         private readonly AspNet5Context _context;
         private readonly IFileSystemWatcher _watcher;
 
@@ -49,6 +50,7 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
+            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context);
             _context = context;
             _watcher = watcher;
 
@@ -264,6 +266,17 @@ namespace OmniSharp.AspNet5
                         {
                             _workspace.RemoveMetadataReference(projectId, pair.Value);
                             frameworkProject.RawReferences.Remove(pair.Key);
+                        }
+                    }
+                    else if (m.MessageType == "Dependencies")
+                    {
+                        var val = m.Payload.ToObject<DependenciesMessage>();
+                        var unreolvedDependencies = val.Dependencies.Values
+                            .Where(dep => dep.Type == "Unresolved");
+
+                        if (unreolvedDependencies.Any())
+                        {
+                            _packagesRestoreTool.Run(GetRuntimePath(), project);
                         }
                     }
                     else if (m.MessageType == "CompilerOptions")
