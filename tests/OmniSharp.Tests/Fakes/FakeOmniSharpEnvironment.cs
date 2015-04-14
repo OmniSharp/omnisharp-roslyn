@@ -1,5 +1,5 @@
-using OmniSharp.Services;
 using Microsoft.Framework.Logging;
+using OmniSharp.Services;
 
 namespace OmniSharp.Tests
 {
