@@ -23,6 +23,7 @@ namespace OmniSharp.AspNet5
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
         public string Kpm { get; private set; }
+        public string K   { get; private set; }
 
         public AspNet5Paths(IOmnisharpEnvironment env, IOptions<OmniSharpOptions> optionsAccessor,
                             ILoggerFactory loggerFactory)
@@ -36,6 +37,7 @@ namespace OmniSharp.AspNet5
             Dnu = FirstPath(RuntimePath, "dnu", "dnu.cmd");
             Klr = FirstPath(RuntimePath, "klr", "klr.exe");
             Kpm = FirstPath(RuntimePath, "kpm", "kpm.cmd");
+            K   = FirstPath(RuntimePath, "k", "k.cmd");
         }
 
         private string GetRuntimePath()

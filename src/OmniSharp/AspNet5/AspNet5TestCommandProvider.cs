@@ -1,14 +1,24 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.Framework.Logging;
+using Microsoft.Framework.OptionsModel;
+using OmniSharp.Options;
+using OmniSharp.Services;
 
 namespace OmniSharp.AspNet5
 {
     public class AspNet5TestCommandProvider : ITestCommandProvider
     {
         private readonly AspNet5Context _context;
+        private readonly string _dnx;
 
-        public AspNet5TestCommandProvider(AspNet5Context context)
+        public AspNet5TestCommandProvider(AspNet5Context context,
+                                          IOmnisharpEnvironment env,
+                                          ILoggerFactory loggerFactory,
+                                          IOptions<OmniSharpOptions> options)
         {
             _context = context;
+            var aspNet5Paths = new AspNet5Paths(env, options, loggerFactory);
+            _dnx = aspNet5Paths.Dnx ?? aspNet5Paths.K;
         }
 
         public string GetTestCommand(TestContext testContext)
@@ -62,7 +72,7 @@ namespace OmniSharp.AspNet5
                     }
                     break;
             }
-            return "k test" + arguments;
+            return _dnx + " test" + arguments;
         }
     }
 }
