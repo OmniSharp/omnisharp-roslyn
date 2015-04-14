@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -12,19 +11,20 @@ namespace OmniSharp.AspNet5
     public class DesignTimeHostManager
     {
         private readonly ILogger _logger;
-
+        private readonly AspNet5Paths _paths;
         private readonly object _processLock = new object();
         private Process _designTimeHostProcess;
         private bool _stopped;
 
-        public DesignTimeHostManager(ILoggerFactory loggerFactory)
+        public DesignTimeHostManager(ILoggerFactory loggerFactory, AspNet5Paths paths)
         {
             _logger = loggerFactory.Create<DesignTimeHostManager>();
+            _paths = paths;
         }
 
         public TimeSpan DelayBeforeRestart { get; set; }
 
-        public void Start(string runtimePath, string hostId, Action<int> onConnected)
+        public void Start(string hostId, Action<int> onConnected)
         {
             lock (_processLock)
             {
@@ -36,12 +36,12 @@ namespace OmniSharp.AspNet5
                 int port = GetFreePort();
                 var psi = new ProcessStartInfo
                 {
-                    FileName = GetRuntimeExecutable(runtimePath),
+                    FileName = _paths.Dnx ?? _paths.Klr,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,
                     Arguments = string.Format(@"""{0}"" {1} {2} {3}",
-                                              Path.Combine(runtimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll"),
+                                              Path.Combine(_paths.RuntimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll"),
                                               port,
                                               Process.GetCurrentProcess().Id,
                                               hostId),
@@ -92,23 +92,13 @@ namespace OmniSharp.AspNet5
                 {
                     _logger.WriteWarning("Design time host process ended");
 
-                    Start(runtimePath, hostId, onConnected);
+                    Start(hostId, onConnected);
                 });
 
                 onConnected(port);
             }
         }
-
-        private static string GetRuntimeExecutable(string runtimePath)
-        {
-            var newPath = Path.Combine(runtimePath, "bin", "dnx");
-            var newPathExe = Path.Combine(runtimePath, "bin", "dnx.exe");
-            var oldPath = Path.Combine(runtimePath, "bin", "klr");
-            var oldPathExe = Path.Combine(runtimePath, "bin", "klr.exe");
-
-            return new[] { newPath, newPathExe, oldPath, oldPathExe }.First(File.Exists);
-        }
-
+        
         public void Stop()
         {
             lock (_processLock)

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -16,7 +15,6 @@ using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -27,10 +25,11 @@ namespace OmniSharp.AspNet5
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _env;
-        private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly AspNet5Paths _aspNet5Paths;
         private readonly DesignTimeHostManager _designTimeHostManager;
+        private readonly PackagesRestoreTool _packagesRestoreTool;
         private readonly AspNet5Context _context;
         private readonly IFileSystemWatcher _watcher;
 
@@ -45,10 +44,11 @@ namespace OmniSharp.AspNet5
         {
             _workspace = workspace;
             _env = env;
-            _options = optionsAccessor.Options;
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
-            _designTimeHostManager = new DesignTimeHostManager(loggerFactory);
+            _aspNet5Paths = new AspNet5Paths(env, optionsAccessor, loggerFactory);
+            _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
+            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context, _aspNet5Paths);
             _context = context;
             _watcher = watcher;
 
@@ -57,7 +57,7 @@ namespace OmniSharp.AspNet5
 
         public void Initalize()
         {
-            _context.RuntimePath = GetRuntimePath();
+            _context.RuntimePath = _aspNet5Paths.RuntimePath;
 
             if (_context.RuntimePath == null)
             {
@@ -75,7 +75,7 @@ namespace OmniSharp.AspNet5
 
             var wh = new ManualResetEventSlim();
 
-            _designTimeHostManager.Start(_context.RuntimePath, _context.HostId, port =>
+            _designTimeHostManager.Start(_context.HostId, port =>
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
@@ -266,6 +266,18 @@ namespace OmniSharp.AspNet5
                             frameworkProject.RawReferences.Remove(pair.Key);
                         }
                     }
+                    else if (m.MessageType == "Dependencies")
+                    {
+                        var val = m.Payload.ToObject<DependenciesMessage>();
+                        var unresolvedDependencies = val.Dependencies.Values
+                            .Where(dep => dep.Type == "Unresolved");
+
+                        if (unresolvedDependencies.Any())
+                        {
+                            _logger.WriteInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unresolvedDependencies.Select(d => d.Name)));
+                            _packagesRestoreTool.Run(project);
+                        }
+                    }
                     else if (m.MessageType == "CompilerOptions")
                     {
                         // Configuration and compiler options
@@ -378,6 +390,13 @@ namespace OmniSharp.AspNet5
 
         private void TriggerDependeees(string path)
         {
+            // temp: run [dnu|kpm] restore when project.json changed
+            var project = _context.GetProject(path);
+            if (project != null)
+            {
+                _packagesRestoreTool.Run(project);
+            }
+
             var seen = new HashSet<string>();
             var results = new HashSet<int>();
             var stack = new Stack<string>();
@@ -503,147 +522,5 @@ namespace OmniSharp.AspNet5
         {
             return Task.Factory.FromAsync((cb, state) => socket.BeginConnect(endPoint, cb, state), ar => socket.EndConnect(ar), null);
         }
-
-        private string GetRuntimePath()
-        {
-            var versionOrAlias = GetRuntimeVersionOrAlias() ?? _options.AspNet5.Alias ?? "default";
-            var seachedLocations = new List<string>();
-            
-            foreach (var location in GetRuntimeLocations())
-            {
-                var paths = GetRuntimePathsFromVersionOrAlias(versionOrAlias, location);
-
-                foreach (var path in paths)
-                {
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        continue;
-                    }
-
-                    if (Directory.Exists(path))
-                    {
-                        _logger.WriteInformation(string.Format("Using runtime '{0}'.", path));
-                        return path;
-                    }
-                    
-                    seachedLocations.Add(path);
-                }
-            }
-
-            _logger.WriteError("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
-
-            return null;
-        }
-
-        private IEnumerable<string> GetRuntimeLocations()
-        {
-            yield return Environment.GetEnvironmentVariable("DNX_HOME");
-            yield return Environment.GetEnvironmentVariable("KRE_HOME");
-
-            var home = Environment.GetEnvironmentVariable("HOME") ??
-                       Environment.GetEnvironmentVariable("USERPROFILE");
-
-            // Newer path
-            yield return Path.Combine(home, ".dnx");
-            
-            // New path
-            yield return Path.Combine(home, ".k");
-
-            // Old path
-            yield return Path.Combine(home, ".kre");
-        }
-
-        private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string versionOrAlias, string runtimePath)
-        {
-            // Newer format
-            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".dnx", "dnx-mono.{0}", "dnx-clr-win-x86.{0}", "runtimes");
-            
-            // New format
-            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".k", "kre-mono.{0}", "kre-clr-win-x86.{0}", "runtimes");
-
-            // Old format
-            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, ".kre", "KRE-Mono.{0}", "KRE-CLR-x86.{0}", "packages");
-        }
-
-        private string GetRuntimePathFromVersionOrAlias(string versionOrAlias,
-                                                        string runtimeHome,
-                                                        string sdkFolder,
-                                                        string monoFormat,
-                                                        string windowsFormat,
-                                                        string runtimeFolder)
-        {
-            if (string.IsNullOrEmpty(runtimeHome))
-            {
-                return null;
-            }
-
-            var aliasDirectory = Path.Combine(runtimeHome, "alias");
-
-            var aliasFiles = new[] { "{0}.alias", "{0}.txt" };
-
-            // Check alias first
-            foreach (var shortAliasFile in aliasFiles)
-            {
-                var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, versionOrAlias));
-
-                if (File.Exists(aliasFile))
-                {
-                    var fullName = File.ReadAllText(aliasFile).Trim();
-
-                    return Path.Combine(runtimeHome, runtimeFolder, fullName);
-                }
-            }
-
-            // There was no alias, look for the input as a version
-            var version = versionOrAlias;
-
-            if (PlatformHelper.IsMono)
-            {
-                return Path.Combine(runtimeHome, runtimeFolder, string.Format(monoFormat, versionOrAlias));
-            }
-            else
-            {
-                return Path.Combine(runtimeHome, runtimeFolder, string.Format(windowsFormat, versionOrAlias));
-            }
-        }
-
-        private string GetRuntimeVersionOrAlias()
-        {
-            var root = ResolveRootDirectory(_env.Path);
-
-            var globalJson = Path.Combine(root, "global.json");
-
-            if (File.Exists(globalJson))
-            {
-                _logger.WriteInformation("Looking for sdk version in '{0}'.", globalJson);
-
-                using (var stream = File.OpenRead(globalJson))
-                {
-                    var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
-                    return obj["sdk"]?["version"]?.Value<string>();
-                }
-            }
-
-            return null;
-        }
-
-        public static string ResolveRootDirectory(string projectPath)
-        {
-            var di = new DirectoryInfo(projectPath);
-
-            while (di.Parent != null)
-            {
-                if (di.EnumerateFiles("global.json").Any())
-                {
-                    return di.FullName;
-                }
-
-                di = di.Parent;
-            }
-
-            // If we don't find any files then make the project folder the root
-            return projectPath;
-        }
-
     }
 }
