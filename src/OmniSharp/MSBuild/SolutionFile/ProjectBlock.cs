@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Microsoft.CodeAnalysis.MSBuild
 {
-    internal sealed partial class ProjectBlock
+    public class ProjectBlock
     {
         private Guid projectTypeGuid;
         private readonly string projectName;

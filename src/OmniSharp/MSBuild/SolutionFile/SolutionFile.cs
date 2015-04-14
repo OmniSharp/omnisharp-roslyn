@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Microsoft.CodeAnalysis.MSBuild
 {
-    internal sealed partial class SolutionFile
+    public class SolutionFile
     {
         private readonly IEnumerable<string> headerLines;
         private readonly string visualStudioVersionLineOpt;
@@ -17,7 +17,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
         private readonly IEnumerable<ProjectBlock> projectBlocks;
         private readonly IEnumerable<SectionBlock> globalSectionBlocks;
 
-        public SolutionFile(
+        internal SolutionFile(
             IEnumerable<string> headerLines,
             string visualStudioVersionLineOpt,
             string minimumVisualStudioVersionLineOpt,

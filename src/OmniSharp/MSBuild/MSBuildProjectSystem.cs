@@ -130,7 +130,7 @@ namespace OmniSharp.MSBuild
 
         }
 
-        private Guid UnityTypeGuid(string projectName)
+        public static Guid UnityTypeGuid(string projectName)
         {
             var md5 = MD5.Create();
             var bytes = Encoding.UTF8.GetBytes(projectName);
