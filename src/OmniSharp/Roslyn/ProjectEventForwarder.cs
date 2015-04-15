@@ -33,12 +33,14 @@ namespace OmniSharp.Roslyn
             switch (args.Kind)
             {
                 case WorkspaceChangeKind.ProjectAdded:
+                    e = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectAdded);
+                    break;
                 case WorkspaceChangeKind.ProjectChanged:
                 case WorkspaceChangeKind.ProjectReloaded:
-                    e = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, args.Kind);
+                    e = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectChanged);
                     break;
                 case WorkspaceChangeKind.ProjectRemoved:
-                    e = new SimpleWorkspaceEvent(args.OldSolution.GetProject(args.ProjectId).FilePath, args.Kind);
+                    e = new SimpleWorkspaceEvent(args.OldSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectRemoved);
                     break;
             }
 
@@ -59,11 +61,11 @@ namespace OmniSharp.Roslyn
                                 _queue.Remove(e);
 
                                 object payload = null;
-                                if (e.Kind != WorkspaceChangeKind.ProjectRemoved)
+                                if (e.EventType != EventTypes.ProjectRemoved)
                                 {
                                     payload = GetProjectInformation(e.FileName);
                                 }
-                                _emitter.Emit(e.Kind.ToString(), payload);
+                                _emitter.Emit(e.EventType, payload);
                             }
                         });
                     }
@@ -83,27 +85,26 @@ namespace OmniSharp.Roslyn
             };
         }
 
-
         private class SimpleWorkspaceEvent
         {
             public string FileName { get; private set; }
-            public WorkspaceChangeKind Kind { get; private set; }
+            public string EventType { get; private set; }
 
-            public SimpleWorkspaceEvent(string fileName, WorkspaceChangeKind kind)
+            public SimpleWorkspaceEvent(string fileName, string eventType)
             {
                 FileName = fileName;
-                Kind = kind;
+                EventType = eventType;
             }
-
+            
             public override bool Equals(object obj)
             {
                 var other = obj as SimpleWorkspaceEvent;
-                return other != null && Kind == other.Kind && FileName == other.FileName;
+                return other != null && EventType == other.EventType && FileName == other.FileName;
             }
 
             public override int GetHashCode()
             {
-                return Kind.GetHashCode() * 23 + FileName.GetHashCode();
+                return EventType.GetHashCode() * 23 + FileName.GetHashCode();
             }
         }
     }

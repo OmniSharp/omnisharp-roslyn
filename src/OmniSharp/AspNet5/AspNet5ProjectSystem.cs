@@ -17,6 +17,7 @@ using Microsoft.Framework.FileSystemGlobbing;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -33,6 +34,7 @@ namespace OmniSharp.AspNet5
         private readonly PackagesRestoreTool _packagesRestoreTool;
         private readonly AspNet5Context _context;
         private readonly IFileSystemWatcher _watcher;
+        private readonly IEventEmitter _emitter;
         private readonly OmniSharpOptions _options;
 
         public AspNet5ProjectSystem(OmnisharpWorkspace workspace,
@@ -42,6 +44,7 @@ namespace OmniSharp.AspNet5
                                     IMetadataFileReferenceCache metadataFileReferenceCache,
                                     IApplicationLifetime lifetime,
                                     IFileSystemWatcher watcher,
+                                    IEventEmitter emitter,
                                     AspNet5Context context)
         {
             _workspace = workspace;
@@ -54,6 +57,7 @@ namespace OmniSharp.AspNet5
             _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context, _aspNet5Paths);
             _context = context;
             _watcher = watcher;
+            _emitter = emitter;
 
             lifetime.ApplicationStopping.Register(OnShutdown);
         }
@@ -104,6 +108,11 @@ namespace OmniSharp.AspNet5
                         project.Configurations = val.Configurations;
                         project.Commands = val.Commands;
                         project.ProjectSearchPaths = val.ProjectSearchPaths;
+
+                        this._emitter.Emit(EventTypes.ProjectChanged, new ProjectInformationResponse()
+                        {
+                            AspNet5Project = new AspNet5Project(project)
+                        });
 
                         var unprocessed = project.ProjectsByFramework.Keys.ToList();
 
