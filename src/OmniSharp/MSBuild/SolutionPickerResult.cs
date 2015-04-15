@@ -1,11 +1,14 @@
-public class SolutionPickerResult
+namespace OmniSharp.MSBuild
 {
-    public SolutionPickerResult(string solution, string message = null)
+    public class SolutionPickerResult
     {
-        Solution = solution;
-        Message = message;
-    }
+        public SolutionPickerResult(string solution, string message = null)
+        {
+            Solution = solution;
+            Message = message;
+        }
 
-    public string Solution { get; private set; }
-    public string Message { get; private set; }
+        public string Solution { get; private set; }
+        public string Message { get; private set; }
+    }
 }
