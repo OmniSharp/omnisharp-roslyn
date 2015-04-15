@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn
                     {
                         if (e.Attribute("name") != null)
                         {
-                            comments[e.Attribute("name").Value] = e.Value;
+                            comments[e.Attribute("name").Value] = e.ToString();
                         }
                     }
                 }
