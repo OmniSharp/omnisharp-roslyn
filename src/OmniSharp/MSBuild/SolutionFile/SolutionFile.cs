@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Microsoft.CodeAnalysis.MSBuild
 {
-    internal sealed partial class SolutionFile
+    public class SolutionFile
     {
         private readonly IEnumerable<string> headerLines;
         private readonly string visualStudioVersionLineOpt;
@@ -17,7 +17,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
         private readonly IEnumerable<ProjectBlock> projectBlocks;
         private readonly IEnumerable<SectionBlock> globalSectionBlocks;
 
-        public SolutionFile(
+        internal SolutionFile(
             IEnumerable<string> headerLines,
             string visualStudioVersionLineOpt,
             string minimumVisualStudioVersionLineOpt,
@@ -189,6 +189,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
             while (reader.Peek() != -1 && char.IsWhiteSpace((char)reader.Peek()))
             {
                 globalSectionBlocks.Add(SectionBlock.Parse(reader));
+                ConsumeEmptyLines(reader);
             }
 
             if (GetNextNonEmptyLine(reader) != "EndGlobal")
@@ -197,13 +198,17 @@ namespace Microsoft.CodeAnalysis.MSBuild
                 throw new Exception();
             }
 
+            ConsumeEmptyLines(reader);
+            return globalSectionBlocks;
+        }
+
+        private static void ConsumeEmptyLines(TextReader reader)
+        {
             // Consume potential empty lines at the end of the global block
             while (reader.Peek() != -1 && "\r\n".Contains((char)reader.Peek()))
             {
                 reader.ReadLine();
             }
-
-            return globalSectionBlocks;
         }
 
         private static string GetNextNonEmptyLine(TextReader reader)

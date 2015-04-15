@@ -16,7 +16,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
     ///     [more keys/values]
     /// EndType
     /// </summary>
-    internal sealed partial class SectionBlock
+    public class SectionBlock
     {
         private readonly string type;
         private readonly string parenthesizedName;
