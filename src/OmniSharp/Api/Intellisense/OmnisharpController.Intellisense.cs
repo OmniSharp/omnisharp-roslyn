@@ -5,6 +5,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Documentation;
 using OmniSharp.Extensions;
 using OmniSharp.Models;
 
@@ -23,7 +24,6 @@ namespace OmniSharp
 
             foreach (var document in documents)
             {
-
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
@@ -115,7 +115,7 @@ namespace OmniSharp
 
             if (request.WantDocumentationForEveryCompletionResult)
             {
-                response.Description = symbol.GetDocumentationCommentXml();
+                response.Description = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _options.FormattingOptions.NewLine);
             }
 
             if (request.WantReturnType)
