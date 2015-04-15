@@ -2,15 +2,12 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace OmniSharp.Documentation
 {
     public static class DocumentationConverter
     {
-        private static readonly Regex Whitespace = new Regex(@"[ \t]+");
-
         /// <summary>
         /// Converts the xml documentation string into a plain text string.
         /// </summary>
@@ -71,7 +68,7 @@ namespace OmniSharp.Documentation
                                     break;
                                 case "param":
                                     ret.Append(lineEnding);
-                                    ret.Append(Whitespace.Replace(xml["name"].Trim(), " "));
+                                    ret.Append(TrimMultiLineString(xml["name"], lineEnding));
                                     ret.Append(": ");
                                     break;
                                 case "value":
@@ -93,9 +90,7 @@ namespace OmniSharp.Documentation
                             }
                             else
                             {
-                                var lines = xml.Value.Split(new string[] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries);
-                                var trimmedLines = string.Join(lineEnding, lines.Select(l => l.TrimStart()));
-                                ret.Append(string.Join(lineEnding, trimmedLines));
+                                ret.Append(TrimMultiLineString(xml.Value, lineEnding));
                             }
                         }
                     } while (xml.Read());
@@ -106,6 +101,13 @@ namespace OmniSharp.Documentation
                 }
                 return ret.ToString();
             }
+        }
+
+        private static string TrimMultiLineString(string input, string lineEnding)
+        {
+            var lines = input.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var trimmedLines = string.Join(lineEnding, lines.Select(l => l.TrimStart()));
+            return string.Join(lineEnding, trimmedLines);
         }
 
         private static string GetCref(string cref)
