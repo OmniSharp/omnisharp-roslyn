@@ -106,8 +106,7 @@ namespace OmniSharp.Documentation
         private static string TrimMultiLineString(string input, string lineEnding)
         {
             var lines = input.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var trimmedLines = string.Join(lineEnding, lines.Select(l => l.TrimStart()));
-            return string.Join(lineEnding, trimmedLines);
+            return string.Join(lineEnding, lines.Select(l => l.TrimStart()));
         }
 
         private static string GetCref(string cref)
