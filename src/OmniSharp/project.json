@@ -12,6 +12,7 @@
         "Microsoft.Framework.Logging.Console": "1.0.0-beta3",
         "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta3",
         "Microsoft.Framework.Cache.Memory": "1.0.0-beta3",
+        "Microsoft.Framework.FileSystemGlobbing": "1.0.0-*",
         "Microsoft.Composition": "1.0.30"
     },
     "commands": {

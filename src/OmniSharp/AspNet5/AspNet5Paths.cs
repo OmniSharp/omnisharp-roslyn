@@ -17,18 +17,18 @@ namespace OmniSharp.AspNet5
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
-
         public string RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
         public string Kpm { get; private set; }
 
-        public AspNet5Paths(IOmnisharpEnvironment env, IOptions<OmniSharpOptions> optionsAccessor,
+        public AspNet5Paths(IOmnisharpEnvironment env,
+                            OmniSharpOptions options,
                             ILoggerFactory loggerFactory)
         {
             _env = env;
-            _options = optionsAccessor.Options;
+            _options = options;
             _logger = loggerFactory.Create<AspNet5Paths>();
 
             RuntimePath = GetRuntimePath();

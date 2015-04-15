@@ -1,6 +1,7 @@
 ﻿{
     "aspnet5": {
-        "alias": "default"
+        "alias": "default",
+        "projects": "src/*/project.json;tests/*/project.json"
     },
     "formattingOptions": {
         "newLine": "\n",

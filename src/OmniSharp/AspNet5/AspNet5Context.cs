@@ -30,6 +30,12 @@ namespace OmniSharp.AspNet5
             WorkspaceMapping = new Dictionary<ProjectId, FrameworkProject>();
         }
 
+        public bool TryAddProject(string projectFile)
+        {
+            Project project;
+            return TryAddProject(projectFile, out project);
+        }
+        
         public bool TryAddProject(string projectFile, out Project project)
         {
             project = null;
