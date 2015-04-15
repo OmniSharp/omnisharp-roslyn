@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Hosting;
@@ -26,9 +27,18 @@ namespace OmniSharp
     {
         public Startup()
         {
-            Configuration = new Configuration()
-                .AddJsonFile("config.json")
-                .AddEnvironmentVariables();
+           var configuration = new Configuration()
+                .AddJsonFile("config.json");
+
+            // Use the local omnisharp config if there's any in the root path
+            if (File.Exists(Program.Environment.ConfigurationPath))
+            {
+                configuration.AddJsonFile(Program.Environment.ConfigurationPath);
+            }
+
+            configuration.AddEnvironmentVariables();
+
+            Configuration = configuration;
         }
 
         public IConfiguration Configuration { get; private set; }

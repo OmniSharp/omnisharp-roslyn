@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
+using Microsoft.Framework.FileSystemGlobbing;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json.Linq;
@@ -32,6 +33,7 @@ namespace OmniSharp.AspNet5
         private readonly PackagesRestoreTool _packagesRestoreTool;
         private readonly AspNet5Context _context;
         private readonly IFileSystemWatcher _watcher;
+        private readonly OmniSharpOptions _options;
 
         public AspNet5ProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
@@ -46,7 +48,8 @@ namespace OmniSharp.AspNet5
             _env = env;
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
-            _aspNet5Paths = new AspNet5Paths(env, optionsAccessor, loggerFactory);
+            _options = optionsAccessor.Options;
+            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
             _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context, _aspNet5Paths);
             _context = context;
@@ -58,7 +61,7 @@ namespace OmniSharp.AspNet5
         public void Initalize()
         {
             _context.RuntimePath = _aspNet5Paths.RuntimePath;
-
+            
             if (_context.RuntimePath == null)
             {
                 // There is no default k found so do nothing
@@ -500,19 +503,58 @@ namespace OmniSharp.AspNet5
 
             var anyProjects = false;
 
-            foreach (var projectFile in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
+            // Single project in this folder
+            var projectInThisFolder = Path.Combine(_env.Path, "project.json");
+
+            if (File.Exists(projectInThisFolder))
             {
-                Project project;
-                if (!_context.TryAddProject(projectFile, out project))
+                if (_context.TryAddProject(projectInThisFolder))
                 {
-                    continue;
+                    _logger.WriteInformation(string.Format("Found project '{0}'.", projectInThisFolder));
+                    
+                    _watcher.Watch(projectInThisFolder, TriggerDependeees);
+
+                    anyProjects = true;
                 }
+            }
+            else
+            {
+                var matcher = new Matcher();
+                matcher.AddIncludePatterns(_options.AspNet5.Projects.Split(';'));
+                
+                foreach (var path in matcher.GetResultsInFullPath(_env.Path))
+                {
+                    string projectFile = null;
+                    
+                    if (Path.GetFileName(path) == "project.json")
+                    {
+                        projectFile = path;
+                    }
+                    else
+                    {
+                        projectFile = Path.Combine(path, "project.json");
+                        if (!File.Exists(projectFile))
+                        {
+                            projectFile = null;
+                        }
+                    }
 
-                _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
+                    if (string.IsNullOrEmpty(projectFile))
+                    {
+                        continue;
+                    }
 
-                _watcher.Watch(projectFile, TriggerDependeees);
+                    if (!_context.TryAddProject(projectFile))
+                    {
+                        continue;
+                    }
 
-                anyProjects = true;
+                    _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
+
+                    _watcher.Watch(projectFile, TriggerDependeees);
+
+                    anyProjects = true;
+                }
             }
 
             return anyProjects;

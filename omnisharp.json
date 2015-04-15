@@ -1,0 +1,5 @@
+{
+    "aspnet5": {
+        "projects": "src/*/project.json;tests/*/project.json"
+    }
+}
