@@ -360,28 +360,19 @@ namespace OmniSharp.AspNet5
 
                         frameworkProject.Loaded = true;
                     }
-                    else if (m.MessageType == "Diagnostics")
-                    {
-                        var val = m.Payload.ToObject<DiagnosticsMessage>();
-                        var errors = val.Errors.Select(DiagnosticLocation.FromFormattedValue);
-                        var warnings = val.Warnings.Select(DiagnosticLocation.FromFormattedValue);
-                        foreach (var diagnostic in errors.Concat(warnings))
-                        {
-                            if (diagnostic != null)
-                            {
-                                _emitter.Emit(EventTypes.Diagnostics, diagnostic);
-                            }
-                        }
-                    }
+//                     Understand protocol version and to the right thing
+//                     else if (m.MessageType == "Diagnostics")
+//                     {
+//                         
+//                     }
                     else if (m.MessageType == "Error")
                     {
                         var value = m.Payload.ToObject<ErrorMessage>();
                         _logger.WriteError("DTH send error message for project {0}: {1}", project.Path, m.Payload.ToString());
-                        _emitter.Emit(EventTypes.ProjectFailed, new Models.ProjectMessage()
+                        _emitter.Emit(EventTypes.ProjectFailed, new DiagnosticLocation()
                         {
-                            Severity = ProjectMessageSeverity.Error,
                             FileName = project.Path,
-                            Message = value.Message,
+                            Text = value.Message,
                         });
                     }
 

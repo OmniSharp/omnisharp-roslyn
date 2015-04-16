@@ -36,10 +36,9 @@ namespace OmniSharp.AspNet5
         {
             Task.Factory.StartNew(() =>
             {
-                this._emitter.Emit(EventTypes.PackageRestoreStarted, new ProjectMessage()
+                this._emitter.Emit(EventTypes.PackageRestoreStarted, new PackageRestoreMessage()
                 {
-                    Severity = ProjectMessageSeverity.Info,
-                    FileName = project.Path
+                    ProjectFileName = project.Path
                 });
 
                 object projectLock;
@@ -90,6 +89,12 @@ namespace OmniSharp.AspNet5
                                 HostId = _context.HostId
                             });
                         }
+
+                        this._emitter.Emit(EventTypes.PackageRestoreFinished, new PackageRestoreMessage()
+                        {
+                            ProjectFileName = project.Path,
+                            Success = restoreProcess.ExitCode == 0
+                        });
                     }
                     finally
                     {
@@ -97,12 +102,6 @@ namespace OmniSharp.AspNet5
                         _projectLocks.Remove(project.Path);
                     }
                 }
-
-                this._emitter.Emit(EventTypes.PackageRestoreFinished, new ProjectMessage()
-                {
-                    Severity = ProjectMessageSeverity.Info,
-                    FileName = project.Path
-                });
             });
         }
     }
