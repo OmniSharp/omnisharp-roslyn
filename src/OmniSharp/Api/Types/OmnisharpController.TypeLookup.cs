@@ -3,6 +3,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Documentation;
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -34,7 +35,7 @@ namespace OmniSharp
 
                     if (request.IncludeDocumentation)
                     {
-                        response.Documentation = symbol.GetDocumentationCommentXml();
+                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _options.FormattingOptions.NewLine);
                     }
                 }
             }
