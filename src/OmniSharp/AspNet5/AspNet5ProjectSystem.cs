@@ -54,7 +54,7 @@ namespace OmniSharp.AspNet5
             _options = optionsAccessor.Options;
             _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
-            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context, _aspNet5Paths);
+            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, _emitter, context, _aspNet5Paths);
             _context = context;
             _watcher = watcher;
             _emitter = emitter;
