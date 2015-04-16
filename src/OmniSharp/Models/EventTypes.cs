@@ -8,5 +8,6 @@ namespace OmniSharp.Models
         public static readonly string ProjectFailed = "ProjectFailed";
         public static readonly string PackageRestoreStarted = "PackageRestoreStarted";
         public static readonly string PackageRestoreFinished = "PackageRestoreFinished";
+        public static readonly string Diagnostics = "Diagnostics";
     }
 }

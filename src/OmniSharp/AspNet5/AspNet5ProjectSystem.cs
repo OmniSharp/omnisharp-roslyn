@@ -360,6 +360,19 @@ namespace OmniSharp.AspNet5
 
                         frameworkProject.Loaded = true;
                     }
+                    else if (m.MessageType == "Diagnostics")
+                    {
+                        var val = m.Payload.ToObject<DiagnosticsMessage>();
+                        var errors = val.Errors.Select(DiagnosticLocation.FromFormattedValue);
+                        var warnings = val.Warnings.Select(DiagnosticLocation.FromFormattedValue);
+                        foreach (var diagnostic in errors.Concat(warnings))
+                        {
+                            if (diagnostic != null)
+                            {
+                                _emitter.Emit(EventTypes.Diagnostics, diagnostic);
+                            }
+                        }
+                    }
                     else if (m.MessageType == "Error")
                     {
                         var value = m.Payload.ToObject<ErrorMessage>();
