@@ -33,7 +33,7 @@ namespace OmniSharp.Tests
 
 Example:
 
-This sample shows how to call the TestNamespace.TestClass.GetZeromethod.
+This sample shows how to call the TestNamespace.TestClass.GetZero method.
 
     class TestClass 
     {

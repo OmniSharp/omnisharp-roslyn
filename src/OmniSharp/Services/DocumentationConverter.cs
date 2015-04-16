@@ -47,7 +47,7 @@ namespace OmniSharp.Documentation
                                     break;
                                 case "exception":
                                     ret.Append(lineEnding);
-                                    ret.Append(GetCref(xml["cref"]));
+                                    ret.Append(GetCref(xml["cref"]).TrimEnd());
                                     ret.Append(": ");
                                     break;
                                 case "returns":
@@ -121,9 +121,9 @@ namespace OmniSharp.Documentation
             }
             if (cref.Substring(1, 1) == ":")
             {
-                return cref.Substring(2, cref.Length - 2);
+                return cref.Substring(2, cref.Length - 2) + " ";
             }
-            return cref;
+            return cref + " ";
         }
     }
 }
