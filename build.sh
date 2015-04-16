@@ -17,7 +17,8 @@ cd ../../
 kvm use 1.0.0-beta3
 kpm bundle src/OmniSharp --no-source --out artifacts/build/omnisharp --runtime kre-mono.1.0.0-beta3 2>&1 | tee buildlog
 # work around for kpm bundle returning an exit code 0 on failure 
-grep "Build succeeded" buildlog
+grep "Build failed" buildlog
+rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 # work around for kpm pack not preserving the executable flag on klr when copied
 chmod +x artifacts/build/omnisharp/approot/packages/kre-mono.1.0.0-beta3/bin/klr
