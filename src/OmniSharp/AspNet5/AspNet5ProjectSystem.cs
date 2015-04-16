@@ -101,7 +101,7 @@ namespace OmniSharp.AspNet5
 
                     if (m.MessageType == "ProjectInformation")
                     {
-                        var val = m.Payload.ToObject<ProjectMessage>();
+                        var val = m.Payload.ToObject<Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages.ProjectMessage>();
 
                         project.Name = val.Name;
                         project.GlobalJsonPath = val.GlobalJsonPath;
@@ -109,7 +109,7 @@ namespace OmniSharp.AspNet5
                         project.Commands = val.Commands;
                         project.ProjectSearchPaths = val.ProjectSearchPaths;
 
-                        this._emitter.Emit(EventTypes.ProjectChanged, new ProjectInformationResponse()
+                        _emitter.Emit(EventTypes.ProjectChanged, new ProjectInformationResponse()
                         {
                             AspNet5Project = new AspNet5Project(project)
                         });
@@ -359,6 +359,17 @@ namespace OmniSharp.AspNet5
                         }
 
                         frameworkProject.Loaded = true;
+                    }
+                    else if (m.MessageType == "Error")
+                    {
+                        var value = m.Payload.ToObject<ErrorMessage>();
+                        _logger.WriteError("DTH send error message for project {0}: {1}", project.Path, m.Payload.ToString());
+                        _emitter.Emit(EventTypes.ProjectFailed, new Models.ProjectMessage()
+                        {
+                            Severity = ProjectMessageSeverity.Error,
+                            FileName = project.Path,
+                            Message = value.Message,
+                        });
                     }
 
                     if (project.ProjectsByFramework.Values.All(p => p.Loaded))
