@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
@@ -18,6 +17,7 @@ namespace OmniSharp.AspNet5
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
         public string RuntimePath { get; private set; }
+        public string RuntimePathErrorMessage { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
@@ -63,9 +63,8 @@ namespace OmniSharp.AspNet5
                     seachedLocations.Add(path);
                 }
             }
-
-            _logger.WriteError("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
-
+            RuntimePathErrorMessage = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
+            _logger.WriteError(RuntimePathErrorMessage);
             return null;
         }
 
