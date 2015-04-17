@@ -13,7 +13,9 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
+#if ASPNET50
 using Microsoft.Framework.FileSystemGlobbing;
+#endif
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json.Linq;
@@ -528,10 +530,16 @@ namespace OmniSharp.AspNet5
             }
             else
             {
+#if ASPNET50
                 var matcher = new Matcher();
                 matcher.AddIncludePatterns(_options.AspNet5.Projects.Split(';'));
-                
+
                 foreach (var path in matcher.GetResultsInFullPath(_env.Path))
+#else
+                // The matcher works on CoreCLR but Omnisharp still targets aspnetcore50 instead of
+                // dnxcore50
+                foreach (var path in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
+#endif 
                 {
                     string projectFile = null;
                     
