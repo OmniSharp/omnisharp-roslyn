@@ -70,7 +70,11 @@ namespace OmniSharp.AspNet5
             {
                 // There is no default k found so do nothing
                 _logger.WriteInformation("No default runtime found");
-                _emitter.Emit(EventTypes.ProjectStatus, ProjectStatusMessage.Error(null, _aspNet5Paths.RuntimePathErrorMessage));
+                _emitter.Emit(EventTypes.ProjectStatus, new ProjectStatusMessage()
+                {
+                    LogLevel = "Error",
+                    Text = _aspNet5Paths.RuntimePathErrorMessage
+                });
                 return;
             }
 
@@ -368,9 +372,20 @@ namespace OmniSharp.AspNet5
 //                     }
                     else if (m.MessageType == "Error")
                     {
-                        var value = m.Payload.ToObject<ErrorMessage>();
+                        var val = m.Payload.ToObject<ErrorMessage>();
                         _logger.WriteError("DTH send error message for project {0}: {1}", project.Path, m.Payload.ToString());
-                        _emitter.Emit(EventTypes.ProjectStatus, ProjectStatusMessage.Error(project.Path, value.Message));
+                        _emitter.Emit(EventTypes.ProjectStatus, new ProjectStatusMessage()
+                        {
+                            LogLevel = "Error",
+                            FileName = project.Path,
+                            Text = val.Message,
+                            Diagnostics = new DiagnosticLocation[]{
+                                new DiagnosticLocation() {
+                                    FileName = val.Path,
+                                    Line = val.Line
+                                }
+                            }
+                        });
                     }
 
                     if (project.ProjectsByFramework.Values.All(p => p.Loaded))

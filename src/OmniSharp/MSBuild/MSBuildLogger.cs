@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild
         {
             var message = new ProjectStatusMessage()
             {
-                LogLevel = "error",
+                LogLevel = "Error",
                 FileName = args.ProjectFile,
                 Diagnostics = new DiagnosticLocation[]{
                     new DiagnosticLocation() {
@@ -68,7 +68,7 @@ namespace OmniSharp.MSBuild
         {
             var message = new ProjectStatusMessage()
             {
-                LogLevel = "warning",
+                LogLevel = "Warning",
                 FileName = args.ProjectFile,
                 Diagnostics = new DiagnosticLocation[]{
                     new DiagnosticLocation() {

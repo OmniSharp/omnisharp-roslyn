@@ -162,17 +162,20 @@ namespace OmniSharp.MSBuild
 
                 if (projectFileInfo == null)
                 {
-                    var statusMessage = ProjectStatusMessage.Error(projectFilePath, string.Format("Failed to process project file '{0}'.", projectFilePath));
-                    _logger.WriteWarning(statusMessage.Text);
-                    _emitter.Emit(EventTypes.ProjectStatus, statusMessage);
+                    _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath));
                 }
             }
             catch (Exception ex)
             {
-                var statusMessage = ProjectStatusMessage.Error(projectFilePath, string.Format("Failed to process project file '{0}'.", projectFilePath));
-                statusMessage.ExceptionMessage = ex.ToString();
-                _logger.WriteWarning(statusMessage.Text, ex);
-                _emitter.Emit(EventTypes.ProjectStatus, statusMessage);
+                var message = new ProjectStatusMessage()
+                {
+                    LogLevel = "Error",
+                    FileName = projectFilePath,
+                    Text = string.Format("Failed to process project file '{0}'.", projectFilePath),
+                    ExceptionMessage = ex.ToString()
+                };
+                _logger.WriteWarning(message.Text, ex);
+                _emitter.Emit(EventTypes.ProjectStatus, message);
             }
 
             return projectFileInfo;
