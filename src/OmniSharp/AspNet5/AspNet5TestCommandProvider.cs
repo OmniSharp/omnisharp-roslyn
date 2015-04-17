@@ -18,7 +18,7 @@ namespace OmniSharp.AspNet5
         {
             _context = context;
             var aspNet5Paths = new AspNet5Paths(env, options, loggerFactory);
-            _dnx = aspNet5Paths.Dnx ?? aspNet5Paths.K;
+            _dnx = aspNet5Paths.Dnx + " ." ?? aspNet5Paths.K;
         }
 
         public string GetTestCommand(TestContext testContext)
