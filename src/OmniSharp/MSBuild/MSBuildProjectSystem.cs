@@ -158,13 +158,13 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(_logger, _env.Path, projectFilePath);
+                projectFileInfo = ProjectFileInfo.Create(_logger, _emitter, _env.Path, projectFilePath);
 
                 if (projectFileInfo == null)
                 {
                     var statusMessage = ProjectStatusMessage.Error(projectFilePath, string.Format("Failed to process project file '{0}'.", projectFilePath));
                     _logger.WriteWarning(statusMessage.Text);
-                    _emitter.Emit(EventTypes.ProjectFailed, statusMessage);
+                    _emitter.Emit(EventTypes.ProjectStatus, statusMessage);
                 }
             }
             catch (Exception ex)
@@ -172,7 +172,7 @@ namespace OmniSharp.MSBuild
                 var statusMessage = ProjectStatusMessage.Error(projectFilePath, string.Format("Failed to process project file '{0}'.", projectFilePath));
                 statusMessage.ExceptionMessage = ex.ToString();
                 _logger.WriteWarning(statusMessage.Text, ex);
-                _emitter.Emit(EventTypes.ProjectFailed, statusMessage);
+                _emitter.Emit(EventTypes.ProjectStatus, statusMessage);
             }
 
             return projectFileInfo;
