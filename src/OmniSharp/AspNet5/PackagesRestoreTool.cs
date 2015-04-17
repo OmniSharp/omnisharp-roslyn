@@ -36,7 +36,7 @@ namespace OmniSharp.AspNet5
         {
             Task.Factory.StartNew(() =>
             {
-                this._emitter.Emit(EventTypes.PackageRestoreStarted, new PackageRestoreMessage()
+                _emitter.Emit(EventTypes.PackageRestoreStarted, new PackageRestoreMessage()
                 {
                     ProjectFileName = project.Path
                 });
@@ -90,7 +90,7 @@ namespace OmniSharp.AspNet5
                             });
                         }
 
-                        this._emitter.Emit(EventTypes.PackageRestoreFinished, new PackageRestoreMessage()
+                        _emitter.Emit(EventTypes.PackageRestoreFinished, new PackageRestoreMessage()
                         {
                             ProjectFileName = project.Path,
                             Success = restoreProcess.ExitCode == 0
