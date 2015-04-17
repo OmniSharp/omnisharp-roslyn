@@ -10,6 +10,7 @@ namespace OmniSharp.Tests
         public int HostPID { get; }
         public string Path { get { return "."; } }
         public string SolutionFilePath { get; }
+        public string ConfigurationPath { get; }
         public TransportType TransportType { get; }
     }
 }

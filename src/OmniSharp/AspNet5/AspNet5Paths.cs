@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Options;
