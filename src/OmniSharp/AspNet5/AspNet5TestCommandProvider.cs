@@ -1,16 +1,26 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.Framework.Logging;
+using Microsoft.Framework.OptionsModel;
+using OmniSharp.Options;
+using OmniSharp.Services;
 
 namespace OmniSharp.AspNet5
 {
     public class AspNet5TestCommandProvider : ITestCommandProvider
     {
         private readonly AspNet5Context _context;
-        
-        public AspNet5TestCommandProvider(AspNet5Context context)
+        private readonly string _dnx;
+
+        public AspNet5TestCommandProvider(AspNet5Context context,
+                                          IOmnisharpEnvironment env,
+                                          ILoggerFactory loggerFactory,
+                                          IOptions<OmniSharpOptions> options)
         {
             _context = context;
+            var aspNet5Paths = new AspNet5Paths(env, options.Options, loggerFactory);
+            _dnx = aspNet5Paths.Dnx != null ? aspNet5Paths.Dnx + " ." : aspNet5Paths.K;
         }
-        
+
         public string GetTestCommand(TestContext testContext)
         {
             if (!_context.ProjectContextMapping.ContainsKey(testContext.ProjectFile))
@@ -28,35 +38,41 @@ namespace OmniSharp.AspNet5
 
             // Find the test command, if any and use that
             var symbol = testContext.Symbol;
-            string testsToRun = "";
-            
-            if (symbol is IMethodSymbol)
-            {
-                testsToRun = symbol.ContainingType.Name + "." + symbol.Name;
-            }
-            else if (symbol is INamedTypeSymbol)
-            {
-                testsToRun = symbol.Name;
-            }
+            string arguments = "";
 
+            var containingNamespace = "";
             if (!symbol.ContainingNamespace.IsGlobalNamespace)
             {
-                testsToRun = symbol.ContainingNamespace + "." + testsToRun;
+                containingNamespace = symbol.ContainingNamespace + ".";
             }
-
-            string testCommand = null;
 
             switch (testContext.TestCommandType)
             {
-                case TestCommandType.All:
-                    testCommand = "k test";
+                case TestCommandType.Fixture:
+                    if (symbol is IMethodSymbol)
+                    {
+                        arguments = " -class " + containingNamespace
+                            + symbol.ContainingType.Name;
+                    }
+                    else if (symbol is INamedTypeSymbol)
+                    {
+                        arguments = " -class " + containingNamespace + symbol.Name;
+                    }
                     break;
                 case TestCommandType.Single:
-                case TestCommandType.Fixture:
-                    testCommand = "k test --test " + testsToRun;
+                    if (symbol is IMethodSymbol)
+                    {
+                        arguments = " -method " + containingNamespace +
+                            symbol.ContainingType.Name + "." + symbol.Name;
+                    }
+                    else if (symbol is INamedTypeSymbol)
+                    {
+                        arguments = " -class " + containingNamespace +
+                            symbol.Name;
+                    }
                     break;
             }
-            return testCommand;
+            return _dnx + " test" + arguments;
         }
     }
 }
