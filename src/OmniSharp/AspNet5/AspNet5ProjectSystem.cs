@@ -106,7 +106,7 @@ namespace OmniSharp.AspNet5
 
                     if (m.MessageType == "ProjectInformation")
                     {
-                        var val = m.Payload.ToObject<Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages.ProjectMessage>();
+                        var val = m.Payload.ToObject<ProjectMessage>();
 
                         project.Name = val.Name;
                         project.GlobalJsonPath = val.GlobalJsonPath;
