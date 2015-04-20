@@ -64,7 +64,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var collection = new ProjectCollection(properties);
                 var project = collection.LoadProject(projectFilePath);
                 var projectInstance = project.CreateProjectInstance();
-                var buildResult = projectInstance.Build("ResolveReferences", loggers: null);
+                var buildResult = projectInstance.Build("ResolveReferences", new Microsoft.Build.Framework.ILogger[] { new MSBuildLogger(logger) });
 
                 if (!buildResult)
                 {
@@ -107,6 +107,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 engine.DefaultToolsVersion = "4.0";
 #pragma warning restore CS0618
                 // engine.RegisterLogger(new ConsoleLogger());
+                engine.RegisterLogger(new MSBuildLogger(logger));
 
                 var propertyGroup = new BuildPropertyGroup();
                 propertyGroup.SetProperty("DesignTimeBuild", "true");
