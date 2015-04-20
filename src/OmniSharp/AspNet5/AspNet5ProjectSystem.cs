@@ -66,13 +66,18 @@ namespace OmniSharp.AspNet5
 
         public void Initalize()
         {
-            _context.RuntimePath = _aspNet5Paths.RuntimePath;
-            
-            if (_context.RuntimePath == null)
+            var diagnostics = new AspNet5RuntimeDiagnosticsMessage();
+            string runtimePath;
+            if (!_aspNet5Paths.TryGetRuntimePath(out runtimePath, diagnostics))
             {
                 // There is no default k found so do nothing
                 _logger.WriteInformation("No default runtime found");
+                _emitter.Emit(EventTypes.AspNet5RuntimeDiagnostics, diagnostics);
                 return;
+            }
+            else
+            {
+                _context.RuntimePath = runtimePath;
             }
 
             if (!ScanForProjects())
@@ -361,6 +366,11 @@ namespace OmniSharp.AspNet5
                         }
 
                         frameworkProject.Loaded = true;
+                    }
+                    else if (m.MessageType == "Error")
+                    {
+                        var val = m.Payload.ToObject<ErrorMessage>();
+                        _logger.WriteError(val.Message);
                     }
 
                     if (project.ProjectsByFramework.Values.All(p => p.Loaded))

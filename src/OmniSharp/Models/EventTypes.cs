@@ -6,6 +6,7 @@ namespace OmniSharp.Models
         public static readonly string ProjectChanged = "ProjectChanged";
         public static readonly string ProjectRemoved = "ProjectRemoved";
 
+        public static readonly string AspNet5RuntimeDiagnostics = "AspNet5RuntimeDiagnostics";
         public static readonly string MsBuildProjectDiagnostics = "MsBuildProjectDiagnostics";
     }
 }

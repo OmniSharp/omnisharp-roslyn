@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -39,9 +40,9 @@ namespace OmniSharp.AspNet5
             K   = FirstPath(RuntimePath, "k", "k.cmd");
         }
 
-        private string GetRuntimePath()
+        public bool TryGetRuntimePath(out string value, AspNet5RuntimeDiagnosticsMessage diagnostics = null)
         {
-            var versionOrAlias = GetRuntimeVersionOrAlias() ?? _options.AspNet5.Alias ?? "default";
+            var versionOrAlias = GetRuntimeVersionOrAlias(diagnostics) ?? _options.AspNet5.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())
@@ -58,19 +59,31 @@ namespace OmniSharp.AspNet5
                     if (Directory.Exists(path))
                     {
                         _logger.WriteInformation(string.Format("Using runtime '{0}'.", path));
-                        return path;
+                        value = path;
+                        return true;
                     }
 
                     seachedLocations.Add(path);
                 }
             }
-
+            if (diagnostics != null)
+            {
+                diagnostics.SearchLocations = seachedLocations;
+                diagnostics.Text = string.Format("The specified runtime path '{0}' does not exist.", versionOrAlias);
+            }
             _logger.WriteError("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
-
-            return null;
+            value = null;
+            return false;
         }
 
-        private string GetRuntimeVersionOrAlias()
+        private string GetRuntimePath()
+        {
+            string value = null;
+            TryGetRuntimePath(out value);
+            return value;
+        }
+
+        private string GetRuntimeVersionOrAlias(AspNet5RuntimeDiagnosticsMessage diagnostics = null)
         {
             var root = ResolveRootDirectory(_env.Path);
 
@@ -83,7 +96,20 @@ namespace OmniSharp.AspNet5
                 using (var stream = File.OpenRead(globalJson))
                 {
                     var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
-                    return obj["sdk"]?["version"]?.Value<string>();
+                    var token = obj["sdk"]?["version"];
+                    if (token == null)
+                    {
+                        return null;
+                    }
+
+                    if (diagnostics != null)
+                    {
+                        var lineInfo = (IJsonLineInfo)token;
+                        diagnostics.FileName = globalJson;
+                        diagnostics.Line = lineInfo.LineNumber;
+                        diagnostics.Column = lineInfo.LinePosition;
+                    }
+                    return token.Value<string>();
                 }
             }
 
