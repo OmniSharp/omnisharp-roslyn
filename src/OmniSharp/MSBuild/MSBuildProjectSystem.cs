@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
+using OmniSharp.Models;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
 
@@ -20,6 +21,7 @@ namespace OmniSharp.MSBuild
         private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IOmnisharpEnvironment _env;
         private readonly ILogger _logger;
+        private readonly IEventEmitter _emitter;
 
         private static readonly Guid[] _supportsProjectTypes = new[] {
             new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
@@ -33,7 +35,8 @@ namespace OmniSharp.MSBuild
                                     ILoggerFactory loggerFactory,
                                     IMetadataFileReferenceCache metadataReferenceCache,
                                     IFileSystemWatcher watcher,
-                                    MSBuildContext context)
+                                    MSBuildContext context,
+                                    IEventEmitter emitter)
         {
             _workspace = workspace;
             _metadataReferenceCache = metadataReferenceCache;
@@ -41,6 +44,7 @@ namespace OmniSharp.MSBuild
             _env = env;
             _logger = loggerFactory.Create<MSBuildProjectSystem>();
             _context = context;
+            _emitter = emitter;
         }
 
         public void Initalize()
@@ -154,7 +158,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(_logger, _env.Path, projectFilePath);
+                projectFileInfo = ProjectFileInfo.Create(_logger, _emitter, _env.Path, projectFilePath);
 
                 if (projectFileInfo == null)
                 {
@@ -163,7 +167,15 @@ namespace OmniSharp.MSBuild
             }
             catch (Exception ex)
             {
-                _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
+                var message = new ProjectStatusMessage()
+                {
+                    LogLevel = "Error",
+                    FileName = projectFilePath,
+                    Text = string.Format("Failed to process project file '{0}'.", projectFilePath),
+                    ExceptionMessage = ex.ToString()
+                };
+                _logger.WriteWarning(message.Text, ex);
+                _emitter.Emit(EventTypes.ProjectStatus, message);
             }
 
             return projectFileInfo;

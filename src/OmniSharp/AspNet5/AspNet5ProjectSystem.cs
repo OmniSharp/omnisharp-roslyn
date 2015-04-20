@@ -54,9 +54,9 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
-            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
+            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory, emitter);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
-            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context, _aspNet5Paths);
+            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, emitter, context, _aspNet5Paths);
             _context = context;
             _watcher = watcher;
             _emitter = emitter;
@@ -111,7 +111,7 @@ namespace OmniSharp.AspNet5
                         project.Commands = val.Commands;
                         project.ProjectSearchPaths = val.ProjectSearchPaths;
 
-                        this._emitter.Emit(EventTypes.ProjectChanged, new ProjectInformationResponse()
+                        _emitter.Emit(EventTypes.ProjectChanged, new ProjectInformationResponse()
                         {
                             AspNet5Project = new AspNet5Project(project)
                         });
@@ -361,6 +361,28 @@ namespace OmniSharp.AspNet5
                         }
 
                         frameworkProject.Loaded = true;
+                    }
+//                     Understand protocol version and to the right thing
+//                     else if (m.MessageType == "Diagnostics")
+//                     {
+//                         
+//                     }
+                    else if (m.MessageType == "Error")
+                    {
+                        var val = m.Payload.ToObject<ErrorMessage>();
+                        _logger.WriteError("DTH send error message for project {0}: {1}", project.Path, m.Payload.ToString());
+                        _emitter.Emit(EventTypes.ProjectStatus, new ProjectStatusMessage()
+                        {
+                            LogLevel = "Error",
+                            FileName = project.Path,
+                            Text = val.Message,
+                            Diagnostics = new DiagnosticLocation[]{
+                                new DiagnosticLocation() {
+                                    FileName = val.Path,
+                                    Line = val.Line
+                                }
+                            }
+                        });
                     }
 
                     if (project.ProjectsByFramework.Values.All(p => p.Loaded))

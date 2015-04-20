@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
+using OmniSharp.Services;
 
 #if ASPNET50
 using Microsoft.Build.BuildEngine;
@@ -45,7 +46,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> Analyzers { get; private set; }
 
-        public static ProjectFileInfo Create(ILogger logger, string solutionDirectory, string projectFilePath)
+        public static ProjectFileInfo Create(ILogger logger, IEventEmitter emitter, string solutionDirectory, string projectFilePath)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
@@ -64,7 +65,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var collection = new ProjectCollection(properties);
                 var project = collection.LoadProject(projectFilePath);
                 var projectInstance = project.CreateProjectInstance();
-                var buildResult = projectInstance.Build("ResolveReferences", loggers: null);
+                var buildResult = projectInstance.Build("ResolveReferences", new Microsoft.Build.Framework.ILogger[] { new MSBuildEventLogger(logger, emitter) });
 
                 if (!buildResult)
                 {
@@ -107,6 +108,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 engine.DefaultToolsVersion = "4.0";
 #pragma warning restore CS0618
                 // engine.RegisterLogger(new ConsoleLogger());
+                engine.RegisterLogger(new MSBuildEventLogger(logger, emitter));
 
                 var propertyGroup = new BuildPropertyGroup();
                 propertyGroup.SetProperty("DesignTimeBuild", "true");
