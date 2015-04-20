@@ -5,12 +5,12 @@ using Microsoft.Framework.Logging;
 
 namespace OmniSharp.MSBuild
 {
-    public class MSBuildLogger : Microsoft.Build.Framework.ILogger
+    public class MSBuildLogForwarder : Microsoft.Build.Framework.ILogger
     {
         private readonly ILogger _logger;
         private readonly IList<Action> _callOnShutdown;
 
-        public MSBuildLogger(ILogger logger)
+        public MSBuildLogForwarder(ILogger logger)
         {
             _logger = logger;
             _callOnShutdown = new List<Action>();
