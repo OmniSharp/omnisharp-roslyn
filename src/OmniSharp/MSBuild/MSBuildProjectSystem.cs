@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
+using OmniSharp.Models;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
 
@@ -20,7 +21,7 @@ namespace OmniSharp.MSBuild
         private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IOmnisharpEnvironment _env;
         private readonly ILogger _logger;
-
+        private readonly IEventEmitter _emitter;
         private static readonly Guid[] _supportsProjectTypes = new[] {
             new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
         };
@@ -31,6 +32,7 @@ namespace OmniSharp.MSBuild
         public MSBuildProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
                                     ILoggerFactory loggerFactory,
+                                    IEventEmitter emitter,
                                     IMetadataFileReferenceCache metadataReferenceCache,
                                     IFileSystemWatcher watcher,
                                     MSBuildContext context)
@@ -40,6 +42,7 @@ namespace OmniSharp.MSBuild
             _watcher = watcher;
             _env = env;
             _logger = loggerFactory.Create<MSBuildProjectSystem>();
+            _emitter = emitter;
             _context = context;
         }
 
@@ -151,10 +154,11 @@ namespace OmniSharp.MSBuild
         private ProjectFileInfo CreateProject(string projectFilePath)
         {
             ProjectFileInfo projectFileInfo = null;
+            var diagnostics = new List<MSBuildDiagnosticsMessage>();
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(_logger, _env.Path, projectFilePath);
+                projectFileInfo = ProjectFileInfo.Create(_logger, _env.Path, projectFilePath, diagnostics);
 
                 if (projectFileInfo == null)
                 {
@@ -165,6 +169,13 @@ namespace OmniSharp.MSBuild
             {
                 _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
             }
+
+            _emitter.Emit(EventTypes.MsBuildProjectDiagnostics, new MSBuildProjectDiagnostics()
+            {
+                FileName = projectFilePath,
+                Warnings = diagnostics.Where(d => d.LogLevel == "Warning"),
+                Errors = diagnostics.Where(d => d.LogLevel == "Error"),
+            });
 
             return projectFileInfo;
         }
