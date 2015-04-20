@@ -52,9 +52,9 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
-            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
+            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory, emitter);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
-            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, _emitter, context, _aspNet5Paths);
+            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, emitter, context, _aspNet5Paths);
             _context = context;
             _watcher = watcher;
             _emitter = emitter;
@@ -70,11 +70,6 @@ namespace OmniSharp.AspNet5
             {
                 // There is no default k found so do nothing
                 _logger.WriteInformation("No default runtime found");
-                _emitter.Emit(EventTypes.ProjectStatus, new ProjectStatusMessage()
-                {
-                    LogLevel = "Error",
-                    Text = _aspNet5Paths.RuntimePathErrorMessage
-                });
                 return;
             }
 

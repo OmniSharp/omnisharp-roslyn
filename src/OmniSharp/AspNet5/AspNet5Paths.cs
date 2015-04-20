@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -16,8 +17,8 @@ namespace OmniSharp.AspNet5
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
+        private readonly IEventEmitter _emitter;
         public string RuntimePath { get; private set; }
-        public string RuntimePathErrorMessage { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
@@ -25,11 +26,13 @@ namespace OmniSharp.AspNet5
 
         public AspNet5Paths(IOmnisharpEnvironment env,
                             OmniSharpOptions options,
-                            ILoggerFactory loggerFactory)
+                            ILoggerFactory loggerFactory,
+                            IEventEmitter emitter)
         {
             _env = env;
             _options = options;
             _logger = loggerFactory.Create<AspNet5Paths>();
+            _emitter = emitter;
 
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath, "dnx", "dnx.exe");
@@ -63,8 +66,14 @@ namespace OmniSharp.AspNet5
                     seachedLocations.Add(path);
                 }
             }
-            RuntimePathErrorMessage = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
-            _logger.WriteError(RuntimePathErrorMessage);
+
+            var message = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
+            _logger.WriteError(message);
+            _emitter.Emit(EventTypes.ProjectStatus, new ProjectStatusMessage()
+            {
+                LogLevel = "Error",
+                Text = message
+            });
             return null;
         }
 
