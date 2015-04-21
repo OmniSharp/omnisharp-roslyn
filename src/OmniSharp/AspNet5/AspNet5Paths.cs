@@ -43,6 +43,16 @@ namespace OmniSharp.AspNet5
             K   = FirstPath(RuntimePath, "k", "k.cmd");
         }
 
+        public string GlobalJson
+        {
+            get
+            {
+                var root = ResolveRootDirectory(_env.Path);
+                var globalJson = Path.Combine(root, "global.json");
+                return File.Exists(globalJson) ? globalJson : null;
+            }
+        }
+
         private string GetRuntimePath()
         {
             var versionOrAliasToken = GetRuntimeVersionOrAlias();
@@ -75,7 +85,7 @@ namespace OmniSharp.AspNet5
             };
             if (versionOrAliasToken != null)
             {
-                message.FileName = GlobalJsonPath(_env.Path);
+                message.FileName = GlobalJson;
                 message.Line = ((IJsonLineInfo)versionOrAliasToken).LineNumber;
                 message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
             }
@@ -86,15 +96,11 @@ namespace OmniSharp.AspNet5
 
         private JToken GetRuntimeVersionOrAlias()
         {
-            var root = ResolveRootDirectory(_env.Path);
-
-            var globalJson = Path.Combine(root, "global.json");
-
-            if (File.Exists(globalJson))
+            if (GlobalJson != null)
             {
-                _logger.WriteInformation("Looking for sdk version in '{0}'.", globalJson);
+                _logger.WriteInformation("Looking for sdk version in '{0}'.", GlobalJson);
 
-                using (var stream = File.OpenRead(globalJson))
+                using (var stream = File.OpenRead(GlobalJson))
                 {
                     var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
                     return obj["sdk"]?["version"];
@@ -106,12 +112,6 @@ namespace OmniSharp.AspNet5
 
         public static string ResolveRootDirectory(string projectPath)
         {
-            // If we don't find any files then make the project folder the root
-            return GlobalJsonPath(projectPath) ?? projectPath;
-        }
-
-        private static string GlobalJsonPath(string projectPath)
-        {
             var di = new DirectoryInfo(projectPath);
             while (di.Parent != null)
             {
@@ -122,7 +122,8 @@ namespace OmniSharp.AspNet5
 
                 di = di.Parent;
             }
-            return null;
+            // If we don't find any files then make the project folder the root
+            return projectPath;
         }
 
         private IEnumerable<string> GetRuntimeLocations()
