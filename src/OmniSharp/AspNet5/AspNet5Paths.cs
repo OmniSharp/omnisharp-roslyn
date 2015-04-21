@@ -18,6 +18,7 @@ namespace OmniSharp.AspNet5
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
+        public string RootDirectory { get; private set; }
         public string RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
@@ -35,6 +36,7 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5Paths>();
             _emitter = emitter;
 
+            RootDirectory = ResolveRootDirectory(_env.Path);
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath, "dnx", "dnx.exe");
             Dnu = FirstPath(RuntimePath, "dnu", "dnu.cmd");
@@ -47,8 +49,7 @@ namespace OmniSharp.AspNet5
         {
             get
             {
-                var root = ResolveRootDirectory(_env.Path);
-                var globalJson = Path.Combine(root, "global.json");
+                var globalJson = Path.Combine(RootDirectory, "global.json");
                 return File.Exists(globalJson) ? globalJson : null;
             }
         }
@@ -110,7 +111,7 @@ namespace OmniSharp.AspNet5
             return null;
         }
 
-        public static string ResolveRootDirectory(string projectPath)
+        private static string ResolveRootDirectory(string projectPath)
         {
             var di = new DirectoryInfo(projectPath);
             while (di.Parent != null)
