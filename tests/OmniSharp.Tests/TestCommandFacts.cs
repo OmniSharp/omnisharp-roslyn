@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using OmniSharp.AspNet5;
 using OmniSharp.Filters;
 using OmniSharp.Models;
+using OmniSharp.Services;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -187,7 +188,7 @@ namespace OmniSharp.Tests
                 Commands = { { "test", "Xunit.KRunner" } }
             });
 
-            var testCommandProviders = new[] { new AspNet5TestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new FakeOmniSharpOptions()) };
+            var testCommandProviders = new[] { new AspNet5TestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter(), new FakeOmniSharpOptions()) };
             var controller = new TestCommandController(workspace, testCommandProviders);
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
 

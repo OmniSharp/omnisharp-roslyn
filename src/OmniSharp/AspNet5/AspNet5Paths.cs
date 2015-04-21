@@ -17,6 +17,7 @@ namespace OmniSharp.AspNet5
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
+        private readonly IEventEmitter _emitter;
         public string RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
@@ -26,11 +27,13 @@ namespace OmniSharp.AspNet5
 
         public AspNet5Paths(IOmnisharpEnvironment env,
                             OmniSharpOptions options,
-                            ILoggerFactory loggerFactory)
+                            ILoggerFactory loggerFactory,
+                            IEventEmitter emitter)
         {
             _env = env;
             _options = options;
             _logger = loggerFactory.Create<AspNet5Paths>();
+            _emitter = emitter;
 
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath, "dnx", "dnx.exe");
@@ -40,9 +43,10 @@ namespace OmniSharp.AspNet5
             K   = FirstPath(RuntimePath, "k", "k.cmd");
         }
 
-        public bool TryGetRuntimePath(out string value, AspNet5RuntimeDiagnosticsMessage diagnostics = null)
+        private string GetRuntimePath()
         {
-            var versionOrAlias = GetRuntimeVersionOrAlias(diagnostics) ?? _options.AspNet5.Alias ?? "default";
+            var versionOrAliasToken = GetRuntimeVersionOrAlias();
+            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.AspNet5.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())
@@ -59,31 +63,28 @@ namespace OmniSharp.AspNet5
                     if (Directory.Exists(path))
                     {
                         _logger.WriteInformation(string.Format("Using runtime '{0}'.", path));
-                        value = path;
-                        return true;
+                        return path;
                     }
 
                     seachedLocations.Add(path);
                 }
             }
-            if (diagnostics != null)
+            var message = new ErrorMessage()
             {
-                diagnostics.SearchLocations = seachedLocations;
-                diagnostics.Text = string.Format("The specified runtime path '{0}' does not exist.", versionOrAlias);
+                Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations))
+            };
+            if (versionOrAliasToken != null)
+            {
+                message.FileName = GlobalJsonPath(_env.Path);
+                message.Line = ((IJsonLineInfo)versionOrAliasToken).LineNumber;
+                message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
             }
-            _logger.WriteError("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
-            value = null;
-            return false;
+            _emitter.Emit(EventTypes.Error, message);
+            _logger.WriteError(message.Text);
+            return null;
         }
 
-        private string GetRuntimePath()
-        {
-            string value = null;
-            TryGetRuntimePath(out value);
-            return value;
-        }
-
-        private string GetRuntimeVersionOrAlias(AspNet5RuntimeDiagnosticsMessage diagnostics = null)
+        private JToken GetRuntimeVersionOrAlias()
         {
             var root = ResolveRootDirectory(_env.Path);
 
@@ -96,20 +97,7 @@ namespace OmniSharp.AspNet5
                 using (var stream = File.OpenRead(globalJson))
                 {
                     var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
-                    var token = obj["sdk"]?["version"];
-                    if (token == null)
-                    {
-                        return null;
-                    }
-
-                    if (diagnostics != null)
-                    {
-                        var lineInfo = (IJsonLineInfo)token;
-                        diagnostics.FileName = globalJson;
-                        diagnostics.Line = lineInfo.LineNumber;
-                        diagnostics.Column = lineInfo.LinePosition;
-                    }
-                    return token.Value<string>();
+                    return obj["sdk"]?["version"];
                 }
             }
 
@@ -118,8 +106,13 @@ namespace OmniSharp.AspNet5
 
         public static string ResolveRootDirectory(string projectPath)
         {
-            var di = new DirectoryInfo(projectPath);
+            // If we don't find any files then make the project folder the root
+            return GlobalJsonPath(projectPath) ?? projectPath;
+        }
 
+        private static string GlobalJsonPath(string projectPath)
+        {
+            var di = new DirectoryInfo(projectPath);
             while (di.Parent != null)
             {
                 if (di.EnumerateFiles("global.json").Any())
@@ -129,9 +122,7 @@ namespace OmniSharp.AspNet5
 
                 di = di.Parent;
             }
-
-            // If we don't find any files then make the project folder the root
-            return projectPath;
+            return null;
         }
 
         private IEnumerable<string> GetRuntimeLocations()

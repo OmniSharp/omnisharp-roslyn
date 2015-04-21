@@ -54,7 +54,7 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
-            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
+            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory, emitter);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
             _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, context, _aspNet5Paths);
             _context = context;
@@ -66,18 +66,13 @@ namespace OmniSharp.AspNet5
 
         public void Initalize()
         {
-            var diagnostics = new AspNet5RuntimeDiagnosticsMessage();
-            string runtimePath;
-            if (!_aspNet5Paths.TryGetRuntimePath(out runtimePath, diagnostics))
+            _context.RuntimePath = _aspNet5Paths.RuntimePath;
+            
+            if (_context.RuntimePath == null)
             {
                 // There is no default k found so do nothing
                 _logger.WriteInformation("No default runtime found");
-                _emitter.Emit(EventTypes.AspNet5RuntimeDiagnostics, diagnostics);
                 return;
-            }
-            else
-            {
-                _context.RuntimePath = runtimePath;
             }
 
             if (!ScanForProjects())
@@ -369,7 +364,7 @@ namespace OmniSharp.AspNet5
                     }
                     else if (m.MessageType == "Error")
                     {
-                        var val = m.Payload.ToObject<ErrorMessage>();
+                        var val = m.Payload.ToObject<Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages.ErrorMessage>();
                         _logger.WriteError(val.Message);
                     }
 

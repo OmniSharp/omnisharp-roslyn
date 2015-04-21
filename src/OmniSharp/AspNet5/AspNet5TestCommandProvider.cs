@@ -14,10 +14,11 @@ namespace OmniSharp.AspNet5
         public AspNet5TestCommandProvider(AspNet5Context context,
                                           IOmnisharpEnvironment env,
                                           ILoggerFactory loggerFactory,
+                                          IEventEmitter emitter,
                                           IOptions<OmniSharpOptions> options)
         {
             _context = context;
-            var aspNet5Paths = new AspNet5Paths(env, options.Options, loggerFactory);
+            var aspNet5Paths = new AspNet5Paths(env, options.Options, loggerFactory, emitter);
             _dnx = aspNet5Paths.Dnx != null ? aspNet5Paths.Dnx + " ." : aspNet5Paths.K;
         }
 
