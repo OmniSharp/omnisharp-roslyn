@@ -48,56 +48,91 @@ namespace OmniSharp.AspNet5
 
                 lock (projectLock)
                 {
+                    var exitCode = -1;
                     _emitter.Emit(EventTypes.PackageRestoreStarted, new PackageRestoreMessage() { FileName = project.Path });
                     _semaphore.Wait();
                     try
                     {
-                        var psi = new ProcessStartInfo()
-                        {
-                            FileName = _paths.Dnu ?? _paths.Kpm,
-                            WorkingDirectory = Path.GetDirectoryName(project.Path),
-                            CreateNoWindow = true,
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            Arguments = "restore"
-                        };
+                        exitCode = DoRun(project, 1);
 
-                        _logger.WriteInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
-
-                        var restoreProcess = Process.Start(psi);
-                        if (restoreProcess.HasExited)
+                        _context.Connection.Post(new Message()
                         {
-                            _logger.WriteError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
-                        }
-                        else
-                        {
-                            restoreProcess.OutputDataReceived += (sender, e) => _logger.WriteInformation(e.Data);
-                            restoreProcess.ErrorDataReceived += (sender, e) => _logger.WriteError(e.Data);
-                            restoreProcess.BeginOutputReadLine();
-                            restoreProcess.BeginErrorReadLine();
-                            restoreProcess.WaitForExit();
-
-                            _context.Connection.Post(new Message()
-                            {
-                                ContextId = project.ContextId,
-                                MessageType = "RestoreComplete",
-                                HostId = _context.HostId
-                            });
-                            _emitter.Emit(EventTypes.PackageRestoreFinished, new PackageRestoreMessage()
-                            {
-                                FileName = project.Path,
-                                Succeeded = restoreProcess.ExitCode == 0
-                            });
-                        }
+                            ContextId = project.ContextId,
+                            MessageType = "RestoreComplete",
+                            HostId = _context.HostId
+                        });
                     }
                     finally
                     {
                         _semaphore.Release();
                         _projectLocks.Remove(project.Path);
+                        _emitter.Emit(EventTypes.PackageRestoreFinished, new PackageRestoreMessage()
+                        {
+                            FileName = project.Path,
+                            Succeeded = exitCode == 0
+                        });
                     }
                 }
             });
+        }
+
+        private int DoRun(Project project, int retry)
+        {
+            var psi = new ProcessStartInfo()
+            {
+                FileName = _paths.Dnu ?? _paths.Kpm,
+                WorkingDirectory = Path.GetDirectoryName(project.Path),
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                Arguments = "restore"
+            };
+
+            _logger.WriteInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
+
+            var restoreProcess = Process.Start(psi);
+            if (restoreProcess.HasExited)
+            {
+                _logger.WriteError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
+                return restoreProcess.ExitCode;
+            }
+
+            // watch dog to workaround dnu restore hangs
+            var lastSignal = DateTime.UtcNow;
+            var wasKilledByWatchDog = false;
+            var watchDog = Task.Factory.StartNew(async () =>
+            {
+                while (!restoreProcess.HasExited)
+                {
+                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(20))
+                    {
+                        _logger.WriteError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
+                        wasKilledByWatchDog = true;
+                        restoreProcess.KillAll();
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+                }
+            });
+
+            restoreProcess.OutputDataReceived += (sender, e) =>
+            {
+                _logger.WriteInformation(e.Data);
+                lastSignal = DateTime.UtcNow;
+            };
+            restoreProcess.ErrorDataReceived += (sender, e) =>
+            {
+                _logger.WriteError(e.Data);
+                lastSignal = DateTime.UtcNow;
+            };
+
+            restoreProcess.BeginOutputReadLine();
+            restoreProcess.BeginErrorReadLine();
+            restoreProcess.WaitForExit();
+
+            return wasKilledByWatchDog && retry > 0
+                ? DoRun(project, retry - 1)
+                : restoreProcess.ExitCode;
         }
     }
 }
