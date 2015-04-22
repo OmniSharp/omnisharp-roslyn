@@ -22,7 +22,7 @@ namespace OmniSharp.ScriptCs
 {
     public class ScriptCsProjectSystem : IProjectSystem
     {
-        private static string baseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+        private static readonly string BaseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
         private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _env;
         private readonly ILogger _logger;
@@ -37,7 +37,7 @@ namespace OmniSharp.ScriptCs
 
         public void Initalize()
         {
-            _logger.WriteInformation(string.Format("Detecting CSX files in '{0}'.", _env.Path));
+            _logger.WriteInformation($"Detecting CSX files in '{_env.Path}'.");
 
             var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.TopDirectoryOnly);
 
@@ -47,7 +47,7 @@ namespace OmniSharp.ScriptCs
                 return;
             }
 
-            _logger.WriteInformation(string.Format("Found {0} CSX files.", allCsxFiles.Length));
+            _logger.WriteInformation($"Found {allCsxFiles.Length} CSX files.");
             LogManager.Adapter = new ConsoleOutLoggerFactoryAdapter();
 
             //todo: initialize assembly redirects or not?
@@ -108,7 +108,7 @@ namespace OmniSharp.ScriptCs
                     var fileName = Path.GetFileName(csxPath);
 
                     var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
-                    var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, string.Format("{0}.dll", fileName), LanguageNames.CSharp, null, null,
+                    var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, $"{fileName}.dll", LanguageNames.CSharp, null, null,
                                                             compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
 
                     _workspace.AddProject(project);
@@ -119,7 +119,8 @@ namespace OmniSharp.ScriptCs
                         var loadedFileName = Path.GetFileName(filePath);
 
                         var loadedFileProjectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
-                        var loadedFileSubmissionProject = ProjectInfo.Create(loadedFileProjectId, VersionStamp.Create(), string.Format("{0}-LoadedFrom-{1}", loadedFileName, fileName), string.Format("{0}-LoadedFrom-{1}.dll", loadedFileName, fileName), LanguageNames.CSharp, null, null,
+                        var loadedFileSubmissionProject = ProjectInfo.Create(loadedFileProjectId, VersionStamp.Create(),
+                            $"{loadedFileName}-LoadedFrom-{fileName}", $"{loadedFileName}-LoadedFrom-{fileName}.dll", LanguageNames.CSharp, null, null,
                                             compilationOptions, parseOptions, null, null, references, null, null, true, typeof(IScriptHost));
 
                         _workspace.AddProject(loadedFileSubmissionProject);
@@ -130,14 +131,14 @@ namespace OmniSharp.ScriptCs
                 }
                 catch (InvalidDirectiveUseException ex)
                 {
-                    _logger.WriteError(string.Format("{0} will be ignored due to the following error: {1}", csxPath, ex.Message), ex);
+                    _logger.WriteError($"{csxPath} will be ignored due to the following error: {ex.Message}", ex);
                 }
             }
         }
 
         private void ImportReferences(List<MetadataReference> listOfReferences, IEnumerable<string> referencesToImport)
         {
-            foreach (var importedReference in referencesToImport)
+            foreach (var importedReference in referencesToImport.Where(x => !x.ToLowerInvariant().Contains("scriptcs.contracts")))
             {
                 if (_scriptServices.FileSystem.IsPathRooted(importedReference))
                 {
@@ -146,7 +147,7 @@ namespace OmniSharp.ScriptCs
                 }
                 else
                 {
-                    listOfReferences.Add(MetadataReference.CreateFromFile(Path.Combine(baseAssemblyPath, importedReference.ToLower().EndsWith(".dll") ? importedReference : importedReference + ".dll")));
+                    listOfReferences.Add(MetadataReference.CreateFromFile(Path.Combine(BaseAssemblyPath, importedReference.ToLower().EndsWith(".dll") ? importedReference : importedReference + ".dll")));
                 }
             }
         }
@@ -161,8 +162,8 @@ namespace OmniSharp.ScriptCs
 
                 var documentId = DocumentId.CreateNewId(projectId, fileName);
                 var documentInfo = DocumentInfo.Create(documentId, fileName, null, SourceCodeKind.Script, null, filePath)
-        .WithSourceCodeKind(SourceCodeKind.Script)
-       .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(csxFile), VersionStamp.Create())));
+                    .WithSourceCodeKind(SourceCodeKind.Script)
+                    .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(csxFile), VersionStamp.Create())));
                 _workspace.AddDocument(documentInfo);
             }
         }
