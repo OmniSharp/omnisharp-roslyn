@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -16,6 +17,7 @@ namespace OmniSharp.AspNet5
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
+        private readonly IEventEmitter _emitter;
         public string RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
@@ -25,11 +27,13 @@ namespace OmniSharp.AspNet5
 
         public AspNet5Paths(IOmnisharpEnvironment env,
                             OmniSharpOptions options,
-                            ILoggerFactory loggerFactory)
+                            ILoggerFactory loggerFactory,
+                            IEventEmitter emitter)
         {
             _env = env;
             _options = options;
             _logger = loggerFactory.Create<AspNet5Paths>();
+            _emitter = emitter;
 
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath, "dnx", "dnx.exe");
@@ -41,7 +45,10 @@ namespace OmniSharp.AspNet5
 
         private string GetRuntimePath()
         {
-            var versionOrAlias = GetRuntimeVersionOrAlias() ?? _options.AspNet5.Alias ?? "default";
+            var root = ResolveRootDirectory(_env.Path);
+            var globalJson = Path.Combine(root, "global.json");
+            var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
+            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.AspNet5.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())
@@ -65,17 +72,23 @@ namespace OmniSharp.AspNet5
                 }
             }
 
-            _logger.WriteError("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations));
-
+            var message = new ErrorMessage()
+            {
+                Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations))
+            };
+            if (versionOrAliasToken != null)
+            {
+                message.FileName = globalJson;
+                message.Line = ((IJsonLineInfo)versionOrAliasToken).LineNumber;
+                message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
+            }
+            _emitter.Emit(EventTypes.Error, message);
+            _logger.WriteError(message.Text);
             return null;
         }
 
-        private string GetRuntimeVersionOrAlias()
+        private JToken GetRuntimeVersionOrAlias(string globalJson)
         {
-            var root = ResolveRootDirectory(_env.Path);
-
-            var globalJson = Path.Combine(root, "global.json");
-
             if (File.Exists(globalJson))
             {
                 _logger.WriteInformation("Looking for sdk version in '{0}'.", globalJson);
@@ -83,17 +96,16 @@ namespace OmniSharp.AspNet5
                 using (var stream = File.OpenRead(globalJson))
                 {
                     var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
-                    return obj["sdk"]?["version"]?.Value<string>();
+                    return obj["sdk"]?["version"];
                 }
             }
 
             return null;
         }
 
-        public static string ResolveRootDirectory(string projectPath)
+        private static string ResolveRootDirectory(string projectPath)
         {
             var di = new DirectoryInfo(projectPath);
-
             while (di.Parent != null)
             {
                 if (di.EnumerateFiles("global.json").Any())
@@ -103,7 +115,6 @@ namespace OmniSharp.AspNet5
 
                 di = di.Parent;
             }
-
             // If we don't find any files then make the project folder the root
             return projectPath;
         }

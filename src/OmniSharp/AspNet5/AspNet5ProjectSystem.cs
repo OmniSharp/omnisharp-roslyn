@@ -54,7 +54,7 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
-            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
+            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory, emitter);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
             _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, emitter, context, _aspNet5Paths);
             _context = context;
@@ -361,6 +361,11 @@ namespace OmniSharp.AspNet5
                         }
 
                         frameworkProject.Loaded = true;
+                    }
+                    else if (m.MessageType == "Error")
+                    {
+                        var val = m.Payload.ToObject<Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages.ErrorMessage>();
+                        _logger.WriteError(val.Message);
                     }
 
                     if (project.ProjectsByFramework.Values.All(p => p.Loaded))
