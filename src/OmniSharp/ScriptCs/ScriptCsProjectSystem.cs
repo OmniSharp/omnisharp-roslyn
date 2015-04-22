@@ -1,22 +1,21 @@
 ﻿#if ASPNET50
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Common.Logging;
+using Common.Logging.Simple;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
 using OmniSharp.Services;
-using System.Reflection;
-using System.IO;
-using System.Linq;
 using ScriptCs;
-using Common.Logging;
 using ScriptCs.Contracts;
-using System.Collections.Generic;
+using ScriptCs.Contracts.Exceptions;
 using ScriptCs.Hosting;
 using LogLevel = ScriptCs.Contracts.LogLevel;
-using System;
-using Common.Logging.Simple;
-using Autofac;
-using ScriptCs.Contracts.Exceptions;
 
 namespace OmniSharp.ScriptCs
 {
@@ -49,10 +48,6 @@ namespace OmniSharp.ScriptCs
 
             _logger.WriteInformation($"Found {allCsxFiles.Length} CSX files.");
             LogManager.Adapter = new ConsoleOutLoggerFactoryAdapter();
-
-            //todo: initialize assembly redirects or not?
-            //var initializationServices = new InitializationServices(scriptcsLogger);
-            //initializationServices.GetAppDomainAssemblyResolver().Initialize();
 
             //script name is added here as a fake one (dir path not even a real file); this is OK though -> it forces MEF initialization
             var scriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), LogManager.GetCurrentClassLogger()).

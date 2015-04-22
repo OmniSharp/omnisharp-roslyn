@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
@@ -21,8 +22,14 @@ namespace OmniSharp
             foreach (var document in documents)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
+                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
 
-                foreach (var quickFix in semanticModel.GetDiagnostics().Select(MakeQuickFix))
+                if (document.SourceCodeKind != SourceCodeKind.Regular)
+                {
+                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
+                }
+
+                foreach (var quickFix in diagnostics.Select(MakeQuickFix))
                 {
                     var existingQuickFix = quickFixes.FirstOrDefault(q => q.Equals(quickFix));
                     if (existingQuickFix == null)
