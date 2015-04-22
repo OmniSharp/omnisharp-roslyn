@@ -168,6 +168,11 @@ namespace OmniSharp.MSBuild
             catch (Exception ex)
             {
                 _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
+                _emitter.Emit(EventTypes.Error, new ErrorMessage()
+                {
+                    FileName = projectFilePath,
+                    Text = ex.ToString()
+                });
             }
 
             _emitter.Emit(EventTypes.MsBuildProjectDiagnostics, new MSBuildProjectDiagnostics()
