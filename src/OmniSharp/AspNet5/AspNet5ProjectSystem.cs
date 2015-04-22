@@ -535,16 +535,24 @@ namespace OmniSharp.AspNet5
             }
             else
             {
+                IEnumerable<string> paths;
 #if ASPNET50
-                var matcher = new Matcher();
-                matcher.AddIncludePatterns(_options.AspNet5.Projects.Split(';'));
-
-                foreach (var path in matcher.GetResultsInFullPath(_env.Path))
+                if (_options.AspNet5.Projects != "**/project.json")
+                {
+                    var matcher = new Matcher();
+                    matcher.AddIncludePatterns(_options.AspNet5.Projects.Split(';'));
+                    paths = matcher.GetResultsInFullPath(_env.Path);
+                }
+                else
+                {
+                    paths = Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories);
+                }
 #else
                 // The matcher works on CoreCLR but Omnisharp still targets aspnetcore50 instead of
                 // dnxcore50
-                foreach (var path in Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories))
+                paths = Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories);
 #endif 
+                foreach (var path in paths)
                 {
                     string projectFile = null;
                     
