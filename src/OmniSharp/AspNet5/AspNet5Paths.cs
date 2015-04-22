@@ -18,7 +18,6 @@ namespace OmniSharp.AspNet5
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
-        public string RootDirectory { get; private set; }
         public string RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
@@ -36,7 +35,6 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5Paths>();
             _emitter = emitter;
 
-            RootDirectory = ResolveRootDirectory(_env.Path);
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath, "dnx", "dnx.exe");
             Dnu = FirstPath(RuntimePath, "dnu", "dnu.cmd");
@@ -45,18 +43,11 @@ namespace OmniSharp.AspNet5
             K   = FirstPath(RuntimePath, "k", "k.cmd");
         }
 
-        public string GlobalJson
-        {
-            get
-            {
-                var globalJson = Path.Combine(RootDirectory, "global.json");
-                return File.Exists(globalJson) ? globalJson : null;
-            }
-        }
-
         private string GetRuntimePath()
         {
-            var versionOrAliasToken = GetRuntimeVersionOrAlias();
+            var root = ResolveRootDirectory(_env.Path);
+            var globalJson = Path.Combine(root, "global.json");
+            var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
             var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.AspNet5.Alias ?? "default";
             var seachedLocations = new List<string>();
 
@@ -80,13 +71,14 @@ namespace OmniSharp.AspNet5
                     seachedLocations.Add(path);
                 }
             }
+
             var message = new ErrorMessage()
             {
                 Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}", versionOrAlias, string.Join("\n", seachedLocations))
             };
             if (versionOrAliasToken != null)
             {
-                message.FileName = GlobalJson;
+                message.FileName = globalJson;
                 message.Line = ((IJsonLineInfo)versionOrAliasToken).LineNumber;
                 message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
             }
@@ -95,13 +87,13 @@ namespace OmniSharp.AspNet5
             return null;
         }
 
-        private JToken GetRuntimeVersionOrAlias()
+        private JToken GetRuntimeVersionOrAlias(string globalJson)
         {
-            if (GlobalJson != null)
+            if (File.Exists(globalJson))
             {
-                _logger.WriteInformation("Looking for sdk version in '{0}'.", GlobalJson);
+                _logger.WriteInformation("Looking for sdk version in '{0}'.", globalJson);
 
-                using (var stream = File.OpenRead(GlobalJson))
+                using (var stream = File.OpenRead(globalJson))
                 {
                     var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
                     return obj["sdk"]?["version"];
