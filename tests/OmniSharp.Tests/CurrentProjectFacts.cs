@@ -37,7 +37,7 @@ namespace OmniSharp.Tests
 
         private AspNet5Project GetProjectContainingSourceFile(string name)
         {
-            var controller = new ProjectSystemController(_context, null, _workspace);
+            var controller = new ProjectSystemController(_context, null, null, _workspace);
 
             var request = new Request
             {

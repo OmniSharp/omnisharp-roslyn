@@ -2,6 +2,7 @@
 using OmniSharp.AspNet5;
 using OmniSharp.Models;
 using OmniSharp.MSBuild;
+using OmniSharp.ScriptCs;
 
 namespace OmniSharp
 {
@@ -10,11 +11,14 @@ namespace OmniSharp
         private readonly AspNet5Context _aspnet5Context;
         private readonly OmnisharpWorkspace _workspace;
         private readonly MSBuildContext _msbuildContext;
+        private readonly ScriptCsContext _scriptCsContext;
 
-        public ProjectSystemController(AspNet5Context aspnet5Context, MSBuildContext msbuildContext, OmnisharpWorkspace workspace)
+        public ProjectSystemController(AspNet5Context aspnet5Context, MSBuildContext msbuildContext, ScriptCsContext scriptCsContext,
+            OmnisharpWorkspace workspace)
         {
             _aspnet5Context = aspnet5Context;
             _msbuildContext = msbuildContext;
+            _scriptCsContext = scriptCsContext;
             _workspace = workspace;
         }
 
@@ -25,7 +29,8 @@ namespace OmniSharp
             return new WorkspaceInformationResponse
             {
                 MSBuild = new MsBuildWorkspaceInformation(_msbuildContext),
-                AspNet5 = new AspNet5WorkspaceInformation(_aspnet5Context)
+                AspNet5 = new AspNet5WorkspaceInformation(_aspnet5Context),
+                ScriptCs = _scriptCsContext
             };
         }
 
@@ -44,6 +49,7 @@ namespace OmniSharp
             {
                 msBuildProjectItem = new MSBuildProject(msBuildContextProject);
             }
+
             if (aspNet5ContextProject != null)
             {
                 aspNet5ProjectItem = new AspNet5Project(aspNet5ContextProject);

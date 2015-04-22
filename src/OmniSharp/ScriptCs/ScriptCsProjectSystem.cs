@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
+using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
 using ScriptCs;
 using ScriptCs.Contracts;
@@ -24,13 +25,15 @@ namespace OmniSharp.ScriptCs
         private static readonly string BaseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
         private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _env;
+        private readonly ScriptCsContext _scriptCsContext;
         private readonly ILogger _logger;
         private ScriptServices _scriptServices;
 
-        public ScriptCsProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory)
+        public ScriptCsProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptCsContext scriptCsContext)
         {
             _workspace = workspace;
             _env = env;
+            _scriptCsContext = scriptCsContext;
             _logger = loggerFactory.Create<ScriptCsProjectSystem>();
         }
 
@@ -46,8 +49,8 @@ namespace OmniSharp.ScriptCs
                 return;
             }
 
+            _scriptCsContext.Path = _env.Path;
             _logger.WriteInformation($"Found {allCsxFiles.Length} CSX files.");
-            LogManager.Adapter = new ConsoleOutLoggerFactoryAdapter();
 
             //script name is added here as a fake one (dir path not even a real file); this is OK though -> it forces MEF initialization
             var scriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), LogManager.GetCurrentClassLogger()).
@@ -68,6 +71,7 @@ namespace OmniSharp.ScriptCs
             {
                 try
                 {
+                    _scriptCsContext.CsxFiles.Add(csxPath);
                     var processResult = _scriptServices.FilePreProcessor.ProcessFile(csxPath);
 
                     var references = new List<MetadataReference> { mscorlib, systemCore, scriptcsContracts };
@@ -96,7 +100,12 @@ namespace OmniSharp.ScriptCs
 
                         //script pack usings
                         usings.AddRange(scriptPackSession.Namespaces);
+
+                        _scriptCsContext.ScriptPacks.UnionWith(scriptPackSession.Contexts.Select(pack => pack.GetType().ToString()));
                     }
+
+                    _scriptCsContext.References.UnionWith(references.Select(x => x.Display));
+                    _scriptCsContext.Usings.UnionWith(usings);
 
                     var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: usings.Distinct());
 
@@ -111,6 +120,7 @@ namespace OmniSharp.ScriptCs
 
                     foreach (var filePath in processResult.LoadedScripts.Distinct().Except(new[] { csxPath }))
                     {
+                        _scriptCsContext.CsxFiles.Add(filePath);
                         var loadedFileName = Path.GetFileName(filePath);
 
                         var loadedFileProjectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
