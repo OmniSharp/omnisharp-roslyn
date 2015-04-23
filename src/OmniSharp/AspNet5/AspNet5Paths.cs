@@ -17,6 +17,7 @@ namespace OmniSharp.AspNet5
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
+        public AspNet5RuntimePathResult RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
@@ -31,15 +32,15 @@ namespace OmniSharp.AspNet5
             _options = options;
             _logger = loggerFactory.Create<AspNet5Paths>();
 
-            var runtimePath = GetRuntimePath().Value;
-            Dnx = FirstPath(runtimePath, "dnx", "dnx.exe");
-            Dnu = FirstPath(runtimePath, "dnu", "dnu.cmd");
-            Klr = FirstPath(runtimePath, "klr", "klr.exe");
-            Kpm = FirstPath(runtimePath, "kpm", "kpm.cmd");
-            K   = FirstPath(runtimePath, "k", "k.cmd");
+            RuntimePath = GetRuntimePath();
+            Dnx = FirstPath(RuntimePath.Value, "dnx", "dnx.exe");
+            Dnu = FirstPath(RuntimePath.Value, "dnu", "dnu.cmd");
+            Klr = FirstPath(RuntimePath.Value, "klr", "klr.exe");
+            Kpm = FirstPath(RuntimePath.Value, "kpm", "kpm.cmd");
+            K   = FirstPath(RuntimePath.Value, "k", "k.cmd");
         }
 
-        public AspNet5RuntimePathResult GetRuntimePath()
+        private AspNet5RuntimePathResult GetRuntimePath()
         {
             var root = ResolveRootDirectory(_env.Path);
             var globalJson = Path.Combine(root, "global.json");

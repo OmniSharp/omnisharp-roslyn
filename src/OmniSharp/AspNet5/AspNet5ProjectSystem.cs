@@ -66,7 +66,7 @@ namespace OmniSharp.AspNet5
 
         public void Initalize()
         {
-            var runtimePath = _aspNet5Paths.GetRuntimePath();
+            var runtimePath = _aspNet5Paths.RuntimePath;
             _context.RuntimePath = runtimePath.Value;
 
             if (!ScanForProjects())
