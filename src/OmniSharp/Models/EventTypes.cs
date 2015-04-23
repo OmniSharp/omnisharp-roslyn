@@ -9,5 +9,6 @@ namespace OmniSharp.Models
         public static readonly string MsBuildProjectDiagnostics = "MsBuildProjectDiagnostics";
         public static readonly string PackageRestoreStarted = "PackageRestoreStarted";
         public static readonly string PackageRestoreFinished = "PackageRestoreFinished";
+        public static readonly string UnresolvedDependencies = "UnresolvedDependencies";
     }
 }
