@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -32,6 +33,7 @@ namespace OmniSharp
             var logLevel = LogLevel.Information;
             var hostPID = -1;
             var transportType = TransportType.Http;
+            var otherArgs = new List<string>();
 
             var enumerator = args.GetEnumerator();
 
@@ -61,9 +63,13 @@ namespace OmniSharp
                 {
                     transportType = TransportType.Stdio;
                 }
+                else
+                {
+                    otherArgs.Add((string)enumerator.Current);
+                }
             }
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType);
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
