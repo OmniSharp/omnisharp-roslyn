@@ -7,12 +7,14 @@ using System.Threading.Tasks;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.Logging;
 using OmniSharp.Models;
+using OmniSharp.Options;
 using OmniSharp.Services;
 
 namespace OmniSharp.AspNet5
 {
     public class PackagesRestoreTool
     {
+        private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
         private readonly AspNet5Context _context;
@@ -21,8 +23,9 @@ namespace OmniSharp.AspNet5
         private readonly IDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
-        public PackagesRestoreTool(ILoggerFactory logger, IEventEmitter emitter, AspNet5Context context, AspNet5Paths paths)
+        public PackagesRestoreTool(OmniSharpOptions options, ILoggerFactory logger, IEventEmitter emitter, AspNet5Context context, AspNet5Paths paths)
         {
+            _options = options;
             _logger = logger.Create<PackagesRestoreTool>();
             _emitter = emitter;
             _context = context;
@@ -34,6 +37,11 @@ namespace OmniSharp.AspNet5
 
         public void Run(Project project)
         {
+            if (!_options.AspNet5.EnablePackageRestore)
+            {
+                return;
+            }
+
             Task.Factory.StartNew(() =>
             {
                 object projectLock;
@@ -105,7 +113,7 @@ namespace OmniSharp.AspNet5
             {
                 while (!restoreProcess.HasExited)
                 {
-                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(20))
+                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.AspNet5.PackageRestoreTimeout))
                     {
                         _logger.WriteError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
                         wasKilledByWatchDog = true;
