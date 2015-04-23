@@ -32,6 +32,8 @@ namespace OmniSharp
             var logLevel = LogLevel.Information;
             var hostPID = -1;
             var transportType = TransportType.Http;
+            var enablePackageRestore = false;
+            var packageRestoreTimeout = 180;
 
             var enumerator = args.GetEnumerator();
 
@@ -61,9 +63,18 @@ namespace OmniSharp
                 {
                     transportType = TransportType.Stdio;
                 }
+                else if (arg == "--enablePackageRestore")
+                {
+                    enablePackageRestore = true;
+                }
+                else if (arg == "--packageRestoreTimeout")
+                {
+                    enumerator.MoveNext();
+                    packageRestoreTimeout = int.Parse((string)enumerator.Current);
+                }
             }
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType);
+            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, enablePackageRestore, packageRestoreTimeout);
 
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });

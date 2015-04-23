@@ -12,5 +12,7 @@ namespace OmniSharp.Tests
         public string SolutionFilePath { get; }
         public string ConfigurationPath { get; }
         public TransportType TransportType { get; }
+        public bool EnablePackageRestore { get; }
+        public int PackageRestoreTimeout { get; }
     }
 }
