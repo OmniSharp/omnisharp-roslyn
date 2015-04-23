@@ -5,7 +5,7 @@ namespace OmniSharp.Services
 {
     public class OmnisharpEnvironment : IOmnisharpEnvironment
     {
-        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType, bool enablePackageRestore, int packageRestoreTimeout)
+        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType)
         {
             if (System.IO.Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {
@@ -22,8 +22,6 @@ namespace OmniSharp.Services
             TraceType = traceType;
             TransportType = transportType;
             ConfigurationPath = System.IO.Path.Combine(Path, "omnisharp.json");
-            EnablePackageRestore = enablePackageRestore;
-            PackageRestoreTimeout = packageRestoreTimeout;
         }
 
         public LogLevel TraceType { get; }
@@ -39,7 +37,5 @@ namespace OmniSharp.Services
         public string ConfigurationPath { get; }
 
         public TransportType TransportType { get; }
-        public bool EnablePackageRestore { get; }
-        public int PackageRestoreTimeout { get; }
     }
 }
