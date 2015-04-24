@@ -270,6 +270,31 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
+        public async Task Returns_enums()
+        {
+            var source =
+                @"
+
+                 public enum Colors
+                 {
+                     Red,
+                     Blue
+                 }
+
+                 public class MyClass1 {
+
+                    public MyClass1()
+                        {
+                            Col$
+                        }
+                    }";
+
+            var completions = await FindCompletionsAsync(source);
+            Assert.Equal(1, completions.Count());
+            ContainsSnippet("Colors$0", completions);
+        }
+
+        [Fact]
         public async Task Returns_method_without_optional_params()
         {
             var source = @"

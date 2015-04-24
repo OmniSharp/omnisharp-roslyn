@@ -92,9 +92,12 @@ namespace OmniSharp
             {
                 completions.Add(MakeAutoCompleteResponse(request, symbol));
 
-                foreach (var ctor in typeSymbol.InstanceConstructors)
+                if (typeSymbol.TypeKind != TypeKind.Enum)
                 {
-                    completions.Add(MakeAutoCompleteResponse(request, ctor));
+                    foreach (var ctor in typeSymbol.InstanceConstructors)
+                    {
+                        completions.Add(MakeAutoCompleteResponse(request, ctor));
+                    }
                 }
                 return completions;
             }
