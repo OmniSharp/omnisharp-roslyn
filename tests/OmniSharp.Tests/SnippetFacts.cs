@@ -42,7 +42,7 @@ namespace OmniSharp.Tests
                              someObj.G$
                          }
                      }";
-            
+
             var completions = await FindCompletionsAsync(source);
             ContainsSnippet("Get<${1:SomeType}>()$0 : string", completions);
         }
@@ -79,7 +79,7 @@ namespace OmniSharp.Tests
                              dict.Sel$
                          }
                      }";
-            
+
             var completions = await FindCompletionsAsync(source);
             ContainsSnippet("Select(${1:Func<KeyValuePair<string, object>, TResult> selector})$0 : IEnumerable<TResult>", completions);
         }
@@ -97,7 +97,7 @@ namespace OmniSharp.Tests
                          somef$
                      }
                  }";
-            
+
             var completions = await FindCompletionsAsync(source);
             ContainsSnippet("someField$0 : int", completions);
         }
@@ -125,7 +125,7 @@ namespace OmniSharp.Tests
             ContainsSnippet("MyClass(${1:int param}, ${2:string param})$0", completions);
         }
 
-        
+
         [Fact]
         public async Task Can_template_generic_type_arguments()
         {
@@ -137,7 +137,7 @@ namespace OmniSharp.Tests
                           var l = new Dict$
                       }
                   }";
-            
+
             var completions = await FindCompletionsAsync(source);
             ContainsSnippet("Dictionary<${1:TKey}, ${2:TValue}>()$0", completions);
         }
@@ -153,7 +153,7 @@ namespace OmniSharp.Tests
                           var l = new Lis$
                       }
                   }";
-            
+
             var completions = await FindCompletionsAsync(source);
             ContainsSnippet("List<${1:T}>(${2:IEnumerable<T> collection})$0", completions);
 
@@ -273,21 +273,15 @@ namespace OmniSharp.Tests
         public async Task Returns_enums()
         {
             var source =
-                @"
+                @"public enum Colors { Red, Blue }
 
-                 public enum Colors
-                 {
-                     Red,
-                     Blue
-                 }
-
-                 public class MyClass1 {
-
-                    public MyClass1()
-                        {
-                            Col$
-                        }
-                    }";
+                  public class MyClass1
+                  {
+                      public MyClass1()
+                      {
+                          Col$
+                      }
+                  }";
 
             var completions = await FindCompletionsAsync(source);
             Assert.Equal(1, completions.Count());
@@ -360,7 +354,7 @@ namespace OmniSharp.Tests
         private string BuildCompletion(AutoCompleteResponse completion)
         {
             string result = completion.Snippet;
-            if(completion.ReturnType != null)
+            if (completion.ReturnType != null)
             {
                 result += " : " + completion.ReturnType;
             }
