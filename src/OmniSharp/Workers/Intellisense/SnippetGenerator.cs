@@ -37,7 +37,9 @@ namespace OmniSharp
                 {
                     RenderMethodSymbol(symbol as IMethodSymbol);
                 }
-                else if (symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter)
+                else if (symbol.Kind == SymbolKind.Event ||
+                         symbol.Kind == SymbolKind.Local ||
+                         symbol.Kind == SymbolKind.Parameter)
                 {
                     _sb.Append(symbol.Name);
                 }

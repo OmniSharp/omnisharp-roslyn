@@ -295,6 +295,25 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
+        public async Task Returns_event_without_event_keyword()
+        {
+            var source =
+                @"
+                public class MyClass1 {
+
+                    public event TickHandler TickChanged;
+                    public MyClass1()
+                    {
+                        Tick$
+                    }
+                }";
+
+            var completions = await FindCompletionsAsync(source);
+            Assert.Equal(1, completions.Count());
+            ContainsSnippet("TickChanged$0", completions);
+        }
+
+        [Fact]
         public async Task Returns_method_without_optional_params()
         {
             var source = @"
