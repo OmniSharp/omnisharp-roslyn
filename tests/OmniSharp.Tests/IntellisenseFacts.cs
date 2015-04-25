@@ -175,18 +175,20 @@ namespace OmniSharp.Tests
             {
                 System.Console.Error.WriteLine("Expected");
                 System.Console.Error.WriteLine("--------");
+
                 foreach (var completion in expected)
                 {
                     System.Console.WriteLine(completion);
                 }
+
                 System.Console.Error.WriteLine();
                 System.Console.Error.WriteLine("Found");
                 System.Console.Error.WriteLine("-----");
+
                 foreach (var completion in completions)
                 {
                     System.Console.WriteLine(completion);
                 }
-
             }
             Assert.Equal(expected, completions);
         }
