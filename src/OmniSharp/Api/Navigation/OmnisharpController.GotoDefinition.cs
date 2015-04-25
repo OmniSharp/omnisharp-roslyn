@@ -11,7 +11,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]
-        public async Task<IActionResult> GotoDefinition(Request request)
+        public async Task<GotoDefinitionResponse> GotoDefinition(Request request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -24,7 +24,7 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                
+
                 if (symbol != null)
                 {
                     var lineSpan = symbol.Locations.First().GetMappedLineSpan();
@@ -37,7 +37,7 @@ namespace OmniSharp
                 }
             }
 
-            return new ObjectResult(response);
+            return response;
         }
     }
 }

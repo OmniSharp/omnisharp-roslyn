@@ -2,7 +2,7 @@
 
 pushd %~dp0
 set "KRE_NUGET_API_URL=https://www.nuget.org/api/v2"
-setlocal EnableDelayedExpansion 
+setlocal EnableDelayedExpansion
 where kvm
 if %ERRORLEVEL% neq 0 (
     @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/aspnet/Home/master/kvminstall.ps1'))"
@@ -27,5 +27,7 @@ call k test
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..\..
 call kpm bundle src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime kre-clr-win-x86.1.0.0-beta3
+cd src\OmniSharp.TypeScriptGeneration
+call k run ..\..\artifacts\build\omnisharp
 
 popd
