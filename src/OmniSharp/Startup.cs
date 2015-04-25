@@ -30,6 +30,11 @@ namespace OmniSharp
            var configuration = new Configuration()
                 .AddJsonFile("config.json");
 
+            if (Program.Environment.OtherArgs != null)
+            {
+                configuration.AddCommandLine(Program.Environment.OtherArgs);
+            }
+            
             // Use the local omnisharp config if there's any in the root path
             if (File.Exists(Program.Environment.ConfigurationPath))
             {

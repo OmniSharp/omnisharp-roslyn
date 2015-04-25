@@ -56,7 +56,7 @@ namespace OmniSharp.AspNet5
             _options = optionsAccessor.Options;
             _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
-            _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, emitter, context, _aspNet5Paths);
+            _packagesRestoreTool = new PackagesRestoreTool(_options, loggerFactory, emitter, context, _aspNet5Paths);
             _context = context;
             _watcher = watcher;
             _emitter = emitter;
@@ -291,6 +291,11 @@ namespace OmniSharp.AspNet5
                         if (unresolvedDependencies.Any())
                         {
                             _logger.WriteInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unresolvedDependencies.Select(d => d.Name)));
+                            _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
+                            {
+                                FileName = project.Path,
+                                UnresolvedDependencies = unresolvedDependencies.Select(d => new PackageDependency() { Name = d.Name, Version = d.Version })
+                            });
                             _packagesRestoreTool.Run(project);
                         }
                     }

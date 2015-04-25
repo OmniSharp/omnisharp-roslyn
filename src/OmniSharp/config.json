@@ -1,7 +1,9 @@
 ﻿{
     "aspnet5": {
         "alias": "default",
-        "projects": "**/project.json"
+        "projects": "**/project.json",
+        "enablePackageRestore": true,
+        "packageRestoreTimeout": "180"
     },
     "formattingOptions": {
         "newLine": "\n",
