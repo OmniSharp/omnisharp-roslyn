@@ -18,7 +18,7 @@ namespace OmniSharp.AspNet5
                                           IOptions<OmniSharpOptions> options)
         {
             _context = context;
-            var aspNet5Paths = new AspNet5Paths(env, options.Options, loggerFactory, emitter);
+            var aspNet5Paths = new AspNet5Paths(env, options.Options, loggerFactory);
             _dnx = aspNet5Paths.Dnx != null ? aspNet5Paths.Dnx + " ." : aspNet5Paths.K;
         }
 

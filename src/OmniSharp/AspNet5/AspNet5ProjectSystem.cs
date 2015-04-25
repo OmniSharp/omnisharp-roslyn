@@ -54,7 +54,7 @@ namespace OmniSharp.AspNet5
             _logger = loggerFactory.Create<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
-            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory, emitter);
+            _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
             _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _aspNet5Paths);
             _packagesRestoreTool = new PackagesRestoreTool(loggerFactory, emitter, context, _aspNet5Paths);
             _context = context;
@@ -66,19 +66,21 @@ namespace OmniSharp.AspNet5
 
         public void Initalize()
         {
-            _context.RuntimePath = _aspNet5Paths.RuntimePath;
-            
-            if (_context.RuntimePath == null)
-            {
-                // There is no default k found so do nothing
-                _logger.WriteInformation("No default runtime found");
-                return;
-            }
+            var runtimePath = _aspNet5Paths.RuntimePath;
+            _context.RuntimePath = runtimePath.Value;
 
             if (!ScanForProjects())
             {
                 // No ASP.NET 5 projects found so do nothing
                 _logger.WriteInformation("No project.json based projects found");
+                return;
+            }
+
+            if (_context.RuntimePath == null)
+            {
+                // There is no default k found so do nothing
+                _logger.WriteInformation("No default runtime found");
+                _emitter.Emit(EventTypes.Error, runtimePath.Error);
                 return;
             }
 
