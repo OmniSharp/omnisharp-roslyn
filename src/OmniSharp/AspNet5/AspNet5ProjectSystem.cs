@@ -389,24 +389,6 @@ namespace OmniSharp.AspNet5
             });
 
             wh.Wait();
-
-            // TODO: Subscribe to _workspace changes and update DTH
-            //Thread.Sleep(5000);
-
-            //_workspace._workspaceChanged += (sender, e) =>
-            //{
-            //    var arg = e;
-            //    var kind = e.Kind;
-
-            //    if (e.Kind == _workspaceChangeKind.DocumentChanged || 
-            //        e.Kind == _workspaceChangeKind.DocumentAdded || 
-            //        e.Kind == _workspaceChangeKind.DocumentRemoved)
-            //    {
-            //        var frameworkProject = context._workspaceMapping[e.ProjectId];
-
-            //        TriggerDependeees(context, frameworkProject.ProjectState.Path);
-            //    }
-            //};
         }
 
         private void OnShutdown()
@@ -414,7 +396,7 @@ namespace OmniSharp.AspNet5
             _designTimeHostManager.Stop();
         }
 
-        private void TriggerDependeees(string path)
+        private void TriggerDependeees(string path, string messageType)
         {
             // temp: run [dnu|kpm] restore when project.json changed
             var project = _context.GetProject(path);
@@ -458,9 +440,22 @@ namespace OmniSharp.AspNet5
                 var message = new Message();
                 message.HostId = _context.HostId;
                 message.ContextId = contextId;
-                message.MessageType = "FilesChanged";
+                message.MessageType = messageType;
                 _context.Connection.Post(message);
             }
+        }
+        
+        private void WatchProject(string projectFile)
+        {
+            // Whenever the project file changes, trigger FilesChanged to the design time host
+            // and all dependendees of the project. That means if A -> B -> C
+            // if C changes, notify A and B
+            _watcher.Watch(projectFile, path => TriggerDependeees(path, "FilesChanged"));
+
+            // When the project.lock.json file changes, refresh dependencies
+            var lockFile = Path.ChangeExtension(projectFile, "lock.json");
+
+            _watcher.Watch(lockFile, _ => TriggerDependeees(projectFile, "RefreshDependencies"));
         }
 
         private void Initialize()
@@ -471,6 +466,8 @@ namespace OmniSharp.AspNet5
                 {
                     continue;
                 }
+
+                WatchProject(project.Path);
 
                 var projectDirectory = Path.GetDirectoryName(project.Path).TrimEnd(Path.DirectorySeparatorChar);
 
@@ -500,6 +497,8 @@ namespace OmniSharp.AspNet5
             {
                 return project.ContextId;
             }
+
+            WatchProject(projectFile);
 
             // Send an InitializeMessage for each project
             var initializeMessage = new InitializeMessage
@@ -535,8 +534,6 @@ namespace OmniSharp.AspNet5
                 {
                     _logger.WriteInformation(string.Format("Found project '{0}'.", projectInThisFolder));
                     
-                    _watcher.Watch(projectInThisFolder, TriggerDependeees);
-
                     anyProjects = true;
                 }
             }
@@ -587,8 +584,6 @@ namespace OmniSharp.AspNet5
                     }
 
                     _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
-
-                    _watcher.Watch(projectFile, TriggerDependeees);
 
                     anyProjects = true;
                 }
