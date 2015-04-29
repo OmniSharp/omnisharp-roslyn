@@ -25,7 +25,8 @@ namespace OmniSharp
             var root = await tree.GetRootAsync();
 
             var nodes = new List<SyntaxNode>();
-            if (request.Lines == null || request.Lines.Length == 0)
+            var highlightFile = request.Lines == null || request.Lines.Length == 0;
+            if (highlightFile)
             {
                 nodes.Add(root);
             }
@@ -57,7 +58,7 @@ namespace OmniSharp
             }
 
             var regions = walker.Regions;
-            if (request.Lines != null && request.Lines.Length != 0)
+            if (!highlightFile)
             {
                 return regions.Where(r => request.Lines.Contains(r.Line));
             }
