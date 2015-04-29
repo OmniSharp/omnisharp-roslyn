@@ -13,8 +13,8 @@ namespace OmniSharp
 {
     public class HighlightSyntaxWalker : CSharpSyntaxWalker
     {
-        readonly SemanticModel _model;
-        readonly List<HighlightResponse> _regions;
+        private readonly SemanticModel _model;
+        private readonly List<HighlightResponse> _regions;
 
         // TODO: Fix overlap
         public IImmutableList<HighlightResponse> Regions
