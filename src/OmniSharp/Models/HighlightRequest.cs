@@ -7,6 +7,9 @@ namespace OmniSharp.Models
         ///   If none are given, highlight the entire
         ///   file.
         /// </summary>
+        /// <remarks>
+        ///   This is 0 indexed.
+        /// </remarks>
         public int[] Lines { get; set; }
     }
 }
