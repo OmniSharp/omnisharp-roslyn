@@ -73,8 +73,6 @@ namespace OmniSharp
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            //var serviceCollection = HostingServices.Create(_serviceProvider, config);
-            //serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
             var engine = new HostingEngine(_serviceProvider);
             var context = new HostingContext()
             {
@@ -82,7 +80,7 @@ namespace OmniSharp
             };
         
             var serverShutdown = engine.Start(context);
-            
+            context.Services.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
             var hostingEnv = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             var appEnv = context.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
             
@@ -93,7 +91,7 @@ namespace OmniSharp
             if (transportType == TransportType.Stdio)
             {
                 context.Server = null;
-                //context.ServerFactory = new Stdio.StdioServerFactory(Console.In, context.ApplicationServices.GetRequiredService<ISharedTextWriter>());
+                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, context.ApplicationServices.GetRequiredService<ISharedTextWriter>());
             }
 
             var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();

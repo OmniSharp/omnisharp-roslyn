@@ -128,8 +128,7 @@ namespace OmniSharp
                     
             if (env.TransportType == TransportType.Stdio)
             {
-                //TODO: JAMES Add back stdio logger
-                //loggerFactory.AddStdio(writer, logFilter);
+                loggerFactory.AddStdio(writer, logFilter);
             }
             else
             {
