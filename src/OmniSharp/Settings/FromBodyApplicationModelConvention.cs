@@ -14,14 +14,18 @@ namespace OmniSharp.Settings
                 {
                     foreach (var parameter in action.Parameters)
                     {
-                        if (parameter.BinderMetadata is IBinderMetadata || ValueProviderResult.CanConvertFromString(parameter.ParameterInfo.ParameterType))
+                        //not sure on what to do with this check
+                        if (ValueProviderResult.CanConvertFromString(parameter.ParameterInfo.ParameterType))
                         {
                             // behavior configured or simple type so do nothing
                         }
                         else
                         {
                             // Complex types are by-default from the body.
-                            parameter.BinderMetadata = new FromBodyAttribute();
+                            parameter.BindingInfo = new BindingInfo() 
+                            {
+                                BindingSource = (new FromBodyAttribute()).BindingSource, 
+                            };
                         }
                     }
                 }

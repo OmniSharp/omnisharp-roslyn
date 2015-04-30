@@ -2,8 +2,8 @@
   "version": "1.0.0-*",
   "description": "ASP.NET 5 web server for stdio",
   "dependencies": {
-    "Microsoft.AspNet.Hosting": "1.0.0-beta3",
-    "Microsoft.AspNet.Http.Interfaces": "1.0.0-beta3",
+    "Microsoft.AspNet.Hosting": "1.0.0-beta4-11618",
+    "Microsoft.AspNet.Http.Interfaces": "1.0.0-beta4-11362",
     "Newtonsoft.Json": "6.0.8"
   },
     "frameworks": {

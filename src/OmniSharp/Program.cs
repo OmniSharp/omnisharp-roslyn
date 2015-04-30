@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
@@ -74,30 +73,28 @@ namespace OmniSharp
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = HostingServices.Create(_serviceProvider, config);
-            serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
-
-            var services = serviceCollection.BuildServiceProvider();
-            var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
-            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
+            //var serviceCollection = HostingServices.Create(_serviceProvider, config);
+            //serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
             var context = new HostingContext()
             {
-                Services = services,
                 Configuration = config,
-                ServerName = "Kestrel",
-                ApplicationName = appEnv.ApplicationName,
-                EnvironmentName = hostingEnv.EnvironmentName,
             };
+        
+            var hostingEnv = _serviceProvider.GetRequiredService<IHostingEnvironment>();
+            var appEnv = _serviceProvider.GetRequiredService<IApplicationEnvironment>();
+            
+            context.ApplicationName = appEnv.ApplicationName;
+            context.EnvironmentName = hostingEnv.EnvironmentName;
             
             if (transportType == TransportType.Stdio)
             {
-                context.ServerName = null;
-                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, services.GetRequiredService<ISharedTextWriter>());
+                context.Server = null;
+                //context.ServerFactory = new Stdio.StdioServerFactory(Console.In, context.ApplicationServices.GetRequiredService<ISharedTextWriter>());
             }
 
-            var engine = services.GetRequiredService<IHostingEngine>();
-            var appShutdownService = services.GetRequiredService<IApplicationShutdown>();
+            var engine = new HostingEngine(_serviceProvider);
+            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEvent(false);
 
             var serverShutdown = engine.Start(context);
@@ -108,7 +105,7 @@ namespace OmniSharp
                 shutdownHandle.Set();
             });
 
-#if ASPNETCORE50
+#if DNXCORE50
             var ignored = Task.Run(() =>
             {
                 Console.WriteLine("Started");

@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild
             _watcher = watcher;
             _env = env;
             _options = optionsAccessor.Options.MsBuild;
-            _logger = loggerFactory.Create<MSBuildProjectSystem>();
+            _logger = loggerFactory.CreateLogger(typeof(MSBuildProjectSystem).FullName);
             _emitter = emitter;
             _context = context;
         }
@@ -63,7 +63,7 @@ namespace OmniSharp.MSBuild
 
                 if (result.Message != null)
                 {
-                    _logger.WriteInformation(result.Message);
+                    _logger.LogInformation(result.Message);
                 }
 
                 if (result.Solution == null)
@@ -86,7 +86,7 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            _logger.WriteInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
+            _logger.LogInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
 
             foreach (var block in solutionFile.ProjectBlocks)
             {
@@ -94,7 +94,7 @@ namespace OmniSharp.MSBuild
                 {
                     if (UnityTypeGuid(block.ProjectName) != block.ProjectTypeGuid)
                     {
-                        _logger.WriteWarning("Skipped unsupported project type '{0}'", block.ProjectPath);
+                        _logger.LogWarning("Skipped unsupported project type '{0}'", block.ProjectPath);
                         continue;
                     }
                 }
@@ -106,7 +106,7 @@ namespace OmniSharp.MSBuild
 
                 var projectFilePath = Path.GetFullPath(Path.GetFullPath(Path.Combine(_env.Path, block.ProjectPath.Replace('\\', Path.DirectorySeparatorChar))));
 
-                _logger.WriteInformation(string.Format("Loading project from '{0}'.", projectFilePath));
+                _logger.LogInformation(string.Format("Loading project from '{0}'.", projectFilePath));
 
                 var projectFileInfo = CreateProject(projectFilePath);
 
@@ -168,12 +168,12 @@ namespace OmniSharp.MSBuild
 
                 if (projectFileInfo == null)
                 {
-                    _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath));
+                    _logger.LogWarning(string.Format("Failed to process project file '{0}'.", projectFilePath));
                 }
             }
             catch (Exception ex)
             {
-                _logger.WriteWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
+                _logger.LogWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
                 _emitter.Emit(EventTypes.Error, new ErrorMessage()
                 {
                     FileName = projectFilePath,
@@ -260,7 +260,7 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    _logger.WriteWarning(string.Format("Unable to resolve project reference '{0}' for '{1}'.", projectReferencePath, projectFileInfo.ProjectFilePath));
+                    _logger.LogWarning(string.Format("Unable to resolve project reference '{0}' for '{1}'.", projectReferencePath, projectFileInfo.ProjectFilePath));
                 }
             }
 
@@ -275,7 +275,7 @@ namespace OmniSharp.MSBuild
             {
                 if (!File.Exists(analyzerPath))
                 {
-                    _logger.WriteWarning(string.Format("Unable to resolve assembly '{0}'", analyzerPath));
+                    _logger.LogWarning(string.Format("Unable to resolve assembly '{0}'", analyzerPath));
                 }
                 else
                 {
@@ -301,7 +301,7 @@ namespace OmniSharp.MSBuild
             {
                 if (!File.Exists(referencePath))
                 {
-                    _logger.WriteWarning(string.Format("Unable to resolve assembly '{0}'", referencePath));
+                    _logger.LogWarning(string.Format("Unable to resolve assembly '{0}'", referencePath));
                 }
                 else
                 {
@@ -312,7 +312,7 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _logger.WriteVerbose(string.Format("Adding reference '{0}' to '{1}'.", referencePath, projectFileInfo.ProjectFilePath));
+                    _logger.LogVerbose(string.Format("Adding reference '{0}' to '{1}'.", referencePath, projectFileInfo.ProjectFilePath));
                     _workspace.AddMetadataReference(project.Id, metadataReference);
                 }
             }

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.Cache.Memory;
+using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.Expiration.Interfaces;
 using Microsoft.Framework.Logging;
 using OmniSharp.Roslyn;
@@ -19,7 +19,7 @@ namespace OmniSharp.Services
         public MetadataFileReferenceCache(IMemoryCache cache, ILoggerFactory loggerFactory)
         {
             _cache = cache;
-            _logger = loggerFactory.Create<MetadataFileReferenceCache>();
+            _logger = loggerFactory.CreateLogger(typeof(MetadataFileReferenceCache).FullName);
         }
 
         public MetadataReference GetMetadataReference(string path)
@@ -28,7 +28,7 @@ namespace OmniSharp.Services
 
             var metadata = _cache.GetOrSet(cacheKey, ctx =>
             {
-                _logger.WriteVerbose(string.Format("Cache miss {0}", path));
+                _logger.LogVerbose(string.Format("Cache miss {0}", path));
 
                 ctx.AddExpirationTrigger(new FileWriteTimeTrigger(path));
 

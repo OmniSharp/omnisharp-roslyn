@@ -51,7 +51,7 @@ namespace OmniSharp.AspNet5
         {
             _workspace = workspace;
             _env = env;
-            _logger = loggerFactory.Create<AspNet5ProjectSystem>();
+            _logger = loggerFactory.CreateLogger(typeof(AspNet5ProjectSystem).FullName);
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
             _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);
@@ -72,14 +72,14 @@ namespace OmniSharp.AspNet5
             if (!ScanForProjects())
             {
                 // No ASP.NET 5 projects found so do nothing
-                _logger.WriteInformation("No project.json based projects found");
+                _logger.LogInformation("No project.json based projects found");
                 return;
             }
 
             if (_context.RuntimePath == null)
             {
                 // There is no default k found so do nothing
-                _logger.WriteInformation("No default runtime found");
+                _logger.LogInformation("No default runtime found");
                 _emitter.Emit(EventTypes.Error, runtimePath.Error);
                 return;
             }
@@ -93,7 +93,7 @@ namespace OmniSharp.AspNet5
 
                 var networkStream = new NetworkStream(socket);
 
-                _logger.WriteInformation("Connected");
+                _logger.LogInformation("Connected");
 
                 _context.DesignTimeHostPort = port;
 
@@ -290,7 +290,7 @@ namespace OmniSharp.AspNet5
 
                         if (unresolvedDependencies.Any())
                         {
-                            _logger.WriteInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unresolvedDependencies.Select(d => d.Name)));
+                            _logger.LogInformation("Project {0} has these unresolved references: {1}", project.Path, string.Join(", ", unresolvedDependencies.Select(d => d.Name)));
                             _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
                             {
                                 FileName = project.Path,
@@ -372,7 +372,7 @@ namespace OmniSharp.AspNet5
                     else if (m.MessageType == "Error")
                     {
                         var val = m.Payload.ToObject<Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages.ErrorMessage>();
-                        _logger.WriteError(val.Message);
+                        _logger.LogError(val.Message);
                     }
 
                     if (project.ProjectsByFramework.Values.All(p => p.Loaded))
@@ -521,7 +521,7 @@ namespace OmniSharp.AspNet5
 
         private bool ScanForProjects()
         {
-            _logger.WriteInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
+            _logger.LogInformation(string.Format("Scanning '{0}' for ASP.NET 5 projects", _env.Path));
 
             var anyProjects = false;
 
@@ -532,7 +532,7 @@ namespace OmniSharp.AspNet5
             {
                 if (_context.TryAddProject(projectInThisFolder))
                 {
-                    _logger.WriteInformation(string.Format("Found project '{0}'.", projectInThisFolder));
+                    _logger.LogInformation(string.Format("Found project '{0}'.", projectInThisFolder));
                     
                     anyProjects = true;
                 }
@@ -583,7 +583,7 @@ namespace OmniSharp.AspNet5
                         continue;
                     }
 
-                    _logger.WriteInformation(string.Format("Found project '{0}'.", projectFile));
+                    _logger.LogInformation(string.Format("Found project '{0}'.", projectFile));
 
                     anyProjects = true;
                 }

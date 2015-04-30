@@ -18,7 +18,7 @@ namespace OmniSharp.AspNet5
 
         public DesignTimeHostManager(ILoggerFactory loggerFactory, AspNet5Paths paths)
         {
-            _logger = loggerFactory.Create<DesignTimeHostManager>();
+            _logger = loggerFactory.CreateLogger(typeof(DesignTimeHostManager).FullName);
             _paths = paths;
         }
 
@@ -47,7 +47,7 @@ namespace OmniSharp.AspNet5
                                               hostId),
                 };
 
-#if ASPNET50
+#if DNX451
                 psi.EnvironmentVariables["KRE_APPBASE"] = Directory.GetCurrentDirectory();
                 psi.EnvironmentVariables["DNX_APPBASE"] = Directory.GetCurrentDirectory();
 #else
@@ -55,7 +55,7 @@ namespace OmniSharp.AspNet5
                 psi.Environment["DNX_APPBASE"] = Directory.GetCurrentDirectory();
 #endif
 
-                _logger.WriteVerbose(psi.FileName + " " + psi.Arguments);
+                _logger.LogVerbose(psi.FileName + " " + psi.Arguments);
 
                 _designTimeHostProcess = Process.Start(psi);
 
@@ -81,16 +81,16 @@ namespace OmniSharp.AspNet5
                 if (_designTimeHostProcess.HasExited)
                 {
                     // REVIEW: Should we quit here or retry?
-                    _logger.WriteError(string.Format("Failed to launch DesignTimeHost. Process exited with code {0}.", _designTimeHostProcess.ExitCode));
+                    _logger.LogError(string.Format("Failed to launch DesignTimeHost. Process exited with code {0}.", _designTimeHostProcess.ExitCode));
                     return;
                 }
 
-                _logger.WriteInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, _designTimeHostProcess.Id));
+                _logger.LogInformation(string.Format("Running DesignTimeHost on port {0}, with PID {1}", port, _designTimeHostProcess.Id));
 
                 _designTimeHostProcess.EnableRaisingEvents = true;
                 _designTimeHostProcess.OnExit(() =>
                 {
-                    _logger.WriteWarning("Design time host process ended");
+                    _logger.LogWarning("Design time host process ended");
 
                     Start(hostId, onConnected);
                 });
@@ -112,7 +112,7 @@ namespace OmniSharp.AspNet5
 
                 if (_designTimeHostProcess != null)
                 {
-                    _logger.WriteInformation("Shutting down DesignTimeHost");
+                    _logger.LogInformation("Shutting down DesignTimeHost");
 
                     _designTimeHostProcess.KillAll();
                     _designTimeHostProcess = null;

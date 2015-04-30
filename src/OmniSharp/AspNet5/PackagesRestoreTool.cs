@@ -26,7 +26,7 @@ namespace OmniSharp.AspNet5
         public PackagesRestoreTool(OmniSharpOptions options, ILoggerFactory logger, IEventEmitter emitter, AspNet5Context context, AspNet5Paths paths)
         {
             _options = options;
-            _logger = logger.Create<PackagesRestoreTool>();
+            _logger = logger.CreateLogger(typeof(PackagesRestoreTool).FullName);
             _emitter = emitter;
             _context = context;
             _paths = paths;
@@ -97,12 +97,12 @@ namespace OmniSharp.AspNet5
                 Arguments = "restore"
             };
 
-            _logger.WriteInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
+            _logger.LogInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
 
             var restoreProcess = Process.Start(psi);
             if (restoreProcess.HasExited)
             {
-                _logger.WriteError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
+                _logger.LogError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
                 return restoreProcess.ExitCode;
             }
 
@@ -115,7 +115,7 @@ namespace OmniSharp.AspNet5
                 {
                     if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.AspNet5.PackageRestoreTimeout))
                     {
-                        _logger.WriteError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
+                        _logger.LogError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
                         wasKilledByWatchDog = true;
                         restoreProcess.KillAll();
                     }
@@ -125,12 +125,12 @@ namespace OmniSharp.AspNet5
 
             restoreProcess.OutputDataReceived += (sender, e) =>
             {
-                _logger.WriteInformation(e.Data);
+                _logger.LogInformation(e.Data);
                 lastSignal = DateTime.UtcNow;
             };
             restoreProcess.ErrorDataReceived += (sender, e) =>
             {
-                _logger.WriteError(e.Data);
+                _logger.LogError(e.Data);
                 lastSignal = DateTime.UtcNow;
             };
 

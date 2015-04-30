@@ -5,7 +5,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
-using Microsoft.Framework.Cache.Memory;
+using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
@@ -63,11 +63,12 @@ namespace OmniSharp
             // hosting layer, this needs to be easier
             services.AddInstance<IOmnisharpEnvironment>(Program.Environment);
 
-            services.AddMvc(Configuration);
+            var temp = services.AddMvc();
+            services.Configure(config: Configuration, optionsName: "...NOT SURE...");
 
             services.Configure<MvcOptions>(opt =>
             {
-                opt.ApplicationModelConventions.Add(new FromBodyApplicationModelConvention());
+                opt.Conventions.Add(new FromBodyApplicationModelConvention());
                 opt.Filters.Add(new UpdateBufferFilter(Workspace));
             });
 
@@ -129,14 +130,15 @@ namespace OmniSharp
                     
             if (env.TransportType == TransportType.Stdio)
             {
-                loggerFactory.AddStdio(writer, logFilter);
+                //TODO: JAMES Add back stdio logger
+                //loggerFactory.AddStdio(writer, logFilter);
             }
             else
             {
                 loggerFactory.AddConsole(logFilter);
             }
 
-            var logger = loggerFactory.Create<Startup>();
+            var logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             app.UseRequestLogging();
 
@@ -144,7 +146,7 @@ namespace OmniSharp
 
             app.UseMvc();
 
-            logger.WriteInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+            logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
             
             // Forward workspace events
             app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();

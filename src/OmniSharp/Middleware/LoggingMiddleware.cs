@@ -15,7 +15,7 @@ namespace OmniSharp.Middleware
         public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
         {
             _next = next;
-            _logger = loggerFactory.Create<LoggingMiddleware>();
+            _logger = loggerFactory.CreateLogger(typeof(LoggingMiddleware).FullName);
         }
 
         public async Task Invoke(HttpContext context)
@@ -47,42 +47,42 @@ namespace OmniSharp.Middleware
                 await context.Response.Body.CopyToAsync(responseBody);
 
             }
-            _logger.WriteInformation(context.Request.Path + ": " + context.Response.StatusCode + " " + stopwatch.ElapsedMilliseconds + "ms");
+            _logger.LogInformation(context.Request.Path + ": " + context.Response.StatusCode + " " + stopwatch.ElapsedMilliseconds + "ms");
         }
 
         private void LogRequest(HttpContext context)
         {
-            _logger.WriteVerbose("************ Request ************");
-            _logger.WriteVerbose(string.Format("{0} - {1}", context.Request.Method, context.Request.Path));
-            _logger.WriteVerbose("************ Headers ************");
+            _logger.LogVerbose("************ Request ************");
+            _logger.LogVerbose(string.Format("{0} - {1}", context.Request.Method, context.Request.Path));
+            _logger.LogVerbose("************ Headers ************");
 
             foreach (var headerGroup in context.Request.Headers)
             {
                 foreach (var header in headerGroup.Value)
                 {
-                    _logger.WriteVerbose(string.Format("{0} - {1}", headerGroup.Key, header));
+                    _logger.LogVerbose(string.Format("{0} - {1}", headerGroup.Key, header));
                 }
             }
 
             context.Request.Body.Position = 0;
 
-            _logger.WriteVerbose("************  Body ************");
+            _logger.LogVerbose("************  Body ************");
             var reader = new StreamReader(context.Request.Body);
             var content = reader.ReadToEnd();
-            _logger.WriteVerbose(content);
+            _logger.LogVerbose(content);
 
             context.Request.Body.Position = 0;
         }
 
         private void LogResponse(HttpContext context)
         {
-            _logger.WriteVerbose("************  Response ************ ");
+            _logger.LogVerbose("************  Response ************ ");
 
             context.Response.Body.Position = 0;
 
             var reader = new StreamReader(context.Response.Body);
             var content = reader.ReadToEnd();
-            _logger.WriteVerbose(content);
+            _logger.LogVerbose(content);
             context.Response.Body.Position = 0;
         }
     }
