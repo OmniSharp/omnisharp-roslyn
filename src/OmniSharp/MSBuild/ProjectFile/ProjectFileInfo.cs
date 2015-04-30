@@ -12,6 +12,7 @@ using Microsoft.Build.Evaluation;
 #endif
 
 using OmniSharp.Models;
+using OmniSharp.Options;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -47,11 +48,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> Analyzers { get; private set; }
 
-        public static ProjectFileInfo Create(ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
+        public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
-
+            
 #if ASPNET50
             if (!PlatformHelper.IsMono)
             {
@@ -60,11 +61,18 @@ namespace OmniSharp.MSBuild.ProjectFile
                     { "DesignTimeBuild", "true" },
                     { "BuildProjectReferences", "false" },
                     { "_ResolveReferenceDependencies", "true" },
-                    { "SolutionDir", solutionDirectory + Path.DirectorySeparatorChar }
+                    { "SolutionDir", solutionDirectory + Path.DirectorySeparatorChar },
+                    { "VisualStudioVersion", options.VisualStudioVersion }
                 };
 
                 var collection = new ProjectCollection(properties);
-                var project = collection.LoadProject(projectFilePath);
+
+                logger.WriteInformation("Using toolset {0} for {1}", options.ToolsVersion ?? collection.DefaultToolsVersion, projectFilePath);
+
+                var project = string.IsNullOrEmpty(options.ToolsVersion) ?
+                        collection.LoadProject(projectFilePath) :
+                        collection.LoadProject(projectFilePath, options.ToolsVersion);
+                        
                 var projectInstance = project.CreateProjectInstance();
                 var buildResult = projectInstance.Build("ResolveReferences", new Microsoft.Build.Framework.ILogger[] { new MSBuildLogForwarder(logger, diagnostics) });
 
@@ -136,7 +144,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var properties = project.EvaluatedProperties.OfType<BuildProperty>()
                                                             .ToDictionary(p => p.Name);
-                                                            
+
                 projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
                 projectFileInfo.Name = Path.GetFileNameWithoutExtension(projectFilePath);
                 projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);

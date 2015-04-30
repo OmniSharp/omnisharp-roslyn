@@ -9,8 +9,10 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.OptionsModel;
 using OmniSharp.Models;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Options;
 using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
@@ -29,8 +31,11 @@ namespace OmniSharp.MSBuild
         private readonly MSBuildContext _context;
         private readonly IFileSystemWatcher _watcher;
 
+        private readonly MSBuildOptions _options;
+
         public MSBuildProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
+                                    IOptions<OmniSharpOptions> optionsAccessor,
                                     ILoggerFactory loggerFactory,
                                     IEventEmitter emitter,
                                     IMetadataFileReferenceCache metadataReferenceCache,
@@ -41,6 +46,7 @@ namespace OmniSharp.MSBuild
             _metadataReferenceCache = metadataReferenceCache;
             _watcher = watcher;
             _env = env;
+            _options = optionsAccessor.Options.MsBuild;
             _logger = loggerFactory.Create<MSBuildProjectSystem>();
             _emitter = emitter;
             _context = context;
@@ -158,7 +164,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(_logger, _env.Path, projectFilePath, diagnostics);
+                projectFileInfo = ProjectFileInfo.Create(_options, _logger, _env.Path, projectFilePath, diagnostics);
 
                 if (projectFileInfo == null)
                 {
