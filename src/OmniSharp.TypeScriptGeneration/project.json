@@ -1,0 +1,15 @@
+﻿{
+    "version": "1.0.0-*",
+    "dependencies": {
+        "TypeLite.Lib": "1.1.2",
+        "OmniSharp": "1.0.0-*",
+        "OmniSharp.Stdio": "1.0.0-*"
+    },
+
+    "commands": {
+        "OmniSharp.TypeScriptGeneration": "run"
+    },
+    "frameworks": {
+        "aspnet50": { }
+    }
+}
