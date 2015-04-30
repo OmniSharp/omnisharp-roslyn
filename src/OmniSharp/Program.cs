@@ -75,15 +75,18 @@ namespace OmniSharp
 
             //var serviceCollection = HostingServices.Create(_serviceProvider, config);
             //serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
-
+            var engine = new HostingEngine(_serviceProvider);
             var context = new HostingContext()
             {
                 Configuration = config,
             };
         
-            var hostingEnv = _serviceProvider.GetRequiredService<IHostingEnvironment>();
-            var appEnv = _serviceProvider.GetRequiredService<IApplicationEnvironment>();
+            var serverShutdown = engine.Start(context);
             
+            var hostingEnv = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
+            var appEnv = context.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
+            
+            //is this loaded too late? do I need to get it somewhere else
             context.ApplicationName = appEnv.ApplicationName;
             context.EnvironmentName = hostingEnv.EnvironmentName;
             
@@ -93,11 +96,8 @@ namespace OmniSharp
                 //context.ServerFactory = new Stdio.StdioServerFactory(Console.In, context.ApplicationServices.GetRequiredService<ISharedTextWriter>());
             }
 
-            var engine = new HostingEngine(_serviceProvider);
             var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEvent(false);
-
-            var serverShutdown = engine.Start(context);
 
             appShutdownService.ShutdownRequested.Register(() =>
             {

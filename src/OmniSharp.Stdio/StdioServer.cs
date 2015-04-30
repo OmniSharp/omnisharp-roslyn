@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.FeatureModel;
-using Microsoft.AspNet.Http.Interfaces;
+using Microsoft.AspNet.Http;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
@@ -16,10 +16,10 @@ namespace OmniSharp.Stdio
     {
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
-        private readonly Func<object, Task> _next;
+        private readonly Func<IFeatureCollection, Task> _next;
         private readonly CancellationTokenSource _cancellation;
 
-        public StdioServer(TextReader input, ISharedTextWriter writer, Func<object, Task> next)
+        public StdioServer(TextReader input, ISharedTextWriter writer, Func<IFeatureCollection, Task> next)
         {
             _input = input;
             _writer = writer;
