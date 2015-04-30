@@ -1,15 +1,9 @@
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Recommendations;
+using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Documentation;
-using OmniSharp.Extensions;
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -21,49 +15,22 @@ namespace OmniSharp
         {
             var document = _workspace.GetDocument(request.FileName);
             var model = await document.GetSemanticModelAsync();
-            var tree = await document.GetSyntaxTreeAsync();
-            var root = await tree.GetRootAsync();
-
-            var nodes = new List<SyntaxNode>();
-            var highlightFile = request.Lines == null || request.Lines.Length == 0;
-            if (highlightFile)
+            var text = await document.GetTextAsync();
+            
+            var results = new List<ClassifiedSpan>();
+            if (request.Lines == null || request.Lines.Length == 0)
             {
-                nodes.Add(root);
+                results.AddRange(Classifier.GetClassifiedSpans(model, new TextSpan(0, text.Length), _workspace));
             }
             else
             {
-                var text = await tree.GetTextAsync();
                 foreach (var line in request.Lines)
                 {
-                    var lineSpan = text.Lines[line].Span;
-                    var node = root;
-                    var next = node;
-                    SyntaxNodeOrToken start, end;
-                    do
-                    {
-                        node = next;
-                        start = node.ChildThatContainsPosition(lineSpan.Start);
-                        end = node.ChildThatContainsPosition(lineSpan.End);
-                        next = start.AsNode();
-                    } while (start.IsNode && start == end);
-
-                    nodes.Add(node);
+                    results.AddRange(Classifier.GetClassifiedSpans(model, text.Lines[line].Span, _workspace));
                 }
             }
-
-            var walker = new HighlightSyntaxWalker(model);
-            foreach (var node in nodes)
-            {
-                walker.Visit(node);
-            }
-
-            var regions = walker.Regions;
-            if (!highlightFile)
-            {
-                return regions.Where(r => request.Lines.Contains(r.Line));
-            }
-
-            return regions;
+            
+            return results.Select(s => HighlightResponse.FromClassifiedSpan(s, text.Lines));
         }
     }
 }
