@@ -17,34 +17,18 @@ namespace OmniSharp.Tests
             });
 
             var controller = new OmnisharpController(workspace, null);
-            var regions = (await controller.Highlight(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 2 } })).ToList();
-
-            Assert.Equal(5, regions.Count);
-            Assert.Equal(2, regions[0].Line);
-            Assert.Equal(2, regions[1].Line);
-            Assert.Equal(2, regions[2].Line);
-            Assert.Equal(2, regions[3].Line);
-            Assert.Equal(2, regions[4].Line);
-
-            Assert.Equal("keyword classname", regions[0].Kind);
-            Assert.Equal(0, regions[0].Start);
-            Assert.Equal(5, regions[0].End);
-
-            Assert.Equal("classname", regions[1].Kind);
-            Assert.Equal(6, regions[1].Start);
-            Assert.Equal(8, regions[1].End);
-
-            Assert.Equal("keyword structname", regions[2].Kind);
-            Assert.Equal(11, regions[2].Start);
-            Assert.Equal(14, regions[2].End);
-
-            Assert.Equal("fieldname", regions[3].Kind);
-            Assert.Equal(15, regions[3].Start);
-            Assert.Equal(16, regions[3].End);
-
-            Assert.Equal("keyword", regions[4].Kind);
-            Assert.Equal(19, regions[4].Start);
-            Assert.Equal(23, regions[4].End);
+            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 2 } });
+            
+            ValidateRegions(regions,
+                new Region("keyword", 2, 0, 5),
+                new Region("class name", 2, 6, 8),
+                new Region("punctuation", 2, 9, 10),
+                new Region("keyword", 2, 11, 14),
+                new Region("identifier", 2, 15, 16),
+                new Region("operator", 2, 17, 18),
+                new Region("keyword", 2, 19, 23),
+                new Region("punctuation", 2, 23, 24),
+                new Region("punctuation", 2, 25, 26));
         }
 
         [Fact]
@@ -56,34 +40,64 @@ namespace OmniSharp.Tests
             });
 
             var controller = new OmnisharpController(workspace, null);
-            var regions = (await controller.Highlight(new HighlightRequest() { FileName = "a.cs" })).ToList();
+            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
 
-            Assert.Equal(5, regions.Count);
-            Assert.Equal(0, regions[0].Line);
-            Assert.Equal(0, regions[1].Line);
-            Assert.Equal(0, regions[2].Line);
-            Assert.Equal(0, regions[3].Line);
-            Assert.Equal(0, regions[4].Line);
-
-            Assert.Equal("keyword classname", regions[0].Kind);
-            Assert.Equal(0, regions[0].Start);
-            Assert.Equal(5, regions[0].End);
-
-            Assert.Equal("classname", regions[1].Kind);
-            Assert.Equal(6, regions[1].Start);
-            Assert.Equal(8, regions[1].End);
-
-            Assert.Equal("keyword structname", regions[2].Kind);
-            Assert.Equal(11, regions[2].Start);
-            Assert.Equal(14, regions[2].End);
-
-            Assert.Equal("fieldname", regions[3].Kind);
-            Assert.Equal(15, regions[3].Start);
-            Assert.Equal(16, regions[3].End);
-
-            Assert.Equal("keyword", regions[4].Kind);
-            Assert.Equal(19, regions[4].Start);
-            Assert.Equal(23, regions[4].End);
+            ValidateRegions(regions,
+                new Region("keyword", 0, 0, 5),
+                new Region("class name", 0, 6, 8),
+                new Region("punctuation", 0, 9, 10),
+                new Region("keyword", 0, 11, 14),
+                new Region("identifier", 0, 15, 16),
+                new Region("operator", 0, 17, 18),
+                new Region("keyword", 0, 19, 23),
+                new Region("punctuation", 0, 23, 24),
+                new Region("punctuation", 0, 25, 26));
+        }
+        
+        private void ValidateRegions(IEnumerable<HighlightResponse> regions, params Region[] expected)
+        {
+            var arr = regions.ToArray();
+            Assert.Equal(expected.Length, arr.Length);
+            
+            for (var i = 0; i < arr.Length; i++) 
+            {
+                var expect = expected[i];
+                var result = arr[i];
+                
+                Assert.Equal(expect.Kind, result.Kind);
+                
+                Assert.Equal(expect.StartLine, result.Start.Line);
+                Assert.Equal(expect.StartChar, result.Start.Character);
+                
+                Assert.Equal(expect.EndLine, result.End.Line);
+                Assert.Equal(expect.EndChar, result.End.Character);
+            }
+        }
+        
+        private class Region
+        {
+            public int StartLine { get; }
+            public int StartChar { get; }
+            public int EndLine { get; }
+            public int EndChar { get; }
+            public string Kind { get; }
+            
+            public Region(string kind, int line, int start, int end)
+            {
+                Kind = kind;
+                StartLine = EndLine = line;
+                StartChar = start;
+                EndChar = end;
+            }
+            
+            public Region(string kind, int startLine, int startChar, int endLine, int endChar)
+            {
+                Kind = kind;
+                StartLine = startLine;
+                EndLine = endLine;
+                StartChar = startChar;
+                EndChar = endChar;
+            }
         }
     }
 }
