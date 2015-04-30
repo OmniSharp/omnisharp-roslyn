@@ -54,6 +54,33 @@ namespace OmniSharp.Tests
                 new Region("punctuation", 0, 25, 26));
         }
         
+        [Fact]
+        public async Task HighlightStringInterpolation()
+        {
+            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            {
+                { "a.cs", "class C1 { string s = $\"{5}\"; }" }
+            });
+            
+            var controller = new OmnisharpController(workspace, null);
+            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
+            
+            ValidateRegions(regions,
+                new Region("keyword", 0, 0, 5),
+                new Region("class name", 0, 6, 8),
+                new Region("punctuation", 0, 9, 10),
+                new Region("keyword", 0, 11, 17),
+                new Region("identifier", 0, 18, 19),
+                new Region("operator", 0, 20, 21),
+                new Region("string", 0, 22, 24),
+                new Region("punctuation", 0, 24, 25),
+                new Region("number", 0, 25, 26),
+                new Region("punctuation", 0, 26, 27),
+                new Region("string", 0, 27, 28),
+                new Region("punctuation", 0, 28, 29),
+                new Region("punctuation", 0, 30, 31));
+        }
+        
         private void ValidateRegions(IEnumerable<HighlightResponse> regions, params Region[] expected)
         {
             var arr = regions.ToArray();
