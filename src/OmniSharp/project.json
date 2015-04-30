@@ -21,10 +21,12 @@
     "frameworks": {
         "aspnet50": {
             "dependencies": {
-               "ICSharpCode.NRefactory": "6.0.0-alpha3"  
+               "ICSharpCode.NRefactory": "6.0.0-alpha3",  
+               "ScriptCs.Hosting.KpmTemp": "0.14.1"
             },
             "frameworkAssemblies": {
                 "System.Globalization": "",
+                "System.Reflection":  "",
                 "Microsoft.Build": "",
                 "Microsoft.Build.Engine": "",
                 "Microsoft.Build.Framework": ""
