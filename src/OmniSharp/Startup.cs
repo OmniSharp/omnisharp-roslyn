@@ -85,7 +85,7 @@ namespace OmniSharp
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
-#if ASPNET50
+#if DNX451
             services.AddSingleton<IProjectSystem, ScriptCs.ScriptCsProjectSystem>();
 #endif
 
@@ -98,7 +98,7 @@ namespace OmniSharp
             // Add the code action provider
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
             
-#if ASPNET50
+#if DNX451
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
 
@@ -115,6 +115,8 @@ namespace OmniSharp
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
+
+            Console.WriteLine("services configured");
         }
 
         public void Configure(IApplicationBuilder app,

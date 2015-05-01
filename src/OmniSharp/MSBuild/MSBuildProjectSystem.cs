@@ -283,7 +283,7 @@ namespace OmniSharp.MSBuild
                     {
                         continue;
                     }
-#if ASPNET50
+#if DNX451
                     var analyzerReference = new AnalyzerFileReference(analyzerPath);
                     project.AddAnalyzerReference(analyzerReference);
 #endif

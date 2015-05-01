@@ -6,7 +6,7 @@ using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
 
-#if ASPNET50
+#if DNX451
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
 #endif
@@ -53,7 +53,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
             
-#if ASPNET50
+#if DNX451
             if (!PlatformHelper.IsMono)
             {
                 var properties = new Dictionary<string, string>
@@ -67,7 +67,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var collection = new ProjectCollection(properties);
 
-                logger.WriteInformation("Using toolset {0} for {1}", options.ToolsVersion ?? collection.DefaultToolsVersion, projectFilePath);
+                logger.LogInformation("Using toolset {0} for {1}", options.ToolsVersion ?? collection.DefaultToolsVersion, projectFilePath);
 
                 var project = string.IsNullOrEmpty(options.ToolsVersion) ?
                         collection.LoadProject(projectFilePath) :

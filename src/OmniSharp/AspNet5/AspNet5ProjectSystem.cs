@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
-#if ASPNET50
+#if DNX451
 using Microsoft.Framework.FileSystemGlobbing;
 #endif
 using Microsoft.Framework.Logging;
@@ -540,7 +540,7 @@ namespace OmniSharp.AspNet5
             else
             {
                 IEnumerable<string> paths;
-#if ASPNET50
+#if DNX451
                 if (_options.AspNet5.Projects != "**/project.json")
                 {
                     var matcher = new Matcher();

@@ -1,4 +1,4 @@
-#if ASPNET50
+#if DNX451
 using System;
 using System.Collections.Generic;
 using Microsoft.Framework.Logging;
@@ -44,7 +44,7 @@ namespace OmniSharp.MSBuild
 
         private void OnError(object sender, Microsoft.Build.Framework.BuildErrorEventArgs args)
         {
-            _logger.WriteError(args.Message);
+            _logger.LogError(args.Message);
             _diagnostics.Add(new MSBuildDiagnosticsMessage()
             {
                 LogLevel = "Error",
@@ -59,7 +59,7 @@ namespace OmniSharp.MSBuild
 
         private void OnWarning(object sender, Microsoft.Build.Framework.BuildWarningEventArgs args)
         {
-            _logger.WriteWarning(args.Message);
+            _logger.LogWarning(args.Message);
             _diagnostics.Add(new MSBuildDiagnosticsMessage()
             {
                 LogLevel = "Warning",

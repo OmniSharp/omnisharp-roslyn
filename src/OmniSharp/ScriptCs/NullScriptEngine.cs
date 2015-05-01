@@ -1,4 +1,4 @@
-﻿#if ASPNET50
+﻿#if DNX451
 using ScriptCs.Contracts;
 using System.Collections.Generic;
 
