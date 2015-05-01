@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.ApplicationModels;
+﻿using Microsoft.AspNet.Mvc.ApplicationModels;
 using Microsoft.AspNet.Mvc.ModelBinding;
+using System.Linq;
 
 namespace OmniSharp.Settings
 {
@@ -14,18 +14,17 @@ namespace OmniSharp.Settings
                 {
                     foreach (var parameter in action.Parameters)
                     {
-                        //not sure on what to do with this check
-                        if (ValueProviderResult.CanConvertFromString(parameter.ParameterInfo.ParameterType))
+                        if (parameter.BindingInfo?.BindingSource != null ||
+                            parameter.Attributes.OfType<IBindingSourceMetadata>().Any() ||
+                            ValueProviderResult.CanConvertFromString(parameter.ParameterInfo.ParameterType))
                         {
                             // behavior configured or simple type so do nothing
                         }
                         else
                         {
                             // Complex types are by-default from the body.
-                            parameter.BindingInfo = new BindingInfo() 
-                            {
-                                BindingSource = (new FromBodyAttribute()).BindingSource, 
-                            };
+                            parameter.BindingInfo = parameter.BindingInfo ?? new BindingInfo();
+                            parameter.BindingInfo.BindingSource = BindingSource.Body;
                         }
                     }
                 }

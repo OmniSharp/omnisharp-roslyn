@@ -74,13 +74,14 @@ namespace OmniSharp
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var engine = new HostingEngine(_serviceProvider);
+            
             var context = new HostingContext()
             {
+                ServerFactoryLocation = "Kestrel",
                 Configuration = config,
             };
-        
+
             var serverShutdown = engine.Start(context);
-            context.Services.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
             var hostingEnv = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             var appEnv = context.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
             

@@ -48,14 +48,14 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime, ISharedTextWriter writer)
+        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime)
         {
             Workspace = new OmnisharpWorkspace();
 
             // Working around another bad bug in ASP.NET 5
             // https://github.com/aspnet/Hosting/issues/151
             services.AddInstance(liftime);
-            services.AddInstance(writer);
+            services.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
             // This is super hacky by it's the easiest way to flow serivces from the 
             // hosting layer, this needs to be easier
@@ -144,13 +144,15 @@ namespace OmniSharp
             app.UseMvc();
 
             logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
-            
+
             // Forward workspace events
             app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
 
+            Console.WriteLine("hope");
             // Initialize everything!
-            var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
-            
+            var projectSystems = app.ApplicationServices.GetRequiredServices<IProjectSystem>();
+
+            Console.WriteLine("nope");
             foreach (var projectSystem in projectSystems)
             {
                 projectSystem.Initalize();
