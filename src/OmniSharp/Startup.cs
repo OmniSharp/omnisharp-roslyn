@@ -85,7 +85,7 @@ namespace OmniSharp
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
-#if DNX451
+#if ASPNET50
             services.AddSingleton<IProjectSystem, ScriptCs.ScriptCsProjectSystem>();
 #endif
 
