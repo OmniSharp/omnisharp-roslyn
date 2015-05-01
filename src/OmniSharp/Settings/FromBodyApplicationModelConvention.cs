@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNet.Mvc.ApplicationModels;
+﻿using System.Linq;
+using Microsoft.AspNet.Mvc.ApplicationModels;
 using Microsoft.AspNet.Mvc.ModelBinding;
-using System.Linq;
 
 namespace OmniSharp.Settings
 {

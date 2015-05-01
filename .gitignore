@@ -28,3 +28,4 @@ nuget.exe
 debugSettings.json
 buildlog
 /.vs
+*.lock.json

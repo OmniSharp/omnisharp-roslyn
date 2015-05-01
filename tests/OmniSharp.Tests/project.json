@@ -3,17 +3,18 @@
     "dependencies": {
         "OmniSharp": "1.0.0-*",
         "xunit": "2.1.0-beta1-*",
-        "xunit.runner.aspnet": "2.1.0-beta1-*",
-        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta3"
+        "xunit.runner.aspnet": "2.0.0-aspnet-beta4",
+        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-rc2"
     },
     "commands": {
         "test": "xunit.runner.aspnet"
     },
     "frameworks": {
-        "aspnet50": { },
-        "aspnetcore50": {
+        "dnx451": {
+         },
+        "dnxcore50": {
             "dependencies": {
-                "System.Collections": ""
+                "System.Collections": "4.0.10-beta-22816"
             }
         }
     }
