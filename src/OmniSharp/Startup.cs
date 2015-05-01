@@ -53,7 +53,7 @@ namespace OmniSharp
             Workspace = new OmnisharpWorkspace();
 
             // Working around another bad bug in ASP.NET 5
-            // https://github.com/aspnet/Hosting/issues/151
+            // https://github.com/aspnet/Hostiong/issues/151
             services.AddInstance(liftime);
             services.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
@@ -85,7 +85,7 @@ namespace OmniSharp
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
-#if ASPNET50
+#if DNX451
             services.AddSingleton<IProjectSystem, ScriptCs.ScriptCsProjectSystem>();
 #endif
 
@@ -150,7 +150,7 @@ namespace OmniSharp
 
             Console.WriteLine("hope");
             // Initialize everything!
-            var projectSystems = app.ApplicationServices.GetRequiredServices<IProjectSystem>();
+            var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
 
             Console.WriteLine("nope");
             foreach (var projectSystem in projectSystems)
