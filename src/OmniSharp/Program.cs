@@ -81,6 +81,8 @@ namespace OmniSharp
                 Configuration = config,
             };
 
+            context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
+
             var serverShutdown = engine.Start(context);
             var hostingEnv = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
             var appEnv = context.ApplicationServices.GetRequiredService<IApplicationEnvironment>();

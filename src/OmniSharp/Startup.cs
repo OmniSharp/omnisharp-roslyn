@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
-using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.Logging.Console;
 using OmniSharp.AspNet5;
 using OmniSharp.Filters;
 using OmniSharp.Middleware;
@@ -34,6 +32,7 @@ namespace OmniSharp
             {
                 configuration.AddCommandLine(Program.Environment.OtherArgs);
             }
+
             // Use the local omnisharp config if there's any in the root path
             if (File.Exists(Program.Environment.ConfigurationPath))
             {
@@ -48,21 +47,13 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime)
+        public void ConfigureServices(IServiceCollection services)
         {
             Workspace = new OmnisharpWorkspace();
 
-            // Working around another bad bug in ASP.NET 5
-            // https://github.com/aspnet/Hostiong/issues/151
-            services.AddInstance(liftime);
             services.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
-            // This is super hacky by it's the easiest way to flow serivces from the 
-            // hosting layer, this needs to be easier
-            services.AddInstance<IOmnisharpEnvironment>(Program.Environment);
-
-            var temp = services.AddMvc();
-            //services.Configure(config: Configuration, optionsName: "...NOT SURE...");
+            services.AddMvc();
 
             services.Configure<MvcOptions>(opt =>
             {
@@ -137,7 +128,7 @@ namespace OmniSharp
                 loggerFactory.AddConsole(logFilter);
             }
 
-            var logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            var logger = loggerFactory.CreateLogger<Startup>();
 
             app.UseRequestLogging();
 
@@ -145,16 +136,21 @@ namespace OmniSharp
 
             app.UseMvc();
 
-            logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+            if (env.TransportType == TransportType.Stdio)
+            {
+                logger.LogInformation($"Omnisharp server running using stdio at location '{env.Path}' on host {env.HostPID}.");
+            }
+            else
+            {
+                logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+            }
 
             // Forward workspace events
             app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
 
-            Console.WriteLine("hope");
             // Initialize everything!
-            var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
+            var projectSystems = app.ApplicationServices.GetRequiredServices<IProjectSystem>();
 
-            Console.WriteLine("nope");
             foreach (var projectSystem in projectSystems)
             {
                 projectSystem.Initalize();
@@ -163,8 +159,7 @@ namespace OmniSharp
             // Mark the workspace as initialized
             Workspace.Initialized = true;
 
-            // This is temporary so that plugins work
-            Console.WriteLine("Solution has finished loading");
+            logger.LogInformation("Solution has finished loading");
         }
     }
 }
