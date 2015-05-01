@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,119 +12,152 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task HighlightSingleLine()
         {
+            var code = @"
+                namespace N1
+                {
+                    class C1 { int n = true; }
+                }
+            ";
+            
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
-                { "a.cs", "namespace N1\n{\nclass C1 { int n = true; }\n}" }
+                { "a.cs", code }
             });
 
             var controller = new OmnisharpController(workspace, null);
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 2 } });
+            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 3 } });
             
-            ValidateRegions(regions,
-                new Region("keyword", 2, 0, 5),
-                new Region("class name", 2, 6, 8),
-                new Region("punctuation", 2, 9, 10),
-                new Region("keyword", 2, 11, 14),
-                new Region("identifier", 2, 15, 16),
-                new Region("operator", 2, 17, 18),
-                new Region("keyword", 2, 19, 23),
-                new Region("punctuation", 2, 23, 24),
-                new Region("punctuation", 2, 25, 26));
+            AssertSyntax(regions, code, 3,
+                Token("class", "keyword"),
+                Token("C1", "class name"),
+                Token("{", "punctuation"),
+                Token("int", "keyword"),
+                Token("n", "identifier"),
+                Token("=", "operator"),
+                Token("true", "keyword"),
+                Token(";", "punctuation"),
+                Token("}", "punctuation"));
         }
 
         [Fact]
         public async Task HighlightEntireFile()
         {
+            var code = @"
+                namespace N1
+                {
+                    class C1 { int n = true; }
+                }
+            ";
+            
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
-                { "a.cs", "class C1 { int n = true; }" }
+                { "a.cs", code }
             });
 
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
 
-            ValidateRegions(regions,
-                new Region("keyword", 0, 0, 5),
-                new Region("class name", 0, 6, 8),
-                new Region("punctuation", 0, 9, 10),
-                new Region("keyword", 0, 11, 14),
-                new Region("identifier", 0, 15, 16),
-                new Region("operator", 0, 17, 18),
-                new Region("keyword", 0, 19, 23),
-                new Region("punctuation", 0, 23, 24),
-                new Region("punctuation", 0, 25, 26));
+            AssertSyntax(regions, code, 0,
+                Token("namespace", "keyword"),
+                Token("N1", "identifier"),
+                Token("{", "punctuation"),
+                Token("class", "keyword"),
+                Token("C1", "class name"),
+                Token("{", "punctuation"),
+                Token("int", "keyword"),
+                Token("n", "identifier"),
+                Token("=", "operator"),
+                Token("true", "keyword"),
+                Token(";", "punctuation"),
+                Token("}", "punctuation"),
+                Token("}", "punctuation"));
         }
         
         [Fact]
         public async Task HighlightStringInterpolation()
         {
+            var code = @"
+                class C1
+                {
+                    string s = $""{5}"";
+                }
+            ";
+            
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
-                { "a.cs", "class C1 { string s = $\"{5}\"; }" }
+                { "a.cs", code }
             });
             
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
             
-            ValidateRegions(regions,
-                new Region("keyword", 0, 0, 5),
-                new Region("class name", 0, 6, 8),
-                new Region("punctuation", 0, 9, 10),
-                new Region("keyword", 0, 11, 17),
-                new Region("identifier", 0, 18, 19),
-                new Region("operator", 0, 20, 21),
-                new Region("string", 0, 22, 24),
-                new Region("punctuation", 0, 24, 25),
-                new Region("number", 0, 25, 26),
-                new Region("punctuation", 0, 26, 27),
-                new Region("string", 0, 27, 28),
-                new Region("punctuation", 0, 28, 29),
-                new Region("punctuation", 0, 30, 31));
+            AssertSyntax(regions, code, 0,
+                Token("class", "keyword"),
+                Token("C1", "class name"),
+                Token("{", "punctuation"),
+                Token("string", "keyword"),
+                Token("s", "identifier"),
+                Token("=", "operator"),
+                Token("$\"", "string"),
+                Token("{", "punctuation"),
+                Token("5", "number"),
+                Token("}", "punctuation"),
+                Token("\"", "string"),
+                Token(";", "punctuation"),
+                Token("}", "punctuation"));
         }
         
-        private void ValidateRegions(IEnumerable<HighlightResponse> regions, params Region[] expected)
+        private void AssertSyntax(IEnumerable<HighlightResponse> regions, string code, int startLine, params TokenSpec[] expected)
         {
             var arr = regions.ToArray();
             Assert.Equal(expected.Length, arr.Length);
             
+            var lineNo = startLine;
+            var lastIndex = 0;
+            var lines = Microsoft.CodeAnalysis.Text.SourceText.From(code).Lines;
             for (var i = 0; i < arr.Length; i++) 
             {
-                var expect = expected[i];
-                var result = arr[i];
+                var tokenSpec = expected[i];
+                var region = arr[i];
+                string line;
+                int start, end;
+                do {
+                    line = lines[lineNo].ToString();
+                    start = line.IndexOf(tokenSpec.Text, lastIndex);
+                    if (start == -1)
+                    {
+                        if(++lineNo >= lines.Count)
+                        {
+                            throw new Exception($"Could not find token {tokenSpec.Text} in the code");
+                        }
+                        
+                        lastIndex = 0;
+                    }
+                } while (start == -1);
+                end = start + tokenSpec.Text.Length;
+                lastIndex = end;
                 
-                Assert.Equal(expect.Kind, result.Kind);
-                
-                Assert.Equal(expect.StartLine, result.Start.Line);
-                Assert.Equal(expect.StartChar, result.Start.Character);
-                
-                Assert.Equal(expect.EndLine, result.End.Line);
-                Assert.Equal(expect.EndChar, result.End.Character);
+                Assert.Equal(tokenSpec.Kind, region.Kind);
+                Assert.Equal(lineNo, region.Start.Line);
+                Assert.Equal(lineNo, region.End.Line);
+                Assert.Equal(start, region.Start.Character);
+                Assert.Equal(end, region.End.Character);
             }
         }
         
-        private class Region
+        private TokenSpec Token(string text, string kind)
         {
-            public int StartLine { get; }
-            public int StartChar { get; }
-            public int EndLine { get; }
-            public int EndChar { get; }
+            return new TokenSpec(kind, text);
+        }
+        private class TokenSpec
+        {
+            public string Text { get; }
             public string Kind { get; }
             
-            public Region(string kind, int line, int start, int end)
+            public TokenSpec(string kind, string text)
             {
                 Kind = kind;
-                StartLine = EndLine = line;
-                StartChar = start;
-                EndChar = end;
-            }
-            
-            public Region(string kind, int startLine, int startChar, int endLine, int endChar)
-            {
-                Kind = kind;
-                StartLine = startLine;
-                EndLine = endLine;
-                StartChar = startChar;
-                EndChar = endChar;
+                Text = text;
             }
         }
     }
