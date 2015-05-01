@@ -3,7 +3,7 @@ namespace OmniSharp.Models
     public class HighlightRequest : Request
     {
         /// <summary>
-        ///   Spesifies which lines to highlight.
+        ///   Specifies which lines to highlight.
         ///   If none are given, highlight the entire
         ///   file.
         /// </summary>
