@@ -1,5 +1,5 @@
 language: csharp
 sudo: false  # use the new container-based infrastructure
-install: curl -sSL https://raw.githubusercontent.com/aspnet/Home/release/kvminstall.sh | sh && source ~/.k/kvm/kvm.sh && kvm upgrade
+install: curl curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | sh && source ~/.dnx/dnvm/dnvm.sh && dnvm upgrade
 script:
   - . ./build.sh
