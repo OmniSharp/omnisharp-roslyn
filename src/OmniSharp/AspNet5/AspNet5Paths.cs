@@ -30,7 +30,7 @@ namespace OmniSharp.AspNet5
         {
             _env = env;
             _options = options;
-            _logger = loggerFactory.CreateLogger(typeof(AspNet5Paths).FullName);
+            _logger = loggerFactory.CreateLogger<AspNet5Paths>();
 
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath.Value, "dnx", "dnx.exe");

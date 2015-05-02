@@ -51,7 +51,7 @@ namespace OmniSharp.AspNet5
         {
             _workspace = workspace;
             _env = env;
-            _logger = loggerFactory.CreateLogger(typeof(AspNet5ProjectSystem).FullName);
+            _logger = loggerFactory.CreateLogger<AspNet5ProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _options = optionsAccessor.Options;
             _aspNet5Paths = new AspNet5Paths(env, _options, loggerFactory);

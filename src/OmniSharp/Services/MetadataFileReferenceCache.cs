@@ -19,7 +19,7 @@ namespace OmniSharp.Services
         public MetadataFileReferenceCache(IMemoryCache cache, ILoggerFactory loggerFactory)
         {
             _cache = cache;
-            _logger = loggerFactory.CreateLogger(typeof(MetadataFileReferenceCache).FullName);
+            _logger = loggerFactory.CreateLogger<MetadataFileReferenceCache>();
         }
 
         public MetadataReference GetMetadataReference(string path)

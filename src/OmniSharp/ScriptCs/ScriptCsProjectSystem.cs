@@ -34,7 +34,7 @@ namespace OmniSharp.ScriptCs
             _workspace = workspace;
             _env = env;
             _scriptCsContext = scriptCsContext;
-            _logger = loggerFactory.CreateLogger(typeof(ScriptCsProjectSystem).FullName);
+            _logger = loggerFactory.CreateLogger<ScriptCsProjectSystem>();
         }
 
         public void Initalize()

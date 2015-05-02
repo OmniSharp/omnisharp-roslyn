@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild
             _watcher = watcher;
             _env = env;
             _options = optionsAccessor.Options.MsBuild;
-            _logger = loggerFactory.CreateLogger(typeof(MSBuildProjectSystem).FullName);
+            _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
             _emitter = emitter;
             _context = context;
         }

@@ -18,7 +18,7 @@ namespace OmniSharp.AspNet5
 
         public DesignTimeHostManager(ILoggerFactory loggerFactory, AspNet5Paths paths)
         {
-            _logger = loggerFactory.CreateLogger(typeof(DesignTimeHostManager).FullName);
+            _logger = loggerFactory.CreateLogger<DesignTimeHostManager>();
             _paths = paths;
         }
 

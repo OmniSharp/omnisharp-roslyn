@@ -26,7 +26,7 @@ namespace OmniSharp.AspNet5
         public PackagesRestoreTool(OmniSharpOptions options, ILoggerFactory logger, IEventEmitter emitter, AspNet5Context context, AspNet5Paths paths)
         {
             _options = options;
-            _logger = logger.CreateLogger(typeof(PackagesRestoreTool).FullName);
+            _logger = logger.CreateLogger<PackagesRestoreTool>();
             _emitter = emitter;
             _context = context;
             _paths = paths;

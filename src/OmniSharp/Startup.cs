@@ -106,8 +106,6 @@ namespace OmniSharp
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
-
-            Console.WriteLine("services configured");
         }
 
         public void Configure(IApplicationBuilder app,

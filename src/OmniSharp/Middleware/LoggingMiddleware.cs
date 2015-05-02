@@ -15,7 +15,7 @@ namespace OmniSharp.Middleware
         public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
         {
             _next = next;
-            _logger = loggerFactory.CreateLogger(typeof(LoggingMiddleware).FullName);
+            _logger = loggerFactory.CreateLogger<LoggingMiddleware>();
         }
 
         public async Task Invoke(HttpContext context)

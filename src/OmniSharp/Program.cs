@@ -84,13 +84,7 @@ namespace OmniSharp
             context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
 
             var serverShutdown = engine.Start(context);
-            var hostingEnv = context.ApplicationServices.GetRequiredService<IHostingEnvironment>();
-            var appEnv = context.ApplicationServices.GetRequiredService<IApplicationEnvironment>();
-            
-            //is this loaded too late? do I need to get it somewhere else
-            context.ApplicationName = appEnv.ApplicationName;
-            context.EnvironmentName = hostingEnv.EnvironmentName;
-            
+
             if (transportType == TransportType.Stdio)
             {
                 context.Server = null;
