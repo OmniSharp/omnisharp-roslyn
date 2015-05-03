@@ -24,6 +24,8 @@ namespace OmniSharp
                 var semanticModel = await document.GetSemanticModelAsync();
                 IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
 
+                //script files can have custom directives such as #load which will be deemed invalid by Roslyn
+                //we suppress the CS1024 diagnostic for script files for this reason. Roslyn will fix it later too, so this is temporary.
                 if (document.SourceCodeKind != SourceCodeKind.Regular)
                 {
                     diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
