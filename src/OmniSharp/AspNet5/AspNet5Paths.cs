@@ -30,7 +30,7 @@ namespace OmniSharp.AspNet5
         {
             _env = env;
             _options = options;
-            _logger = loggerFactory.Create<AspNet5Paths>();
+            _logger = loggerFactory.CreateLogger<AspNet5Paths>();
 
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath.Value, "dnx", "dnx.exe");
@@ -61,7 +61,7 @@ namespace OmniSharp.AspNet5
 
                     if (Directory.Exists(path))
                     {
-                        _logger.WriteInformation(string.Format("Using runtime '{0}'.", path));
+                        _logger.LogInformation(string.Format("Using runtime '{0}'.", path));
                         return new AspNet5RuntimePathResult()
                         {
                             Value = path
@@ -82,7 +82,7 @@ namespace OmniSharp.AspNet5
                 message.Line = ((IJsonLineInfo)versionOrAliasToken).LineNumber;
                 message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
             }
-            _logger.WriteError(message.Text);
+            _logger.LogError(message.Text);
             return new AspNet5RuntimePathResult()
             {
                 Error = message
@@ -93,7 +93,7 @@ namespace OmniSharp.AspNet5
         {
             if (File.Exists(globalJson))
             {
-                _logger.WriteInformation("Looking for sdk version in '{0}'.", globalJson);
+                _logger.LogInformation("Looking for sdk version in '{0}'.", globalJson);
 
                 using (var stream = File.OpenRead(globalJson))
                 {

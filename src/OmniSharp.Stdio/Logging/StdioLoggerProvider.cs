@@ -15,7 +15,7 @@ namespace OmniSharp.Stdio.Logging
             _filter = filter;
         }
 
-        public ILogger Create(string name)
+        public ILogger CreateLogger(string name)
         {
             return new StdioLogger(_writer, name, _filter);
         }

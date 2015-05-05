@@ -1,20 +1,16 @@
 {
-    "version": "1.0.0-*",
-    "dependencies": {
-        "OmniSharp": "1.0.0-*",
-        "xunit": "2.1.0-beta1-*",
-        "xunit.runner.aspnet": "2.1.0-beta1-*",
-        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-beta3"
-    },
-    "commands": {
-        "test": "xunit.runner.aspnet"
-    },
-    "frameworks": {
-        "aspnet50": { },
-        "aspnetcore50": {
-            "dependencies": {
-                "System.Collections": ""
-            }
-        }
-    }
+  "version": "1.0.0-*",
+  "dependencies": {
+    "OmniSharp": "1.0.0-*",
+    "xunit": "2.1.0-beta1-*",
+    "xunit.runner.aspnet": "2.1.0-beta1-*",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-rc1"
+  },
+  "commands": {
+    "test": "xunit.runner.aspnet"
+  },
+  "frameworks": {
+    "dnx451": { },
+    "dnxcore50": {  }
+  }
 }
