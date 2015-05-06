@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "omnisharp": {
+      "commandName": "omnisharp",
+      "commandLineArgs": "-s C:\\Users\\rafael.teixeira\\Projects\\managed-commons-core\\Commons.Core.sln  aspnet5:enablePackageRestore=false"
+    }
+  }
+}
