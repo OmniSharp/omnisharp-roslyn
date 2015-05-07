@@ -13,7 +13,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotoregion")]
-        public async Task<IActionResult> GoToRegion(Request request)
+        public async Task<QuickFixResponse> GoToRegion(Request request)
         {
             var regions = new List<QuickFix>();
             var document = _workspace.GetDocument(request.FileName);
@@ -32,7 +32,7 @@ namespace OmniSharp
                     regions.Add(await GetQuickFix(regionTrivia.GetLocation()));
                 }
             }
-            return new ObjectResult(new QuickFixResponse(regions));
+            return new QuickFixResponse(regions);
         } 
     }
 }
