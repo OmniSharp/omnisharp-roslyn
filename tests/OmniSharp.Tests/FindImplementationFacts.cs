@@ -7,7 +7,7 @@ using OmniSharp.Models;
 using Xunit;
 
 namespace OmniSharp.Tests
-{
+{    
     public class FindImplementationFacts
     {
         [Fact]
