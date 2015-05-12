@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -38,8 +39,7 @@ namespace OmniSharp
                     }
                 }
 
-                var changes = new List<ModifiedFileResponse>();
-
+                var changes = new Dictionary<string, ModifiedFileResponse>();
                 var solutionChanges = solution.GetChanges(_workspace.CurrentSolution);
 
                 foreach (var projectChange in solutionChanges.GetProjectChanges())
@@ -47,7 +47,13 @@ namespace OmniSharp
                     foreach (var changedDocumentId in projectChange.GetChangedDocuments())
                     {
                         var changedDocument = solution.GetDocument(changedDocumentId);
-                        var modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
+
+                        ModifiedFileResponse modifiedFileResponse;
+                        if (!changes.TryGetValue(changedDocument.FilePath, out modifiedFileResponse))
+                        {
+                            modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
+                            changes[changedDocument.FilePath] = modifiedFileResponse;
+                        }
 
                         if (!request.WantsTextChanges)
                         {
@@ -58,17 +64,19 @@ namespace OmniSharp
                         {
                             var originalDocument = _workspace.CurrentSolution.GetDocument(changedDocumentId);
                             var textChanges = await changedDocument.GetTextChangesAsync(originalDocument);
-                            modifiedFileResponse.Changes = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
+                            var linePositionSpanTextChanges = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
+
+                            modifiedFileResponse.Changes = modifiedFileResponse.Changes != null
+                                ? modifiedFileResponse.Changes.Union(linePositionSpanTextChanges)
+                                : linePositionSpanTextChanges;
                         }
-                        
-                        changes.Add(modifiedFileResponse);
                     }
                 }
 
                 // Attempt to update the workspace
                 if (_workspace.TryApplyChanges(solution))
                 {
-                    response.Changes = changes;
+                    response.Changes = changes.Values;
                 }
             }
 
