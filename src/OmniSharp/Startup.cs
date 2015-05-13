@@ -27,14 +27,14 @@ namespace OmniSharp
     {
         public Startup()
         {
-           var configuration = new Configuration()
-                .AddJsonFile("config.json");
+            var configuration = new Configuration()
+                 .AddJsonFile("config.json");
 
             if (Program.Environment.OtherArgs != null)
             {
                 configuration.AddCommandLine(Program.Environment.OtherArgs);
             }
-            
+
             // Use the local omnisharp config if there's any in the root path
             if (File.Exists(Program.Environment.ConfigurationPath))
             {
@@ -98,7 +98,7 @@ namespace OmniSharp
 
             // Add the code action provider
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
-            
+
 #if ASPNET50
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
@@ -126,7 +126,7 @@ namespace OmniSharp
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
                 && env.TraceType <= type;
-                    
+
             if (env.TransportType == TransportType.Stdio)
             {
                 loggerFactory.AddStdio(writer, logFilter);
@@ -145,16 +145,37 @@ namespace OmniSharp
             app.UseMvc();
 
             logger.WriteInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
-            
+
             // Forward workspace events
             app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
 
             // Initialize everything!
             var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
-            
+
+            var successfullyInitialized = false;
             foreach (var projectSystem in projectSystems)
             {
-                projectSystem.Initalize();
+                try
+                {
+                    projectSystem.Initalize();
+
+                    if (!successfullyInitialized)
+                    {
+                        successfullyInitialized = true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    //if a project system throws an unhandled exception
+                    //it should not crash the entire server
+                    logger.WriteError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
+                }
+            }
+
+            if (!successfullyInitialized)
+            {
+                logger.WriteInformation("None of the project systems produced a result");
+                return;
             }
 
             // Mark the workspace as initialized
