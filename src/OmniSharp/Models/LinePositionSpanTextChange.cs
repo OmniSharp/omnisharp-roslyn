@@ -76,10 +76,14 @@ namespace OmniSharp.Models
                 && EndLine == other.EndLine
                 && EndColumn == other.EndColumn;
         }
-        
+
         public override int GetHashCode()
         {
-            return NewText.GetHashCode() + 23 * StartLine + 23 * StartColumn + 23 * EndLine + 23 * EndColumn;
+            return NewText.GetHashCode()
+                * (23 + StartLine)
+                * (29 + StartColumn)
+                * (31 + EndLine)
+                * (37 + EndColumn);
         }
     }
 
