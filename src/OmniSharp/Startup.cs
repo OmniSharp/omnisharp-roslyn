@@ -151,18 +151,11 @@ namespace OmniSharp
 
             // Initialize everything!
             var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
-
-            var successfullyInitialized = false;
             foreach (var projectSystem in projectSystems)
             {
                 try
                 {
                     projectSystem.Initalize();
-
-                    if (!successfullyInitialized)
-                    {
-                        successfullyInitialized = true;
-                    }
                 }
                 catch (Exception e)
                 {
@@ -170,12 +163,6 @@ namespace OmniSharp
                     //it should not crash the entire server
                     logger.WriteError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
                 }
-            }
-
-            if (!successfullyInitialized)
-            {
-                logger.WriteInformation("None of the project systems produced a result");
-                return;
             }
 
             // Mark the workspace as initialized
