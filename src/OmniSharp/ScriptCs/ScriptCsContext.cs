@@ -11,12 +11,4 @@ namespace OmniSharp.ScriptCs
 
         public string Path { get; set; }
     }
-
-    public class Foo {
-        public class Bar {
-            public class Abc {
-
-            }
-        }
-    }
 }

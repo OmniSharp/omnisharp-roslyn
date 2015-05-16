@@ -5,7 +5,7 @@ using OmniSharp.Models;
 using Xunit;
 
 namespace OmniSharp.Tests
-{            
+{
     public class GoToFileFacts
     {
         [Fact]
