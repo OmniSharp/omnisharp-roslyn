@@ -19,12 +19,12 @@ namespace OmniSharp
             if (character == '\n')
             {
                 // format previous line on new line
-                var lines = (await document.GetTextAsync()).Lines;
-                var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
-                {
-                    return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
-                }
+                var text = await document.GetTextAsync();
+                var targetLine = text.Lines[text.Lines.GetLineFromPosition(position).LineNumber - 1];
+
+                // *workaround* for not having 'indentation for line'
+                var fakeDocument = document.WithText(text.WithChanges(new TextChange(TextSpan.FromBounds(position, position), ";")));
+                return await GetFormattingChangesForRange(options, fakeDocument, targetLine.Start, targetLine.End);
             }
             else if(character == '}' || character == ';')
             {
@@ -32,7 +32,7 @@ namespace OmniSharp
                 var node = FindFormatTarget(tree, position);
                 if (node != null)
                 {
-                    return await GetFormattingChangesForRange(workspace, options, document, node.FullSpan.Start, node.FullSpan.End);
+                    return await GetFormattingChangesForRange(options, document, node.FullSpan.Start, node.FullSpan.End);
                 }
             }
 
@@ -63,7 +63,7 @@ namespace OmniSharp
             return null;
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(OptionSet options, Document document, int start, int end)
         {
             var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end));
             var textChanges = await changedDocument.GetTextChangesAsync(document);
@@ -75,7 +75,7 @@ namespace OmniSharp
             });
         }
 
-        public static async Task<string> GetFormattedDocument(Workspace workspace, OptionSet options, Document document)
+        public static async Task<string> GetFormattedDocument(OptionSet options, Document document)
         {
             var formattedDocument = await Formatter.FormatAsync(document, options);
             var newText = (await formattedDocument.GetTextAsync()).ToString();
