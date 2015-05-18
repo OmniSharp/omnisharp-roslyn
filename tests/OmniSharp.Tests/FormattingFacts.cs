@@ -193,5 +193,58 @@ class C {
 
             return (await controller.FormatRange(req)).Changes;
         }
+
+        // ---- format on enter ----------------------------------------------------
+
+        [Fact]
+        public async Task FormatOnEnterDoesNotGoPastCaret_Whitespace()
+        {
+            var source = "class C\n{\n    \n    //comment\n    $\n\n}";
+            var request = NewFormatOnEnterRequest(source);
+            var changes = await FormattingChanges(request);
+
+            foreach (var change in changes)
+            {
+                Assert.True(change.EndLine <= request.Line);
+                Assert.True(change.EndColumn <= request.Column);
+            }
+        }
+
+        [Fact]
+        public async Task FormatOnEnterDoesNotGoPastCaret_Tab()
+        {
+            var source = "class C\n{\n    \n    //comment\n $\n\n}";
+            var request = NewFormatOnEnterRequest(source);
+            var changes = await FormattingChanges(request);
+
+            foreach (var change in changes)
+            {
+                Assert.True(change.EndLine <= request.Line);
+                Assert.True(change.EndColumn <= request.Column);
+            }
+        }
+
+        private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChanges(FormatAfterKeystrokeRequest req)
+        {
+            var workspace = TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
+            var controller = new OmnisharpController(workspace, null);
+
+            return (await controller.FormatAfterKeystroke(req)).Changes;
+        }
+
+        private static FormatAfterKeystrokeRequest NewFormatOnEnterRequest(string source)
+        {
+            var position = TestHelpers.GetLineAndColumnFromDollar(source);
+            source = source.Replace("$", string.Empty);
+
+            return new FormatAfterKeystrokeRequest()
+            {
+                Character = "\n",
+                Line = position.Line,
+                Column = position.Column,
+                Buffer = source,
+                FileName = "a.cs"
+            };
+        }
     }
 }
