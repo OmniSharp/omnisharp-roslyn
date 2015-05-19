@@ -11,7 +11,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("typelookup")]
-        public async Task<IActionResult> TypeLookup(TypeLookupRequest request)
+        public async Task<TypeLookupResponse> TypeLookup(TypeLookupRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new TypeLookupResponse();
@@ -23,10 +23,10 @@ namespace OmniSharp
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 if (symbol != null)
                 {
-                    if(symbol.Kind == SymbolKind.NamedType)
+                    //non regular C# code semantics (interactive, script) don't allow namespaces
+                    if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType)
                     {
-                        response.Type = symbol.ContainingNamespace.ToDisplayString() + "." 
-                                        + symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                        response.Type = $"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
                     }
                     else
                     {
@@ -39,7 +39,7 @@ namespace OmniSharp
                     }
                 }
             }
-            return new ObjectResult(response);
+            return response;
         }
     }
 }
