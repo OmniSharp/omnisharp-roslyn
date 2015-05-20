@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
@@ -13,24 +15,38 @@ namespace OmniSharp
         [HttpPost("highlight")]
         public async Task<IEnumerable<HighlightResponse>> Highlight(HighlightRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
+            var documents = _workspace.GetDocuments(request.FileName);
+            var results = new List<Tuple<ClassifiedSpan, string, TextLineCollection>>();
+
+            foreach (var document in documents) {
+                var spans = await this.GetHighlightSpan(request.Lines, document);
+                results.AddRange(spans);
+            }
+
+            return results.GroupBy(z => z.Item1.TextSpan.ToString()).Select(a => HighlightResponse.FromClassifiedSpan(a.First().Item1, a.First().Item3, a.Select(z => z.Item2)));
+        }
+
+        private async Task<IEnumerable<Tuple<ClassifiedSpan, string, TextLineCollection>>> GetHighlightSpan(int[] Lines, Document document)
+        {
+            var results = new List<Tuple<ClassifiedSpan, string, TextLineCollection>>();
+            var project = document.Project.Name;
             var model = await document.GetSemanticModelAsync();
             var text = await document.GetTextAsync();
-            
-            var results = new List<ClassifiedSpan>();
-            if (request.Lines == null || request.Lines.Length == 0)
+
+            if (Lines == null || Lines.Length == 0)
             {
-                results.AddRange(Classifier.GetClassifiedSpans(model, new TextSpan(0, text.Length), _workspace));
+                foreach (var span in Classifier.GetClassifiedSpans(model, new TextSpan(0, text.Length), _workspace))
+                    results.Add(Tuple.Create(span, project, text.Lines));
             }
             else
             {
-                foreach (var line in request.Lines)
+                foreach (var line in Lines)
                 {
-                    results.AddRange(Classifier.GetClassifiedSpans(model, text.Lines[line].Span, _workspace));
+                    foreach (var span in Classifier.GetClassifiedSpans(model, text.Lines[line].Span, _workspace))
+                        results.Add(Tuple.Create(span, project, text.Lines));
                 }
             }
-            
-            return results.Select(s => HighlightResponse.FromClassifiedSpan(s, text.Lines));
+            return results;
         }
     }
 }
