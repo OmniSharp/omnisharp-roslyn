@@ -156,7 +156,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
                 projectFileInfo.Name = Path.GetFileNameWithoutExtension(projectFilePath);
                 projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);
-                projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(properties["LangVersion"].FinalValue);
+                if (properties.ContainsKey("LangVersion"))
+                {
+                    projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(properties["LangVersion"].FinalValue);
+                }
                 projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
 
