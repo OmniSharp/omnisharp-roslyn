@@ -27,7 +27,7 @@ namespace OmniSharp
         {
            var configuration = new Configuration()
                 .AddJsonFile("config.json");
-                
+
             if (Program.Environment.OtherArgs != null)
             {
                 configuration.AddCommandLine(Program.Environment.OtherArgs);
@@ -50,8 +50,6 @@ namespace OmniSharp
         public void ConfigureServices(IServiceCollection services)
         {
             Workspace = new OmnisharpWorkspace();
-
-            services.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
 
             services.AddMvc();
 
@@ -88,7 +86,7 @@ namespace OmniSharp
 
             // Add the code action provider
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
-            
+
 #if DNX451
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
@@ -116,7 +114,7 @@ namespace OmniSharp
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
                 && env.TraceType <= type;
-                    
+
             if (env.TransportType == TransportType.Stdio)
             {
                 loggerFactory.AddStdio(writer, logFilter);

@@ -74,22 +74,24 @@ namespace OmniSharp
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var engine = new HostingEngine(_serviceProvider);
-            
+
             var context = new HostingContext()
             {
                 ServerFactoryLocation = "Kestrel",
                 Configuration = config,
             };
 
+            var writer = new SharedConsoleWriter();
             context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
-
-            var serverShutdown = engine.Start(context);
+            context.Services.AddInstance<ISharedTextWriter>(new SharedConsoleWriter());
 
             if (transportType == TransportType.Stdio)
             {
                 context.Server = null;
-                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, context.ApplicationServices.GetRequiredService<ISharedTextWriter>());
+                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, writer);
             }
+
+            var serverShutdown = engine.Start(context);
 
             var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEvent(false);
@@ -122,14 +124,14 @@ namespace OmniSharp
                     hostProcess.EnableRaisingEvents = true;
                     hostProcess.OnExit(() => appShutdownService.RequestShutdown());
                 }
-                catch 
+                catch
                 {
                     // If the process dies before we get here then request shutdown
                     // immediately
                     appShutdownService.RequestShutdown();
                 }
             }
-            
+
             shutdownHandle.WaitOne();
         }
     }
