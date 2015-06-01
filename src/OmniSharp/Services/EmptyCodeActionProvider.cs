@@ -7,14 +7,7 @@ namespace OmniSharp.Services
 {
     public class EmptyCodeActionProvider : ICodeActionProvider
     {
-        public IEnumerable<CodeRefactoringProvider> GetRefactorings()
-        {
-            return Enumerable.Empty<CodeRefactoringProvider>();
-        }
-
-        public IEnumerable<CodeFixProvider> GetCodeFixes()
-        {
-            return Enumerable.Empty<CodeFixProvider>();
-        }
+        public IEnumerable<CodeRefactoringProvider> Refactorings => Enumerable.Empty<CodeRefactoringProvider>();
+        public IEnumerable<CodeFixProvider> CodeFixes => Enumerable.Empty<CodeFixProvider>();
     }
 }

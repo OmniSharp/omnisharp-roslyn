@@ -128,8 +128,7 @@ namespace OmniSharp
             {
                 if (fixContext.HasValue)
                 {
-                    var codeFixes = provider.GetCodeFixes();
-                    foreach (var codeFix in codeFixes)
+                    foreach (var codeFix in provider.CodeFixes)
                     {
                         if (!_blacklist.Contains(codeFix.ToString()))
                         {
@@ -146,9 +145,7 @@ namespace OmniSharp
             {
                 if (refactoringContext.HasValue)
                 {
-                    var refactorings = provider.GetRefactorings();
-
-                    foreach (var refactoring in refactorings)
+                    foreach (var refactoring in provider.Refactorings)
                     {
                         // if (!_blacklist.Contains(refactoring.ToString()))
                         {

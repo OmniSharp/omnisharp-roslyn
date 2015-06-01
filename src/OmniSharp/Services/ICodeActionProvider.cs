@@ -6,7 +6,7 @@ namespace OmniSharp.Services
 {
     public interface ICodeActionProvider
     {
-        IEnumerable<CodeRefactoringProvider> GetRefactorings();
-        IEnumerable<CodeFixProvider> GetCodeFixes();
+        IEnumerable<CodeRefactoringProvider> Refactorings { get; }
+        IEnumerable<CodeFixProvider> CodeFixes { get; }
     }
 }
