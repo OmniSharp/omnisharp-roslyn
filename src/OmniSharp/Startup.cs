@@ -88,7 +88,7 @@ namespace OmniSharp
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
 
 #if DNX451
-            services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
+            services.AddSingleton<ICodeActionProvider, RoslynCodeActionProvider>();
 #endif
 
             if (Program.Environment.TransportType == TransportType.Stdio)

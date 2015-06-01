@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
@@ -15,6 +18,7 @@ namespace OmniSharp
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
+        private readonly Document _originalDocument;
 
         public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
         {
@@ -25,18 +29,16 @@ namespace OmniSharp
         [HttpPost("getcodeactions")]
         public async Task<GetCodeActionsResponse> GetCodeActions(CodeActionRequest request)
         {
-            var actions = new List<CodeAction>();
-            var context = await GetContext(request, actions);
-            await GetContextualCodeActions(context);
+            var actions = await GetActions(request);
             return new GetCodeActionsResponse() { CodeActions = actions.Select(a => a.Title) };
         }
 
         [HttpPost("runcodeaction")]
         public async Task<RunCodeActionResponse> RunCodeAction(CodeActionRequest request)
         {
-            var actions = new List<CodeAction>();
-            var context = await GetContext(request, actions);
-            await GetContextualCodeActions(context);
+            var originalDocument = _workspace.GetDocument(request.FileName);
+
+            var actions = await GetActions(request);
 
             if (request.CodeAction > actions.Count())
             {
@@ -52,7 +54,6 @@ namespace OmniSharp
                 o.Apply(_workspace, CancellationToken.None);
             }
 
-            var originalDocument = context.Value.Document;
             var response = new RunCodeActionResponse();
             if (!request.WantsTextChanges)
             {
@@ -70,7 +71,17 @@ namespace OmniSharp
             return response;
         }
 
-        private async Task<CodeRefactoringContext?> GetContext(CodeActionRequest request, List<CodeAction> actionsDestination)
+        private async Task<IEnumerable<CodeAction>> GetActions(CodeActionRequest request)
+        {
+            var actions = new List<CodeAction>();
+            var refactoringContext = await GetRefactoringContext(request, actions);
+            var codeFixContext = await GetCodeFixContext(request, actions);
+            await CollectCodeFixActions(codeFixContext);
+            await CollectRefactoringActions(refactoringContext);
+            return actions;
+        }
+
+        private async Task<CodeRefactoringContext?> GetRefactoringContext(CodeActionRequest request, List<CodeAction> actionsDestination)
         {
             var document = _workspace.GetDocument(request.FileName);
             if (document != null)
@@ -81,30 +92,71 @@ namespace OmniSharp
                 return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
             }
 
-            //todo, handle context creation issues
             return null;
         }
 
-        private async Task GetContextualCodeActions(CodeRefactoringContext? context)
+        private async Task<CodeFixContext?> GetCodeFixContext(CodeActionRequest request, List<CodeAction> actionsDestination)
         {
-            if (!context.HasValue)
+            var document = _workspace.GetDocument(request.FileName);
+            if (document != null)
             {
-                return;
+                var sourceText = await document.GetTextAsync();
+                var semanticModel = await document.GetSemanticModelAsync();
+                var diagnostics = semanticModel.GetDiagnostics();
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+
+                var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(position)).ToImmutableArray();
+
+                if (pointDiagnostics.Any())
+                    return new CodeFixContext(document, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             }
 
-            if (_codeActionProviders != null)
-            {
-                foreach (var provider in _codeActionProviders)
-                {
-                    var providers = provider.GetProviders();
+            return null;
+        }
 
-                    foreach (var codeActionProvider in providers)
+        private static readonly HashSet<string> _blacklist = new HashSet<string> {
+            "Microsoft.CodeAnalysis.CSharp.CodeRefactorings.ExtractMethod.ExtractMethodCodeRefactoringProvider",
+
+            "Microsoft.CodeAnalysis.CSharp.CodeFixes.AddMissingReference.AddMissingReferenceCodeFixProvider",
+            "Microsoft.CodeAnalysis.CSharp.CodeFixes.Async.CSharpConvertToAsyncMethodCodeFixProvider",
+            "Microsoft.CodeAnalysis.CSharp.CodeFixes.Iterator.CSharpChangeToIEnumerableCodeFixProvider"
+        };
+
+        private async Task CollectCodeFixActions(CodeFixContext? fixContext)
+        {
+            foreach (var provider in _codeActionProviders)
+            {
+                if (fixContext.HasValue)
+                {
+                    var codeFixes = provider.GetCodeFixes();
+                    foreach (var codeFix in codeFixes)
                     {
-                        await codeActionProvider.ComputeRefactoringsAsync(context.Value);
+                        if (!_blacklist.Contains(codeFix.ToString()))
+                        {
+                            await codeFix.RegisterCodeFixesAsync(fixContext.Value);
+                        }
                     }
                 }
             }
         }
 
+        private async Task CollectRefactoringActions(CodeRefactoringContext? refactoringContext)
+        {
+            foreach (var provider in _codeActionProviders)
+            {
+                if (refactoringContext.HasValue)
+                {
+                    var refactorings = provider.GetRefactorings();
+
+                    foreach (var refactoring in refactorings)
+                    {
+                        // if (!_blacklist.Contains(refactoring.ToString()))
+                        {
+                            await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

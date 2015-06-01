@@ -29,7 +29,7 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new CodeActionController(workspace, new[] { new NRefactoryCodeActionProvider() });
+            var controller = new CodeActionController(workspace, new[] { new RoslynCodeActionProvider() });
             var request = CreateRequest(source);
             var response = await controller.GetCodeActions(request);
             return response.CodeActions;
