@@ -10,24 +10,18 @@ using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
-    public static class MefContainer
+    public static class OmniSharpMefContainer
     {
-        static CompositionHost container;
         public static CompositionHost Container
         {
             get
             {
-                if (container == null)
-                {
-                    var csharpFeatures = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-                    var features = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+                var csharpFeatures = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+                var features = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
 
-                    container = new ContainerConfiguration()
-                                .WithAssemblies(MefHostServices.DefaultAssemblies.Add(features).Add(csharpFeatures))
-                                .CreateContainer();
-                }
-
-                return container;
+                return new ContainerConfiguration()
+                            .WithAssemblies(MefHostServices.DefaultAssemblies.Add(features).Add(csharpFeatures))
+                            .CreateContainer();
             }
         }
     }
@@ -38,7 +32,7 @@ namespace OmniSharp
 
         public BufferManager BufferManager { get; private set; }
 
-        public OmnisharpWorkspace() : base(new MefHostServices(MefContainer.Container), "Custom")
+        public OmnisharpWorkspace() : base(new MefHostServices(OmniSharpMefContainer.Container), "Custom")
         {
             BufferManager = new BufferManager(this);
         }

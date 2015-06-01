@@ -18,7 +18,7 @@ namespace OmniSharp
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
-        private readonly Document _originalDocument;
+        private Document _originalDocument;
 
         public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
         {
@@ -36,8 +36,6 @@ namespace OmniSharp
         [HttpPost("runcodeaction")]
         public async Task<RunCodeActionResponse> RunCodeAction(CodeActionRequest request)
         {
-            var originalDocument = _workspace.GetDocument(request.FileName);
-
             var actions = await GetActions(request);
 
             if (request.CodeAction > actions.Count())
@@ -58,14 +56,14 @@ namespace OmniSharp
             if (!request.WantsTextChanges)
             {
                 // return the new document
-                var sourceText = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextAsync();
+                var sourceText = await _workspace.CurrentSolution.GetDocument(_originalDocument.Id).GetTextAsync();
                 response.Text = sourceText.ToString();
             }
             else
             {
                 // return the text changes
-                var changes = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextChangesAsync(originalDocument);
-                response.Changes = await LinePositionSpanTextChange.Convert(originalDocument, changes);
+                var changes = await _workspace.CurrentSolution.GetDocument(_originalDocument.Id).GetTextChangesAsync(_originalDocument);
+                response.Changes = await LinePositionSpanTextChange.Convert(_originalDocument, changes);
             }
 
             return response;
@@ -74,43 +72,37 @@ namespace OmniSharp
         private async Task<IEnumerable<CodeAction>> GetActions(CodeActionRequest request)
         {
             var actions = new List<CodeAction>();
+            _originalDocument = _workspace.GetDocument(request.FileName);
+            if (_originalDocument == null)
+                return actions;
+
             var refactoringContext = await GetRefactoringContext(request, actions);
             var codeFixContext = await GetCodeFixContext(request, actions);
-            await CollectCodeFixActions(codeFixContext);
             await CollectRefactoringActions(refactoringContext);
+            await CollectCodeFixActions(codeFixContext);
+            actions.Reverse();
             return actions;
         }
 
         private async Task<CodeRefactoringContext?> GetRefactoringContext(CodeActionRequest request, List<CodeAction> actionsDestination)
         {
-            var document = _workspace.GetDocument(request.FileName);
-            if (document != null)
-            {
-                var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-                var location = new TextSpan(position, 1);
-                return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
-            }
-
-            return null;
+            var sourceText = await _originalDocument.GetTextAsync();
+            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            var location = new TextSpan(position, 1);
+            return new CodeRefactoringContext(_originalDocument, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
         private async Task<CodeFixContext?> GetCodeFixContext(CodeActionRequest request, List<CodeAction> actionsDestination)
         {
-            var document = _workspace.GetDocument(request.FileName);
-            if (document != null)
-            {
-                var sourceText = await document.GetTextAsync();
-                var semanticModel = await document.GetSemanticModelAsync();
-                var diagnostics = semanticModel.GetDiagnostics();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            var sourceText = await _originalDocument.GetTextAsync();
+            var semanticModel = await _originalDocument.GetSemanticModelAsync();
+            var diagnostics = semanticModel.GetDiagnostics();
+            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
 
-                var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(position)).ToImmutableArray();
+            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(position)).ToImmutableArray();
 
-                if (pointDiagnostics.Any())
-                    return new CodeFixContext(document, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
-            }
-
+            if (pointDiagnostics.Any())
+                return new CodeFixContext(_originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             return null;
         }
 
@@ -147,9 +139,13 @@ namespace OmniSharp
                 {
                     foreach (var refactoring in provider.Refactorings)
                     {
-                        // if (!_blacklist.Contains(refactoring.ToString()))
+                        // if (refactoring.ToString().EndsWith("InvertIfCodeRefactoringProvider"))
                         {
-                            await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
+                            System.Console.WriteLine(refactoring);
+                            // if (!_blacklist.Contains(refactoring.ToString()))
+                            {
+                                await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
+                            }
                         }
                     }
                 }
