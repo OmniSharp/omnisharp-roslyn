@@ -11,6 +11,8 @@ namespace OmniSharp.Services
     public class RoslynCodeActionProvider : ICodeActionProvider
     {
         private IEnumerable<Type> _features;
+        private readonly IEnumerable<CodeRefactoringProvider> _refactorings;
+        private readonly IEnumerable<CodeFixProvider> _codeFixes;
 
         public RoslynCodeActionProvider()
         {
@@ -19,18 +21,22 @@ namespace OmniSharp.Services
                                 .Where(type => !type.IsInterface
                                         && !type.IsAbstract
                                         && !type.ContainsGenericParameters); // TODO: handle providers with generic params
+
+            _refactorings = _features.Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
+                   .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
+
+            _codeFixes = _features.Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
+                    .Select(type => (CodeFixProvider)Activator.CreateInstance(type));
         }
 
         public IEnumerable<CodeRefactoringProvider> GetRefactorings()
         {
-            return _features.Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
-                    .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
+            return _refactorings;
         }
 
         public IEnumerable<CodeFixProvider> GetCodeFixes()
         {
-            return _features.Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
-                    .Select(type => (CodeFixProvider)Activator.CreateInstance(type));
+            return _codeFixes;
         }
     }
 }
