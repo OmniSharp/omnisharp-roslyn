@@ -38,8 +38,6 @@ namespace OmniSharp.Services
         public virtual IEnumerable<CodeFixProvider> CodeFixes => _codeFixes;
 
         public abstract string ProviderName { get; }
-
-        internal virtual ImmutableArray<Assembly> MefAssemblies { get; }
     }
 }
 #endif

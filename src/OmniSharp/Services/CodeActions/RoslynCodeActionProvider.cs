@@ -18,7 +18,7 @@ namespace OmniSharp.Services
         }
 
         public override string ProviderName => "Roslyn";
-        internal override ImmutableArray<Assembly> MefAssemblies => _mefAssemblies;
+        internal static ImmutableArray<Assembly> MefAssemblies => _mefAssemblies;
     }
 }
 #endif

@@ -10,29 +10,13 @@ using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
-    public static class OmniSharpMefContainer
-    {
-        public static CompositionHost Container
-        {
-            get
-            {
-                var csharpFeatures = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-                var features = Assembly.Load(new AssemblyName("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-
-                return new ContainerConfiguration()
-                            .WithAssemblies(MefHostServices.DefaultAssemblies.Add(features).Add(csharpFeatures))
-                            .CreateContainer();
-            }
-        }
-    }
-
     public class OmnisharpWorkspace : Workspace
     {
         public bool Initialized { get; set; }
 
         public BufferManager BufferManager { get; private set; }
 
-        public OmnisharpWorkspace() : base(new MefHostServices(OmniSharpMefContainer.Container), "Custom")
+        public OmnisharpWorkspace(CompositionHost container) : base(new MefHostServices(container), "Custom")
         {
             BufferManager = new BufferManager(this);
         }

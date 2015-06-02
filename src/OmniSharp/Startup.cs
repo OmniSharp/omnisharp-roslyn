@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.IO;
+using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
+using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -25,8 +28,8 @@ namespace OmniSharp
     {
         public Startup()
         {
-           var configuration = new Configuration()
-                .AddJsonFile("config.json");
+            var configuration = new Configuration()
+                 .AddJsonFile("config.json");
 
             if (Program.Environment.OtherArgs != null)
             {
@@ -49,7 +52,14 @@ namespace OmniSharp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            Workspace = new OmnisharpWorkspace();
+
+            var assemblies = new List<Assembly>();
+#if DNX451
+            assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
+            assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
+#endif
+            var container = BuildContainer(assemblies);
+            Workspace = new OmnisharpWorkspace(container);
 
             services.AddMvc();
 
@@ -108,6 +118,13 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
+        public CompositionHost BuildContainer(IEnumerable<Assembly> assemblies)
+        {
+            return new ContainerConfiguration()
+                        .WithAssemblies(MefHostServices.DefaultAssemblies.AddRange(assemblies))
+                        .CreateContainer();
+
+        }
         public void Configure(IApplicationBuilder app,
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env,
