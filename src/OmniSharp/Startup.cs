@@ -88,7 +88,9 @@ namespace OmniSharp
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
 
 #if DNX451
+            //TODO Do roslyn code actions run on Core CLR?
             services.AddSingleton<ICodeActionProvider, RoslynCodeActionProvider>();
+            services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
 
             if (Program.Environment.TransportType == TransportType.Stdio)

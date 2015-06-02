@@ -44,8 +44,7 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     applicationRoot = Path.GetFullPath((string)enumerator.Current);
                 }
-                else
-                    if (arg == "-p")
+                else if (arg == "-p")
                 {
                     enumerator.MoveNext();
                     serverPort = int.Parse((string)enumerator.Current);

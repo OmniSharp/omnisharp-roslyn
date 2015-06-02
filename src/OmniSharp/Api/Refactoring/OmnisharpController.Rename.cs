@@ -60,7 +60,7 @@ namespace OmniSharp
                             var textChanges = await changedDocument.GetTextChangesAsync(originalDocument);
                             modifiedFileResponse.Changes = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
                         }
-                        
+
                         changes.Add(modifiedFileResponse);
                     }
                 }
