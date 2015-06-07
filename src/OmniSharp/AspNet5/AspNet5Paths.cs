@@ -124,8 +124,8 @@ namespace OmniSharp.AspNet5
 
         private IEnumerable<string> GetRuntimeLocations()
         {
-            yield return Environment.GetEnvironmentVariable("DNX_HOME");
-            yield return Environment.GetEnvironmentVariable("KRE_HOME");
+            yield return Environment.GetEnvironmentVariable("DNX_HOME") ?? string.Empty;
+            yield return Environment.GetEnvironmentVariable("KRE_HOME") ?? string.Empty;
 
             //  %HOME% and %USERPROFILE% might point to different places.
             foreach (var home in new string[] { Environment.GetEnvironmentVariable("HOME"), Environment.GetEnvironmentVariable("USERPROFILE") }.Where(s => !string.IsNullOrEmpty(s)))
