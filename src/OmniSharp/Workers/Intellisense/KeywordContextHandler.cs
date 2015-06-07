@@ -32,281 +32,191 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace OmniSharp
+namespace OmniSharp.Intellisense
 {
+    internal sealed class RecommendedKeyword
+    {
+        public string Keyword { get; private set; }
+        public bool IsIntrinsic { get; private set; }
+        public bool ShouldFormatOnCommit { get; private set; }
+
+        public RecommendedKeyword(string keyword, bool isIntrinsic = false, bool shouldFormatOnCommit = false)
+        {
+            this.Keyword = keyword;
+            this.IsIntrinsic = isIntrinsic;
+            this.ShouldFormatOnCommit = shouldFormatOnCommit;
+        }
+    }
+    internal interface IKeywordRecommender<TContext>
+    {
+        IEnumerable<RecommendedKeyword> RecommendKeywords(int position, TContext context, CancellationToken cancellationToken);
+    }
+
     class KeywordContextHandler
     {
-        public IEnumerable<string> Get(CSharpSyntaxContext ctx, SemanticModel semanticModel, int offset, CancellationToken cancellationToken = default(CancellationToken))
+        static readonly IKeywordRecommender<CSharpSyntaxContext>[] recommender = {
+            new AbstractKeywordRecommender(),
+            new AddKeywordRecommender(),
+            new AliasKeywordRecommender(),
+            new AscendingKeywordRecommender(),
+            new AsKeywordRecommender(),
+            new AssemblyKeywordRecommender(),
+            new AsyncKeywordRecommender(),
+            new AwaitKeywordRecommender(),
+            new BaseKeywordRecommender(),
+            new BoolKeywordRecommender(),
+            new BreakKeywordRecommender(),
+            new ByKeywordRecommender(),
+            new ByteKeywordRecommender(),
+            new CaseKeywordRecommender(),
+            new CatchKeywordRecommender(),
+            new CharKeywordRecommender(),
+            new CheckedKeywordRecommender(),
+            new ChecksumKeywordRecommender(),
+            new ClassKeywordRecommender(),
+            new ConstKeywordRecommender(),
+            new ContinueKeywordRecommender(),
+            new DecimalKeywordRecommender(),
+            new DefaultKeywordRecommender(),
+            new DefineKeywordRecommender(),
+            new DelegateKeywordRecommender(),
+            new DescendingKeywordRecommender(),
+            new DisableKeywordRecommender(),
+            new DoKeywordRecommender(),
+            new DoubleKeywordRecommender(),
+            new DynamicKeywordRecommender(),
+            new ElifKeywordRecommender(),
+            new ElseKeywordRecommender(),
+            new EndIfKeywordRecommender(),
+            new EndRegionKeywordRecommender(),
+            new EnumKeywordRecommender(),
+            new EqualsKeywordRecommender(),
+            new ErrorKeywordRecommender(),
+            new EventKeywordRecommender(),
+            new ExplicitKeywordRecommender(),
+            new ExternKeywordRecommender(),
+            new FalseKeywordRecommender(),
+            new FieldKeywordRecommender(),
+            new FinallyKeywordRecommender(),
+            new FixedKeywordRecommender(),
+            new FloatKeywordRecommender(),
+            new ForEachKeywordRecommender(),
+            new ForKeywordRecommender(),
+            new FromKeywordRecommender(),
+            new GetKeywordRecommender(),
+            new GlobalKeywordRecommender(),
+            new GotoKeywordRecommender(),
+            new GroupKeywordRecommender(),
+            new HiddenKeywordRecommender(),
+            new IfKeywordRecommender(),
+            new ImplicitKeywordRecommender(),
+            new InKeywordRecommender(),
+            new InterfaceKeywordRecommender(),
+            new InternalKeywordRecommender(),
+            new IntKeywordRecommender(),
+            new IntoKeywordRecommender(),
+            new IsKeywordRecommender(),
+            new JoinKeywordRecommender(),
+            new LetKeywordRecommender(),
+            new LineKeywordRecommender(),
+            new LockKeywordRecommender(),
+            new LongKeywordRecommender(),
+            new MethodKeywordRecommender(),
+            new ModuleKeywordRecommender(),
+            new NameOfKeywordRecommender(),
+            new NamespaceKeywordRecommender(),
+            new NewKeywordRecommender(),
+            new NullKeywordRecommender(),
+            new ObjectKeywordRecommender(),
+            new OnKeywordRecommender(),
+            new OperatorKeywordRecommender(),
+            new OrderByKeywordRecommender(),
+            new OutKeywordRecommender(),
+            new OverrideKeywordRecommender(),
+            new ParamKeywordRecommender(),
+            new ParamsKeywordRecommender(),
+            new PartialKeywordRecommender(),
+            new PragmaKeywordRecommender(),
+            new PrivateKeywordRecommender(),
+            new PropertyKeywordRecommender(),
+            new ProtectedKeywordRecommender(),
+            new PublicKeywordRecommender(),
+            new ReadOnlyKeywordRecommender(),
+            new ReferenceKeywordRecommender(),
+            new RefKeywordRecommender(),
+            new RegionKeywordRecommender(),
+            new RemoveKeywordRecommender(),
+            new RestoreKeywordRecommender(),
+            new ReturnKeywordRecommender(),
+            new SByteKeywordRecommender(),
+            new SealedKeywordRecommender(),
+            new SelectKeywordRecommender(),
+            new SetKeywordRecommender(),
+            new ShortKeywordRecommender(),
+            new SizeOfKeywordRecommender(),
+            new StackAllocKeywordRecommender(),
+            new StaticKeywordRecommender(),
+            new StringKeywordRecommender(),
+            new StructKeywordRecommender(),
+            new SwitchKeywordRecommender(),
+            new ThisKeywordRecommender(),
+            new ThrowKeywordRecommender(),
+            new TrueKeywordRecommender(),
+            new TryKeywordRecommender(),
+            new TypeKeywordRecommender(),
+            new TypeOfKeywordRecommender(),
+            new TypeVarKeywordRecommender(),
+            new UIntKeywordRecommender(),
+            new ULongKeywordRecommender(),
+            new UncheckedKeywordRecommender(),
+            new UndefKeywordRecommender(),
+            new UnsafeKeywordRecommender(),
+            new UShortKeywordRecommender(),
+            new UsingKeywordRecommender(),
+            new VarKeywordRecommender(),
+            new VirtualKeywordRecommender(),
+            new VoidKeywordRecommender(),
+            new VolatileKeywordRecommender(),
+            new WarningKeywordRecommender(),
+            new WhereKeywordRecommender(),
+            new WhileKeywordRecommender(),
+            new YieldKeywordRecommender()
+        };
+
+        public IEnumerable<string> Get(CSharpSyntaxContext context, SemanticModel model, int position)
         {
+            // var ctx = await completionContext.GetSyntaxContextAsync(engine.Workspace, cancellationToken).ConfigureAwait(false);
+            // var model = await completionContext.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+            if (context.IsInNonUserCode)
+            {
+                return Enumerable.Empty<string>();
+            }
+
+            // if (ctx.TargetToken.IsKind(SyntaxKind.OverrideKeyword))
+            //     return Enumerable.Empty<string>();
+
+            // if (info.CompletionTriggerReason == CompletionTriggerReason.CharTyped && info.TriggerCharacter == ' ')
+            // {
+            //     if (!ctx.CSharpSyntaxContext.IsEnumBaseListContext && !ctx.LeftToken.IsKind(SyntaxKind.EqualsToken) && !ctx.LeftToken.IsKind(SyntaxKind.EqualsEqualsToken))
+            //         return Enumerable.Empty<string>();
+            // }
+
             var result = new List<string>();
-            var parent = ctx.TargetToken.Parent;
-            if (parent != null && parent.IsKind(SyntaxKind.ArrayRankSpecifier))
-                return result;
-            if (ctx.IsIsOrAsTypeContext)
+
+            foreach (var r in recommender)
             {
-                foreach (var kw in primitiveTypesKeywords)
-                    result.Add(kw);
-                return result;
-            }
-            if (parent != null)
-            {
-                if (parent.Kind() == SyntaxKind.IdentifierName)
+                var recommended = r.RecommendKeywords(position, context, CancellationToken.None);
+                if (recommended == null)
+                    continue;
+                foreach (var kw in recommended)
                 {
-                    if (ctx.LeftToken.Parent.Kind() == SyntaxKind.IdentifierName &&
-                        parent.Parent != null && parent.Parent.Kind() == SyntaxKind.ParenthesizedExpression ||
-                        ctx.LeftToken.Parent.Kind() == SyntaxKind.CatchDeclaration)
-                        return result;
-                }
-                if (parent.Kind() == SyntaxKind.NamespaceDeclaration)
-                {
-                    var decl = parent as NamespaceDeclarationSyntax;
-                    if (decl.OpenBraceToken.Span.Length > 0 &&
-                        decl.OpenBraceToken.SpanStart > ctx.TargetToken.SpanStart)
-                        return result;
-                }
-                if (parent.Kind() == SyntaxKind.ClassDeclaration ||
-                    parent.Kind() == SyntaxKind.StructDeclaration ||
-                    parent.Kind() == SyntaxKind.InterfaceDeclaration)
-                {
-                    foreach (var kw in typeLevelKeywords)
-                        result.Add(kw);
-                    return result;
-                }
-                if (parent.Kind() == SyntaxKind.EnumDeclaration ||
-                    parent.Kind() == SyntaxKind.DelegateDeclaration ||
-                    parent.Kind() == SyntaxKind.PredefinedType ||
-                    parent.Kind() == SyntaxKind.TypeParameterList ||
-                    parent.Kind() == SyntaxKind.QualifiedName ||
-                    parent.Kind() == SyntaxKind.SimpleMemberAccessExpression)
-                {
-                    return result;
-                }
-            }
-            if (parent.IsKind(SyntaxKind.AttributeList))
-            {
-                if (parent.Parent.Parent == null || parent.Parent.Parent.IsKind(SyntaxKind.CompilationUnit))
-                {
-                    result.Add("assembly");
-                    result.Add("module");
-                    result.Add("type");
-                }
-                else
-                {
-                    result.Add("param");
-                    result.Add("field");
-                    result.Add("property");
-                    result.Add("method");
-                    result.Add("event");
-                }
-                result.Add("return");
-            }
-            if (ctx.IsInstanceContext)
-            {
-                if (ctx.LeftToken.Parent.Ancestors().Any(a => a is SwitchStatementSyntax || a is BlockSyntax && a.ToFullString().IndexOf("switch", StringComparison.Ordinal) > 0))
-                {
-                    result.Add("case");
+                    Console.WriteLine(kw.Keyword);
+                    result.Add(kw.Keyword);
                 }
             }
 
-            var forEachStatementSyntax = parent as ForEachStatementSyntax;
-            if (forEachStatementSyntax != null)
-            {
-                if (forEachStatementSyntax.Type.Span.Length > 0 &&
-                    forEachStatementSyntax.Identifier.Span.Length > 0 &&
-                    forEachStatementSyntax.InKeyword.Span.Length == 0)
-                {
-                    result.Add("in");
-                    return result;
-                }
-            }
-            if (parent != null && parent.Kind() == SyntaxKind.ArgumentList)
-            {
-                result.Add("out");
-                result.Add("ref");
-            }
-            else if (parent != null && parent.Kind() == SyntaxKind.ParameterList)
-            {
-                result.Add("out");
-                result.Add("ref");
-                result.Add("params");
-                foreach (var kw in primitiveTypesKeywords)
-                    result.Add(kw);
-
-                if (ctx.IsParameterTypeContext)
-                {
-                    bool isFirst = ctx.LeftToken.GetPreviousToken().IsKind(SyntaxKind.OpenParenToken);
-                    if (isFirst)
-                        result.Add("this");
-                }
-
-                return result;
-            }
-            else
-            {
-                result.Add("var");
-                result.Add("dynamic");
-            }
-
-            if (parent != null && parent.Parent != null && parent.IsKind(SyntaxKind.BaseList) && parent.Parent.IsKind(SyntaxKind.EnumDeclaration))
-            {
-                foreach (var kw in validEnumBaseTypes)
-                    result.Add(kw);
-                return result;
-            }
-            if (parent != null &&
-                parent.Parent != null &&
-                parent.Parent.IsKind(SyntaxKind.FromClause))
-            {
-                foreach (var kw in linqKeywords)
-                    result.Add(kw);
-            }
-            if (ctx.IsGlobalStatementContext || parent == null || parent is NamespaceDeclarationSyntax)
-            {
-                foreach (var kw in globalLevelKeywords)
-                    result.Add(kw);
-                return result;
-            }
-            else
-            {
-                foreach (var kw in typeLevelKeywords)
-                    result.Add(kw);
-            }
-
-            foreach (var kw in primitiveTypesKeywords)
-                result.Add(kw);
-
-            foreach (var kw in statementStartKeywords)
-                result.Add(kw);
-
-            foreach (var kw in expressionLevelKeywords)
-                result.Add(kw);
-
-            if (ctx.IsPreProcessorKeywordContext)
-            {
-                foreach (var kw in preprocessorKeywords)
-                    result.Add(kw);
-            }
-
-            if (ctx.IsPreProcessorExpressionContext)
-            {
-                var parseOptions = semanticModel.SyntaxTree.Options as CSharpParseOptions;
-                foreach (var define in parseOptions.PreprocessorSymbolNames)
-                {
-                    result.Add(define);
-                }
-            }
-            if (parent.IsKind(SyntaxKind.TypeParameterConstraintClause))
-            {
-                result.Add("new()");
-            }
             return result;
         }
 
-        static readonly string[] preprocessorKeywords = {
-            "else",
-            "elif",
-            "endif",
-            "define",
-            "undef",
-            "warning",
-            "error",
-            "pragma",
-            "line",
-            "line hidden",
-            "line default",
-            "region",
-            "endregion"
-        };
-
-        static readonly string[] validEnumBaseTypes = {
-            "byte",
-            "sbyte",
-            "short",
-            "int",
-            "long",
-            "ushort",
-            "uint",
-            "ulong"
-        };
-
-        static readonly string[] expressionLevelKeywords = {
-            "as",
-            "is",
-            "else",
-            "out",
-            "ref",
-            "null",
-            "delegate",
-            "default",
-            "true",
-            "false"
-        };
-
-        static readonly string[] primitiveTypesKeywords = {
-            "void",
-            "object",
-            "bool",
-            "byte",
-            "sbyte",
-            "char",
-            "short",
-            "int",
-            "long",
-            "ushort",
-            "uint",
-            "ulong",
-            "float",
-            "double",
-            "decimal",
-            "string"
-        };
-
-        static readonly string[] statementStartKeywords = {
-            "base", "new", "sizeof", "this",
-            "true", "false", "typeof", "checked", "unchecked", "from", "break", "checked",
-            "unchecked", "const", "continue", "do", "finally", "fixed", "for", "foreach",
-            "goto", "if", "lock", "return", "stackalloc", "switch", "throw", "try", "unsafe",
-            "using", "while", "yield",
-            "catch"
-        };
-
-        static readonly string[] globalLevelKeywords = {
-            "namespace", "using", "extern", "public", "internal",
-            "class", "interface", "struct", "enum", "delegate",
-            "abstract", "sealed", "static", "unsafe", "partial"
-        };
-
-        static readonly string[] typeLevelKeywords = {
-            "public", "internal", "protected", "private", "async",
-            "class", "interface", "struct", "enum", "delegate",
-            "abstract", "sealed", "static", "unsafe", "partial",
-            "const", "event", "extern", "fixed", "new",
-            "operator", "explicit", "implicit",
-            "override", "readonly", "virtual", "volatile"
-        };
-
-        static readonly string[] linqKeywords = {
-            "from",
-            "where",
-            "select",
-            "group",
-            "into",
-            "orderby",
-            "join",
-            "let",
-            "in",
-            "on",
-            "equals",
-            "by",
-            "ascending",
-            "descending"
-        };
-
-        static readonly string[] parameterTypePredecessorKeywords = {
-            "out",
-            "ref",
-            "params"
-        };
     }
-
 }

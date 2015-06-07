@@ -21,7 +21,7 @@
     "frameworks": {
         "aspnet50": {
             "dependencies": {
-               "ICSharpCode.NRefactory": "6.0.0-alpha3",  
+               "ICSharpCode.NRefactory": "6.0.0-alpha3",
                "ScriptCs.Hosting": "0.14.1"
             },
             "frameworkAssemblies": {

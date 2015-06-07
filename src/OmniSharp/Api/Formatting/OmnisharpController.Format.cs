@@ -19,7 +19,7 @@ namespace OmniSharp
             }
 
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
-            var position = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            int position = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
             var changes = await Formatting.GetFormattingChangesAfterKeystroke(_workspace, Options, document, position, request.Char);
 
             return new FormatRangeResponse()
