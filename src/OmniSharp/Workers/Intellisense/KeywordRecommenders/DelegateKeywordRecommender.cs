@@ -2,10 +2,10 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.CSharp.Utilities;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace OmniSharp.Intellisense
 {
@@ -29,7 +29,7 @@ namespace OmniSharp.Intellisense
         {
             return
                 context.IsGlobalStatementContext ||
-				(context.IsNonAttributeExpressionContext && !context.IsConstantExpressionContext) ||
+                (context.IsNonAttributeExpressionContext && !context.IsConstantExpressionContext) ||
                 IsAfterAsyncKeywordInExpressionContext(context, cancellationToken) ||
                 context.IsTypeDeclarationContext(
                     validModifiers: s_validModifiers,

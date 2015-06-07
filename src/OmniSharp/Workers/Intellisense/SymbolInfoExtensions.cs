@@ -23,14 +23,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Intellisense
 {
-	public static class SymbolInfoExtensions
+    public static class SymbolInfoExtensions
     {
         public static IEnumerable<ISymbol> GetAllSymbols(this SymbolInfo info)
         {

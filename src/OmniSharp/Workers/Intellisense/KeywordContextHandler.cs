@@ -210,7 +210,6 @@ namespace OmniSharp.Intellisense
                     continue;
                 foreach (var kw in recommended)
                 {
-                    Console.WriteLine(kw.Keyword);
                     result.Add(kw.Keyword);
                 }
             }

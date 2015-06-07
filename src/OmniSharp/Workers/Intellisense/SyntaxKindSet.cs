@@ -1,10 +1,9 @@
-using System;
-using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace OmniSharp.Intellisense
 {
-	public static class SyntaxKindSet
+    public static class SyntaxKindSet
     {
         public static readonly ISet<SyntaxKind> AllTypeModifiers = new HashSet<SyntaxKind>(SyntaxFacts.EqualityComparer)
         {

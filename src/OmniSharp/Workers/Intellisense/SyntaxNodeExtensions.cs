@@ -19,7 +19,7 @@ using Roslyn.Utilities;
 
 namespace OmniSharp.Intellisense
 {
-	public static partial class SyntaxNodeExtensions
+    public static partial class SyntaxNodeExtensions
     {
         public static IEnumerable<SyntaxNodeOrToken> DepthFirstTraversal(this SyntaxNode node)
         {

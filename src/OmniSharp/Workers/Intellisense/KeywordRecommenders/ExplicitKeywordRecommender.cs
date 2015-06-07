@@ -2,9 +2,9 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.CSharp.Utilities;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace OmniSharp.Intellisense
 {
@@ -28,7 +28,7 @@ namespace OmniSharp.Intellisense
             if (context.IsMemberDeclarationContext(validModifiers: s_validMemberModifiers, validTypeDeclarations: SyntaxKindSet.ClassStructTypeDeclarations, canBePartial: false, cancellationToken: cancellationToken))
             {
                 // operators must be both public and static
-				var modifiers = context.PrecedingModifiers;
+                var modifiers = context.PrecedingModifiers;
 
                 return
                     modifiers.Contains(SyntaxKind.PublicKeyword) &&

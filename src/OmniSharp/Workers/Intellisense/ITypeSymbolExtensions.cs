@@ -1,15 +1,15 @@
 using System;
-using System.Linq;
-using System.ComponentModel;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis;
-using System.Reflection;
 using System.Collections.Generic;
-using System.Threading;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp.Intellisense
 {

@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Roslyn.Utilities;
 using Microsoft.CodeAnalysis;
+using Roslyn.Utilities;
 
 namespace OmniSharp.Intellisense
 {

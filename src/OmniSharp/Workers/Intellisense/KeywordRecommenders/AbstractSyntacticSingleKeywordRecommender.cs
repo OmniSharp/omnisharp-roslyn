@@ -2,9 +2,9 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Roslyn.Utilities;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace OmniSharp.Intellisense
 {
