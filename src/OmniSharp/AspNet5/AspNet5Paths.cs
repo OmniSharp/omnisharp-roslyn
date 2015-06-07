@@ -50,7 +50,8 @@ namespace OmniSharp.AspNet5
 
             foreach (var location in GetRuntimeLocations())
             {
-                var paths = GetRuntimePathsFromVersionOrAlias(versionOrAlias, location);
+                //  Need to expand variables, because DNX_HOME variable might include %USERPROFILE%.
+                var paths = GetRuntimePathsFromVersionOrAlias(versionOrAlias, Environment.ExpandEnvironmentVariables(location));
 
                 foreach (var path in paths)
                 {
@@ -126,18 +127,18 @@ namespace OmniSharp.AspNet5
             yield return Environment.GetEnvironmentVariable("DNX_HOME");
             yield return Environment.GetEnvironmentVariable("KRE_HOME");
 
-            var home = Environment.GetEnvironmentVariable("HOME") ??
-                       Environment.GetEnvironmentVariable("USERPROFILE");
-
-            // Newer path
-            yield return Path.Combine(home, ".dnx");
-
-            // New path
-
-            yield return Path.Combine(home, ".k");
-
-            // Old path
-            yield return Path.Combine(home, ".kre");
+            //  %HOME% and %USERPROFILE% might point to different places.
+            foreach (var home in new string[] { Environment.GetEnvironmentVariable("HOME"), Environment.GetEnvironmentVariable("USERPROFILE") }.Where(s => !string.IsNullOrEmpty(s)))
+            {
+                // Newer path
+                yield return Path.Combine(home, ".dnx");
+    
+                // New path
+                yield return Path.Combine(home, ".k");
+    
+                // Old path
+                yield return Path.Combine(home, ".kre");
+            }
         }
 
         private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string versionOrAlias, string runtimePath)
