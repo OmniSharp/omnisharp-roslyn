@@ -27,3 +27,4 @@ nuget.exe
 *.sln.ide
 debugSettings.json
 buildlog
+project.lock.json
