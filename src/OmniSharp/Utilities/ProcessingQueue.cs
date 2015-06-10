@@ -25,7 +25,7 @@ namespace OmniSharp
 
         public void Start()
         {
-            Logger.WriteVerbose("[ProcessingQueue]: Start()");
+            Logger.LogVerbose("[ProcessingQueue]: Start()");
             new Thread(ReceiveMessages) { IsBackground = true }.Start();
         }
 
@@ -35,7 +35,7 @@ namespace OmniSharp
             {
                 if (Logger.IsEnabled(LogLevel.Verbose))
                 {
-                    Logger.WriteVerbose(string.Format("[ProcessingQueue]: Post({0})", message));
+                    Logger.LogVerbose(string.Format("[ProcessingQueue]: Post({0})", message));
                 }
 
                 _writer.Write(JsonConvert.SerializeObject(message));
@@ -52,7 +52,7 @@ namespace OmniSharp
 
                     if (Logger.IsEnabled(LogLevel.Verbose))
                     {
-                        Logger.WriteVerbose(string.Format("[ProcessingQueue]: Receive ({0})", message));
+                        Logger.LogVerbose(string.Format("[ProcessingQueue]: Receive ({0})", message));
                     }
 
                     OnReceive(message);
@@ -63,7 +63,7 @@ namespace OmniSharp
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError("Error occured processing message", ex);
+                    Logger.LogError("Error occured processing message", ex);
                 }
             }
         }

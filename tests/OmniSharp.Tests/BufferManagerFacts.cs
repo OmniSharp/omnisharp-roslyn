@@ -58,6 +58,7 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmnisharpWorkspace();
 
+            
             TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
                 new[] { "" },
                 new Dictionary<string, string>() { { Path.Combine("src", "root", "foo.cs"), "class C1 {}" } });

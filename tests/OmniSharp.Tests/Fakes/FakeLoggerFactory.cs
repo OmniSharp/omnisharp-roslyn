@@ -4,13 +4,16 @@ namespace OmniSharp.Tests
 {
     public class FakeLoggerFactory : ILoggerFactory
     {
+        private static FakeLogger logger = new FakeLogger();
         public void AddProvider(ILoggerProvider provider)
         {
         }
 
-        public ILogger Create(string name)
+        public LogLevel MinimumLevel { get; set; } = LogLevel.Verbose;
+
+        public ILogger CreateLogger(string name)
         {
-            return NullLogger.Instance;
+            return logger;
         }
     }
 }

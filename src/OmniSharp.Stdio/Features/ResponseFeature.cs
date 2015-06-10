@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.AspNet.Http.Interfaces;
+using Microsoft.AspNet.Http;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -26,6 +26,11 @@ namespace OmniSharp.Stdio.Features
         public void OnSendingHeaders(Action<object> callback, object state)
         {
             // nothing
+        }
+        
+        public void OnResponseCompleted(Action<object> act, object state)
+        {
+            //nothing again
         }
     }
 }

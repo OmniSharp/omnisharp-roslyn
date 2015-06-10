@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.DependencyInjection.Fallback;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Services;
@@ -74,33 +73,28 @@ namespace OmniSharp
             var config = new Configuration()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = HostingServices.Create(_serviceProvider, config);
-            serviceCollection.AddSingleton<ISharedTextWriter, SharedConsoleWriter>();
-
-            var services = serviceCollection.BuildServiceProvider();
-            var hostingEnv = services.GetRequiredService<IHostingEnvironment>();
-            var appEnv = services.GetRequiredService<IApplicationEnvironment>();
+            var engine = new HostingEngine(_serviceProvider);
 
             var context = new HostingContext()
             {
-                Services = services,
+                ServerFactoryLocation = "Kestrel",
                 Configuration = config,
-                ServerName = "Kestrel",
-                ApplicationName = appEnv.ApplicationName,
-                EnvironmentName = hostingEnv.EnvironmentName,
             };
-            
+
+            var writer = new SharedConsoleWriter();
+            context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
+            context.Services.AddInstance<ISharedTextWriter>(writer);
+
             if (transportType == TransportType.Stdio)
             {
-                context.ServerName = null;
-                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, services.GetRequiredService<ISharedTextWriter>());
+                context.Server = null;
+                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, writer);
             }
 
-            var engine = services.GetRequiredService<IHostingEngine>();
-            var appShutdownService = services.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEvent(false);
-
             var serverShutdown = engine.Start(context);
+
+            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
+            var shutdownHandle = new ManualResetEvent(false);
 
             appShutdownService.ShutdownRequested.Register(() =>
             {
@@ -108,7 +102,7 @@ namespace OmniSharp
                 shutdownHandle.Set();
             });
 
-#if ASPNETCORE50
+#if DNXCORE50
             var ignored = Task.Run(() =>
             {
                 Console.WriteLine("Started");
@@ -130,14 +124,14 @@ namespace OmniSharp
                     hostProcess.EnableRaisingEvents = true;
                     hostProcess.OnExit(() => appShutdownService.RequestShutdown());
                 }
-                catch 
+                catch
                 {
                     // If the process dies before we get here then request shutdown
                     // immediately
                     appShutdownService.RequestShutdown();
                 }
             }
-            
+
             shutdownHandle.WaitOne();
         }
     }

@@ -1,4 +1,4 @@
-#if ASPNET50
+#if DNX451
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;

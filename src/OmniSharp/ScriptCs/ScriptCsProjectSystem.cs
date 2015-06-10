@@ -1,4 +1,4 @@
-﻿#if ASPNET50
+﻿#if DNX451
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,23 +31,23 @@ namespace OmniSharp.ScriptCs
             _workspace = workspace;
             _env = env;
             _scriptCsContext = scriptCsContext;
-            _logger = loggerFactory.Create<ScriptCsProjectSystem>();
+            _logger = loggerFactory.CreateLogger<ScriptCsProjectSystem>();
         }
 
         public void Initalize()
         {
-            _logger.WriteInformation($"Detecting CSX files in '{_env.Path}'.");
+            _logger.LogInformation($"Detecting CSX files in '{_env.Path}'.");
 
             var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.TopDirectoryOnly);
 
             if (allCsxFiles.Length == 0)
             {
-                _logger.WriteInformation("Could not find any CSX files");
+                _logger.LogInformation("Could not find any CSX files");
                 return;
             }
 
             _scriptCsContext.Path = _env.Path;
-            _logger.WriteInformation($"Found {allCsxFiles.Length} CSX files.");
+            _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
             //script name is added here as a fake one (dir path not even a real file); this is OK though -> it forces MEF initialization
             var scriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), LogManager.GetCurrentClassLogger()).
@@ -133,7 +133,7 @@ namespace OmniSharp.ScriptCs
                 }
                 catch (Exception ex)
                 {
-                    _logger.WriteError($"{csxPath} will be ignored due to the following error:", ex);
+                    _logger.LogError($"{csxPath} will be ignored due to the following error:", ex);
                 }
             }
         }

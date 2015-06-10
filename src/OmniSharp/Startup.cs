@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
-using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
-using Microsoft.Framework.Cache.Memory;
+using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.Logging.Console;
 using OmniSharp.AspNet5;
 using OmniSharp.Filters;
 using OmniSharp.Middleware;
@@ -40,7 +38,6 @@ namespace OmniSharp
             {
                 configuration.AddJsonFile(Program.Environment.ConfigurationPath);
             }
-
             configuration.AddEnvironmentVariables();
 
             Configuration = configuration;
@@ -50,24 +47,15 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public void ConfigureServices(IServiceCollection services, IApplicationLifetime liftime, ISharedTextWriter writer)
+        public void ConfigureServices(IServiceCollection services)
         {
             Workspace = new OmnisharpWorkspace();
 
-            // Working around another bad bug in ASP.NET 5
-            // https://github.com/aspnet/Hosting/issues/151
-            services.AddInstance(liftime);
-            services.AddInstance(writer);
-
-            // This is super hacky by it's the easiest way to flow serivces from the 
-            // hosting layer, this needs to be easier
-            services.AddInstance<IOmnisharpEnvironment>(Program.Environment);
-
-            services.AddMvc(Configuration);
+            services.AddMvc();
 
             services.Configure<MvcOptions>(opt =>
             {
-                opt.ApplicationModelConventions.Add(new FromBodyApplicationModelConvention());
+                opt.Conventions.Add(new FromBodyApplicationModelConvention());
                 opt.Filters.Add(new UpdateBufferFilter(Workspace));
             });
 
@@ -86,7 +74,7 @@ namespace OmniSharp
             services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
-#if ASPNET50
+#if DNX451
             services.AddSingleton<IProjectSystem, ScriptCs.ScriptCsProjectSystem>();
 #endif
 
@@ -99,7 +87,7 @@ namespace OmniSharp
             // Add the code action provider
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
 
-#if ASPNET50
+#if DNX451
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
 
@@ -136,7 +124,7 @@ namespace OmniSharp
                 loggerFactory.AddConsole(logFilter);
             }
 
-            var logger = loggerFactory.Create<Startup>();
+            var logger = loggerFactory.CreateLogger<Startup>();
 
             app.UseRequestLogging();
 
@@ -144,13 +132,21 @@ namespace OmniSharp
 
             app.UseMvc();
 
-            logger.WriteInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+            if (env.TransportType == TransportType.Stdio)
+            {
+                logger.LogInformation($"Omnisharp server running using stdio at location '{env.Path}' on host {env.HostPID}.");
+            }
+            else
+            {
+                logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+            }
 
             // Forward workspace events
             app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
 
             // Initialize everything!
-            var projectSystems = app.ApplicationServices.GetRequiredService<IEnumerable<IProjectSystem>>();
+            var projectSystems = app.ApplicationServices.GetRequiredServices<IProjectSystem>();
+
             foreach (var projectSystem in projectSystems)
             {
                 try
@@ -161,15 +157,14 @@ namespace OmniSharp
                 {
                     //if a project system throws an unhandled exception
                     //it should not crash the entire server
-                    logger.WriteError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
+                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
                 }
             }
 
             // Mark the workspace as initialized
             Workspace.Initialized = true;
 
-            // This is temporary so that plugins work
-            Console.WriteLine("Solution has finished loading");
+            logger.LogInformation("Solution has finished loading");
         }
     }
 }
