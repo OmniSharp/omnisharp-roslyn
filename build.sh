@@ -25,7 +25,10 @@ dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd ../../
 dnvm use 1.0.0-beta4
-dnu publish src/OmniSharp --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
+dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
+OMNISHARP_VERSION=1.0.$TRAVIS_BUILD_NUMBER
+nuget push artifacts/build/omnisharp/approot/packages/OmniSharp/$OMNISHARP_VERSION/OmniSharp.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+nuget push artifacts/build/omnisharp/approot/packages/OmniSharp.Stdio/$OMNISHARP_VERSION/OmniSharp.Stdio.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
