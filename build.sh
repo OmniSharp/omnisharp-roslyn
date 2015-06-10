@@ -18,6 +18,3 @@ dnu publish src/OmniSharp --no-source --out artifacts/build/omnisharp --runtime 
 # work around for kpm bundle returning an exit code 0 on failure 
 grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
-
-# work around for kpm pack not preserving the executable flag on klr when copied
-chmod +x artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4/bin/klr
