@@ -12,6 +12,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :install
+set
 call dnvm install 1.0.0-beta4
 call dnvm use 1.0.0-beta4
 rem set the runtime path because the above commands set \.dnx<space>\runtimes
