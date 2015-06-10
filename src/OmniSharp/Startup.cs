@@ -25,8 +25,8 @@ namespace OmniSharp
     {
         public Startup()
         {
-           var configuration = new Configuration()
-                .AddJsonFile("config.json");
+            var configuration = new Configuration()
+                 .AddJsonFile("config.json");
 
             if (Program.Environment.OtherArgs != null)
             {
@@ -149,7 +149,16 @@ namespace OmniSharp
 
             foreach (var projectSystem in projectSystems)
             {
-                projectSystem.Initalize();
+                try
+                {
+                    projectSystem.Initalize();
+                }
+                catch (Exception e)
+                {
+                    //if a project system throws an unhandled exception
+                    //it should not crash the entire server
+                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
+                }
             }
 
             // Mark the workspace as initialized

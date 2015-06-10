@@ -163,5 +163,26 @@ namespace OmniSharp.Tests
             Assert.Equal(0, result.Changes.Count());
             Assert.NotNull(result.ErrorMessage);
         }
+
+        [Fact]
+        public async Task Rename_DoesNotDuplicateRenamesWithMultipleFrameowrks()
+        {
+            const string fileContent = @"
+                using System;
+                public class Program
+                {
+                    public void Main(bool aBool$ean)
+                    {
+                        Console.Write(aBoolean);
+                    }
+                }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var result = await SendRequest(workspace, "foo", "test.cs", fileContent, true);
+
+            Assert.Equal(1, result.Changes.Count());
+            Assert.Equal("test.cs", result.Changes.ElementAt(0).FileName);
+            Assert.Equal(2, result.Changes.ElementAt(0).Changes.Count());
+        }
     }
 }

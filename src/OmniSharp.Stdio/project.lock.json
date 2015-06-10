@@ -1107,7 +1107,7 @@
     },
     "Newtonsoft.Json/6.0.8": {
       "serviceable": false,
-      "sha": "nZX7xCBl3PXpxRCxVtVfUXn63gSzrT8aO0VB9Tp24q656IUup9EGE8SGlo0UJ9if48OacJU34ZEtKEGWIdNCzg==",
+      "sha": "7ut47NDedTW19EbL0JpFDYUP62fcuz27hJrehCDNajdCS5NtqL+E39+7Um3OkNc2wl2ym7K8Ln5eNuLus6mVGQ==",
       "frameworks": {
         "DNX,Version=v4.5.1": {
           "dependencies": {},
@@ -1899,6 +1899,38 @@
         "lib/portable-wpa81+wp80+win80+net45+aspnetcore50/System.Net.Primitives.dll"
       ]
     },
+    "System.Private.Uri/4.0.0-beta-23008": {
+      "serviceable": false,
+      "sha": "GR5NNmPdXeWeA9e/MOduvqfOz3CkLb1O9s3e4q9tXQCaBkS8rz+FvIaDMyCZWSa2LTdoI1EZsQnRvIhc3XEahA==",
+      "frameworks": {
+        "DNX,Version=v4.5.1": {
+          "dependencies": {},
+          "frameworkAssemblies": [],
+          "runtimeAssemblies": [],
+          "compileAssemblies": []
+        },
+        "DNXCore,Version=v5.0": {
+          "dependencies": {},
+          "frameworkAssemblies": [],
+          "runtimeAssemblies": [
+            "lib/DNXCore50/System.Private.Uri.dll"
+          ],
+          "compileAssemblies": [
+            "lib/DNXCore50/System.Private.Uri.dll"
+          ]
+        }
+      },
+      "files": [
+        "System.Private.Uri.4.0.0-beta-23008.nupkg",
+        "System.Private.Uri.4.0.0-beta-23008.nupkg.sha512",
+        "System.Private.Uri.nuspec",
+        "lib/DNXCore50/System.Private.Uri.dll",
+        "lib/netcore50/System.Private.Uri.dll",
+        "ref/dnxcore50/_._",
+        "ref/netcore50/_._",
+        "runtimes/win8-aot/lib/netcore50/System.Private.Uri.dll"
+      ]
+    },
     "System.Reflection/4.0.10-beta-22816": {
       "serviceable": false,
       "sha": "vdH/6euCyI/0el+6baAh/pttTZyWDh/PfL2TebSri3+FvNkjIEcE4httMn7J/5Lqz+NMDcLP7wOlY4Aa5EazNg==",
@@ -2071,45 +2103,48 @@
         "lib/portable-wpa81+wp80+win80+net45+aspnetcore50/System.Resources.ResourceManager.dll"
       ]
     },
-    "System.Runtime/4.0.20-beta-22816": {
+    "System.Runtime/4.0.20-beta-23008": {
       "serviceable": false,
-      "sha": "sDSJEmM6Q5O7Nn9XxHTrsEJ4bv4hsBdeTWjuvyzd9/u9ujl9AWa3q1XFLrdPZetILPOC1P0+1LOCq4kZcsKF5Q==",
+      "sha": "LJkR+LLQ03ikMpVL738OKANcrdSpVeyTilFeZitR7i6zofdTuQuHAd5r8ztqRdSaniwUa0m5KXlmOrxPKrXHew==",
       "frameworks": {
         "DNX,Version=v4.5.1": {
           "dependencies": {},
           "frameworkAssemblies": [
             "mscorlib",
+            "System.Core",
             "System",
-            "System.ComponentModel.Composition",
-            "System.Core"
+            "System.ComponentModel.Composition"
           ],
           "runtimeAssemblies": [
-            "lib/net45/System.Runtime.dll"
+            "lib/net46/System.Runtime.dll"
           ],
           "compileAssemblies": [
-            "lib/net45/System.Runtime.dll"
+            "lib/net46/System.Runtime.dll"
           ]
         },
         "DNXCore,Version=v5.0": {
-          "dependencies": {},
+          "dependencies": {
+            "System.Private.Uri": "4.0.0-beta-23008"
+          },
           "frameworkAssemblies": [],
           "runtimeAssemblies": [
-            "lib/aspnetcore50/System.Runtime.dll"
+            "lib/DNXCore50/System.Runtime.dll"
           ],
           "compileAssemblies": [
-            "lib/contract/System.Runtime.dll"
+            "lib/DNXCore50/System.Runtime.dll"
           ]
         }
       },
       "files": [
-        "License.rtf",
-        "System.Runtime.4.0.20-beta-22816.nupkg",
-        "System.Runtime.4.0.20-beta-22816.nupkg.sha512",
+        "System.Runtime.4.0.20-beta-23008.nupkg",
+        "System.Runtime.4.0.20-beta-23008.nupkg.sha512",
         "System.Runtime.nuspec",
-        "lib/aspnetcore50/System.Runtime.dll",
-        "lib/contract/System.Runtime.dll",
-        "lib/net45/System.Runtime.dll",
-        "lib/portable-wpa81+wp80+win80+net45+aspnetcore50/System.Runtime.dll"
+        "lib/DNXCore50/System.Runtime.dll",
+        "lib/net46/System.Runtime.dll",
+        "lib/netcore50/System.Runtime.dll",
+        "ref/any/System.Runtime.dll",
+        "ref/net46/System.Runtime.dll",
+        "runtimes/win8-aot/lib/netcore50/System.Runtime.dll"
       ]
     },
     "System.Runtime.Extensions/4.0.10-beta-22816": {

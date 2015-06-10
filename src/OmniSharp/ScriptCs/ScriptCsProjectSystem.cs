@@ -5,16 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Common.Logging;
-using Common.Logging.Simple;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
-using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
 using ScriptCs;
 using ScriptCs.Contracts;
-using ScriptCs.Contracts.Exceptions;
 using ScriptCs.Hosting;
 using LogLevel = ScriptCs.Contracts.LogLevel;
 
@@ -134,9 +131,9 @@ namespace OmniSharp.ScriptCs
                     }
 
                 }
-                catch (InvalidDirectiveUseException ex)
+                catch (Exception ex)
                 {
-                    _logger.LogError($"{csxPath} will be ignored due to the following error: {ex.Message}", ex);
+                    _logger.LogError($"{csxPath} will be ignored due to the following error:", ex);
                 }
             }
         }
