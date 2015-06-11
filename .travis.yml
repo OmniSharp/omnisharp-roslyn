@@ -1,7 +1,16 @@
 language: csharp
 mono:
-  - beta
-sudo: false  # use the new container-based infrastructure
-install: curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | sh && source ~/.dnx/dnvm/dnvm.sh && dnvm upgrade
+- beta
+sudo: false
+install: curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh
+  | sh && source ~/.dnx/dnvm/dnvm.sh && dnvm upgrade
 script:
-  - . ./build.sh
+- ". ./build.sh"
+deploy:
+  provider: releases
+  api_key:
+    secure: NZ6FmmX0b4ldqi9zeAOX3jKYq1w8+AMM+6PkgOxZaTnwX7r8JuHkysEm1VE5wr4VYrPZ1Hhb6U0mCI+kf0eh5u1ECxeiWVCUmcBDv+e3ErkLvqKWD37vaoOjb+ay8vx+VOtnsQvy6QueA3JK0Vsaiwlf806KuoPcth6WI//zZBI=
+  file: 'omnisharp.tar.gz'
+  on:
+    repo: OmniSharp/omnisharp-roslyn
+    tags: true
