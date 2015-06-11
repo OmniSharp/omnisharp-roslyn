@@ -11,6 +11,7 @@ deploy:
   api_key:
     secure: NZ6FmmX0b4ldqi9zeAOX3jKYq1w8+AMM+6PkgOxZaTnwX7r8JuHkysEm1VE5wr4VYrPZ1Hhb6U0mCI+kf0eh5u1ECxeiWVCUmcBDv+e3ErkLvqKWD37vaoOjb+ay8vx+VOtnsQvy6QueA3JK0Vsaiwlf806KuoPcth6WI//zZBI=
   file: 'omnisharp.tar.gz'
+  skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
