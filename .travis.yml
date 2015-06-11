@@ -14,3 +14,4 @@ deploy:
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
+    all_branches: true
