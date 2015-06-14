@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Services;
+using System;
 
 namespace OmniSharp
 {
@@ -88,8 +89,8 @@ namespace OmniSharp
         private async Task<CodeRefactoringContext?> GetRefactoringContext(CodeActionRequest request, List<CodeAction> actionsDestination)
         {
             var sourceText = await _originalDocument.GetTextAsync();
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-            var location = new TextSpan(position, 1);
+            var location = GetTextSpan(request, sourceText);
+
             return new CodeRefactoringContext(_originalDocument, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
@@ -98,22 +99,33 @@ namespace OmniSharp
             var sourceText = await _originalDocument.GetTextAsync();
             var semanticModel = await _originalDocument.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            var location = GetTextSpan(request, sourceText);
 
-            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(position)).ToImmutableArray();
+            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location)).ToImmutableArray();
 
             if (pointDiagnostics.Any())
                 return new CodeFixContext(_originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             return null;
         }
 
+        private static TextSpan GetTextSpan(CodeActionRequest request, SourceText sourceText)
+        {
+            if (request.HasRange)
+            {
+                var startPosition = sourceText.Lines.GetPosition(new LinePosition(request.SelectionStartLine.Value - 1, request.SelectionStartColumn.Value - 1));
+                var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.SelectionEndLine.Value - 1, request.SelectionEndColumn.Value - 1));
+                return TextSpan.FromBounds(startPosition, endPosition);
+            }
+
+            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            return new TextSpan(position, 1);
+        }
+
         private static readonly HashSet<string> _blacklist = new HashSet<string> {
-            "Microsoft.CodeAnalysis.CSharp.CodeRefactorings.ExtractMethod.ExtractMethodCodeRefactoringProvider",
 
             "Microsoft.CodeAnalysis.CSharp.CodeFixes.AddMissingReference.AddMissingReferenceCodeFixProvider",
             "Microsoft.CodeAnalysis.CSharp.CodeFixes.Async.CSharpConvertToAsyncMethodCodeFixProvider",
             "Microsoft.CodeAnalysis.CSharp.CodeFixes.Iterator.CSharpChangeToIEnumerableCodeFixProvider",
-            "ICSharpCode.NRefactory6.CSharp.Refactoring.ExtractMethodAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.CreateMethodDeclarationAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.UseStringFormatAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.UseAsAndNullCheckAction",
