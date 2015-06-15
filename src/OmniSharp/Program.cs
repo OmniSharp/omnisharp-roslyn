@@ -9,8 +9,8 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
-using OmniSharp.Stdio.Services;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
@@ -28,7 +28,7 @@ namespace OmniSharp
         public void Main(string[] args)
         {
             var applicationRoot = Directory.GetCurrentDirectory();
-            int serverPort = 2000;
+            var serverPort = 2000;
             var logLevel = LogLevel.Information;
             var hostPID = -1;
             var transportType = TransportType.Http;

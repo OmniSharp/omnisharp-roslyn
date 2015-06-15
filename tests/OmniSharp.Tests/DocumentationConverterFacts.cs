@@ -7,7 +7,7 @@ namespace OmniSharp.Tests
     public class DocumentationConverterFacts
     {
         [Fact]
-        public async Task Converts_xml_documentation_to_plain_text()
+        public void Converts_xml_documentation_to_plain_text()
         {
             var documentation = @"
 <member name=""M:TestNamespace.TestClass.GetZero"">
@@ -17,9 +17,9 @@ namespace OmniSharp.Tests
     <example> 
     This sample shows how to call the <see cref=""M:TestNamespace.TestClass.GetZero""/> method.
     <code>
-    class TestClass 
+    class TestClass
     {
-        static int Main() 
+        static int Main()
         {
             return GetZero();
         }
@@ -35,9 +35,9 @@ Example:
 
 This sample shows how to call the TestNamespace.TestClass.GetZero method.
 
-    class TestClass 
+    class TestClass
     {
-        static int Main() 
+        static int Main()
         {
             return GetZero();
         }

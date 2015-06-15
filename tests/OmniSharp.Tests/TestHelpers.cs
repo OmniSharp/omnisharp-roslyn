@@ -7,6 +7,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
@@ -78,7 +79,7 @@ namespace OmniSharp.Tests
 
             var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
             var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, $"{fileName}.dll", LanguageNames.CSharp, fileName,
-                       compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary), metadataReferences: references, parseOptions: parseOptions, 
+                       compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary), metadataReferences: references, parseOptions: parseOptions,
                        isSubmission: true);
 
             workspace.AddProject(project);
@@ -97,7 +98,7 @@ namespace OmniSharp.Tests
 
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
-            var workspace = new OmnisharpWorkspace();
+            var workspace = Startup.CreateWorkspace();
             AddProjectToWorkspace(workspace, "project.json", new[] { "aspnet50", "aspnetcore50" }, sourceFiles);
             return workspace;
         }

@@ -52,15 +52,7 @@ namespace OmniSharp
 
         public void ConfigureServices(IServiceCollection services)
         {
-
-            var assemblies = new List<Assembly>();
-#if DNX451
-            assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
-            assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
-#endif
-            var container = BuildContainer(assemblies);
-            Workspace = new OmnisharpWorkspace(container);
-
+            Workspace = CreateWorkspace();
             services.AddMvc();
 
             services.Configure<MvcOptions>(opt =>
@@ -118,13 +110,16 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public CompositionHost BuildContainer(IEnumerable<Assembly> assemblies)
+        public static OmnisharpWorkspace CreateWorkspace()
         {
-            return new ContainerConfiguration()
-                        .WithAssemblies(MefHostServices.DefaultAssemblies.AddRange(assemblies))
-                        .CreateContainer();
-
+            var assemblies = MefHostServices.DefaultAssemblies;
+#if DNX451
+            assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
+            assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
+#endif
+            return new OmnisharpWorkspace(MefHostServices.Create(assemblies));
         }
+
         public void Configure(IApplicationBuilder app,
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env,

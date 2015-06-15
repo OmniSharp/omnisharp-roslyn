@@ -1,4 +1,5 @@
 #if DNX451
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
@@ -13,8 +14,7 @@ namespace OmniSharp.Tests
         public async Task Can_get_code_actions()
         {
             var source =
-                @"using System;
-                  public class Class1
+                @"public class Class1
                   {
                       public void Whatever()
                       {
@@ -29,7 +29,7 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new CodeActionController(workspace, new[] { new RoslynCodeActionProvider() });
+            var controller = new CodeActionController(workspace, new[] { new NRefactoryCodeActionProvider() });
             var request = CreateRequest(source);
             var response = await controller.GetCodeActions(request);
             return response.CodeActions;
