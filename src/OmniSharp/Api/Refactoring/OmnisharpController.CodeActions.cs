@@ -17,7 +17,6 @@ namespace OmniSharp
     public class CodeActionController
     {
         private readonly OmnisharpWorkspace _workspace;
-        object ICodeActionProvider;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private Document _originalDocument;
 
@@ -293,7 +292,7 @@ namespace OmniSharp
                             }
                             catch
                             {
-                                System.Console.WriteLine("errorr " + codeFix);
+                                System.Console.WriteLine("error " + codeFix);
                             }
                         }
                     }
@@ -317,7 +316,7 @@ namespace OmniSharp
                             }
                             catch
                             {
-                                System.Console.WriteLine("errorr " + refactoring);
+                                System.Console.WriteLine("error " + refactoring);
                             }
                         }
                     }
