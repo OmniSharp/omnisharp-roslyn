@@ -26,10 +26,26 @@ namespace OmniSharp.Tests
             Assert.Contains("Use 'var' keyword", refactorings);
         }
 
+        [Fact]
+        public async Task Can_get_code_actions_from_roslyn()
+        {
+            var source =
+                @"public class Class1
+                  {
+                      public void Whatever()
+                      {
+                          Console$.Write(1);
+                      }
+                  }";
+
+            var refactorings = await FindRefactoringsAsync(source);
+            Assert.Contains("Use 'var' keyword", refactorings);
+        }
+
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new CodeActionController(workspace, new[] { new NRefactoryCodeActionProvider() });
+            var controller = new CodeActionController(workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() });
             var request = CreateRequest(source);
             var response = await controller.GetCodeActions(request);
             return response.CodeActions;

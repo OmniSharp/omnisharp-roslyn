@@ -302,23 +302,25 @@ namespace OmniSharp
 
         private async Task CollectRefactoringActions(CodeRefactoringContext? refactoringContext)
         {
+            if (!refactoringContext.HasValue)
+                return;
+
             foreach (var provider in _codeActionProviders)
             {
-                if (refactoringContext.HasValue)
+                foreach (var refactoring in provider.Refactorings)
                 {
-                    foreach (var refactoring in provider.Refactorings)
+                    if (_blacklist.Contains(refactoring.ToString()))
                     {
-                        if (!_blacklist.Contains(refactoring.ToString()))
-                        {
-                            try
-                            {
-                                await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
-                            }
-                            catch
-                            {
-                                System.Console.WriteLine("error " + refactoring);
-                            }
-                        }
+                        continue;
+                    }
+
+                    try
+                    {
+                        await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
+                    }
+                    catch
+                    {
+                        System.Console.WriteLine("error " + refactoring);
                     }
                 }
             }
