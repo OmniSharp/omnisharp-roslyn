@@ -8,5 +8,16 @@
         public int? SelectionStartLine { get; set; }
         public int? SelectionEndColumn { get; set; }
         public int? SelectionEndLine { get; set; }
+
+        public bool HasRange
+        {
+            get
+            {
+                return SelectionStartColumn.HasValue &&
+                    SelectionEndColumn.HasValue &&
+                    SelectionStartLine.HasValue &&
+                    SelectionEndLine.HasValue;
+            }
+        }
     }
 }
