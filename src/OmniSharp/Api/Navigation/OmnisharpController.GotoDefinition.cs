@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
 namespace OmniSharp
-{
+{   
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]

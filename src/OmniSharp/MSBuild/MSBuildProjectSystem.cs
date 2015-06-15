@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
@@ -85,8 +86,7 @@ namespace OmniSharp.MSBuild
                     solutionFile = SolutionFile.Parse(reader);
                 }
             }
-
-            _logger.LogInformation(string.Format("Detecting projects in '{0}'.", solutionFilePath));
+            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
             foreach (var block in solutionFile.ProjectBlocks)
             {
@@ -106,7 +106,7 @@ namespace OmniSharp.MSBuild
 
                 var projectFilePath = Path.GetFullPath(Path.GetFullPath(Path.Combine(_env.Path, block.ProjectPath.Replace('\\', Path.DirectorySeparatorChar))));
 
-                _logger.LogInformation(string.Format("Loading project from '{0}'.", projectFilePath));
+                _logger.LogInformation($"Loading project from '{projectFilePath}'.");
 
                 var projectFileInfo = CreateProject(projectFilePath);
 
@@ -168,12 +168,12 @@ namespace OmniSharp.MSBuild
 
                 if (projectFileInfo == null)
                 {
-                    _logger.LogWarning(string.Format("Failed to process project file '{0}'.", projectFilePath));
+                    _logger.LogWarning($"Failed to process project file '{projectFilePath}'.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(string.Format("Failed to process project file '{0}'.", projectFilePath), ex);
+                _logger.LogWarning($"Failed to process project file '{projectFilePath}'.", ex);
                 _emitter.Emit(EventTypes.Error, new ErrorMessage()
                 {
                     FileName = projectFilePath,
@@ -236,6 +236,12 @@ namespace OmniSharp.MSBuild
                 }
             }
 
+            if (projectFileInfo.SpecifiedLanguageVersion.HasValue)
+            {
+                var parseOptions = new CSharpParseOptions(projectFileInfo.SpecifiedLanguageVersion.Value);
+                _workspace.SetParseOptions(project.Id, parseOptions);
+            }
+
             foreach (var unused in unusedDocuments)
             {
                 _workspace.RemoveDocument(unused.Value);
@@ -260,7 +266,7 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    _logger.LogWarning(string.Format("Unable to resolve project reference '{0}' for '{1}'.", projectReferencePath, projectFileInfo.ProjectFilePath));
+                    _logger.LogWarning($"Unable to resolve project reference '{projectReferencePath}' for '{projectFileInfo}'.");
                 }
             }
 
@@ -275,7 +281,7 @@ namespace OmniSharp.MSBuild
             {
                 if (!File.Exists(analyzerPath))
                 {
-                    _logger.LogWarning(string.Format("Unable to resolve assembly '{0}'", analyzerPath));
+                    _logger.LogWarning($"Unable to resolve assembly '{analyzerPath}'");
                 }
                 else
                 {
@@ -301,7 +307,7 @@ namespace OmniSharp.MSBuild
             {
                 if (!File.Exists(referencePath))
                 {
-                    _logger.LogWarning(string.Format("Unable to resolve assembly '{0}'", referencePath));
+                    _logger.LogWarning($"Unable to resolve assembly '{referencePath}'");
                 }
                 else
                 {
@@ -312,7 +318,7 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _logger.LogVerbose(string.Format("Adding reference '{0}' to '{1}'.", referencePath, projectFileInfo.ProjectFilePath));
+                    _logger.LogVerbose($"Adding reference '{referencePath}' to '{projectFileInfo.ProjectFilePath}'.");
                     _workspace.AddMetadataReference(project.Id, metadataReference);
                 }
             }

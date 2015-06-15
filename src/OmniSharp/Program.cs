@@ -82,7 +82,7 @@ namespace OmniSharp
 
             var writer = new SharedConsoleWriter();
             context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
-            context.Services.AddInstance<ISharedTextWriter>(new SharedConsoleWriter());
+            context.Services.AddInstance<ISharedTextWriter>(writer);
 
             if (transportType == TransportType.Stdio)
             {

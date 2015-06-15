@@ -8,16 +8,16 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("currentfilemembersastree")]
-        public async Task<IActionResult> MembersAsTree(Request request)
+        public async Task<FileMemberTree> MembersAsTree(Request request)
         {
-            return new ObjectResult(new
+            return new FileMemberTree()
             {
                 TopLevelTypeDefinitions = await StructureComputer.Compute(_workspace.GetDocuments(request.FileName))
-            });
+            };
         }
 
         [HttpPost("currentfilemembersasflat")]
-        public async Task<IActionResult> MembersAsFlat(Request request)
+        public async Task<IEnumerable<QuickFix>> MembersAsFlat(Request request)
         {
             var stack = new List<FileMemberElement>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
             var ret = new List<QuickFix>();
@@ -28,7 +28,7 @@ namespace OmniSharp
                 ret.Add(node.Location);
                 stack.AddRange(node.ChildNodes);
             }
-            return new ObjectResult(ret);
+            return ret;
         }
     }
 }

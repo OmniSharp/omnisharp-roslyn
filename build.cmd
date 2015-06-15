@@ -2,16 +2,17 @@
 
 pushd %~dp0
 set "DNX_NUGET_API_URL=https://www.nuget.org/api/v2"
-setlocal EnableDelayedExpansion 
+setlocal EnableDelayedExpansion
 where dnvm
 if %ERRORLEVEL% neq 0 (
     @powershell -NoProfile -ExecutionPolicy unrestricted -Command "&{$Branch='dev';iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.ps1'))}"
-    set PATH=!PATH!;!userprofile!\.k\bin
-    set KRE_HOME=!USERPROFILE!\.k
+    set PATH=!PATH!;!USERPROFILE!\.dnx\bin
+    set DNX_HOME=!USERPROFILE!\.dnx
     goto install
 )
 
 :install
+set
 call dnvm install 1.0.0-beta4
 call dnvm use 1.0.0-beta4
 rem set the runtime path because the above commands set \.dnx<space>\runtimes

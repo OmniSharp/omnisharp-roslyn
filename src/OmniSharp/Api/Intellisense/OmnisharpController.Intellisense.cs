@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
@@ -7,6 +8,7 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Documentation;
 using OmniSharp.Extensions;
+using OmniSharp.Intellisense;
 using OmniSharp.Models;
 
 namespace OmniSharp
@@ -58,7 +60,7 @@ namespace OmniSharp
 
         private void AddKeywords(SemanticModel model, int position, bool wantKind, string wordToComplete)
         {
-            var context = CSharpSyntaxContext.CreateContext(_workspace, model, position);
+            var context = CSharpSyntaxContext.CreateContext(_workspace, model, position, CancellationToken.None);
             var keywordHandler = new KeywordContextHandler();
             var keywords = keywordHandler.Get(context, model, position);
 

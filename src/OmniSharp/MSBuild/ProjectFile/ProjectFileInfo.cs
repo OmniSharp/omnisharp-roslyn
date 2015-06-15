@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Framework.Logging;
 
 #if DNX451
@@ -27,6 +28,8 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string ProjectFilePath { get; private set; }
 
         public FrameworkName TargetFramework { get; private set; }
+
+        public LanguageVersion? SpecifiedLanguageVersion { get; private set; }
 
         public string ProjectDirectory
         {
@@ -52,7 +55,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
-            
+
 #if DNX451
             if (!PlatformHelper.IsMono)
             {
@@ -61,9 +64,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                     { "DesignTimeBuild", "true" },
                     { "BuildProjectReferences", "false" },
                     { "_ResolveReferenceDependencies", "true" },
-                    { "SolutionDir", solutionDirectory + Path.DirectorySeparatorChar },
-                    { "VisualStudioVersion", options.VisualStudioVersion }
+                    { "SolutionDir", solutionDirectory + Path.DirectorySeparatorChar }
                 };
+
+                if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
+                {
+                    properties.Add("VisualStudioVersion", options.VisualStudioVersion);
+                }
 
                 var collection = new ProjectCollection(properties);
 
@@ -72,7 +79,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var project = string.IsNullOrEmpty(options.ToolsVersion) ?
                         collection.LoadProject(projectFilePath) :
                         collection.LoadProject(projectFilePath, options.ToolsVersion);
-                        
+
                 var projectInstance = project.CreateProjectInstance();
                 var buildResult = projectInstance.Build("ResolveReferences", new Microsoft.Build.Framework.ILogger[] { new MSBuildLogForwarder(logger, diagnostics) });
 
@@ -84,6 +91,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
                 projectFileInfo.Name = projectInstance.GetPropertyValue("ProjectName");
                 projectFileInfo.TargetFramework = new FrameworkName(projectInstance.GetPropertyValue("TargetFrameworkMoniker"));
+                projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(projectInstance.GetPropertyValue("LangVersion"));
                 projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
 
@@ -148,6 +156,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
                 projectFileInfo.Name = Path.GetFileNameWithoutExtension(projectFilePath);
                 projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);
+                if (properties.ContainsKey("LangVersion"))
+                {
+                    projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(properties["LangVersion"].FinalValue);
+                }
                 projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
 
@@ -174,6 +186,24 @@ namespace OmniSharp.MSBuild.ProjectFile
             // TODO: Shell out to msbuild/xbuild here?
 #endif
             return projectFileInfo;
+        }
+
+        private static LanguageVersion? ToLanguageVersion(string langVersionPropertyValue)
+        {
+            if (!(string.IsNullOrWhiteSpace(langVersionPropertyValue) || langVersionPropertyValue.Equals("Default", StringComparison.OrdinalIgnoreCase)))
+            {
+                // ISO-1, ISO-2, 3, 4, 5, 6 or Default
+                switch (langVersionPropertyValue.ToLower())
+                {
+                    case "iso-1": return LanguageVersion.CSharp1;
+                    case "iso-2": return LanguageVersion.CSharp2;
+                    case "3": return LanguageVersion.CSharp3;
+                    case "4": return LanguageVersion.CSharp4;
+                    case "5": return LanguageVersion.CSharp5;
+                    case "6": return LanguageVersion.CSharp6;
+                }
+            }
+            return null;
         }
     }
 }

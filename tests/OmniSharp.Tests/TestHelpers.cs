@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
@@ -55,14 +56,38 @@ namespace OmniSharp.Tests
             return new LineColumn(lineCount, index - lastLineEnd);
         }
 
-        public static string RemovePercentMarker(string fileContent) 
+        public static string RemovePercentMarker(string fileContent)
         {
             return fileContent.Replace("%", "");
         }
 
-        public static string RemoveDollarMarker(string fileContent) 
+        public static string RemoveDollarMarker(string fileContent)
         {
             return fileContent.Replace("$", "");
+        }
+
+        public static OmnisharpWorkspace CreateCsxWorkspace(string source, string fileName = "dummy.csx")
+        {
+            var versionStamp = VersionStamp.Create();
+            var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
+            var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
+            var references = new[] { mscorlib, systemCore };
+            var workspace = new OmnisharpWorkspace();
+
+            var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
+
+            var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
+            var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, $"{fileName}.dll", LanguageNames.CSharp, fileName,
+                       compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary), metadataReferences: references, parseOptions: parseOptions, 
+                       isSubmission: true);
+
+            workspace.AddProject(project);
+            var document = DocumentInfo.Create(DocumentId.CreateNewId(project.Id), fileName, null, SourceCodeKind.Script, null, fileName)
+                .WithSourceCodeKind(SourceCodeKind.Script)
+                .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(source), VersionStamp.Create())));
+
+            workspace.AddDocument(document);
+            return workspace;
         }
 
         public static OmnisharpWorkspace CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
@@ -76,7 +101,7 @@ namespace OmniSharp.Tests
             AddProjectToWorkspace(workspace, "project.json", new[] { "aspnet50", "aspnetcore50" }, sourceFiles);
             return workspace;
         }
-        
+
         public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
         {
             var versionStamp = VersionStamp.Create();
@@ -103,7 +128,7 @@ namespace OmniSharp.Tests
 
             return workspace;
         }
-        
+
         private static Assembly AssemblyFromType(Type type)
         {
             return type.GetTypeInfo().Assembly;
