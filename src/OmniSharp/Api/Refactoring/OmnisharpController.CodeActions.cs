@@ -278,23 +278,25 @@ namespace OmniSharp
 
         private async Task CollectCodeFixActions(CodeFixContext? fixContext)
         {
+            if (!fixContext.HasValue)
+                return;
+                
             foreach (var provider in _codeActionProviders)
             {
-                if (fixContext.HasValue)
+                foreach (var codeFix in provider.CodeFixes)
                 {
-                    foreach (var codeFix in provider.CodeFixes)
+                    if (_blacklist.Contains(codeFix.ToString()))
                     {
-                        if (!_blacklist.Contains(codeFix.ToString()))
-                        {
-                            try
-                            {
-                                await codeFix.RegisterCodeFixesAsync(fixContext.Value);
-                            }
-                            catch
-                            {
-                                System.Console.WriteLine("error " + codeFix);
-                            }
-                        }
+                        continue;
+                    }
+
+                    try
+                    {
+                        await codeFix.RegisterCodeFixesAsync(fixContext.Value);
+                    }
+                    catch
+                    {
+                        System.Console.WriteLine("error " + codeFix);
                     }
                 }
             }
