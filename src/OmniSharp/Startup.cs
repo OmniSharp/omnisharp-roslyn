@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.IO;
-using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;

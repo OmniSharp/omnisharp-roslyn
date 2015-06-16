@@ -100,7 +100,6 @@ namespace OmniSharp
             var location = GetTextSpan(request, sourceText);
 
             var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location)).ToImmutableArray();
-
             if (pointDiagnostics.Any())
                 return new CodeFixContext(_originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             return null;
@@ -131,7 +130,6 @@ namespace OmniSharp
             "ICSharpCode.NRefactory6.CSharp.Refactoring.SplitIfAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.SplitDeclarationListAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.SplitDeclarationAndAssignmentAction",
-            "ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.SimplifyIfInLoopsFlowAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.SimplifyIfFlowAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ReverseDirectionForForLoopAction",
@@ -175,7 +173,6 @@ namespace OmniSharp
             "ICSharpCode.NRefactory6.CSharp.Refactoring.AccessToStaticMemberViaDerivedTypeFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ConvertIfToOrExpressionFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ConvertToConstantFixProvider",
-            "ICSharpCode.NRefactory6.CSharp.Refactoring.FieldCanBeMadeReadOnlyFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.MemberCanBeMadeStaticFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ParameterCanBeDeclaredWithBaseTypeFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.PossibleMistakenCallToGetTypeFixProvider",
@@ -259,7 +256,6 @@ namespace OmniSharp
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ParameterOnlyAssignedFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.RedundantAssignmentFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.StaticEventSubscriptionFixProvider",
-            "ICSharpCode.NRefactory6.CSharp.Refactoring.UnreachableCodeFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.XmlDocFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.CS0029InvalidConversionFixProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.CS0126ReturnMustBeFollowedByAnyExpressionFixProvider",
@@ -280,7 +276,7 @@ namespace OmniSharp
         {
             if (!fixContext.HasValue)
                 return;
-                
+
             foreach (var provider in _codeActionProviders)
             {
                 foreach (var codeFix in provider.CodeFixes)
