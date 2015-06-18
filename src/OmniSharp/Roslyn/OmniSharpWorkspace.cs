@@ -1,11 +1,8 @@
 using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.Linq;
-using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Models;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp

@@ -47,6 +47,7 @@ namespace OmniSharp
 
             var operations = await action.GetOperationsAsync(CancellationToken.None);
 
+            var solution = _workspace.CurrentSolution;
             foreach (var o in operations)
             {
                 o.Apply(_workspace, CancellationToken.None);
@@ -62,10 +63,10 @@ namespace OmniSharp
             else
             {
                 // return the text changes
-                var changes = await _workspace.CurrentSolution.GetDocument(_originalDocument.Id).GetTextChangesAsync(_originalDocument);
-                response.Changes = await LinePositionSpanTextChange.Convert(_originalDocument, changes);
+                var changes = await FileChanges.GetFileChangesAsync(solution, _workspace.CurrentSolution, true);
+                response.Changes = changes;
             }
-
+            _workspace.TryApplyChanges(_workspace.CurrentSolution);
             return response;
         }
 

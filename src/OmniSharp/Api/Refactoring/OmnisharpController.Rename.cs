@@ -25,7 +25,7 @@ namespace OmniSharp
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
 
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(document, position);
-                Solution solution = _workspace.CurrentSolution;
+                var solution = _workspace.CurrentSolution;
 
                 if (symbol != null)
                 {
@@ -38,46 +38,12 @@ namespace OmniSharp
                         response.ErrorMessage = e.Message;
                     }
                 }
-
-                var changes = new Dictionary<string, ModifiedFileResponse>();
-                var solutionChanges = solution.GetChanges(_workspace.CurrentSolution);
-
-                foreach (var projectChange in solutionChanges.GetProjectChanges())
-                {
-                    foreach (var changedDocumentId in projectChange.GetChangedDocuments())
-                    {
-                        var changedDocument = solution.GetDocument(changedDocumentId);
-
-                        ModifiedFileResponse modifiedFileResponse;
-                        if (!changes.TryGetValue(changedDocument.FilePath, out modifiedFileResponse))
-                        {
-                            modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
-                            changes[changedDocument.FilePath] = modifiedFileResponse;
-                        }
-
-                        if (!request.WantsTextChanges)
-                        {
-                            var changedText = await changedDocument.GetTextAsync();
-                            modifiedFileResponse.Buffer = changedText.ToString();
-                        }
-                        else
-                        {
-                            var originalDocument = _workspace.CurrentSolution.GetDocument(changedDocumentId);
-                            var textChanges = await changedDocument.GetTextChangesAsync(originalDocument);
-                            var linePositionSpanTextChanges = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
-
-                            modifiedFileResponse.Changes = modifiedFileResponse.Changes != null
-                                ? modifiedFileResponse.Changes.Union(linePositionSpanTextChanges)
-                                : linePositionSpanTextChanges;
-                        }
-
-                    }
-                }
+                var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, request.WantsTextChanges);
 
                 // Attempt to update the workspace
                 if (_workspace.TryApplyChanges(solution))
                 {
-                    response.Changes = changes.Values;
+                    response.Changes = changes;
                 }
             }
 
