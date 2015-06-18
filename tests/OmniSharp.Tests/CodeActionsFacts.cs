@@ -1,6 +1,7 @@
 #if DNX451
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Services;
@@ -58,7 +59,7 @@ namespace OmniSharp.Tests
                     using MyNamespace2;
                     using MyNamespace3;
                     using MyNamespace4;";
-                
+
             var newSource = await RunRefactoring(source, "Sort usings");
             Assert.Equal(expected, newSource);
         }
@@ -79,11 +80,57 @@ public class c {public c() {Console.Write(1);}}";
                   @"using System;
 
 public class c {public c() {Console.Write(1);}}";
-                
+
             var newSource = await RunRefactoring(source, "Remove Unnecessary Usings");
             Assert.Equal(expected, newSource);
         }
-        
+
+        [Fact]
+        public async Task Can_get_ranged_code_action()
+        {
+            var source =
+            @"public class Class1
+              {
+                  public void Whatever()
+                  {
+                      $Console.Write(""should be using System;"");$
+                  }
+              }";
+
+            var refactorings = await FindRefactoringsAsync(source);
+            Assert.Contains("Extract Method", refactorings);
+        }
+
+        [Fact]
+        public async Task Can_extract_method()
+        {
+            var source =
+            @"public class Class1
+              {
+                  public void Whatever()
+                  {
+                      $Console.Write(""should be using System;"");$
+                  }
+              }";
+
+            var expected =
+            @"public class Class1
+              {
+                  public void Whatever()
+    {
+        NewMethod();
+    }
+
+    private static void NewMethod()
+    {
+        Console.Write(""should be using System;"");
+    }
+}";
+
+            var newSource = await RunRefactoring(source, "Extract Method");
+            Assert.Equal(expected, newSource);
+        }
+
         private async Task<string> RunRefactoring(string source, string refactoringName)
         {
             var refactorings = await FindRefactoringsAsync(source);
@@ -112,11 +159,15 @@ public class c {public c() {Console.Write(1);}}";
 
         private CodeActionRequest CreateCodeActionRequest(string source, int codeActionIndex = 0, string fileName = "dummy.cs")
         {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
+            var range = TestHelpers.GetRangeFromDollars(source);
             return new CodeActionRequest
             {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
+                Line = range.Start.Line,
+                Column = range.Start.Column,
+                SelectionStartColumn = range.Start.Column,
+                SelectionStartLine = range.Start.Line,
+                SelectionEndColumn = range.End.Column,
+                SelectionEndLine = range.End.Line,
                 FileName = fileName,
                 Buffer = source.Replace("$", ""),
                 CodeAction = codeActionIndex
