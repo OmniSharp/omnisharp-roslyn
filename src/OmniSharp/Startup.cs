@@ -38,6 +38,7 @@ namespace OmniSharp
             {
                 configuration.AddJsonFile(Program.Environment.ConfigurationPath);
             }
+            
             configuration.AddEnvironmentVariables();
 
             Configuration = configuration;
