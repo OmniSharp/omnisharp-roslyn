@@ -169,14 +169,13 @@ public class c {public c() {Console.Write(1);}}";
 
             response = await RunRefactoring(source, "Generate method 'MyNewClass.DoSomething'", true);
             expected =
-                @"namespace MyNamespace
-{
-    internal class MyNewClass
-    {
-    }
-}";
-
-            Assert.Equal(expected, change.Changes.Last().NewText);
+@"        internal static void DoSomething()
+        {
+            throw new NotImplementedException();
+        }
+";
+            change = response.Changes.First();
+            Assert.Equal(expected, change.Changes.First().NewText);
         }
 
         private async Task<RunCodeActionResponse> RunRefactoring(string source, string refactoringName, bool wantsChanges = false)
