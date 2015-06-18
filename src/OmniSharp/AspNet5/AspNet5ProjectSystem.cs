@@ -333,14 +333,16 @@ namespace OmniSharp.AspNet5
                         // The sources to feed to the language service
                         var val = m.Payload.ToObject<SourcesMessage>();
 
-                        project.SourceFiles = val.Files;
+                        project.SourceFiles = val.Files
+                            .Where(fileName => Path.GetExtension(fileName) == ".cs")
+                            .ToList();
 
                         var frameworkProject = project.ProjectsByFramework[val.Framework.FrameworkName];
                         var projectId = frameworkProject.ProjectId;
 
                         var unprocessed = new HashSet<string>(frameworkProject.Documents.Keys);
 
-                        foreach (var file in val.Files)
+                        foreach (var file in project.SourceFiles)
                         {
                             if (unprocessed.Remove(file))
                             {
