@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
-    public class AspNet5Context
+    public class DnxContext
     {
         private int _contextId;
 
@@ -22,7 +22,7 @@ namespace OmniSharp.AspNet5
 
         public ProcessingQueue Connection { get; set; }
 
-        public AspNet5Context()
+        public DnxContext()
         {
             HostId = Guid.NewGuid().ToString();
             ProjectContextMapping = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
     public class FrameworkProject
     {

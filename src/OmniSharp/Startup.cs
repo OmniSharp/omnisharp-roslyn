@@ -8,7 +8,7 @@ using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
-using OmniSharp.AspNet5;
+using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
@@ -68,11 +68,11 @@ namespace OmniSharp
             services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
 
             // Add the project systems
-            services.AddInstance(new AspNet5Context());
+            services.AddInstance(new DnxContext());
             services.AddInstance(new MSBuildContext());
             services.AddInstance(new ScriptCs.ScriptCsContext());
 
-            services.AddSingleton<IProjectSystem, AspNet5ProjectSystem>();
+            services.AddSingleton<IProjectSystem, DnxProjectSystem>();
             services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
 
 #if DNX451
@@ -83,7 +83,7 @@ namespace OmniSharp
             services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
 
             // Add test command providers
-            services.AddSingleton<ITestCommandProvider, AspNet5TestCommandProvider>();
+            services.AddSingleton<ITestCommandProvider, DnxTestCommandProvider>();
 
             // Add the code action provider
             services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();

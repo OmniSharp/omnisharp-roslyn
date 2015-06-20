@@ -2,7 +2,7 @@
 {
     public class OmniSharpOptions
     {
-        public AspNet5Options AspNet5 { get; set; }
+        public DnxOptions Dnx { get; set; }
         
         public MSBuildOptions MsBuild { get; set; }
 
@@ -10,7 +10,7 @@
         
         public OmniSharpOptions()
         {
-            AspNet5 = new AspNet5Options();
+            Dnx = new DnxOptions();
             MsBuild = new MSBuildOptions();
             FormattingOptions = new FormattingOptions();
         }

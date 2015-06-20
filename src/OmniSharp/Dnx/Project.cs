@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
     public class Project
     {

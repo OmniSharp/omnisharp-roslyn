@@ -10,20 +10,20 @@ using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
     public class PackagesRestoreTool
     {
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
-        private readonly AspNet5Context _context;
-        private readonly AspNet5Paths _paths;
+        private readonly DnxContext _context;
+        private readonly DnxPaths _paths;
         private readonly object _lock;
         private readonly IDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
-        public PackagesRestoreTool(OmniSharpOptions options, ILoggerFactory logger, IEventEmitter emitter, AspNet5Context context, AspNet5Paths paths)
+        public PackagesRestoreTool(OmniSharpOptions options, ILoggerFactory logger, IEventEmitter emitter, DnxContext context, DnxPaths paths)
         {
             _options = options;
             _logger = logger.CreateLogger<PackagesRestoreTool>();
@@ -37,7 +37,7 @@ namespace OmniSharp.AspNet5
 
         public void Run(Project project)
         {
-            if (!_options.AspNet5.EnablePackageRestore)
+            if (!_options.Dnx.EnablePackageRestore)
             {
                 return;
             }
@@ -113,7 +113,7 @@ namespace OmniSharp.AspNet5
             {
                 while (!restoreProcess.HasExited)
                 {
-                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.AspNet5.PackageRestoreTimeout))
+                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.Dnx.PackageRestoreTimeout))
                     {
                         _logger.LogError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
                         wasKilledByWatchDog = true;

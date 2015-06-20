@@ -98,7 +98,7 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
             var workspace = new OmnisharpWorkspace();
-            AddProjectToWorkspace(workspace, "project.json", new[] { "aspnet50", "aspnetcore50" }, sourceFiles);
+            AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
             return workspace;
         }
 

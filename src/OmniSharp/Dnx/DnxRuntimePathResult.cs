@@ -1,8 +1,8 @@
 using OmniSharp.Models;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
-    public class AspNet5RuntimePathResult
+    public class DnxRuntimePathResult
     {
         public string Value { get; set; }
 

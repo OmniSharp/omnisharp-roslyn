@@ -6,17 +6,17 @@ using System.Net.Sockets;
 using System.Threading;
 using Microsoft.Framework.Logging;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
     public class DesignTimeHostManager
     {
         private readonly ILogger _logger;
-        private readonly AspNet5Paths _paths;
+        private readonly DnxPaths _paths;
         private readonly object _processLock = new object();
         private Process _designTimeHostProcess;
         private bool _stopped;
 
-        public DesignTimeHostManager(ILoggerFactory loggerFactory, AspNet5Paths paths)
+        public DesignTimeHostManager(ILoggerFactory loggerFactory, DnxPaths paths)
         {
             _logger = loggerFactory.CreateLogger<DesignTimeHostManager>();
             _paths = paths;
