@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.AspNet5;
+using OmniSharp.Dnx;
 using OmniSharp.Models;
 using Xunit;
 
@@ -8,17 +8,17 @@ namespace OmniSharp.Tests
 {
     public class CurrentProjectFacts
     {
-        private readonly AspNet5Context _context;
+        private readonly DnxContext _context;
         private readonly OmnisharpWorkspace _workspace;
 
         public CurrentProjectFacts()
         {
-            _context = new AspNet5Context();
+            _context = new DnxContext();
             _workspace = new OmnisharpWorkspace();
         }
 
         [Fact]
-        public void CanGetAspNet5Project()
+        public void CanGetDnxProject()
         {
             var project1 = CreateProjectWithSourceFile("project1.json", "file1.cs");
             var project2 = CreateProjectWithSourceFile("project2.json", "file2.cs");
@@ -26,7 +26,7 @@ namespace OmniSharp.Tests
 
             var project = GetProjectContainingSourceFile("file2.cs");
 
-            var expectedProject = new AspNet5Project(project2);
+            var expectedProject = new DnxProject(project2);
 
             Assert.Equal(expectedProject.GlobalJsonPath, project.GlobalJsonPath);
             Assert.Equal(expectedProject.Name, project.Name);
@@ -35,7 +35,7 @@ namespace OmniSharp.Tests
             Assert.Equal(expectedProject.Frameworks.Count, project.Frameworks.Count);
         }
 
-        private AspNet5Project GetProjectContainingSourceFile(string name)
+        private DnxProject GetProjectContainingSourceFile(string name)
         {
             var controller = new ProjectSystemController(_context, null, null, _workspace);
 
@@ -45,12 +45,12 @@ namespace OmniSharp.Tests
             };
 
             var response = controller.CurrentProject(request);
-            return response.AspNet5Project;
+            return response.DnxProject;
         }
 
-        private AspNet5.Project CreateProjectWithSourceFile(string projectPath, string documentPath)
+        private Dnx.Project CreateProjectWithSourceFile(string projectPath, string documentPath)
         {
-            AspNet5.Project project;
+            Dnx.Project project;
             _context.TryAddProject(projectPath, out project);
             var projectId = ProjectId.CreateNewId();
             var versionStamp = VersionStamp.Create();

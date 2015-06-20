@@ -10,27 +10,27 @@ using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
-    public class AspNet5Paths
+    public class DnxPaths
     {
         private readonly IOmnisharpEnvironment _env;
         private readonly OmniSharpOptions _options;
         private readonly ILogger _logger;
-        public AspNet5RuntimePathResult RuntimePath { get; private set; }
+        public DnxRuntimePathResult RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
         public string Kpm { get; private set; }
         public string K   { get; private set; }
 
-        public AspNet5Paths(IOmnisharpEnvironment env,
+        public DnxPaths(IOmnisharpEnvironment env,
                             OmniSharpOptions options,
                             ILoggerFactory loggerFactory)
         {
             _env = env;
             _options = options;
-            _logger = loggerFactory.CreateLogger<AspNet5Paths>();
+            _logger = loggerFactory.CreateLogger<DnxPaths>();
 
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath.Value, "dnx", "dnx.exe");
@@ -40,12 +40,12 @@ namespace OmniSharp.AspNet5
             K   = FirstPath(RuntimePath.Value, "k", "k.cmd");
         }
 
-        private AspNet5RuntimePathResult GetRuntimePath()
+        private DnxRuntimePathResult GetRuntimePath()
         {
             var root = ResolveRootDirectory(_env.Path);
             var globalJson = Path.Combine(root, "global.json");
             var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
-            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.AspNet5.Alias ?? "default";
+            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.Dnx.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())
@@ -63,7 +63,7 @@ namespace OmniSharp.AspNet5
                     if (Directory.Exists(path))
                     {
                         _logger.LogInformation(string.Format("Using runtime '{0}'.", path));
-                        return new AspNet5RuntimePathResult()
+                        return new DnxRuntimePathResult()
                         {
                             Value = path
                         };
@@ -84,7 +84,7 @@ namespace OmniSharp.AspNet5
                 message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
             }
             _logger.LogError(message.Text);
-            return new AspNet5RuntimePathResult()
+            return new DnxRuntimePathResult()
             {
                 Error = message
             };
