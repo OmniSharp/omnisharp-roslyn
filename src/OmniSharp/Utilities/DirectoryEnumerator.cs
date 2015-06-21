@@ -25,11 +25,11 @@ namespace OmniSharp.Utilities
             while (directoryStack.Any())
             {
                 var current = directoryStack.Pop();
-                
+
                 try
                 {
                     allFiles = allFiles.Concat(GetFiles(current, pattern));
-                    
+
                     foreach (var subdirectory in GetSubdirectories(current))
                     {
                         directoryStack.Push(subdirectory);
@@ -48,7 +48,7 @@ namespace OmniSharp.Utilities
         {
             try
             {
-                return Directory.EnumerateFiles(path, pattern, SearchOption.TopDirectoryOnly);
+                return Directory.GetFiles(path, pattern, SearchOption.TopDirectoryOnly);
             }
             catch (PathTooLongException)
             {
