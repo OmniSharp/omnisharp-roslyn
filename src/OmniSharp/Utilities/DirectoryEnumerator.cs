@@ -28,9 +28,10 @@ namespace OmniSharp.Utilities
 
                 try
                 {
-                    allFiles = allFiles.Concat(GetFiles(current, pattern));
+                    var files = Directory.GetFiles(current, pattern);
+                    allFiles = allFiles.Concat(files);
 
-                    foreach (var subdirectory in GetSubdirectories(current))
+                    foreach (var subdirectory in Directory.EnumerateDirectories(current))
                     {
                         directoryStack.Push(subdirectory);
                     }
@@ -39,35 +40,13 @@ namespace OmniSharp.Utilities
                 {
                     _logger.LogWarning(string.Format("Unauthorized access to {0}, skipping", current));
                 }
+                catch (PathTooLongException)
+                {
+                    _logger.LogWarning(string.Format("Path {0} is too long, skipping", current));
+                }
             }
 
             return allFiles;
-        }
-
-        private IEnumerable<string> GetFiles(string path, string pattern)
-        {
-            try
-            {
-                return Directory.GetFiles(path, pattern, SearchOption.TopDirectoryOnly);
-            }
-            catch (PathTooLongException)
-            {
-                _logger.LogWarning(string.Format("Path {0} is too long, skipping", path));
-                return Enumerable.Empty<string>();
-            }
-        }
-
-        private IEnumerable<string> GetSubdirectories(string path)
-        {
-            try
-            {
-                return Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly);
-            }
-            catch (PathTooLongException)
-            {
-                _logger.LogWarning(string.Format("Path {0} is too long, skipping", path));
-                return Enumerable.Empty<string>();
-            }
         }
     }
 }
