@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +64,8 @@ namespace OmniSharp
             else
             {
                 // return the text changes
-                var changes = await FileChanges.GetFileChangesAsync(solution, _workspace.CurrentSolution, true);
+                var directoryName = Path.GetDirectoryName(request.FileName);
+                var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, true);
                 response.Changes = changes;
             }
             _workspace.TryApplyChanges(_workspace.CurrentSolution);

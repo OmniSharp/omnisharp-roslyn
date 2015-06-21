@@ -1,5 +1,6 @@
 #if DNX451
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
@@ -10,7 +11,8 @@ namespace OmniSharp.Tests
 {
     public class CodingActionsFacts
     {
-        OmnisharpWorkspace _workspace;
+        private OmnisharpWorkspace _workspace;
+        private string bufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
         [Fact]
         public async Task Can_get_code_actions_from_nrefactory()
@@ -133,7 +135,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task Can_create_a_class_with_a_new_method_in_new_file()
+        public async Task Can_create_a_class_with_a_new_method_in_adjacent_file()
         {
             var source =
                   @"namespace MyNamespace
@@ -147,7 +149,7 @@ namespace OmniSharp.Tests
 
             var response = await RunRefactoring(source, "Generate class for 'MyNewClass' in 'MyNamespace' (in new file)", true);
             var change = response.Changes.First();
-            Assert.Equal("MyNewClass.cs", change.FileName);
+            Assert.Equal($"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}MyNewClass.cs", change.FileName);
             var expected =
               @"namespace MyNamespace
               {
@@ -199,7 +201,7 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
             var request = CreateCodeActionRequest(source);
-            _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer);
+            _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer, bufferPath);
             var controller = new CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() });
             var response = await controller.GetCodeActions(request);
             return response.CodeActions;
@@ -208,13 +210,13 @@ namespace OmniSharp.Tests
         private async Task<RunCodeActionResponse> RunRefactoringsAsync(string source, int codeActionIndex, bool wantsChanges = false)
         {
             var request = CreateCodeActionRequest(source, codeActionIndex, wantsChanges: wantsChanges);
-            _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer);
+            _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer, bufferPath);
             var controller = new CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() });
             var response = await controller.RunCodeAction(request);
             return response;
         }
 
-        private CodeActionRequest CreateCodeActionRequest(string source, int codeActionIndex = 0, string fileName = "dummy.cs", bool wantsChanges = false)
+        private CodeActionRequest CreateCodeActionRequest(string source, int codeActionIndex = 0, bool wantsChanges = false)
         {
             var range = TestHelpers.GetRangeFromDollars(source);
             return new CodeActionRequest
@@ -225,7 +227,7 @@ namespace OmniSharp.Tests
                 SelectionStartLine = range.Start.Line,
                 SelectionEndColumn = range.End.Column,
                 SelectionEndLine = range.End.Line,
-                FileName = fileName,
+                FileName = bufferPath,
                 Buffer = source.Replace("$", ""),
                 CodeAction = codeActionIndex,
                 WantsTextChanges = wantsChanges

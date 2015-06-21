@@ -38,7 +38,7 @@ namespace OmniSharp
                         response.ErrorMessage = e.Message;
                     }
                 }
-                var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, request.WantsTextChanges);
+                var changes = await FileChanges.GetFileChangesAsync(solution, _workspace.CurrentSolution, null, request.WantsTextChanges);
 
                 // Attempt to update the workspace
                 if (_workspace.TryApplyChanges(solution))
