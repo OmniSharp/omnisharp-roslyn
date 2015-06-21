@@ -40,7 +40,7 @@ namespace OmniSharp
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
             var start = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
             var end = lines.GetPosition(new LinePosition(request.EndLine - 1, request.EndColumn - 1));
-            var changes = await Formatting.GetFormattingChangesForRange(_workspace, Options, document, start, end);
+            var changes = await Formatting.GetFormattingChangesForRange(Options, document, start, end);
 
             return new FormatRangeResponse()
             {
@@ -57,7 +57,7 @@ namespace OmniSharp
                 return null;
             }
 
-            var newText = await Formatting.GetFormattedDocument(_workspace, Options, document);
+            var newText = await Formatting.GetFormattedDocument(Options, document);
             return new CodeFormatResponse()
             {
                 Buffer = newText
