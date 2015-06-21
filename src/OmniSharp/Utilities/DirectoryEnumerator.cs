@@ -15,41 +15,58 @@ namespace OmniSharp.Utilities
             _logger = loggerFactory.CreateLogger<DirectoryEnumerator>();
         }
 
-        public IEnumerable<string> SafeEnumerateFiles(string path, string searchPattern)
+        public IEnumerable<string> SafeEnumerateFiles(string target, string pattern = "*.*")
         {
-            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+            var allFiles = Enumerable.Empty<string>();
+
+            var directoryStack = new Stack<string>();
+            directoryStack.Push(target);
+
+            while (directoryStack.Any())
             {
-                yield break;
+                var current = directoryStack.Pop();
+                
+                try
+                {
+                    allFiles = allFiles.Concat(GetFiles(current, pattern));
+                    
+                    foreach (var subdirectory in GetSubdirectories(current))
+                    {
+                        directoryStack.Push(subdirectory);
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    _logger.LogWarning(string.Format("Unauthorized access to {0}, skipping", current));
+                }
             }
-            
-            string[] files = null;
-            string[] directories = null;
-            
+
+            return allFiles;
+        }
+
+        private IEnumerable<string> GetFiles(string path, string pattern)
+        {
             try
             {
-                // Get the files and directories now so we can get any exceptions up front
-                files = Directory.GetFiles(path, searchPattern);
-                directories = Directory.GetDirectories(path);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                _logger.LogWarning(string.Format("Unauthorized access to {0}, skipping", path));
-                yield break;
+                return Directory.EnumerateFiles(path, pattern, SearchOption.TopDirectoryOnly);
             }
             catch (PathTooLongException)
             {
                 _logger.LogWarning(string.Format("Path {0} is too long, skipping", path));
-                yield break;
+                return Enumerable.Empty<string>();
             }
+        }
 
-            foreach (var file in files)
+        private IEnumerable<string> GetSubdirectories(string path)
+        {
+            try
             {
-                yield return file;
+                return Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly);
             }
-
-            foreach (var file in directories.SelectMany(x => SafeEnumerateFiles(x, searchPattern)))
+            catch (PathTooLongException)
             {
-                yield return file;
+                _logger.LogWarning(string.Format("Path {0} is too long, skipping", path));
+                return Enumerable.Empty<string>();
             }
         }
     }
