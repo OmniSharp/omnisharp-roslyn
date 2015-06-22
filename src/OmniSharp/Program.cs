@@ -67,7 +67,6 @@ namespace OmniSharp
                     otherArgs.Add((string)enumerator.Current);
                 }
             }
-
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
             var config = new Configuration()

@@ -23,7 +23,7 @@ namespace OmniSharp.Models
 
                     if (newText.Length > 0)
                     {
-                        // Roslyn computes text changes on character arrays. So it might happen that a 
+                        // Roslyn computes text changes on character arrays. So it might happen that a
                         // change starts inbetween \r\n which is OK when you are offset-based but a problem
                         // when you are line,column-based. This code extends text edits which just overlap
                         // a with a line break to its full line break
