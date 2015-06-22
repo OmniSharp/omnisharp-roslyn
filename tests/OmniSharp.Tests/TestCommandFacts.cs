@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using OmniSharp.AspNet5;
+using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.Models;
 using OmniSharp.Services;
@@ -177,7 +177,7 @@ namespace OmniSharp.Tests
         private async Task<string> GetTestCommandArgumentsAsync(string source, TestCommandType testType = TestCommandType.Single)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var context = new AspNet5Context();
+            var context = new DnxContext();
             var projectName = "project.json";
             var projectCounter = 1;
 
@@ -188,7 +188,7 @@ namespace OmniSharp.Tests
                 Commands = { { "test", "Xunit.KRunner" } }
             });
 
-            var testCommandProviders = new[] { new AspNet5TestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter(), new FakeOmniSharpOptions()) };
+            var testCommandProviders = new[] { new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter(), new FakeOmniSharpOptions()) };
             var controller = new TestCommandController(workspace, testCommandProviders);
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
 

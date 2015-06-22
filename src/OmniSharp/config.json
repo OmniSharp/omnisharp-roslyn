@@ -1,5 +1,5 @@
 ﻿{
-    "aspnet5": {
+    "dnx": {
         "alias": "default",
         "projects": "**/project.json",
         "enablePackageRestore": true,

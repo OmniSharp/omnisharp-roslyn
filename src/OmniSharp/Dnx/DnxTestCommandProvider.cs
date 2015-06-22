@@ -4,22 +4,22 @@ using Microsoft.Framework.OptionsModel;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
-namespace OmniSharp.AspNet5
+namespace OmniSharp.Dnx
 {
-    public class AspNet5TestCommandProvider : ITestCommandProvider
+    public class DnxTestCommandProvider : ITestCommandProvider
     {
-        private readonly AspNet5Context _context;
+        private readonly DnxContext _context;
         private readonly string _dnx;
 
-        public AspNet5TestCommandProvider(AspNet5Context context,
+        public DnxTestCommandProvider(DnxContext context,
                                           IOmnisharpEnvironment env,
                                           ILoggerFactory loggerFactory,
                                           IEventEmitter emitter,
                                           IOptions<OmniSharpOptions> options)
         {
             _context = context;
-            var aspNet5Paths = new AspNet5Paths(env, options.Options, loggerFactory);
-            _dnx = aspNet5Paths.Dnx != null ? aspNet5Paths.Dnx + " ." : aspNet5Paths.K;
+            var dnxPaths = new DnxPaths(env, options.Options, loggerFactory);
+            _dnx = dnxPaths.Dnx != null ? dnxPaths.Dnx + " ." : dnxPaths.K;
         }
 
         public string GetTestCommand(TestContext testContext)

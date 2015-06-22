@@ -85,11 +85,11 @@ namespace OmniSharp.Tests
             var workspace = new OmnisharpWorkspace();
 
             TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
-                new[] { "aspnet50", "aspnet50core" },
+                new[] { "dnx451", "dnxcore50" },
                 new Dictionary<string, string>() { { Path.Combine("src", "a.cs"), "class C {}" } });
 
             TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("test", "project.json"),
-                new[] { "aspnet50", "aspnet50core" },
+                new[] { "dnx451", "dnxcore50" },
                 new Dictionary<string, string>() { { Path.Combine("test", "b.cs"), "class C {}" } });
 
             Assert.Equal(4, workspace.CurrentSolution.Projects.Count());
