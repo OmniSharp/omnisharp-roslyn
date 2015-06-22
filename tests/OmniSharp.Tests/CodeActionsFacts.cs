@@ -202,7 +202,7 @@ namespace OmniSharp.Tests
         {
             var request = CreateCodeActionRequest(source);
             _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer, bufferPath);
-            var controller = new CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() });
+            var controller = new CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
             var response = await controller.GetCodeActions(request);
             return response.CodeActions;
         }
@@ -211,7 +211,7 @@ namespace OmniSharp.Tests
         {
             var request = CreateCodeActionRequest(source, codeActionIndex, wantsChanges: wantsChanges);
             _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer, bufferPath);
-            var controller = new CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() });
+            var controller = new CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
             var response = await controller.RunCodeAction(request);
             return response;
         }

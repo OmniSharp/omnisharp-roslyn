@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.Logging;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
@@ -21,10 +22,13 @@ namespace OmniSharp
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private Document _originalDocument;
 
-        public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
+        private readonly ILogger _logger;
+
+        public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
+            _logger = loggerFactory.CreateLogger<CodeActionController>();
         }
 
         [HttpPost("getcodeactions")]
@@ -45,7 +49,7 @@ namespace OmniSharp
             }
 
             var action = actions.ElementAt(request.CodeAction);
-
+            _logger.LogInformation("Applying " + action);
             var operations = await action.GetOperationsAsync(CancellationToken.None);
 
             var solution = _workspace.CurrentSolution;
@@ -77,7 +81,9 @@ namespace OmniSharp
             var actions = new List<CodeAction>();
             _originalDocument = _workspace.GetDocument(request.FileName);
             if (_originalDocument == null)
+            {
                 return actions;
+            }
 
             var refactoringContext = await GetRefactoringContext(request, actions);
             var codeFixContext = await GetCodeFixContext(request, actions);
@@ -91,7 +97,6 @@ namespace OmniSharp
         {
             var sourceText = await _originalDocument.GetTextAsync();
             var location = GetTextSpan(request, sourceText);
-
             return new CodeRefactoringContext(_originalDocument, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
@@ -104,7 +109,10 @@ namespace OmniSharp
 
             var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location)).ToImmutableArray();
             if (pointDiagnostics.Any())
+            {
                 return new CodeFixContext(_originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
+            }
+
             return null;
         }
 
@@ -116,16 +124,16 @@ namespace OmniSharp
                 var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.SelectionEndLine.Value - 1, request.SelectionEndColumn.Value - 1));
                 return TextSpan.FromBounds(startPosition, endPosition);
             }
-
             var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
             return new TextSpan(position, 1);
         }
 
         private static readonly HashSet<string> _blacklist = new HashSet<string> {
-
+            // This list is horrible but hopefully temporary
             "Microsoft.CodeAnalysis.CSharp.CodeFixes.AddMissingReference.AddMissingReferenceCodeFixProvider",
             "Microsoft.CodeAnalysis.CSharp.CodeFixes.Async.CSharpConvertToAsyncMethodCodeFixProvider",
             "Microsoft.CodeAnalysis.CSharp.CodeFixes.Iterator.CSharpChangeToIEnumerableCodeFixProvider",
+            "Microsoft.CodeAnalysis.CSharp.CodeRefactorings.ChangeSignature.ChangeSignatureCodeRefactoringProvider",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.CreateMethodDeclarationAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.UseStringFormatAction",
             "ICSharpCode.NRefactory6.CSharp.Refactoring.UseAsAndNullCheckAction",
@@ -295,7 +303,7 @@ namespace OmniSharp
                     }
                     catch
                     {
-                        System.Console.WriteLine("error " + codeFix);
+                        _logger.LogError("Error registering code fixes " + codeFix);
                     }
                 }
             }
@@ -317,11 +325,12 @@ namespace OmniSharp
 
                     try
                     {
+
                         await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
                     }
                     catch
                     {
-                        System.Console.WriteLine("error " + refactoring);
+                        _logger.LogError("Error computing refactorings for " + refactoring);
                     }
                 }
             }
