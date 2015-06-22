@@ -1,6 +1,6 @@
 ﻿namespace OmniSharp.Options
 {
-    public class AspNet5Options
+    public class DnxOptions
     {
         public string Alias { get; set; }
         public string Projects { get; set; }
