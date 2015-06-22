@@ -22,6 +22,7 @@ using Newtonsoft.Json.Linq;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Dnx
 {
@@ -38,6 +39,7 @@ namespace OmniSharp.Dnx
         private readonly IFileSystemWatcher _watcher;
         private readonly IEventEmitter _emitter;
         private readonly OmniSharpOptions _options;
+        private readonly DirectoryEnumerator _directoryEnumerator;
 
         public DnxProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
@@ -60,6 +62,7 @@ namespace OmniSharp.Dnx
             _context = context;
             _watcher = watcher;
             _emitter = emitter;
+            _directoryEnumerator = new DirectoryEnumerator(loggerFactory);
 
             lifetime.ApplicationStopping.Register(OnShutdown);
         }
@@ -551,12 +554,12 @@ namespace OmniSharp.Dnx
                 }
                 else
                 {
-                    paths = Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories);
+                    paths = _directoryEnumerator.SafeEnumerateFiles(_env.Path, "project.json");
                 }
 #else
                 // The matcher works on CoreCLR but Omnisharp still targets aspnetcore50 instead of
                 // dnxcore50
-                paths = Directory.EnumerateFiles(_env.Path, "project.json", SearchOption.AllDirectories);
+                paths = _directoryEnumerator.SafeEnumerateFiles(_env.Path, "project.json");
 #endif 
                 foreach (var path in paths)
                 {
