@@ -9,7 +9,7 @@ namespace OmniSharp.Services
         int HostPID { get; }
         string Path { get; }
         string SolutionFilePath { get; }
-        string ConfigurationPath { get; } 
+        string ConfigurationPath { get; }
         TransportType TransportType { get; }
     }
 }

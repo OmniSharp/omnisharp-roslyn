@@ -24,11 +24,39 @@ namespace OmniSharp.Tests
                 Line = line;
                 Column = column;
             }
+
+            public bool Equals(LineColumn other)
+            {
+                return this.Line.Equals(other.Line) &&
+                       this.Column.Equals(other.Column);
+            }
+        }
+
+        public class Range
+        {
+            public LineColumn Start { get; private set; }
+            public LineColumn End { get; private set; }
+
+            public Range (LineColumn start, LineColumn end)
+            {
+                Start = start;
+                End = end;
+            }
+
+            public bool IsEmpty { get { return Start.Equals(End);  } }
         }
 
         public static LineColumn GetLineAndColumnFromDollar(string text)
         {
             return GetLineAndColumnFromFirstOccurence(text, "$");
+        }
+
+        public static Range GetRangeFromDollars(string text)
+        {
+            var start = GetLineAndColumnFromFirstOccurence(text, "$");
+            var end = GetLineAndColumnFromLastOccurence(text, "$");
+
+            return new Range(start, end);
         }
 
         public static LineColumn GetLineAndColumnFromPercent(string text)
@@ -39,9 +67,21 @@ namespace OmniSharp.Tests
         private static LineColumn GetLineAndColumnFromFirstOccurence(string text, string marker)
         {
             var indexOfChar = text.IndexOf(marker);
-            if (indexOfChar == -1)
-                throw new ArgumentException(string.Format("Expected a {0} in test input", marker));
+            CheckIndex(indexOfChar, marker);
             return GetLineAndColumnFromIndex(text, indexOfChar);
+        }
+
+        private static LineColumn GetLineAndColumnFromLastOccurence(string text, string marker)
+        {
+            var indexOfChar = text.LastIndexOf(marker);
+            CheckIndex(indexOfChar, marker);
+            return GetLineAndColumnFromIndex(text, indexOfChar);
+        }
+
+        private static void CheckIndex(int index, string marker)
+        {
+            if (index == -1)
+                throw new ArgumentException(string.Format("Expected a {0} in test input", marker));
         }
 
         public static LineColumn GetLineAndColumnFromIndex(string text, int index)
@@ -78,7 +118,7 @@ namespace OmniSharp.Tests
 
             var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
             var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, $"{fileName}.dll", LanguageNames.CSharp, fileName,
-                       compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary), metadataReferences: references, parseOptions: parseOptions, 
+                       compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary), metadataReferences: references, parseOptions: parseOptions,
                        isSubmission: true);
 
             workspace.AddProject(project);
@@ -97,7 +137,7 @@ namespace OmniSharp.Tests
 
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
-            var workspace = new OmnisharpWorkspace();
+            var workspace = Startup.CreateWorkspace();
             AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
             return workspace;
         }

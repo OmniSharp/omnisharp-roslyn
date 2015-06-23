@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
+using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -38,7 +38,7 @@ namespace OmniSharp
             {
                 configuration.AddJsonFile(Program.Environment.ConfigurationPath);
             }
-            
+
             configuration.AddEnvironmentVariables();
 
             Configuration = configuration;
@@ -50,8 +50,7 @@ namespace OmniSharp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            Workspace = new OmnisharpWorkspace();
-
+            Workspace = CreateWorkspace();
             services.AddMvc();
 
             services.Configure<MvcOptions>(opt =>
@@ -85,10 +84,9 @@ namespace OmniSharp
             // Add test command providers
             services.AddSingleton<ITestCommandProvider, DnxTestCommandProvider>();
 
-            // Add the code action provider
-            services.AddSingleton<ICodeActionProvider, EmptyCodeActionProvider>();
-
 #if DNX451
+            //TODO Do roslyn code actions run on Core CLR?
+            services.AddSingleton<ICodeActionProvider, RoslynCodeActionProvider>();
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
 
@@ -105,6 +103,16 @@ namespace OmniSharp
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
+        }
+
+        public static OmnisharpWorkspace CreateWorkspace()
+        {
+            var assemblies = MefHostServices.DefaultAssemblies;
+#if DNX451
+            assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
+            assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
+#endif
+            return new OmnisharpWorkspace(MefHostServices.Create(assemblies));
         }
 
         public void Configure(IApplicationBuilder app,
