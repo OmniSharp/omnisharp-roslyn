@@ -1,31 +1,25 @@
-﻿#if DNX451
-using System;
+#if DNX451
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using ICSharpCode.NRefactory6.CSharp.Refactoring;
-using Microsoft.CodeAnalysis.CodeRefactorings;
+using Microsoft.CodeAnalysis.CodeFixes;
 
 namespace OmniSharp.Services
 {
-    public class NRefactoryCodeActionProvider : ICodeActionProvider
+    public class NRefactoryCodeActionProvider : AbstractCodeActionProvider
     {
-        public IEnumerable<CodeRefactoringProvider> GetProviders()
+        public NRefactoryCodeActionProvider() : base(typeof(UseVarKeywordAction).Assembly)
         {
-            // todo , replace this with the nrefactory filtered list of providers
-            var types = typeof(UseVarKeywordAction)
-                                .Assembly
-                                .GetExportedTypes()
-                                .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t));
-
-            IEnumerable<CodeRefactoringProvider> providers =
-                types
-                    .Where(type => !type.IsInterface
-                            && !type.IsAbstract
-                            && !type.ContainsGenericParameters) // TODO: handle providers with generic params 
-                    .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
-
-            return providers;
         }
+
+        public override IEnumerable<CodeFixProvider> CodeFixes => Enumerable.Empty<CodeFixProvider>();
+
+        public override string ProviderName => "NRefactory";
+
+        internal static ImmutableArray<Assembly> MefAssemblies =>
+            ImmutableArray.Create<Assembly>(typeof(UseVarKeywordAction).Assembly);
     }
 }
 #endif

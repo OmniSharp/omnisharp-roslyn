@@ -96,7 +96,7 @@ namespace OmniSharp
             {
                 foreach (var provider in _codeActionProviders)
                 {
-                    var providers = provider.GetProviders();
+                    var providers = provider.Refactorings;
 
                     foreach (var codeActionProvider in providers)
                     {

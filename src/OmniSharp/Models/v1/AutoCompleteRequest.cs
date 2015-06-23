@@ -39,7 +39,7 @@ namespace OmniSharp.Models
         public bool WantSnippet { get; set; }
 
         /// <summary>
-        /// Returns the return type 
+        /// Returns the return type
         /// </summary>
         public bool WantReturnType { get; set; }
 
