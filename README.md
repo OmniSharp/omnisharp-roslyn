@@ -6,7 +6,9 @@ omnisharp-roslyn
 
 Omnisharp based on roslyn workspaces
 
-This currently requires kre version - 1.0.0-beta3.. and because the omnisharp server uses kestrel, you'll also need to make sure that you have libuv installed.
+This currently requires dnx version - 1.0.0-beta4 (see https://github.com/aspnet/Home).. and because the omnisharp server uses kestrel, you'll also need to make sure that you have libuv installed.
+
+If you are using mono, you'll need a minimum of verson 4.0.1
 
 Run the server with ```./scripts/Omnisharp -s /path/to/project -p portnumber```
 

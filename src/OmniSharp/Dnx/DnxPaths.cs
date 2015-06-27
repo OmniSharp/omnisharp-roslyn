@@ -75,7 +75,7 @@ namespace OmniSharp.Dnx
 
             var message = new ErrorMessage()
             {
-                Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}.\nVisit https://github.com/aspnet/Home/tree/glennc/readmelove for an installation guide.", versionOrAlias, string.Join("\n", seachedLocations))
+                Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}.\nVisit https://github.com/aspnet/Home for an installation guide.", versionOrAlias, string.Join("\n", seachedLocations))
             };
             if (versionOrAliasToken != null)
             {
@@ -132,10 +132,10 @@ namespace OmniSharp.Dnx
             {
                 // Newer path
                 yield return Path.Combine(home, ".dnx");
-    
+
                 // New path
                 yield return Path.Combine(home, ".k");
-    
+
                 // Old path
                 yield return Path.Combine(home, ".kre");
             }
