@@ -21,6 +21,7 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
+    // asdf 
     public class Startup
     {
         public Startup()
@@ -45,7 +46,6 @@ namespace OmniSharp
         }
 
         public IConfiguration Configuration { get; private set; }
-
         public OmnisharpWorkspace Workspace { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
