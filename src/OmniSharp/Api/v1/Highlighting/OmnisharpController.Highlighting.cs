@@ -68,9 +68,9 @@ namespace OmniSharp
             if (!request.WantNames)
                 spans = spans.Where(x => !x.ClassificationType.EndsWith(" name"));
             if (!request.WantComments)
-                spans = spans.Where(x => x.ClassificationType != "comment" && !x.ClassificationType.StartsWith("xml doc comment"));
+                spans = spans.Where(x => x.ClassificationType != "comment" && !x.ClassificationType.StartsWith("xml doc comment "));
             if (!request.WantStrings)
-                spans = spans.Where(x => x.ClassificationType != "string");
+                spans = spans.Where(x => x.ClassificationType != "string" && !x.ClassificationType.StartsWith("string "));
             if (!request.WantOperators)
                 spans = spans.Where(x => x.ClassificationType != "operator");
             if (!request.WantPunctuation)

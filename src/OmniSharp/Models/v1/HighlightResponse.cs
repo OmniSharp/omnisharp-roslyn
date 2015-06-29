@@ -21,9 +21,10 @@ namespace OmniSharp.Models
             return new HighlightResponse
             {
                 StartLine = linePos.Start.Line + 1,
-                StartColumn = linePos.Start.Character + 1,
-                EndLine = linePos.Start.Line + 1,
-                EndColumn = linePos.Start.Character + 1,
+                EndLine = linePos.End.Line + 1,
+                // Caution, Character is 1-based.
+                StartColumn = linePos.Start.Character,
+                EndColumn = linePos.End.Character,
                 Kind = span.ClassificationType,
                 Projects = projects
             };
