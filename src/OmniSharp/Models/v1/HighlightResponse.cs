@@ -7,8 +7,10 @@ namespace OmniSharp.Models
 {
     public class HighlightResponse : IComparable<HighlightResponse>
     {
-        public LinePosition Start { get; set; }
-        public LinePosition End { get; set; }
+        public int StartLine { get; set; }
+        public int StartColumn { get; set; }
+        public int EndLine { get; set; }
+        public int EndColumn { get; set; }
         public string Kind { get; set; }
         public IEnumerable<string> Projects { get; set; }
 
@@ -18,8 +20,10 @@ namespace OmniSharp.Models
 
             return new HighlightResponse
             {
-                Start = linePos.Start,
-                End = linePos.End,
+                StartLine = linePos.Start.Line + 1,
+                StartColumn = linePos.Start.Character + 1,
+                EndLine = linePos.Start.Line + 1,
+                EndColumn = linePos.Start.Character + 1,
                 Kind = span.ClassificationType,
                 Projects = projects
             };
@@ -27,38 +31,38 @@ namespace OmniSharp.Models
 
         public int CompareTo(HighlightResponse other)
         {
-            if (other.Start.Line < Start.Line)
+            if (other.StartLine < StartLine)
             {
                 return 1;
             }
-            else if (other.Start.Line > Start.Line)
+            else if (other.StartLine > StartLine)
             {
                 return -1;
             }
             // same start line
-            else if (other.Start.Character < Start.Character)
+            else if (other.StartColumn < StartColumn)
             {
                 return 1;
             }
-            else if (other.Start.Character > Start.Character)
+            else if (other.StartColumn > StartColumn)
             {
                 return -1;
             }
             // same start line and start column
-            else if (other.End.Line < End.Line)
+            else if (other.EndLine < EndLine)
             {
                 return 1;
             }
-            else if (other.End.Line > End.Line)
+            else if (other.EndLine > EndLine)
             {
                 return -1;
             }
             // same start line, start column, and end line
-            else if (other.End.Character < End.Character)
+            else if (other.EndColumn < EndColumn)
             {
                 return 1;
             }
-            else if (other.End.Character > End.Character)
+            else if (other.EndColumn > EndColumn)
             {
                 return -1;
             }
@@ -73,18 +77,18 @@ namespace OmniSharp.Models
         {
             var node = other as FileMemberElement;
             return node != null
-                && node.Location.Line == Start.Line
-                && node.Location.Column == Start.Character
-                && node.Location.EndLine == End.Line
-                && node.Location.EndColumn == End.Character;
+                && node.Location.Line == StartLine
+                && node.Location.Column == StartColumn
+                && node.Location.EndLine == EndLine
+                && node.Location.EndColumn == EndColumn;
         }
 
         public override int GetHashCode()
         {
-            return 13 * Start.Line +
-                17 * Start.Character +
-                23 * End.Line +
-                31 * End.Character;
+            return 13 * StartLine +
+                17 * StartColumn +
+                23 * EndLine +
+                31 * EndColumn;
         }
     }
 }
