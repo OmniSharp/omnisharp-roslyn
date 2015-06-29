@@ -21,7 +21,6 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
-    // asdf 
     public class Startup
     {
         public Startup()
