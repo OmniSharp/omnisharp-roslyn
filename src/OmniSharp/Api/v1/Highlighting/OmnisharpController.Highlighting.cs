@@ -16,6 +16,11 @@ namespace OmniSharp
         public async Task<IEnumerable<HighlightResponse>> Highlight(HighlightRequest request)
         {
             var documents = _workspace.GetDocuments(request.FileName);
+            if (request.ProjectNames != null && request.ProjectNames.Length > 0)
+            {
+                documents = documents.Where(d => request.ProjectNames.Contains(d.Project.Name, StringComparer.Ordinal));
+            }
+
             var results = new List<ClassifiedResult>();
 
             foreach (var document in documents)

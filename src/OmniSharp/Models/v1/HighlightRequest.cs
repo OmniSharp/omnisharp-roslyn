@@ -8,6 +8,11 @@ namespace OmniSharp.Models
         ///   file.
         /// </summary>
         public int[] Lines { get; set; }
+        /// <summary>
+        ///   Specifies which projects to highlight for.
+        //    If none are given, highlight for all the projects.
+        /// </summary>
+        public string[] ProjectNames { get; set; }
         /// <suimmary>
         ///   Request comment classifications
         /// </summary>
