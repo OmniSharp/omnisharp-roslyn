@@ -45,7 +45,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> Analyzers { get; private set; }
 
-        public IList<string> DefinedConstants { get; private set; }
+        public IList<string> DefineConstants { get; private set; }
 
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
@@ -112,10 +112,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                                    .Select(p => p.GetMetadataValue("FullPath"))
                                    .ToList();
 
-                var definedConstants = projectInstance.GetPropertyValue("DefineConstants");
-                if (!string.IsNullOrWhiteSpace(definedConstants))
+                var defineConstants = projectInstance.GetPropertyValue("DefineConstants");
+                if (!string.IsNullOrWhiteSpace(defineConstants))
                 {
-                    projectFileInfo.DefinedConstants = definedConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
             }
             else
@@ -184,10 +184,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                     .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                     .ToList();
 
-                var definedConstants = properties["DefineConstants"].FinalValue;
-                if (!string.IsNullOrWhiteSpace(definedConstants))
+                var defineConstants = properties["DefineConstants"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(defineConstants))
                 {
-                    projectFileInfo.DefinedConstants = definedConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
             }
 #else

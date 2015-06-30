@@ -236,9 +236,15 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (projectFileInfo.SpecifiedLanguageVersion.HasValue)
+            if (projectFileInfo.SpecifiedLanguageVersion.HasValue || projectFileInfo.DefineConstants != null)
             {
-                var parseOptions = new CSharpParseOptions(projectFileInfo.SpecifiedLanguageVersion.Value);
+                var parseOptions = projectFileInfo.SpecifiedLanguageVersion.HasValue
+                    ? new CSharpParseOptions(projectFileInfo.SpecifiedLanguageVersion.Value)
+                    : new CSharpParseOptions();
+                if (projectFileInfo.DefineConstants != null && projectFileInfo.DefineConstants.Any())
+                {
+                    parseOptions.WithPreprocessorSymbols(projectFileInfo.DefineConstants);
+                }
                 _workspace.SetParseOptions(project.Id, parseOptions);
             }
 
