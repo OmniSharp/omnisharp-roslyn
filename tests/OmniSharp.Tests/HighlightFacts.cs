@@ -18,7 +18,7 @@ namespace OmniSharp.Tests
                     class C1 { int n = true; }
                 }
             ";
-            
+
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
@@ -167,7 +167,7 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task HighlightExclude  sUnwantedPunctuation()
+        public async Task HighlightExcludesUnwantedPunctuation()
         {
             var code = @"
                 namespace N1
