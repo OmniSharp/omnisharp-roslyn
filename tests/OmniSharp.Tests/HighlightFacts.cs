@@ -27,7 +27,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 4 } });
 
-            AssertSyntax(regions, code, 3,
+            AssertSyntax(regions.Highlights, code, 3,
                 Token("class", "keyword"),
                 Token("C1", "class name"),
                 Token("{", "punctuation"),
@@ -57,7 +57,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
 
-            AssertSyntax(regions, code, 0,
+            AssertSyntax(regions.Highlights, code, 0,
                 Token("namespace", "keyword"),
                 Token("N1", "identifier"),
                 Token("{", "punctuation"),
@@ -91,7 +91,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
 
-            AssertSyntax(regions, code, 0,
+            AssertSyntax(regions.Highlights, code, 0,
                 Token("class", "keyword"),
                 Token("C1", "class name"),
                 Token("{", "punctuation"),
@@ -107,7 +107,7 @@ namespace OmniSharp.Tests
                 Token("}", "punctuation"));
         }
 
-        private void AssertSyntax(IEnumerable<HighlightResponse> regions, string code, int startLine, params TokenSpec[] expected)
+        private void AssertSyntax(IEnumerable<HighlightSpan> regions, string code, int startLine, params TokenSpec[] expected)
         {
             var arr = regions.ToArray();
 
@@ -163,7 +163,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", WantKeywords = false });
 
-            Assert.DoesNotContain(regions, x => x.Kind == "keyword");
+            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "keyword");
         }
 
         [Fact]
@@ -184,7 +184,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", WantPunctuation = false });
 
-            Assert.DoesNotContain(regions, x => x.Kind == "punctuation");
+            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "punctuation");
         }
 
         [Fact]
@@ -205,7 +205,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", WantOperators = false });
 
-            Assert.DoesNotContain(regions, x => x.Kind == "operator");
+            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "operator");
         }
 
         [Fact]
@@ -226,7 +226,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", WantIdentifiers = false });
 
-            Assert.DoesNotContain(regions, x => x.Kind == "identifier");
+            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "identifier");
         }
 
         [Fact]
@@ -247,7 +247,7 @@ namespace OmniSharp.Tests
             var controller = new OmnisharpController(workspace, null);
             var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", WantNames = false });
 
-            Assert.DoesNotContain(regions, x => x.Kind.EndsWith(" name"));
+            Assert.DoesNotContain(regions.Highlights, x => x.Kind.EndsWith(" name"));
         }
 
         private TokenSpec Token(string text, string kind)

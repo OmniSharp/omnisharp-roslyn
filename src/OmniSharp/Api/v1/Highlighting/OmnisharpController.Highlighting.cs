@@ -13,12 +13,22 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("highlight")]
-        public async Task<IEnumerable<HighlightResponse>> Highlight(HighlightRequest request)
+        public async Task<HighlightResponse> Highlight(HighlightRequest request)
         {
             var documents = _workspace.GetDocuments(request.FileName);
             if (request.ProjectNames != null && request.ProjectNames.Length > 0)
             {
                 documents = documents.Where(d => request.ProjectNames.Contains(d.Project.Name, StringComparer.Ordinal));
+            }
+
+            if (request.Classifications == null || request.Classifications.Length > 0)
+            {
+                request.Classifications = AllClassifications;
+            }
+
+            if (request.ExcludeClassifications != null && request.ExcludeClassifications.Length > 0)
+            {
+                request.Classifications = request.Classifications.Except(request.ExcludeClassifications).ToArray();
             }
 
             var results = new List<ClassifiedResult>();
@@ -47,7 +57,7 @@ namespace OmniSharp
                     }
                 }
 
-                results.AddRange(FilterSpans(request, spans)
+                results.AddRange(FilterSpans(request.Classifications, spans)
                     .Select(span => new ClassifiedResult()
                     {
                         Span = span,
@@ -56,9 +66,13 @@ namespace OmniSharp
                     }));
             }
 
-            return results
-                .GroupBy(z => z.Span.TextSpan.ToString())
-                .Select(a => HighlightResponse.FromClassifiedSpan(a.First().Span, a.First().Lines, a.Select(z => z.Project)));
+            return new HighlightResponse()
+            {
+                Highlights = results
+                    .GroupBy(result => result.Span.TextSpan.ToString())
+                    .Select(grouping => HighlightSpan.FromClassifiedSpan(grouping.First().Span, grouping.First().Lines, grouping.Select(z => z.Project)))
+                    .ToArray()
+            };
         }
 
         class ClassifiedResult
@@ -68,28 +82,25 @@ namespace OmniSharp
             public string Project { get; set; }
         }
 
-        private IEnumerable<ClassifiedSpan> FilterSpans(HighlightRequest request, IEnumerable<ClassifiedSpan> spans)
+        private HighlightClassification[] AllClassifications = Enum.GetValues(typeof(HighlightClassification)).Cast<HighlightClassification>().ToArray();
+
+        private IEnumerable<ClassifiedSpan> FilterSpans(HighlightClassification[] classifications, IEnumerable<ClassifiedSpan> spans)
         {
-            if (!request.WantNames)
-                spans = spans.Where(x => !x.ClassificationType.EndsWith(" name"));
-            if (!request.WantComments)
-                spans = spans.Where(x => x.ClassificationType != "comment" && !x.ClassificationType.StartsWith("xml doc comment "));
-            if (!request.WantStrings)
-                spans = spans.Where(x => x.ClassificationType != "string" && !x.ClassificationType.StartsWith("string "));
-            if (!request.WantOperators)
-                spans = spans.Where(x => x.ClassificationType != "operator");
-            if (!request.WantPunctuation)
-                spans = spans.Where(x => x.ClassificationType != "punctuation");
-            if (!request.WantKeywords)
-                spans = spans.Where(x => x.ClassificationType != "keyword");
-            if (!request.WantNumbers)
-                spans = spans.Where(x => x.ClassificationType != "number");
-            if (!request.WantIdentifiers)
-                spans = spans.Where(x => x.ClassificationType != "identifier");
-            if (!request.WantPreprocessorKeywords)
-                spans = spans.Where(x => x.ClassificationType != "preprocessor keyword");
-            if (!request.WantExcludedCode)
-                spans = spans.Where(x => x.ClassificationType != "excluded code");
+            foreach (var classification in AllClassifications.Except(classifications))
+            {
+                if (classification == HighlightClassification.Name)
+                    spans = spans.Where(x => !x.ClassificationType.EndsWith(" name"));
+                else if (classification == HighlightClassification.Comment)
+                    spans = spans.Where(x => x.ClassificationType != "comment" && !x.ClassificationType.StartsWith("xml doc comment "));
+                else if (classification == HighlightClassification.String)
+                    spans = spans.Where(x => x.ClassificationType != "string" && !x.ClassificationType.StartsWith("string "));
+                else if (classification == HighlightClassification.PreprocessorKeyword)
+                    spans = spans.Where(x => x.ClassificationType != "preprocessor keyword");
+                else if (classification == HighlightClassification.ExcludedCode)
+                    spans = spans.Where(x => x.ClassificationType != "excluded code");
+                else
+                    spans = spans.Where(x => x.ClassificationType != Enum.GetName(typeof(HighlightClassification), classification).ToLower());
+            }
 
             return spans;
         }
