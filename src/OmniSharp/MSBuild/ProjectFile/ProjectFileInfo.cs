@@ -31,13 +31,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public LanguageVersion? SpecifiedLanguageVersion { get; private set; }
 
-        public string ProjectDirectory
-        {
-            get
-            {
-                return Path.GetDirectoryName(ProjectFilePath);
-            }
-        }
+        public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
 
         public string AssemblyName { get; private set; }
 
@@ -50,6 +44,8 @@ namespace OmniSharp.MSBuild.ProjectFile
         public IList<string> ProjectReferences { get; private set; }
 
         public IList<string> Analyzers { get; private set; }
+
+        public IList<string> DefinedConstants { get; private set; }
 
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
@@ -115,6 +111,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                     projectInstance.GetItems("Analyzer")
                                    .Select(p => p.GetMetadataValue("FullPath"))
                                    .ToList();
+
+                var definedConstants = projectInstance.GetPropertyValue("DefineConstants");
+                if (!string.IsNullOrWhiteSpace(definedConstants))
+                {
+                    projectFileInfo.DefinedConstants = definedConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                }
             }
             else
             {
@@ -181,6 +183,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.Analyzers = itemsLookup["Analyzer"]
                     .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                     .ToList();
+
+                var definedConstants = properties["DefineConstants"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(definedConstants))
+                {
+                    projectFileInfo.DefinedConstants = definedConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                }
             }
 #else
             // TODO: Shell out to msbuild/xbuild here?
