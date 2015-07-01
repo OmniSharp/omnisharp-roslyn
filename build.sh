@@ -28,6 +28,20 @@ dnvm use 1.0.0-beta4
 dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
+
+curl -LO http://nuget.org/nuget.exe
+mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta4 -Prerelease -OutputDirectory artifacts/build/omnisharp/approot/packages
+
+if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-beta4" ]; then
+    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta4 in output exiting!'
+    exit 1
+fi
+
+if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; then
+    echo 'ERROR: Can not find dnx-mono.1.0.0-beta4 in output exiting!'
+    exit 1
+fi
+
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 cd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
