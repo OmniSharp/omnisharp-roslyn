@@ -6,11 +6,20 @@ namespace OmniSharp.Models
 {
     public class MsBuildWorkspaceInformation
     {
-        public MsBuildWorkspaceInformation(MSBuildContext msbuildContext)
+        public MsBuildWorkspaceInformation(MSBuildContext msbuildContext, bool includeSourceFiles)
         {
             SolutionPath = msbuildContext.SolutionPath;
 
-            Projects = msbuildContext.Projects.Values.Select(p => new MSBuildProject(p));
+            Projects = msbuildContext
+                .Projects
+                .Values
+                .OrderBy(x => x.AssemblyName)
+                .Select(p => {
+                    var prj = new MSBuildProject(p);
+                    if (!includeSourceFiles)
+                        prj.SourceFiles = null;
+                    return prj;
+                });
         }
 
         public string SolutionPath { get; }

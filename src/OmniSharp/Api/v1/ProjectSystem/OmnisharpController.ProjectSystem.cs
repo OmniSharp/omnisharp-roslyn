@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.Mvc;
 using OmniSharp.Dnx;
 using OmniSharp.Models;
+using OmniSharp.Models.v1;
 using OmniSharp.MSBuild;
 using OmniSharp.ScriptCs;
 
@@ -24,11 +25,15 @@ namespace OmniSharp
 
         [HttpPost("/projects")]
         [HttpGet("/projects")]
-        public WorkspaceInformationResponse ProjectInformation()
+        public WorkspaceInformationResponse ProjectInformation(ProjectInformationRequest request)
         {
+            var includeSourceFiles = true;
+            if (request != null)
+                includeSourceFiles = request.IncludeSourceFiles;
+
             return new WorkspaceInformationResponse
             {
-                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext),
+                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext, includeSourceFiles),
                 Dnx = new DnxWorkspaceInformation(_dnxContext),
                 ScriptCs = _scriptCsContext
             };
