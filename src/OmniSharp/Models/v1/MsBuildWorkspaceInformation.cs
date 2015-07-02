@@ -6,7 +6,7 @@ namespace OmniSharp.Models
 {
     public class MsBuildWorkspaceInformation
     {
-        public MsBuildWorkspaceInformation(MSBuildContext msbuildContext, bool includeSourceFiles)
+        public MsBuildWorkspaceInformation(MSBuildContext msbuildContext, bool excludeSourceFiles)
         {
             SolutionPath = msbuildContext.SolutionPath;
 
@@ -15,10 +15,10 @@ namespace OmniSharp.Models
                 .Values
                 .OrderBy(x => x.AssemblyName)
                 .Select(p => {
-                    var prj = new MSBuildProject(p);
-                    if (!includeSourceFiles)
-                        prj.SourceFiles = null;
-                    return prj;
+                    var project = new MSBuildProject(p);
+                    if (excludeSourceFiles)
+                        project.SourceFiles = null;
+                    return project;
                 });
         }
 

@@ -2,6 +2,6 @@
 {
     public class ProjectInformationRequest
     {
-        public bool IncludeSourceFiles { get; set; }
+        public bool ExcludeSourceFiles { get; set; }
     }
 }

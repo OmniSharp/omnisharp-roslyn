@@ -27,13 +27,9 @@ namespace OmniSharp
         [HttpGet("/projects")]
         public WorkspaceInformationResponse ProjectInformation(ProjectInformationRequest request)
         {
-            var includeSourceFiles = true;
-            if (request != null)
-                includeSourceFiles = request.IncludeSourceFiles;
-
             return new WorkspaceInformationResponse
             {
-                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext, includeSourceFiles),
+                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext, request.ExcludeSourceFiles),
                 Dnx = new DnxWorkspaceInformation(_dnxContext),
                 ScriptCs = _scriptCsContext
             };
