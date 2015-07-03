@@ -29,7 +29,7 @@ namespace OmniSharp
         {
             return new WorkspaceInformationResponse
             {
-                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext, request.ExcludeSourceFiles),
+                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext, request?.ExcludeSourceFiles ?? false),
                 Dnx = new DnxWorkspaceInformation(_dnxContext),
                 ScriptCs = _scriptCsContext
             };
