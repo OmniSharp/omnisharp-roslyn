@@ -1,5 +1,8 @@
 {
     "version": "1.0.0-*",
+    "compilationOptions": {
+        "warningsAsErrors": true
+    },
     "dependencies": {
         "OmniSharp.Stdio": "1.0.0-*",
         "Kestrel": "1.0.0-beta4",
