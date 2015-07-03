@@ -45,7 +45,7 @@ namespace OmniSharp
         }
 
         public IConfiguration Configuration { get; private set; }
-
+        
         public OmnisharpWorkspace Workspace { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
