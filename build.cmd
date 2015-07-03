@@ -1,7 +1,7 @@
 @echo off
 
 pushd %~dp0
-set "DNX_NUGET_API_URL=https://www.nuget.org/api/v2"
+set "DNX_FEED=https://www.nuget.org/api/v2"
 setlocal EnableDelayedExpansion
 where dnvm
 if %ERRORLEVEL% neq 0 (
