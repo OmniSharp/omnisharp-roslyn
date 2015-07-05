@@ -48,7 +48,7 @@ namespace OmniSharp
                 }
                 else
                 {
-                    foreach (var line in request.Lines)
+                    foreach (var line in request.Lines.Where(z => z <= text.Lines.Count))
                     {
                         foreach (var span in await Classifier.GetClassifiedSpansAsync(document, text.Lines[line - 1].Span))
                         {
