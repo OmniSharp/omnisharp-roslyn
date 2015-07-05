@@ -1,22 +1,19 @@
 {
     "version": "1.0.0-*",
-    "compilationOptions": {
-        "warningsAsErrors": true
-    },
     "dependencies": {
         "OmniSharp.Stdio": "1.0.0-*",
-        "Kestrel": "1.0.0-beta4",
-        "Microsoft.AspNet.Mvc": "6.0.0-beta4",
-        "Microsoft.AspNet.Diagnostics": "1.0.0-beta4",
+        "Kestrel": "1.0.0-beta5",
+        "Microsoft.AspNet.Mvc": "6.0.0-beta5",
+        "Microsoft.AspNet.Diagnostics": "1.0.0-beta5",
         "Microsoft.CodeAnalysis": "1.0.0-rc2",
         "Microsoft.CodeAnalysis.CSharp": "1.0.0-rc2",
         "Microsoft.CodeAnalysis.CSharp.Features": "1.0.0-rc2",
         "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-rc2",
         "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-rc2",
-        "Microsoft.Framework.Logging.Console": "1.0.0-beta4",
+        "Microsoft.Framework.Logging.Console": "1.0.0-beta5",
         "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
-        "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
-        "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4",
+        "Microsoft.Framework.Caching.Memory": "1.0.0-beta5",
+        "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta5",
         "Microsoft.Composition": "1.0.30"
     },
     "commands": {
