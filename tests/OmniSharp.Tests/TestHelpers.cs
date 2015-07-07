@@ -109,8 +109,8 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateCsxWorkspace(string source, string fileName = "dummy.csx")
         {
             var versionStamp = VersionStamp.Create();
-            var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
-            var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
+            var mscorlib = MetadataReferenceFromType(typeof(object));
+            var systemCore = MetadataReferenceFromType(typeof(Enumerable));
             var references = new[] { mscorlib, systemCore };
             var workspace = new OmnisharpWorkspace();
 
@@ -145,8 +145,9 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
         {
             var versionStamp = VersionStamp.Create();
-            var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
-            var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
+
+            var mscorlib = MetadataReferenceFromType(typeof(object));
+            var systemCore = MetadataReferenceFromType(typeof(Enumerable));
             var references = new[] { mscorlib, systemCore };
 
             foreach (var framework in frameworks)
@@ -169,9 +170,10 @@ namespace OmniSharp.Tests
             return workspace;
         }
 
-        private static Assembly AssemblyFromType(Type type)
+        private static MetadataReference MetadataReferenceFromType(Type type)
         {
-            return type.GetTypeInfo().Assembly;
+            var assembly = type.GetTypeInfo().Assembly;
+            return MetadataReference.CreateFromFile(assembly.Location);
         }
 
         public static async Task<ISymbol> SymbolFromQuickFix(OmnisharpWorkspace workspace, QuickFix result)
