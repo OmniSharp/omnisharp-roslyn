@@ -26,7 +26,8 @@ namespace OmniSharp
         public Startup()
         {
             var configurationBuilder = new ConfigurationBuilder(Directory.GetCurrentDirectory())
-                 .AddJsonFile("config.json");
+                                            .AddJsonFile("config.json")
+                                            .AddEnvironmentVariables();
 
             if (Program.Environment.OtherArgs != null)
             {
@@ -38,8 +39,6 @@ namespace OmniSharp
             {
                 configurationBuilder.AddJsonFile(Program.Environment.ConfigurationPath);
             }
-
-            configurationBuilder.AddEnvironmentVariables();
 
             Configuration = configurationBuilder.Build();
         }
