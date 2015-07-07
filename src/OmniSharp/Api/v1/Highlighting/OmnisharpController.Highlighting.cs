@@ -48,9 +48,14 @@ namespace OmniSharp
                 }
                 else
                 {
-                    foreach (var line in request.Lines.Where(z => z <= text.Lines.Count))
+                    var linesToClassify = request.Lines.Join(
+                        text.Lines,
+                        line => line,
+                        line => line.LineNumber,
+                        (requestLine, line) => line.Span);
+                    foreach (var lineSpan in linesToClassify)
                     {
-                        foreach (var span in await Classifier.GetClassifiedSpansAsync(document, text.Lines[line - 1].Span))
+                        foreach (var span in await Classifier.GetClassifiedSpansAsync(document, lineSpan))
                         {
                             spans.Add(span);
                         }
