@@ -50,7 +50,7 @@ namespace OmniSharp
                 {
                     var linesToClassify = request.Lines.Join(
                         text.Lines,
-                        line => line,
+                        line => line - 1,
                         line => line.LineNumber,
                         (requestLine, line) => line.Span);
                     foreach (var lineSpan in linesToClassify)
