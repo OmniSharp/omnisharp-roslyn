@@ -6,7 +6,7 @@ namespace OmniSharp.Settings
 {
     public class FromBodyApplicationModelConvention : IApplicationModelConvention
     {
-        public void Apply(ApplicationModel application)
+        void IApplicationModelConvention.Apply(ApplicationModel application)
         {
             foreach (var controller in application.Controllers)
             {
@@ -15,8 +15,8 @@ namespace OmniSharp.Settings
                     foreach (var parameter in action.Parameters)
                     {
                         if (parameter.BindingInfo?.BindingSource != null ||
-                            parameter.Attributes.OfType<IBindingSourceMetadata>().Any() ||
-                            ValueProviderResult.CanConvertFromString(parameter.ParameterInfo.ParameterType))
+                            parameter.Attributes.OfType<IBindingSourceMetadata>().Any())
+                            //|| ValueProviderResult.CanConvertFromString(parameter.ParameterInfo.ParameterType))
                         {
                             // behavior configured or simple type so do nothing
                         }

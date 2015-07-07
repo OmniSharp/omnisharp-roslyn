@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.Expiration.Interfaces;
+using Microsoft.Framework.Caching.Distributed;
 using Microsoft.Framework.Logging;
 using OmniSharp.Roslyn;
 
@@ -26,18 +26,20 @@ namespace OmniSharp.Services
         {
             var cacheKey = _cacheKeyPrefix + path.ToLowerInvariant();
 
-            var metadata = _cache.GetOrSet(cacheKey, ctx =>
-            {
+            var metadata = _cache.Get<AssemblyMetadata>(cacheKey);
+
+            if (metadata == null) {
                 _logger.LogVerbose(string.Format("Cache miss {0}", path));
 
-                ctx.AddExpirationTrigger(new FileWriteTimeTrigger(path));
+                // HOWTODO? ctx.AddExpirationTrigger(new FileWriteTimeTrigger(path));
 
                 using (var stream = File.OpenRead(path))
                 {
                     var moduleMetadata = ModuleMetadata.CreateFromStream(stream, PEStreamOptions.PrefetchMetadata);
-                    return AssemblyMetadata.Create(moduleMetadata);
+                    metadata = AssemblyMetadata.Create(moduleMetadata);
+                    _cache.Set(cacheKey, metadata);
                 }
-            });
+            }
 
             var documentationFile = Path.ChangeExtension(path, ".xml");
             if (File.Exists(documentationFile))
@@ -47,7 +49,7 @@ namespace OmniSharp.Services
 
             return metadata.GetReference();
         }
-
+/*
         private class FileWriteTimeTrigger : IExpirationTrigger
         {
             private readonly string _path;
@@ -79,5 +81,6 @@ namespace OmniSharp.Services
                 throw new NotImplementedException();
             }
         }
+*/
     }
 }

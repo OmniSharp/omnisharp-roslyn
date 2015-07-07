@@ -18,5 +18,10 @@ namespace OmniSharp.Tests
         {
             return null;
         }
+
+        public IDisposable BeginScopeImpl(object state)
+        {
+            return null;
+        }
     }
 }

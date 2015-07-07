@@ -5,7 +5,7 @@ using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using OmniSharp.Dnx;
@@ -25,27 +25,27 @@ namespace OmniSharp
     {
         public Startup()
         {
-            var configuration = new Configuration()
+            var configurationBuilder = new ConfigurationBuilder(Directory.GetCurrentDirectory())
                  .AddJsonFile("config.json");
 
             if (Program.Environment.OtherArgs != null)
             {
-                configuration.AddCommandLine(Program.Environment.OtherArgs);
+                configurationBuilder.AddCommandLine(Program.Environment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
             if (File.Exists(Program.Environment.ConfigurationPath))
             {
-                configuration.AddJsonFile(Program.Environment.ConfigurationPath);
+                configurationBuilder.AddJsonFile(Program.Environment.ConfigurationPath);
             }
 
-            configuration.AddEnvironmentVariables();
+            configurationBuilder.AddEnvironmentVariables();
 
-            Configuration = configuration;
+            Configuration = configurationBuilder.Build();
         }
 
         public IConfiguration Configuration { get; private set; }
-        
+
         public OmnisharpWorkspace Workspace { get; set; }
 
         public void ConfigureServices(IServiceCollection services)

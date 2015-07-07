@@ -7,7 +7,7 @@ using OmniSharp.Models;
 using Xunit;
 
 namespace OmniSharp.Tests
-{    
+{
     public class FindImplementationFacts
     {
         [Fact]
@@ -16,7 +16,7 @@ namespace OmniSharp.Tests
             var source = @"
                 public interface Som$eInterface {}
                 public class SomeClass : SomeInterface {}";
-            
+
             var implementations = await FindImplementations(source);
             var implementation = implementations.First();
 
@@ -89,6 +89,6 @@ namespace OmniSharp.Tests
                 Buffer = source.Replace("$", "")
             };
         }
-        
+
     }
 }

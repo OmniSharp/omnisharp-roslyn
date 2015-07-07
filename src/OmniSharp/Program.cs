@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
@@ -70,28 +70,28 @@ namespace OmniSharp
 
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
-            var config = new Configuration()
-             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+            var config = new ConfigurationBuilder()
+               .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort })
+               .Build();
 
-            var engine = new HostingEngine(_serviceProvider);
-
-            var context = new HostingContext()
-            {
-                ServerFactoryLocation = "Kestrel",
-                Configuration = config,
-            };
-
+            var builder = new WebHostBuilder(_serviceProvider, config);
             var writer = new SharedConsoleWriter();
-            context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
-            context.Services.AddInstance<ISharedTextWriter>(writer);
 
             if (transportType == TransportType.Stdio)
             {
-                context.Server = null;
-                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, writer);
+                builder.UseServer(new Stdio.StdioServerFactory(Console.In, writer));
             }
+            else
+            {
+                builder.UseServer("Kestrel");
+            }
+            var engine = builder.Build();
 
-            var serverShutdown = engine.Start(context);
+            var services = new ServiceCollection();
+            services.AddInstance(typeof(IOmnisharpEnvironment), Environment);
+            services.AddInstance(typeof(ISharedTextWriter), writer);
+
+            var serverShutdown = engine.Start();
 
             var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEvent(false);
