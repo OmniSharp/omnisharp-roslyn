@@ -108,8 +108,8 @@ namespace OmniSharp
         {
             var assemblies = MefHostServices.DefaultAssemblies;
 #if DNX451
-            assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
-            assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
+//             assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
+//             assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
 #endif
             return new OmnisharpWorkspace(MefHostServices.Create(assemblies));
         }
