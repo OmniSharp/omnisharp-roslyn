@@ -85,11 +85,14 @@ namespace OmniSharp
             {
                 builder.UseServer("Kestrel");
             }
-            var engine = builder.Build();
 
-            var services = new ServiceCollection();
-            services.AddInstance(typeof(IOmnisharpEnvironment), Environment);
-            services.AddInstance(typeof(ISharedTextWriter), writer);
+            builder.UseServices(services =>
+            {
+                services.AddInstance(typeof(IOmnisharpEnvironment), Environment);
+                services.AddInstance(typeof(ISharedTextWriter), writer);
+            });
+
+            var engine = builder.Build();
 
             var serverShutdown = engine.Start();
 
