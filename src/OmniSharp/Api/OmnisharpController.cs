@@ -9,7 +9,7 @@ namespace OmniSharp
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly OmniSharpOptions _options;
-
+        
         public OmnisharpController(OmnisharpWorkspace workspace, IOptions<OmniSharpOptions> optionsAccessor)
         {
             _workspace = workspace;

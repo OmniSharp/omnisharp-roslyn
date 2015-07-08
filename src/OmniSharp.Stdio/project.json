@@ -5,8 +5,8 @@
       "warningsAsErrors": true
   },
   "dependencies": {
-    "Microsoft.AspNet.Hosting": "1.0.0-beta4",
-    "Microsoft.AspNet.Http.Interfaces": "1.0.0-beta4",
+    "Microsoft.AspNet.Hosting": "1.0.0-beta5",
+    "Microsoft.AspNet.Http.Abstractions": "1.0.0-beta5",
     "Newtonsoft.Json": "6.0.8"
   },
     "frameworks": {

@@ -5,9 +5,10 @@ using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.Runtime;
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.Middleware;
@@ -23,29 +24,29 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup()
+        public Startup(IApplicationEnvironment applicationEnvironment)
         {
-            var configuration = new Configuration()
-                 .AddJsonFile("config.json");
+            var configurationBuilder
+                = new ConfigurationBuilder(applicationEnvironment.ApplicationBasePath)
+                    .AddJsonFile("config.json")
+                    .AddEnvironmentVariables();
 
             if (Program.Environment.OtherArgs != null)
             {
-                configuration.AddCommandLine(Program.Environment.OtherArgs);
+                configurationBuilder.AddCommandLine(Program.Environment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
             if (File.Exists(Program.Environment.ConfigurationPath))
             {
-                configuration.AddJsonFile(Program.Environment.ConfigurationPath);
+                configurationBuilder.AddJsonFile(Program.Environment.ConfigurationPath);
             }
 
-            configuration.AddEnvironmentVariables();
-
-            Configuration = configuration;
+            Configuration = configurationBuilder.Build();
         }
 
         public IConfiguration Configuration { get; private set; }
-        
+
         public OmnisharpWorkspace Workspace { get; set; }
 
         public void ConfigureServices(IServiceCollection services)
@@ -109,8 +110,8 @@ namespace OmniSharp
         {
             var assemblies = MefHostServices.DefaultAssemblies;
 #if DNX451
-            assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
-            assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
+//             assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
+//             assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
 #endif
             return new OmnisharpWorkspace(MefHostServices.Create(assemblies));
         }
