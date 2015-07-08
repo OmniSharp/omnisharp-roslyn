@@ -23,14 +23,12 @@ class Foo {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new OmnisharpController(workspace, null);
-            var response = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 2,
                 Column = 14
-            }) as ObjectResult;
-
-            var definitionResponse = response.Value as GotoDefinitionResponse;
+            });
 
             Assert.Equal("foo.cs", definitionResponse.FileName);
             Assert.Equal(3, definitionResponse.Line);
@@ -52,36 +50,34 @@ class Foo {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new OmnisharpController(workspace, null);
-            var response = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 2,
                 Column = 14
-            }) as ObjectResult;
-
-            var definitionResponse = response.Value as GotoDefinitionResponse;
+            });
 
             Assert.Null(definitionResponse.FileName);
             Assert.Equal(0, definitionResponse.Line);
             Assert.Equal(0, definitionResponse.Column);
         }
-        
+
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var response = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 7,
-                Column = 20
-            }) as ObjectResult;
+                Column = 20,
+                WantMetadataSource = true
+            });
 
-            var definitionResponse = response.Value as GotoDefinitionResponse;
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.Equal(0, definitionResponse.Line);
-            Assert.Equal(0, definitionResponse.Column);
+            Assert.Equal("#/metadata/Assembly/mscorlib/Symbol/System.Console", definitionResponse.FileName);
+            // We probably shouldn't hard code metadata locations (they could change randomly)
+            Assert.NotEqual(0, definitionResponse.Line);
+            Assert.NotEqual(0, definitionResponse.Column);
             Assert.Contains("public static class Console", definitionResponse.MetadataSource);
             Assert.Contains("public static void WriteLine(string value)", definitionResponse.MetadataSource);
         }
@@ -90,18 +86,17 @@ class Foo {
         public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var response = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 10,
-                Column = 17
-            }) as ObjectResult;
+                Line = 11,
+                Column = 17,
+                WantMetadataSource = true
+            });
 
-            var definitionResponse = response.Value as GotoDefinitionResponse;
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.Equal(0, definitionResponse.Line);
-            Assert.Equal(0, definitionResponse.Column);
+            Assert.Equal("#/metadata/Assembly/System.Core/Symbol/System.Linq.Enumerable", definitionResponse.FileName);
+            Assert.NotEqual(0, definitionResponse.Line);
+            Assert.NotEqual(0, definitionResponse.Column);
             Assert.Contains("public static class Enumerable", definitionResponse.MetadataSource);
             Assert.Contains("public static List<TSource> ToList<TSource>(this IEnumerable<TSource> source)", definitionResponse.MetadataSource);
         }
@@ -110,19 +105,54 @@ class Foo {
         public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var response = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 9,
-                Column = 25
-            }) as ObjectResult;
+                Column = 25,
+                WantMetadataSource = true
+            });
 
-            var definitionResponse = response.Value as GotoDefinitionResponse;
+            Assert.Equal("#/metadata/Assembly/mscorlib/Symbol/System.Collections.Generic.List`1", definitionResponse.FileName);
+            Assert.NotEqual(0, definitionResponse.Line);
+            Assert.NotEqual(0, definitionResponse.Column);
+            Assert.Contains("public class List<T>", definitionResponse.MetadataSource);
+        }
 
-            Assert.Null(definitionResponse.FileName);
-            Assert.Equal(0, definitionResponse.Line);
-            Assert.Equal(0, definitionResponse.Column);
-            Assert.Contains("public class List<T> : IList<T>, ICollection<T>", definitionResponse.MetadataSource);
+        [Fact]
+        public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
+        {
+            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            {
+                FileName = "bar.cs",
+                Line = 12,
+                Column = 26,
+                WantMetadataSource = true
+            });
+
+            Assert.Equal("#/metadata/Assembly/mscorlib/Symbol/System.Collections.Generic.Dictionary`2", definitionResponse.FileName);
+            Assert.NotEqual(0, definitionResponse.Line);
+            Assert.NotEqual(0, definitionResponse.Column);
+            Assert.Contains("public class Dictionary", definitionResponse.MetadataSource);
+        }
+
+        [Fact]
+        public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
+        {
+            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            {
+                FileName = "bar.cs",
+                Line = 10,
+                Column = 23,
+                WantMetadataSource = true
+            });
+
+            Assert.Equal("#/metadata/Assembly/mscorlib/Symbol/System.String", definitionResponse.FileName);
+            Assert.NotEqual(0, definitionResponse.Line);
+            Assert.NotEqual(0, definitionResponse.Column);
+            Assert.Contains("public sealed class String", definitionResponse.MetadataSource);
         }
 
         OmnisharpWorkspace CreateTestWorkspace()
@@ -140,7 +170,9 @@ class Bar {
         Console.WriteLine(""Stuff"");
 
         var foo = new List<string>();
+        var str = String.Emtpy;
         foo.ToList();
+        var dict = new Dictionary<string, string>();
     }
 }";
 

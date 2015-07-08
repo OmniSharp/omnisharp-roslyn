@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -9,10 +11,43 @@ namespace OmniSharp.Roslyn
     public class MetadataHelper
     {
 #if DNX451
-        public static Task<Document> GetDocumentFromMetadata(Document document, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        private static string GetTypeDisplayString(INamedTypeSymbol symbol)
+        {
+            if (symbol.SpecialType != SpecialType.None)
+            {
+                var specialType = symbol.SpecialType;
+                var name = Enum.GetName(typeof(SpecialType), symbol.SpecialType).Replace("_", ".");
+                return name;
+            }
+
+            if (symbol.IsGenericType)
+            {
+                symbol = symbol.ConstructUnboundGenericType();
+            }
+
+            if (symbol.IsUnboundGenericType)
+            {
+                // TODO: Is this the best to get the fully metadata name?
+                var parts = symbol.ToDisplayParts();
+                var filteredParts = parts.Where(x => x.Kind != SymbolDisplayPartKind.Punctuation).ToArray();
+                var typeName = new StringBuilder();
+                foreach (var part in filteredParts.Take(filteredParts.Length - 1))
+                {
+                    typeName.Append(part.Symbol.Name);
+                    typeName.Append(".");
+                }
+                typeName.Append(symbol.MetadataName);
+
+                return typeName.ToString();
+            }
+
+            return symbol.ToDisplayString();
+        }
+
+        public static Task<Document> GetDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
             var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
-            var temporaryDocument = document.Project.AddDocument($"#/metadata/{topLevelSymbol.ToDisplayString()}", string.Empty);
+            var temporaryDocument = project.AddDocument($"#/metadata/Assembly/{topLevelSymbol.ContainingAssembly.Name}/Symbol/{GetTypeDisplayString(topLevelSymbol)}", string.Empty);
 
             object service = Activator.CreateInstance(_CSharpMetadataAsSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
             var method = _CSharpMetadataAsSourceService.Value.GetMethod("AddSourceToAsync");
