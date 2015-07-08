@@ -44,10 +44,16 @@ namespace OmniSharp.Roslyn
             return symbol.ToDisplayString();
         }
 
+        public static string GetSymbolName(ISymbol symbol)
+        {
+            var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
+            return GetTypeDisplayString(topLevelSymbol);
+        }
+
         public static Task<Document> GetDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
             var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
-            var temporaryDocument = project.AddDocument($"#/metadata/Assembly/{topLevelSymbol.ContainingAssembly.Name}/Symbol/{GetTypeDisplayString(topLevelSymbol)}", string.Empty);
+            var temporaryDocument = project.AddDocument($"#/metadata/Project/{project.Name}/Assembly/{topLevelSymbol.ContainingAssembly.Name}/Symbol/{GetTypeDisplayString(topLevelSymbol)}", string.Empty);
 
             object service = Activator.CreateInstance(_CSharpMetadataAsSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
             var method = _CSharpMetadataAsSourceService.Value.GetMethod("AddSourceToAsync");
