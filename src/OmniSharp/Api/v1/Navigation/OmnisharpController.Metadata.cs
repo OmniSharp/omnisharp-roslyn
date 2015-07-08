@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,14 +9,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
     public partial class OmnisharpController
     {
-        [HttpPost("gotodefinition")]
-        public async Task<GotoDefinitionResponse> GotoDefinition(Request request)
+        [HttpPost("metadata")]
+        public async Task<GotoDefinitionResponse> Metadata(Request request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -45,21 +44,22 @@ namespace OmniSharp
                         };
                     }
 #if DNX451
-                    else if (location.IsInMetadata)
+                    /*else if (location.IsInMetadata)
                     {
-                        var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document, symbol);
-                        var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument);
-                        var lineSpan = metadataLocation.GetMappedLineSpan();
+                        var temporaryDocument = document.Project.AddDocument("foo", string.Empty);
+                        var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
+
+                        object service = Activator.CreateInstance(_CSharpMetadataAsSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
+                        var method = _CSharpMetadataAsSourceService.Value.GetMethod("AddSourceToAsync");
+
+                        var result = await (Task<Document>)method.Invoke(service, new object[] { temporaryDocument, topLevelSymbol, new CancellationToken() });
+                        var source = await result.GetTextAsync();
+                        response.MetadataSource = source.ToString();
+
+                        //document.Project.RemoveDocument(temporaryDocument.Id);
 
                         //TODO: Find the location of the symbol in the source
-                        response = new GotoDefinitionResponse
-                        {
-                            FileName = lineSpan.Path,
-                            Line = lineSpan.StartLinePosition.Line + 1,
-                            Column = lineSpan.StartLinePosition.Character + 1,
-                            //MetadataSource = metadataSource.ToString()
-                        };
-                    }
+                    }*/
 #endif
                 }
             }
