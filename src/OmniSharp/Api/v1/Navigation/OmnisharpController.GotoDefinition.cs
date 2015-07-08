@@ -16,7 +16,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]
-        public async Task<GotoDefinitionResponse> GotoDefinition(Request request)
+        public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -47,7 +47,7 @@ namespace OmniSharp
 #if DNX451
                     else if (location.IsInMetadata)
                     {
-                        var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document, symbol);
+                        var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol);
                         var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument);
                         var lineSpan = metadataLocation.GetMappedLineSpan();
 
@@ -59,6 +59,12 @@ namespace OmniSharp
                             Column = lineSpan.StartLinePosition.Character + 1,
                             //MetadataSource = metadataSource.ToString()
                         };
+
+                        if (request.WantMetadataSource)
+                        {
+                            var metadataSource = await metadataDocument.GetTextAsync();
+                            response.MetadataSource = metadataSource.ToString();
+                        }
                     }
 #endif
                 }
