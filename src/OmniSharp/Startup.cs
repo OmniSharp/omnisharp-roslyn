@@ -8,6 +8,7 @@ using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.Runtime;
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.Middleware;
@@ -23,11 +24,12 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup()
+        public Startup(IApplicationEnvironment applicationEnvironment)
         {
-            var configurationBuilder = new ConfigurationBuilder(Directory.GetCurrentDirectory())
-                                            .AddJsonFile("config.json")
-                                            .AddEnvironmentVariables();
+            var configurationBuilder
+                = new ConfigurationBuilder(applicationEnvironment.ApplicationBasePath)
+                    .AddJsonFile("config.json")
+                    .AddEnvironmentVariables();
 
             if (Program.Environment.OtherArgs != null)
             {
