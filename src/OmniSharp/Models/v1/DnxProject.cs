@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using OmniSharp.Dnx;
 
 namespace OmniSharp.Models
@@ -12,6 +13,7 @@ namespace OmniSharp.Models
         public IList<string> Configurations { get; set; }
         public IList<string> ProjectSearchPaths { get; set; }
         public IList<string> Frameworks { get; set; }
+        public IList<DnxFramework> DnxFrameworks { get; set; }
         public string GlobalJsonPath { get; set; }
         public IList<string> SourceFiles { get; set; }
 
@@ -24,6 +26,7 @@ namespace OmniSharp.Models
             GlobalJsonPath = project.GlobalJsonPath;
             ProjectSearchPaths = project.ProjectSearchPaths;
             Frameworks = project.ProjectsByFramework.Keys.ToList();
+            DnxFrameworks = project.ProjectsByFramework.Values.Select(framework => new DnxFramework(framework)).ToList();
             SourceFiles = project.SourceFiles;
         }
     }

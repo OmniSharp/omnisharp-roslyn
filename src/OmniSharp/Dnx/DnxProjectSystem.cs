@@ -129,7 +129,7 @@ namespace OmniSharp.Dnx
 
                             var frameworkProject = project.ProjectsByFramework.GetOrAdd(frameworkData.FrameworkName, framework =>
                             {
-                                return new FrameworkProject(project, framework);
+                                return new FrameworkProject(project, frameworkData);
                             });
 
                             var id = frameworkProject.ProjectId;
@@ -233,7 +233,7 @@ namespace OmniSharp.Dnx
                             var referencedFrameworkProject = referencedProject.ProjectsByFramework.GetOrAdd(projectReference.Framework.FrameworkName,
                                 framework =>
                                 {
-                                    return new FrameworkProject(referencedProject, framework);
+                                    return new FrameworkProject(referencedProject, projectReference.Framework);
                                 });
 
                             var projectReferenceId = referencedFrameworkProject.ProjectId;
@@ -449,7 +449,7 @@ namespace OmniSharp.Dnx
                 _context.Connection.Post(message);
             }
         }
-        
+
         private void WatchProject(string projectFile)
         {
             // Whenever the project file changes, trigger FilesChanged to the design time host
@@ -538,7 +538,7 @@ namespace OmniSharp.Dnx
                 if (_context.TryAddProject(projectInThisFolder))
                 {
                     _logger.LogInformation(string.Format("Found project '{0}'.", projectInThisFolder));
-                    
+
                     anyProjects = true;
                 }
             }
@@ -560,11 +560,11 @@ namespace OmniSharp.Dnx
                 // The matcher works on CoreCLR but Omnisharp still targets aspnetcore50 instead of
                 // dnxcore50
                 paths = _directoryEnumerator.SafeEnumerateFiles(_env.Path, "project.json");
-#endif 
+#endif
                 foreach (var path in paths)
                 {
                     string projectFile = null;
-                    
+
                     if (Path.GetFileName(path) == "project.json")
                     {
                         projectFile = path;

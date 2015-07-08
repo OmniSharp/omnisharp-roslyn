@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 
 namespace OmniSharp.Dnx
 {
@@ -9,6 +10,10 @@ namespace OmniSharp.Dnx
         public ProjectId ProjectId { get; set; }
 
         public string Framework { get; private set; }
+
+        public string FriendlyName { get; private set; }
+
+        public string ShortName { get; private set; }
 
         public Dictionary<string, DocumentId> Documents { get; set; }
 
@@ -26,10 +31,12 @@ namespace OmniSharp.Dnx
 
         public bool Loaded { get; set; }
 
-        public FrameworkProject(Project project, string framework)
+        public FrameworkProject(Project project, FrameworkData frameworkData)
         {
             Project = project;
-            Framework = framework;
+            Framework = frameworkData.FrameworkName;
+            FriendlyName = frameworkData.FriendlyName;
+            ShortName = frameworkData.ShortName;
             ProjectId = ProjectId.CreateNewId();
             Documents = new Dictionary<string, DocumentId>();
             FileReferences = new Dictionary<string, MetadataReference>();
