@@ -65,7 +65,7 @@ class Foo {
             Assert.Equal(0, definitionResponse.Line);
             Assert.Equal(0, definitionResponse.Column);
         }
-        
+
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
@@ -122,7 +122,7 @@ class Foo {
             Assert.Null(definitionResponse.FileName);
             Assert.Equal(0, definitionResponse.Line);
             Assert.Equal(0, definitionResponse.Column);
-            Assert.Contains("public class List<T> : IList<T>, ICollection<T>", definitionResponse.MetadataSource);
+            Assert.Contains("public class List<T>", definitionResponse.MetadataSource);
         }
 
         OmnisharpWorkspace CreateTestWorkspace()
