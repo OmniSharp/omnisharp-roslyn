@@ -16,7 +16,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]
-        public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
+        public async Task<GotoDefinitionResponse> GotoDefinition(Request request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -51,20 +51,17 @@ namespace OmniSharp
                         var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument);
                         var lineSpan = metadataLocation.GetMappedLineSpan();
 
-                        //TODO: Find the location of the symbol in the source
                         response = new GotoDefinitionResponse
                         {
-                            FileName = lineSpan.Path,
                             Line = lineSpan.StartLinePosition.Line + 1,
                             Column = lineSpan.StartLinePosition.Character + 1,
-                            //MetadataSource = metadataSource.ToString()
+                            MetadataSource = new MetadataSource()
+                            {
+                                AssemblyName = symbol.ContainingAssembly.Name,
+                                ProjectName = document.Project.Name,
+                                TypeName = MetadataHelper.GetSymbolName(symbol)
+                            },
                         };
-
-                        if (request.WantMetadataSource)
-                        {
-                            var metadataSource = await metadataDocument.GetTextAsync();
-                            response.MetadataSource = metadataSource.ToString();
-                        }
                     }
 #endif
                 }

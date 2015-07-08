@@ -1,8 +1,6 @@
 namespace OmniSharp.Models
 {
-    public class MetadataRequest
+    public class MetadataRequest : MetadataSource
     {
-        public string AssemblyName { get; set; }
-        public string TypeName { get; set; }
     }
 }
