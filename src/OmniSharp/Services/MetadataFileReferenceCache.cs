@@ -28,7 +28,8 @@ namespace OmniSharp.Services
 
             var metadata = _cache.Get<AssemblyMetadata>(cacheKey);
 
-            if (metadata == null) {
+            if (metadata == null)
+            {
                 _logger.LogVerbose(string.Format("Cache miss {0}", path));
 
                 // HOWTODO? ctx.AddExpirationTrigger(new FileWriteTimeTrigger(path));

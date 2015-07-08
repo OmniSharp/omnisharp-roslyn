@@ -6,7 +6,7 @@ namespace OmniSharp.Settings
 {
     public class FromBodyApplicationModelConvention : IApplicationModelConvention
     {
-        void IApplicationModelConvention.Apply(ApplicationModel application)
+        public void Apply(ApplicationModel application)
         {
             foreach (var controller in application.Controllers)
             {
