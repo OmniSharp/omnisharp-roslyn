@@ -11,11 +11,19 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
 namespace OmniSharp
-{   
+{
     public partial class OmnisharpController
     {
+#if DNX451
+        private static Lazy<Type> _CSharpMetadataAsSourceService = new Lazy<Type>(() =>
+        {
+            var assembly = Assembly.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            return assembly.GetType("Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService");
+        });
+#endif
+
         [HttpPost("gotodefinition")]
-        public async Task<IActionResult> GotoDefinition(Request request)
+        public async Task<GotoDefinitionResponse> GotoDefinition(Request request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -28,7 +36,7 @@ namespace OmniSharp
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                
+
                 if (symbol != null)
                 {
                     var location = symbol.Locations.First();
@@ -49,15 +57,14 @@ namespace OmniSharp
                         var temporaryDocument = document.Project.AddDocument("foo", string.Empty);
                         var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
 
-                        var assembly = Assembly.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-                        var type = assembly.GetType("Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService");
-                        
-                        object service = Activator.CreateInstance(type, new object[] { temporaryDocument.Project.LanguageServices });
-                        var method = type.GetMethod("AddSourceToAsync");
-                        
+                        object service = Activator.CreateInstance(_CSharpMetadataAsSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
+                        var method = _CSharpMetadataAsSourceService.Value.GetMethod("AddSourceToAsync");
+
                         var result = await (Task<Document>)method.Invoke(service, new object[] { temporaryDocument, topLevelSymbol, new CancellationToken() });
                         var source = await result.GetTextAsync();
                         response.MetadataSource = source.ToString();
+
+                        //document.Project.RemoveDocument(temporaryDocument.Id);
 
                         //TODO: Find the location of the symbol in the source
                     }
@@ -65,7 +72,7 @@ namespace OmniSharp
                 }
             }
 
-            return new ObjectResult(response);
+            return response;
         }
 
         public static INamedTypeSymbol GetTopLevelContainingNamedType(ISymbol symbol)
