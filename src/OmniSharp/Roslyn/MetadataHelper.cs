@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -50,10 +51,22 @@ namespace OmniSharp.Roslyn
             return GetTypeDisplayString(topLevelSymbol);
         }
 
-        public static Task<Document> GetDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        private static string Folderize(string path)
+        {
+            return string.Join("/", path.Split('.'));
+        }
+
+        public static string GetFilePathForSymbol(Project project, ISymbol symbol)
         {
             var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
-            var temporaryDocument = project.AddDocument($"#/metadata/Project/{project.Name}/Assembly/{topLevelSymbol.ContainingAssembly.Name}/Symbol/{GetTypeDisplayString(topLevelSymbol)}", string.Empty);
+            return $"metadata/Project/{Folderize(project.Name)}/Assembly/{Folderize(topLevelSymbol.ContainingAssembly.Name)}/Symbol/{Folderize(GetTypeDisplayString(topLevelSymbol))}.cs".Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        }
+
+        public static Task<Document> GetDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        {
+            var filePath = GetFilePathForSymbol(project, symbol);
+            var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
+            var temporaryDocument = project.AddDocument(filePath, string.Empty);
 
             object service = Activator.CreateInstance(_CSharpMetadataAsSourceService.Value, new object[] { temporaryDocument.Project.LanguageServices });
             var method = _CSharpMetadataAsSourceService.Value.GetMethod("AddSourceToAsync");

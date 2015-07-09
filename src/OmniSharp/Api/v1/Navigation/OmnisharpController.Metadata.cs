@@ -24,16 +24,18 @@ namespace OmniSharp
             {
                 var compliation = await project.GetCompilationAsync();
                 var symbol = compliation.GetTypeByMetadataName(request.TypeName);
-                if (symbol != null)
+                if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
-                    // AssemblyName is optional.
-                    if (string.IsNullOrEmpty(request.AssemblyName) || symbol.ContainingAssembly.Name == request.AssemblyName)
-                    {
-                        var document = await MetadataHelper.GetDocumentFromMetadata(project, symbol);
-                        var source = await document.GetTextAsync();
-                        response.Source = source.ToString();
-                        return response;
-                    }
+                    var document = await MetadataHelper.GetDocumentFromMetadata(project, symbol);
+                    var source = await document.GetTextAsync();
+                    response.SourceName = MetadataHelper.GetFilePathForSymbol(project, symbol);
+                    response.Source = source.ToString();
+
+                    var id = DocumentId.CreateNewId(project.Id);
+                    var version = VersionStamp.Create();
+                    var documentInfo = DocumentInfo.Create(id, response.SourceName, filePath: response.SourceName, loader: TextLoader.From(TextAndVersion.Create(source, version)));
+                    _workspace.AddDocument(documentInfo);
+                    return response;
                 }
             }
 #endif
