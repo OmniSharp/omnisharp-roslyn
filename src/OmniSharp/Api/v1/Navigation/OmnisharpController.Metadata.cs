@@ -30,11 +30,7 @@ namespace OmniSharp
                     var source = await document.GetTextAsync();
                     response.SourceName = MetadataHelper.GetFilePathForSymbol(project, symbol);
                     response.Source = source.ToString();
-
-                    var id = DocumentId.CreateNewId(project.Id);
-                    var version = VersionStamp.Create();
-                    var documentInfo = DocumentInfo.Create(id, response.SourceName, filePath: response.SourceName, loader: TextLoader.From(TextAndVersion.Create(source, version)));
-                    _workspace.AddDocument(documentInfo);
+                    
                     return response;
                 }
             }
