@@ -15,11 +15,11 @@ namespace OmniSharp
 {
     public partial class OmnisharpController
     {
+#if DNX451
         [HttpPost("metadata")]
         public async Task<MetadataResponse> Metadata(MetadataRequest request)
         {
             var response = new MetadataResponse();
-#if DNX451
             foreach (var project in _workspace.CurrentSolution.Projects)
             {
                 var compliation = await project.GetCompilationAsync();
@@ -30,12 +30,19 @@ namespace OmniSharp
                     var source = await document.GetTextAsync();
                     response.SourceName = MetadataHelper.GetFilePathForSymbol(project, symbol);
                     response.Source = source.ToString();
-                    
+
                     return response;
                 }
             }
-#endif
             return response;
         }
+#else
+        [HttpPost("metadata")]
+        public Task<MetadataResponse> Metadata(MetadataRequest request)
+        {
+            // this handles the case where the method isn't async on coreclr
+            return Task.FromResult(new MetadataResponse());
+        }
+#endif
     }
 }
