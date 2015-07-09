@@ -88,35 +88,5 @@ class Foo {
 
             Assert.NotNull(response.Source);
         }
-
-        [Fact]
-        public async Task ReturnsSource_WithoutAssemblyName()
-        {
-            var source1 = @"using System;
-
-class Foo {
-}";
-            var source2 = @"class Bar {
-    private Foo foo;
-}";
-
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
-            var controller = new OmnisharpController(workspace, null);
-            var response = await controller.Metadata(new MetadataRequest
-            {
-                TypeName = "System.Collections.Generic.List`1"
-            });
-
-            Assert.NotNull(response.Source);
-
-            response = await controller.Metadata(new MetadataRequest
-            {
-                TypeName = "System.Collections.Generic.Dictionary`2"
-            });
-
-            Assert.NotNull(response.Source);
-        }
     }
 }
