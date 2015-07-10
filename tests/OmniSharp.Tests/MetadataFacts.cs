@@ -25,7 +25,8 @@ class Foo {
             var response = await controller.Metadata(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
-                TypeName = "System.String"
+                TypeName = "System.String",
+                Timeout = 60000
             });
 
             Assert.NotNull(response.Source);
@@ -49,7 +50,8 @@ class Foo {
             var response = await controller.Metadata(new MetadataRequest
             {
                 AssemblyName = "System.Core",
-                TypeName = "System.Linq.Enumerable"
+                TypeName = "System.Linq.Enumerable",
+                Timeout = 60000
             });
 
             Assert.NotNull(response.Source);
@@ -73,7 +75,8 @@ class Foo {
             var response = await controller.Metadata(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
-                TypeName = "System.Collections.Generic.List`1"
+                TypeName = "System.Collections.Generic.List`1",
+                Timeout = 60000
             });
 
             Assert.NotNull(response.Source);
