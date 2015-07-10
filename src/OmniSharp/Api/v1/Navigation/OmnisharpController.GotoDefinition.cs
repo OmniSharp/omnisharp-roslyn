@@ -14,7 +14,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("gotodefinition")]
-        public async Task<GotoDefinitionResponse> GotoDefinition(Request request)
+        public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -44,11 +44,11 @@ namespace OmniSharp
                     }
                     else if (location.IsInMetadata)
                     {
-                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
                         var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
                         if (metadataDocument != null)
                         {
-                            cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                            cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
                             var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
                             var lineSpan = metadataLocation.GetMappedLineSpan();
 
