@@ -44,26 +44,27 @@ namespace OmniSharp
                             Column = lineSpan.StartLinePosition.Character + 1
                         };
                     }
-#if DNX451
                     else if (location.IsInMetadata)
                     {
                         var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol);
-                        var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument);
-                        var lineSpan = metadataLocation.GetMappedLineSpan();
-
-                        response = new GotoDefinitionResponse
+                        if (metadataDocument != null)
                         {
-                            Line = lineSpan.StartLinePosition.Line + 1,
-                            Column = lineSpan.StartLinePosition.Character + 1,
-                            MetadataSource = new MetadataSource()
+                            var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument);
+                            var lineSpan = metadataLocation.GetMappedLineSpan();
+
+                            response = new GotoDefinitionResponse
                             {
-                                AssemblyName = symbol.ContainingAssembly.Name,
-                                ProjectName = document.Project.Name,
-                                TypeName = MetadataHelper.GetSymbolName(symbol)
-                            },
-                        };
+                                Line = lineSpan.StartLinePosition.Line + 1,
+                                Column = lineSpan.StartLinePosition.Character + 1,
+                                MetadataSource = new MetadataSource()
+                                {
+                                    AssemblyName = symbol.ContainingAssembly.Name,
+                                    ProjectName = document.Project.Name,
+                                    TypeName = MetadataHelper.GetSymbolName(symbol)
+                                },
+                            };
+                        }
                     }
-#endif
                 }
             }
 
