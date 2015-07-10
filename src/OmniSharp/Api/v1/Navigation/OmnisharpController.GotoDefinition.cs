@@ -46,12 +46,12 @@ namespace OmniSharp
                     }
                     else if (location.IsInMetadata)
                     {
-                        var cancelationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                        var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancelationSource.Token);
+                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                        var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
                         if (metadataDocument != null)
                         {
-                            cancelationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                            var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancelationSource.Token);
+                            cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                            var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
                             var lineSpan = metadataLocation.GetMappedLineSpan();
 
                             response = new GotoDefinitionResponse
