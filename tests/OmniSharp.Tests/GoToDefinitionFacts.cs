@@ -22,11 +22,12 @@ class Foo {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new OmnisharpController(workspace, null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 2,
-                Column = 14
+                Column = 14,
+                Timeout = 60000
             });
 
             Assert.Equal("foo.cs", definitionResponse.FileName);
@@ -49,11 +50,12 @@ class Foo {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new OmnisharpController(workspace, null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 2,
-                Column = 14
+                Column = 14,
+                Timeout = 60000
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -65,11 +67,12 @@ class Foo {
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 7,
-                Column = 20
+                Column = 20,
+                Timeout = 60000
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -85,11 +88,12 @@ class Foo {
         public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 11,
                 Column = 17,
+                Timeout = 60000
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -104,11 +108,12 @@ class Foo {
         public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 9,
                 Column = 25,
+                Timeout = 60000
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -123,11 +128,12 @@ class Foo {
         public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 12,
                 Column = 26,
+                Timeout = 60000
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -142,11 +148,12 @@ class Foo {
         public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
         {
             var controller = new OmnisharpController(CreateTestWorkspace(), null);
-            var definitionResponse = await controller.GotoDefinition(new Request
+            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 10,
                 Column = 23,
+                Timeout = 60000
             });
 
             Assert.Null(definitionResponse.FileName);

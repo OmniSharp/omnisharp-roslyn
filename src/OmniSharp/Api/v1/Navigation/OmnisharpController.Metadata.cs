@@ -19,7 +19,7 @@ namespace OmniSharp
                 var symbol = compilation.GetTypeByMetadataName(request.TypeName);
                 if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
-                    var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                    var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
                     var document = await MetadataHelper.GetDocumentFromMetadata(project, symbol, cancellationSource.Token);
                     if (document != null)
                     {
