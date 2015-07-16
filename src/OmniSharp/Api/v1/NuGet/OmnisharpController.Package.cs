@@ -7,7 +7,9 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
+#if DNX451
 using NuGet.Protocol.Core.Types;
+#endif
 using OmniSharp.Dnx;
 using OmniSharp.Documentation;
 using OmniSharp.Extensions;
@@ -17,6 +19,7 @@ using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
+#if DNX451
     public partial class OmnisharpController
     {
         [HttpPost("packagesearch")]
@@ -34,7 +37,6 @@ namespace OmniSharp
                 if (request.PackageTypes == null)
                     request.PackageTypes = Enumerable.Empty<string>();
 
-#if DNX451
                 var token = CancellationToken.None;
                 var filter = new SearchFilter()
                 {
@@ -56,13 +58,10 @@ namespace OmniSharp
 
                 var results = await Task.WhenAll(tasks);
                 return MergeResults(results, repos);
-#endif
             }
 
             return new PackageSearchResponse();
         }
-
-#if DNX451
         private PackageSearchResponse MergeResults(IEnumerable<SimpleSearchMetadata>[] results, IEnumerable<SourceRepository> repos)
         {
             var comparer = new global::NuGet.Packaging.Core.PackageIdentityComparer();

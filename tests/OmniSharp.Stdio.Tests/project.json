@@ -13,6 +13,11 @@
     "test": "xunit.runner.dnx"
   },
   "frameworks": {
-    "dnx451": { }
+    "dnx451": { },
+    "dnxcore50": {
+      "dependencies": {
+        "System.Console": "4.0.0-beta-22523"
+      }
+    }
   }
 }
