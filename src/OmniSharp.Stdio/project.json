@@ -13,11 +13,6 @@
         "dnx451": {
             "frameworkAssemblies": {
             }
-        },
-        "dnxcore50": {
-            "dependencies": {
-                "System.Runtime": "4.0.20-beta-22816"
-            }
         }
     }
 }

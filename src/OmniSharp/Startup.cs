@@ -8,10 +8,14 @@ using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
+#if DNX451
+using NuGet.Protocol.Core.Types;
+#endif
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
+using OmniSharp.NuGet;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
@@ -45,7 +49,7 @@ namespace OmniSharp
         }
 
         public IConfiguration Configuration { get; private set; }
-        
+
         public OmnisharpWorkspace Workspace { get; set; }
 
         public void ConfigureServices(IServiceCollection services)

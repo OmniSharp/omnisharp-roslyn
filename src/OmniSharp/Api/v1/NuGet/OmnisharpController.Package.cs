@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,54 +7,52 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
+using NuGet.Protocol.Core.Types;
+using OmniSharp.Dnx;
 using OmniSharp.Documentation;
 using OmniSharp.Extensions;
 using OmniSharp.Intellisense;
 using OmniSharp.Models;
+using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
     public partial class OmnisharpController
     {
         [HttpPost("packagesearch")]
-        public async Task<IEnumerable<AutoCompleteResponse>> PackageSearch(AutoCompleteRequest request)
+        public async IEnumerable<PackageSearchResponse> PackageSearch(PackageSearchRequest request)
         {
-            var documents = _workspace.GetDocuments(request.FileName);
-            var wordToComplete = request.WordToComplete;
-
-            foreach (var document in documents)
+            var document = _workspace.GetDocument(request.FileName);
+            var projectPath = document?.Project?.FilePath;
+            if (!string.IsNullOrWhiteSpace(projectPath))
             {
-                var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-                var model = await document.GetSemanticModelAsync();
+                projectPath = Path.GetDirectoryName(projectPath);
 
-                AddKeywords(model, position, request.WantKind, wordToComplete);
-
-                var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
-
-                foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
-                {
-                    if (request.WantSnippet)
+#if DNX451
+                var token = CancellationToken.None;
+                var tasks = new List<Task<IEnumerable<SimpleSearchMetadata>>>();
+                var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
+                foreach (var repo in repositoryProvider.GetRepositories() {
+                    var resource = await repo.GetResourceAsync<SimpleSearchResource>();
+                    if (resource != null)
                     {
-                        foreach (var completion in MakeSnippetedResponses(request, symbol))
-                        {
-                            _completions.Add(completion);
-                        }
-                    }
-                    else
-                    {
-                        _completions.Add(MakeAutoCompleteResponse(request, symbol));
+                        tasks.Add(resource.Search("jquery", new SearchFilter(), 0, 100, token));
                     }
                 }
+                return await Task.WhenAll(tasks)
+                    .ContinueWith(MergeResults);
+#endif
             }
 
-            return _completions
-                .OrderByDescending(c => c.CompletionText.IsValidCompletionStartsWithExactCase(wordToComplete))
-                .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
-                .ThenByDescending(c => c.CompletionText.IsCamelCaseMatch(wordToComplete))
-                .ThenByDescending(c => c.CompletionText.IsSubsequenceMatch(wordToComplete))
-                .ThenBy(c => c.CompletionText);
-            //return await Task.FromResult(null);
+            return await Task.FromResult(new PackageSearchResponse());
         }
+#if DNX451
+        private async Task<PackageSearchResponse> MergeResults(Task<IEnumerable<SimpleSearchMetadata>[]> task)
+        {
+
+            var result = await task;
+            return result.SelectMany(x => x);
+        }
+#endif
     }
 }
