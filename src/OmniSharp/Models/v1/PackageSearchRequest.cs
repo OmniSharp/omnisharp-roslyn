@@ -1,6 +1,27 @@
+using System.Collections.Generic;
+
 namespace OmniSharp.Models
 {
     public class PackageSearchRequest : Request
     {
+        /// <summary>
+        /// The filter search critera
+        /// </summary>
+        public string Search { get; set; }
+
+        /// <summary>
+        /// Filter to only the list of packages compatible with these frameworks.
+        /// </summary>
+        public IEnumerable<string> SupportedFrameworks { get; set; }
+
+        /// <summary>
+        /// Include prerelease packages in search
+        /// </summary>
+        public bool IncludePrerelease { get; set; }
+
+        /// <summary>
+        /// Restrict the search to certain package types.
+        /// </summary>
+        public IEnumerable<string> PackageTypes { get; set; }
     }
 }

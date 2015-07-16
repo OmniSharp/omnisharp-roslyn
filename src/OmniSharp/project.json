@@ -28,6 +28,7 @@
                 "ICSharpCode.NRefactory": "6.0.0-alpha3",
                 "ScriptCs.Hosting": "0.14.1",
                 "NuGet.Configuration": "3.1.0-*",
+                "NuGet.Packaging.Core": "3.1.0-*",
                 "NuGet.Protocol.Core.v2": "3.1.0-*",
                 "NuGet.Protocol.Core.v3": "3.1.0-*"
             },
