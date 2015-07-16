@@ -20,7 +20,7 @@ namespace OmniSharp
     public partial class OmnisharpController
     {
         [HttpPost("packagesearch")]
-        public async IEnumerable<PackageSearchResponse> PackageSearch(PackageSearchRequest request)
+        public async Task< PackageSearchResponse> PackageSearch(PackageSearchRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var projectPath = document?.Project?.FilePath;
@@ -32,26 +32,26 @@ namespace OmniSharp
                 var token = CancellationToken.None;
                 var tasks = new List<Task<IEnumerable<SimpleSearchMetadata>>>();
                 var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
-                foreach (var repo in repositoryProvider.GetRepositories() {
+                foreach (var repo in repositoryProvider.GetRepositories()) {
                     var resource = await repo.GetResourceAsync<SimpleSearchResource>();
                     if (resource != null)
                     {
                         tasks.Add(resource.Search("jquery", new SearchFilter(), 0, 100, token));
                     }
                 }
-                return await Task.WhenAll(tasks)
-                    .ContinueWith(MergeResults);
+
+                var results = await Task.WhenAll(tasks);
+                return MergeResults(results);
 #endif
             }
 
-            return await Task.FromResult(new PackageSearchResponse());
+            return new PackageSearchResponse();
         }
-#if DNX451
-        private async Task<PackageSearchResponse> MergeResults(Task<IEnumerable<SimpleSearchMetadata>[]> task)
-        {
 
-            var result = await task;
-            return result.SelectMany(x => x);
+#if DNX451
+        private PackageSearchResponse MergeResults(IEnumerable<SimpleSearchMetadata>[] results)
+        {
+            return new PackageSearchResponse();
         }
 #endif
     }
