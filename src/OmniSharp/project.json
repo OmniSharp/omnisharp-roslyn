@@ -17,7 +17,9 @@
         "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
         "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
         "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4",
-        "Microsoft.Composition": "1.0.30"
+        "Microsoft.Composition": "1.0.30",
+        "NuGet.Configuration": "3.1.0-*",
+        "NuGet.Protocol.Core.v3": "3.1.0-*"
     },
     "commands": {
         "omnisharp": "run"
