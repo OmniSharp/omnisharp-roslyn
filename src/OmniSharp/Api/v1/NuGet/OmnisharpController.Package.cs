@@ -73,10 +73,11 @@ namespace OmniSharp
             return new PackageSearchResponse()
             {
                 Sources = repos.Select(x => x.PackageSource.Source),
-                Items = results
+                Packages = results
                     .SelectMany(z => z)
                     .GroupBy(x => x.Identity.Id)
                     .Select(x => x.OrderByDescending(z => z.Identity, comparer).First())
+                    .OrderBy(x => x.Identity.Id)
                     .Select(x => new PackageSearchItem()
                     {
                         Id = x.Identity.Id,
