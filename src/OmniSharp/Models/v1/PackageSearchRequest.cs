@@ -2,8 +2,13 @@ using System.Collections.Generic;
 
 namespace OmniSharp.Models
 {
-    public class PackageSearchRequest : Request
+    public class PackageSearchRequest
     {
+        /// <summary>
+        /// The path to the project file
+        /// </summary>
+        public string ProjectPath { get; set; }
+
         /// <summary>
         /// The filter search critera
         /// </summary>

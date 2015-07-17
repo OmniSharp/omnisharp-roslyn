@@ -7,8 +7,10 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
+using NuGet.Logging;
 #if DNX451
 using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 #endif
 using OmniSharp.Dnx;
 using OmniSharp.Documentation;
@@ -25,12 +27,14 @@ namespace OmniSharp
         [HttpPost("packagesearch")]
         public async Task<PackageSearchResponse> PackageSearch(PackageSearchRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
-            var projectPath = document?.Project?.FilePath;
-            if (!string.IsNullOrWhiteSpace(projectPath))
+            var projectPath = request.ProjectPath;
+            if (request.ProjectPath.EndsWith(".json"))
             {
                 projectPath = Path.GetDirectoryName(projectPath);
+            }
 
+            if (!string.IsNullOrWhiteSpace(projectPath))
+            {
                 if (request.SupportedFrameworks == null)
                     request.SupportedFrameworks = Enumerable.Empty<string>();
 
@@ -62,6 +66,7 @@ namespace OmniSharp
 
             return new PackageSearchResponse();
         }
+
         private PackageSearchResponse MergeResults(IEnumerable<SimpleSearchMetadata>[] results, IEnumerable<SourceRepository> repos)
         {
             var comparer = new global::NuGet.Packaging.Core.PackageIdentityComparer();
@@ -80,6 +85,68 @@ namespace OmniSharp
                     Description = x.Description
                 })
             };
+        }
+
+        [HttpPost("packageversion")]
+        public async Task<PackageVersionResponse> PackageVersion(PackageVersionRequest request)
+        {
+
+            var projectPath = request.ProjectPath;
+            if (request.ProjectPath.EndsWith(".json"))
+            {
+                projectPath = Path.GetDirectoryName(projectPath);
+            }
+
+            if (!string.IsNullOrWhiteSpace(projectPath))
+            {
+                var token = CancellationToken.None;
+                // Temp?
+                var filter = new SearchFilter()
+                {
+                    IncludePrerelease = true
+                };
+                var foundVersions = new List<NuGetVersion>();
+                var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
+                var repos = repositoryProvider.GetRepositories().ToArray();
+                foreach (var repo in repos)
+                {
+                    /*
+                    var resource = await repo.GetResourceAsync<FindPackageByIdResource>();
+                    if (resource != null)
+                    {
+                        try
+                        {
+                            resource.Logger = NullLogger.Instance;
+                            resource.NoCache = true;
+                            foundVersions.AddRange(await resource.GetAllVersionsAsync(request.Id, token));
+                        }
+                        catch (NuGetProtocolException)
+                        {
+                            // We can ignore this exception, package was not found on feed.
+                        }
+                    }*/
+                    var resource = await repo.GetResourceAsync<SimpleSearchResource>();
+                    if (resource != null)
+                    {
+                        var result = await resource.Search(request.Id, filter, 0, 50, token);
+                        var package = result.FirstOrDefault(z => z.Identity.Id == request.Id);
+                        if (package != null)
+                            foundVersions.AddRange(package.AllVersions);
+                    }
+                }
+
+                var comparer = new VersionComparer();
+                var versions = Enumerable.Distinct<NuGetVersion>(foundVersions, comparer)
+                    .OrderByDescending(z => z, comparer)
+                    .Select(z => z.ToNormalizedString());
+
+                return new PackageVersionResponse()
+                {
+                    Versions = versions
+                };
+            }
+
+            return new PackageVersionResponse();
         }
     }
 #endif
