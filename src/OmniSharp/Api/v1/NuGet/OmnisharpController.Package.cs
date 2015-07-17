@@ -7,8 +7,8 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
-using NuGet.Logging;
 #if DNX451
+using NuGet.Logging;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 #endif
@@ -74,16 +74,16 @@ namespace OmniSharp
             {
                 Sources = repos.Select(x => x.PackageSource.Source),
                 Items = results
-                .SelectMany(z => z)
-                .GroupBy(x => x.Identity.Id)
-                .Select(x => x.OrderByDescending(z => z.Identity, comparer).First())
-                .Select(x => new PackageSearchItem()
-                {
-                    Id = x.Identity.Id,
-                    Version = x.Identity.Version.ToNormalizedString(),
-                    HasVersion = x.Identity.HasVersion,
-                    Description = x.Description
-                })
+                    .SelectMany(z => z)
+                    .GroupBy(x => x.Identity.Id)
+                    .Select(x => x.OrderByDescending(z => z.Identity, comparer).First())
+                    .Select(x => new PackageSearchItem()
+                    {
+                        Id = x.Identity.Id,
+                        Version = x.Identity.Version.ToNormalizedString(),
+                        HasVersion = x.Identity.HasVersion,
+                        Description = x.Description
+                    })
             };
         }
 
@@ -110,20 +110,15 @@ namespace OmniSharp
                 var repos = repositoryProvider.GetRepositories().ToArray();
                 foreach (var repo in repos)
                 {
+                    // TODO: Swap when bug is fixed
+                    // https://github.com/NuGet/NuGet3/pull/90
                     /*
                     var resource = await repo.GetResourceAsync<FindPackageByIdResource>();
                     if (resource != null)
                     {
-                        try
-                        {
-                            resource.Logger = NullLogger.Instance;
-                            resource.NoCache = true;
-                            foundVersions.AddRange(await resource.GetAllVersionsAsync(request.Id, token));
-                        }
-                        catch (NuGetProtocolException)
-                        {
-                            // We can ignore this exception, package was not found on feed.
-                        }
+                        resource.Logger = NullLogger.Instance;
+                        resource.NoCache = true;
+                        foundVersions.AddRange(await resource.GetAllVersionsAsync(request.Id, token));
                     }*/
                     var resource = await repo.GetResourceAsync<SimpleSearchResource>();
                     if (resource != null)
