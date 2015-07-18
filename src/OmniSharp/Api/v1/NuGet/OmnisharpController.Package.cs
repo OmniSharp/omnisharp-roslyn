@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 #if DNX451
 using NuGet.Logging;
+using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 #endif
@@ -51,6 +52,7 @@ namespace OmniSharp
                 var tasks = new List<Task<IEnumerable<SimpleSearchMetadata>>>();
                 var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
                 var repos = repositoryProvider.GetRepositories().ToArray();
+
                 foreach (var repo in repos)
                 {
                     var resource = await repo.GetResourceAsync<SimpleSearchResource>();
@@ -69,21 +71,21 @@ namespace OmniSharp
 
         private PackageSearchResponse MergeResults(IEnumerable<SimpleSearchMetadata>[] results, IEnumerable<SourceRepository> repos)
         {
-            var comparer = new global::NuGet.Packaging.Core.PackageIdentityComparer();
+            var comparer = new PackageIdentityComparer();
             return new PackageSearchResponse()
             {
-                Sources = repos.Select(x => x.PackageSource.Source),
+                Sources = repos.Select(repo => repo.PackageSource.Source),
                 Packages = results
-                    .SelectMany(z => z)
-                    .GroupBy(x => x.Identity.Id)
-                    .Select(x => x.OrderByDescending(z => z.Identity, comparer).First())
-                    .OrderBy(x => x.Identity.Id)
-                    .Select(x => new PackageSearchItem()
+                    .SelectMany(metadata => metadata)
+                    .GroupBy(metadata => metadata.Identity.Id)
+                    .Select(metadataGroup => metadataGroup.OrderByDescending(metadata => metadata.Identity, comparer).First())
+                    .OrderBy(metadata => metadata.Identity.Id)
+                    .Select(metadata => new PackageSearchItem()
                     {
-                        Id = x.Identity.Id,
-                        Version = x.Identity.Version.ToNormalizedString(),
-                        HasVersion = x.Identity.HasVersion,
-                        Description = x.Description
+                        Id = metadata.Identity.Id,
+                        Version = metadata.Identity.Version.ToNormalizedString(),
+                        HasVersion = metadata.Identity.HasVersion,
+                        Description = metadata.Description
                     })
             };
         }
@@ -91,7 +93,6 @@ namespace OmniSharp
         [HttpPost("packageversion")]
         public async Task<PackageVersionResponse> PackageVersion(PackageVersionRequest request)
         {
-
             var projectPath = request.ProjectPath;
             if (request.ProjectPath.EndsWith(".json"))
             {
@@ -101,10 +102,10 @@ namespace OmniSharp
             if (!string.IsNullOrWhiteSpace(projectPath))
             {
                 var token = CancellationToken.None;
-                // Temp?
-                var filter = new SearchFilter()
+
+                var filter = new SearchFilter
                 {
-                    IncludePrerelease = true
+                    IncludePrerelease = request.IncludePrerelease
                 };
                 var foundVersions = new List<NuGetVersion>();
                 var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
@@ -125,7 +126,7 @@ namespace OmniSharp
                     if (resource != null)
                     {
                         var result = await resource.Search(request.Id, filter, 0, 50, token);
-                        var package = result.FirstOrDefault(z => z.Identity.Id == request.Id);
+                        var package = result.FirstOrDefault(metadata => metadata.Identity.Id == request.Id);
                         if (package != null)
                             foundVersions.AddRange(package.AllVersions);
                     }
@@ -133,8 +134,8 @@ namespace OmniSharp
 
                 var comparer = new VersionComparer();
                 var versions = Enumerable.Distinct<NuGetVersion>(foundVersions, comparer)
-                    .OrderByDescending(z => z, comparer)
-                    .Select(z => z.ToNormalizedString());
+                    .OrderByDescending(version => version, comparer)
+                    .Select(version => version.ToNormalizedString());
 
                 return new PackageVersionResponse()
                 {

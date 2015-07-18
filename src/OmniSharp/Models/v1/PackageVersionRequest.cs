@@ -13,5 +13,10 @@ namespace OmniSharp.Models
         /// The id of the package to look up the versions
         /// </summary>
         public string Id { get; set; }
+
+        /// <summary>
+        /// Include pre-release version numbers
+        /// <summary>
+        public bool IncludePrerelease { get; set; } = true;
     }
 }
