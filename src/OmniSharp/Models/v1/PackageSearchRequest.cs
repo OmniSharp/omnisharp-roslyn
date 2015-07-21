@@ -10,6 +10,11 @@ namespace OmniSharp.Models
         public string ProjectPath { get; set; }
 
         /// <summary>
+        /// The sources to search for the given package
+        /// </summary>
+        public IEnumerable<string> Sources { get; set; }
+
+        /// <summary>
         /// The filter search critera
         /// </summary>
         public string Search { get; set; }

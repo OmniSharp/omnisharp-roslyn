@@ -25,6 +25,29 @@ namespace OmniSharp
 #if DNX451
     public partial class OmnisharpController
     {
+        [HttpPost("packagesource")]
+        public PackageSourceResponse PackageSource(PackageSourceRequest request)
+        {
+            var projectPath = request.ProjectPath;
+            if (request.ProjectPath.EndsWith(".json"))
+            {
+                projectPath = Path.GetDirectoryName(projectPath);
+            }
+
+            if (!string.IsNullOrWhiteSpace(projectPath))
+            {
+                var tasks = new List<Task<IEnumerable<SimpleSearchMetadata>>>();
+                var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
+                var repos = repositoryProvider.GetRepositories().ToArray();
+                return new PackageSourceResponse()
+                {
+                    Sources = repos.Select(x => x.PackageSource.Source)
+                };
+            }
+
+            return new PackageSourceResponse();
+        }
+
         [HttpPost("packagesearch")]
         public async Task<PackageSearchResponse> PackageSearch(PackageSearchRequest request)
         {
@@ -42,6 +65,9 @@ namespace OmniSharp
                 if (request.PackageTypes == null)
                     request.PackageTypes = Enumerable.Empty<string>();
 
+                if (request.Sources == null)
+                    request.Sources = Enumerable.Empty<string>();
+
                 var token = CancellationToken.None;
                 var filter = new SearchFilter()
                 {
@@ -52,6 +78,10 @@ namespace OmniSharp
                 var tasks = new List<Task<IEnumerable<SimpleSearchMetadata>>>();
                 var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
                 var repos = repositoryProvider.GetRepositories().ToArray();
+                if (request.Sources.Any()) {
+                    // Reduce to just the sources we requested
+                    repos = repos.Join(request.Sources, x => x.PackageSource.Source, x => x, (x, y) => x).ToArray();
+                }
 
                 foreach (var repo in repos)
                 {
@@ -74,7 +104,6 @@ namespace OmniSharp
             var comparer = new PackageIdentityComparer();
             return new PackageSearchResponse()
             {
-                Sources = repos.Select(repo => repo.PackageSource.Source),
                 Packages = results
                     .SelectMany(metadata => metadata)
                     .GroupBy(metadata => metadata.Identity.Id)
