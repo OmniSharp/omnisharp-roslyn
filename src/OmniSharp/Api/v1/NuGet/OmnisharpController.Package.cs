@@ -78,7 +78,8 @@ namespace OmniSharp
                 var tasks = new List<Task<IEnumerable<SimpleSearchMetadata>>>();
                 var repositoryProvider = new OmniSharpSourceRepositoryProvider(projectPath);
                 var repos = repositoryProvider.GetRepositories().ToArray();
-                if (request.Sources.Any()) {
+                if (request.Sources.Any())
+                {
                     // Reduce to just the sources we requested
                     repos = repos.Join(request.Sources, x => x.PackageSource.Source, x => x, (x, y) => x).ToArray();
                 }
