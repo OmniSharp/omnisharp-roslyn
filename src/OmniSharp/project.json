@@ -38,7 +38,6 @@
                 "Microsoft.Build": "",
                 "Microsoft.Build.Engine": "",
                 "Microsoft.Build.Framework": ""
-
             }
         },
         "dnxcore50": {
