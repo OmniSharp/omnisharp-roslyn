@@ -63,7 +63,7 @@ namespace OmniSharp.Dnx
                 using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
                     var t1 = DateTime.UtcNow;
-                    var dthTimeout = TimeSpan.FromSeconds(4);
+                    var dthTimeout = TimeSpan.FromSeconds(10);
                     while (!socket.Connected && DateTime.UtcNow - t1 < dthTimeout)
                     {
                         Thread.Sleep(500);
@@ -75,6 +75,13 @@ namespace OmniSharp.Dnx
                         {
                             // this happens when the DTH isn't listening yet
                         }
+                    }
+
+                    if (!socket.Connected)
+                    {
+                        // reached timeout
+                        _logger.LogError("Failed to launch DesignTimeHost in a timely fashion.");
+                        return;
                     }
                 }
 
@@ -98,7 +105,7 @@ namespace OmniSharp.Dnx
                 onConnected(port);
             }
         }
-        
+
         public void Stop()
         {
             lock (_processLock)
