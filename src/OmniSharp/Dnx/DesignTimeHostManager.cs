@@ -35,10 +35,10 @@ namespace OmniSharp.Dnx
 
                 int port = GetFreePort();
 
+                var dthPath = Path.Combine(_paths.RuntimePath.Value, "bin", "lib", "Microsoft.Dnx.DesignTimeHost", "Microsoft.Dnx.DesignTimeHost.dll");
                 // TODO: This is for backcompat. Once the dust settles, and MS.Framework.DTH goes away, remove this.
-                var dthPath = Path.Combine(_paths.RuntimePath.Value, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll");
                 if (!File.Exists(dthPath))
-                  dthPath = Path.Combine(_paths.RuntimePath.Value, "bin", "lib", "Microsoft.Dnx.DesignTimeHost", "Microsoft.Dnx.DesignTimeHost.dll");
+                  dthPath = Path.Combine(_paths.RuntimePath.Value, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll");
 
                 var psi = new ProcessStartInfo
                 {
