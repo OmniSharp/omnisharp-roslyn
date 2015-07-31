@@ -16,7 +16,7 @@ namespace OmniSharp.Tests
                 { "a.cs", "class C { int n = true; }" }
             });
 
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var quickFixes = await controller.CodeCheck(new Request() { FileName = "a.cs" });
 
             Assert.Equal(1, quickFixes.QuickFixes.Count());
@@ -32,7 +32,7 @@ namespace OmniSharp.Tests
                 { "b.cs", "class C2 { int n = true; }" },
             });
 
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var quickFixes = await controller.CodeCheck(new Request());
 
             Assert.Equal(2, quickFixes.QuickFixes.Count());
