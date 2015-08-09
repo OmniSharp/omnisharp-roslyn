@@ -30,9 +30,17 @@ namespace OmniSharp.Roslyn
             }
 
             var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
+            string buffer = request.Buffer;
+            var updateRequest = request as UpdateBufferRequest;
+
+            if (updateRequest != null && updateRequest.FromDisk)
+            {
+                buffer = File.ReadAllText(updateRequest.FileName);
+            }
+ 
             if (!documentIds.IsEmpty)
             {
-                var sourceText = SourceText.From(request.Buffer);
+                var sourceText = SourceText.From(buffer);
                 foreach (var documentId in documentIds)
                 {
                     _workspace.OnDocumentChanged(documentId, sourceText);
@@ -40,7 +48,7 @@ namespace OmniSharp.Roslyn
             }
             else
             {
-                TryAddTransientDocument(request.FileName, request.Buffer);
+                TryAddTransientDocument(request.FileName, buffer);
             }
         }
 
