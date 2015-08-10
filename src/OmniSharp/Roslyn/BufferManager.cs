@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn
         private readonly IDictionary<string, IEnumerable<DocumentId>> _transientDocuments = new Dictionary<string, IEnumerable<DocumentId>>(StringComparer.OrdinalIgnoreCase);
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
-
+        
         public BufferManager(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
@@ -24,19 +24,22 @@ namespace OmniSharp.Roslyn
 
         public void UpdateBuffer(Request request)
         {
-            if (request.Buffer == null || request.FileName == null)
+            string buffer = request.Buffer;
+            
+            var updateRequest = request as UpdateBufferRequest;
+
+            if (updateRequest != null && updateRequest.FromDisk)
+            {
+                
+                buffer = File.ReadAllText(updateRequest.FileName);
+            }
+
+            if (buffer == null || request.FileName == null)
             {
                 return;
             }
 
             var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
-            string buffer = request.Buffer;
-            var updateRequest = request as UpdateBufferRequest;
-
-            if (updateRequest != null && updateRequest.FromDisk)
-            {
-                buffer = File.ReadAllText(updateRequest.FileName);
-            }
  
             if (!documentIds.IsEmpty)
             {
