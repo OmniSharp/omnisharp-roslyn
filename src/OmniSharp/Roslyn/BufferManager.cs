@@ -30,7 +30,6 @@ namespace OmniSharp.Roslyn
 
             if (updateRequest != null && updateRequest.FromDisk)
             {
-                
                 buffer = File.ReadAllText(updateRequest.FileName);
             }
 
