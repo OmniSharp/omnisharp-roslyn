@@ -233,7 +233,7 @@ namespace OmniSharp.Tests
         private async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(sources);
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var request = CreateRequest(sources[currentFile], currentFile, excludeDefinition);
             request.OnlyThisFile = onlyThisFile;
             var bufferFilter = new UpdateBufferFilter(workspace);

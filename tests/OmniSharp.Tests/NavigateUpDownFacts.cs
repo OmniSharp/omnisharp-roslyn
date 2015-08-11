@@ -726,7 +726,7 @@ namespace OmniSharp.Tests
         {
             var initialCursorLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContent));
             var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContent);
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var request = new Request
             {
                 Line = initialCursorLineColumn.Line,

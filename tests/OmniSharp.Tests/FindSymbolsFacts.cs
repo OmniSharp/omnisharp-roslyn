@@ -186,14 +186,14 @@ namespace OmniSharp.Tests
         private async Task<QuickFixResponse> FindSymbols(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             return await controller.FindSymbols();
         }
 
         private async Task<QuickFixResponse> FindSymbolsWithFilter(string source, string filter)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var request = new FindSymbolsRequest { Filter = filter };
             return await controller.FindSymbols(request);
         }

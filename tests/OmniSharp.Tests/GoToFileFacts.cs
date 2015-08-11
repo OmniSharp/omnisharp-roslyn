@@ -17,7 +17,7 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var response = controller.GoToFile(new Request());
 
             Assert.Equal(2, response.QuickFixes.Count());
@@ -29,7 +29,7 @@ namespace OmniSharp.Tests
         public void ReturnsEmptyResponseForEmptyWorskpace()
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var response = controller.GoToFile(new Request());
 
             Assert.Equal(0, response.QuickFixes.Count());
