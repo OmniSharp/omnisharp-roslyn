@@ -7,6 +7,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
@@ -138,6 +139,7 @@ namespace OmniSharp.Tests
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
             var workspace = Startup.CreateWorkspace();
+            workspace.Options.WithChangedOption(FormattingOptions.TabSize, LanguageNames.CSharp, 4);
             AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
             return workspace;
         }
