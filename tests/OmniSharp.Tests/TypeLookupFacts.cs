@@ -13,7 +13,7 @@ namespace OmniSharp.Tests
             
             var workspace = TestHelpers.CreateCsxWorkspace(source1);
             
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var response = await controller.TypeLookup(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 8 });
             
             Assert.Equal("Foo", response.Type);   
@@ -28,7 +28,7 @@ namespace OmniSharp.Tests
             
             var workspace = TestHelpers.CreateSimpleWorkspace(source1);
             
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var response = await controller.TypeLookup(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
             
             Assert.Equal("Bar.Foo", response.Type);   

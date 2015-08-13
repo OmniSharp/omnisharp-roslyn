@@ -12,7 +12,7 @@ namespace OmniSharp.Tests
         private async Task<RenameResponse> SendRequest(OmnisharpWorkspace workspace, string renameTo, string filename, string fileContent, bool wantsTextChanges = false)
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(fileContent);
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             var request = new RenameRequest
             {
                 Line = lineColumn.Line,

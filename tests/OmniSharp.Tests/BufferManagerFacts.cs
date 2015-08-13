@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.Models;
 using Xunit;
 
@@ -50,6 +52,22 @@ namespace OmniSharp.Tests
             {
                 Assert.Equal(Path.Combine("src", "project.json"), document.Project.FilePath);
             }
+        }
+
+        [Fact]
+        public async Task UpdateBufferReadsFromDisk()
+        {
+            var code = "public class MyClass {}";
+            string fileName = Path.GetTempPath() + Guid.NewGuid().ToString() + ".cs";
+            var workspace = TestHelpers.CreateSimpleWorkspace("", fileName);
+
+            File.WriteAllText(fileName, code);
+            workspace.BufferManager.UpdateBuffer(new UpdateBufferRequest { FileName = fileName, FromDisk = true });
+
+            var document = workspace.GetDocument(fileName);
+            var text = await document.GetTextAsync();
+
+            Assert.Equal(code, text.ToString());
         }
 
         [Fact]

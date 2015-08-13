@@ -10,7 +10,7 @@ namespace OmniSharp.Tests
         private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out OmnisharpController controller, out DocumentInfo document, string filename, string contents)
         {
             workspace = new OmnisharpWorkspace();
-            controller = new OmnisharpController(workspace, null);
+            controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
                 "ProjectNameVal", "AssemblyNameVal", LanguageNames.CSharp);

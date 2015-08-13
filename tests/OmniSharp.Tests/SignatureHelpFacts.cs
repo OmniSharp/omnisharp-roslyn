@@ -371,7 +371,7 @@ namespace OmniSharp.Tests
             };
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
             return await controller.GetSignatureHelp(request);
         }
     }
