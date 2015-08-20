@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Filters;
@@ -9,7 +9,12 @@ namespace OmniSharp.Tests
 {
     public class RenameFacts
     {
-        private async Task<RenameResponse> SendRequest(OmnisharpWorkspace workspace, string renameTo, string filename, string fileContent, bool wantsTextChanges = false)
+        private async Task<RenameResponse> SendRequest(OmnisharpWorkspace workspace,
+                                                       string renameTo,
+                                                       string filename,
+                                                       string fileContent,
+                                                       bool wantsTextChanges = false,
+                                                       bool applyTextChanges = true)
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(fileContent);
             var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
@@ -20,7 +25,8 @@ namespace OmniSharp.Tests
                 RenameTo = renameTo,
                 FileName = filename,
                 Buffer = fileContent.Replace("$", ""),
-                WantsTextChanges = wantsTextChanges
+                WantsTextChanges = wantsTextChanges,
+                ApplyTextChanges = applyTextChanges
             };
 
             var bufferFilter = new UpdateBufferFilter(workspace);
@@ -43,7 +49,7 @@ namespace OmniSharp.Tests
                         }";
 
             var workspace = TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
-            var result = await SendRequest(workspace, "foo", "test.cs", fileContent);
+            var result = await SendRequest(workspace, "foo", "test.cs", fileContent, applyTextChanges: true);
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
@@ -64,6 +70,30 @@ namespace OmniSharp.Tests
                                 public string Buffer { get; set; }
                             }
                         }", result.Changes.First().Buffer);
+        }
+
+        [Fact]
+        public async Task Rename_DoesNotUpdatesWorkspace()
+        {
+            const string fileContent = @"using System;
+
+                        namespace OmniSharp.Models
+                        {
+                            public class CodeFormat$Response
+                            {
+                                public string Buffer { get; set; }
+                            }
+                        }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var result = await SendRequest(workspace, "foo", "test.cs", fileContent, applyTextChanges: false);
+
+            var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
+            var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
+
+
+            // check that the workspace has not been updated
+            Assert.Equal(fileContent.Replace("$", ""), sourceText.ToString());
         }
 
         [Fact]

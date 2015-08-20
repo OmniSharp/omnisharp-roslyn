@@ -73,8 +73,15 @@ namespace OmniSharp
                     }
                 }
 
-                // Attempt to update the workspace
-                if (_workspace.TryApplyChanges(solution))
+                if (request.ApplyTextChanges)
+                {
+                    // Attempt to update the workspace
+                    if (_workspace.TryApplyChanges(solution))
+                    {
+                        response.Changes = changes.Values;
+                    }
+                }
+                else
                 {
                     response.Changes = changes.Values;
                 }
