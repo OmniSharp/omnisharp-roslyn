@@ -22,33 +22,54 @@ namespace OmniSharp.Roslyn
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
 
-        public void UpdateBuffer(Request request)
+        public async Task UpdateBuffer(Request request)
         {
-            string buffer = request.Buffer;
-            
-            var updateRequest = request as UpdateBufferRequest;
+            var buffer = request.Buffer;
+            var changes = request.Changes;
 
+            var updateRequest = request as UpdateBufferRequest;
             if (updateRequest != null && updateRequest.FromDisk)
             {
                 buffer = File.ReadAllText(updateRequest.FileName);
             }
 
-            if (buffer == null || request.FileName == null)
+            if (request.FileName == null || (buffer == null && changes == null))
             {
                 return;
             }
 
             var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
- 
             if (!documentIds.IsEmpty)
             {
-                var sourceText = SourceText.From(buffer);
-                foreach (var documentId in documentIds)
+                if (changes == null)
                 {
-                    _workspace.OnDocumentChanged(documentId, sourceText);
+                    var sourceText = SourceText.From(buffer);
+                    foreach (var documentId in documentIds)
+                    {
+                        _workspace.OnDocumentChanged(documentId, sourceText);
+                    }
+                }
+                else
+                {
+                    foreach (var documentId in documentIds)
+                    {
+                        var document = _workspace.CurrentSolution.GetDocument(documentId);
+                        var sourceText = await document.GetTextAsync();
+
+                        foreach (var change in request.Changes)
+                        {
+                            var startOffset = sourceText.Lines.GetPosition(new LinePosition(change.StartLine - 1, change.StartColumn - 1));
+                            var endOffset = sourceText.Lines.GetPosition(new LinePosition(change.EndLine - 1, change.EndColumn - 1));
+
+                            sourceText = sourceText.WithChanges(new[] {
+                                new TextChange(new TextSpan(startOffset, endOffset - startOffset), change.NewText)
+                            });
+                        }
+                        _workspace.OnDocumentChanged(documentId, sourceText);
+                    }
                 }
             }
-            else
+            else if(buffer != null)
             {
                 TryAddTransientDocument(request.FileName, buffer);
             }
