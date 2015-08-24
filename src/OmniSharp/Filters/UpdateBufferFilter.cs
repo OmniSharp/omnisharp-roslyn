@@ -17,14 +17,14 @@ namespace OmniSharp.Filters
         {
         }
 
-        public void OnActionExecuting(ActionExecutingContext context)
+        public async void OnActionExecuting(ActionExecutingContext context)
         {
             if (context.ActionArguments.Any())
             {
                 var request = context.ActionArguments.FirstOrDefault(arg => arg.Value is Request);
                 if (request.Value != null)
                 {
-                    _workspace.BufferManager.UpdateBuffer((Request)request.Value);
+                    await _workspace.BufferManager.UpdateBuffer((Request)request.Value);
                 }
             }
         }
