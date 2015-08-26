@@ -1,3 +1,4 @@
+#if DNX451
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -164,8 +165,6 @@ namespace OmniSharp
             }
 
             //Sort usings
-            //TODO: Sorting usings is not available as a public service in Roslyn yet.
-            //When it is, replace the NRefactory based provider with the Roslyn one.
             var nRefactoryProvider = new NRefactoryCodeActionProvider();
             var sortActions = new List<CodeAction>();
             var refactoringContext = await GetRefactoringContext(document, sortActions);
@@ -274,3 +273,4 @@ namespace OmniSharp
         }
     }
 }
+#endif

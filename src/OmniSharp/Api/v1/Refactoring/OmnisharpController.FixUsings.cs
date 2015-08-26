@@ -5,6 +5,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
+#if DNX451
     public partial class OmnisharpController
     {
         [HttpPost("fixusings")]
@@ -23,4 +24,5 @@ namespace OmniSharp
             return response;
         }
     }
+#endif
 }
