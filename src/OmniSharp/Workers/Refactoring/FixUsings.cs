@@ -30,8 +30,6 @@ namespace OmniSharp
             var ambiguous = await AddMissingUsings();
             await RemoveUsings();
             await SortUsings();
-            var compilationUnitSyntax = (await AddLinqQuerySyntax());
-            _document = _document.WithSyntaxRoot(compilationUnitSyntax);
 
             var response = new FixUsingsResponse();
             response.AmbiguousResults = ambiguous;
@@ -56,10 +54,9 @@ namespace OmniSharp
                 {
                     _document = _workspace.GetDocument(_document.FilePath);
                     _semanticModel = await _document.GetSemanticModelAsync();
-                    var sourceText = (await _document.GetTextAsync());
                     var diagnostics = _semanticModel.GetDiagnostics();
                     var location = node.Identifier.Span;
-                    var usingOperations = new Dictionary<string, CodeActionOperation>();
+
                     //Restrict diagnostics only to missing usings
                     var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location) &&
                             (d.Id == "CS0246" || d.Id == "CS1061" || d.Id == "CS0103")).ToImmutableArray();
@@ -71,23 +68,12 @@ namespace OmniSharp
                         {
                             continue;
                         }
-                        var usingActions = GetUsingActions(new RoslynCodeActionProvider(), pointDiagnostics, "using");
-                        foreach (var action in usingActions)
-                        {
-                            var operations = await action.GetOperationsAsync(CancellationToken.None).ConfigureAwait(false);
-                            if (operations != null)
-                            {
-                                foreach (var codeOperation in operations)
-                                {
-                                    usingOperations.Add(action.Title, codeOperation);
-                                }
-                            }
-                        }
+                        var usingOperations = await GetUsingActions(new RoslynCodeActionProvider(), pointDiagnostics, "using");
 
                         if (usingOperations.Count() == 1)
                         {
                             //Only one operation - apply it
-                            usingOperations.Single().Value.Apply(_workspace, CancellationToken.None);
+                            usingOperations.Single().Apply(_workspace, CancellationToken.None);
                             updated = true;
                         }
                         else if (usingOperations.Count() > 1)
@@ -139,19 +125,13 @@ namespace OmniSharp
                     {
                         continue;
                     }
-                    var usingActions = GetUsingActions(codeActionProvider, pointDiagnostics, "Remove Unnecessary Usings");
-                    foreach (var action in usingActions)
+                    var usingActions = await GetUsingActions(codeActionProvider, pointDiagnostics, "Remove Unnecessary Usings");
+
+                    foreach (var codeOperation in usingActions)
                     {
-                        var operations = await action.GetOperationsAsync(CancellationToken.None).ConfigureAwait(false);
-                        if (operations != null)
+                        if (codeOperation != null)
                         {
-                            foreach (var codeOperation in operations)
-                            {
-                                if (codeOperation != null)
-                                {
-                                    codeOperation.Apply(_workspace, CancellationToken.None);
-                                }
-                            }
+                            codeOperation.Apply(_workspace, CancellationToken.None);
                         }
                     }
                 }
@@ -168,14 +148,10 @@ namespace OmniSharp
             var refactoringContext = await GetRefactoringContext(_document, sortActions);
             if (refactoringContext != null)
             {
-                foreach (var refactoring in nRefactoryProvider.Refactorings)
-                {
-                    if (refactoring.ToString() != "ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction")
-                    {
-                        continue;
-                    }
-                    await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
-                }
+                var sortUsingsAction = nRefactoryProvider.Refactorings
+                    .First(r => r is ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction);
+
+                await sortUsingsAction.ComputeRefactoringsAsync(refactoringContext.Value);
 
                 foreach (var action in sortActions)
                 {
@@ -196,20 +172,19 @@ namespace OmniSharp
 
         private static async Task<CodeRefactoringContext?> GetRefactoringContext(Document document, List<CodeAction> actionsDestination)
         {
-            var firstUsing = (await document.GetSyntaxTreeAsync()).GetRoot().DescendantNodes().Where(n => n is UsingDirectiveSyntax);
-            if (firstUsing.Count() == 0)
+            var firstUsing = (await document.GetSyntaxTreeAsync()).GetRoot().DescendantNodes().FirstOrDefault(n => n is UsingDirectiveSyntax);
+            if (firstUsing == null)
             {
                 return null;
             }
-            var location = firstUsing.First().GetLocation().SourceSpan;
+            var location = firstUsing.GetLocation().SourceSpan;
 
             return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
-        private IEnumerable<CodeAction> GetUsingActions(ICodeActionProvider codeActionProvider,
+        private async Task<IEnumerable<CodeActionOperation>> GetUsingActions(ICodeActionProvider codeActionProvider,
                 ImmutableArray<Diagnostic> pointDiagnostics, string actionPrefix)
         {
-
             var actions = new List<CodeAction>();
             var context = new CodeFixContext(_document, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actions.Add(a), CancellationToken.None);
             var providers = codeActionProvider.CodeFixes;
@@ -222,50 +197,15 @@ namespace OmniSharp
             }
 #pragma warning restore 4014
 
-            return actions.Where(a => a.Title.StartsWith(actionPrefix));
-        }
-
-        private async Task<CompilationUnitSyntax> AddLinqQuerySyntax()
-        {
-            var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
-            var compilationUnitSyntax = (CompilationUnitSyntax)syntaxNode;
-            var usings = GetUsings(syntaxNode);
-            if (HasLinqQuerySyntax(_semanticModel, syntaxNode) && !usings.Contains("using System.Linq;"))
-            {
-                var linqName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName("System"),
-                        SyntaxFactory.IdentifierName("Linq"));
-                var linq = SyntaxFactory.UsingDirective(linqName).NormalizeWhitespace()
-                            .WithTrailingTrivia(SyntaxFactory.Whitespace(Environment.NewLine));
-                compilationUnitSyntax = compilationUnitSyntax.AddUsings(linq);
-            }
-
-            return compilationUnitSyntax;
+            var tasks = actions.Where(a => a.Title.StartsWith(actionPrefix))
+                    .Select(async a => await a.GetOperationsAsync(CancellationToken.None)).ToList();
+            return (await Task.WhenAll(tasks)).SelectMany(x => x);
         }
 
         private static HashSet<string> GetUsings(SyntaxNode root)
         {
             var usings = root.DescendantNodes().OfType<UsingDirectiveSyntax>().Select(u => u.ToString().Trim());
             return new HashSet<string>(usings);
-        }
-
-        private static bool HasLinqQuerySyntax(SemanticModel semanticModel, SyntaxNode syntaxNode)
-        {
-            return syntaxNode.DescendantNodes()
-                .Any(x => x.Kind() == SyntaxKind.QueryExpression
-                        || x.Kind() == SyntaxKind.QueryBody
-                        || x.Kind() == SyntaxKind.FromClause
-                        || x.Kind() == SyntaxKind.LetClause
-                        || x.Kind() == SyntaxKind.JoinClause
-                        || x.Kind() == SyntaxKind.JoinClause
-                        || x.Kind() == SyntaxKind.JoinIntoClause
-                        || x.Kind() == SyntaxKind.WhereClause
-                        || x.Kind() == SyntaxKind.OrderByClause
-                        || x.Kind() == SyntaxKind.AscendingOrdering
-                        || x.Kind() == SyntaxKind.DescendingOrdering
-                        || x.Kind() == SyntaxKind.SelectClause
-                        || x.Kind() == SyntaxKind.GroupClause
-                        || x.Kind() == SyntaxKind.QueryContinuation
-                    );
         }
     }
 }
