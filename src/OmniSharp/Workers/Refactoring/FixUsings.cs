@@ -28,7 +28,8 @@ namespace OmniSharp
             _document = document;
             _semanticModel = await document.GetSemanticModelAsync();
             var ambiguous = await AddMissingUsings();
-            await OrganizeUsings();
+            await RemoveUsings();
+            await SortUsings();
             var compilationUnitSyntax = (await AddLinqQuerySyntax());
             _document = _document.WithSyntaxRoot(compilationUnitSyntax);
 
@@ -112,7 +113,7 @@ namespace OmniSharp
             return ambiguous;
         }
 
-        private async Task OrganizeUsings()
+        private async Task RemoveUsings()
         {
             var codeActionProvider = new RoslynCodeActionProvider();
             //Remove unneccessary usings
@@ -156,6 +157,11 @@ namespace OmniSharp
                 }
             }
 
+            return;
+        }
+
+        private async Task SortUsings()
+        {
             //Sort usings
             var nRefactoryProvider = new NRefactoryCodeActionProvider();
             var sortActions = new List<CodeAction>();
@@ -186,8 +192,6 @@ namespace OmniSharp
                     }
                 }
             }
-
-            return;
         }
 
         private static async Task<CodeRefactoringContext?> GetRefactoringContext(Document document, List<CodeAction> actionsDestination)
