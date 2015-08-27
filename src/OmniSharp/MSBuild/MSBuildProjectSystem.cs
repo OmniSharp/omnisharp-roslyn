@@ -243,7 +243,7 @@ namespace OmniSharp.MSBuild
                     : new CSharpParseOptions();
                 if (projectFileInfo.DefineConstants != null && projectFileInfo.DefineConstants.Any())
                 {
-                    parseOptions.WithPreprocessorSymbols(projectFileInfo.DefineConstants);
+                    parseOptions = parseOptions.WithPreprocessorSymbols(projectFileInfo.DefineConstants);
                 }
                 _workspace.SetParseOptions(project.Id, parseOptions);
             }
