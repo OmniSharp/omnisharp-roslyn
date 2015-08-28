@@ -42,7 +42,7 @@ namespace OmniSharp
                             Column = lineSpan.StartLinePosition.Character + 1
                         };
                     }
-                    else if (location.IsInMetadata)
+                    else if (location.IsInMetadata && request.WantMetadata)
                     {
                         var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
                         var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
