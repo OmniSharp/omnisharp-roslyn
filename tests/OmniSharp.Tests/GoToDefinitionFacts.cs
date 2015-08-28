@@ -72,7 +72,8 @@ class Foo {
                 FileName = "bar.cs",
                 Line = 7,
                 Column = 20,
-                Timeout = 60000
+                Timeout = 60000,
+                WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -93,7 +94,8 @@ class Foo {
                 FileName = "bar.cs",
                 Line = 11,
                 Column = 17,
-                Timeout = 60000
+                Timeout = 60000,
+                WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -113,7 +115,8 @@ class Foo {
                 FileName = "bar.cs",
                 Line = 9,
                 Column = 25,
-                Timeout = 60000
+                Timeout = 60000,
+                WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -133,7 +136,8 @@ class Foo {
                 FileName = "bar.cs",
                 Line = 12,
                 Column = 26,
-                Timeout = 60000
+                Timeout = 60000,
+                WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
@@ -153,7 +157,8 @@ class Foo {
                 FileName = "bar.cs",
                 Line = 10,
                 Column = 23,
-                Timeout = 60000
+                Timeout = 60000,
+                WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
