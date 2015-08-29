@@ -4,6 +4,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Host.Mef;
+using System.Composition;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
@@ -22,6 +23,10 @@ using OmniSharp.Services;
 using OmniSharp.Settings;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+using System.Composition.Hosting;
+using System.Linq;
+using System.Reflection;
+using Microsoft.Framework.Runtime;
 
 namespace OmniSharp
 {
@@ -122,8 +127,11 @@ namespace OmniSharp
         public void Configure(IApplicationBuilder app,
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env,
-                              ISharedTextWriter writer)
+                              ISharedTextWriter writer,
+                              ILibraryManager manager)
         {
+            Workspace.ConfigurePluginHost(manager);
+            
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
                 && env.TraceType <= type;

@@ -4,7 +4,9 @@
         "warningsAsErrors": true
     },
     "dependencies": {
+        "OmniSharp.Abstractions": "1.0.0-*",
         "OmniSharp.Stdio": "1.0.0-*",
+        "OmniSharp.Roslyn.CSharp": "1.0.0-*",
         "Kestrel": "1.0.0-beta4",
         "Microsoft.AspNet.Mvc": "6.0.0-beta4",
         "Microsoft.AspNet.Diagnostics": "1.0.0-beta4",

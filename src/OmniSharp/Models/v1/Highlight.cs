@@ -14,7 +14,7 @@ namespace OmniSharp.Models
         public string Kind { get; set; }
         public IEnumerable<string> Projects { get; set; }
 
-        internal static HighlightSpan FromClassifiedSpan(ClassifiedSpan span, TextLineCollection lines, IEnumerable<string> projects)
+        public static HighlightSpan FromClassifiedSpan(ClassifiedSpan span, TextLineCollection lines, IEnumerable<string> projects)
         {
             var linePos = lines.GetLinePositionSpan(span.TextSpan);
 

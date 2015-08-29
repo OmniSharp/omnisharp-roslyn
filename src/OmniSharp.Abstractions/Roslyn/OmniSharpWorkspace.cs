@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.Runtime;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp
@@ -13,6 +17,10 @@ namespace OmniSharp
 
         public BufferManager BufferManager { get; private set; }
 
+        public CompositionHost PluginHost { get; private set; }
+
+        public static OmnisharpWorkspace Instance{ get; private set; }
+
         public OmnisharpWorkspace() : this(MefHostServices.DefaultHost)
         {
         }
@@ -20,6 +28,22 @@ namespace OmniSharp
         public OmnisharpWorkspace(MefHostServices hostServices) : base(hostServices, "Custom")
         {
             BufferManager = new BufferManager(this);
+        }
+
+        public void ConfigurePluginHost(ILibraryManager manager)
+        {
+            Instance = this;
+
+            var config = new ContainerConfiguration();
+            foreach (var assembly in manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                .Select(assemblyName => Assembly.Load(assemblyName)))
+            {
+                config = config.WithAssembly(assembly);
+            }
+
+            var compositionHost = config.CreateContainer();
+            PluginHost = compositionHost;
         }
 
         public void AddProject(ProjectInfo projectInfo)

@@ -1,3 +1,4 @@
+using System.Composition.Hosting;
 ﻿using Microsoft.AspNet.Mvc;
 using Microsoft.Framework.OptionsModel;
 using OmniSharp.Options;
