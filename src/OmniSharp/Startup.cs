@@ -9,16 +9,16 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
-using OmniSharp.Roslyn;
-using OmniSharp.Services;
-using OmniSharp.Stdio.Logging;
-using OmniSharp.Stdio.Services;
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.MSBuild;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
+using OmniSharp.Roslyn;
 using OmniSharp.Settings;
+using OmniSharp.Services;
+using OmniSharp.Stdio.Logging;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
