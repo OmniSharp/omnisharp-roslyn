@@ -9,7 +9,6 @@ using Microsoft.AspNet.Http;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using static OmniSharp.Endpoints;
 
 namespace OmniSharp.Middleware.Endpoint
 {
@@ -33,7 +32,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly Type _responseType;
         private readonly OmnisharpWorkspace _workspace;
 
-        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, EndpointMapItem item)
+        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, OmniSharp.Endpoints.EndpointMapItem item)
         {
             EndpointName = item.EndpointName;
             _host = host;

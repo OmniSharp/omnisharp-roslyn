@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Composition;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
@@ -12,9 +11,8 @@ using Microsoft.AspNet.Http;
 using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using static OmniSharp.Endpoints;
 using OmniSharp.Middleware.Endpoint;
+using OmniSharp.Models;
 
 namespace OmniSharp.Middleware
 {

@@ -11,12 +11,12 @@ using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
-using OmniSharp.MSBuild;
 using OmniSharp.Middleware;
+using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
-using OmniSharp.Settings;
 using OmniSharp.Services;
+using OmniSharp.Settings;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
 

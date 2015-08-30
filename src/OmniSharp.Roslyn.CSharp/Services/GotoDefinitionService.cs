@@ -10,12 +10,11 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using static OmniSharp.Endpoints;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
-    [OmniSharpEndpoint(typeof(GotoDefinition), LanguageNames.CSharp)]
-    public class GotoDefinitionService : GotoDefinition
+    [OmniSharpEndpoint(typeof(Endpoints.GotoDefinition), LanguageNames.CSharp)]
+    public class GotoDefinitionService : Endpoints.GotoDefinition
     {
         [Import]
         public OmnisharpWorkspace Workspace { get; set; }
