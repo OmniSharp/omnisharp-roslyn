@@ -143,8 +143,8 @@ namespace OmniSharp
 
             app.UseErrorHandler("/error");
 
-            app.UseMiddleware<EndpointMiddleware>();
             app.UseMvc();
+            app.UseMiddleware<EndpointMiddleware>();
 
             if (env.TransportType == TransportType.Stdio)
             {

@@ -23,7 +23,6 @@ namespace OmniSharp.Middleware.Endpoint
         private static Type FuncType = typeof(Func<,>);
 
         private readonly CompositionHost _host;
-        private readonly Type _workspaceDelegateType;
         private readonly Type _delegateType;
         private readonly Type _interfaceType;
         private readonly LanguagePredicateHandler _languagePredicateHandler;
@@ -38,17 +37,14 @@ namespace OmniSharp.Middleware.Endpoint
             _host = host;
             _languagePredicateHandler = languagePredicateHandler;
             _interfaceType = item.InterfaceType;
-            _workspaceDelegateType = WorkspaceFuncType.MakeGenericType(typeof(OmnisharpWorkspace), item.RequestType, TaskType.MakeGenericType(item.ResponseType));
             _delegateType = FuncType.MakeGenericType(item.RequestType, TaskType.MakeGenericType(item.ResponseType));
             _requestType = item.RequestType;
             _responseType = item.ResponseType;
             _workspace = workspace;
 
-            var workspaceDelegateExports = (IEnumerable<ExportHandler>)GetExportsMethod.MakeGenericMethod(_workspaceDelegateType).Invoke(this, new object[] { });
             var delegateExports = (IEnumerable<ExportHandler>)GetExportsMethod.MakeGenericMethod(_delegateType).Invoke(this, new object[] { });
             var interfaceExports = (IEnumerable<ExportHandler>)GetExportsMethod.MakeGenericMethod(_interfaceType).Invoke(this, new object[] { });
             _exports = delegateExports
-                .Concat(workspaceDelegateExports)
                 .Concat(interfaceExports)
                 .ToDictionary(export => export.Language);
         }
@@ -113,10 +109,6 @@ namespace OmniSharp.Middleware.Endpoint
                 {
                     yield return CreateDelegateExportHandler(export.Metadata.Language, typeof(T).GetTypeInfo(), export.Value);
                 }
-                else if (typeInfo.GenericTypeArguments.Length == 3)
-                {
-                    yield return CreateDelegateExportHandler(export.Metadata.Language, typeof(T).GetTypeInfo(), export.Value);
-                }
             }
         }
 
@@ -137,12 +129,6 @@ namespace OmniSharp.Middleware.Endpoint
             return (ExportHandler)Activator.CreateInstance(genericType, language, value);
         }
 
-        private ExportHandler CreateWorkspaceDelegateExportHandler(string language, TypeInfo typeInfo, object value)
-        {
-            var genericType = typeof(WorkspaceDelegateExportHandler<,>).MakeGenericType(_requestType, _responseType);
-            return (ExportHandler)Activator.CreateInstance(genericType, language, value);
-        }
-
         class DelegateExportHandler<TRequest, TResponse> : ExportHandler
         {
             private readonly Func<TRequest, Task<TResponse>> _handler;
@@ -155,21 +141,6 @@ namespace OmniSharp.Middleware.Endpoint
             public async override Task<object> Handle(OmnisharpWorkspace workspace, object request)
             {
                 return await _handler((TRequest)request);
-            }
-        }
-
-        class WorkspaceDelegateExportHandler<TRequest, TResponse> : ExportHandler
-        {
-            private readonly Func<OmnisharpWorkspace, TRequest, Task<TResponse>> _handler;
-
-            public WorkspaceDelegateExportHandler(string language, Func<OmnisharpWorkspace, TRequest, Task<TResponse>> handler) : base(language)
-            {
-                _handler = handler;
-            }
-
-            public async override Task<object> Handle(OmnisharpWorkspace workspace, object request)
-            {
-                return await _handler(workspace, (TRequest)request);
             }
         }
 
