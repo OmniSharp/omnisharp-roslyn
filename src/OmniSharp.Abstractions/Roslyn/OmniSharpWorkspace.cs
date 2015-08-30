@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Composition.Convention;
 using System.Composition.Hosting;
+using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -14,6 +15,26 @@ using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
+    class OmnisharpWorkspaceProvider : ExportDescriptorProvider
+    {
+        private readonly OmnisharpWorkspace _workspace;
+
+        public OmnisharpWorkspaceProvider(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public override IEnumerable<ExportDescriptorPromise> GetExportDescriptors(CompositionContract contract, DependencyAccessor descriptorAccessor)
+        {
+            if (contract.ContractType == typeof(OmnisharpWorkspace))
+            {
+                yield return new ExportDescriptorPromise(contract, string.Empty, true,
+                    () => Enumerable.Empty<CompositionDependency>(),
+                    deps => ExportDescriptor.Create((context, operation) => _workspace, new Dictionary<string, object>()));
+            }
+        }
+    }
+
     public class OmnisharpWorkspace : Workspace
     {
         private ILibraryManager _manager;
@@ -49,6 +70,8 @@ namespace OmniSharp
             {
                 config = config.WithAssembly(assembly);
             }
+
+            config = config.WithProvider(new OmnisharpWorkspaceProvider(this));
 
             var compositionHost = config.CreateContainer();
             PluginHost = compositionHost;

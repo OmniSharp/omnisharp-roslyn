@@ -34,7 +34,7 @@ namespace OmniSharp
             public Type ResponseType { get; }
         }
 
-        public static EndpointMapItem[] Map = {
+        public static EndpointMapItem[] AvailableEndpoints = {
             new EndpointMapItem("/gotodefinition", typeof(GotoDefinition), typeof(GotoDefinitionRequest), typeof(GotoDefinitionResponse)),
         };
 

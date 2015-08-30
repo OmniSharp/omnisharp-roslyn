@@ -21,16 +21,17 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public Func<string, Task<bool>> IsApplicableTo { get; } = filePath => Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
     }
 
-    //[GotoDefinition(LanguageNames.CSharp)]
     [OmniSharpEndpoint(typeof(GotoDefinition), LanguageNames.CSharp)]
     public partial class RoslynServices : GotoDefinition
     {
-        //[GotoDefinition(LanguageNames.CSharp)]
+        [Import]
+        public OmnisharpWorkspace Workspace { get; set; }
+
         public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();
 
-            var document = OmnisharpWorkspace.Instance.GetDocument(request.FileName);
+            var document = Workspace.GetDocument(request.FileName);
             var response = new GotoDefinitionResponse();
             if (document != null)
             {

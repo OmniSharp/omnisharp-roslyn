@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class GoToDefinitionFacts
     {
@@ -21,7 +23,8 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new RoslynServices();
+            controller.Workspace = workspace;
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
@@ -49,7 +52,8 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new OmnisharpController(workspace, null);
+            var controller = new RoslynServices();
+            controller.Workspace = workspace;
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
@@ -66,7 +70,8 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
-            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var controller = new RoslynServices();
+            controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
@@ -88,7 +93,8 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
         {
-            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var controller = new RoslynServices();
+            controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
@@ -109,7 +115,8 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
         {
-            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var controller = new RoslynServices();
+            controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
@@ -130,7 +137,8 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
         {
-            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var controller = new RoslynServices();
+            controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
@@ -151,7 +159,8 @@ class Foo {
         [Fact]
         public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
         {
-            var controller = new OmnisharpController(CreateTestWorkspace(), null);
+            var controller = new RoslynServices();
+            controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
