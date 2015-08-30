@@ -23,7 +23,7 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = workspace;
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
@@ -52,7 +52,7 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = workspace;
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
@@ -70,7 +70,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
@@ -93,7 +93,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
         {
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
@@ -115,7 +115,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
         {
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
@@ -137,7 +137,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
         {
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {
@@ -159,7 +159,7 @@ class Foo {
         [Fact]
         public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
         {
-            var controller = new RoslynServices();
+            var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
             var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
             {

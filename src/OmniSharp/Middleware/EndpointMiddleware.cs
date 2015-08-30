@@ -13,8 +13,8 @@ using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using OmniSharp.Middleware.Endpoint;
 using static OmniSharp.Endpoints;
+using OmniSharp.Middleware.Endpoint;
 
 namespace OmniSharp.Middleware
 {

@@ -4,29 +4,21 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Host.Mef;
-using System.Composition;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
-#if DNX451
-using NuGet.Protocol.Core.Types;
-#endif
-using OmniSharp.Dnx;
-using OmniSharp.Filters;
-using OmniSharp.Middleware;
-using OmniSharp.MSBuild;
-using OmniSharp.NuGet;
-using OmniSharp.Options;
+using Microsoft.Framework.Runtime;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
-using OmniSharp.Settings;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
-using System.Composition.Hosting;
-using System.Linq;
-using System.Reflection;
-using Microsoft.Framework.Runtime;
+using OmniSharp.Dnx;
+using OmniSharp.Filters;
+using OmniSharp.MSBuild;
+using OmniSharp.Middleware;
+using OmniSharp.Options;
+using OmniSharp.Settings;
 
 namespace OmniSharp
 {

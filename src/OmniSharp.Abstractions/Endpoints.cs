@@ -1,8 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Mef;
-using System.Composition;
 
 namespace OmniSharp
 {

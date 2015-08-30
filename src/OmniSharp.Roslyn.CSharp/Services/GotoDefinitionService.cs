@@ -4,25 +4,18 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp;
-using OmniSharp.Models;
 using OmniSharp.Mef;
+using OmniSharp.Models;
 using static OmniSharp.Endpoints;
-using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
-    public class LanguagePredicate
-    {
-        private static readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
-        [OmniSharpLanguage(LanguageNames.CSharp)]
-        public Func<string, Task<bool>> IsApplicableTo { get; } = filePath => Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
-    }
-
     [OmniSharpEndpoint(typeof(GotoDefinition), LanguageNames.CSharp)]
-    public partial class RoslynServices : GotoDefinition
+    public class GotoDefinitionService : GotoDefinition
     {
         [Import]
         public OmnisharpWorkspace Workspace { get; set; }
