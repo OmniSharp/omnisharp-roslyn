@@ -10,12 +10,14 @@
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-rc2",
     "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-rc2",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Framework.Runtime.Interfaces": "1.0.0-beta4"
+    "Microsoft.Framework.Runtime.Interfaces": "1.0.0-beta4",
+    "Microsoft.Framework.Caching.Memory": "1.0.0-beta4"
   },
   "frameworks": {
     "dnx451": {
       "frameworkAssemblies": {
         "System.Runtime": "4.0.0.0",
+        "System.Threading":"4.0.0.0",
         "System.Threading.Tasks":"4.0.0.0",
         "System.Collections":"4.0.0.0",
         "System.Linq": "4.0.0.0",

@@ -16,8 +16,22 @@ namespace OmniSharp
 
     public static class Endpoints
     {
+        public static EndpointMapItem[] AvailableEndpoints = {
+            EndpointMapItem.Create<GotoDefinition, GotoDefinitionRequest, GotoDefinitionResponse>("/gotodefinition"),
+        };
+
+        public interface GotoDefinition
+        {
+            Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request);
+        }
+
         public class EndpointMapItem
         {
+            public static EndpointMapItem Create<TInterface, TRequest, TResponse>(string endpoint)
+            {
+                return new EndpointMapItem(endpoint, typeof(TInterface), typeof(TRequest), typeof(TResponse));
+            }
+
             public EndpointMapItem(string endpointName, Type interfaceType, Type requestType, Type responseType)
             {
                 EndpointName = endpointName;
@@ -27,18 +41,9 @@ namespace OmniSharp
             }
 
             public string EndpointName { get; }
-            public Type InterfaceType {get;}
+            public Type InterfaceType { get; }
             public Type RequestType { get; }
             public Type ResponseType { get; }
-        }
-
-        public static EndpointMapItem[] AvailableEndpoints = {
-            new EndpointMapItem("/gotodefinition", typeof(GotoDefinition), typeof(GotoDefinitionRequest), typeof(GotoDefinitionResponse)),
-        };
-
-        public interface GotoDefinition
-        {
-            Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request);
         }
     }
 }

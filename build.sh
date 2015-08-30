@@ -25,6 +25,8 @@ dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 cd ../../
 dnvm use 1.0.0-beta4
+dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
+dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
 dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog

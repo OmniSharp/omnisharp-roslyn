@@ -27,6 +27,8 @@ cd ..\OmniSharp.Stdio.Tests
 call dnx . test
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..\..
+call dnu build src\OmniSharp.Abstractions --configuration Release --out artifacts
+call dnu build src\OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
 call dnu publish src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
 
 popd
