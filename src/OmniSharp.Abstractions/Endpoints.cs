@@ -16,26 +16,31 @@ namespace OmniSharp
         }
     }
 
-    public static class EndpointDelegates
-    {
-        [EndpointName("/gotodefinition")]
-        public class GotoDefinitionAttribute : OmniSharpEndpointAttribute
-        {
-            public GotoDefinitionAttribute(string language) : base(typeof(Func<GotoDefinitionRequest, Task<GotoDefinitionResponse>>), language) { }
-        }
-    }
-
     public static class Endpoints
     {
+        public class EndpointMapItem
+        {
+            public EndpointMapItem(string endpointName, Type interfaceType, Type requestType, Type responseType)
+            {
+                EndpointName = endpointName;
+                RequestType = requestType;
+                ResponseType = responseType;
+                InterfaceType = interfaceType;
+            }
+
+            public string EndpointName { get; }
+            public Type InterfaceType {get;}
+            public Type RequestType { get; }
+            public Type ResponseType { get; }
+        }
+
+        public static EndpointMapItem[] Map = {
+            new EndpointMapItem("/gotodefinition", typeof(GotoDefinition), typeof(GotoDefinitionRequest), typeof(GotoDefinitionResponse)),
+        };
+
         public interface GotoDefinition
         {
             Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request);
-        }
-
-        [EndpointName("/gotodefinition")]
-        public class GotoDefinitionAttribute : OmniSharpEndpointAttribute
-        {
-            public GotoDefinitionAttribute(string language) : base(typeof(GotoDefinition), language) { }
         }
     }
 }

@@ -10,7 +10,6 @@ namespace OmniSharp.Mef
     }
 
     [MetadataAttribute]
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
     public class OmniSharpEndpointAttribute : ExportAttribute
     {
         public string Language { get; }
@@ -22,7 +21,6 @@ namespace OmniSharp.Mef
     }
 
     [MetadataAttribute]
-    [AttributeUsage(AttributeTargets.Method)]
     public class OmniSharpLanguageAttribute : ExportAttribute
     {
         public string Language { get; }

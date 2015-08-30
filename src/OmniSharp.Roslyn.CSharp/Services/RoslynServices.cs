@@ -9,22 +9,23 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp;
 using OmniSharp.Models;
 using OmniSharp.Mef;
-using static OmniSharp.EndpointDelegates;
+using static OmniSharp.Endpoints;
 using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
-    public partial class RoslynServices
+    public class LanguagePredicate
     {
-        private readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
-
+        private static readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
         [OmniSharpLanguage(LanguageNames.CSharp)]
-        public Task<bool> IsApplicableTo(string filePath)
-        {
-            return Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
-        }
+        public Func<string, Task<bool>> IsApplicableTo { get; } = filePath => Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
+    }
 
-        [GotoDefinition(LanguageNames.CSharp)]
+    //[GotoDefinition(LanguageNames.CSharp)]
+    [OmniSharpEndpoint(typeof(GotoDefinition), LanguageNames.CSharp)]
+    public partial class RoslynServices : GotoDefinition
+    {
+        //[GotoDefinition(LanguageNames.CSharp)]
         public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();

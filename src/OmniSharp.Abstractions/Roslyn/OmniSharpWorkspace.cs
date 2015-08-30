@@ -54,12 +54,6 @@ namespace OmniSharp
             PluginHost = compositionHost;
         }
 
-        public IDictionary<string, Lazy<T>> GetExportsByLanguage<T>()
-        {
-            return PluginHost.GetExports<ExportFactory<T, OmniSharpLanguage>>()
-                .ToDictionary(x => x.Metadata.Language, export => new Lazy<T>(() => export.CreateExport().Value));
-        }
-
         public void AddProject(ProjectInfo projectInfo)
         {
             OnProjectAdded(projectInfo);
