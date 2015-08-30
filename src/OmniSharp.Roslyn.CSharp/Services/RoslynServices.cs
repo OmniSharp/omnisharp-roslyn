@@ -6,19 +6,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Endpoints;
+using OmniSharp;
 using OmniSharp.Models;
+using OmniSharp.Mef;
+using static OmniSharp.EndpointDelegates;
+using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
-    [Export(typeof(IGotoDefintion))]
-    class RoslynGotoDefinition : IGotoDefintion
+    public partial class RoslynServices
     {
-        public Task<bool> IsApplicableTo(GotoDefinitionRequest request)
+        private readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
+
+        [OmniSharpLanguage(LanguageNames.CSharp)]
+        public Task<bool> IsApplicableTo(string filePath)
         {
-            return Task.FromResult(OmnisharpWorkspace.Instance.GetDocument(request.FileName) != null);
+            return Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
         }
 
+        [GotoDefinition(LanguageNames.CSharp)]
         public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();

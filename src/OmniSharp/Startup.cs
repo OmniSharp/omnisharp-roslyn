@@ -131,7 +131,7 @@ namespace OmniSharp
                               ILibraryManager manager)
         {
             Workspace.ConfigurePluginHost(manager);
-            
+
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
                 && env.TraceType <= type;
@@ -151,6 +151,7 @@ namespace OmniSharp
 
             app.UseErrorHandler("/error");
 
+            app.UseMiddleware<EndpointMiddleware>();
             app.UseMvc();
 
             if (env.TransportType == TransportType.Stdio)

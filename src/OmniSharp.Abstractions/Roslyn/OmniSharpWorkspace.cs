@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Composition;
+using System.Composition.Convention;
 using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
@@ -7,19 +9,22 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Runtime;
+using OmniSharp.Mef;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
     public class OmnisharpWorkspace : Workspace
     {
+        private ILibraryManager _manager;
+
         public bool Initialized { get; set; }
 
         public BufferManager BufferManager { get; private set; }
 
         public CompositionHost PluginHost { get; private set; }
 
-        public static OmnisharpWorkspace Instance{ get; private set; }
+        public static OmnisharpWorkspace Instance { get; private set; }
 
         public OmnisharpWorkspace() : this(MefHostServices.DefaultHost)
         {
@@ -32,6 +37,9 @@ namespace OmniSharp
 
         public void ConfigurePluginHost(ILibraryManager manager)
         {
+            if (_manager != null) manager = _manager;
+
+            _manager = manager;
             Instance = this;
 
             var config = new ContainerConfiguration();
@@ -44,6 +52,12 @@ namespace OmniSharp
 
             var compositionHost = config.CreateContainer();
             PluginHost = compositionHost;
+        }
+
+        public IDictionary<string, Lazy<T>> GetExportsByLanguage<T>()
+        {
+            return PluginHost.GetExports<ExportFactory<T, OmniSharpLanguage>>()
+                .ToDictionary(x => x.Metadata.Language, export => new Lazy<T>(() => export.CreateExport().Value));
         }
 
         public void AddProject(ProjectInfo projectInfo)
