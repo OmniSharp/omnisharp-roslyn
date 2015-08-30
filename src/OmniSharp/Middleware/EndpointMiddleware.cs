@@ -50,8 +50,6 @@ namespace OmniSharp.Middleware
                 var endpoint = httpContext.Request.Path.Value;
                 if (_endpoints.Contains(endpoint))
                 {
-                    OmnisharpWorkspace.Instance.ConfigurePluginHost(null);
-                    _logger.LogInformation($"Endpoint Request: {httpContext.Request.Path}");
                     Lazy<EndpointHandler> handler;
                     if (_endpointHandlers.TryGetValue(endpoint, out handler))
                     {

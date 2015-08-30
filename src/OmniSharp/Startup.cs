@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Mvc;
@@ -122,7 +124,9 @@ namespace OmniSharp
                               ISharedTextWriter writer,
                               ILibraryManager manager)
         {
-            Workspace.ConfigurePluginHost(manager);
+            Workspace.ConfigurePluginHost(manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                .Select(assemblyName => Assembly.Load(assemblyName)));
 
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))

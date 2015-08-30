@@ -37,8 +37,6 @@ namespace OmniSharp
 
     public class OmnisharpWorkspace : Workspace
     {
-        private ILibraryManager _manager;
-
         public bool Initialized { get; set; }
 
         public BufferManager BufferManager { get; private set; }
@@ -56,17 +54,12 @@ namespace OmniSharp
             BufferManager = new BufferManager(this);
         }
 
-        public void ConfigurePluginHost(ILibraryManager manager)
+        public void ConfigurePluginHost(IEnumerable<Assembly> assemblies)
         {
-            if (_manager != null) manager = _manager;
-
-            _manager = manager;
             Instance = this;
 
             var config = new ContainerConfiguration();
-            foreach (var assembly in manager.GetReferencingLibraries("OmniSharp.Abstractions")
-                .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
-                .Select(assemblyName => Assembly.Load(assemblyName)))
+            foreach (var assembly in assemblies)
             {
                 config = config.WithAssembly(assembly);
             }

@@ -6,7 +6,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
-    public class LanguagePredicate
+    public class CSharpLanguage
     {
         private static readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
         [OmniSharpLanguage(LanguageNames.CSharp)]
