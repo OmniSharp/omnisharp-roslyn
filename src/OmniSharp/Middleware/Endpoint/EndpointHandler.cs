@@ -10,6 +10,7 @@ using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Plugins;
 
 namespace OmniSharp.Middleware.Endpoint
 {
@@ -39,7 +40,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly Type _delegateType;
         private readonly Type _requestHandlerType;
         private readonly LanguagePredicateHandler _languagePredicateHandler;
-        private readonly IDictionary<string, ExportHandler> _exports;
+        private readonly Lazy<Task<Dictionary<string, ExportHandler>>> _exports;
         private readonly Type _requestType;
         private readonly Type _responseType;
         private readonly OmnisharpWorkspace _workspace;
@@ -47,28 +48,41 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
         private readonly ILogger _logger;
+        private readonly IEnumerable<OutOfProcessPlugin> _plugins;
 
-        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item)
+        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<OutOfProcessPlugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;
             _logger = logger;
+            _workspace = workspace;
             _languagePredicateHandler = languagePredicateHandler;
+            _plugins = plugins;
+
             _delegateType = FuncType.MakeGenericType(item.RequestType, TaskType.MakeGenericType(item.ResponseType));
             _requestHandlerType = RequestHandlerType.MakeGenericType(item.RequestType, item.ResponseType);
             _requestType = item.RequestType;
             _responseType = item.ResponseType;
-            _workspace = workspace;
+
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
             _isMergeable = typeof(IMergeableResponse).IsAssignableFrom(item.ResponseType);
 
+            _exports = new Lazy<Task<Dictionary<string, ExportHandler>>>(() => LoadExportHandlers());
+        }
+
+        private Task<Dictionary<string, ExportHandler>> LoadExportHandlers()
+        {
             var delegateExports = (IEnumerable<ExportHandler>)GetDelegateExportsMethod.MakeGenericMethod(_delegateType).Invoke(this, new object[] { });
             var interfaceExports = (IEnumerable<ExportHandler>)GetRequestHandlerExportsMethod.MakeGenericMethod(_requestHandlerType).Invoke(this, new object[] { });
 
-            _exports = delegateExports
-                .Concat(interfaceExports)
-                .ToDictionary(export => export.Language);
+            var plugins = _plugins.Where(x => x.SupportedEndpoints.Contains(EndpointName))
+                .Select(plugin => new PluginExportHandler(plugin));
+
+            return Task.FromResult(delegateExports
+               .Concat(interfaceExports)
+               .Concat(plugins)
+               .ToDictionary(export => export.Language));
         }
 
         public string EndpointName { get; }
@@ -107,8 +121,9 @@ namespace OmniSharp.Middleware.Endpoint
         private async Task HandleSingleRequest(string language, HttpContext context)
         {
             var request = DeserializeRequestObject(context.Request.Body);
+            var exports = await _exports.Value;
             ExportHandler handler;
-            if (_exports.TryGetValue(language, out handler))
+            if (exports.TryGetValue(language, out handler))
             {
                 var response = await handler.Handle(request);
                 SerializeResponseObject(context.Response, response);
@@ -125,12 +140,13 @@ namespace OmniSharp.Middleware.Endpoint
                 throw new NotSupportedException($"Responses must be mergable to spread them out across all plugins for {EndpointName}");
             }
 
+            var exports = await _exports.Value;
             var request = DeserializeRequestObject(context.Request.Body);
 
             IMergeableResponse response = null;
             var responses = new List<Task<object>>();
 
-            foreach (var handler in _exports.Values)
+            foreach (var handler in exports.Values)
             {
                 responses.Add(handler.Handle(request));
             }
@@ -262,6 +278,21 @@ namespace OmniSharp.Middleware.Endpoint
             public RequestHandlerExportHandler(string language, RequestHandler<TRequest, TResponse> handler)
              : base(language, handler.Handle)
             { }
+        }
+
+        class PluginExportHandler : ExportHandler
+        {
+            private readonly OutOfProcessPlugin _plugin;
+
+            public PluginExportHandler(OutOfProcessPlugin plugin) : base(plugin.Language)
+            {
+                _plugin = plugin;
+            }
+
+            public override Task<object> Handle(object request)
+            {
+                return _plugin.Handle(request);
+            }
         }
     }
 }

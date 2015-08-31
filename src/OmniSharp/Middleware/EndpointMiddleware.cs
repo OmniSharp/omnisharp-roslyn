@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware.Endpoint;
 using OmniSharp.Models;
+using OmniSharp.Plugins;
 
 namespace OmniSharp.Middleware
 {
@@ -39,7 +40,7 @@ namespace OmniSharp.Middleware
 
             var endpointHandlers = endpoints.ToDictionary(
                 x => x.EndpointName,
-                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint))
+                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<OutOfProcessPlugin>()))
             );
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }
