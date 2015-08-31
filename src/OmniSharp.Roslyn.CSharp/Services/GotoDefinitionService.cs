@@ -13,13 +13,13 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
-    [OmniSharpEndpoint(typeof(Endpoints.GotoDefinition), LanguageNames.CSharp)]
-    public class GotoDefinitionService : Endpoints.GotoDefinition
+    [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+    public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
         [Import]
         public OmnisharpWorkspace Workspace { get; set; }
 
-        public async Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
+        async Task<GotoDefinitionResponse> RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>.Handle(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();
 

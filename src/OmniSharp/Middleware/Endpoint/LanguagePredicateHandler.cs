@@ -7,17 +7,17 @@ namespace OmniSharp.Middleware.Endpoint
 {
     class LanguagePredicateHandler
     {
-        private readonly IEnumerable<Lazy<Func<string, Task<bool>>, OmniSharpLanguage>> _exports;
-        public LanguagePredicateHandler(IEnumerable<Lazy<Func<string, Task<bool>>, OmniSharpLanguage>> exports)
+        private readonly IEnumerable<Lazy<Func<string, bool>, OmniSharpLanguage>> _exports;
+        public LanguagePredicateHandler(IEnumerable<Lazy<Func<string, bool>, OmniSharpLanguage>> exports)
         {
             _exports = exports;
         }
 
-        public async Task<string> GetLanguageForFilePath(string filePath)
+        public string GetLanguageForFilePath(string filePath)
         {
             foreach (var export in _exports)
             {
-                if (await export.Value(filePath))
+                if (export.Value(filePath))
                 {
                     return export.Metadata.Language;
                 }

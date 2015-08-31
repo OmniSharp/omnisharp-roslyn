@@ -27,19 +27,20 @@ namespace OmniSharp.Middleware
         private readonly CompositionHost _host;
         private readonly ILogger _logger;
 
-        public EndpointMiddleware(RequestDelegate next, OmnisharpWorkspace workspace, ILoggerFactory loggerFactory)
+        public EndpointMiddleware(RequestDelegate next, OmnisharpWorkspace workspace, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
         {
             _next = next;
             _workspace = workspace;
             _host = workspace.PluginHost;
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
-            _languagePredicateHandler = new LanguagePredicateHandler(_host.GetExports<Lazy<Func<string, Task<bool>>, OmniSharpLanguage>>());
+            _languagePredicateHandler = new LanguagePredicateHandler(_host.GetExports<Lazy<Func<string, bool>, OmniSharpLanguage>>());
 
-            _endpoints = new HashSet<string>(OmniSharp.Endpoints.AvailableEndpoints
-                .Select(x => x.EndpointName).Distinct());
+            _endpoints = new HashSet<string>(endpoints.Select(x => x.EndpointName).Distinct());
 
-            var endpointHandlers = OmniSharp.Endpoints.AvailableEndpoints
-                .ToDictionary(x => x.EndpointName, endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, endpoint)));
+            var endpointHandlers = endpoints.ToDictionary(
+                x => x.EndpointName,
+                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint))
+            );
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }
 
@@ -67,7 +68,7 @@ namespace OmniSharp.Middleware
     {
         public static IApplicationBuilder UseEndpointMiddleware(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<EndpointMiddleware>();
+            return builder.UseMiddleware<EndpointMiddleware>(OmniSharp.Endpoints.AvailableEndpoints.AsEnumerable());
         }
     }
 }

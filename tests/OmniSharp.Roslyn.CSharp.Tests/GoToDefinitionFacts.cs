@@ -25,7 +25,8 @@ class Foo {
             });
             var controller = new GotoDefinitionService();
             controller.Workspace = workspace;
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 2,
@@ -54,7 +55,8 @@ class Foo {
             });
             var controller = new GotoDefinitionService();
             controller.Workspace = workspace;
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 2,
@@ -72,7 +74,8 @@ class Foo {
         {
             var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 7,
@@ -95,7 +98,8 @@ class Foo {
         {
             var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 11,
@@ -117,7 +121,8 @@ class Foo {
         {
             var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 9,
@@ -139,7 +144,8 @@ class Foo {
         {
             var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 12,
@@ -161,7 +167,8 @@ class Foo {
         {
             var controller = new GotoDefinitionService();
             controller.Workspace = CreateTestWorkspace();
-            var definitionResponse = await controller.GotoDefinition(new GotoDefinitionRequest
+            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
+            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
                 Line = 10,

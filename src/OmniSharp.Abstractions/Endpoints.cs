@@ -14,34 +14,38 @@ namespace OmniSharp
         }
     }
 
+    public interface RequestHandler<TRequest, TResponse>
+    {
+        Task<TResponse> Handle(TRequest request);
+    }
+
+    public interface IMergeableResponse
+    {
+        IMergeableResponse Merge(IMergeableResponse response);
+    }
+
     public static class Endpoints
     {
         public static EndpointMapItem[] AvailableEndpoints = {
-            EndpointMapItem.Create<GotoDefinition, GotoDefinitionRequest, GotoDefinitionResponse>("/gotodefinition"),
+            EndpointMapItem.Create<GotoDefinitionRequest, GotoDefinitionResponse>("/gotodefinition"),
+            EndpointMapItem.Create<FindSymbolsRequest, QuickFixResponse>("/findsymbols"),
         };
-
-        public interface GotoDefinition
-        {
-            Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request);
-        }
 
         public class EndpointMapItem
         {
-            public static EndpointMapItem Create<TInterface, TRequest, TResponse>(string endpoint)
+            public static EndpointMapItem Create<TRequest, TResponse>(string endpoint)
             {
-                return new EndpointMapItem(endpoint, typeof(TInterface), typeof(TRequest), typeof(TResponse));
+                return new EndpointMapItem(endpoint, typeof(TRequest), typeof(TResponse));
             }
 
-            public EndpointMapItem(string endpointName, Type interfaceType, Type requestType, Type responseType)
+            public EndpointMapItem(string endpointName, Type requestType, Type responseType)
             {
                 EndpointName = endpointName;
                 RequestType = requestType;
                 ResponseType = responseType;
-                InterfaceType = interfaceType;
             }
 
             public string EndpointName { get; }
-            public Type InterfaceType { get; }
             public Type RequestType { get; }
             public Type ResponseType { get; }
         }

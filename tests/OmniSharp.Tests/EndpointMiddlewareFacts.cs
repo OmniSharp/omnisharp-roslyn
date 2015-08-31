@@ -29,24 +29,28 @@ namespace OmniSharp.Tests
 {
     public class EndpointMiddlewareFacts
     {
-        [OmniSharpEndpoint(typeof(Endpoints.GotoDefinition), LanguageNames.CSharp)]
-        public class GotoDefinitionService : Endpoints.GotoDefinition
+        [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+        public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
             [Import]
             public OmnisharpWorkspace Workspace { get; set; }
 
-            public Task<GotoDefinitionResponse> GotoDefinition(GotoDefinitionRequest request)
+            public Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
             {
-                //throw new NotImplementedException();
                 return Task.FromResult<GotoDefinitionResponse>(null);
             }
         }
+
+        [OmniSharpEndpoint(typeof(Func<FindSymbolsRequest, Task<QuickFixResponse>>), LanguageNames.CSharp)]
+        public Func<FindSymbolsRequest, Task<QuickFixResponse>> FindSymbolsDelegate { get; } = (request) => { return Task.FromResult<QuickFixResponse>(null); };
+
+        class Response { }
 
         public class CSharpLanguage
         {
             private static readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
             [OmniSharpLanguage(LanguageNames.CSharp)]
-            public Func<string, Task<bool>> IsApplicableTo { get; } = filePath => Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
+            public Func<string, bool> IsApplicableTo { get; } = filePath => ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension));
         }
 
         class LoggerFactory : ILoggerFactory
@@ -72,7 +76,7 @@ namespace OmniSharp.Tests
 
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
             workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory());
+            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/notvalid");
@@ -87,7 +91,7 @@ namespace OmniSharp.Tests
 
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
             workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory());
+            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -128,7 +132,7 @@ namespace OmniSharp.Tests
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory());
+            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -148,6 +152,121 @@ namespace OmniSharp.Tests
             );
 
             await middleware.Invoke(context);
+        }
+
+        [Fact]
+        public async Task Passes_through_to_all_services_with_delegate()
+        {
+            RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
+
+            var source1 = @"using System;
+
+    class Foo {
+    }";
+            var source2 = @"class Bar {
+        private Foo foo;
+    }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+                    { "foo.cs", source1 }, { "bar.cs", source2}
+                });
+            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+
+            var context = new DefaultHttpContext();
+            context.Request.Path = PathString.FromUriComponent("/findsymbols");
+
+            var memoryStream = new MemoryStream();
+
+            context.Request.Body = new MemoryStream(
+                Encoding.UTF8.GetBytes(
+                    JsonConvert.SerializeObject(new FindSymbolsRequest
+                    {
+
+                    })
+                )
+            );
+
+            await middleware.Invoke(context);
+        }
+
+        [Fact]
+        public async Task Passes_through_to_specific_service_with_delegate()
+        {
+            RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
+
+            var source1 = @"using System;
+
+    class Foo {
+    }";
+            var source2 = @"class Bar {
+        private Foo foo;
+    }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+                    { "foo.cs", source1 }, { "bar.cs", source2}
+                });
+            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+
+            var context = new DefaultHttpContext();
+            context.Request.Path = PathString.FromUriComponent("/findsymbols");
+
+            var memoryStream = new MemoryStream();
+
+            context.Request.Body = new MemoryStream(
+                Encoding.UTF8.GetBytes(
+                    JsonConvert.SerializeObject(new FindSymbolsRequest
+                    {
+                        Language = LanguageNames.CSharp
+                    })
+                )
+            );
+
+            await middleware.Invoke(context);
+        }
+
+
+
+        public Func<ThrowRequest, Task<ThrowResponse>> ThrowDelegate = (request) =>
+        {
+            return Task.FromResult<ThrowResponse>(null);
+        };
+
+        public class ThrowRequest { }
+        public class ThrowResponse { }
+
+        [Fact]
+        public async Task Should_throw_if_type_is_not_mergeable()
+        {
+            RequestDelegate _next = async (ctx) => await Task.Run(() => { throw new NotImplementedException(); });
+
+            var source1 = @"using System;
+
+    class Foo {
+    }";
+            var source2 = @"class Bar {
+        private Foo foo;
+    }";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+                    { "foo.cs", source1 }, { "bar.cs", source2}
+                });
+            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
+
+            var context = new DefaultHttpContext();
+            context.Request.Path = PathString.FromUriComponent("/throw");
+
+            var memoryStream = new MemoryStream();
+
+            context.Request.Body = new MemoryStream(
+                Encoding.UTF8.GetBytes(
+                    JsonConvert.SerializeObject(new ThrowRequest())
+                )
+            );
+
+            await Assert.ThrowsAsync<NotSupportedException>(async () => await middleware.Invoke(context));
         }
     }
 }

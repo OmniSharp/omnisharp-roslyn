@@ -10,6 +10,6 @@ namespace OmniSharp.Roslyn.CSharp.Services
     {
         private static readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
         [OmniSharpLanguage(LanguageNames.CSharp)]
-        public Func<string, Task<bool>> IsApplicableTo { get; } = filePath => Task.FromResult(ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension)));
+        public Func<string, bool> IsApplicableTo { get; } = filePath => ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension));
     }
 }

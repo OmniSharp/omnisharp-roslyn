@@ -1,18 +1,22 @@
 using System;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+    public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
-        [HttpPost("findsymbols")]
-        public async Task<QuickFixResponse> FindSymbols(FindSymbolsRequest request = null)
+        [Import]
+        public OmnisharpWorkspace Workspace { get; set; }
+
+        public async Task<QuickFixResponse> Handle(FindSymbolsRequest request = null)
         {
             Func<string, bool> isMatch =
                 candidate => request != null
@@ -24,7 +28,7 @@ namespace OmniSharp
 
         private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
         {
-            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
+            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(Workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
 
             var quickFixes = (from symbol in symbols
                               from location in symbol.Locations
@@ -37,7 +41,7 @@ namespace OmniSharp
         {
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
-            var documents = _workspace.GetDocuments(path);
+            var documents = Workspace.GetDocuments(path);
 
             var format = SymbolDisplayFormat.MinimallyQualifiedFormat;
             format = format.WithMemberOptions(format.MemberOptions

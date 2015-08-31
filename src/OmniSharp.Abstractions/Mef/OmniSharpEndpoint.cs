@@ -25,7 +25,7 @@ namespace OmniSharp.Mef
     {
         public string Language { get; }
 
-        public OmniSharpLanguageAttribute(string language) : base(typeof(Func<string, Task<bool>>))
+        public OmniSharpLanguageAttribute(string language) : base(typeof(Func<string, bool>))
         {
             Language = language;
         }

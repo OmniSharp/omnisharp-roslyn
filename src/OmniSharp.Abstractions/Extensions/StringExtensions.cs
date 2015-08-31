@@ -40,7 +40,7 @@ namespace OmniSharp.Extensions
             return new string(completion.ToUpper().Intersect(partial.ToUpper()).ToArray()) == partial.ToUpper();
         }
 
-        private static bool FirstLetterMatches(string word, string match) 
+        private static bool FirstLetterMatches(string word, string match)
         {
             if(string.IsNullOrEmpty(match))
             {
