@@ -77,7 +77,7 @@ namespace OmniSharp.Middleware.Endpoint
             var interfaceExports = (IEnumerable<ExportHandler>)GetRequestHandlerExportsMethod.MakeGenericMethod(_requestHandlerType).Invoke(this, new object[] { });
 
             var plugins = _plugins.Where(x => x.SupportedEndpoints.Contains(EndpointName))
-                .Select(plugin => new PluginExportHandler(plugin));
+                .Select(plugin => new PluginExportHandler(plugin, _responseType));
 
             return Task.FromResult(delegateExports
                .Concat(interfaceExports)
@@ -283,10 +283,12 @@ namespace OmniSharp.Middleware.Endpoint
         class PluginExportHandler : ExportHandler
         {
             private readonly OutOfProcessPlugin _plugin;
+            private readonly Type _responseType;
 
-            public PluginExportHandler(OutOfProcessPlugin plugin) : base(plugin.Language)
+            public PluginExportHandler(OutOfProcessPlugin plugin, Type responseType) : base(plugin.Language)
             {
                 _plugin = plugin;
+                _responseType = responseType;
             }
 
             public override Task<object> Handle(object request)
