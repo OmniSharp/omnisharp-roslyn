@@ -1,60 +1,87 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using OmniSharp.Stdio.Protocol;
+using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Plugins
 {
-    public class OutOfProcessPlugin
+    public class OutOfProcessPlugin : IDisposable
     {
-        public OutOfProcessPlugin(string[] supportedEndpoints)
-        {
-            SupportedEndpoints = supportedEndpoints;
+        private readonly CancellationTokenSource _cancellation;
+        private readonly Process _process;
+        private readonly ISharedTextWriter _writer;
+        private readonly ConcurrentDictionary<int, Action<string>> _requests = new ConcurrentDictionary<int, Action<string>>();
+        public OopConfig Config;
 
+        public OutOfProcessPlugin(ISharedTextWriter writer, OopConfig config)
+        {
+            _writer = writer;
+            _cancellation = new CancellationTokenSource();
+            Config = config;
             Task.Run(() => Run());
         }
 
-        public string[] SupportedEndpoints { get; }
-        public string Language { get; set; }
-
-        private ConcurrentDictionary<int, RequestItem> _requests = new ConcurrentDictionary<int, RequestItem>();
-        private Process _process;
-
         public Task<object> Handle(string endpoint, object Request, Type responseType)
         {
-            var request = new RequestItem()
+            var request = new OopRequest()
             {
                 Command = endpoint,
                 Body = Request
             };
 
-            //_requests.TryAdd(request.Seq, request);
             _process.StandardInput.WriteLine(JsonConvert.SerializeObject(request));
-            new Task
+            // Complete Task
+            var tcs = new TaskCompletionSource<object>();
 
+            _requests.TryAdd(request.Seq, (result) =>
+            {
+                var response = JsonConvert.DeserializeObject(result, responseType);
+                tcs.SetResult(response);
+            });
+
+            return tcs.Task;
         }
 
         private async Task Run()
         {
-            _writer.WriteLine(new EventPacket()
-            {
-                Event = "started"
-            });
-
             while (!_cancellation.IsCancellationRequested)
             {
-                var line = await _input.ReadLineAsync();
+                var line = await _process.StandardOutput.ReadLineAsync();
                 if (line == null)
                 {
                     break;
                 }
 
-                var ignored = Task.Factory.StartNew(async () =>
+                var ignored = Task.Factory.StartNew((Action)(() =>
                 {
                     try
                     {
-                        await HandleRequest(line);
+                        var response = OopResponse.Parse(line);
+
+                        if (!response.Success)
+                        {
+                            _writer.WriteLine(new EventPacket()
+                            {
+                                Event = "error",
+                                Body = response.Message,
+                            });
+                            return;
+                        }
+
+                        Action<string> requestHandler = null;
+                        if (!_requests.TryGetValue((int)response.Seq, out requestHandler))
+                        {
+                            throw new ArgumentException("invalid seq-value");
+                        }
+
+                        requestHandler((string)response.ArgumentsJson);
                     }
                     catch (Exception e)
                     {
@@ -64,15 +91,13 @@ namespace OmniSharp.Plugins
                             Body = e.ToString()
                         });
                     }
-                });
+                }));
             }
         }
-    }
 
-    class RequestItem
-    {
-        public int Seq { get; set; }
-        public string Command { get; set; }
-        public object Body { get; set; }
+        public void Dispose()
+        {
+            _cancellation.Cancel();
+        }
     }
 }

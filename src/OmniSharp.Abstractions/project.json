@@ -4,6 +4,7 @@
     "warningsAsErrors": true
   },
   "dependencies": {
+    "Newtonsoft.Json": "7.0.1",
     "Microsoft.CodeAnalysis": "1.0.0-rc2",
     "Microsoft.CodeAnalysis.CSharp": "1.0.0-rc2",
     "Microsoft.CodeAnalysis.CSharp.Features": "1.0.0-rc2",
