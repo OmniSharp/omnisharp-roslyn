@@ -28,19 +28,19 @@ namespace OmniSharp.Plugins
             Task.Run(() => Run());
         }
 
-        public Task<object> Handle(string endpoint, object Request, Type responseType)
+        public Task<object> Handle(string endpoint, object request, Type responseType)
         {
-            var request = new OopRequest()
+            var oopRequest = new OopRequest()
             {
                 Command = endpoint,
-                Body = Request
+                Arguments = request
             };
 
-            _process.StandardInput.WriteLine(JsonConvert.SerializeObject(request));
+            _process.StandardInput.WriteLine(JsonConvert.SerializeObject(oopRequest));
             // Complete Task
             var tcs = new TaskCompletionSource<object>();
 
-            _requests.TryAdd(request.Seq, (result) =>
+            _requests.TryAdd(oopRequest.Seq, (result) =>
             {
                 var response = JsonConvert.DeserializeObject(result, responseType);
                 tcs.SetResult(response);
@@ -76,12 +76,12 @@ namespace OmniSharp.Plugins
                         }
 
                         Action<string> requestHandler = null;
-                        if (!_requests.TryGetValue((int)response.Seq, out requestHandler))
+                        if (!_requests.TryGetValue((int)response.Request_seq, out requestHandler))
                         {
                             throw new ArgumentException("invalid seq-value");
                         }
 
-                        requestHandler((string)response.ArgumentsJson);
+                        requestHandler((string)response.BodyJson);
                     }
                     catch (Exception e)
                     {

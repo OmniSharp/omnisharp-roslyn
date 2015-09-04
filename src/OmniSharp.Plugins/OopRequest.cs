@@ -9,6 +9,6 @@ namespace OmniSharp.Plugins
         }
         public int Seq { get; set; }
         public string Command { get; set; }
-        public object Body { get; set; }
+        public object Arguments { get; set; }
     }
 }

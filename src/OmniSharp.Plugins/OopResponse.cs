@@ -10,7 +10,7 @@ namespace OmniSharp.Plugins
             var obj = JObject.Parse(json);
             var result = obj.ToObject<OopResponse>();
 
-            if (result.Seq <= 0)
+            if (result.Request_seq <= 0)
             {
                 throw new ArgumentException("invalid seq-value");
             }
@@ -21,22 +21,22 @@ namespace OmniSharp.Plugins
             }
 
             JToken arguments;
-            if (obj.TryGetValue("arguments", StringComparison.OrdinalIgnoreCase, out arguments))
+            if (obj.TryGetValue("body", StringComparison.OrdinalIgnoreCase, out arguments))
             {
-                result.ArgumentsJson = arguments.ToString();
+                result.BodyJson = arguments.ToString();
             }
             else
             {
-                result.ArgumentsJson = string.Empty;
+                result.BodyJson = string.Empty;
             }
             return result;
         }
 
-        public int Seq { get; set; }
+        public int Request_seq { get; set; }
 
         public string Command { get; set; }
 
-        public string ArgumentsJson { get; set; }
+        public string BodyJson { get; set; }
 
         public bool Running { get; set; }
 
