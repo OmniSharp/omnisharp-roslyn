@@ -4,6 +4,14 @@ using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.MSBuild;
 using OmniSharp.ScriptCs;
+using OmniSharp.Extensions;
+
+#if DNX451
+using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+#endif
 
 namespace OmniSharp
 {
@@ -62,5 +70,105 @@ namespace OmniSharp
                 DnxProject = dnxProjectItem
             };
         }
+
+#if DNX451
+        [HttpPost("/addtoproject")]
+        public void AddToProject(Request request)
+        {
+            if (request.FileName == null || !File.Exists(request.FileName))
+            {
+                return;
+            }
+            
+            var project = GetRelativeMsBuildProject(request.FileName);
+
+            if (project == null)
+            {
+                return;
+            }
+
+            var itemType = GetItemType(request.FileName);
+            var itemAlreadyExists = project.AllEvaluatedItems.Any(i => i.EvaluatedInclude == request.FileName && string.Equals(i.ItemType, itemType, StringComparison.OrdinalIgnoreCase));
+            if (itemAlreadyExists)
+            {
+                return;
+            }
+
+            project.AddItem(itemType, GetRelativeFileName(request.FileName, project.FullPath));
+            project.Save();
+        }
+
+        [HttpPost("/removefromproject")]
+        public void RemoveFromProject(Request request)
+        {
+            if (request.FileName == null || !File.Exists(request.FileName))
+            {
+                return;
+            }
+
+            var project = GetRelativeMsBuildProject(request.FileName);
+
+            if (project == null)
+            {
+                return;
+            }
+
+            var itemType = GetItemType(request.FileName);
+
+            var item = project.AllEvaluatedItems
+                .Where(i => string.Equals(i.ItemType, itemType, StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault(i => i.EvaluatedInclude == GetRelativeFileName(request.FileName, project.FullPath) || i.EvaluatedInclude == request.FileName);
+
+            if (item == null)
+            {
+                return;
+            }
+
+            project.RemoveItem(item);
+            project.Save();
+        }
+
+        private static string GetItemType(string fileName)
+        {
+            return new FileInfo(fileName).Extension == ".cs" ? "Compile" : "Content";
+        }
+
+        private static string GetRelativeFileName(string filename, string projectFile)
+        {
+            return new Uri(projectFile)
+                .MakeRelativeUri(new Uri(filename))
+                .ToString()
+                .ForceWindowsPathSeparator();
+        }
+
+
+        public Microsoft.Build.Evaluation.Project GetRelativeMsBuildProject(string filename)
+        {
+            var relativeProject = FindRelativeProject(filename);
+
+            if (relativeProject == null || new FileInfo(relativeProject.FilePath).Extension != ".csproj")
+            {
+                return null;
+            }
+
+            Microsoft.Build.Evaluation.ProjectCollection.GlobalProjectCollection.UnloadAllProjects();
+            return new Microsoft.Build.Evaluation.Project(relativeProject.FilePath);
+        }
+
+        public Microsoft.CodeAnalysis.Project FindRelativeProject(string filename)
+        {
+            foreach (var project in _workspace.CurrentSolution.Projects)
+            {
+                var directory = Path.GetDirectoryName(project.FilePath);
+
+                if (filename.StartsWith(directory, StringComparison.OrdinalIgnoreCase))
+                {
+                    return project;
+                }
+            }
+
+            return null;
+        }
+#endif
     }
 }

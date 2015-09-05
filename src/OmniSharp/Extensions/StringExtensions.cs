@@ -39,6 +39,10 @@ namespace OmniSharp.Extensions
 
             return new string(completion.ToUpper().Intersect(partial.ToUpper()).ToArray()) == partial.ToUpper();
         }
+        public static string ForceWindowsPathSeparator(this string path)
+        {
+            return path.Replace('/', '\\');
+        }
 
         private static bool FirstLetterMatches(string word, string match) 
         {
