@@ -169,7 +169,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
             return new SolutionFile(headerLines, visualStudioVersionLineOpt, minimumVisualStudioVersionLineOpt, projectBlocks, globalSectionBlocks);
         }
 
-        [SuppressMessage("", "RS0001")] // TODO: This suppression should be removed once we have rulesets in place for Roslyn.sln
+        //[SuppressMessage("", "RS0001")] // TODO: This suppression should be removed once we have rulesets in place for Roslyn.sln
         private static IEnumerable<SectionBlock> ParseGlobal(TextReader reader)
         {
             if (reader.Peek() == -1)

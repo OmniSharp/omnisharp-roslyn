@@ -16,6 +16,7 @@ using OmniSharp.Filters;
 using OmniSharp.Middleware;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
+using OmniSharp.Plugins;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Settings;
@@ -122,11 +123,22 @@ namespace OmniSharp
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env,
                               ISharedTextWriter writer,
-                              ILibraryManager manager)
+                              ILibraryManager manager,
+                              PluginAssemblies plugins)
         {
-            Workspace.ConfigurePluginHost(manager.GetReferencingLibraries("OmniSharp.Abstractions")
-                .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
-                .Select(assemblyName => Assembly.Load(assemblyName)));
+            if (plugins.AssemblyNames.Any())
+            {
+                Workspace.ConfigurePluginHost(manager.GetLibraries()
+                    .SelectMany(x => x.LoadableAssemblies)
+                    .Join(plugins.AssemblyNames, x => x.FullName, x => x, (library, name) => library)
+                    .Select(assemblyName => Assembly.Load(assemblyName)));
+            }
+            else
+            {
+                Workspace.ConfigurePluginHost(manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                    .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                    .Select(assemblyName => Assembly.Load(assemblyName)));
+            }
 
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))

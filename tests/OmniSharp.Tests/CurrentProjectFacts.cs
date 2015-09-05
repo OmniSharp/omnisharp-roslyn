@@ -45,7 +45,7 @@ namespace OmniSharp.Tests
             };
 
             var response = controller.CurrentProject(request);
-            return response.DnxProject;
+            return (DnxProject)response[nameof(DnxProject)];
         }
 
         private Dnx.Project CreateProjectWithSourceFile(string projectPath, string documentPath)

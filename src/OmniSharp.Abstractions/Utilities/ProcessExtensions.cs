@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace OmniSharp
 {
-    internal static class ProcessExtensions
+    public static class ProcessExtensions
     {
         private static object _syncLock = new object();
         private static Thread _backgroundWatcher;

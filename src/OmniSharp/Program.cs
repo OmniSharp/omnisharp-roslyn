@@ -9,6 +9,7 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
+using OmniSharp.Plugins;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Services;
 
@@ -33,6 +34,7 @@ namespace OmniSharp
             var hostPID = -1;
             var transportType = TransportType.Http;
             var otherArgs = new List<string>();
+            var plugins = new List<string>();
 
             var enumerator = args.GetEnumerator();
 
@@ -62,6 +64,10 @@ namespace OmniSharp
                 {
                     transportType = TransportType.Stdio;
                 }
+                else if (arg == "--plugin") {
+                    enumerator.MoveNext();
+                    plugins.Add((string)enumerator.Current);
+                }
                 else
                 {
                     otherArgs.Add((string)enumerator.Current);
@@ -84,6 +90,7 @@ namespace OmniSharp
             var writer = new SharedConsoleWriter();
             context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
             context.Services.AddInstance<ISharedTextWriter>(writer);
+            context.Services.AddInstance<PluginAssemblies>(new PluginAssemblies(plugins));
 
             if (transportType == TransportType.Stdio)
             {

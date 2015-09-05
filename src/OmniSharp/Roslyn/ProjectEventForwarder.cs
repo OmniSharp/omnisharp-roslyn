@@ -80,8 +80,8 @@ namespace OmniSharp.Roslyn
 
             return new ProjectInformationResponse
             {
-                MsBuildProject = msBuildContextProject != null ? new MSBuildProject(msBuildContextProject) : null,
-                DnxProject = dnxContextProject != null ? new DnxProject(dnxContextProject) : null
+                {nameof(MSBuildProject),  msBuildContextProject != null ? new MSBuildProject(msBuildContextProject) : null},
+                {nameof(DnxProject), dnxContextProject != null ? new DnxProject(dnxContextProject) : null}
             };
         }
 
@@ -95,7 +95,7 @@ namespace OmniSharp.Roslyn
                 FileName = fileName;
                 EventType = eventType;
             }
-            
+
             public override bool Equals(object obj)
             {
                 var other = obj as SimpleWorkspaceEvent;

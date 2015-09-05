@@ -58,8 +58,8 @@ namespace OmniSharp
 
             return new ProjectInformationResponse
             {
-                MsBuildProject = msBuildProjectItem,
-                DnxProject = dnxProjectItem
+                {nameof(MSBuildProject), msBuildProjectItem },
+                {nameof(DnxProject), dnxProjectItem}
             };
         }
     }

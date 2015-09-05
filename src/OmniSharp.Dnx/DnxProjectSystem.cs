@@ -118,7 +118,7 @@ namespace OmniSharp.Dnx
 
                         this._emitter.Emit(EventTypes.ProjectChanged, new ProjectInformationResponse()
                         {
-                            DnxProject = new DnxProject(project)
+                            {nameof(DnxProject), new DnxProject(project)}
                         });
 
                         var unprocessed = project.ProjectsByFramework.Keys.ToList();
@@ -546,10 +546,10 @@ namespace OmniSharp.Dnx
             {
                 IEnumerable<string> paths;
 #if DNX451
-                if (_options.Dnx.Projects != "**/project.json")
+                if (_options.GetOptions(new DnxOptions()).Projects != "**/project.json")
                 {
                     var matcher = new Matcher();
-                    matcher.AddIncludePatterns(_options.Dnx.Projects.Split(';'));
+                    matcher.AddIncludePatterns(_options.GetOptions(new DnxOptions()).Projects.Split(';'));
                     paths = matcher.GetResultsInFullPath(_env.Path);
                 }
                 else

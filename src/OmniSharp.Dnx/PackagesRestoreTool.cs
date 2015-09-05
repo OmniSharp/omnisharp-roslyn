@@ -37,7 +37,7 @@ namespace OmniSharp.Dnx
 
         public void Run(Project project)
         {
-            if (!_options.Dnx.EnablePackageRestore)
+            if (!_options.GetOptions(new DnxOptions()).EnablePackageRestore)
             {
                 return;
             }
@@ -113,7 +113,7 @@ namespace OmniSharp.Dnx
             {
                 while (!restoreProcess.HasExited)
                 {
-                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.Dnx.PackageRestoreTimeout))
+                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.GetOptions(new DnxOptions()).PackageRestoreTimeout))
                     {
                         _logger.LogError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
                         wasKilledByWatchDog = true;

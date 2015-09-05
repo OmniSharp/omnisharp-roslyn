@@ -2,7 +2,7 @@ using System;
 
 namespace OmniSharp
 {
-    internal static class PlatformHelper
+    public static class PlatformHelper
     {
         private static Lazy<bool> _isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
 

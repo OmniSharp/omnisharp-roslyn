@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild
             _metadataReferenceCache = metadataReferenceCache;
             _watcher = watcher;
             _env = env;
-            _options = optionsAccessor.Options.MsBuild;
+            _options = optionsAccessor.Options.GetOptions(new MSBuildOptions());
             _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
             _emitter = emitter;
             _context = context;

@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "Microsoft.CodeAnalysis": "1.0.0-rc2",
+    "Microsoft.CodeAnalysis.CSharp": "1.0.0-rc2",
+    "Microsoft.CodeAnalysis.CSharp.Features": "1.0.0-rc2",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-rc2",
+    "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-rc2",
+    "Microsoft.Framework.Logging.Console": "1.0.0-beta4",
+    "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
+    "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
+    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4"
+  },
+  "frameworks": {
+    "dnx451": {
+      "frameworkAssemblies": {
+          "System.Globalization": "",
+          "System.Reflection":  "",
+          "Microsoft.Build": "",
+          "Microsoft.Build.Engine": "",
+          "Microsoft.Build.Framework": "",
+          "System.Xml":"4.0.0.0",
+          "System.Security":"4.0.0.0"
+        }
+    },
+    "dnxcore50": {
+      "dependencies": {
+        "System.Runtime": "4.0.20-beta-22816",
+        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-22816"
+      }
+    }
+  }
+}
