@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Composition;
 
 namespace OmniSharp.ScriptCs
 {
+    [Export, Shared]
     public class ScriptCsContext
     {
         public HashSet<string> CsxFiles { get; } = new HashSet<string>();

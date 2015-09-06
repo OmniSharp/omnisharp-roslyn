@@ -1,25 +1,22 @@
+using System.Collections.Generic;
 ﻿using Microsoft.AspNet.Mvc;
 using OmniSharp.Dnx;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.MSBuild;
 using OmniSharp.ScriptCs;
+using OmniSharp.Services;
 
 namespace OmniSharp
 {
     public class ProjectSystemController
     {
-        private readonly DnxContext _dnxContext;
         private readonly OmnisharpWorkspace _workspace;
-        private readonly MSBuildContext _msbuildContext;
-        private readonly ScriptCsContext _scriptCsContext;
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public ProjectSystemController(DnxContext dnxContext, MSBuildContext msbuildContext, ScriptCsContext scriptCsContext,
-            OmnisharpWorkspace workspace)
+        public ProjectSystemController(IEnumerable<IProjectSystem> projectSystems,            OmnisharpWorkspace workspace)
         {
-            _dnxContext = dnxContext;
-            _msbuildContext = msbuildContext;
-            _scriptCsContext = scriptCsContext;
+            _projectSystems = projectSystems;
             _workspace = workspace;
         }
 

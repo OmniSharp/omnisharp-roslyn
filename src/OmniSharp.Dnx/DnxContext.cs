@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Composition;
 using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Dnx
 {
+    [Export, Shared]
     public class DnxContext
     {
         private int _contextId;
@@ -35,7 +37,7 @@ namespace OmniSharp.Dnx
             Project project;
             return TryAddProject(projectFile, out project);
         }
-        
+
         public bool TryAddProject(string projectFile, out Project project)
         {
             project = null;
@@ -58,17 +60,6 @@ namespace OmniSharp.Dnx
             Projects[contextId] = project;
 
             return true;
-        }
-
-        public Project GetProject(string path)
-        {
-            int contextId;
-            if (!ProjectContextMapping.TryGetValue(path, out contextId))
-            {
-                return null;
-            }
-
-            return Projects[contextId];
         }
     }
 }

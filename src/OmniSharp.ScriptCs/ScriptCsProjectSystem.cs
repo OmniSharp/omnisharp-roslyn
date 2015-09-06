@@ -1,6 +1,6 @@
-﻿#if DNX451
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,6 +17,7 @@ using LogLevel = ScriptCs.Contracts.LogLevel;
 
 namespace OmniSharp.ScriptCs
 {
+    [Export(typeof(IProjectSystem))]
     public class ScriptCsProjectSystem : IProjectSystem
     {
         private static readonly string BaseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
@@ -26,6 +27,7 @@ namespace OmniSharp.ScriptCs
         private readonly ILogger _logger;
         private ScriptServices _scriptServices;
 
+        [ImportingConstructor]
         public ScriptCsProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptCsContext scriptCsContext)
         {
             _workspace = workspace;
@@ -36,6 +38,7 @@ namespace OmniSharp.ScriptCs
 
         public void Initalize()
         {
+
             _logger.LogInformation($"Detecting CSX files in '{_env.Path}'.");
 
             var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.TopDirectoryOnly);
@@ -169,6 +172,10 @@ namespace OmniSharp.ScriptCs
                 _workspace.AddDocument(documentInfo);
             }
         }
+
+        public object GetProject(string path)
+        {
+            return _scriptCsContext;
+        }
     }
 }
-#endif

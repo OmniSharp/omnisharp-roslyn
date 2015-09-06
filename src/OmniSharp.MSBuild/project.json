@@ -13,7 +13,8 @@
     "Microsoft.Framework.Logging.Console": "1.0.0-beta4",
     "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
     "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
-    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4"
+    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4",
+    "Microsoft.Composition": "1.0.30"
   },
   "frameworks": {
     "dnx451": {
@@ -26,12 +27,6 @@
           "System.Xml":"4.0.0.0",
           "System.Security":"4.0.0.0"
         }
-    },
-    "dnxcore50": {
-      "dependencies": {
-        "System.Runtime": "4.0.20-beta-22816",
-        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-22816"
-      }
     }
   }
 }

@@ -1,4 +1,3 @@
-﻿#if DNX451
 using ScriptCs.Contracts;
 using System.Collections.Generic;
 
@@ -18,4 +17,3 @@ namespace OmniSharp.ScriptCs
         }
     }
 }
-#endif

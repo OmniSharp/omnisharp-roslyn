@@ -70,18 +70,6 @@ namespace OmniSharp
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
 
-            // Add the project systems
-            services.AddInstance(new DnxContext());
-            services.AddInstance(new MSBuildContext());
-            services.AddInstance(new ScriptCs.ScriptCsContext());
-
-            services.AddSingleton<IProjectSystem, DnxProjectSystem>();
-            services.AddSingleton<IProjectSystem, MSBuildProjectSystem>();
-
-#if DNX451
-            services.AddSingleton<IProjectSystem, ScriptCs.ScriptCsProjectSystem>();
-#endif
-
             // Add the file watcher
             services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
 
@@ -123,19 +111,20 @@ namespace OmniSharp
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env,
                               ISharedTextWriter writer,
+                              IServiceProvider serviceProvider,
                               ILibraryManager manager,
                               PluginAssemblies plugins)
         {
             if (plugins.AssemblyNames.Any())
             {
-                Workspace.ConfigurePluginHost(manager.GetLibraries()
+                Workspace.ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, manager.GetLibraries()
                     .SelectMany(x => x.LoadableAssemblies)
                     .Join(plugins.AssemblyNames, x => x.FullName, x => x, (library, name) => library)
                     .Select(assemblyName => Assembly.Load(assemblyName)));
             }
             else
             {
-                Workspace.ConfigurePluginHost(manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                Workspace.ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, manager.GetReferencingLibraries("OmniSharp.Abstractions")
                     .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
                     .Select(assemblyName => Assembly.Load(assemblyName)));
             }
@@ -177,7 +166,7 @@ namespace OmniSharp
             // Initialize everything!
             var projectSystems = app.ApplicationServices.GetRequiredServices<IProjectSystem>();
 
-            foreach (var projectSystem in projectSystems)
+            foreach (var projectSystem in Workspace.PluginHost.GetExports<IProjectSystem>())
             {
                 try
                 {

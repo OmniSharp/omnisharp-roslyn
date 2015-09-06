@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -18,6 +19,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
+    [Export(typeof(IProjectSystem))]
     public class MSBuildProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;
@@ -333,6 +335,22 @@ namespace OmniSharp.MSBuild
             {
                 _workspace.RemoveMetadataReference(project.Id, reference);
             }
+        }
+
+        public ProjectFileInfo GetProject(string path)
+        {
+            ProjectFileInfo projectFileInfo;
+            if (!_context.Projects.TryGetValue(path, out projectFileInfo))
+            {
+                return null;
+            }
+
+            return projectFileInfo;
+        }
+
+        object IProjectSystem.GetProject(string path)
+        {
+            return GetProject(path);
         }
     }
 }

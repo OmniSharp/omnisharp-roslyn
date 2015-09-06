@@ -1,4 +1,6 @@
+using System;
 ﻿using System.Collections.Generic;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -26,6 +28,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Dnx
 {
+    [Export(typeof(IProjectSystem))]
     public class DnxProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;
@@ -396,6 +399,17 @@ namespace OmniSharp.Dnx
             wh.Wait();
         }
 
+        public Project GetProject(string path)
+        {
+            int contextId;
+            if (!_context.ProjectContextMapping.TryGetValue(path, out contextId))
+            {
+                return null;
+            }
+
+            return _context.Projects[contextId];
+        }
+
         private void OnShutdown()
         {
             _designTimeHostManager.Stop();
@@ -404,7 +418,7 @@ namespace OmniSharp.Dnx
         private void TriggerDependeees(string path, string messageType)
         {
             // temp: run [dnu|kpm] restore when project.json changed
-            var project = _context.GetProject(path);
+            var project = GetProject(path);
             if (project != null)
             {
                 _packagesRestoreTool.Run(project);
@@ -600,6 +614,11 @@ namespace OmniSharp.Dnx
         private static Task ConnectAsync(Socket socket, IPEndPoint endPoint)
         {
             return Task.Factory.FromAsync((cb, state) => socket.BeginConnect(endPoint, cb, state), ar => socket.EndConnect(ar), null);
+        }
+
+        object IProjectSystem.GetProject(string path)
+        {
+            return GetProject(path);
         }
     }
 }
