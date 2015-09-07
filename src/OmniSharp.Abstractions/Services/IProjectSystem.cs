@@ -1,11 +1,14 @@
 using System;
+﻿using OmniSharp.Models.v1;
+using Microsoft.Framework.ConfigurationModel;
 
-﻿namespace OmniSharp.Services
+namespace OmniSharp.Services
 {
     public interface IProjectSystem
     {
-        void Initalize();
-        object GetInformation();
-        object GetProject(string path);
+        string Key { get; }
+        void Initalize(IConfiguration configuration);
+        object GetInformationModel(ProjectInformationRequest request);
+        object GetProjectModel(string path);
     }
 }

@@ -23,8 +23,7 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new GotoDefinitionService();
-            controller.Workspace = workspace;
+            var controller = new GotoDefinitionService(workspace);
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -53,8 +52,7 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new GotoDefinitionService();
-            controller.Workspace = workspace;
+            var controller = new GotoDefinitionService(workspace);
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -72,8 +70,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
-            var controller = new GotoDefinitionService();
-            controller.Workspace = CreateTestWorkspace();
+            var controller = new GotoDefinitionService( CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -96,8 +93,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
         {
-            var controller = new GotoDefinitionService();
-            controller.Workspace = CreateTestWorkspace();
+            var controller = new GotoDefinitionService( CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -119,8 +115,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
         {
-            var controller = new GotoDefinitionService();
-            controller.Workspace = CreateTestWorkspace();
+            var controller = new GotoDefinitionService( CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -142,8 +137,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
         {
-            var controller = new GotoDefinitionService();
-            controller.Workspace = CreateTestWorkspace();
+            var controller = new GotoDefinitionService(CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -165,8 +159,7 @@ class Foo {
         [Fact]
         public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
         {
-            var controller = new GotoDefinitionService();
-            controller.Workspace = CreateTestWorkspace();
+            var controller = new GotoDefinitionService(CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {

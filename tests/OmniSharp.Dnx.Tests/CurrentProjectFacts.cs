@@ -1,7 +1,10 @@
+using System.Composition.Hosting;
+using System.Reflection;
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Dnx;
 using OmniSharp.Models;
+using OmniSharp.Services;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -10,11 +13,15 @@ namespace OmniSharp.Tests
     {
         private readonly DnxContext _context;
         private readonly OmnisharpWorkspace _workspace;
+        private readonly IProjectSystem _projectSystem;
+        private readonly CompositionHost _host;
 
         public CurrentProjectFacts()
         {
             _context = new DnxContext();
             _workspace = new OmnisharpWorkspace();
+            _host = TestHelpers.CreatePluginHost(_workspace, new[] { typeof(DnxProjectSystem).GetTypeInfo().Assembly });
+            _projectSystem = new DnxProjectSystem(_workspace, null, new FakeLoggerFactory(), null, null, null, null, _context);
         }
 
         [Fact]
@@ -37,7 +44,7 @@ namespace OmniSharp.Tests
 
         private DnxProject GetProjectContainingSourceFile(string name)
         {
-            var controller = new ProjectSystemController(_context, null, null, _workspace);
+            var controller = new ProjectSystemController(_workspace, _host);
 
             var request = new Request
             {

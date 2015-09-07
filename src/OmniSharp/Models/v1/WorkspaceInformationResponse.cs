@@ -1,11 +1,6 @@
-﻿using OmniSharp.ScriptCs;
+using System.Collections.Generic;
 
 namespace OmniSharp.Models
 {
-    public class WorkspaceInformationResponse
-    {
-        public DnxWorkspaceInformation Dnx { get; set; }
-        public MsBuildWorkspaceInformation MSBuild { get; set; }
-        public ScriptCsContext ScriptCs { get; set; }
-    }
+    public class WorkspaceInformationResponse : Dictionary<string, object> { }
 }

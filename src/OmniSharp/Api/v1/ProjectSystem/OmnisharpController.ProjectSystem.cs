@@ -1,10 +1,9 @@
+using System.Composition.Hosting;
 using System.Collections.Generic;
 ﻿using Microsoft.AspNet.Mvc;
 using OmniSharp.Dnx;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
-using OmniSharp.MSBuild;
-using OmniSharp.ScriptCs;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -14,9 +13,9 @@ namespace OmniSharp
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public ProjectSystemController(IEnumerable<IProjectSystem> projectSystems,            OmnisharpWorkspace workspace)
+        public ProjectSystemController(OmnisharpWorkspace workspace, CompositionHost host)
         {
-            _projectSystems = projectSystems;
+            _projectSystems = host.GetExports<IProjectSystem>();
             _workspace = workspace;
         }
 
@@ -24,40 +23,28 @@ namespace OmniSharp
         [HttpGet("/projects")]
         public WorkspaceInformationResponse ProjectInformation(ProjectInformationRequest request)
         {
-            return new WorkspaceInformationResponse
+            var response = new WorkspaceInformationResponse();
+            foreach (var projectSystem in _projectSystems)
             {
-                MSBuild = new MsBuildWorkspaceInformation(_msbuildContext, request?.ExcludeSourceFiles ?? false),
-                Dnx = new DnxWorkspaceInformation(_dnxContext),
-                ScriptCs = _scriptCsContext
-            };
+                var information = projectSystem.GetInformationModel(request);
+                response.Add(projectSystem.Key, information);
+            }
+            return response;
         }
 
         [HttpPost("/project")]
         public ProjectInformationResponse CurrentProject(Request request)
         {
-            var document = _workspace.GetDocument(request.FileName);
+            var response = new ProjectInformationResponse();
 
-            var msBuildContextProject = _msbuildContext?.GetProject(document?.Project.FilePath);
-            var dnxContextProject = _dnxContext?.GetProject(document?.Project.FilePath);
-
-            MSBuildProject msBuildProjectItem = null;
-            DnxProject dnxProjectItem = null;
-
-            if (msBuildContextProject != null)
+            foreach (var projectSystem in _projectSystems)
             {
-                msBuildProjectItem = new MSBuildProject(msBuildContextProject);
+                var project = projectSystem.GetProjectModel(request.FileName);
+                if (project != null)
+                    response.Add(projectSystem.Key, project);
             }
 
-            if (dnxContextProject != null)
-            {
-                dnxProjectItem = new DnxProject(dnxContextProject);
-            }
-
-            return new ProjectInformationResponse
-            {
-                {nameof(MSBuildProject), msBuildProjectItem },
-                {nameof(DnxProject), dnxProjectItem}
-            };
+            return response;
         }
     }
 }

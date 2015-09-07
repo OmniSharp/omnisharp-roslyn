@@ -15,7 +15,7 @@ namespace OmniSharp.Plugins
     public class OutOfProcessPlugin : IDisposable
     {
         private readonly CancellationTokenSource _cancellation;
-        private readonly Process _process;
+        private readonly Process _process = null;
         private readonly ISharedTextWriter _writer;
         private readonly ConcurrentDictionary<int, Action<string>> _requests = new ConcurrentDictionary<int, Action<string>>();
         public OopConfig Config;

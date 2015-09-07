@@ -28,11 +28,11 @@ namespace OmniSharp.Middleware
         private readonly CompositionHost _host;
         private readonly ILogger _logger;
 
-        public EndpointMiddleware(RequestDelegate next, OmnisharpWorkspace workspace, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
+        public EndpointMiddleware(RequestDelegate next, OmnisharpWorkspace workspace, CompositionHost host, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
         {
             _next = next;
             _workspace = workspace;
-            _host = workspace.PluginHost;
+            _host = host;
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
             _languagePredicateHandler = new LanguagePredicateHandler(_host.GetExports<Lazy<Func<string, bool>, OmniSharpLanguage>>());
 

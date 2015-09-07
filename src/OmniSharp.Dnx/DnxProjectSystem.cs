@@ -12,6 +12,7 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
@@ -22,31 +23,33 @@ using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Models;
+using OmniSharp.Models.v1;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Dnx
 {
-    [Export(typeof(IProjectSystem))]
+    [Export(typeof(IProjectSystem)), Shared]
     public class DnxProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
-        private readonly DnxPaths _dnxPaths;
-        private readonly DesignTimeHostManager _designTimeHostManager;
-        private readonly PackagesRestoreTool _packagesRestoreTool;
+        private DnxPaths _dnxPaths;
+        private DesignTimeHostManager _designTimeHostManager;
+        private PackagesRestoreTool _packagesRestoreTool;
+        private DnxOptions _options;
         private readonly DnxContext _context;
         private readonly IFileSystemWatcher _watcher;
         private readonly IEventEmitter _emitter;
-        private readonly OmniSharpOptions _options;
         private readonly DirectoryEnumerator _directoryEnumerator;
+        private readonly ILoggerFactory _loggerFactory;
 
+        [ImportingConstructor]
         public DnxProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
-                                    IOptions<OmniSharpOptions> optionsAccessor,
                                     ILoggerFactory loggerFactory,
                                     IMetadataFileReferenceCache metadataFileReferenceCache,
                                     IApplicationLifetime lifetime,
@@ -56,12 +59,9 @@ namespace OmniSharp.Dnx
         {
             _workspace = workspace;
             _env = env;
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<DnxProjectSystem>();
             _metadataFileReferenceCache = metadataFileReferenceCache;
-            _options = optionsAccessor.Options;
-            _dnxPaths = new DnxPaths(env, _options, loggerFactory);
-            _designTimeHostManager = new DesignTimeHostManager(loggerFactory, _dnxPaths);
-            _packagesRestoreTool = new PackagesRestoreTool(_options, loggerFactory, emitter, context, _dnxPaths);
             _context = context;
             _watcher = watcher;
             _emitter = emitter;
@@ -70,10 +70,20 @@ namespace OmniSharp.Dnx
             lifetime.ApplicationStopping.Register(OnShutdown);
         }
 
-        public void Initalize()
+        public string Key { get { return "Dnx"; } }
+
+        public void Initalize(IConfiguration configuration)
         {
+            _options = new DnxOptions();
+            OptionsServices.ReadProperties(_options, configuration);
+
+            _dnxPaths = new DnxPaths(_env, _options, _loggerFactory);
+            _packagesRestoreTool = new PackagesRestoreTool(_options, _loggerFactory, _emitter, _context, _dnxPaths); ;
+            _designTimeHostManager = new DesignTimeHostManager(_loggerFactory, _dnxPaths);
+
             var runtimePath = _dnxPaths.RuntimePath;
             _context.RuntimePath = runtimePath.Value;
+
 
             if (!ScanForProjects())
             {
@@ -560,10 +570,10 @@ namespace OmniSharp.Dnx
             {
                 IEnumerable<string> paths;
 #if DNX451
-                if (_options.GetOptions(new DnxOptions()).Projects != "**/project.json")
+                if (_options.Projects != "**/project.json")
                 {
                     var matcher = new Matcher();
-                    matcher.AddIncludePatterns(_options.GetOptions(new DnxOptions()).Projects.Split(';'));
+                    matcher.AddIncludePatterns(_options.Projects.Split(';'));
                     paths = matcher.GetResultsInFullPath(_env.Path);
                 }
                 else
@@ -616,9 +626,18 @@ namespace OmniSharp.Dnx
             return Task.Factory.FromAsync((cb, state) => socket.BeginConnect(endPoint, cb, state), ar => socket.EndConnect(ar), null);
         }
 
-        object IProjectSystem.GetProject(string path)
+        object IProjectSystem.GetProjectModel(string path)
         {
-            return GetProject(path);
+            var project = GetProject(path);
+            if (project != null)
+                return new DnxProject(GetProject(path));
+
+            return null;
+        }
+
+        public object GetInformationModel(ProjectInformationRequest request)
+        {
+            return new DnxWorkspaceInformation(_context);
         }
     }
 }

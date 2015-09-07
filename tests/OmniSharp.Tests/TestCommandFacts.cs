@@ -1,7 +1,10 @@
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
 using OmniSharp.Models;
+using OmniSharp.Options;
 using OmniSharp.Services;
 using Xunit;
 
@@ -188,8 +191,9 @@ namespace OmniSharp.Tests
                 Commands = { { "test", "Xunit.KRunner" } }
             });
 
-            var testCommandProviders = new[] { new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter(), new FakeOmniSharpOptions()) };
-            var controller = new TestCommandController(workspace, testCommandProviders);
+            var testCommandProviders = new[] { new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter(), new DnxOptions()) };
+            var host = TestHelpers.CreatePluginHost(workspace, Enumerable.Empty<Assembly>());
+            var controller = new TestCommandController(workspace, host);
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
 
             var request = new TestCommandRequest

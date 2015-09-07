@@ -15,7 +15,7 @@ namespace OmniSharp.Dnx
     public class DnxPaths
     {
         private readonly IOmnisharpEnvironment _env;
-        private readonly OmniSharpOptions _options;
+        private readonly DnxOptions _options;
         private readonly ILogger _logger;
         public DnxRuntimePathResult RuntimePath { get; private set; }
         public string Dnx { get; private set; }
@@ -25,7 +25,7 @@ namespace OmniSharp.Dnx
         public string K   { get; private set; }
 
         public DnxPaths(IOmnisharpEnvironment env,
-                            OmniSharpOptions options,
+                            DnxOptions options,
                             ILoggerFactory loggerFactory)
         {
             _env = env;
@@ -45,7 +45,7 @@ namespace OmniSharp.Dnx
             var root = ResolveRootDirectory(_env.Path);
             var globalJson = Path.Combine(root, "global.json");
             var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
-            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.GetOptions(new DnxOptions()).Alias ?? "default";
+            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())

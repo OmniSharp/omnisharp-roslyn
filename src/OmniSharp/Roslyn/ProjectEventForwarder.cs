@@ -1,26 +1,23 @@
+using System.Composition.Hosting;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Dnx;
 using OmniSharp.Models;
-using OmniSharp.MSBuild;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn
 {
     public class ProjectEventForwarder
     {
-        private readonly DnxContext _dnxContext;
-        private readonly MSBuildContext _msbuildContext;
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEventEmitter _emitter;
         private readonly ISet<SimpleWorkspaceEvent> _queue = new HashSet<SimpleWorkspaceEvent>();
         private readonly object _lock = new object();
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public ProjectEventForwarder(DnxContext dnxContext, MSBuildContext msbuildContext, OmnisharpWorkspace workspace, IEventEmitter emitter)
+        public ProjectEventForwarder(OmnisharpWorkspace workspace, CompositionHost host, IEventEmitter emitter)
         {
-            _dnxContext = dnxContext;
-            _msbuildContext = msbuildContext;
+            _projectSystems = host.GetExports<IProjectSystem>();
             _workspace = workspace;
             _emitter = emitter;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
@@ -75,14 +72,15 @@ namespace OmniSharp.Roslyn
 
         private ProjectInformationResponse GetProjectInformation(string fileName)
         {
-            var msBuildContextProject = _msbuildContext.GetProject(fileName);
-            var dnxContextProject = _dnxContext.GetProject(fileName);
+            var response = new ProjectInformationResponse();
 
-            return new ProjectInformationResponse
-            {
-                {nameof(MSBuildProject),  msBuildContextProject != null ? new MSBuildProject(msBuildContextProject) : null},
-                {nameof(DnxProject), dnxContextProject != null ? new DnxProject(dnxContextProject) : null}
-            };
+            foreach (var projectSystem in _projectSystems) {
+                var project = projectSystem.GetProjectModel(fileName);
+                if (project != null)
+                    response.Add(projectSystem.Key, project);
+            }
+
+            return response;
         }
 
         private class SimpleWorkspaceEvent

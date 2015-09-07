@@ -75,8 +75,8 @@ namespace OmniSharp.Tests
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
-            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/notvalid");
@@ -90,8 +90,8 @@ namespace OmniSharp.Tests
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
-            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -131,8 +131,8 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -170,8 +170,8 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -206,8 +206,8 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -252,8 +252,8 @@ namespace OmniSharp.Tests
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            workspace.ConfigurePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
+            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");

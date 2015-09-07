@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Services;
 
 namespace OmniSharp.Tests
 {
@@ -38,13 +40,13 @@ namespace OmniSharp.Tests
             public LineColumn Start { get; private set; }
             public LineColumn End { get; private set; }
 
-            public Range (LineColumn start, LineColumn end)
+            public Range(LineColumn start, LineColumn end)
             {
                 Start = start;
                 End = end;
             }
 
-            public bool IsEmpty { get { return Start.Equals(End);  } }
+            public bool IsEmpty { get { return Start.Equals(End); } }
         }
 
         public static LineColumn GetLineAndColumnFromDollar(string text)
@@ -141,6 +143,22 @@ namespace OmniSharp.Tests
             var workspace = Startup.CreateWorkspace();
             AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
             return workspace;
+        }
+
+        public static CompositionHost CreatePluginHost(OmnisharpWorkspace workspace, IEnumerable<Assembly> assemblies)
+        {
+            return Startup.ConfigurePluginHost(
+                null,
+                workspace,
+                new FakeLoggerFactory(),
+                new FakeEnvironment(),
+                null,
+                new FakeOmniSharpOptions().Options,
+                null,
+                null,
+                null,
+                null,
+                assemblies);
         }
 
         public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)

@@ -1,20 +1,24 @@
 using System;
+using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
+using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.OptionsModel;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Dnx;
 using OmniSharp.Filters;
+using OmniSharp.Mef;
 using OmniSharp.Middleware;
-using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Plugins;
 using OmniSharp.Roslyn;
@@ -52,6 +56,8 @@ namespace OmniSharp
 
         public OmnisharpWorkspace Workspace { get; set; }
 
+        public CompositionHost PluginHost { get; private set; }
+
         public void ConfigureServices(IServiceCollection services)
         {
             Workspace = CreateWorkspace();
@@ -65,6 +71,7 @@ namespace OmniSharp
 
             // Add the omnisharp workspace to the container
             services.AddInstance(Workspace);
+            services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
 
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
@@ -107,24 +114,62 @@ namespace OmniSharp
             return new OmnisharpWorkspace(MefHostServices.Create(assemblies));
         }
 
+        public static CompositionHost ConfigurePluginHost(IServiceProvider serviceProvider,
+                              OmnisharpWorkspace workspace,
+                              ILoggerFactory loggerFactory,
+                              IOmnisharpEnvironment env,
+                              ISharedTextWriter writer,
+                              OmniSharpOptions options,
+                              IMetadataFileReferenceCache metadataFileReferenceCache,
+                              IApplicationLifetime applicationLifetime,
+                              IFileSystemWatcher fileSystemWatcher,
+                              IEventEmitter eventEmitter,
+                              IEnumerable<Assembly> assemblies)
+        {
+            var config = new ContainerConfiguration();
+            foreach (var assembly in assemblies)
+            {
+                config = config.WithAssembly(assembly);
+            }
+
+            //IOmnisharpEnvironment env, ILoggerFactory loggerFactory
+            config = config.WithProvider(MefValueProvider.From(workspace))
+                .WithProvider(MefValueProvider.From(serviceProvider))
+                .WithProvider(MefValueProvider.From(loggerFactory))
+                .WithProvider(MefValueProvider.From(env))
+                .WithProvider(MefValueProvider.From(writer))
+                .WithProvider(MefValueProvider.From(options))
+                .WithProvider(MefValueProvider.From(metadataFileReferenceCache))
+                .WithProvider(MefValueProvider.From(applicationLifetime))
+                .WithProvider(MefValueProvider.From(fileSystemWatcher))
+                .WithProvider(MefValueProvider.From(eventEmitter));
+
+            return config.CreateContainer();
+        }
+
         public void Configure(IApplicationBuilder app,
                               ILoggerFactory loggerFactory,
                               IOmnisharpEnvironment env,
                               ISharedTextWriter writer,
                               IServiceProvider serviceProvider,
                               ILibraryManager manager,
+                              IOptions<OmniSharpOptions> optionsAccessor,
+                              IMetadataFileReferenceCache metadataFileReferenceCache,
+                              IApplicationLifetime applicationLifetime,
+                              IFileSystemWatcher fileSystemWatcher,
+                              IEventEmitter eventEmitter,
                               PluginAssemblies plugins)
         {
             if (plugins.AssemblyNames.Any())
             {
-                Workspace.ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, manager.GetLibraries()
+                PluginHost = ConfigurePluginHost(serviceProvider, Workspace, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetLibraries()
                     .SelectMany(x => x.LoadableAssemblies)
                     .Join(plugins.AssemblyNames, x => x.FullName, x => x, (library, name) => library)
                     .Select(assemblyName => Assembly.Load(assemblyName)));
             }
             else
             {
-                Workspace.ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                PluginHost = ConfigurePluginHost(serviceProvider, Workspace, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetReferencingLibraries("OmniSharp.Abstractions")
                     .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
                     .Select(assemblyName => Assembly.Load(assemblyName)));
             }
@@ -162,15 +207,11 @@ namespace OmniSharp
 
             // Forward workspace events
             app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
-
-            // Initialize everything!
-            var projectSystems = app.ApplicationServices.GetRequiredServices<IProjectSystem>();
-
-            foreach (var projectSystem in Workspace.PluginHost.GetExports<IProjectSystem>())
+            foreach (var projectSystem in PluginHost.GetExports<IProjectSystem>())
             {
                 try
                 {
-                    projectSystem.Initalize();
+                    projectSystem.Initalize(Configuration.GetSubKey(projectSystem.Key));
                 }
                 catch (Exception e)
                 {

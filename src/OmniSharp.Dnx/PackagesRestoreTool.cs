@@ -14,7 +14,7 @@ namespace OmniSharp.Dnx
 {
     public class PackagesRestoreTool
     {
-        private readonly OmniSharpOptions _options;
+        private readonly DnxOptions _options;
         private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
         private readonly DnxContext _context;
@@ -23,7 +23,7 @@ namespace OmniSharp.Dnx
         private readonly IDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
-        public PackagesRestoreTool(OmniSharpOptions options, ILoggerFactory logger, IEventEmitter emitter, DnxContext context, DnxPaths paths)
+        public PackagesRestoreTool(DnxOptions options, ILoggerFactory logger, IEventEmitter emitter, DnxContext context, DnxPaths paths)
         {
             _options = options;
             _logger = logger.CreateLogger<PackagesRestoreTool>();
@@ -37,7 +37,7 @@ namespace OmniSharp.Dnx
 
         public void Run(Project project)
         {
-            if (!_options.GetOptions(new DnxOptions()).EnablePackageRestore)
+            if (!_options.EnablePackageRestore)
             {
                 return;
             }
@@ -113,7 +113,7 @@ namespace OmniSharp.Dnx
             {
                 while (!restoreProcess.HasExited)
                 {
-                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.GetOptions(new DnxOptions()).PackageRestoreTimeout))
+                    if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.PackageRestoreTimeout))
                     {
                         _logger.LogError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
                         wasKilledByWatchDog = true;

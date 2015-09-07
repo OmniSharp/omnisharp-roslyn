@@ -10,7 +10,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+    [OmniSharpEndpoint(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
     public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
         [Import]

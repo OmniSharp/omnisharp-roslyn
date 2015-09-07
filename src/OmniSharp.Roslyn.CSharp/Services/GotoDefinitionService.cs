@@ -16,14 +16,19 @@ namespace OmniSharp.Roslyn.CSharp.Services
     [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
     public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
-        [Import]
-        public OmnisharpWorkspace Workspace { get; set; }
+        private OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public GotoDefinitionService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
 
         async Task<GotoDefinitionResponse> RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>.Handle(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();
 
-            var document = Workspace.GetDocument(request.FileName);
+            var document = _workspace.GetDocument(request.FileName);
             var response = new GotoDefinitionResponse();
             if (document != null)
             {
@@ -31,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                 var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-                var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, OmnisharpWorkspace.Instance);
+                var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
 
                 if (symbol != null)
                 {

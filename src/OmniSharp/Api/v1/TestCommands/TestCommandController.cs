@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,11 +17,10 @@ namespace OmniSharp
         private OmnisharpWorkspace _workspace;
         private IEnumerable<ITestCommandProvider> _testCommandProviders;
 
-        public TestCommandController(OmnisharpWorkspace workspace,
-                                     IEnumerable<ITestCommandProvider> testCommandProviders)
+        public TestCommandController(OmnisharpWorkspace workspace, CompositionHost host)
         {
             _workspace = workspace;
-            _testCommandProviders = testCommandProviders;
+            _testCommandProviders = host.GetExports<ITestCommandProvider>();
         }
 
         [HttpPost("gettestcontext")]

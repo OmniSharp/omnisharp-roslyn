@@ -8,7 +8,9 @@ using Common.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Logging;
+using OmniSharp.Models.v1;
 using OmniSharp.Services;
 using ScriptCs;
 using ScriptCs.Contracts;
@@ -36,9 +38,8 @@ namespace OmniSharp.ScriptCs
             _logger = loggerFactory.CreateLogger<ScriptCsProjectSystem>();
         }
 
-        public void Initalize()
+        public void Initalize(IConfiguration configuration)
         {
-
             _logger.LogInformation($"Detecting CSX files in '{_env.Path}'.");
 
             var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.TopDirectoryOnly);
@@ -141,6 +142,8 @@ namespace OmniSharp.ScriptCs
             }
         }
 
+        public string Key { get { return "ScriptCs";} }
+
         private void ImportReferences(List<MetadataReference> listOfReferences, IEnumerable<string> referencesToImport)
         {
             foreach (var importedReference in referencesToImport.Where(x => !x.ToLowerInvariant().Contains("scriptcs.contracts")))
@@ -173,7 +176,12 @@ namespace OmniSharp.ScriptCs
             }
         }
 
-        public object GetProject(string path)
+        public object GetProjectModel(string path)
+        {
+            return null;
+        }
+
+        public object GetInformationModel(ProjectInformationRequest request)
         {
             return _scriptCsContext;
         }

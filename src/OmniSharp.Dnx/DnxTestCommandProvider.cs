@@ -1,3 +1,4 @@
+using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
@@ -6,6 +7,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Dnx
 {
+    [Export(typeof(ITestCommandProvider))]
     public class DnxTestCommandProvider : ITestCommandProvider
     {
         private readonly DnxContext _context;
@@ -15,10 +17,10 @@ namespace OmniSharp.Dnx
                                           IOmnisharpEnvironment env,
                                           ILoggerFactory loggerFactory,
                                           IEventEmitter emitter,
-                                          IOptions<OmniSharpOptions> options)
+                                          DnxOptions options)
         {
             _context = context;
-            var dnxPaths = new DnxPaths(env, options.Options, loggerFactory);
+            var dnxPaths = new DnxPaths(env, options, loggerFactory);
             _dnx = dnxPaths.Dnx != null ? dnxPaths.Dnx + " ." : dnxPaths.K;
         }
 

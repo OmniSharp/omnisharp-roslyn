@@ -8,7 +8,6 @@ using NuGet.Configuration;
 using NuGet.Protocol.Core.v2;
 using NuGet.Protocol.Core.v3;
 #endif
-using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.NuGet
 {

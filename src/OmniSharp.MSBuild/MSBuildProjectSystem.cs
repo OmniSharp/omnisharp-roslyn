@@ -10,9 +10,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using OmniSharp.Models;
+using OmniSharp.Models.v1;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -34,11 +36,13 @@ namespace OmniSharp.MSBuild
         private readonly MSBuildContext _context;
         private readonly IFileSystemWatcher _watcher;
 
-        private readonly MSBuildOptions _options;
+        private MSBuildOptions _options;
 
+        public string Key { get { return "MsBuild"; } }
+
+        [ImportingConstructor]
         public MSBuildProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
-                                    IOptions<OmniSharpOptions> optionsAccessor,
                                     ILoggerFactory loggerFactory,
                                     IEventEmitter emitter,
                                     IMetadataFileReferenceCache metadataReferenceCache,
@@ -49,14 +53,16 @@ namespace OmniSharp.MSBuild
             _metadataReferenceCache = metadataReferenceCache;
             _watcher = watcher;
             _env = env;
-            _options = optionsAccessor.Options.GetOptions(new MSBuildOptions());
             _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
             _emitter = emitter;
             _context = context;
         }
 
-        public void Initalize()
+        public void Initalize(IConfiguration configuration)
         {
+            _options = new MSBuildOptions();
+            OptionsServices.ReadProperties(_options, configuration);
+
             var solutionFilePath = _env.SolutionFilePath;
 
             if (string.IsNullOrEmpty(solutionFilePath))
@@ -348,9 +354,18 @@ namespace OmniSharp.MSBuild
             return projectFileInfo;
         }
 
-        object IProjectSystem.GetProject(string path)
+        object IProjectSystem.GetProjectModel(string path)
         {
-            return GetProject(path);
+            var project = GetProject(path);
+            if (project != null)
+                return new MSBuildProject(GetProject(path));
+
+            return null;
+        }
+
+        public object GetInformationModel(ProjectInformationRequest request)
+        {
+            return new MsBuildWorkspaceInformation(_context, request?.ExcludeSourceFiles ?? false);
         }
     }
 }

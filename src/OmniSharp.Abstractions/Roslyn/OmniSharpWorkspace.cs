@@ -12,41 +12,18 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Mef;
+using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
-    class GenericProvider<T> : ExportDescriptorProvider
-    {
-        private readonly T _item;
-
-        public GenericProvider(T item)
-        {
-            _item = item;
-        }
-
-        public override IEnumerable<ExportDescriptorPromise> GetExportDescriptors(CompositionContract contract, DependencyAccessor descriptorAccessor)
-        {
-            if (contract.ContractType == typeof(T))
-            {
-                yield return new ExportDescriptorPromise(contract, string.Empty, true,
-                    () => Enumerable.Empty<CompositionDependency>(),
-                    deps => ExportDescriptor.Create((context, operation) => _item, new Dictionary<string, object>()));
-            }
-        }
-    }
-
     public class OmnisharpWorkspace : Workspace
     {
         public bool Initialized { get; set; }
 
         public BufferManager BufferManager { get; private set; }
-
-        public CompositionHost PluginHost { get; private set; }
-
-        public static OmnisharpWorkspace Instance { get; private set; }
 
         public OmnisharpWorkspace() : this(MefHostServices.DefaultHost)
         {
@@ -55,31 +32,6 @@ namespace OmniSharp
         public OmnisharpWorkspace(MefHostServices hostServices) : base(hostServices, "Custom")
         {
             BufferManager = new BufferManager(this);
-        }
-
-        public void ConfigurePluginHost(IServiceProvider serviceProvider,
-                              ILoggerFactory loggerFactory,
-                              IOmnisharpEnvironment env,
-                              ISharedTextWriter writer,
-                              IEnumerable<Assembly> assemblies)
-        {
-            Instance = this;
-
-            var config = new ContainerConfiguration();
-            foreach (var assembly in assemblies)
-            {
-                config = config.WithAssembly(assembly);
-            }
-
-            //IOmnisharpEnvironment env, ILoggerFactory loggerFactory
-            config = config.WithProvider(new GenericProvider<OmnisharpWorkspace>(this));
-            config = config.WithProvider(new GenericProvider<IServiceProvider>(serviceProvider));
-            config = config.WithProvider(new GenericProvider<ILoggerFactory>(loggerFactory));
-            config = config.WithProvider(new GenericProvider<IOmnisharpEnvironment>(env));
-            config = config.WithProvider(new GenericProvider<ISharedTextWriter>(writer));
-
-            var compositionHost = config.CreateContainer();
-            PluginHost = compositionHost;
         }
 
         public void AddProject(ProjectInfo projectInfo)
