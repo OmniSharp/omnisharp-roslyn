@@ -191,7 +191,7 @@ namespace OmniSharp.Tests
                 Commands = { { "test", "Xunit.KRunner" } }
             });
 
-            var testCommandProviders = new[] { new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter(), new DnxOptions()) };
+            var testCommandProviders = new[] { new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter()) };
             var host = TestHelpers.CreatePluginHost(workspace, Enumerable.Empty<Assembly>());
             var controller = new TestCommandController(workspace, host);
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);

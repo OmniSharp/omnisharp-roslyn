@@ -187,8 +187,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFixResponse> FindSymbols(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new FindSymbolsService();
-            controller.Workspace = workspace;
+            var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             return await requestHandler.Handle(null);
         }
@@ -196,8 +195,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFixResponse> FindSymbolsWithFilter(string source, string filter)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new FindSymbolsService();
-            controller.Workspace = workspace;
+            var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             var request = new FindSymbolsRequest { Filter = filter };
             return await controller.Handle(request);
