@@ -13,8 +13,13 @@ namespace OmniSharp
     [OmniSharpEndpoint(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
     public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
-        [Import]
-        public OmnisharpWorkspace Workspace { get; set; }
+        private OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public FindSymbolsService(OmnisharpWorkspace workspace) {
+_workspace = workspace;
+        }
+
 
         public async Task<QuickFixResponse> Handle(FindSymbolsRequest request = null)
         {
@@ -28,7 +33,7 @@ namespace OmniSharp
 
         private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
         {
-            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(Workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
+            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
 
             var quickFixes = (from symbol in symbols
                               from location in symbol.Locations
@@ -41,7 +46,7 @@ namespace OmniSharp
         {
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
-            var documents = Workspace.GetDocuments(path);
+            var documents = _workspace.GetDocuments(path);
 
             var format = SymbolDisplayFormat.MinimallyQualifiedFormat;
             format = format.WithMemberOptions(format.MemberOptions

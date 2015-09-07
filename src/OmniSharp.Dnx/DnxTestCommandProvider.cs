@@ -13,14 +13,14 @@ namespace OmniSharp.Dnx
         private readonly DnxContext _context;
         private readonly string _dnx;
 
+        [ImportingConstructor]
         public DnxTestCommandProvider(DnxContext context,
                                           IOmnisharpEnvironment env,
                                           ILoggerFactory loggerFactory,
-                                          IEventEmitter emitter,
-                                          DnxOptions options)
+                                          IEventEmitter emitter)
         {
             _context = context;
-            var dnxPaths = new DnxPaths(env, options, loggerFactory);
+            var dnxPaths = new DnxPaths(env, context.Options, loggerFactory);
             _dnx = dnxPaths.Dnx != null ? dnxPaths.Dnx + " ." : dnxPaths.K;
         }
 

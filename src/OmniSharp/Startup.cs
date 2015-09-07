@@ -80,14 +80,16 @@ namespace OmniSharp
             // Add the file watcher
             services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
 
-            // Add test command providers
-            services.AddSingleton<ITestCommandProvider, DnxTestCommandProvider>();
-
 #if DNX451
             //TODO Do roslyn code actions run on Core CLR?
             services.AddSingleton<ICodeActionProvider, RoslynCodeActionProvider>();
             services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
 #endif
+
+            foreach (var endpoint in Endpoints.AvailableEndpoints)
+            {
+                services.AddInstance(endpoint);
+            }
 
             if (Program.Environment.TransportType == TransportType.Stdio)
             {
@@ -193,8 +195,8 @@ namespace OmniSharp
 
             app.UseErrorHandler("/error");
 
-            app.UseMvc();
             app.UseMiddleware<EndpointMiddleware>();
+            app.UseMvc();
 
             if (env.TransportType == TransportType.Stdio)
             {

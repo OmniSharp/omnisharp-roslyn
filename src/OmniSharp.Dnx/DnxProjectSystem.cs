@@ -83,6 +83,7 @@ namespace OmniSharp.Dnx
 
             var runtimePath = _dnxPaths.RuntimePath;
             _context.RuntimePath = runtimePath.Value;
+            _context.Options = _options;
 
 
             if (!ScanForProjects())

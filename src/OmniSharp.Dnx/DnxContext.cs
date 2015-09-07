@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Composition;
 using Microsoft.CodeAnalysis;
+using OmniSharp.Options;
 
 namespace OmniSharp.Dnx
 {
@@ -23,6 +24,8 @@ namespace OmniSharp.Dnx
         public Dictionary<ProjectId, FrameworkProject> WorkspaceMapping { get; private set; }
 
         public ProcessingQueue Connection { get; set; }
+
+        public DnxOptions Options { get; set; }
 
         public DnxContext()
         {

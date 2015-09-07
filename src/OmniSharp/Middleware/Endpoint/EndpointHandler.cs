@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
 using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Plugins;
@@ -89,10 +90,11 @@ namespace OmniSharp.Middleware.Endpoint
 
         public Task Handle(HttpContext context)
         {
-            var model = GetLanguageModel(context.Request.Body);
+            var request = DeserializeRequestObject(context.Request.Body);
+            var model = GetLanguageModel(request);
             if (_hasLanguageProperty)
             {
-                return HandleLanguageRequest(model.Language, context);
+                return HandleLanguageRequest(model.Language, request, context);
             }
 
             if (_hasFileNameProperty)
@@ -102,25 +104,25 @@ namespace OmniSharp.Middleware.Endpoint
                 {
                     throw new NotSupportedException($"Could not determine language for {model.FileName} (does is it not support {EndpointName}?)");
                 }
-                return HandleLanguageRequest(language, context);
+                return HandleLanguageRequest(language, request, context);
             }
 
-            return HandleAllRequest(context);
+            return HandleAllRequest(request, context);
         }
 
-        private Task HandleLanguageRequest(string language, HttpContext context)
+        private Task HandleLanguageRequest(string language, JObject requestObject, HttpContext context)
         {
             if (!string.IsNullOrEmpty(language))
             {
-                return HandleSingleRequest(language, context);
+                return HandleSingleRequest(language, requestObject, context);
             }
 
-            return HandleAllRequest(context);
+            return HandleAllRequest(requestObject, context);
         }
 
-        private async Task HandleSingleRequest(string language, HttpContext context)
+        private async Task HandleSingleRequest(string language, JObject requestObject, HttpContext context)
         {
-            var request = DeserializeRequestObject(context.Request.Body);
+            var request = requestObject.ToObject(_requestType);
             var exports = await _exports.Value;
             ExportHandler handler;
             if (exports.TryGetValue(language, out handler))
@@ -133,7 +135,7 @@ namespace OmniSharp.Middleware.Endpoint
             throw new NotSupportedException($"{language} does not support {EndpointName}");
         }
 
-        private async Task HandleAllRequest(HttpContext context)
+        private async Task HandleAllRequest(JObject requestObject, HttpContext context)
         {
             if (!_isMergeable)
             {
@@ -141,7 +143,7 @@ namespace OmniSharp.Middleware.Endpoint
             }
 
             var exports = await _exports.Value;
-            var request = DeserializeRequestObject(context.Request.Body);
+            var request = requestObject.ToObject(_requestType);
 
             IMergeableResponse response = null;
             var responses = new List<Task<object>>();
@@ -166,50 +168,27 @@ namespace OmniSharp.Middleware.Endpoint
             SerializeResponseObject(context.Response, response);
         }
 
-        private LanguageModel GetLanguageModel(Stream readStream)
+        private LanguageModel GetLanguageModel(JObject jobject)
         {
-            using (var jsonReader = new JsonTextReader(new StreamReader(readStream)))
+            var response = new LanguageModel();
+            JToken token;
+            if (jobject.TryGetValue(nameof(LanguageModel.Language), StringComparison.OrdinalIgnoreCase, out token))
             {
-                jsonReader.CloseInput = false;
-
-                var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-
-                var response = new LanguageModel();
-                try
-                {
-                    var result = jsonSerializer.Deserialize<Dictionary<string, object>>(jsonReader);
-                    if (result.ContainsKey(nameof(LanguageModel.Language)))
-                    {
-                        response.Language = (string)result[nameof(LanguageModel.Language)];
-                    }
-
-                    if (result.ContainsKey(nameof(LanguageModel.FileName)))
-                    {
-                        response.FileName = (string)result[nameof(LanguageModel.FileName)];
-                    }
-                }
-                finally { }
-
-                return response;
+                response.Language = token.ToString();
             }
+
+
+            if (jobject.TryGetValue(nameof(LanguageModel.FileName), StringComparison.OrdinalIgnoreCase, out token))
+            {
+                response.FileName = token.ToString();
+            }
+
+            return response;
         }
 
-        private object DeserializeRequestObject(Stream readStream)
+        private JObject DeserializeRequestObject(Stream readStream)
         {
-            using (var jsonReader = new JsonTextReader(new StreamReader(readStream)))
-            {
-                jsonReader.CloseInput = false;
-
-                var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-                try
-                {
-                    return jsonSerializer.Deserialize(jsonReader, _requestType);
-                }
-                catch
-                {
-                    return null;
-                }
-            }
+            return JObject.Load(new JsonTextReader(new StreamReader(readStream)));
         }
 
         private void SerializeResponseObject(HttpResponse response, object value)
