@@ -1,5 +1,5 @@
-using System.Composition.Hosting;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 ﻿using Microsoft.AspNet.Mvc;
 using OmniSharp.Dnx;
 using OmniSharp.Models;

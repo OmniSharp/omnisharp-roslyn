@@ -145,7 +145,7 @@ namespace OmniSharp.Tests
             return workspace;
         }
 
-        public static CompositionHost CreatePluginHost(OmnisharpWorkspace workspace, IEnumerable<Assembly> assemblies)
+        public static CompositionHost CreatePluginHost(OmnisharpWorkspace workspace, IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             return Startup.ConfigurePluginHost(
                 null,
@@ -158,7 +158,8 @@ namespace OmniSharp.Tests
                 null,
                 null,
                 null,
-                assemblies);
+                assemblies,
+                configure);
         }
 
         public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)

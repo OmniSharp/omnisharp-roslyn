@@ -1,6 +1,6 @@
 using System;
-﻿using OmniSharp.Models.v1;
 using Microsoft.Framework.ConfigurationModel;
+﻿using OmniSharp.Models.v1;
 
 namespace OmniSharp.Services
 {

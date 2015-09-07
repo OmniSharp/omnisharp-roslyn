@@ -253,7 +253,7 @@ namespace OmniSharp.Tests
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), new [] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse   >("/throw")});
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");

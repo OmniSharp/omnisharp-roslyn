@@ -14,8 +14,8 @@ using OmniSharp.Models.v1;
 using OmniSharp.Services;
 using ScriptCs;
 using ScriptCs.Contracts;
-using ScriptCs.Hosting;
 using LogLevel = ScriptCs.Contracts.LogLevel;
+using ScriptCs.Hosting;
 
 namespace OmniSharp.ScriptCs
 {

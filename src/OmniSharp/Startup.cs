@@ -126,7 +126,8 @@ namespace OmniSharp
                               IApplicationLifetime applicationLifetime,
                               IFileSystemWatcher fileSystemWatcher,
                               IEventEmitter eventEmitter,
-                              IEnumerable<Assembly> assemblies)
+                              IEnumerable<Assembly> assemblies,
+                              Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
             foreach (var assembly in assemblies)
@@ -145,6 +146,9 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(applicationLifetime))
                 .WithProvider(MefValueProvider.From(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From(eventEmitter));
+
+            if (configure != null )
+                config = configure(config);
 
             return config.CreateContainer();
         }

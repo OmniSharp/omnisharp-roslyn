@@ -1,5 +1,5 @@
-using ScriptCs.Contracts;
 using System.Collections.Generic;
+using ScriptCs.Contracts;
 
 namespace OmniSharp.ScriptCs
 {
