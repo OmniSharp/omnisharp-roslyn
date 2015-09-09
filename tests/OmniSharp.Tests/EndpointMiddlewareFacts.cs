@@ -15,6 +15,7 @@ using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Authentication;
 using Microsoft.AspNet.Http.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Newtonsoft.Json;
@@ -22,7 +23,9 @@ using OmniSharp.Filters;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Models;
+using OmniSharp.Models.v1;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Services;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -46,11 +49,24 @@ namespace OmniSharp.Tests
 
         class Response { }
 
-        public class CSharpLanguage
+        [Export(typeof(IProjectSystem))]
+        class FakeProjectSystem : IProjectSystem
         {
-            private static readonly string[] ValidCSharpExtensions = { "cs", "csx", "cake" };
-            [OmniSharpLanguage(LanguageNames.CSharp)]
-            public Func<string, bool> IsApplicableTo { get; } = filePath => ValidCSharpExtensions.Any(extension => filePath.EndsWith(extension));
+            public string Key { get { return "Fake"; } }
+            public string Language { get { return LanguageNames.CSharp; } }
+            public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
+
+            public Task<object> GetInformationModel(ProjectInformationRequest request)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<object> GetProjectModel(string path)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Initalize(IConfiguration configuration) { }
         }
 
         class LoggerFactory : ILoggerFactory
@@ -253,7 +269,7 @@ namespace OmniSharp.Tests
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), new [] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse   >("/throw")});
+            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");

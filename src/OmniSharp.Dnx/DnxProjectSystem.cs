@@ -71,6 +71,8 @@ namespace OmniSharp.Dnx
         }
 
         public string Key { get { return "Dnx"; } }
+        public string Language {get { return LanguageNames.CSharp; } }
+        public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
         public void Initalize(IConfiguration configuration)
         {
@@ -627,18 +629,18 @@ namespace OmniSharp.Dnx
             return Task.Factory.FromAsync((cb, state) => socket.BeginConnect(endPoint, cb, state), ar => socket.EndConnect(ar), null);
         }
 
-        object IProjectSystem.GetProjectModel(string path)
+        Task<object> IProjectSystem.GetProjectModel(string path)
         {
             var project = GetProject(path);
             if (project != null)
-                return new DnxProject(GetProject(path));
+                return Task.FromResult<object>(new DnxProject(GetProject(path)));
 
-            return null;
+            return Task.FromResult<object>(null);
         }
 
-        public object GetInformationModel(ProjectInformationRequest request)
+        Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
         {
-            return new DnxWorkspaceInformation(_context);
+            return Task.FromResult<object>(new DnxWorkspaceInformation(_context));
         }
     }
 }

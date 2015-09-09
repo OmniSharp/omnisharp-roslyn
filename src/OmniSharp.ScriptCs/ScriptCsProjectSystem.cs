@@ -4,6 +4,7 @@ using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Common.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -37,6 +38,10 @@ namespace OmniSharp.ScriptCs
             _scriptCsContext = scriptCsContext;
             _logger = loggerFactory.CreateLogger<ScriptCsProjectSystem>();
         }
+
+        public string Key { get { return "ScriptCs"; } }
+        public string Language { get { return LanguageNames.CSharp; } }
+        public IEnumerable<string> Extensions { get; } = new[] { ".csx" };
 
         public void Initalize(IConfiguration configuration)
         {
@@ -142,8 +147,6 @@ namespace OmniSharp.ScriptCs
             }
         }
 
-        public string Key { get { return "ScriptCs";} }
-
         private void ImportReferences(List<MetadataReference> listOfReferences, IEnumerable<string> referencesToImport)
         {
             foreach (var importedReference in referencesToImport.Where(x => !x.ToLowerInvariant().Contains("scriptcs.contracts")))
@@ -176,14 +179,14 @@ namespace OmniSharp.ScriptCs
             }
         }
 
-        public object GetProjectModel(string path)
+        Task<object> IProjectSystem.GetProjectModel(string path)
         {
-            return null;
+            return Task.FromResult<object>(null);
         }
 
-        public object GetInformationModel(ProjectInformationRequest request)
+        Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
         {
-            return _scriptCsContext;
+            return Task.FromResult<object>(_scriptCsContext);
         }
     }
 }

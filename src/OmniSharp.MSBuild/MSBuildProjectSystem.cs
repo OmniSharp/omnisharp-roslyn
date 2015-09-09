@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -38,8 +39,6 @@ namespace OmniSharp.MSBuild
 
         private MSBuildOptions _options;
 
-        public string Key { get { return "MsBuild"; } }
-
         [ImportingConstructor]
         public MSBuildProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
@@ -57,6 +56,10 @@ namespace OmniSharp.MSBuild
             _emitter = emitter;
             _context = context;
         }
+
+        public string Key { get { return "MsBuild"; } }
+        public string Language { get { return LanguageNames.CSharp; } }
+        public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
         public void Initalize(IConfiguration configuration)
         {
@@ -354,18 +357,18 @@ namespace OmniSharp.MSBuild
             return projectFileInfo;
         }
 
-        object IProjectSystem.GetProjectModel(string path)
+        Task<object> IProjectSystem.GetProjectModel(string path)
         {
             var project = GetProject(path);
             if (project != null)
-                return new MSBuildProject(GetProject(path));
+                return Task.FromResult<object>(new MSBuildProject(GetProject(path)));
 
-            return null;
+            return Task.FromResult<object>(null);
         }
 
-        public object GetInformationModel(ProjectInformationRequest request)
+        Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
         {
-            return new MsBuildWorkspaceInformation(_context, request?.ExcludeSourceFiles ?? false);
+            return Task.FromResult<object>(new MsBuildWorkspaceInformation(_context, request?.ExcludeSourceFiles ?? false));
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Composition.Hosting;
 using System.Reflection;
+using System.Threading.Tasks;
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Dnx;
@@ -25,13 +26,13 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public void CanGetDnxProject()
+        public async Task CanGetDnxProject()
         {
             var project1 = CreateProjectWithSourceFile("project1.json", "file1.cs");
             var project2 = CreateProjectWithSourceFile("project2.json", "file2.cs");
             var project3 = CreateProjectWithSourceFile("project3.json", "file3.cs");
 
-            var project = GetProjectContainingSourceFile("file2.cs");
+            var project = await GetProjectContainingSourceFile("file2.cs");
 
             var expectedProject = new DnxProject(project2);
 
@@ -42,7 +43,7 @@ namespace OmniSharp.Tests
             Assert.Equal(expectedProject.Frameworks.Count, project.Frameworks.Count);
         }
 
-        private DnxProject GetProjectContainingSourceFile(string name)
+        private async Task<DnxProject> GetProjectContainingSourceFile(string name)
         {
             var controller = new ProjectSystemController(_workspace, _host);
 
@@ -51,8 +52,8 @@ namespace OmniSharp.Tests
                 FileName = name
             };
 
-            var response = controller.CurrentProject(request);
-            return (DnxProject)response[nameof(DnxProject)];
+            var response = await controller.CurrentProject(request);
+            return (DnxProject)response["Dnx"];
         }
 
         private Dnx.Project CreateProjectWithSourceFile(string projectPath, string documentPath)

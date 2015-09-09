@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
-﻿using Microsoft.AspNet.Mvc;
+using System.Threading.Tasks;
+using Microsoft.AspNet.Mvc;
 using OmniSharp.Dnx;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
@@ -21,27 +23,58 @@ namespace OmniSharp
 
         [HttpPost("/projects")]
         [HttpGet("/projects")]
-        public WorkspaceInformationResponse ProjectInformation(ProjectInformationRequest request)
+        public async Task<WorkspaceInformationResponse> ProjectInformation(ProjectInformationRequest request)
         {
+            var tasks = new List<Task<Action>>();
             var response = new WorkspaceInformationResponse();
+
             foreach (var projectSystem in _projectSystems)
             {
-                var information = projectSystem.GetInformationModel(request);
-                response.Add(projectSystem.Key, information);
+                tasks.Add(projectSystem.GetInformationModel(request)
+                    .ContinueWith((information) =>
+                    {
+                        Action action = () =>
+                        {
+                            response.Add(projectSystem.Key, information);
+                        };
+
+                        return action;
+                    }));
+            }
+
+            var results = await Task.WhenAll(tasks);
+            foreach (var result in results)
+            {
+                result();
             }
             return response;
         }
 
         [HttpPost("/project")]
-        public ProjectInformationResponse CurrentProject(Request request)
+        public async Task<ProjectInformationResponse> CurrentProject(Request request)
         {
+            var tasks = new List<Task<Action>>();
             var response = new ProjectInformationResponse();
 
             foreach (var projectSystem in _projectSystems)
             {
-                var project = projectSystem.GetProjectModel(request.FileName);
-                if (project != null)
-                    response.Add(projectSystem.Key, project);
+                tasks.Add(projectSystem.GetProjectModel(request.FileName)
+                    .ContinueWith((project) =>
+                    {
+                        Action action = () =>
+                        {
+                            if (project != null)
+                                response.Add(projectSystem.Key, project);
+                        };
+
+                        return action;
+                    }));
+            }
+
+            var results = await Task.WhenAll(tasks);
+            foreach (var result in results)
+            {
+                result();
             }
 
             return response;

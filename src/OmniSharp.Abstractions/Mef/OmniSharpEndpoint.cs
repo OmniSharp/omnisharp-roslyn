@@ -19,15 +19,4 @@ namespace OmniSharp.Mef
             Language = language;
         }
     }
-
-    [MetadataAttribute]
-    public class OmniSharpLanguageAttribute : ExportAttribute
-    {
-        public string Language { get; }
-
-        public OmniSharpLanguageAttribute(string language) : base(typeof(Func<string, bool>))
-        {
-            Language = language;
-        }
-    }
 }

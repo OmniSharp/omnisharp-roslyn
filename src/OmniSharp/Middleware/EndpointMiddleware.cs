@@ -14,6 +14,7 @@ using OmniSharp.Mef;
 using OmniSharp.Middleware.Endpoint;
 using OmniSharp.Models;
 using OmniSharp.Plugins;
+using OmniSharp.Services;
 
 namespace OmniSharp.Middleware
 {
@@ -27,14 +28,16 @@ namespace OmniSharp.Middleware
         private readonly OmnisharpWorkspace _workspace;
         private readonly CompositionHost _host;
         private readonly ILogger _logger;
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         public EndpointMiddleware(RequestDelegate next, OmnisharpWorkspace workspace, CompositionHost host, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
         {
             _next = next;
             _workspace = workspace;
             _host = host;
+            _projectSystems = host.GetExports<IProjectSystem>();
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
-            _languagePredicateHandler = new LanguagePredicateHandler(_host.GetExports<Lazy<Func<string, bool>, OmniSharpLanguage>>());
+            _languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
 
             _endpoints = new HashSet<string>(endpoints.Select(x => x.EndpointName).Distinct());
 

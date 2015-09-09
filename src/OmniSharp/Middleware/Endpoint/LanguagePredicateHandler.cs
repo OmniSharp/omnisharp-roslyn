@@ -1,25 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
+using OmniSharp.Services;
 
 namespace OmniSharp.Middleware.Endpoint
 {
     class LanguagePredicateHandler
     {
-        private readonly IEnumerable<Lazy<Func<string, bool>, OmniSharpLanguage>> _exports;
-        public LanguagePredicateHandler(IEnumerable<Lazy<Func<string, bool>, OmniSharpLanguage>> exports)
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
+
+        public LanguagePredicateHandler(IEnumerable<IProjectSystem> projectSystems)
         {
-            _exports = exports;
+            _projectSystems = projectSystems;
         }
 
         public string GetLanguageForFilePath(string filePath)
         {
-            foreach (var export in _exports)
+            foreach (var projectSystem in _projectSystems)
             {
-                if (export.Value(filePath))
-                {
-                    return export.Metadata.Language;
+                if (projectSystem.Extensions.Any(extension => filePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase))) {
+                    return projectSystem.Language;
                 }
             }
 
