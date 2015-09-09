@@ -1,32 +1,43 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Framework.ConfigurationModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Models.v1;
+using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Plugins
 {
-    public class OutOfProcessPlugin : IDisposable
+    public class OutOfProcessPlugin : IProjectSystem, IDisposable
     {
         private readonly CancellationTokenSource _cancellation;
         private readonly Process _process = null;
         private readonly ISharedTextWriter _writer;
         private readonly ConcurrentDictionary<int, Action<string>> _requests = new ConcurrentDictionary<int, Action<string>>();
-        public OopConfig Config;
+        public OopConfig Config { get; set; }
 
         public OutOfProcessPlugin(ISharedTextWriter writer, OopConfig config)
         {
             _writer = writer;
             _cancellation = new CancellationTokenSource();
             Config = config;
-            Task.Run(() => Run());
+
+            Key = Config.Name;
+            Language = Config.Language;
+            Extensions = Config.Extensions;
         }
+
+        public string Key { get; }
+        public string Language { get; }
+        public IEnumerable<string> Extensions { get; }
 
         public Task<object> Handle(string endpoint, object request, Type responseType)
         {
@@ -98,6 +109,23 @@ namespace OmniSharp.Plugins
         public void Dispose()
         {
             _cancellation.Cancel();
+        }
+
+        public void Initalize(IConfiguration configuration)
+        {
+            Task.Run(() => Run());
+        }
+
+        public Task<object> GetInformationModel(ProjectInformationRequest request)
+        {
+            // TODO: Call out to process
+            return null;
+        }
+
+        public Task<object> GetProjectModel(string path)
+        {
+            // TODO: Call out to process
+            return null;
         }
     }
 }
