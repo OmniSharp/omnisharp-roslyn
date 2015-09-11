@@ -16,15 +16,15 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Plugins
 {
-    public class OutOfProcessPlugin : IProjectSystem, IDisposable
+    public class Plugin : IProjectSystem, IDisposable
     {
         private readonly CancellationTokenSource _cancellation;
         private readonly Process _process = null;
         private readonly ISharedTextWriter _writer;
         private readonly ConcurrentDictionary<int, Action<string>> _requests = new ConcurrentDictionary<int, Action<string>>();
-        public OopConfig Config { get; set; }
+        public PluginConfig Config { get; set; }
 
-        public OutOfProcessPlugin(ISharedTextWriter writer, OopConfig config)
+        public Plugin(ISharedTextWriter writer, PluginConfig config)
         {
             _writer = writer;
             _cancellation = new CancellationTokenSource();
@@ -41,7 +41,7 @@ namespace OmniSharp.Plugins
 
         public Task<object> Handle(string endpoint, object request, Type responseType)
         {
-            var oopRequest = new OopRequest()
+            var oopRequest = new PluginRequest()
             {
                 Command = endpoint,
                 Arguments = request
@@ -70,11 +70,11 @@ namespace OmniSharp.Plugins
                     break;
                 }
 
-                var ignored = Task.Factory.StartNew((Action)(() =>
+                var ignored = Task.Factory.StartNew(() =>
                 {
                     try
                     {
-                        var response = OopResponse.Parse(line);
+                        var response = PluginResponse.Parse(line);
 
                         if (!response.Success)
                         {
@@ -87,7 +87,7 @@ namespace OmniSharp.Plugins
                         }
 
                         Action<string> requestHandler = null;
-                        if (!_requests.TryGetValue((int)response.Request_seq, out requestHandler))
+                        if (!_requests.TryGetValue(response.Request_seq, out requestHandler))
                         {
                             throw new ArgumentException("invalid seq-value");
                         }
@@ -102,7 +102,7 @@ namespace OmniSharp.Plugins
                             Body = e.ToString()
                         });
                     }
-                }));
+                });
             }
         }
 

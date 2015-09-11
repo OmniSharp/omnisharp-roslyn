@@ -3,12 +3,12 @@ using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.Plugins
 {
-    class OopResponse
+    class PluginResponse
     {
-        public static OopResponse Parse(string json)
+        public static PluginResponse Parse(string json)
         {
             var obj = JObject.Parse(json);
-            var result = obj.ToObject<OopResponse>();
+            var result = obj.ToObject<PluginResponse>();
 
             if (result.Request_seq <= 0)
             {

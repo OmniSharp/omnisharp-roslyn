@@ -43,7 +43,7 @@ namespace OmniSharp.Middleware
 
             var endpointHandlers = endpoints.ToDictionary(
                 x => x.EndpointName,
-                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<OutOfProcessPlugin>()))
+                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<Plugin>()))
             );
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }

@@ -24,8 +24,8 @@
           "Microsoft.Build": "",
           "Microsoft.Build.Engine": "",
           "Microsoft.Build.Framework": "",
-          "System.Xml":"4.0.0.0",
-          "System.Security":"4.0.0.0"
+          "System.Xml":"",
+          "System.Security":""
         }
     }
   }

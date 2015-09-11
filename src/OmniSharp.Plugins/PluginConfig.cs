@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace OmniSharp.Plugins
 {
-    public class OopConfig
+    public class PluginConfig
     {
         public string Name { get; set; }
         public string[] Endpoints { get; }

@@ -1,9 +1,9 @@
 namespace OmniSharp.Plugins
 {
-    class OopRequest
+    class PluginRequest
     {
         protected static int _seqPool = 1;
-        public OopRequest()
+        public PluginRequest()
         {
             Seq = _seqPool++;
         }

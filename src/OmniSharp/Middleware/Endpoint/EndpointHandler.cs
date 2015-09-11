@@ -49,9 +49,9 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
         private readonly ILogger _logger;
-        private readonly IEnumerable<OutOfProcessPlugin> _plugins;
+        private readonly IEnumerable<Plugin> _plugins;
 
-        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<OutOfProcessPlugin> plugins)
+        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<Plugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;
@@ -262,10 +262,10 @@ namespace OmniSharp.Middleware.Endpoint
         class PluginExportHandler : ExportHandler
         {
             private readonly string _endpoint;
-            private readonly OutOfProcessPlugin _plugin;
+            private readonly Plugin _plugin;
             private readonly Type _responseType;
 
-            public PluginExportHandler(string endpoint, OutOfProcessPlugin plugin, Type responseType) : base(plugin.Config.Language)
+            public PluginExportHandler(string endpoint, Plugin plugin, Type responseType) : base(plugin.Config.Language)
             {
                 _endpoint = endpoint;
                 _plugin = plugin;
