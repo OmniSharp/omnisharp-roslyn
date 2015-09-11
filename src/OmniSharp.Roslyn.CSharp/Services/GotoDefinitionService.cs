@@ -24,7 +24,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
             _workspace = workspace;
         }
 
-        async Task<GotoDefinitionResponse> RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>.Handle(GotoDefinitionRequest request)
+        public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
         {
             var quickFixes = new List<QuickFix>();
 

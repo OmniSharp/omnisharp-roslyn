@@ -15,45 +15,37 @@ namespace OmniSharp
         [HttpPost("findusages")]
         public async Task<QuickFixResponse> FindUsages(FindUsagesRequest request)
         {
-            var documents = _workspace.GetDocuments(request.FileName);
+            var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
-            if (documents != null)
+            if (document != null)
             {
                 var locations = new List<Location>();
-                foreach (var document in documents)
+                var semanticModel = await document.GetSemanticModelAsync();
+                var sourceText = await document.GetTextAsync();
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
+                var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
+                var usages = request.OnlyThisFile
+                    ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
+                    : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+
+                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
                 {
-                    try
+                    foreach (var location in usage.Locations)
                     {
-                        var semanticModel = await document.GetSemanticModelAsync();
-                        var sourceText = await document.GetTextAsync();
-                        var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-                        var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
-                        var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
-                        var usages = request.OnlyThisFile
-                            ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
-                            : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+                        locations.Add(location.Location);
+                    }
 
+                    if (!request.ExcludeDefinition)
+                    {
+                        var definitionLocations = usage.Definition.Locations
+                            .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
 
-                        foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
+                        foreach (var location in definitionLocations)
                         {
-                            foreach (var location in usage.Locations)
-                            {
-                                locations.Add(location.Location);
-                            }
-
-                            if (!request.ExcludeDefinition)
-                            {
-                                var definitionLocations = usage.Definition.Locations
-                                    .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
-
-                                foreach (var location in definitionLocations)
-                                {
-                                    locations.Add(location);
-                                }
-                            }
+                            locations.Add(location);
                         }
                     }
-                    catch{}
                 }
 
                 var quickFixTasks = locations.Distinct().Select(async l => await GetQuickFix(l));

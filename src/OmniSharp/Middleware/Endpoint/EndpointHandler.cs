@@ -10,6 +10,7 @@ using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Mef;
+using OmniSharp.Middleware.Endpoint.Exports;
 using OmniSharp.Models;
 using OmniSharp.Plugins;
 
@@ -223,58 +224,6 @@ namespace OmniSharp.Middleware.Endpoint
             {
                 var genericType = typeof(DelegateExportHandler<,>).MakeGenericType(_requestType, _responseType);
                 yield return (ExportHandler)Activator.CreateInstance(genericType, export.Metadata.Language, export.Value);
-            }
-        }
-
-        abstract class ExportHandler
-        {
-            protected ExportHandler(string language)
-            {
-                Language = language;
-            }
-
-            public string Language { get; }
-            public abstract Task<object> Handle(object request);
-        }
-
-        class DelegateExportHandler<TRequest, TResponse> : ExportHandler
-        {
-            private readonly Func<TRequest, Task<TResponse>> _handler;
-            public DelegateExportHandler(string language, Func<TRequest, Task<TResponse>> handler)
-             : base(language)
-            {
-                _handler = handler;
-            }
-
-            public async override Task<object> Handle(object request)
-            {
-                return await _handler((TRequest)request);
-            }
-        }
-
-        class RequestHandlerExportHandler<TRequest, TResponse> : DelegateExportHandler<TRequest, TResponse>
-        {
-            public RequestHandlerExportHandler(string language, RequestHandler<TRequest, TResponse> handler)
-             : base(language, handler.Handle)
-            { }
-        }
-
-        class PluginExportHandler : ExportHandler
-        {
-            private readonly string _endpoint;
-            private readonly Plugin _plugin;
-            private readonly Type _responseType;
-
-            public PluginExportHandler(string endpoint, Plugin plugin, Type responseType) : base(plugin.Config.Language)
-            {
-                _endpoint = endpoint;
-                _plugin = plugin;
-                _responseType = responseType;
-            }
-
-            public override Task<object> Handle(object request)
-            {
-                return _plugin.Handle(_endpoint, request, _responseType);
             }
         }
     }

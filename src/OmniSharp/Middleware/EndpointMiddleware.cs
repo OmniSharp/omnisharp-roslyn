@@ -18,7 +18,6 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Middleware
 {
-    // You may need to install the Microsoft.AspNet.Http.Abstractions package into your project
     public class EndpointMiddleware
     {
         private readonly RequestDelegate _next;
@@ -67,7 +66,6 @@ namespace OmniSharp.Middleware
         }
     }
 
-    // Extension method used to add the middleware to the HTTP request pipeline.
     public static class EndpointMiddlewareExtensions
     {
         public static IApplicationBuilder UseEndpointMiddleware(this IApplicationBuilder builder)

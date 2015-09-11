@@ -16,10 +16,10 @@ namespace OmniSharp
         private OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FindSymbolsService(OmnisharpWorkspace workspace) {
-_workspace = workspace;
+        public FindSymbolsService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
         }
-
 
         public async Task<QuickFixResponse> Handle(FindSymbolsRequest request = null)
         {

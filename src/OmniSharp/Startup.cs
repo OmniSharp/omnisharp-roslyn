@@ -117,17 +117,17 @@ namespace OmniSharp
         }
 
         public static CompositionHost ConfigurePluginHost(IServiceProvider serviceProvider,
-                              OmnisharpWorkspace workspace,
-                              ILoggerFactory loggerFactory,
-                              IOmnisharpEnvironment env,
-                              ISharedTextWriter writer,
-                              OmniSharpOptions options,
-                              IMetadataFileReferenceCache metadataFileReferenceCache,
-                              IApplicationLifetime applicationLifetime,
-                              IFileSystemWatcher fileSystemWatcher,
-                              IEventEmitter eventEmitter,
-                              IEnumerable<Assembly> assemblies,
-                              Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+                                                          OmnisharpWorkspace workspace,
+                                                          ILoggerFactory loggerFactory,
+                                                          IOmnisharpEnvironment env,
+                                                          ISharedTextWriter writer,
+                                                          OmniSharpOptions options,
+                                                          IMetadataFileReferenceCache metadataFileReferenceCache,
+                                                          IApplicationLifetime applicationLifetime,
+                                                          IFileSystemWatcher fileSystemWatcher,
+                                                          IEventEmitter eventEmitter,
+                                                          IEnumerable<Assembly> assemblies,
+                                                          Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
             foreach (var assembly in assemblies)
@@ -147,7 +147,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From(eventEmitter));
 
-            if (configure != null )
+            if (configure != null)
                 config = configure(config);
 
             return config.CreateContainer();
