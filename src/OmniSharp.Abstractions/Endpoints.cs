@@ -29,6 +29,9 @@ namespace OmniSharp
         public static EndpointMapItem[] AvailableEndpoints = {
             EndpointMapItem.Create<GotoDefinitionRequest, GotoDefinitionResponse>("/gotodefinition"),
             EndpointMapItem.Create<FindSymbolsRequest, QuickFixResponse>("/findsymbols"),
+            EndpointMapItem.Create<UpdateBufferRequest, object>("/updatebuffer"),
+            EndpointMapItem.Create<ChangeBufferRequest, object>("/changebuffer"),
+            EndpointMapItem.Create<Request, QuickFixResponse>("/codecheck"),
         };
 
         public class EndpointMapItem

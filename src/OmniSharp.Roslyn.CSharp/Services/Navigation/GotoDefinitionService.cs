@@ -11,7 +11,7 @@ using OmniSharp;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 
-namespace OmniSharp.Roslyn.CSharp.Services
+namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
     public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>

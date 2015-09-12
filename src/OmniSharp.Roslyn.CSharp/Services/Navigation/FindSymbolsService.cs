@@ -8,7 +8,7 @@ using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [OmniSharpEndpoint(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
     public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>

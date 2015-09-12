@@ -1,17 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    public partial class OmnisharpController
+    [OmniSharpEndpoint(typeof(RequestHandler<Request, QuickFixResponse>), LanguageNames.CSharp)]
+    public class CodeCheckService : RequestHandler<Request, QuickFixResponse>
     {
-        [HttpPost("codecheck")]
-        public async Task<QuickFixResponse> CodeCheck(Request request)
+        private OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public CodeCheckService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<QuickFixResponse> Handle(Request request)
         {
             var quickFixes = new List<QuickFix>();
 

@@ -1,23 +1,24 @@
+using System;
 using System.Composition;
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Buffer
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<ChangeBufferRequest, object>), LanguageNames.CSharp)]
-    public class ChangeBufferService : RequestHandler<ChangeBufferRequest, object>
+    [OmniSharpEndpoint(typeof(RequestHandler<UpdateBufferRequest, object>), LanguageNames.CSharp)]
+    public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
     {
         private OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public ChangeBufferService(OmnisharpWorkspace workspace)
+        public UpdateBufferService(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
         }
 
-        public async Task<object> Handle(ChangeBufferRequest request)
+        public async Task<object> Handle(UpdateBufferRequest request)
         {
             await _workspace.BufferManager.UpdateBuffer(request);
             return true;
