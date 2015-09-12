@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -16,8 +17,8 @@ namespace OmniSharp.Tests
                 { "a.cs", "class C { int n = true; }" }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var quickFixes = await controller.CodeCheck(new Request() { FileName = "a.cs" });
+            var controller = new CodeCheckService(workspace);
+            var quickFixes = await controller.Handle(new Request() { FileName = "a.cs" });
 
             Assert.Equal(1, quickFixes.QuickFixes.Count());
             Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
@@ -32,8 +33,8 @@ namespace OmniSharp.Tests
                 { "b.cs", "class C2 { int n = true; }" },
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var quickFixes = await controller.CodeCheck(new Request());
+            var controller = new CodeCheckService(workspace);
+            var quickFixes = await controller.Handle(new Request());
 
             Assert.Equal(2, quickFixes.QuickFixes.Count());
         }

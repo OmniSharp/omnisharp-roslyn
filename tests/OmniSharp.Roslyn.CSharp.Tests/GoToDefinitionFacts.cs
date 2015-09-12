@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Tests;
 using Xunit;
 

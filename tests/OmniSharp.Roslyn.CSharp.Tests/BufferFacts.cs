@@ -1,16 +1,17 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using Xunit;
 
 namespace OmniSharp.Tests
 {
-    public class OmnisharpControllerFacts
+    public class BufferFacts
     {
-        private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out OmnisharpController controller, out DocumentInfo document, string filename, string contents)
+        private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
         {
             workspace = new OmnisharpWorkspace();
-            controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
+            controller = new ChangeBufferService(workspace);
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
                 "ProjectNameVal", "AssemblyNameVal", LanguageNames.CSharp);
@@ -28,12 +29,12 @@ namespace OmniSharp.Tests
         public async Task ChangeBuffer_InsertRemoveChanges()
         {
             OmnisharpWorkspace workspace;
-            OmnisharpController controller;
+            ChangeBufferService controller;
             DocumentInfo document;
             CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", "class C {}");
 
             // insert edit
-            await controller.ChangeBuffer(new Models.ChangeBufferRequest()
+            await controller.Handle(new Models.ChangeBufferRequest()
             {
                 StartLine = 1,
                 StartColumn = 1,
@@ -46,7 +47,7 @@ namespace OmniSharp.Tests
             Assert.Equal("farbooclass C {}", sourceText.ToString());
 
             // remove edit
-            await controller.ChangeBuffer(new Models.ChangeBufferRequest()
+            await controller.Handle(new Models.ChangeBufferRequest()
             {
                 StartLine = 1,
                 StartColumn = 1,
@@ -59,7 +60,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C {}", sourceText.ToString());
 
             // modification edit
-            await controller.ChangeBuffer(new Models.ChangeBufferRequest()
+            await controller.Handle(new Models.ChangeBufferRequest()
             {
                 StartLine = 1,
                 StartColumn = 1,
