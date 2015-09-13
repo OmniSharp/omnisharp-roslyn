@@ -37,6 +37,15 @@ namespace OmniSharp
             EndpointMapItem.Create<FormatAfterKeystrokeRequest, FormatRangeResponse>("formatAfterKeystroke"),
             EndpointMapItem.Create<FormatRangeRequest, FormatRangeResponse>("formatRange"),
             EndpointMapItem.Create<Request, CodeFormatResponse>("codeformat"),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
+            // EndpointMapItem.Create<, >(""),
         };
 
         public class EndpointMapItem
