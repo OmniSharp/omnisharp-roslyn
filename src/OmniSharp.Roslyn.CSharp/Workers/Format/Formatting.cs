@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Format
 {
     public class Formatting
     {
