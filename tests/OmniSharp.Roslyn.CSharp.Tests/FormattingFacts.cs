@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Framework.OptionsModel;
-using OmniSharp.Roslyn.CSharp.Workers.Format;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using Xunit;
-using OmniSharp.Tests;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
+using OmniSharp.Roslyn.CSharp.Workers.Format;
+using OmniSharp.Tests;
+using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

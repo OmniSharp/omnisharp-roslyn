@@ -4,9 +4,9 @@ using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Roslyn.CSharp.Workers.Format;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Workers.Format;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {

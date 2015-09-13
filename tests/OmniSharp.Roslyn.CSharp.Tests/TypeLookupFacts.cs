@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using OmniSharp.Tests;
 using Xunit;
@@ -15,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var workspace = TestHelpers.CreateCsxWorkspace(source1);
 
-            var controller = new TypeLookupService(workspace, new FakeOmniSharpOptions().Options.FormattingOptions);
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
             var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 8 });
 
             Assert.Equal("Foo", response.Type);
@@ -30,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source1);
 
-            var controller = new TypeLookupService(workspace, new FakeOmniSharpOptions().Options.FormattingOptions);
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
             var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
 
             Assert.Equal("Bar.Foo", response.Type);

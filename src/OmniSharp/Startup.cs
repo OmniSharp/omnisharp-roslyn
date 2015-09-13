@@ -142,7 +142,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(env))
                 .WithProvider(MefValueProvider.From(writer))
                 .WithProvider(MefValueProvider.From(options))
-                .WithProvider(MefValueProvider.From(options.FormattingOptions))
+                .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()))
                 .WithProvider(MefValueProvider.From(metadataFileReferenceCache))
                 .WithProvider(MefValueProvider.From(applicationLifetime))
                 .WithProvider(MefValueProvider.From(fileSystemWatcher))

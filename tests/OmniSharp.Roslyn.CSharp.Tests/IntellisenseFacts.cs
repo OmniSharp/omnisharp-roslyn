@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using OmniSharp.Tests;
 using Xunit;
@@ -198,7 +199,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new IntellisenseService(workspace, new FakeOmniSharpOptions().Options.FormattingOptions);
+            var controller = new IntellisenseService(workspace, new FormattingOptions());
 
             if (request == null)
             {
