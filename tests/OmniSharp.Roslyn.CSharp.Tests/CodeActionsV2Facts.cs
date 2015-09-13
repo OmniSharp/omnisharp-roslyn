@@ -8,6 +8,7 @@ using OmniSharp.Models.V2;
 using OmniSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using Xunit;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 
 namespace OmniSharp.Tests
 {

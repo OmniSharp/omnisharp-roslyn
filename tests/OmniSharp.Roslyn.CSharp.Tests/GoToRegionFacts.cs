@@ -58,10 +58,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return await controller.Handle(request);
         }
 
-        private Request CreateRequest(string source, string fileName = "dummy.cs")
+        private GotoRegionRequest CreateRequest(string source, string fileName = "dummy.cs")
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new Request {
+            return new GotoRegionRequest {
                 Line = lineColumn.Line,
                 Column = lineColumn.Column,
                 FileName = fileName,

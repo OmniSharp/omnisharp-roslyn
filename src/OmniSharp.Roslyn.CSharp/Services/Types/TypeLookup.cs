@@ -3,13 +3,14 @@ using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Types
 {
-    [Export(typeof(RequestHandler<TypeLookupRequest, TypeLookupResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<TypeLookupRequest, TypeLookupResponse>), LanguageNames.CSharp)]
     public class TypeLookupService : RequestHandler<TypeLookupRequest, TypeLookupResponse>
     {
         private readonly FormattingOptions _formattingOptions;

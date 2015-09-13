@@ -364,7 +364,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
             source = source.Replace("$", string.Empty);
 
-            var request = new Request()
+            var request = new SignatureHelpRequest()
             {
                 FileName = "dummy.cs",
                 Line = lineColumn.Line,

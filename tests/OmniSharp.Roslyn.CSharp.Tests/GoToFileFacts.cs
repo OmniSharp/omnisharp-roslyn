@@ -21,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new GotoFileService(workspace);
-            var response = await controller.Handle(new Request());
+            var response = await controller.Handle(new GotoFileRequest());
 
             Assert.Equal(2, response.QuickFixes.Count());
             Assert.Equal("foo.cs", response.QuickFixes.ElementAt(0).FileName);
@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
             var controller = new GotoFileService(workspace);
-            var response = await controller.Handle(new Request());
+            var response = await controller.Handle(new GotoFileRequest());
 
             Assert.Equal(0, response.QuickFixes.Count());
         }

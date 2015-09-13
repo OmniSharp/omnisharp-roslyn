@@ -9,8 +9,8 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<Request, QuickFixResponse>), LanguageNames.CSharp)]
-    public class CodeCheckService : RequestHandler<Request, QuickFixResponse>
+    [OmniSharpEndpoint(typeof(RequestHandler<CodeCheckRequest, QuickFixResponse>), LanguageNames.CSharp)]
+    public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private OmnisharpWorkspace _workspace;
 
@@ -20,7 +20,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspace = workspace;
         }
 
-        public async Task<QuickFixResponse> Handle(Request request)
+        public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
             var quickFixes = new List<QuickFix>();
 

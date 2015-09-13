@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {
-    [Export(typeof(RequestHandler<HighlightRequest, HighlightResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<HighlightRequest, HighlightResponse>), LanguageNames.CSharp)]
     public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]

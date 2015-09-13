@@ -730,20 +730,27 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContent);
             var naviagteUpService = new NavigateUpService(workspace);
             var navigateDownService = new NavigateDownService(workspace);
-            var request = new Request
-            {
-                Line = initialCursorLineColumn.Line,
-                Column = initialCursorLineColumn.Column,
-                FileName = fileName,
-                Buffer = fileContentNoDollarMarker
-            };
 
             if (upOrDown == NavigateDirection.UP)
             {
+                var request = new NavigateUpRequest
+                {
+                    Line = initialCursorLineColumn.Line,
+                    Column = initialCursorLineColumn.Column,
+                    FileName = fileName,
+                    Buffer = fileContentNoDollarMarker
+                };
                 return await naviagteUpService.Handle(request);
             }
             else
             {
+                var request = new NavigateDownRequest
+                {
+                    Line = initialCursorLineColumn.Line,
+                    Column = initialCursorLineColumn.Column,
+                    FileName = fileName,
+                    Buffer = fileContentNoDollarMarker
+                };
                 return await navigateDownService.Handle(request);
             }
         }

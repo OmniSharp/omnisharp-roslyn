@@ -1,23 +1,27 @@
 using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
-    public class SignatureHelpService : RequestHandler<Request, SignatureHelp>
+    [OmniSharpEndpoint(typeof(RequestHandler<SignatureHelpRequest, SignatureHelp>), LanguageNames.CSharp)]
+    public class SignatureHelpService : RequestHandler<SignatureHelpRequest, SignatureHelp>
     {
         private readonly OmnisharpWorkspace _workspace;
 
+        [ImportingConstructor]
         public SignatureHelpService(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
         }
 
-        public async Task<SignatureHelp> Handle(Request request)
+        public async Task<SignatureHelp> Handle(SignatureHelpRequest request)
         {
             var invocations = new List<InvocationContext>();
             foreach (var document in _workspace.GetDocuments(request.FileName))

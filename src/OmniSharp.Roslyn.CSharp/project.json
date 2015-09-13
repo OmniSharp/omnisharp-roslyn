@@ -13,6 +13,9 @@
   },
   "frameworks": {
     "dnx451": {
+      "dependencies": {
+        "ICSharpCode.NRefactory": "6.0.0-alpha3"
+      },
       "frameworkAssemblies": {
         "System.Runtime": "",
         "System.Threading":"",

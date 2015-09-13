@@ -4,19 +4,20 @@ using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Format;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
-    [Export(typeof(RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>))]
-    [Export(typeof(RequestHandler<FormatRangeRequest, FormatRangeResponse>))]
-    [Export(typeof(RequestHandler<Request, CodeFormatResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>), LanguageNames.CSharp)]
+    [OmniSharpEndpoint(typeof(RequestHandler<FormatRangeRequest, FormatRangeResponse>), LanguageNames.CSharp)]
+    [OmniSharpEndpoint(typeof(RequestHandler<CodeFormatRequest, CodeFormatResponse>), LanguageNames.CSharp)]
     public class CodeFormattingService :
         RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>,
         RequestHandler<FormatRangeRequest, FormatRangeResponse>,
-        RequestHandler<Request, CodeFormatResponse>
+        RequestHandler<CodeFormatRequest, CodeFormatResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly OptionSet _options;
@@ -49,7 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             };
         }
 
-        async Task<CodeFormatResponse> RequestHandler<Request, CodeFormatResponse>.Handle(Request request)
+        async Task<CodeFormatResponse> RequestHandler<CodeFormatRequest, CodeFormatResponse>.Handle(CodeFormatRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             if (document == null)

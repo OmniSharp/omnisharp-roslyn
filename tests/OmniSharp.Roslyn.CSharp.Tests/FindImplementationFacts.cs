@@ -83,10 +83,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
         }
 
-        private Request CreateRequest(string source, string fileName = "dummy.cs")
+        private FindImplementationsRequest CreateRequest(string source, string fileName = "dummy.cs")
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new Request {
+            return new FindImplementationsRequest {
                 Line = lineColumn.Line,
                 Column = lineColumn.Column,
                 FileName = fileName,

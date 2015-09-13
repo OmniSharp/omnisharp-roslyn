@@ -9,13 +9,14 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Intellisense;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
-    [Export(typeof(RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>), LanguageNames.CSharp)]
     public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
         private readonly OmnisharpWorkspace _workspace;

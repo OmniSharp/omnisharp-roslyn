@@ -19,17 +19,20 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
+    [Export, Shared]
     public class OmnisharpWorkspace : Workspace
     {
         public bool Initialized { get; set; }
 
         public BufferManager BufferManager { get; private set; }
 
-        public OmnisharpWorkspace() : this(MefHostServices.DefaultHost)
+        public OmnisharpWorkspace() : base(MefHostServices.DefaultHost, "Custom")
         {
+            BufferManager = new BufferManager(this);
         }
 
-        public OmnisharpWorkspace(MefHostServices hostServices) : base(hostServices, "Custom")
+        [ImportingConstructor]
+        public OmnisharpWorkspace(HostServicesBuilder builder) : base(builder.GetHostServices(), "Custom")
         {
             BufferManager = new BufferManager(this);
         }

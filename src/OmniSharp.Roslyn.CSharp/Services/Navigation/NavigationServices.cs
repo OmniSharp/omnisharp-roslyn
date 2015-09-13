@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [Export(typeof(RequestHandler<Request, NavigateResponse>))]
-    public class NavigateUpService : RequestHandler<Request, NavigateResponse>
+    [OmniSharpEndpoint(typeof(RequestHandler<NavigateUpRequest, NavigateResponse>), LanguageNames.CSharp)]
+    public class NavigateUpService : RequestHandler<NavigateUpRequest, NavigateResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -18,14 +20,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             _workspace = workspace;
         }
 
-        public async Task<NavigateResponse> Handle(Request request)
+        public async Task<NavigateResponse> Handle(NavigateUpRequest request)
         {
             return await NavigationHelpers.Navigate(_workspace, request, NavigationHelpers.IsCloserNodeUp);
         }
     }
 
-    [Export(typeof(RequestHandler<Request, NavigateResponse>))]
-    public class NavigateDownService : RequestHandler<Request, NavigateResponse>
+    [OmniSharpEndpoint(typeof(RequestHandler<NavigateDownRequest, NavigateResponse>), LanguageNames.CSharp)]
+    public class NavigateDownService : RequestHandler<NavigateDownRequest, NavigateResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -35,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             _workspace = workspace;
         }
 
-        public async Task<NavigateResponse> Handle(Request request)
+        public async Task<NavigateResponse> Handle(NavigateDownRequest request)
         {
             return await NavigationHelpers.Navigate(_workspace, request, NavigationHelpers.IsCloserNodeDown);
         }

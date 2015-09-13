@@ -7,12 +7,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [Export(typeof(RequestHandler<Request, QuickFixResponse>))]
-    public class FindImplementationsService : RequestHandler<Request, QuickFixResponse>
+    [OmniSharpEndpoint(typeof(RequestHandler<FindImplementationsRequest, QuickFixResponse>), LanguageNames.CSharp)]
+    public class FindImplementationsService : RequestHandler<FindImplementationsRequest, QuickFixResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -22,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             _workspace = workspace;
         }
 
-        public async Task<QuickFixResponse> Handle(Request request)
+        public async Task<QuickFixResponse> Handle(FindImplementationsRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();

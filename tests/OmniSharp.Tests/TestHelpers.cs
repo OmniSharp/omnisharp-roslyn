@@ -140,7 +140,19 @@ namespace OmniSharp.Tests
 
         public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
-            var workspace = Startup.CreateWorkspace();
+            var host = Startup.ConfigurePluginHost(
+                null,
+                new FakeLoggerFactory(),
+                new FakeEnvironment(),
+                null,
+                new FakeOmniSharpOptions().Options,
+                null,
+                null,
+                null,
+                null,
+                Enumerable.Empty<Assembly>(),
+                null);
+            var workspace = host.GetExport<OmnisharpWorkspace>();
             AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
             return workspace;
         }
@@ -149,7 +161,6 @@ namespace OmniSharp.Tests
         {
             return Startup.ConfigurePluginHost(
                 null,
-                workspace,
                 new FakeLoggerFactory(),
                 new FakeEnvironment(),
                 null,

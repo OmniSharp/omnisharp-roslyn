@@ -7,11 +7,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [Export(typeof(RequestHandler<FindUsagesRequest, QuickFixResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<FindUsagesRequest, QuickFixResponse>), LanguageNames.CSharp)]
     public class FindUsagesService : RequestHandler<FindUsagesRequest, QuickFixResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

@@ -60,7 +60,6 @@ namespace OmniSharp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            Workspace = CreateWorkspace();
             services.AddMvc();
 
             services.Configure<MvcOptions>(opt =>
@@ -70,7 +69,7 @@ namespace OmniSharp
             });
 
             // Add the omnisharp workspace to the container
-            services.AddInstance(Workspace);
+            services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
 
             // Caching
@@ -79,12 +78,6 @@ namespace OmniSharp
 
             // Add the file watcher
             services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
-
-#if DNX451
-            //TODO Do roslyn code actions run on Core CLR?
-            services.AddSingleton<ICodeActionProvider, RoslynCodeActionProvider>();
-            services.AddSingleton<ICodeActionProvider, NRefactoryCodeActionProvider>();
-#endif
 
             foreach (var endpoint in Endpoints.AvailableEndpoints)
             {
@@ -106,18 +99,7 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static OmnisharpWorkspace CreateWorkspace()
-        {
-            var assemblies = MefHostServices.DefaultAssemblies;
-#if DNX451
-            assemblies = assemblies.AddRange(RoslynCodeActionProvider.MefAssemblies);
-            assemblies = assemblies.AddRange(NRefactoryCodeActionProvider.MefAssemblies);
-#endif
-            return new OmnisharpWorkspace(MefHostServices.Create(assemblies));
-        }
-
         public static CompositionHost ConfigurePluginHost(IServiceProvider serviceProvider,
-                                                          OmnisharpWorkspace workspace,
                                                           ILoggerFactory loggerFactory,
                                                           IOmnisharpEnvironment env,
                                                           ISharedTextWriter writer,
@@ -136,7 +118,7 @@ namespace OmniSharp
             }
 
             //IOmnisharpEnvironment env, ILoggerFactory loggerFactory
-            config = config.WithProvider(MefValueProvider.From(workspace))
+            config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(env))
@@ -169,17 +151,21 @@ namespace OmniSharp
         {
             if (plugins.AssemblyNames.Any())
             {
-                PluginHost = ConfigurePluginHost(serviceProvider, Workspace, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetLibraries()
+                PluginHost = ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetLibraries()
                     .SelectMany(x => x.LoadableAssemblies)
                     .Join(plugins.AssemblyNames, x => x.FullName, x => x, (library, name) => library)
-                    .Select(assemblyName => Assembly.Load(assemblyName)));
+                    .Select(assemblyName => Assembly.Load(assemblyName))
+                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly }));
             }
             else
             {
-                PluginHost = ConfigurePluginHost(serviceProvider, Workspace, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                PluginHost = ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetReferencingLibraries("OmniSharp.Abstractions")
                     .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
-                    .Select(assemblyName => Assembly.Load(assemblyName)));
+                    .Select(assemblyName => Assembly.Load(assemblyName))
+                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly }));
             }
+
+            Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
 
             Func<string, LogLevel, bool> logFilter = (category, type) =>
                 (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))

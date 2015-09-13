@@ -1,10 +1,13 @@
 #if DNX451
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Composition;
 using System.Reflection;
+using OmniSharp.Services;
 
-namespace OmniSharp.Services
+namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
 {
+    [Export(typeof(ICodeActionProvider))]
     public class RoslynCodeActionProvider : AbstractCodeActionProvider
     {
         private static ImmutableArray<Assembly> _mefAssemblies =>
@@ -18,7 +21,6 @@ namespace OmniSharp.Services
         }
 
         public override string ProviderName => "Roslyn";
-        internal static ImmutableArray<Assembly> MefAssemblies => _mefAssemblies;
     }
 }
 #endif

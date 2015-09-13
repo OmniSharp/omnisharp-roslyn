@@ -19,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             });
 
             var controller = new CodeCheckService(workspace);
-            var quickFixes = await controller.Handle(new Request() { FileName = "a.cs" });
+            var quickFixes = await controller.Handle(new CodeCheckRequest() { FileName = "a.cs" });
 
             Assert.Equal(1, quickFixes.QuickFixes.Count());
             Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
@@ -35,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             });
 
             var controller = new CodeCheckService(workspace);
-            var quickFixes = await controller.Handle(new Request());
+            var quickFixes = await controller.Handle(new CodeCheckRequest());
 
             Assert.Equal(2, quickFixes.QuickFixes.Count());
         }

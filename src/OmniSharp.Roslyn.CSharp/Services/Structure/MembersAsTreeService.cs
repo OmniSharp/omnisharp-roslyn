@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [Export(typeof(RequestHandler<Request, FileMemberTree>))]
-    public class MembersAsTreeService : RequestHandler<Request, FileMemberTree>
+    [OmniSharpEndpoint(typeof(RequestHandler<MembersTreeRequest, FileMemberTree>), LanguageNames.CSharp)]
+    public class MembersAsTreeService : RequestHandler<MembersTreeRequest, FileMemberTree>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -16,7 +18,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             _workspace = workspace;
         }
 
-        public async Task<FileMemberTree> Handle(Request request)
+        public async Task<FileMemberTree> Handle(MembersTreeRequest request)
         {
             return new FileMemberTree()
             {

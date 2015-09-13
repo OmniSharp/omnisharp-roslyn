@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [Export(typeof(RequestHandler<Request, IEnumerable<QuickFix>>))]
-    public class MembersAsFlatService : RequestHandler<Request, IEnumerable<QuickFix>>
+    [OmniSharpEndpoint(typeof(RequestHandler<MembersFlatRequest, IEnumerable<QuickFix>>), LanguageNames.CSharp)]
+    public class MembersAsFlatService : RequestHandler<MembersFlatRequest, IEnumerable<QuickFix>>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -16,7 +18,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             _workspace = workspace;
         }
 
-        public async Task<IEnumerable<QuickFix>> Handle(Request request)
+        public async Task<IEnumerable<QuickFix>> Handle(MembersFlatRequest request)
         {
             var stack = new List<FileMemberElement>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
             var ret = new List<QuickFix>();

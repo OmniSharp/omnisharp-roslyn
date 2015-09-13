@@ -7,12 +7,13 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [Export(typeof(RequestHandler<Request, QuickFixResponse>))]
-    public class GotoRegionService : RequestHandler<Request, QuickFixResponse>
+    [OmniSharpEndpoint(typeof(RequestHandler<GotoRegionRequest, QuickFixResponse>), LanguageNames.CSharp)]
+    public class GotoRegionService : RequestHandler<GotoRegionRequest, QuickFixResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -22,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             _workspace = workspace;
         }
 
-        public async Task<QuickFixResponse> Handle(Request request)
+        public async Task<QuickFixResponse> Handle(GotoRegionRequest request)
         {
             var regions = new List<QuickFix>();
             var document = _workspace.GetDocument(request.FileName);

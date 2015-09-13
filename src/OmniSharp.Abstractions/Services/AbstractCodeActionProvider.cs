@@ -31,11 +31,15 @@ namespace OmniSharp.Services
 
             _codeFixes = features.Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
                     .Select(type => (CodeFixProvider)Activator.CreateInstance(type));
+
+            Assemblies = new[] { codeActionAssembly };
         }
 
         public virtual IEnumerable<CodeRefactoringProvider> Refactorings => _refactorings;
 
         public virtual IEnumerable<CodeFixProvider> CodeFixes => _codeFixes;
+
+        public virtual IEnumerable<Assembly> Assemblies { get; protected set; }
 
         public abstract string ProviderName { get; }
     }

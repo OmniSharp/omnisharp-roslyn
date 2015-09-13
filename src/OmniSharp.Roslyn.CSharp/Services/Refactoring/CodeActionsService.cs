@@ -3,16 +3,18 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [Export(typeof(RequestHandler<CodeActionRequest, GetCodeActionsResponse>))]
-    [Export(typeof(RequestHandler<CodeActionRequest, RunCodeActionResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<CodeActionRequest, GetCodeActionsResponse>), LanguageNames.CSharp)]
+    [OmniSharpEndpoint(typeof(RequestHandler<CodeActionRequest, RunCodeActionResponse>), LanguageNames.CSharp)]
     public class CodeActionsService :
         RequestHandler<CodeActionRequest, GetCodeActionsResponse>,
         RequestHandler<CodeActionRequest, RunCodeActionResponse>
@@ -21,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
         [ImportingConstructor]
-        public CodeActionsService(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
+        public CodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
             _codeActionProviders = providers;

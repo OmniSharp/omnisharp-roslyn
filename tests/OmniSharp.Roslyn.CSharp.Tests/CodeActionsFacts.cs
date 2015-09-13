@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using OmniSharp.Services;
 using OmniSharp.Tests;

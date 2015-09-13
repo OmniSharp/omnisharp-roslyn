@@ -12,14 +12,15 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
+using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Extensions;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    [Export(typeof(RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>))]
-    [Export(typeof(RequestHandler<RunCodeActionRequest, RunCodeActionResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>), LanguageNames.CSharp)]
+    [OmniSharpEndpoint(typeof(RequestHandler<RunCodeActionRequest, RunCodeActionResponse>), LanguageNames.CSharp)]
     public class CodeActionService :
         RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>,
         RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
@@ -30,7 +31,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private readonly ILogger _logger;
 
-        public CodeActionService(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
+        [ImportingConstructor]
+        public CodeActionService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
