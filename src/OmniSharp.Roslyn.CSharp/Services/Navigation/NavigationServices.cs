@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 using OmniSharp.Helpers;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [Export(typeof(RequestHandler<Request, NavigateResponse>))]
-    public class NavigationUpService : RequestHandler<Request, NavigateResponse>
+    public class NavigateUpService : RequestHandler<Request, NavigateResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public NavigationUpService(OmnisharpWorkspace workspace)
+        public NavigateUpService(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -25,12 +25,12 @@ namespace OmniSharp
     }
 
     [Export(typeof(RequestHandler<Request, NavigateResponse>))]
-    public class NavigationDownService : RequestHandler<Request, NavigateResponse>
+    public class NavigateDownService : RequestHandler<Request, NavigateResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public NavigationDownService(OmnisharpWorkspace workspace)
+        public NavigateDownService(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
         }

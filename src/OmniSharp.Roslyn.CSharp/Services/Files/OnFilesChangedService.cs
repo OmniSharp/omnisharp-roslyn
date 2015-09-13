@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
     [Export(typeof(RequestHandler<IEnumerable<Request> ,object>))]
     public class OnFilesChangedService : RequestHandler<IEnumerable<Request> ,object>

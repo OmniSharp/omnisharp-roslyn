@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 
-namespace OmniSharp.Services.Documentation
+namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 {
     public static class DocumentationConverter
     {

@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [Export(typeof(RequestHandler<Request, QuickFixResponse>))]
     public class FindImplementationsService : RequestHandler<Request, QuickFixResponse>

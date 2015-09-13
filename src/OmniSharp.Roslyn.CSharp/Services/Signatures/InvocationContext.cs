@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
     internal class InvocationContext
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using V2 = OmniSharp.Models.V2;
 
 namespace OmniSharp
 {
@@ -58,7 +58,10 @@ namespace OmniSharp
             EndpointMapItem.Create<Request, FileMemberTree>("/currentfilemembersastree"),
             EndpointMapItem.Create<Request, IEnumerable<QuickFix>>("/currentfilemembersasflat"),
             EndpointMapItem.Create<TestCommandRequest, GetTestCommandResponse>("/gettestcontext"),
-        };
+
+            EndpointMapItem.Create<V2.GetCodeActionsRequest, V2.GetCodeActionsResponse>("/v2/getcodeactions"),
+            EndpointMapItem.Create<V2.RunCodeActionRequest, V2.RunCodeActionResponse>("/v2/runcodeaction"),
+    };
 
         public class EndpointMapItem
         {

@@ -1,8 +1,10 @@
 ﻿using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     enum NavigateDirection
     {
@@ -726,8 +728,8 @@ namespace OmniSharp.Tests
         {
             var initialCursorLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContent));
             var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContent);
-            var naviagteUpService = new NavigationUpService(workspace);
-            var navigateDownService = new NavigationDownService(workspace);
+            var naviagteUpService = new NavigateUpService(workspace);
+            var navigateDownService = new NavigateDownService(workspace);
             var request = new Request
             {
                 Line = initialCursorLineColumn.Line,

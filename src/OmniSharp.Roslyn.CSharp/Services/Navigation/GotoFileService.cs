@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [Export(typeof(RequestHandler<Request, QuickFixResponse>))]
     public class GotoFileService : RequestHandler<Request, QuickFixResponse>

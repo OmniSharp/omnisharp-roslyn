@@ -3,9 +3,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Intellisense;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class IntellisenseFacts
     {

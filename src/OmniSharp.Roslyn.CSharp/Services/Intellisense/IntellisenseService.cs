@@ -11,9 +11,9 @@ using OmniSharp.Extensions;
 using OmniSharp.Intellisense;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Services.Documentation;
+using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
     [Export(typeof(RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>))]
     public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>

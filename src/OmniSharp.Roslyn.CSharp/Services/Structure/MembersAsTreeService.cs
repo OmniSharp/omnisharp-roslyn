@@ -3,7 +3,7 @@ using System.Composition;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
     [Export(typeof(RequestHandler<Request, FileMemberTree>))]
     public class MembersAsTreeService : RequestHandler<Request, FileMemberTree>

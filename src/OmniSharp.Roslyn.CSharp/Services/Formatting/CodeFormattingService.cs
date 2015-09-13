@@ -4,11 +4,11 @@ using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Format;
+using OmniSharp.Roslyn.CSharp.Workers.Format;
 using OmniSharp.Models;
 using OmniSharp.Options;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
     [Export(typeof(RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>))]
     [Export(typeof(RequestHandler<FormatRangeRequest, FormatRangeResponse>))]
@@ -41,7 +41,7 @@ namespace OmniSharp
 
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
             int position = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-            var changes = await Formatting.GetFormattingChangesAfterKeystroke(_workspace, _options, document, position, request.Char);
+            var changes = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattingChangesAfterKeystroke(_workspace, _options, document, position, request.Char);
 
             return new FormatRangeResponse()
             {
@@ -57,7 +57,7 @@ namespace OmniSharp
                 return null;
             }
 
-            var newText = await Formatting.GetFormattedDocument(_workspace, _options, document);
+            var newText = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattedDocument(_workspace, _options, document);
             return new CodeFormatResponse()
             {
                 Buffer = newText
@@ -75,7 +75,7 @@ namespace OmniSharp
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
             var start = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
             var end = lines.GetPosition(new LinePosition(request.EndLine - 1, request.EndColumn - 1));
-            var changes = await Formatting.GetFormattingChangesForRange(_workspace, _options, document, start, end);
+            var changes = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattingChangesForRange(_workspace, _options, document, start, end);
 
             return new FormatRangeResponse()
             {

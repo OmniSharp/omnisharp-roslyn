@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [Export(typeof(RequestHandler<MetadataRequest, MetadataResponse>))]
     public class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>

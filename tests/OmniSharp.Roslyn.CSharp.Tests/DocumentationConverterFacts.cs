@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
-using OmniSharp.Services.Documentation;
+using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class DocumentationConverterFacts
     {

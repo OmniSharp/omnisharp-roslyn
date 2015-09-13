@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Highlighting;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class HighlightFacts
     {

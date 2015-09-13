@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -13,11 +13,16 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Framework.Logging;
 using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.CSharp.Extensions;
 using OmniSharp.Services;
 
-namespace OmniSharp.Api.V2
+namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    public class CodeActionController
+    [Export(typeof(RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>))]
+    [Export(typeof(RequestHandler<RunCodeActionRequest, RunCodeActionResponse>))]
+    public class CodeActionService :
+        RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>,
+        RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
@@ -25,22 +30,20 @@ namespace OmniSharp.Api.V2
 
         private readonly ILogger _logger;
 
-        public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
+        public CodeActionService(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
-            _logger = loggerFactory.CreateLogger<CodeActionController>();
+            _logger = loggerFactory.CreateLogger<CodeActionService>();
         }
 
-        [HttpPost("v2/getcodeactions")]
-        public async Task<GetCodeActionsResponse> GetCodeActions(GetCodeActionsRequest request)
+        async Task<GetCodeActionsResponse> RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>.Handle(GetCodeActionsRequest request)
         {
             var actions = await GetActions(request);
             return new GetCodeActionsResponse { CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title)) };
         }
 
-        [HttpPost("v2/runcodeaction")]
-        public async Task<RunCodeActionResponse> RunCodeAction(RunCodeActionRequest request)
+        async Task<RunCodeActionResponse> RequestHandler<RunCodeActionRequest, RunCodeActionResponse>.Handle(RunCodeActionRequest request)
         {
             var actions = await GetActions(request);
 

@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
 {
     [Export(typeof(RequestHandler<TestCommandRequest, GetTestCommandResponse>))]
     public class TestCommandService : RequestHandler<TestCommandRequest, GetTestCommandResponse>

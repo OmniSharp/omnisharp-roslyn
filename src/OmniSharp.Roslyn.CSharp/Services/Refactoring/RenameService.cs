@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
     public class RenameService : RequestHandler<RenameRequest, RenameResponse>
     {

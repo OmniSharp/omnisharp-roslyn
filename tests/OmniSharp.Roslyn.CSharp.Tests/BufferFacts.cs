@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class BufferFacts
     {

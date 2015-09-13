@@ -3,9 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Filters;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FindReferencesFacts
     {

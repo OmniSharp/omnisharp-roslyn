@@ -4,12 +4,14 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Framework.OptionsModel;
-using OmniSharp.Format;
+using OmniSharp.Roslyn.CSharp.Workers.Format;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using Xunit;
+using OmniSharp.Tests;
+using OmniSharp.Roslyn.CSharp.Services.Formatting;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
 
     public class FormattingFacts

@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {
     [Export(typeof(RequestHandler<HighlightRequest, HighlightResponse>))]
     public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>

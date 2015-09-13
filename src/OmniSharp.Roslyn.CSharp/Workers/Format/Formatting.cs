@@ -8,9 +8,9 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp.Format
+namespace OmniSharp.Roslyn.CSharp.Workers.Format
 {
-    public class Formatting
+    public static class Formatting
     {
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
         {

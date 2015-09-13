@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
-namespace OmniSharp.Roslyn.CSharp.Services.Navigation
+namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
     [Export(typeof(RequestHandler<CodeActionRequest, GetCodeActionsResponse>))]
     [Export(typeof(RequestHandler<CodeActionRequest, RunCodeActionResponse>))]

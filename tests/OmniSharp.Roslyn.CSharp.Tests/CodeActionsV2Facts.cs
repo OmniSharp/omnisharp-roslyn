@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Api.V2;
 using OmniSharp.Models.V2;
 using OmniSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -210,8 +210,8 @@ namespace OmniSharp.Tests
         {
             var request = CreateGetCodeActionsRequest(source);
             _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer, bufferPath);
-            var controller = new Api.V2.CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
-            var response = await controller.GetCodeActions(request);
+            RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> controller = new CodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            var response = await controller.Handle(request);
             return response.CodeActions;
         }
 
@@ -219,8 +219,8 @@ namespace OmniSharp.Tests
         {
             var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
             _workspace = _workspace ?? TestHelpers.CreateSimpleWorkspace(request.Buffer, bufferPath);
-            var controller = new Api.V2.CodeActionController(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
-            var response = await controller.RunCodeAction(request);
+            RequestHandler<RunCodeActionRequest, RunCodeActionResponse> controller = new CodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            var response = await controller.Handle(request);
             return response;
         }
 

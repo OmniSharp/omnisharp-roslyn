@@ -5,9 +5,9 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Services.Documentation;
+using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Types
 {
     [Export(typeof(RequestHandler<TypeLookupRequest, TypeLookupResponse>))]
     public class TypeLookupService : RequestHandler<TypeLookupRequest, TypeLookupResponse>
