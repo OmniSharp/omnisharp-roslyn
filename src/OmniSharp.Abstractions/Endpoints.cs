@@ -44,13 +44,9 @@ namespace OmniSharp
             EndpointMapItem.Create<FindUsagesRequest, QuickFixResponse>("/findusages"),
             EndpointMapItem.Create<GotoFileRequest, QuickFixResponse>("/gotofile"),
             EndpointMapItem.Create<GotoRegionRequest, QuickFixResponse>("/gotoregion"),
-            EndpointMapItem.Create<MetadataRequest, MetadataResponse>("/metadata"),
             EndpointMapItem.Create<NavigateUpRequest, NavigateResponse>("/navigateup"),
             EndpointMapItem.Create<NavigateDownRequest, NavigateResponse>("/navigatedown"),
             EndpointMapItem.Create<TypeLookupRequest, TypeLookupResponse>("/typelookup"),
-            EndpointMapItem.Create<PackageSourceRequest ,PackageSourceResponse >("/packagesource"),
-            EndpointMapItem.Create<PackageSearchRequest , PackageSearchResponse>("/packagesearch"),
-            EndpointMapItem.Create<PackageVersionRequest , PackageVersionResponse>("/packageversion"),
             EndpointMapItem.Create<CodeActionRequest , GetCodeActionsResponse>("/getcodeactions"),
             EndpointMapItem.Create<CodeActionRequest , RunCodeActionResponse>("/runcodeaction"),
             EndpointMapItem.Create<RenameRequest , RenameResponse>("/rename"),
@@ -59,27 +55,34 @@ namespace OmniSharp
             EndpointMapItem.Create<MembersFlatRequest, IEnumerable<QuickFix>>("/currentfilemembersasflat"),
             EndpointMapItem.Create<TestCommandRequest, GetTestCommandResponse>("/gettestcontext"),
 
+            EndpointMapItem.Create<MetadataRequest, MetadataResponse>("/metadata", takeOne: true),
+            EndpointMapItem.Create<PackageSourceRequest ,PackageSourceResponse >("/packagesource", takeOne: true),
+            EndpointMapItem.Create<PackageSearchRequest , PackageSearchResponse>("/packagesearch", takeOne: true),
+            EndpointMapItem.Create<PackageVersionRequest , PackageVersionResponse>("/packageversion", takeOne: true),
+
             EndpointMapItem.Create<V2.GetCodeActionsRequest, V2.GetCodeActionsResponse>("/v2/getcodeactions"),
             EndpointMapItem.Create<V2.RunCodeActionRequest, V2.RunCodeActionResponse>("/v2/runcodeaction"),
-    };
+        };
 
         public class EndpointMapItem
         {
-            public static EndpointMapItem Create<TRequest, TResponse>(string endpoint)
+            public static EndpointMapItem Create<TRequest, TResponse>(string endpoint, bool takeOne = false)
             {
-                return new EndpointMapItem(endpoint, typeof(TRequest), typeof(TResponse));
+                return new EndpointMapItem(endpoint, typeof(TRequest), typeof(TResponse), takeOne);
             }
 
-            public EndpointMapItem(string endpointName, Type requestType, Type responseType)
+            public EndpointMapItem(string endpointName, Type requestType, Type responseType, bool takeOne)
             {
                 EndpointName = endpointName;
                 RequestType = requestType;
                 ResponseType = responseType;
+                TakeOne = takeOne;
             }
 
             public string EndpointName { get; }
             public Type RequestType { get; }
             public Type ResponseType { get; }
+            public bool TakeOne { get; }
         }
     }
 }

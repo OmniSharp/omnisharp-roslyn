@@ -38,12 +38,13 @@ namespace OmniSharp.Middleware
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
             _languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
 
-            _endpoints = new HashSet<string>(endpoints.Select(x => x.EndpointName).Distinct());
+            _endpoints = new HashSet<string>(endpoints.Select(x => x.EndpointName).Distinct(), StringComparer.OrdinalIgnoreCase);
 
             var endpointHandlers = endpoints.ToDictionary(
                 x => x.EndpointName,
-                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<Plugin>()))
-            );
+                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<Plugin>())),
+                StringComparer.OrdinalIgnoreCase);
+                
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }
 

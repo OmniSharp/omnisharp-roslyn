@@ -49,6 +49,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
+        private readonly bool _isSpreadable;
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
 
@@ -69,6 +70,7 @@ namespace OmniSharp.Middleware.Endpoint
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
             _isMergeable = typeof(IMergeableResponse).IsAssignableFrom(item.ResponseType);
+            _isSpreadable = _isMergeable || item.TakeOne;
 
             _exports = new Lazy<Task<Dictionary<string, ExportHandler>>>(() => LoadExportHandlers());
         }
@@ -101,11 +103,7 @@ namespace OmniSharp.Middleware.Endpoint
             if (_hasFileNameProperty)
             {
                 var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName);
-                if (string.IsNullOrEmpty(language))
-                {
-                    throw new NotSupportedException($"Could not determine language for {model.FileName} (does is it not support {EndpointName}?)");
-                }
-                return HandleLanguageRequest(language, request, context);
+				return HandleLanguageRequest(language, request, context);
             }
 
             return HandleAllRequest(request, context);
@@ -138,7 +136,7 @@ namespace OmniSharp.Middleware.Endpoint
 
         private async Task HandleAllRequest(JObject requestObject, HttpContext context)
         {
-            if (!_isMergeable)
+            if (!_isSpreadable)
             {
                 throw new NotSupportedException($"Responses must be mergable to spread them out across all plugins for {EndpointName}");
             }
@@ -146,27 +144,43 @@ namespace OmniSharp.Middleware.Endpoint
             var exports = await _exports.Value;
             var request = requestObject.ToObject(_requestType);
 
-            IMergeableResponse response = null;
-            var responses = new List<Task<object>>();
+            object response = null;
 
-            foreach (var handler in exports.Values)
-            {
-                responses.Add(handler.Handle(request));
+            if (_isMergeable) {
+                IMergeableResponse mergableResponse = null;
+
+                var responses = new List<Task<object>>();
+                foreach (var handler in exports.Values)
+                {
+                    responses.Add(handler.Handle(request));
+                }
+
+                foreach (IMergeableResponse exportResponse in await Task.WhenAll(responses))
+                {
+                    if (mergableResponse != null)
+                    {
+                        mergableResponse = mergableResponse.Merge(exportResponse);
+                    }
+                    else
+                    {
+                        mergableResponse = exportResponse;
+                    }
+                }
+
+                response = mergableResponse;
+            } else {
+                foreach (var handler in exports.Values)
+                {
+                    response = await handler.Handle(request);
+
+                    if (response != null)
+                        break;
+                }
             }
 
-            foreach (IMergeableResponse exportResponse in await Task.WhenAll(responses))
-            {
-                if (response != null)
-                {
-                    response = response.Merge(exportResponse);
-                }
-                else
-                {
-                    response = exportResponse;
-                }
+            if (response != null) {
+                SerializeResponseObject(context.Response, response);
             }
-
-            SerializeResponseObject(context.Response, response);
         }
 
         private LanguageModel GetLanguageModel(JObject jobject)

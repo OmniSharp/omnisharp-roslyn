@@ -14,13 +14,14 @@ using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 #endif
 using OmniSharp.Extensions;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
 #if DNX451
-    [Export(typeof(RequestHandler<PackageSourceRequest, PackageSourceResponse>))]
+    [OmniSharpEndpoint(typeof(RequestHandler<PackageSourceRequest, PackageSourceResponse>), LanguageNames.CSharp)]
     public class PackageSourceService : RequestHandler<PackageSourceRequest, PackageSourceResponse>
     {
         [ImportingConstructor]

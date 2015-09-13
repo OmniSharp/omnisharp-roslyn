@@ -192,7 +192,7 @@ class C {
         private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChangesForRange(FormatRangeRequest req)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
-            RequestHandler<FormatRangeRequest, FormatRangeResponse> controller = new CodeFormattingService(workspace, new FormattingOptions());
+            RequestHandler<FormatRangeRequest, FormatRangeResponse> controller = new FormatRangeService(workspace, new FormattingOptions());
 
             return (await controller.Handle(req)).Changes;
         }
