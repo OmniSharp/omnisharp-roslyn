@@ -14,7 +14,6 @@ using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 #endif
 using OmniSharp.Dnx;
-using OmniSharp.Documentation;
 using OmniSharp.Extensions;
 using OmniSharp.Intellisense;
 using OmniSharp.Models;
@@ -133,7 +132,7 @@ namespace OmniSharp
             {
                 if (request.Sources == null)
                     request.Sources = Enumerable.Empty<string>();
-                    
+
                 var token = CancellationToken.None;
 
                 var filter = new SearchFilter

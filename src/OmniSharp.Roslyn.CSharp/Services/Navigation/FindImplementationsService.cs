@@ -1,19 +1,28 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Helpers;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<Request, QuickFixResponse>))]
+    public class FindImplementationsService : RequestHandler<Request, QuickFixResponse>
     {
-        [HttpPost("findimplementations")]
-        public async Task<QuickFixResponse> FindImplementations(Request request)
+        private readonly OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public FindImplementationsService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<QuickFixResponse> Handle(Request request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
@@ -48,7 +57,7 @@ namespace OmniSharp
             {
                 foreach (var location in symbol.Locations)
                 {
-                    await AddQuickFix(quickFixes, location);
+                    await QuickFixHelper.AddQuickFix(quickFixes, _workspace, location);
                 }
             }
         }

@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using OmniSharp.Documentation;
+using OmniSharp.Services.Documentation;
 using Xunit;
 
 namespace OmniSharp.Tests

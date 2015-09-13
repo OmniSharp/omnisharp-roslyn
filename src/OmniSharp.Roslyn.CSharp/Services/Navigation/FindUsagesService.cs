@@ -1,19 +1,28 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Helpers;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<FindUsagesRequest, QuickFixResponse>))]
+    public class FindUsagesService : RequestHandler<FindUsagesRequest, QuickFixResponse>
     {
-        [HttpPost("findusages")]
-        public async Task<QuickFixResponse> FindUsages(FindUsagesRequest request)
+        private readonly OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public FindUsagesService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<QuickFixResponse> Handle(FindUsagesRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new QuickFixResponse();
@@ -48,7 +57,7 @@ namespace OmniSharp
                     }
                 }
 
-                var quickFixTasks = locations.Distinct().Select(async l => await GetQuickFix(l));
+                var quickFixTasks = locations.Distinct().Select(async l => await QuickFixHelper.GetQuickFix(_workspace, l));
 
                 var quickFixes = await Task.WhenAll(quickFixTasks);
                 response = new QuickFixResponse(quickFixes.Distinct()

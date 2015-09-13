@@ -1,16 +1,24 @@
 using System;
+using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using OmniSharp.Models;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<MetadataRequest, MetadataResponse>))]
+    public partial class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
     {
-        [HttpPost("metadata")]
-        public async Task<MetadataResponse> Metadata(MetadataRequest request)
+        private readonly OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public MetadataService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<MetadataResponse> Handle(MetadataRequest request)
         {
             var response = new MetadataResponse();
             foreach (var project in _workspace.CurrentSolution.Projects)

@@ -13,7 +13,18 @@
   },
   "frameworks": {
     "dnx451": {
-      "frameworkAssemblies": {}
+      "frameworkAssemblies": {
+        "System.Runtime": "",
+        "System.Threading":"",
+        "System.Threading.Tasks":"",
+        "System.Collections":"",
+        "System.Globalization":"",
+        "System.Linq": "",
+        "System.Text.Encoding":"",
+        "System.IO":"",
+        "System.Reflection":"",
+        "System.Security":""
+      }
     },
     "dnxcore50": {
       "dependencies": {

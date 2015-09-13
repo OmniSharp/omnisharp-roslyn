@@ -24,8 +24,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 4 } });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 4 } });
 
             AssertSyntax(regions.Highlights, code, 3,
                 Token("class", "keyword"),
@@ -54,8 +54,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
 
             AssertSyntax(regions.Highlights, code, 0,
                 Token("namespace", "keyword"),
@@ -88,8 +88,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());            
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs" });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
 
             AssertSyntax(regions.Highlights, code, 0,
                 Token("class", "keyword"),
@@ -160,8 +160,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Keyword } });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Keyword } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "keyword");
         }
@@ -181,8 +181,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Punctuation } });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Punctuation } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "punctuation");
         }
@@ -202,8 +202,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Operator } });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Operator } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "operator");
         }
@@ -223,8 +223,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Identifier } });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Identifier } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "identifier");
         }
@@ -244,8 +244,8 @@ namespace OmniSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            var regions = await controller.Highlight(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Name } });
+            var controller = new HighlightingService(workspace);
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Name } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind.EndsWith(" name"));
         }

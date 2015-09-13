@@ -7,7 +7,7 @@ using OmniSharp.Models;
 using Xunit;
 
 namespace OmniSharp.Tests
-{    
+{
     public class FindImplementationFacts
     {
         [Fact]
@@ -16,7 +16,7 @@ namespace OmniSharp.Tests
             var source = @"
                 public interface Som$eInterface {}
                 public class SomeClass : SomeInterface {}";
-            
+
             var implementations = await FindImplementations(source);
             var implementation = implementations.First();
 
@@ -71,11 +71,13 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
+            var controller = new FindImplementationsService(workspace);
             var request = CreateRequest(source);
+
             var bufferFilter = new UpdateBufferFilter(workspace);
             bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
-            var implementations = await controller.FindImplementations(request);
+
+            var implementations = await controller.Handle(request);
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
         }
 
@@ -89,6 +91,6 @@ namespace OmniSharp.Tests
                 Buffer = source.Replace("$", "")
             };
         }
-        
+
     }
 }

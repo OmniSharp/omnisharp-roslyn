@@ -5,18 +5,18 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 
-namespace OmniSharp
+namespace OmniSharp.Helpers
 {
-    public partial class OmnisharpController
+    public static class QuickFixHelper
     {
-        private async Task<QuickFix> GetQuickFix(Location location)
+        public static async Task<QuickFix> GetQuickFix(OmnisharpWorkspace workspace, Location location)
         {
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
 
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
-            var documents = _workspace.GetDocuments(path);
+            var documents = workspace.GetDocuments(path);
             var line = lineSpan.StartLinePosition.Line;
             var syntaxTree = await documents.First().GetSyntaxTreeAsync();
             var text = syntaxTree.GetText().Lines[line].ToString();
@@ -33,11 +33,11 @@ namespace OmniSharp
             };
         }
 
-        private async Task AddQuickFix(ICollection<QuickFix> quickFixes, Location location)
+        public static async Task AddQuickFix(ICollection<QuickFix> quickFixes, OmnisharpWorkspace workspace, Location location)
         {
             if (location.IsInSource)
             {
-                var quickFix = await GetQuickFix(location);
+                var quickFix = await GetQuickFix(workspace, location);
                 quickFixes.Add(quickFix);
             }
         }

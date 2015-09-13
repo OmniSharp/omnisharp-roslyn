@@ -37,15 +37,16 @@ namespace OmniSharp
             EndpointMapItem.Create<FormatAfterKeystrokeRequest, FormatRangeResponse>("formatAfterKeystroke"),
             EndpointMapItem.Create<FormatRangeRequest, FormatRangeResponse>("formatRange"),
             EndpointMapItem.Create<Request, CodeFormatResponse>("codeformat"),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
-            // EndpointMapItem.Create<, >(""),
+            EndpointMapItem.Create<HighlightRequest, HighlightResponse>("highlight"),
+            EndpointMapItem.Create<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>("autocomplete"),
+            EndpointMapItem.Create<Request, QuickFixResponse>("findimplementations"),
+            EndpointMapItem.Create<FindUsagesRequest, QuickFixResponse>("findusages"),
+            EndpointMapItem.Create<Request, QuickFixResponse>("gotofile"),
+            EndpointMapItem.Create<Request, QuickFixResponse>("gotoregion"),
+            EndpointMapItem.Create<MetadataRequest, MetadataResponse>("metadata"),
+            EndpointMapItem.Create<Request, NavigateResponse>("navigateup"),
+            EndpointMapItem.Create<Request, NavigateResponse>("navigatedown"),
+            EndpointMapItem.Create<TypeLookupRequest, TypeLookupResponse>("typelookup")
         };
 
         public class EndpointMapItem

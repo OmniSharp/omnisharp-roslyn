@@ -1,25 +1,36 @@
+using System;
 ﻿using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Documentation;
 using OmniSharp.Extensions;
 using OmniSharp.Intellisense;
 using OmniSharp.Models;
+using OmniSharp.Options;
+using OmniSharp.Services.Documentation;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>))]
+    public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
-        private HashSet<AutoCompleteResponse> _completions
-            = new HashSet<AutoCompleteResponse>();
+        private readonly OmnisharpWorkspace _workspace;
+        private readonly HashSet<AutoCompleteResponse> _completions;
+        private readonly FormattingOptions _formattingOptions;
 
-        [HttpPost("autocomplete")]
-        public async Task<IEnumerable<AutoCompleteResponse>> AutoComplete(AutoCompleteRequest request)
+        [ImportingConstructor]
+        public IntellisenseService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        {
+            _workspace = workspace;
+            _completions = new HashSet<AutoCompleteResponse>();
+            _formattingOptions = formattingOptions;
+        }
+
+        public async Task<IEnumerable<AutoCompleteResponse>> Handle(AutoCompleteRequest request)
         {
             var documents = _workspace.GetDocuments(request.FileName);
             var wordToComplete = request.WordToComplete;
@@ -120,7 +131,7 @@ namespace OmniSharp
 
             if (request.WantDocumentationForEveryCompletionResult)
             {
-                response.Description = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _options.FormattingOptions.NewLine);
+                response.Description = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
             }
 
             if (request.WantReturnType)

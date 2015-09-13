@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
@@ -10,10 +10,16 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<HighlightRequest, HighlightResponse>))]
+    public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
     {
-        [HttpPost("highlight")]
-        public async Task<HighlightResponse> Highlight(HighlightRequest request)
+        [ImportingConstructor]
+        public HighlightingService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<HighlightResponse> Handle(HighlightRequest request)
         {
             var documents = _workspace.GetDocuments(request.FileName);
             if (request.ProjectNames != null && request.ProjectNames.Length > 0)
@@ -88,6 +94,7 @@ namespace OmniSharp
         }
 
         private HighlightClassification[] AllClassifications = Enum.GetValues(typeof(HighlightClassification)).Cast<HighlightClassification>().ToArray();
+        private readonly OmnisharpWorkspace _workspace;
 
         private IEnumerable<ClassifiedSpan> FilterSpans(HighlightClassification[] classifications, IEnumerable<ClassifiedSpan> spans)
         {

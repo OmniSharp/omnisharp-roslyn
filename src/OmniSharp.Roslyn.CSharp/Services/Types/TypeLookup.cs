@@ -1,17 +1,28 @@
+using System.Composition;
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Documentation;
 using OmniSharp.Models;
+using OmniSharp.Options;
+using OmniSharp.Services.Documentation;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<TypeLookupRequest, TypeLookupResponse>))]
+    public class TypeLookupService : RequestHandler<TypeLookupRequest, TypeLookupResponse>
     {
-        [HttpPost("typelookup")]
-        public async Task<TypeLookupResponse> TypeLookup(TypeLookupRequest request)
+        private readonly FormattingOptions _formattingOptions;
+        private readonly OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public TypeLookupService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        {
+            _workspace = workspace;
+            _formattingOptions = formattingOptions;
+        }
+
+        public async Task<TypeLookupResponse> Handle(TypeLookupRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new TypeLookupResponse();
@@ -24,7 +35,7 @@ namespace OmniSharp
                 if (symbol != null)
                 {
                     //non regular C# code semantics (interactive, script) don't allow namespaces
-                    if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType)
+                    if (document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType)
                     {
                         response.Type = $"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
                     }
@@ -35,7 +46,7 @@ namespace OmniSharp
 
                     if (request.IncludeDocumentation)
                     {
-                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _options.FormattingOptions.NewLine);
+                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
                     }
                 }
             }
