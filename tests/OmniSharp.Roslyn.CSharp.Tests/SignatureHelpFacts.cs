@@ -96,7 +96,7 @@ namespace OmniSharp.Tests
     public static void Main(){
         Foo($);
     }
-    pubic static Foo(bool b, int n = 1234) 
+    pubic static Foo(bool b, int n = 1234)
     {
     }
 }";
@@ -121,10 +121,10 @@ namespace OmniSharp.Tests
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(1$2, 
+        new Program().Foo(1$2,
     }
     /// foo1
-    private int Foo(int one, int two, int three) 
+    private int Foo(int one, int two, int three)
     {
         return 3;
     }
@@ -137,10 +137,10 @@ namespace OmniSharp.Tests
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12 $) 
+        new Program().Foo(12 $)
     }
     /// foo1
-    private int Foo(int one, int two, int three) 
+    private int Foo(int one, int two, int three)
     {
         return 3;
     }
@@ -153,10 +153,10 @@ namespace OmniSharp.Tests
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, $ 
+        new Program().Foo(12, $
     }
     /// foo1
-    private int Foo(int one, int two, int three) 
+    private int Foo(int one, int two, int three)
     {
         return 3;
     }
@@ -169,10 +169,10 @@ namespace OmniSharp.Tests
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, 1$ 
+        new Program().Foo(12, 1$
     }
     /// foo1
-    private int Foo(int one, int two, int three) 
+    private int Foo(int one, int two, int three)
     {
         return 3;
     }
@@ -185,10 +185,10 @@ namespace OmniSharp.Tests
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, 1, $ 
+        new Program().Foo(12, 1, $
     }
     /// foo1
-    private int Foo(int one, int two, int three) 
+    private int Foo(int one, int two, int three)
     {
         return 3;
     }
@@ -207,7 +207,7 @@ namespace OmniSharp.Tests
         new Program().Foo(12, $
     }
     /// foo1
-    private int Foo() 
+    private int Foo()
     {
         return 3;
     }
@@ -233,7 +233,7 @@ namespace OmniSharp.Tests
         new Program().Foo(""d"", $
     }
     /// foo1
-    private int Foo() 
+    private int Foo()
     {
         return 3;
     }
@@ -259,7 +259,7 @@ namespace OmniSharp.Tests
         new Program().Foo($)
     }
     /// foo1
-    private int Foo() 
+    private int Foo()
     {
         return 3;
     }
@@ -371,8 +371,8 @@ namespace OmniSharp.Tests
             };
 
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
-            return await controller.GetSignatureHelp(request);
+            var controller = new SignatureHelpService(workspace);
+            return await controller.Handle(request);
         }
     }
 }

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
+using System.Composition;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,19 +12,20 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public class TestCommandController
+    [Export(typeof(RequestHandler<TestCommandRequest, GetTestCommandResponse>))]
+    public class TestCommandService : RequestHandler<TestCommandRequest, GetTestCommandResponse>
     {
         private OmnisharpWorkspace _workspace;
         private IEnumerable<ITestCommandProvider> _testCommandProviders;
 
-        public TestCommandController(OmnisharpWorkspace workspace, CompositionHost host)
+        [ImportingConstructor]
+        public TestCommandService(OmnisharpWorkspace workspace, IEnumerable<ITestCommandProvider> testCommandProviders)
         {
             _workspace = workspace;
-            _testCommandProviders = host.GetExports<ITestCommandProvider>();
+            _testCommandProviders = testCommandProviders;
         }
 
-        [HttpPost("gettestcontext")]
-        public async Task<GetTestCommandResponse> GetTestCommand(TestCommandRequest request)
+        public async Task<GetTestCommandResponse> Handle(TestCommandRequest request)
         {
             var quickFixes = new List<QuickFix>();
 

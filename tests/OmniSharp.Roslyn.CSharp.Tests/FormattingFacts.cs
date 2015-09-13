@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Framework.OptionsModel;
+using OmniSharp.Format;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using Xunit;
@@ -29,7 +30,7 @@ class C {
             AssertFormatTargetKind(SyntaxKind.ObjectInitializerExpression, @"
 class C {
     public void M(){
-    
+
         new T() {
             A = 6,
             B = 7
@@ -189,9 +190,9 @@ class C {
         private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChangesForRange(FormatRangeRequest req)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
-            var controller = new OmnisharpController(workspace, null);
+            RequestHandler<FormatRangeRequest, FormatRangeResponse> controller = new CodeFormattingService(workspace, new FormattingOptions());
 
-            return (await controller.FormatRange(req)).Changes;
+            return (await controller.Handle(req)).Changes;
         }
     }
 }

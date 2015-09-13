@@ -124,13 +124,13 @@ namespace OmniSharp.Tests
                     {
                         private string text;
 
-                        public string %MoreText 
+                        public string %MoreText
                         {
-                            get 
+                            get
                             {
                                 return text;
                             }
-                            set 
+                            set
                             {
                                 text = valu$e;
                             }
@@ -258,7 +258,7 @@ namespace OmniSharp.Tests
                         {
                             private string %text;
 
-                            private Nested$Controller() 
+                            private Nested$Controller()
                             {
                                 Console.WriteLine(""In nested controller constructor"");
                             }
@@ -301,7 +301,7 @@ namespace OmniSharp.Tests
                         }
 
                         //Introducing a commented member
-                        //public void PrintString() 
+                        //public void PrintString()
                         //{
                         //    Console.Writeline(""Do nothing else"");
                         //}
@@ -309,7 +309,7 @@ namespace OmniSharp.Tests
                         $private class NestedController
                         {
                             public string Text;
-                            public NestedController() 
+                            public NestedController()
                             {
                                 Console.WriteLine(""In nested controller constructor"");
                             }
@@ -339,7 +339,7 @@ namespace OmniSharp.Tests
                 using Microsoft.AspNet.Mvc;
                 using OmniSharp.Models;
 
-                namespace $%OmniSharp 
+                namespace $%OmniSharp
                 {
                     public class NavigateController
                     {
@@ -440,11 +440,11 @@ namespace OmniSharp.Tests
 
                         public string MoreText
                         {
-                            get 
+                            get
                             {
                                 return text;
                             }
-                            set 
+                            set
                             {
                                 this.te$xt = value;
                             }
@@ -606,11 +606,11 @@ namespace OmniSharp.Tests
                         private class NestedController
                         {
                             public string Text;
-                            public Nested$Controller() 
+                            public Nested$Controller()
                             {
                                 Console.WriteLine(""In nested controller constructor"");
                             }
-                            public void %AnotherMethod() 
+                            public void %AnotherMethod()
                             {
                                 Console.WriteLine(""In nested controller method"");
                             }
@@ -653,7 +653,7 @@ namespace OmniSharp.Tests
                         }
 
                         //Introducing a commented member
-                        //public void PrintString() 
+                        //public void PrintString()
                         //{
                         //    Console.Writeline(""Do nothing else"");
                         //}
@@ -661,7 +661,7 @@ namespace OmniSharp.Tests
                         private class NestedController
                         {
                             public string Text;
-                            public NestedController() 
+                            public NestedController()
                             {
                                 Consol$e.WriteLine(""In nested controller constructor"");
                             }
@@ -691,7 +691,7 @@ namespace OmniSharp.Tests
                 using Microsoft.AspNet.Mvc;
                 using OmniSharp.Models;
 
-                namespace OmniSharp 
+                namespace OmniSharp
                 {
                     public class NavigateController
                     {
@@ -726,7 +726,8 @@ namespace OmniSharp.Tests
         {
             var initialCursorLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContent));
             var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContent);
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
+            var naviagteUpService = new NavigationUpService(workspace);
+            var navigateDownService = new NavigationDownService(workspace);
             var request = new Request
             {
                 Line = initialCursorLineColumn.Line,
@@ -737,11 +738,11 @@ namespace OmniSharp.Tests
 
             if (upOrDown == NavigateDirection.UP)
             {
-                return await controller.NavigateUp(request);
+                return await naviagteUpService.Handle(request);
             }
             else
             {
-                return await controller.NavigateDown(request);
+                return await navigateDownService.Handle(request);
             }
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.v1;
 
 namespace OmniSharp
 {
@@ -50,12 +51,13 @@ namespace OmniSharp
             EndpointMapItem.Create<PackageSourceRequest ,PackageSourceResponse >("/packagesource"),
             EndpointMapItem.Create<PackageSearchRequest , PackageSearchResponse>("/packagesearch"),
             EndpointMapItem.Create<PackageVersionRequest , PackageVersionResponse>("/packageversion"),
-            EndpointMapItem.Create<ProjectInformationRequest , WorkspaceInformationResponse>("/projects"),
-            EndpointMapItem.Create< , >("/"),
-            EndpointMapItem.Create< , >("/"),
-            EndpointMapItem.Create< , >("/"),
-            EndpointMapItem.Create< , >("/"),
-            EndpointMapItem.Create< , >("/"),
+            EndpointMapItem.Create<CodeActionRequest , GetCodeActionsResponse>("/getcodeactions"),
+            EndpointMapItem.Create<CodeActionRequest , RunCodeActionResponse>("/runcodeaction"),
+            EndpointMapItem.Create<RenameRequest , RenameResponse>("/rename"),
+            EndpointMapItem.Create<Request, SignatureHelp>("/signatureHelp"),
+            EndpointMapItem.Create<Request, FileMemberTree>("/currentfilemembersastree"),
+            EndpointMapItem.Create<Request, IEnumerable<QuickFix>>("/currentfilemembersasflat"),
+            EndpointMapItem.Create<TestCommandRequest, GetTestCommandResponse>("/gettestcontext"),
         };
 
         public class EndpointMapItem

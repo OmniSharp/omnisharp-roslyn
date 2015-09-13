@@ -8,7 +8,7 @@ using OmniSharp.Roslyn;
 namespace OmniSharp
 {
     [Export(typeof(RequestHandler<MetadataRequest, MetadataResponse>))]
-    public partial class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
+    public class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 

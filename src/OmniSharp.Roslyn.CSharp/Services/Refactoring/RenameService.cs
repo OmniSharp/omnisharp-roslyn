@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Rename;
@@ -11,10 +10,16 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    public class RenameService : RequestHandler<RenameRequest, RenameResponse>
     {
-        [HttpPost("rename")]
-        public async Task<RenameResponse> Rename(RenameRequest request)
+        private readonly OmnisharpWorkspace _workspace;
+
+        public RenameService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<RenameResponse> Handle(RenameRequest request)
         {
             var response = new RenameResponse();
 

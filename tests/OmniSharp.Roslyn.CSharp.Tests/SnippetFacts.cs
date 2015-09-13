@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Options;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -29,7 +30,7 @@ namespace OmniSharp.Tests
         {
             var source =
                 @"using System.Collections.Generic;
-             
+
                      public class Test {
                          public string Get<SomeType>()
                          {
@@ -344,9 +345,9 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<string>> FindCompletionsAsync(string source)
         {
             var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
+            var controller = new IntellisenseService(workspace, new FormattingOptions());
             var request = CreateRequest(source);
-            var response = await controller.AutoComplete(request);
+            var response = await controller.Handle(request);
             var completions = response as IEnumerable<AutoCompleteResponse>;
             return completions.Select(completion => BuildCompletion(completion));
         }

@@ -21,8 +21,8 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new OmnisharpController(workspace, null);
-            var response = await controller.Metadata(new MetadataRequest
+            var controller = new MetadataService(workspace);
+            var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
                 TypeName = "System.String",
@@ -46,8 +46,8 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new OmnisharpController(workspace, null);
-            var response = await controller.Metadata(new MetadataRequest
+            var controller = new MetadataService(workspace);
+            var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "System.Core",
                 TypeName = "System.Linq.Enumerable",
@@ -71,8 +71,8 @@ class Foo {
             var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new OmnisharpController(workspace, null);
-            var response = await controller.Metadata(new MetadataRequest
+            var controller = new MetadataService(workspace);
+            var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
                 TypeName = "System.Collections.Generic.List`1",
@@ -81,7 +81,7 @@ class Foo {
 
             Assert.NotNull(response.Source);
 
-            response = await controller.Metadata(new MetadataRequest
+            response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
                 TypeName = "System.Collections.Generic.Dictionary`2"

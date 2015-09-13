@@ -13,7 +13,7 @@ namespace OmniSharp
     [Export(typeof(RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>))]
     [Export(typeof(RequestHandler<FormatRangeRequest, FormatRangeResponse>))]
     [Export(typeof(RequestHandler<Request, CodeFormatResponse>))]
-    public partial class CodeFormattingService :
+    public class CodeFormattingService :
         RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>,
         RequestHandler<FormatRangeRequest, FormatRangeResponse>,
         RequestHandler<Request, CodeFormatResponse>

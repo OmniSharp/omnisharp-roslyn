@@ -194,8 +194,7 @@ namespace OmniSharp.Tests
             });
 
             ITestCommandProvider testCommandProvider = new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter());
-            var host = TestHelpers.CreatePluginHost(workspace, Enumerable.Empty<Assembly>(), config => config.WithProvider(MefValueProvider.From(testCommandProvider)));
-            var controller = new TestCommandController(workspace, host);
+            var controller = new TestCommandService(workspace, new [] { testCommandProvider });
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
 
             var request = new TestCommandRequest
@@ -209,7 +208,7 @@ namespace OmniSharp.Tests
 
             var bufferFilter = new UpdateBufferFilter(workspace);
             bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
-            var testCommand = await controller.GetTestCommand(request);
+            var testCommand = await controller.Handle(request);
             return testCommand.TestCommand;
         }
     }

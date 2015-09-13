@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
@@ -11,19 +11,23 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    public class CodeActionController
+    [Export(typeof(RequestHandler<CodeActionRequest, GetCodeActionsResponse>))]
+    [Export(typeof(RequestHandler<CodeActionRequest, RunCodeActionResponse>))]
+    public class CodeActionsService :
+        RequestHandler<CodeActionRequest, GetCodeActionsResponse>,
+        RequestHandler<CodeActionRequest, RunCodeActionResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
-        public CodeActionController(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
+        [ImportingConstructor]
+        public CodeActionsService(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
         }
 
-        [HttpPost("getcodeactions")]
-        public async Task<GetCodeActionsResponse> GetCodeActions(CodeActionRequest request)
+        async Task<GetCodeActionsResponse> RequestHandler<CodeActionRequest, GetCodeActionsResponse>.Handle(CodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);
@@ -31,8 +35,7 @@ namespace OmniSharp
             return new GetCodeActionsResponse() { CodeActions = actions.Select(a => a.Title) };
         }
 
-        [HttpPost("runcodeaction")]
-        public async Task<RunCodeActionResponse> RunCodeAction(CodeActionRequest request)
+        async Task<RunCodeActionResponse> RequestHandler<CodeActionRequest, RunCodeActionResponse>.Handle(CodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);

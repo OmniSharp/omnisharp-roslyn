@@ -45,15 +45,8 @@ namespace OmniSharp.Tests
 
         private async Task<DnxProject> GetProjectContainingSourceFile(string name)
         {
-            var controller = new ProjectSystemController(_workspace, _host);
-
-            var request = new Request
-            {
-                FileName = name
-            };
-
-            var response = await controller.CurrentProject(request);
-            return (DnxProject)response["Dnx"];
+            var response = await _projectSystem.GetProjectModel(name);
+            return (DnxProject)response;
         }
 
         private Dnx.Project CreateProjectWithSourceFile(string projectPath, string documentPath)

@@ -1,23 +1,22 @@
 using System.Collections.Generic;
+using System.Composition;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    [Export(typeof(RequestHandler<Request, IEnumerable<QuickFix>>))]
+    public class MembersAsFlatService : RequestHandler<Request, IEnumerable<QuickFix>>
     {
-        [HttpPost("currentfilemembersastree")]
-        public async Task<FileMemberTree> MembersAsTree(Request request)
+        private readonly OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public MembersAsFlatService(OmnisharpWorkspace workspace)
         {
-            return new FileMemberTree()
-            {
-                TopLevelTypeDefinitions = await StructureComputer.Compute(_workspace.GetDocuments(request.FileName))
-            };
+            _workspace = workspace;
         }
 
-        [HttpPost("currentfilemembersasflat")]
-        public async Task<IEnumerable<QuickFix>> MembersAsFlat(Request request)
+        public async Task<IEnumerable<QuickFix>> Handle(Request request)
         {
             var stack = new List<FileMemberElement>(await StructureComputer.Compute(_workspace.GetDocuments(request.FileName)));
             var ret = new List<QuickFix>();

@@ -200,6 +200,9 @@ namespace OmniSharp
 
             app.UseErrorHandler("/error");
 
+            // TODO: When we wire up plugins, we may need to hand them off to this middleware too.
+            app.UseMiddleware<StatusMiddleware>();
+            app.UseMiddleware<ProjectSystemMiddleware>();
             app.UseMiddleware<EndpointMiddleware>();
             app.UseMvc();
 

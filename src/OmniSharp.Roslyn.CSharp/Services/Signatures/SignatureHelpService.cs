@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -9,10 +8,16 @@ using OmniSharp.Models;
 
 namespace OmniSharp
 {
-    public partial class OmnisharpController
+    public class SignatureHelpService : RequestHandler<Request, SignatureHelp>
     {
-        [HttpPost("signatureHelp")]
-        public async Task<SignatureHelp> GetSignatureHelp(Request request)
+        private readonly OmnisharpWorkspace _workspace;
+
+        public SignatureHelpService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        public async Task<SignatureHelp> Handle(Request request)
         {
             var invocations = new List<InvocationContext>();
             foreach (var document in _workspace.GetDocuments(request.FileName))
