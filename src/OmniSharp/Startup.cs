@@ -59,47 +59,25 @@ namespace OmniSharp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
             // Add the omnisharp workspace to the container
             services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
 
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
-            services.AddSingleton<IMetadataFileReferenceCache, MetadataFileReferenceCache>();
-
-            // Add the file watcher
-            services.AddSingleton<IFileSystemWatcher, ManualFileSystemWatcher>();
 
             foreach (var endpoint in Endpoints.AvailableEndpoints)
             {
                 services.AddInstance(endpoint);
             }
 
-            if (Program.Environment.TransportType == TransportType.Stdio)
-            {
-                services.AddSingleton<IEventEmitter, StdioEventEmitter>();
-            }
-            else
-            {
-                services.AddSingleton<IEventEmitter, NullEventEmitter>();
-            }
-
-            services.AddSingleton<ProjectEventForwarder, ProjectEventForwarder>();
-
+            services.AddOptions();
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static CompositionHost ConfigurePluginHost(IServiceProvider serviceProvider,
-                                                          ILoggerFactory loggerFactory,
-                                                          IOmnisharpEnvironment env,
-                                                          ISharedTextWriter writer,
+        public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
                                                           OmniSharpOptions options,
-                                                          IMetadataFileReferenceCache metadataFileReferenceCache,
-                                                          IApplicationLifetime applicationLifetime,
-                                                          IFileSystemWatcher fileSystemWatcher,
-                                                          IEventEmitter eventEmitter,
                                                           IEnumerable<Assembly> assemblies,
                                                           Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
@@ -110,51 +88,47 @@ namespace OmniSharp
                 config = config.WithAssembly(assembly);
             }
 
-            //IOmnisharpEnvironment env, ILoggerFactory loggerFactory
+            var memoryCache = serviceProvider.GetService<IMemoryCache>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var env = serviceProvider.GetService<IOmnisharpEnvironment>();
+            var writer = serviceProvider.GetService<ISharedTextWriter>();
+            var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
+
             config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
+                .WithProvider(MefValueProvider.From<IFileSystemWatcher>(new ManualFileSystemWatcher()))
+                .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(env))
                 .WithProvider(MefValueProvider.From(writer))
-                .WithProvider(MefValueProvider.From(options))
-                .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()))
-                .WithProvider(MefValueProvider.From(metadataFileReferenceCache))
                 .WithProvider(MefValueProvider.From(applicationLifetime))
-                .WithProvider(MefValueProvider.From(fileSystemWatcher))
-                .WithProvider(MefValueProvider.From(eventEmitter));
+                .WithProvider(MefValueProvider.From(options))
+                .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()));
+
+            if (Program.Environment.TransportType == TransportType.Stdio)
+            {
+                config = config
+                    .WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(writer)));
+            }
+            else
+            {
+                config = config
+                    .WithProvider(MefValueProvider.From<IEventEmitter>(new NullEventEmitter()));
+            }
 
             if (configure != null)
                 config = configure(config);
 
-            return config.CreateContainer();
+            var container = config.CreateContainer();
+            return container;
         }
 
-        public void Configure(IApplicationBuilder app,
-                              ILoggerFactory loggerFactory,
-                              IOmnisharpEnvironment env,
-                              ISharedTextWriter writer,
-                              IServiceProvider serviceProvider,
-                              ILibraryManager manager,
-                              IOptions<OmniSharpOptions> optionsAccessor,
-                              IMetadataFileReferenceCache metadataFileReferenceCache,
-                              IApplicationLifetime applicationLifetime,
-                              IFileSystemWatcher fileSystemWatcher,
-                              IEventEmitter eventEmitter,
-                              PluginAssemblies plugins)
+        public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider, ILibraryManager manager,
+            IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ISharedTextWriter writer, IOptions<OmniSharpOptions> optionsAccessor)
         {
-            if (plugins.AssemblyNames.Any())
-            {
-                PluginHost = ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetLibraries()
-                    .SelectMany(x => x.LoadableAssemblies)
-                    .Join(plugins.AssemblyNames, x => x.FullName, x => x, (library, name) => library)
-                    .Select(assemblyName => Assembly.Load(assemblyName)));
-            }
-            else
-            {
-                PluginHost = ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetReferencingLibraries("OmniSharp.Abstractions")
-                    .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
-                    .Select(assemblyName => Assembly.Load(assemblyName)));
-            }
+            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Options, manager.GetReferencingLibraries("OmniSharp.Abstractions")
+                .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                .Select(assemblyName => Assembly.Load(assemblyName)));
 
             Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
 
@@ -179,8 +153,6 @@ namespace OmniSharp
 
             app.UseMiddleware<EndpointMiddleware>();
             app.UseMiddleware<StatusMiddleware>();
-            // TODO: When we wire up plugins, we may need to hand them off to this middleware too.
-            app.UseMiddleware<ProjectSystemMiddleware>();
 
             if (env.TransportType == TransportType.Stdio)
             {
@@ -192,7 +164,7 @@ namespace OmniSharp
             }
 
             // Forward workspace events
-            app.ApplicationServices.GetRequiredService<ProjectEventForwarder>();
+            PluginHost.GetExport<ProjectEventForwarder>();
             foreach (var projectSystem in PluginHost.GetExports<IProjectSystem>())
             {
                 try

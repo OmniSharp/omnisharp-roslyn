@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Filters;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Tests;
@@ -238,8 +237,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new FindUsagesService(workspace);
             var request = CreateRequest(sources[currentFile], currentFile, excludeDefinition);
             request.OnlyThisFile = onlyThisFile;
-            var bufferFilter = new UpdateBufferFilter(workspace);
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
+            await workspace.BufferManager.UpdateBuffer(request);
             return await controller.Handle(request);
         }
     }

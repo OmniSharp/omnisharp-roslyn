@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.v1;
 using V2 = OmniSharp.Models.V2;
 
 namespace OmniSharp
@@ -59,6 +60,9 @@ namespace OmniSharp
             EndpointMapItem.Create<PackageSourceRequest ,PackageSourceResponse >("/packagesource", takeOne: true),
             EndpointMapItem.Create<PackageSearchRequest , PackageSearchResponse>("/packagesearch", takeOne: true),
             EndpointMapItem.Create<PackageVersionRequest , PackageVersionResponse>("/packageversion", takeOne: true),
+
+            EndpointMapItem.Create<WorkspaceInformationRequest, WorkspaceInformationResponse>("/projects", takeOne: true),
+            EndpointMapItem.Create<ProjectInformationRequest, ProjectInformationResponse>("/project"),
 
             EndpointMapItem.Create<V2.GetCodeActionsRequest, V2.GetCodeActionsResponse>("/v2/getcodeactions"),
             EndpointMapItem.Create<V2.RunCodeActionRequest, V2.RunCodeActionResponse>("/v2/runcodeaction"),

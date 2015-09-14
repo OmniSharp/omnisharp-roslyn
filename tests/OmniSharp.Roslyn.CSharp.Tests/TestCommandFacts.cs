@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Dnx;
-using OmniSharp.Filters;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -208,8 +207,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Type = testType
             };
 
-            var bufferFilter = new UpdateBufferFilter(workspace);
-            bufferFilter.OnActionExecuting(TestHelpers.CreateActionExecutingContext(request, controller));
+            await workspace.BufferManager.UpdateBuffer(request);
+
             var testCommand = await controller.Handle(request);
             return testCommand.TestCommand;
         }

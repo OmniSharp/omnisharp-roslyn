@@ -23,7 +23,6 @@ namespace OmniSharp.Middleware
         private readonly RequestDelegate _next;
         private readonly HashSet<string> _endpoints;
         private readonly IReadOnlyDictionary<string, Lazy<EndpointHandler>> _endpointHandlers;
-        private readonly LanguagePredicateHandler _languagePredicateHandler;
         private readonly CompositionHost _host;
         private readonly ILogger _logger;
         private readonly IEnumerable<IProjectSystem> _projectSystems;
@@ -34,14 +33,34 @@ namespace OmniSharp.Middleware
             _host = host;
             _projectSystems = host.GetExports<IProjectSystem>();
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
-            _languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
+            _endpoints = new HashSet<string>(
+                    endpoints
+                        .Select(x => x.EndpointName)
+                        .Distinct(),
+                    StringComparer.OrdinalIgnoreCase
+                );
 
-            _endpoints = new HashSet<string>(endpoints.Select(x => x.EndpointName).Distinct(), StringComparer.OrdinalIgnoreCase);
-
+            var languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
+            var projectSystemPredicateHandler = new ProjectSystemPredicateHandler();
             var endpointHandlers = endpoints.ToDictionary(
-                x => x.EndpointName,
-                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(_languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<Plugin>())),
-                StringComparer.OrdinalIgnoreCase);
+                    x => x.EndpointName,
+                    endpoint => new Lazy<EndpointHandler>(() =>
+                    {
+                        IPredicateHandler handler;
+
+                        if (endpoint.EndpointName == "/project" || endpoint.EndpointName == "/projects")
+                        {
+                            handler = projectSystemPredicateHandler;
+                        }
+                        else
+                        {
+                            handler = languagePredicateHandler;
+                        }
+
+                        return new EndpointHandler(handler, _host, _logger, endpoint, Enumerable.Empty<Plugin>());
+                    }),
+                    StringComparer.OrdinalIgnoreCase
+                );
 
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }

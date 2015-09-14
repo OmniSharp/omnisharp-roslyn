@@ -184,7 +184,7 @@ namespace OmniSharp.ScriptCs
             return Task.FromResult<object>(null);
         }
 
-        Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
+        Task<object> IProjectSystem.GetInformationModel(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(_scriptCsContext);
         }

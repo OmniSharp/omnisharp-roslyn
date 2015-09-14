@@ -28,7 +28,14 @@
         "System.Text.Encoding":"",
         "System.IO":"",
         "System.Reflection":"",
-        "System.Security":""
+        "System.Security":"",
+        "System.Globalization": "",
+        "System.Reflection":  "",
+        "System.Xml": "",
+        "System.Xml.Linq": "",
+        "Microsoft.Build": "",
+        "Microsoft.Build.Engine": "",
+        "Microsoft.Build.Framework": ""
       }
     },
     "dnxcore50": {
@@ -47,7 +54,8 @@
         "System.Threading": "4.0.10-beta-22816",
         "System.IO.FileSystem.Watcher": "4.0.0-beta-22816",
         "System.Net.Sockets": "4.0.0-beta-22816",
-        "System.Diagnostics.Process": "4.0.0-beta-22816"
+        "System.Diagnostics.Process": "4.0.0-beta-22816",
+        "System.Xml.XDocument": "4.0.10-beta-22816"
       }
     }
   }

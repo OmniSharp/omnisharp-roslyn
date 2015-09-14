@@ -1,4 +1,5 @@
 using System;
+using System.Composition;
 using System.IO;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
@@ -9,6 +10,7 @@ using OmniSharp.Roslyn;
 
 namespace OmniSharp.Services
 {
+    [Export(typeof(IMetadataFileReferenceCache))]
     public class MetadataFileReferenceCache : IMetadataFileReferenceCache
     {
         private static readonly string _cacheKeyPrefix = nameof(MetadataFileReferenceCache);
@@ -16,6 +18,7 @@ namespace OmniSharp.Services
         private readonly IMemoryCache _cache;
         private readonly ILogger _logger;
 
+        [ImportingConstructor]
         public MetadataFileReferenceCache(IMemoryCache cache, ILoggerFactory loggerFactory)
         {
             _cache = cache;

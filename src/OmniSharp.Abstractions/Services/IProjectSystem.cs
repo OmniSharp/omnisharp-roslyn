@@ -12,7 +12,7 @@ namespace OmniSharp.Services
         string Language { get; }
         IEnumerable<string> Extensions { get; }
         void Initalize(IConfiguration configuration);
-        Task<object> GetInformationModel(ProjectInformationRequest request);
+        Task<object> GetInformationModel(WorkspaceInformationRequest request);
         Task<object> GetProjectModel(string path);
     }
 }

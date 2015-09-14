@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Composition;
 using System.Composition.Hosting;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -7,6 +8,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn
 {
+    [Export]
     public class ProjectEventForwarder
     {
         private readonly OmnisharpWorkspace _workspace;
@@ -15,9 +17,10 @@ namespace OmniSharp.Roslyn
         private readonly object _lock = new object();
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public ProjectEventForwarder(OmnisharpWorkspace workspace, CompositionHost host, IEventEmitter emitter)
+        [ImportingConstructor]
+        public ProjectEventForwarder(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems, IEventEmitter emitter)
         {
-            _projectSystems = host.GetExports<IProjectSystem>();
+            _projectSystems = projectSystems;
             _workspace = workspace;
             _emitter = emitter;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;

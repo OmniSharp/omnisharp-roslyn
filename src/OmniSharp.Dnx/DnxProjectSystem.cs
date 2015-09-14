@@ -643,7 +643,7 @@ namespace OmniSharp.Dnx
             return Task.FromResult<object>(new DnxProject(project));
         }
 
-        Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
+        Task<object> IProjectSystem.GetInformationModel(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(new DnxWorkspaceInformation(_context));
         }

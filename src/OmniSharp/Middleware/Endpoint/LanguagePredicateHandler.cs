@@ -7,7 +7,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Middleware.Endpoint
 {
-    class LanguagePredicateHandler
+    class LanguagePredicateHandler : IPredicateHandler
     {
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 

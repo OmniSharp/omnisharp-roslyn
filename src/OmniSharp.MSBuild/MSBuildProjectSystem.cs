@@ -370,7 +370,7 @@ namespace OmniSharp.MSBuild
             return Task.FromResult<object>(new MSBuildProject(project));
         }
 
-        Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
+        Task<object> IProjectSystem.GetInformationModel(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(new MsBuildWorkspaceInformation(_context, request?.ExcludeSourceFiles ?? false));
         }

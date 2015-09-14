@@ -41,7 +41,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly CompositionHost _host;
         private readonly Type _delegateType;
         private readonly Type _requestHandlerType;
-        private readonly LanguagePredicateHandler _languagePredicateHandler;
+        private readonly IPredicateHandler _languagePredicateHandler;
         private readonly Lazy<Task<Dictionary<string, ExportHandler>>> _exports;
         private readonly Type _requestType;
         private readonly Type _responseType;
@@ -53,7 +53,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
 
-        public EndpointHandler(LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<Plugin> plugins)
+        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<Plugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;

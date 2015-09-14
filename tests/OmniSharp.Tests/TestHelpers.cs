@@ -160,16 +160,9 @@ namespace OmniSharp.Tests
 
         public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
-            return Startup.ConfigurePluginHost(
-                null,
-                new FakeLoggerFactory(),
-                new FakeEnvironment(),
-                null,
+            return Startup.ConfigureMef(
+                new FakeServiceProvider(),
                 new FakeOmniSharpOptions().Options,
-                null,
-                null,
-                null,
-                null,
                 assemblies,
                 configure);
         }

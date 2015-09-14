@@ -116,7 +116,7 @@ namespace OmniSharp.Plugins
             Task.Run(() => Run());
         }
 
-        public Task<object> GetInformationModel(ProjectInformationRequest request)
+        public Task<object> GetInformationModel(WorkspaceInformationRequest request)
         {
             // TODO: Call out to process
             return null;

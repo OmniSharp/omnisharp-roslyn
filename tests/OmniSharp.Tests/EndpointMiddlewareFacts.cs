@@ -19,7 +19,6 @@ using Microsoft.Framework.ConfigurationModel;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Newtonsoft.Json;
-using OmniSharp.Filters;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Models;
@@ -56,7 +55,7 @@ namespace OmniSharp.Tests
             public string Language { get { return LanguageNames.CSharp; } }
             public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
-            public Task<object> GetInformationModel(ProjectInformationRequest request)
+            public Task<object> GetInformationModel(WorkspaceInformationRequest request)
             {
                 throw new NotImplementedException();
             }
