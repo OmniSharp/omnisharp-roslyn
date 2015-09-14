@@ -52,8 +52,9 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly bool _isSpreadable;
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
+        private readonly Lazy<EndpointHandler> _updateBufferHandler;
 
-        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<Plugin> plugins)
+        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, Lazy<EndpointHandler> updateBufferHandler, IEnumerable<Plugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;
@@ -71,6 +72,7 @@ namespace OmniSharp.Middleware.Endpoint
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
             _isMergeable = typeof(IMergeableResponse).IsAssignableFrom(item.ResponseType);
             _isSpreadable = _isMergeable || item.TakeOne;
+            _updateBufferHandler = updateBufferHandler;
 
             _exports = new Lazy<Task<Dictionary<string, ExportHandler>>>(() => LoadExportHandlers());
         }
@@ -91,55 +93,57 @@ namespace OmniSharp.Middleware.Endpoint
 
         public string EndpointName { get; }
 
-        public Task Handle(HttpContext context)
+        public async Task<object> Handle(HttpContext context)
         {
-            var request = DeserializeRequestObject(context.Request.Body);
-            var model = GetLanguageModel(request);
+            var requestObject = DeserializeRequestObject(context.Request.Body);
+            var model = GetLanguageModel(requestObject);
+            var request = requestObject.ToObject(_requestType);
+
+            if (request is Request)
+            {
+                if (_updateBufferHandler.Value != null)
+                {
+                    await _updateBufferHandler.Value.Handle(context);
+                }
+            }
+
             if (_hasLanguageProperty)
             {
-                return HandleLanguageRequest(model.Language, request, context);
+                return await HandleLanguageRequest(model.Language, request, context);
             }
 
             if (_hasFileNameProperty)
             {
                 var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName);
-                return HandleLanguageRequest(language, request, context);
+                return await HandleLanguageRequest(language, request, context);
+            }
+
+            return await HandleAllRequest(request, context);
+        }
+
+        private Task<object> HandleLanguageRequest(string language, object request, HttpContext context)
+        {
+            if (!string.IsNullOrEmpty(language))
+            {
+                return HandleSingleRequest(language, request, context);
             }
 
             return HandleAllRequest(request, context);
         }
 
-        private Task HandleLanguageRequest(string language, JObject requestObject, HttpContext context)
+        private async Task<object> HandleSingleRequest(string language, object request, HttpContext context)
         {
-            if (!string.IsNullOrEmpty(language))
-            {
-                return HandleSingleRequest(language, requestObject, context);
-            }
-
-            return HandleAllRequest(requestObject, context);
-        }
-
-        private async Task HandleSingleRequest(string language, JObject requestObject, HttpContext context)
-        {
-            var request = requestObject.ToObject(_requestType);
-            if (request is Request)
-            {
-                await _workspace.BufferManager.UpdateBuffer((Request)request);
-            }
-
             var exports = await _exports.Value;
             ExportHandler handler;
             if (exports.TryGetValue(language, out handler))
             {
-                var response = await handler.Handle(request);
-                SerializeResponseObject(context.Response, response);
-                return;
+                return await handler.Handle(request);
             }
 
             throw new NotSupportedException($"{language} does not support {EndpointName}");
         }
 
-        private async Task HandleAllRequest(JObject requestObject, HttpContext context)
+        private async Task<object> HandleAllRequest(object request, HttpContext context)
         {
             if (!_isSpreadable)
             {
@@ -147,7 +151,6 @@ namespace OmniSharp.Middleware.Endpoint
             }
 
             var exports = await _exports.Value;
-            var request = requestObject.ToObject(_requestType);
 
             object response = null;
 
@@ -188,8 +191,10 @@ namespace OmniSharp.Middleware.Endpoint
 
             if (response != null)
             {
-                SerializeResponseObject(context.Response, response);
+                return response;
             }
+
+            return null;
         }
 
         private LanguageModel GetLanguageModel(JObject jobject)
@@ -213,19 +218,6 @@ namespace OmniSharp.Middleware.Endpoint
         private JObject DeserializeRequestObject(Stream readStream)
         {
             return JObject.Load(new JsonTextReader(new StreamReader(readStream)));
-        }
-
-        private void SerializeResponseObject(HttpResponse response, object value)
-        {
-            using (var writer = new StreamWriter(response.Body))
-            {
-                using (var jsonWriter = new JsonTextWriter(writer))
-                {
-                    jsonWriter.CloseOutput = false;
-                    var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-                    jsonSerializer.Serialize(jsonWriter, value);
-                }
-            }
         }
 
         private IEnumerable<ExportHandler> GetRequestHandlerExports<T>()

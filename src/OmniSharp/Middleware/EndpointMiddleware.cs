@@ -40,6 +40,7 @@ namespace OmniSharp.Middleware
                     StringComparer.OrdinalIgnoreCase
                 );
 
+            var updateBufferEndpointHandler = new Lazy<EndpointHandler>(() => _endpointHandlers["/updatebuffer"].Value);
             var languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
             var projectSystemPredicateHandler = new ProjectSystemPredicateHandler();
             var endpointHandlers = endpoints.ToDictionary(
@@ -57,7 +58,14 @@ namespace OmniSharp.Middleware
                             handler = languagePredicateHandler;
                         }
 
-                        return new EndpointHandler(handler, _host, _logger, endpoint, Enumerable.Empty<Plugin>());
+                        var updateEndpointHandler = updateBufferEndpointHandler;
+
+                        if (endpoint.EndpointName == "/updatebuffer")
+                        {
+                            updateEndpointHandler = new Lazy<EndpointHandler>(() => null);
+                        }
+
+                        return new EndpointHandler(handler, _host, _logger, endpoint, updateEndpointHandler, Enumerable.Empty<Plugin>());
                     }),
                     StringComparer.OrdinalIgnoreCase
                 );
@@ -75,12 +83,26 @@ namespace OmniSharp.Middleware
                     Lazy<EndpointHandler> handler;
                     if (_endpointHandlers.TryGetValue(endpoint, out handler))
                     {
-                        return handler.Value.Handle(httpContext);
+                        var response = handler.Value.Handle(httpContext);
+                        SerializeResponseObject(httpContext.Response, response);
                     }
                 }
             }
 
             return _next(httpContext);
+        }
+
+        private void SerializeResponseObject(HttpResponse response, object value)
+        {
+            using (var writer = new StreamWriter(response.Body))
+            {
+                using (var jsonWriter = new JsonTextWriter(writer))
+                {
+                    jsonWriter.CloseOutput = false;
+                    var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
+                    jsonSerializer.Serialize(jsonWriter, value);
+                }
+            }
         }
     }
 
