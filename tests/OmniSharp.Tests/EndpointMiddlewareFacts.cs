@@ -86,18 +86,18 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public Task Passes_through_for_invalid_path()
+        public async Task Passes_through_for_invalid_path()
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
-            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/notvalid");
 
-            return Assert.ThrowsAsync<NotImplementedException>(() => middleware.Invoke(context));
+            await Assert.ThrowsAsync<NotImplementedException>(() => middleware.Invoke(context));
         }
 
         [Fact]
@@ -105,9 +105,9 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
-            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -144,11 +144,11 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -183,11 +183,11 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -219,11 +219,11 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -265,11 +265,11 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
             var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, workspace, host, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");

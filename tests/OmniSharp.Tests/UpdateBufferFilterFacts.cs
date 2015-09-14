@@ -13,7 +13,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBuffer_HandlesVoidRequest()
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "test.cs", "class C {}" }
             });
@@ -47,7 +47,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBuffer_AddsNewDocumentsIfNeeded()
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "test.cs", "class C {}" }
             });
@@ -60,7 +60,7 @@ namespace OmniSharp.Tests
             Assert.NotNull(docId);
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("interface I {}", sourceText.ToString());
-            
+
             docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").FirstOrDefault();
             Assert.NotNull(docId);
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
@@ -70,7 +70,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBuffer_TransientDocumentsDisappearWhenProjectAddsThem()
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "test.cs", "class C {}" }
             });

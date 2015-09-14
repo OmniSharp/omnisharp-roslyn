@@ -21,7 +21,7 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new GotoDefinitionService(workspace);
@@ -50,7 +50,7 @@ class Foo {
     private Baz foo;
 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new GotoDefinitionService(workspace);
@@ -71,7 +71,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
-            var controller = new GotoDefinitionService( CreateTestWorkspace());
+            var controller = new GotoDefinitionService( await CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -94,7 +94,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
         {
-            var controller = new GotoDefinitionService( CreateTestWorkspace());
+            var controller = new GotoDefinitionService( await CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -116,7 +116,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
         {
-            var controller = new GotoDefinitionService( CreateTestWorkspace());
+            var controller = new GotoDefinitionService( await CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -138,7 +138,7 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
         {
-            var controller = new GotoDefinitionService(CreateTestWorkspace());
+            var controller = new GotoDefinitionService(await CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -160,7 +160,7 @@ class Foo {
         [Fact]
         public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
         {
-            var controller = new GotoDefinitionService(CreateTestWorkspace());
+            var controller = new GotoDefinitionService(await CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
@@ -179,7 +179,7 @@ class Foo {
             Assert.NotEqual(0, definitionResponse.Column);
         }
 
-        OmnisharpWorkspace CreateTestWorkspace()
+        async Task<OmnisharpWorkspace> CreateTestWorkspace()
         {
             var source1 = @"using System;
 
@@ -200,7 +200,7 @@ class Bar {
     }
 }";
 
-            return TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            return await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
         }

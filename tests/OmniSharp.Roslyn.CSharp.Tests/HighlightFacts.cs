@@ -21,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -51,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -85,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -157,7 +157,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -178,7 +178,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -199,7 +199,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -220,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -241,7 +241,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });

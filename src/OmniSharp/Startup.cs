@@ -112,7 +112,8 @@ namespace OmniSharp
                                                           Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
-            foreach (var assembly in assemblies)
+            foreach (var assembly in assemblies
+                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly }))
             {
                 config = config.WithAssembly(assembly);
             }
@@ -154,15 +155,13 @@ namespace OmniSharp
                 PluginHost = ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetLibraries()
                     .SelectMany(x => x.LoadableAssemblies)
                     .Join(plugins.AssemblyNames, x => x.FullName, x => x, (library, name) => library)
-                    .Select(assemblyName => Assembly.Load(assemblyName))
-                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly }));
+                    .Select(assemblyName => Assembly.Load(assemblyName)));
             }
             else
             {
                 PluginHost = ConfigurePluginHost(serviceProvider, loggerFactory, env, writer, optionsAccessor.Options, metadataFileReferenceCache, applicationLifetime, fileSystemWatcher, eventEmitter, manager.GetReferencingLibraries("OmniSharp.Abstractions")
                     .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
-                    .Select(assemblyName => Assembly.Load(assemblyName))
-                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly }));
+                    .Select(assemblyName => Assembly.Load(assemblyName)));
             }
 
             Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
@@ -186,11 +185,11 @@ namespace OmniSharp
 
             app.UseErrorHandler("/error");
 
-            // TODO: When we wire up plugins, we may need to hand them off to this middleware too.
-            app.UseMiddleware<StatusMiddleware>();
-            app.UseMiddleware<ProjectSystemMiddleware>();
-            app.UseMiddleware<EndpointMiddleware>();
             app.UseMvc();
+            app.UseMiddleware<EndpointMiddleware>();
+            app.UseMiddleware<StatusMiddleware>();
+            // TODO: When we wire up plugins, we may need to hand them off to this middleware too.
+            app.UseMiddleware<ProjectSystemMiddleware>();
 
             if (env.TransportType == TransportType.Stdio)
             {

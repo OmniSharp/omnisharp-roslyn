@@ -45,7 +45,6 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly Lazy<Task<Dictionary<string, ExportHandler>>> _exports;
         private readonly Type _requestType;
         private readonly Type _responseType;
-        private readonly OmnisharpWorkspace _workspace;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
@@ -53,12 +52,11 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
 
-        public EndpointHandler(OmnisharpWorkspace workspace, LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<Plugin> plugins)
+        public EndpointHandler(LanguagePredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, IEnumerable<Plugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;
             _logger = logger;
-            _workspace = workspace;
             _languagePredicateHandler = languagePredicateHandler;
             _plugins = plugins;
 
@@ -103,7 +101,7 @@ namespace OmniSharp.Middleware.Endpoint
             if (_hasFileNameProperty)
             {
                 var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName);
-				return HandleLanguageRequest(language, request, context);
+                return HandleLanguageRequest(language, request, context);
             }
 
             return HandleAllRequest(request, context);
@@ -146,7 +144,8 @@ namespace OmniSharp.Middleware.Endpoint
 
             object response = null;
 
-            if (_isMergeable) {
+            if (_isMergeable)
+            {
                 IMergeableResponse mergableResponse = null;
 
                 var responses = new List<Task<object>>();
@@ -168,7 +167,9 @@ namespace OmniSharp.Middleware.Endpoint
                 }
 
                 response = mergableResponse;
-            } else {
+            }
+            else
+            {
                 foreach (var handler in exports.Values)
                 {
                     response = await handler.Handle(request);
@@ -178,7 +179,8 @@ namespace OmniSharp.Middleware.Endpoint
                 }
             }
 
-            if (response != null) {
+            if (response != null)
+            {
                 SerializeResponseObject(context.Response, response);
             }
         }

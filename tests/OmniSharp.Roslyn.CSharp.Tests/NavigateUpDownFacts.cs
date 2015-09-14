@@ -717,7 +717,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task AssertPosition(string fileContent, NavigateDirection navigateDirection)
         {
             var fileContentNoPercentMarker = TestHelpers.RemovePercentMarker(fileContent);
-            var workspace = TestHelpers.CreateSimpleWorkspace(fileContentNoPercentMarker, "test.cs");
+            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContentNoPercentMarker, "test.cs");
             var response = await SendRequest(workspace, "test.cs", fileContentNoPercentMarker, navigateDirection);
             var finalCursorLineColumn = TestHelpers.GetLineAndColumnFromPercent(TestHelpers.RemoveDollarMarker(fileContent));
             Assert.Equal(finalCursorLineColumn.Line, response.Line);

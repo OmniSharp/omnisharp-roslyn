@@ -11,7 +11,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task ExtendsTextChangeAtStart()
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace("class {\r\n }");
+            var workspace = await TestHelpers.CreateSimpleWorkspace("class {\r\n }");
             var document = workspace.GetDocument("dummy.cs");
 
             var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {
@@ -24,11 +24,11 @@ namespace OmniSharp.Tests
             Assert.Equal(2, lineChanges.ElementAt(0).EndLine);
             Assert.Equal(3, lineChanges.ElementAt(0).EndColumn);
         }
-        
+
         [Fact]
         public async Task ExtendsTextChangeAtEnd()
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace("class {\n}");
+            var workspace = await TestHelpers.CreateSimpleWorkspace("class {\n}");
             var document = workspace.GetDocument("dummy.cs");
 
             var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {

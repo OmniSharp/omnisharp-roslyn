@@ -183,7 +183,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<string> GetTestCommandArgumentsAsync(string source, TestCommandType testType = TestCommandType.Single)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
             var context = new DnxContext();
             var projectName = "project.json";
             var projectCounter = 1;

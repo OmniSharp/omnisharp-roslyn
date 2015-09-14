@@ -133,12 +133,17 @@ namespace OmniSharp.Tests
             return workspace;
         }
 
-        public static OmnisharpWorkspace CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
         {
             return CreateSimpleWorkspace(new Dictionary<string, string> { { fileName, source } });
         }
 
-        public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, string source, string fileName = "dummy.cs")
+        {
+            return CreateSimpleWorkspace(host, new Dictionary<string, string> { { fileName, source } });
+        }
+
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
             var host = Startup.ConfigurePluginHost(
                 null,
@@ -154,10 +159,22 @@ namespace OmniSharp.Tests
                 null);
             var workspace = host.GetExport<OmnisharpWorkspace>();
             AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
+
+            await Task.Delay(100);
             return workspace;
         }
 
-        public static CompositionHost CreatePluginHost(OmnisharpWorkspace workspace, IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, Dictionary<string, string> sourceFiles)
+        {
+            var host = host ?? CreatePluginHost(Enumerable.Empty<Assembly>());
+            var workspace = host.GetExport<OmnisharpWorkspace>();
+            AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
+
+            await Task.Delay(100);
+            return workspace;
+        }
+
+        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             return Startup.ConfigurePluginHost(
                 null,

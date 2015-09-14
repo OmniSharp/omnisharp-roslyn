@@ -13,7 +13,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferIgnoresVoidRequests()
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace("class C {}", "test.cs");
+            var workspace = await TestHelpers.CreateSimpleWorkspace("class C {}", "test.cs");
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
@@ -59,7 +59,7 @@ namespace OmniSharp.Tests
         {
             var code = "public class MyClass {}";
             string fileName = Path.GetTempPath() + Guid.NewGuid().ToString() + ".cs";
-            var workspace = TestHelpers.CreateSimpleWorkspace("", fileName);
+            var workspace = await TestHelpers.CreateSimpleWorkspace("", fileName);
 
             File.WriteAllText(fileName, code);
             await workspace.BufferManager.UpdateBuffer(new UpdateBufferRequest { FileName = fileName, FromDisk = true });

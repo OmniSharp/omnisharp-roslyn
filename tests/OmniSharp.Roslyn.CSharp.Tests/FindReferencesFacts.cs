@@ -234,7 +234,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(sources);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(sources);
             var controller = new FindUsagesService(workspace);
             var request = CreateRequest(sources[currentFile], currentFile, excludeDefinition);
             request.OnlyThisFile = onlyThisFile;

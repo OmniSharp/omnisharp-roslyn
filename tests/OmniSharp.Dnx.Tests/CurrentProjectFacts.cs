@@ -21,7 +21,7 @@ namespace OmniSharp.Tests
         {
             _context = new DnxContext();
             _workspace = new OmnisharpWorkspace();
-            _host = TestHelpers.CreatePluginHost(_workspace, new[] { typeof(DnxProjectSystem).GetTypeInfo().Assembly });
+            _host = TestHelpers.CreatePluginHost(new[] { typeof(DnxProjectSystem).GetTypeInfo().Assembly });
             _projectSystem = new DnxProjectSystem(_workspace, null, new FakeLoggerFactory(), null, null, null, null, _context);
         }
 

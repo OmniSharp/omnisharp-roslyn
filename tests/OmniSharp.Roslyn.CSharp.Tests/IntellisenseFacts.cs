@@ -198,7 +198,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
 
             if (request == null)

@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
             RequestHandler<CodeActionRequest, GetCodeActionsResponse> controller = new CodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider() });
             var request = CreateRequest(source);
             var response = await controller.Handle(request);

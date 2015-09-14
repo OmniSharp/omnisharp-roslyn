@@ -20,7 +20,7 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new MetadataService(workspace);
@@ -45,7 +45,7 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new MetadataService(workspace);
@@ -70,7 +70,7 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new MetadataService(workspace);

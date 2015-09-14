@@ -24,15 +24,13 @@ namespace OmniSharp.Middleware
         private readonly HashSet<string> _endpoints;
         private readonly IReadOnlyDictionary<string, Lazy<EndpointHandler>> _endpointHandlers;
         private readonly LanguagePredicateHandler _languagePredicateHandler;
-        private readonly OmnisharpWorkspace _workspace;
         private readonly CompositionHost _host;
         private readonly ILogger _logger;
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public EndpointMiddleware(RequestDelegate next, OmnisharpWorkspace workspace, CompositionHost host, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
+        public EndpointMiddleware(RequestDelegate next, CompositionHost host, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
         {
             _next = next;
-            _workspace = workspace;
             _host = host;
             _projectSystems = host.GetExports<IProjectSystem>();
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
@@ -42,9 +40,9 @@ namespace OmniSharp.Middleware
 
             var endpointHandlers = endpoints.ToDictionary(
                 x => x.EndpointName,
-                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(workspace, _languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<Plugin>())),
+                endpoint => new Lazy<EndpointHandler>(() => new EndpointHandler(_languagePredicateHandler, _host, _logger, endpoint, Enumerable.Empty<Plugin>())),
                 StringComparer.OrdinalIgnoreCase);
-                
+
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }
 

@@ -29,7 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             class Foo {}
             }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(source1);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source1);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });

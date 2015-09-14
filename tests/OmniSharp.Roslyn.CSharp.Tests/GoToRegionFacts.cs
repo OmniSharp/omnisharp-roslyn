@@ -50,7 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindRegions(string source)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
             var controller = new GotoRegionService(workspace);
             var request = CreateRequest(source);
             var bufferFilter = new UpdateBufferFilter(workspace);

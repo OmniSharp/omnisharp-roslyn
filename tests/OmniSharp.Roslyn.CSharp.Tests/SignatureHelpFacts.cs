@@ -372,7 +372,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Buffer = source
             };
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
             var controller = new SignatureHelpService(workspace);
             return await controller.Handle(request);
         }
