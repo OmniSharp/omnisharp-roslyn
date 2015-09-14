@@ -5,15 +5,12 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "OmniSharp.Roslyn": "1.0.0-*"
+    "Microsoft.CodeAnalysis": "1.0.0-rc2"
   },
   "frameworks": {
     "dnx451": {
       "dependencies": {
-        "NuGet.Configuration": "3.1.0-*",
-        "NuGet.Packaging.Core": "3.1.0-*",
-        "NuGet.Protocol.Core.v2": "3.1.0-*",
-        "NuGet.Protocol.Core.v3": "3.1.0-*"
+        "ICSharpCode.NRefactory": "6.0.0-alpha3"
       },
       "frameworkAssemblies": {
         "System.Runtime": "",
@@ -25,12 +22,14 @@
         "System.Text.Encoding":"",
         "System.IO":"",
         "System.Reflection":"",
-        "System.Security":""
+        "System.Security":"",
+        "System.Xml":""
       }
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.20-beta-22816"
+        "System.Runtime": "4.0.20-beta-22816",
+        "System.Xml.ReaderWriter": "4.0.10-beta-22816"
       }
     }
   }

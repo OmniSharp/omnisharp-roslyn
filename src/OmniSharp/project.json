@@ -1,50 +1,35 @@
 {
-    "version": "1.0.0-*",
-    "compilationOptions": {
-        "warningsAsErrors": true
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "OmniSharp.Dnx": "1.0.0-*",
+    "OmniSharp.Stdio": "1.0.0-*",
+    "OmniSharp.Nuget": "1.0.0-*",
+    "OmniSharp.Plugins": "1.0.0-*",
+    "OmniSharp.Roslyn.CSharp": "1.0.0-*",
+    "Kestrel": "1.0.0-beta4",
+    "Microsoft.Framework.OptionsModel": "1.0.0-beta4",
+    "Microsoft.AspNet.Diagnostics": "1.0.0-beta4",
+    "Microsoft.Framework.Logging.Console": "1.0.0-beta4",
+    "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
+    "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
+    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4"
+  },
+  "commands": {
+    "omnisharp": "run"
+  },
+  "frameworks": {
+    "dnx451": {
+      "dependencies": {
+        "OmniSharp.MSBuild": "1.0.0-*",
+        "OmniSharp.ScriptCs": "1.0.0-*"
+      }
     },
-    "dependencies": {
-        "OmniSharp.Abstractions": "1.0.0-*",
-        "OmniSharp.Dnx": "1.0.0-*",
-        "OmniSharp.Stdio": "1.0.0-*",
-        "OmniSharp.Nuget": "1.0.0-*",
-        "OmniSharp.Plugins": "1.0.0-*",
-        "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-        "Kestrel": "1.0.0-beta4",
-        "Microsoft.AspNet.Mvc": "6.0.0-beta4",
-        "Microsoft.AspNet.Diagnostics": "1.0.0-beta4",
-        "Microsoft.CodeAnalysis": "1.0.0-rc2",
-        "Microsoft.CodeAnalysis.CSharp": "1.0.0-rc2",
-        "Microsoft.CodeAnalysis.CSharp.Features": "1.0.0-rc2",
-        "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.0.0-rc2",
-        "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.0.0-rc2",
-        "Microsoft.Framework.Logging.Console": "1.0.0-beta4",
-        "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
-        "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
-        "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4",
-        "Microsoft.Composition": "1.0.30"
-    },
-    "commands": {
-        "omnisharp": "run"
-    },
-    "frameworks": {
-        "dnx451": {
-            "dependencies": {
-                "ScriptCs.Hosting": "0.14.1",
-                "OmniSharp.MSBuild": "1.0.0-*",
-                "OmniSharp.ScriptCs": "1.0.0-*"
-            },
-            "frameworkAssemblies": {
-                "System.Globalization": "",
-                "System.Reflection":  ""
-            }
-        },
-        "dnxcore50": {
-            "dependencies": {
-                "System.IO.FileSystem.Watcher": "4.0.0-beta-22816",
-                "System.Net.Sockets": "4.0.0-beta-22816",
-                "System.Diagnostics.Process": "4.0.0-beta-22816"
-            }
-        }
+    "dnxcore50": {
+      "dependencies": {}
     }
+  }
 }

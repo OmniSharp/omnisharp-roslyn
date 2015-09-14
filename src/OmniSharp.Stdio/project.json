@@ -8,7 +8,7 @@
     "OmniSharp.Abstractions": "1.0.0-*",
     "Microsoft.AspNet.Hosting": "1.0.0-beta4",
     "Microsoft.AspNet.Http.Interfaces": "1.0.0-beta4",
-    "Newtonsoft.Json": "6.0.8"
+    "Newtonsoft.Json": "7.0.1"
   },
     "frameworks": {
         "dnx451": {

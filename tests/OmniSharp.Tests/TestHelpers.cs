@@ -4,7 +4,6 @@ using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
@@ -216,13 +215,6 @@ namespace OmniSharp.Tests
                 symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix));
             }
             return symbols;
-        }
-
-        public static ActionExecutingContext CreateActionExecutingContext(Request req, object controller = null)
-        {
-            var actionContext = new ActionContext(null, null, null);
-            var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilter>(), new Dictionary<string, object> { { "request", req } }, controller);
-            return actionExecutingContext;
         }
     }
 }
