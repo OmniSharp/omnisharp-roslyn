@@ -89,7 +89,6 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
@@ -104,7 +103,6 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
@@ -125,9 +123,7 @@ namespace OmniSharp.Tests
                 )
             );
 
-            await middleware.Invoke(context);
-
-            Assert.True(true);
+            await Assert.ThrowsAsync<Newtonsoft.Json.JsonReaderException>(async () => await middleware.Invoke(context));
         }
 
         [Fact]
@@ -135,18 +131,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var source1 = @"using System;
-
-    class Foo {
-    }";
-            var source2 = @"class Bar {
-        private Foo foo;
-    }";
-
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
-                    { "foo.cs", source1 }, { "bar.cs", source2}
-                });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
@@ -166,7 +151,7 @@ namespace OmniSharp.Tests
                 )
             );
 
-            await middleware.Invoke(context);
+            await Assert.ThrowsAsync<Newtonsoft.Json.JsonReaderException>(async () => await middleware.Invoke(context));
         }
 
         [Fact]
@@ -174,18 +159,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var source1 = @"using System;
-
-    class Foo {
-    }";
-            var source2 = @"class Bar {
-        private Foo foo;
-    }";
-
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
-                    { "foo.cs", source1 }, { "bar.cs", source2}
-                });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
@@ -210,18 +184,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var source1 = @"using System;
-
-    class Foo {
-    }";
-            var source2 = @"class Bar {
-        private Foo foo;
-    }";
-
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
-                    { "foo.cs", source1 }, { "bar.cs", source2}
-                });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
@@ -256,18 +219,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = async (ctx) => await Task.Run(() => { throw new NotImplementedException(); });
 
-            var source1 = @"using System;
-
-    class Foo {
-    }";
-            var source2 = @"class Bar {
-        private Foo foo;
-    }";
-
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
-                    { "foo.cs", source1 }, { "bar.cs", source2}
-                });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
 
             var context = new DefaultHttpContext();
