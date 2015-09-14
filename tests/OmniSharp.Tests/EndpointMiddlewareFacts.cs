@@ -46,6 +46,9 @@ namespace OmniSharp.Tests
         [OmniSharpEndpoint(typeof(Func<FindSymbolsRequest, Task<QuickFixResponse>>), LanguageNames.CSharp)]
         public Func<FindSymbolsRequest, Task<QuickFixResponse>> FindSymbolsDelegate { get; } = (request) => { return Task.FromResult<QuickFixResponse>(null); };
 
+        [OmniSharpEndpoint(typeof(Func<UpdateBufferRequest, Task<object>>), LanguageNames.CSharp)]
+        public Func<UpdateBufferRequest, Task<object>> UpdateBuffer { get; } = (request) => { return Task.FromResult<object>(true); };
+
         class Response { }
 
         [Export(typeof(IProjectSystem))]
@@ -123,7 +126,9 @@ namespace OmniSharp.Tests
                 )
             );
 
-            await Assert.ThrowsAsync<Newtonsoft.Json.JsonReaderException>(async () => await middleware.Invoke(context));
+            await middleware.Invoke(context);
+
+            Assert.True(true);
         }
 
         [Fact]
@@ -151,7 +156,9 @@ namespace OmniSharp.Tests
                 )
             );
 
-            await Assert.ThrowsAsync<Newtonsoft.Json.JsonReaderException>(async () => await middleware.Invoke(context));
+            await middleware.Invoke(context);
+
+            Assert.True(true);
         }
 
         [Fact]
@@ -177,6 +184,8 @@ namespace OmniSharp.Tests
             );
 
             await middleware.Invoke(context);
+
+            Assert.True(true);
         }
 
         [Fact]
@@ -202,9 +211,9 @@ namespace OmniSharp.Tests
             );
 
             await middleware.Invoke(context);
+
+            Assert.True(true);
         }
-
-
 
         public Func<ThrowRequest, Task<ThrowResponse>> ThrowDelegate = (request) =>
         {

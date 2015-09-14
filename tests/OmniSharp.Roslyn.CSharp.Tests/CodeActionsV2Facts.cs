@@ -10,12 +10,14 @@ using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using Xunit;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using System.Reflection;
+using System.Composition.Hosting;
 
 namespace OmniSharp.Tests
 {
     public class CodingActionsV2Facts
     {
         private OmnisharpWorkspace _workspace;
+        private CompositionHost _host;
         private string bufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
         [Fact]
@@ -211,8 +213,8 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
         {
             var request = CreateGetCodeActionsRequest(source);
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
-            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(host, request.Buffer, bufferPath);
+            _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
+            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
             var controller = new GetCodeActionsService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
             var response = await controller.Handle(request);
             return response.CodeActions;
@@ -221,8 +223,8 @@ namespace OmniSharp.Tests
         private async Task<RunCodeActionResponse> RunRefactoringsAsync(string source, string identifier, bool wantsChanges = false)
         {
             var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
-            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(host, request.Buffer, bufferPath);
+            _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
+            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
             var controller = new RunCodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
             var response = await controller.Handle(request);
             return response;

@@ -80,9 +80,13 @@ namespace OmniSharp
                                                           Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
-            foreach (var assembly in assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly }))
+            assemblies = assemblies
+                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly })
+                .Distinct();
+
+            foreach (var assembly in assemblies)
             {
+                Console.WriteLine($"Loading assembly: {assembly.FullName}");
                 config = config.WithAssembly(assembly);
             }
 
@@ -124,9 +128,15 @@ namespace OmniSharp
         public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider, ILibraryManager manager,
             IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ISharedTextWriter writer, IOptions<OmniSharpOptions> optionsAccessor)
         {
-            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Options, manager.GetReferencingLibraries("OmniSharp.Abstractions")
+            var assemblies = manager.GetReferencingLibraries("OmniSharp.Abstractions")
                 .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
-                .Select(assemblyName => Assembly.Load(assemblyName)));
+                .Concat(
+                    manager.GetReferencingLibraries("OmniSharp.Roslyn")
+                        .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                )
+                .Select(assemblyName => Assembly.Load(assemblyName));
+
+            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Options, assemblies);
 
             Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
 
