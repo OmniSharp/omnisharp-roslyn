@@ -15,13 +15,11 @@ namespace OmniSharp.Tests
         private readonly DnxContext _context;
         private readonly OmnisharpWorkspace _workspace;
         private readonly IProjectSystem _projectSystem;
-        private readonly CompositionHost _host;
 
         public CurrentProjectFacts()
         {
-            _context = new DnxContext();
             _workspace = new OmnisharpWorkspace();
-            _host = TestHelpers.CreatePluginHost(new[] { typeof(DnxProjectSystem).GetTypeInfo().Assembly });
+            _context = new DnxContext();
             _projectSystem = new DnxProjectSystem(_workspace, null, new FakeLoggerFactory(), null, null, null, null, _context);
         }
 

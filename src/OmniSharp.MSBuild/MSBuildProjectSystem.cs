@@ -359,11 +359,15 @@ namespace OmniSharp.MSBuild
 
         Task<object> IProjectSystem.GetProjectModel(string path)
         {
-            var project = GetProject(path);
-            if (project != null)
-                return Task.FromResult<object>(new MSBuildProject(GetProject(path)));
+            var document = _workspace.GetDocument(path);
+            if (document == null)
+                return Task.FromResult<object>(null);
 
-            return Task.FromResult<object>(null);
+            var project = GetProject(document.Project.FilePath);
+            if (project == null)
+                return Task.FromResult<object>(null);
+
+            return Task.FromResult<object>(new MSBuildProject(project));
         }
 
         Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)

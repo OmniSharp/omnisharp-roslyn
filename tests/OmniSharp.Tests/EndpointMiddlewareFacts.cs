@@ -144,10 +144,10 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
@@ -183,10 +183,10 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
@@ -219,10 +219,10 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
 
             var context = new DefaultHttpContext();
@@ -265,10 +265,10 @@ namespace OmniSharp.Tests
         private Foo foo;
     }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateSimpleWorkspace(host, new Dictionary<string, string> {
                     { "foo.cs", source1 }, { "bar.cs", source2}
                 });
-            var host = TestHelpers.CreatePluginHost(workspace, new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
 
             var context = new DefaultHttpContext();

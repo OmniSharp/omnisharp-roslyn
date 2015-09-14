@@ -135,7 +135,7 @@ namespace OmniSharp.Tests
 
         public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
         {
-            return CreateSimpleWorkspace(new Dictionary<string, string> { { fileName, source } });
+            return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), new Dictionary<string, string> { { fileName, source } });
         }
 
         public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, string source, string fileName = "dummy.cs")
@@ -143,34 +143,18 @@ namespace OmniSharp.Tests
             return CreateSimpleWorkspace(host, new Dictionary<string, string> { { fileName, source } });
         }
 
-        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
         {
-            var host = Startup.ConfigurePluginHost(
-                null,
-                new FakeLoggerFactory(),
-                new FakeEnvironment(),
-                null,
-                new FakeOmniSharpOptions().Options,
-                null,
-                null,
-                null,
-                null,
-                Enumerable.Empty<Assembly>(),
-                null);
-            var workspace = host.GetExport<OmnisharpWorkspace>();
-            AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
-
-            await Task.Delay(100);
-            return workspace;
+            return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), sourceFiles);
         }
 
-        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, Dictionary<string, string> sourceFiles)
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
         {
-            var host = host ?? CreatePluginHost(Enumerable.Empty<Assembly>());
+            var host = _host ?? CreatePluginHost(Enumerable.Empty<Assembly>());
             var workspace = host.GetExport<OmnisharpWorkspace>();
             AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
 
-            await Task.Delay(100);
+            await Task.Delay(50);
             return workspace;
         }
 

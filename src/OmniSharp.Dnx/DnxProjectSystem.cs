@@ -1,5 +1,5 @@
 using System;
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -67,11 +67,11 @@ namespace OmniSharp.Dnx
             _emitter = emitter;
             _directoryEnumerator = new DirectoryEnumerator(loggerFactory);
 
-            lifetime.ApplicationStopping.Register(OnShutdown);
+            lifetime?.ApplicationStopping.Register(OnShutdown);
         }
 
         public string Key { get { return "Dnx"; } }
-        public string Language {get { return LanguageNames.CSharp; } }
+        public string Language { get { return LanguageNames.CSharp; } }
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
         public void Initalize(IConfiguration configuration)
@@ -420,6 +420,7 @@ namespace OmniSharp.Dnx
                 return null;
             }
 
+
             return _context.Projects[contextId];
         }
 
@@ -631,11 +632,15 @@ namespace OmniSharp.Dnx
 
         Task<object> IProjectSystem.GetProjectModel(string path)
         {
-            var project = GetProject(path);
-            if (project != null)
-                return Task.FromResult<object>(new DnxProject(GetProject(path)));
+            var document = _workspace.GetDocument(path);
+            if (document == null)
+                return Task.FromResult<object>(null);
 
-            return Task.FromResult<object>(null);
+            var project = GetProject(document.Project.FilePath);
+            if (project == null)
+                return Task.FromResult<object>(null);
+
+            return Task.FromResult<object>(new DnxProject(project));
         }
 
         Task<object> IProjectSystem.GetInformationModel(ProjectInformationRequest request)
