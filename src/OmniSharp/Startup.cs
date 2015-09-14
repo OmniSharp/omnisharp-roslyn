@@ -16,7 +16,6 @@ using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Microsoft.Framework.Runtime;
 using OmniSharp.Dnx;
-using OmniSharp.Filters;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
@@ -61,13 +60,6 @@ namespace OmniSharp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-
-            services.Configure<MvcOptions>(opt =>
-            {
-                opt.Conventions.Add(new FromBodyApplicationModelConvention());
-                opt.Filters.Add(new UpdateBufferFilter(Workspace));
-            });
-
             // Add the omnisharp workspace to the container
             services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
@@ -185,7 +177,6 @@ namespace OmniSharp
 
             app.UseErrorHandler("/error");
 
-            app.UseMvc();
             app.UseMiddleware<EndpointMiddleware>();
             app.UseMiddleware<StatusMiddleware>();
             // TODO: When we wire up plugins, we may need to hand them off to this middleware too.

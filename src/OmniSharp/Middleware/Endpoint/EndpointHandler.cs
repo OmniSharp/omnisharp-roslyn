@@ -45,6 +45,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly Lazy<Task<Dictionary<string, ExportHandler>>> _exports;
         private readonly Type _requestType;
         private readonly Type _responseType;
+        private readonly OmnisharpWorkspace _workspace;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
@@ -59,6 +60,7 @@ namespace OmniSharp.Middleware.Endpoint
             _logger = logger;
             _languagePredicateHandler = languagePredicateHandler;
             _plugins = plugins;
+            _workspace = host.GetExport<OmnisharpWorkspace>();
 
             _delegateType = FuncType.MakeGenericType(item.RequestType, TaskType.MakeGenericType(item.ResponseType));
             _requestHandlerType = RequestHandlerType.MakeGenericType(item.RequestType, item.ResponseType);
@@ -120,6 +122,11 @@ namespace OmniSharp.Middleware.Endpoint
         private async Task HandleSingleRequest(string language, JObject requestObject, HttpContext context)
         {
             var request = requestObject.ToObject(_requestType);
+            if (request is Request)
+            {
+                await _workspace.BufferManager.UpdateBuffer((Request)request);
+            }
+
             var exports = await _exports.Value;
             ExportHandler handler;
             if (exports.TryGetValue(language, out handler))
