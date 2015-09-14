@@ -105,7 +105,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(options))
                 .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()));
 
-            if (Program.Environment.TransportType == TransportType.Stdio)
+            if (env.TransportType == TransportType.Stdio)
             {
                 config = config
                     .WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(writer)));

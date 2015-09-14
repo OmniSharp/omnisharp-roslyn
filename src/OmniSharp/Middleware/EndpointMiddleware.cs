@@ -49,19 +49,19 @@ namespace OmniSharp.Middleware
                     {
                         IPredicateHandler handler;
 
+                        // Projects are a special case, this allows us to select the correct "Projects" language for them
                         if (endpoint.EndpointName == "/project" || endpoint.EndpointName == "/projects")
-                        {
                             handler = projectSystemPredicateHandler;
-                        }
                         else
-                        {
                             handler = languagePredicateHandler;
-                        }
 
+                        // This lets any endpoint, that contains a Request object, invoke update buffer.
+                        // The language will be same language as the caller, this means any language service
+                        // must implement update buffer.
                         var updateEndpointHandler = updateBufferEndpointHandler;
-
                         if (endpoint.EndpointName == "/updatebuffer")
                         {
+                            // We don't want to call update buffer on update buffer.
                             updateEndpointHandler = new Lazy<EndpointHandler>(() => null);
                         }
 
@@ -73,7 +73,7 @@ namespace OmniSharp.Middleware
             _endpointHandlers = new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers);
         }
 
-        public Task Invoke(HttpContext httpContext)
+        public async Task Invoke(HttpContext httpContext)
         {
             if (httpContext.Request.Path.HasValue)
             {
@@ -83,13 +83,14 @@ namespace OmniSharp.Middleware
                     Lazy<EndpointHandler> handler;
                     if (_endpointHandlers.TryGetValue(endpoint, out handler))
                     {
-                        var response = handler.Value.Handle(httpContext);
+                        var response = await handler.Value.Handle(httpContext);
                         SerializeResponseObject(httpContext.Response, response);
+                        return;
                     }
                 }
             }
 
-            return _next(httpContext);
+            await _next(httpContext);
         }
 
         private void SerializeResponseObject(HttpResponse response, object value)
