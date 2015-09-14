@@ -211,9 +211,9 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
         {
             var request = CreateGetCodeActionsRequest(source);
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(CodeActionService).GetTypeInfo().Assembly });
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
             _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(host, request.Buffer, bufferPath);
-            RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse> controller = new CodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            var controller = new GetCodeActionsService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
             var response = await controller.Handle(request);
             return response.CodeActions;
         }
@@ -221,9 +221,9 @@ namespace OmniSharp.Tests
         private async Task<RunCodeActionResponse> RunRefactoringsAsync(string source, string identifier, bool wantsChanges = false)
         {
             var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(CodeActionService).GetTypeInfo().Assembly });
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
             _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(host, request.Buffer, bufferPath);
-            RequestHandler<RunCodeActionRequest, RunCodeActionResponse> controller = new CodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            var controller = new RunCodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
             var response = await controller.Handle(request);
             return response;
         }

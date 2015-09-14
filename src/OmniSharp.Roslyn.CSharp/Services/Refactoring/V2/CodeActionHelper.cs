@@ -19,95 +19,43 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>), LanguageNames.CSharp)]
-    [OmniSharpEndpoint(typeof(RequestHandler<RunCodeActionRequest, RunCodeActionResponse>), LanguageNames.CSharp)]
-    public class CodeActionService :
-        RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>,
-        RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
+    public static class CodeActionHelper
     {
-        private readonly OmnisharpWorkspace _workspace;
-        private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
-        private Document _originalDocument;
-
-        private readonly ILogger _logger;
-
-        [ImportingConstructor]
-        public CodeActionService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
-        {
-            _workspace = workspace;
-            _codeActionProviders = providers;
-            _logger = loggerFactory.CreateLogger<CodeActionService>();
-        }
-
-        async Task<GetCodeActionsResponse> RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>.Handle(GetCodeActionsRequest request)
-        {
-            var actions = await GetActions(request);
-            return new GetCodeActionsResponse { CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title)) };
-        }
-
-        async Task<RunCodeActionResponse> RequestHandler<RunCodeActionRequest, RunCodeActionResponse>.Handle(RunCodeActionRequest request)
-        {
-            var actions = await GetActions(request);
-
-            var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
-            if (action == null)
-            {
-                return new RunCodeActionResponse();
-            }
-
-            _logger.LogInformation("Applying " + action);
-            var operations = await action.GetOperationsAsync(CancellationToken.None);
-
-            var solution = _workspace.CurrentSolution;
-            foreach (var o in operations)
-            {
-                o.Apply(_workspace, CancellationToken.None);
-            }
-
-            var response = new RunCodeActionResponse();
-            var directoryName = Path.GetDirectoryName(request.FileName);
-            var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, request.WantsTextChanges);
-
-            response.Changes = changes;
-            _workspace.TryApplyChanges(_workspace.CurrentSolution);
-            return response;
-        }
-
-        private async Task<IEnumerable<CodeAction>> GetActions(ICodeActionRequest request)
+        public static async Task<IEnumerable<CodeAction>> GetActions(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, ICodeActionRequest request)
         {
             var actions = new List<CodeAction>();
-            _originalDocument = _workspace.GetDocument(request.FileName);
-            if (_originalDocument == null)
+            var originalDocument = workspace.GetDocument(request.FileName);
+            if (originalDocument == null)
             {
                 return actions;
             }
 
-            var refactoringContext = await GetRefactoringContext(request, actions);
-            var codeFixContext = await GetCodeFixContext(request, actions);
-            await CollectRefactoringActions(refactoringContext);
-            await CollectCodeFixActions(codeFixContext);
+            var refactoringContext = await GetRefactoringContext(originalDocument, request, actions);
+            var codeFixContext = await GetCodeFixContext(originalDocument, request, actions);
+            await CollectRefactoringActions(codeActionProviders, logger, refactoringContext);
+            await CollectCodeFixActions(codeActionProviders, logger, codeFixContext);
             actions.Reverse();
             return actions;
         }
 
-        private async Task<CodeRefactoringContext?> GetRefactoringContext(ICodeActionRequest request, List<CodeAction> actionsDestination)
+        private static async Task<CodeRefactoringContext?> GetRefactoringContext(Document originalDocument, ICodeActionRequest request, List<CodeAction> actionsDestination)
         {
-            var sourceText = await _originalDocument.GetTextAsync();
+            var sourceText = await originalDocument.GetTextAsync();
             var location = GetTextSpan(request, sourceText);
-            return new CodeRefactoringContext(_originalDocument, location, (a) => actionsDestination.Add(a), CancellationToken.None);
+            return new CodeRefactoringContext(originalDocument, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
-        private async Task<CodeFixContext?> GetCodeFixContext(ICodeActionRequest request, List<CodeAction> actionsDestination)
+        private static async Task<CodeFixContext?> GetCodeFixContext(Document originalDocument, ICodeActionRequest request, List<CodeAction> actionsDestination)
         {
-            var sourceText = await _originalDocument.GetTextAsync();
-            var semanticModel = await _originalDocument.GetSemanticModelAsync();
+            var sourceText = await originalDocument.GetTextAsync();
+            var semanticModel = await originalDocument.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
             var location = GetTextSpan(request, sourceText);
 
             var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location)).ToImmutableArray();
             if (pointDiagnostics.Any())
             {
-                return new CodeFixContext(_originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
+                return new CodeFixContext(originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             }
 
             return null;
@@ -280,12 +228,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ConditionIsAlwaysTrueOrFalseFixProvider"
         };
 
-        private async Task CollectCodeFixActions(CodeFixContext? fixContext)
+        private static async Task CollectCodeFixActions(IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, CodeFixContext? fixContext)
         {
             if (!fixContext.HasValue)
                 return;
 
-            foreach (var provider in _codeActionProviders)
+            foreach (var provider in codeActionProviders)
             {
                 foreach (var codeFix in provider.CodeFixes)
                 {
@@ -300,18 +248,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     }
                     catch
                     {
-                        _logger.LogError("Error registering code fixes " + codeFix);
+                        logger.LogError("Error registering code fixes " + codeFix);
                     }
                 }
             }
         }
 
-        private async Task CollectRefactoringActions(CodeRefactoringContext? refactoringContext)
+        private static async Task CollectRefactoringActions(IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, CodeRefactoringContext? refactoringContext)
         {
             if (!refactoringContext.HasValue)
                 return;
 
-            foreach (var provider in _codeActionProviders)
+            foreach (var provider in codeActionProviders)
             {
                 foreach (var refactoring in provider.Refactorings)
                 {
@@ -326,7 +274,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     }
                     catch
                     {
-                        _logger.LogError("Error computing refactorings for " + refactoring);
+                        logger.LogError("Error computing refactorings for " + refactoring);
                     }
                 }
             }

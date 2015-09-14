@@ -93,18 +93,20 @@ namespace OmniSharp.Middleware.Endpoint
 
         public string EndpointName { get; }
 
-        public async Task<object> Handle(HttpContext context)
+        public Task<object> Handle(HttpContext context)
         {
             var requestObject = DeserializeRequestObject(context.Request.Body);
             var model = GetLanguageModel(requestObject);
-            var request = requestObject.ToObject(_requestType);
 
-            if (request is Request)
+            return Process(context, model, requestObject);
+        }
+
+        public async Task<object> Process(HttpContext context, LanguageModel model, JObject requestObject)
+        {
+            var request = requestObject.ToObject(_requestType);
+            if (request is Request && _updateBufferHandler.Value != null)
             {
-                if (_updateBufferHandler.Value != null)
-                {
-                    await _updateBufferHandler.Value.Handle(context);
-                }
+                await _updateBufferHandler.Value.Process(context, model, requestObject);
             }
 
             if (_hasLanguageProperty)
