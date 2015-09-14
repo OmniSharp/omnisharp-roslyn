@@ -152,7 +152,7 @@ namespace OmniSharp.Tests
         {
             var host = _host ?? CreatePluginHost(Enumerable.Empty<Assembly>());
             var workspace = host.GetExport<OmnisharpWorkspace>();
-            AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
+            await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
 
             await Task.Delay(50);
             return workspace;
@@ -167,7 +167,7 @@ namespace OmniSharp.Tests
                 configure);
         }
 
-        public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
+        public static Task<OmnisharpWorkspace> AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
         {
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
@@ -179,8 +179,8 @@ namespace OmniSharp.Tests
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
                                                      "OmniSharp+" + framework, "AssemblyName",
                                                      LanguageNames.CSharp, filePath, metadataReferences: references);
-                workspace.AddProject(projectInfo);
 
+                workspace.AddProject(projectInfo);
                 foreach (var file in sourceFiles)
                 {
                     var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), file.Key,
@@ -191,7 +191,7 @@ namespace OmniSharp.Tests
                 }
             }
 
-            return workspace;
+            return Task.FromResult(workspace);
         }
 
         private static Assembly AssemblyFromType(Type type)

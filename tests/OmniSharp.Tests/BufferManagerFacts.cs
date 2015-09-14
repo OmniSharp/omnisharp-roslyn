@@ -32,7 +32,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
         {
-            var workspace = GetWorkspaceWithProjects();
+            var workspace = await GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
@@ -42,7 +42,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnPath()
         {
-            var workspace = GetWorkspaceWithProjects();
+            var workspace = await GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "newFile.cs"));
@@ -76,11 +76,11 @@ namespace OmniSharp.Tests
             var workspace = new OmnisharpWorkspace();
 
 
-            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
+            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
                 new[] { "" },
                 new Dictionary<string, string>() { { Path.Combine("src", "root", "foo.cs"), "class C1 {}" } });
 
-            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
+            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
                 new[] { "" },
                 new Dictionary<string, string>() { { Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}" } });
 
@@ -101,7 +101,7 @@ namespace OmniSharp.Tests
         public async Task UpdateRequestHandleChanges()
         {
 
-            var workspace = GetWorkspaceWithProjects();
+            var workspace = await GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request()
             {
@@ -133,15 +133,15 @@ namespace OmniSharp.Tests
             Assert.Equal("interface I {}", (await document.GetTextAsync()).ToString());
         }
 
-        private static OmnisharpWorkspace GetWorkspaceWithProjects()
+        private async static Task<OmnisharpWorkspace> GetWorkspaceWithProjects()
         {
             var workspace = new OmnisharpWorkspace();
 
-            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
+            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
                 new[] { "dnx451", "dnxcore50" },
                 new Dictionary<string, string>() { { Path.Combine("src", "a.cs"), "class C {}" } });
 
-            TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("test", "project.json"),
+            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("test", "project.json"),
                 new[] { "dnx451", "dnxcore50" },
                 new Dictionary<string, string>() { { Path.Combine("test", "b.cs"), "class C {}" } });
 
