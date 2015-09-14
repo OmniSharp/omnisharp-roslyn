@@ -21,32 +21,32 @@ dnvm alias default 1.0.0-beta4
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
-poshd tests/OmniSharp.Dnx.Tests
+pushd tests/OmniSharp.Dnx.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
-poshd tests/OmniSharp.MSBuild.Tests
+pushd tests/OmniSharp.MSBuild.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
-poshd tests/OmniSharp.Plugins.Tests
+pushd tests/OmniSharp.Plugins.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
-poshd tests/OmniSharp.Roslyn.CSharp.Tests
+pushd tests/OmniSharp.Roslyn.CSharp.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
-poshd tests/OmniSharp.ScriptCs.Tests
+pushd tests/OmniSharp.ScriptCs.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
-poshd tests/OmniSharp.Stdio.Tests
+pushd tests/OmniSharp.Stdio.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
