@@ -18,13 +18,13 @@ namespace OmniSharp.Services
         {
         }
 
-        protected AbstractCodeActionProvider(Assembly codeActionAssembly)
+        protected AbstractCodeActionProvider(params Assembly[] codeActionAssemblies)
         {
-            var features = codeActionAssembly
-                                .GetTypes()
+            var features = codeActionAssemblies
+                                .SelectMany(assembly => assembly.GetTypes()
                                 .Where(type => !type.IsInterface
                                         && !type.IsAbstract
-                                        && !type.ContainsGenericParameters); // TODO: handle providers with generic params
+                                        && !type.ContainsGenericParameters)); // TODO: handle providers with generic params
 
             _refactorings = features.Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
                    .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
@@ -32,7 +32,7 @@ namespace OmniSharp.Services
             _codeFixes = features.Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
                     .Select(type => (CodeFixProvider)Activator.CreateInstance(type));
 
-            Assemblies = new[] { codeActionAssembly };
+            Assemblies = codeActionAssemblies;
         }
 
         public virtual IEnumerable<CodeRefactoringProvider> Refactorings => _refactorings;
