@@ -4,6 +4,9 @@ if ! type dnvm > /dev/null 2>&1; then
     curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | DNX_BRANCH=dev sh && source ~/.dnx/dnvm/dnvm.sh
 fi
 
+# work around restore timeouts on Mono
+[ -z "$MONO_THREADS_PER_CPU" ] && export MONO_THREADS_PER_CPU=50
+
 # HACK - dnu restore with beta4 fails most of the time
 # due to timeouts or other failures.
 # Fetch the latest dnu and use that instead
