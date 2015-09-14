@@ -86,7 +86,6 @@ namespace OmniSharp
 
             foreach (var assembly in assemblies)
             {
-                Console.WriteLine($"Loading assembly: {assembly.FullName}");
                 config = config.WithAssembly(assembly);
             }
 
