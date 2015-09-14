@@ -20,16 +20,51 @@ dnvm install 1.0.0-beta4
 dnvm alias default 1.0.0-beta4
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-cd tests/OmniSharp.Tests
+
+poshd tests/OmniSharp.Dnx.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-cd ../OmniSharp.Stdio.Tests
+popd
+
+poshd tests/OmniSharp.MSBuild.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-cd ../../
+popd
+
+poshd tests/OmniSharp.Plugins.Tests
+dnx . test -parallel none
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+popd
+
+poshd tests/OmniSharp.Roslyn.CSharp.Tests
+dnx . test -parallel none
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+popd
+
+poshd tests/OmniSharp.ScriptCs.Tests
+dnx . test -parallel none
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+popd
+
+poshd tests/OmniSharp.Stdio.Tests
+dnx . test -parallel none
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+popd
+
+pushd tests/OmniSharp.Tests
+dnx . test -parallel none
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+popd
+
 dnvm use 1.0.0-beta4
 dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
+dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
+dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
+dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
+dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
 dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
+dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
+dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
 dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
