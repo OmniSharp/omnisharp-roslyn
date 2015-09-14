@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Services;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -73,8 +74,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnNearestPath()
         {
-            var workspace = new OmnisharpWorkspace();
-
+            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
 
             await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
                 new[] { "" },
@@ -135,7 +135,7 @@ namespace OmniSharp.Tests
 
         private async static Task<OmnisharpWorkspace> GetWorkspaceWithProjects()
         {
-            var workspace = new OmnisharpWorkspace();
+            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
 
             await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
                 new[] { "dnx451", "dnxcore50" },

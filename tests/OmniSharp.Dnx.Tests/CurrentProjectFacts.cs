@@ -1,4 +1,5 @@
 using System.Composition.Hosting;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 ﻿using Microsoft.CodeAnalysis;
@@ -18,7 +19,7 @@ namespace OmniSharp.Tests
 
         public CurrentProjectFacts()
         {
-            _workspace = new OmnisharpWorkspace();
+            _workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
             _context = new DnxContext();
             _projectSystem = new DnxProjectSystem(_workspace, null, new FakeLoggerFactory(), null, null, null, null, _context);
         }

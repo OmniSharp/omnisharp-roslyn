@@ -26,11 +26,6 @@ namespace OmniSharp
 
         public BufferManager BufferManager { get; private set; }
 
-        public OmnisharpWorkspace() : base(MefHostServices.DefaultHost, "Custom")
-        {
-            BufferManager = new BufferManager(this);
-        }
-
         [ImportingConstructor]
         public OmnisharpWorkspace(HostServicesBuilder builder) : base(builder.GetHostServices(), "Custom")
         {

@@ -114,7 +114,7 @@ namespace OmniSharp.Tests
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
             var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
             var references = new[] { mscorlib, systemCore };
-            var workspace = new OmnisharpWorkspace();
+            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
 
