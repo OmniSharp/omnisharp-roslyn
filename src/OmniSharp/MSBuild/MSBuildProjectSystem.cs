@@ -115,12 +115,14 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
+                var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind, assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
                                                      VersionStamp.Create(),
                                                      projectFileInfo.Name,
                                                      projectFileInfo.AssemblyName,
                                                      LanguageNames.CSharp,
-                                                     projectFileInfo.ProjectFilePath);
+                                                     projectFileInfo.ProjectFilePath,
+                                                     compilationOptions: compilationOptions);
 
                 _workspace.AddProject(projectInfo);
 
