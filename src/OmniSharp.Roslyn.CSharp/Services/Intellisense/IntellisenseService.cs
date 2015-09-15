@@ -20,14 +20,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
     public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
         private readonly OmnisharpWorkspace _workspace;
-        private readonly HashSet<AutoCompleteResponse> _completions;
         private readonly FormattingOptions _formattingOptions;
 
         [ImportingConstructor]
         public IntellisenseService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
-            _completions = new HashSet<AutoCompleteResponse>();
             _formattingOptions = formattingOptions;
         }
 
@@ -35,6 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         {
             var documents = _workspace.GetDocuments(request.FileName);
             var wordToComplete = request.WordToComplete;
+            var completions = new List<AutoCompleteResponse>();
 
             foreach (var document in documents)
             {
@@ -42,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
                 var model = await document.GetSemanticModelAsync();
 
-                AddKeywords(model, position, request.WantKind, wordToComplete);
+                AddKeywords(completions, model, position, request.WantKind, wordToComplete);
 
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
 
@@ -52,17 +51,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                     {
                         foreach (var completion in MakeSnippetedResponses(request, symbol))
                         {
-                            _completions.Add(completion);
+                            completions.Add(completion);
                         }
                     }
                     else
                     {
-                        _completions.Add(MakeAutoCompleteResponse(request, symbol));
+                        completions.Add(MakeAutoCompleteResponse(request, symbol));
                     }
                 }
             }
 
-            return _completions
+            return completions
                 .OrderByDescending(c => c.CompletionText.IsValidCompletionStartsWithExactCase(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsCamelCaseMatch(wordToComplete))
@@ -70,7 +69,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenBy(c => c.CompletionText);
         }
 
-        private void AddKeywords(SemanticModel model, int position, bool wantKind, string wordToComplete)
+        private void AddKeywords(List<AutoCompleteResponse> completions, SemanticModel model, int position, bool wantKind, string wordToComplete)
         {
             var context = CSharpSyntaxContext.CreateContext(_workspace, model, position, CancellationToken.None);
             var keywordHandler = new KeywordContextHandler();
@@ -78,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
             foreach (var keyword in keywords.Where(k => k.IsValidCompletionFor(wordToComplete)))
             {
-                _completions.Add(new AutoCompleteResponse
+                completions.Add(new AutoCompleteResponse
                 {
                     CompletionText = keyword,
                     DisplayText = keyword,
