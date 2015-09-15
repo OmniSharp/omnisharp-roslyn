@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         {
             var documents = _workspace.GetDocuments(request.FileName);
             var wordToComplete = request.WordToComplete;
-            var completions = new List<AutoCompleteResponse>();
+            var completions = new HashSet<AutoCompleteResponse>();
 
             foreach (var document in documents)
             {
@@ -69,7 +69,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenBy(c => c.CompletionText);
         }
 
-        private void AddKeywords(List<AutoCompleteResponse> completions, SemanticModel model, int position, bool wantKind, string wordToComplete)
+        private void AddKeywords(HashSet<AutoCompleteResponse> completions, SemanticModel model, int position, bool wantKind, string wordToComplete)
         {
             var context = CSharpSyntaxContext.CreateContext(_workspace, model, position, CancellationToken.None);
             var keywordHandler = new KeywordContextHandler();
