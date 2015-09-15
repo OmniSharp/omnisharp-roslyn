@@ -115,7 +115,10 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind, assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
+                var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
+#if DNX451
+                compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
+#endif
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
                                                      VersionStamp.Create(),
                                                      projectFileInfo.Name,
