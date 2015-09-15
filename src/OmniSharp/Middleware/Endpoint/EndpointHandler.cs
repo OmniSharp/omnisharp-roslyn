@@ -106,7 +106,11 @@ namespace OmniSharp.Middleware.Endpoint
             var request = requestObject.ToObject(_requestType);
             if (request is Request && _updateBufferHandler.Value != null)
             {
-                await _updateBufferHandler.Value.Process(context, model, requestObject);
+                var realRequest = request as Request;
+                if (!string.IsNullOrWhiteSpace(realRequest.FileName) && (realRequest.Buffer != null || realRequest.Changes != null))
+                {
+                    await _updateBufferHandler.Value.Process(context, model, requestObject);
+                }
             }
 
             if (_hasLanguageProperty)
