@@ -180,7 +180,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var expected = new[] {
                 "Method()",
-                "Method(string param)"
+                "Method(string param)",
+                "NestedMethod()"
             };
             Assert.Equal(expected, symbols);
         }

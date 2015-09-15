@@ -4,6 +4,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FuzzySearch;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
@@ -21,12 +22,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly FormattingOptions _formattingOptions;
+        private readonly Nuzzaldrin _fuzz;
 
         [ImportingConstructor]
         public IntellisenseService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;
+            _fuzz = new Nuzzaldrin();
         }
 
         public async Task<IEnumerable<AutoCompleteResponse>> Handle(AutoCompleteRequest request)
@@ -45,7 +48,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
                 var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
 
-                foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
+                foreach (var symbol in symbols.Where(s => _fuzz.Score(s.Name, wordToComplete) > 0))
                 {
                     if (request.WantSnippet)
                     {
@@ -75,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             var keywordHandler = new KeywordContextHandler();
             var keywords = keywordHandler.Get(context, model, position);
 
-            foreach (var keyword in keywords.Where(k => k.IsValidCompletionFor(wordToComplete)))
+            foreach (var keyword in keywords.Where(k => _fuzz.Score(k, wordToComplete) > 0))
             {
                 completions.Add(new AutoCompleteResponse
                 {

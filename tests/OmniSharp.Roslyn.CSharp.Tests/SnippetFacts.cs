@@ -225,23 +225,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsSnippet("WriteLine();$0 : void", completions);
         }
 
-        [Fact]
-        public async Task Fuzzy_matches_are_not_returned_when_first_letters_do_not_match()
-        {
-            var source = @"
-                using System;
-                public class Class1
-                {
-                    public Class1()
-                    {
-                        Console.rl$
-                    }
-                }
-            ";
-
-            var completions = await FindCompletionsAsync(source);
-            Assert.DoesNotContain("WriteLine();$0 : void", completions);
-        }
+        // [Fact]
+        // public async Task Fuzzy_matches_are_not_returned_when_first_letters_do_not_match()
+        // {
+        //     var source = @"
+        //         using System;
+        //         public class Class1
+        //         {
+        //             public Class1()
+        //             {
+        //                 Console.rl$
+        //             }
+        //         }
+        //     ";
+        //
+        //     var completions = await FindCompletionsAsync(source);
+        //     Assert.DoesNotContain("WriteLine();$0 : void", completions);
+        // }
 
         [Fact]
         public async Task Can_complete_parameter()

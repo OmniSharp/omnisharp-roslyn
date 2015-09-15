@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
+using FuzzySearch;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -14,30 +15,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
         private OmnisharpWorkspace _workspace;
+        private readonly Nuzzaldrin _fuzz;
 
         [ImportingConstructor]
         public FindSymbolsService(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
+            _fuzz = new Nuzzaldrin();
         }
 
         public async Task<QuickFixResponse> Handle(FindSymbolsRequest request = null)
         {
-            Func<string, bool> isMatch =
-                candidate => request != null
-                ? candidate.IsValidCompletionFor(request.Filter)
-                : true;
+            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(
+                _workspace.CurrentSolution,
+                name => _fuzz.Score(name, request?.Filter) > 0,
+                SymbolFilter.TypeAndMember);
 
-            return await FindSymbols(isMatch);
-        }
-
-        private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
-        {
-            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
-
-            var quickFixes = (from symbol in symbols
-                              from location in symbol.Locations
-                              select ConvertSymbol(symbol, location)).Distinct();
+            var quickFixes = symbols
+                .SelectMany(symbol =>
+                    symbol.Locations.Select(
+                        location => ConvertSymbol(symbol, location)
+                    )).Distinct();
 
             return new QuickFixResponse(quickFixes);
         }
