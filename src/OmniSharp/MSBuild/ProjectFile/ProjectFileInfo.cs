@@ -47,6 +47,8 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> DefineConstants { get; private set; }
 
+        public OutputKind OutputKind { get; private set; }
+
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
@@ -90,6 +92,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(projectInstance.GetPropertyValue("LangVersion"));
                 projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
+                var outputType = projectInstance.GetPropertyValue("OutputType");
+                switch(outputType)
+                {
+                    case "Library": projectFileInfo.OutputKind = OutputKind.DynamicallyLinkedLibrary;
+                        break;
+                    case "WinExe": projectFileInfo.OutputKind = OutputKind.WindowsApplication;
+                        break;
+                    default:
+                    case "Exe": projectFileInfo.OutputKind = OutputKind.ConsoleApplication;
+                        break;
+                }
 
                 projectFileInfo.SourceFiles =
                     projectInstance.GetItems("Compile")
