@@ -18,7 +18,7 @@
          },
         "dnxcore50": {
             "dependencies": {
-                "System.Collections": "4.0.10-beta-22816"
+                "System.Collections": "4.0.10-beta-23109"
             }
         }
     }

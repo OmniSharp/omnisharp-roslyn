@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.Configuration;
 using OmniSharp.Models.v1;
 
 namespace OmniSharp.Services

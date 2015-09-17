@@ -13,10 +13,10 @@ if %ERRORLEVEL% neq 0 (
 
 :install
 set
-call dnvm install 1.0.0-beta4
-call dnvm use 1.0.0-beta4
+call dnvm install 1.0.0-beta7
+call dnvm use 1.0.0-beta7
 rem set the runtime path because the above commands set \.dnx<space>\runtimes
-set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
+set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta7\bin;!PATH!
 
 call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
@@ -69,6 +69,6 @@ call dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
 call dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
 call dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
 call dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
-call dnu publish src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+call dnu publish src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta7
 
 popd

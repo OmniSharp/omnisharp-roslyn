@@ -7,17 +7,8 @@ fi
 # work around restore timeouts on Mono
 [ -z "$MONO_THREADS_PER_CPU" ] && export MONO_THREADS_PER_CPU=50
 
-# HACK - dnu restore with beta4 fails most of the time
-# due to timeouts or other failures.
-# Fetch the latest dnu and use that instead
-#export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetmaster/api/v2/
-dnvm update-self
-dnvm upgrade -unstable
-dnu restore
-# end hack
-
-dnvm install 1.0.0-beta4
-dnvm alias default 1.0.0-beta4
+dnvm install 1.0.0-beta7
+dnvm alias default 1.0.0-beta7
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
@@ -56,7 +47,7 @@ dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
-dnvm use 1.0.0-beta4
+dnvm use 1.0.0-beta7
 dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
 dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
 dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
@@ -65,21 +56,21 @@ dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
 dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
 dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
 dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
-dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
+dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta7 2>&1 | tee buildlog
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 curl -LO http://nuget.org/nuget.exe
-mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta4 -Prerelease -OutputDirectory artifacts/build/omnisharp/approot/packages
+mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta7 -Prerelease -OutputDirectory artifacts/build/omnisharp/approot/packages
 
-if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-beta4" ]; then
-    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta4 in output exiting!'
+if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-beta7" ]; then
+    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta7 in output exiting!'
     exit 1
 fi
 
-if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; then
-    echo 'ERROR: Can not find dnx-mono.1.0.0-beta4 in output exiting!'
+if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta7" ]; then
+    echo 'ERROR: Can not find dnx-mono.1.0.0-beta7 in output exiting!'
     exit 1
 fi
 

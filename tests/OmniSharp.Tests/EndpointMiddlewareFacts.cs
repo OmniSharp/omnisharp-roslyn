@@ -15,7 +15,7 @@ using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Authentication;
 using Microsoft.AspNet.Http.Core;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.Configuration;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using Newtonsoft.Json;

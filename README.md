@@ -6,7 +6,7 @@ omnisharp-roslyn
 
 Omnisharp based on [Roslyn](https://github.com/dotnet/roslyn) workspaces
 
-This currently requires dnx version - 1.0.0-beta4 (see https://github.com/aspnet/Home). If you need the HTTP interface and you want to run on linux, you'll also need to make sure that you have libuv installed.
+This currently requires dnx version - 1.0.0-beta7 (see https://github.com/aspnet/Home). If you need the HTTP interface and you want to run on linux, you'll also need to make sure that you have libuv installed.
 
 If you are using Mono, you'll need a minimum of verson 4.0.1
 

@@ -31,8 +31,8 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.20-beta-22816",
-        "System.Xml.ReaderWriter": "4.0.10-beta-22816"
+        "System.Runtime": "4.0.20-beta-23109",
+        "System.Xml.ReaderWriter": "4.0.10-beta-23109"
       }
     }
   }

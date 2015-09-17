@@ -6,8 +6,8 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-    "Microsoft.AspNet.Hosting": "1.0.0-beta4",
-    "Microsoft.Framework.Logging.Console": "1.0.0-beta4"
+    "Microsoft.AspNet.Hosting": "1.0.0-beta7",
+    "Microsoft.Framework.Logging.Console": "1.0.0-beta7"
   },
   "frameworks": {
     "dnx451": {
@@ -17,14 +17,14 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.IO.FileSystem.Watcher": "4.0.0-beta-22816",
-        "System.Net.Sockets": "4.0.0-beta-22816",
-        "System.Diagnostics.Process": "4.0.0-beta-22816",
-        "System.Runtime": "4.0.20-beta-22816",
-        "System.Threading": "4.0.10-beta-22816",
-        "System.Threading.Thread": "4.0.0-beta-22816",
-        "System.Threading.Tasks": "4.0.10-beta-22816",
-        "System.Dynamic.Runtime": "4.0.10-beta-22816"
+        "System.IO.FileSystem.Watcher": "4.0.0-beta-23109",
+        "System.Net.Sockets": "4.0.0-beta-23109",
+        "System.Diagnostics.Process": "4.0.0-beta-23109",
+        "System.Runtime": "4.0.20-beta-23109",
+        "System.Threading": "4.0.10-beta-23109",
+        "System.Threading.Thread": "4.0.0-beta-23109",
+        "System.Threading.Tasks": "4.0.10-beta-23109",
+        "System.Dynamic.Runtime": "4.0.10-beta-23109"
       }
     }
   }

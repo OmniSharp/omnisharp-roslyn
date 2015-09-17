@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Server;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Framework.Configuration;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio

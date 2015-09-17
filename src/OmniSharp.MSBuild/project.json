@@ -6,7 +6,7 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-    "Microsoft.Framework.Logging.Console": "1.0.0-beta4"
+    "Microsoft.Framework.Logging.Console": "1.0.0-beta7"
   },
   "frameworks": {
     "dnx451": {
