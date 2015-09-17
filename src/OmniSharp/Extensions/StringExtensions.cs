@@ -27,7 +27,9 @@ namespace OmniSharp.Extensions
         public static bool IsSubsequenceMatch(this string completion, string partial)
         {
             if (partial == string.Empty)
+            {
                 return true;
+            }
 
             // Limit the number of results returned by making sure
             // at least the first characters match.
