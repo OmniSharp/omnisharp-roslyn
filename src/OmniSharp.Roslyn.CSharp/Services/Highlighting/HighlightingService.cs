@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Framework.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 
@@ -15,9 +16,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
     public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]
-        public HighlightingService(OmnisharpWorkspace workspace)
+        public HighlightingService(OmnisharpWorkspace workspace, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
+            _logger = loggerFactory.CreateLogger<HighlightingService>();
         }
 
         public async Task<HighlightResponse> Handle(HighlightRequest request)
@@ -62,6 +64,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
                         (requestLine, line) => line.Span);
                     foreach (var lineSpan in linesToClassify)
                     {
+                        var enumerator = (await Classifier.GetClassifiedSpansAsync(document, lineSpan)).GetEnumerator();
+                        while (enumerator.MoveNext())
+                        {
+                            try
+                            {
+                                spans.Add(enumerator.Current);
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.LogError("Exception when trying to get classifications from Classifier", e);
+                            }
+                        }
                         foreach (var span in await Classifier.GetClassifiedSpansAsync(document, lineSpan))
                         {
                             spans.Add(span);
@@ -96,6 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 
         private HighlightClassification[] AllClassifications = Enum.GetValues(typeof(HighlightClassification)).Cast<HighlightClassification>().ToArray();
         private readonly OmnisharpWorkspace _workspace;
+        private readonly ILogger _logger;
 
         private IEnumerable<ClassifiedSpan> FilterSpans(HighlightClassification[] classifications, IEnumerable<ClassifiedSpan> spans)
         {
