@@ -19,5 +19,7 @@ namespace OmniSharp.Stdio.Logging
         {
             return new StdioLogger(_writer, name, _filter);
         }
+
+        public void Dispose() { }
     }
 }

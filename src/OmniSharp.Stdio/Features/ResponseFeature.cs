@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
+using Microsoft.AspNet.Http.Features;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -23,12 +25,20 @@ namespace OmniSharp.Stdio.Features
 
         public bool HeadersSent { get; set; }
 
-        public void OnSendingHeaders(Action<object> callback, object state)
+        public bool HasStarted
         {
-            // nothing
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
-        
-        public void OnResponseCompleted(Action<object> act, object state)
+
+        public void OnStarting(Func<object, Task> callback, object state)
+        {
+            //nothing again
+        }
+
+        public void OnCompleted(Func<object, Task> callback, object state)
         {
             //nothing again
         }

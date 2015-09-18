@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Http.Features;
 using Microsoft.Framework.Configuration;
 using OmniSharp.Stdio.Services;
 

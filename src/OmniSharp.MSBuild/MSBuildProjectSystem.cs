@@ -64,7 +64,7 @@ namespace OmniSharp.MSBuild
         public void Initalize(IConfiguration configuration)
         {
             _options = new MSBuildOptions();
-            OptionsServices.ReadProperties(_options, configuration);
+            ConfigurationBinder.Bind(configuration, _options);
 
             var solutionFilePath = _env.SolutionFilePath;
 
@@ -318,7 +318,7 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 #if DNX451
-                    var analyzerReference = new AnalyzerFileReference(analyzerPath);
+                    var analyzerReference = new AnalyzerFileReference(analyzerPath, new AnalyzerAssemblyLoader());
                     project.AddAnalyzerReference(analyzerReference);
 #endif
                 }

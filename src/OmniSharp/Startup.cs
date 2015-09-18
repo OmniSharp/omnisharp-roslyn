@@ -8,12 +8,12 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Microsoft.AspNet.Hosting;
 using Microsoft.CodeAnalysis.Host.Mef;
+using Microsoft.Dnx.Runtime;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.Configuration;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
-using Microsoft.Framework.Runtime;
 using OmniSharp.Dnx;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
@@ -30,7 +30,7 @@ namespace OmniSharp
     {
         public Startup()
         {
-            var configuration = new Configuration()
+            var configuration = new ConfigurationBuilder()
                  .AddJsonFile("config.json");
 
             if (Program.Environment.OtherArgs != null)
@@ -46,7 +46,7 @@ namespace OmniSharp
 
             configuration.AddEnvironmentVariables();
 
-            Configuration = configuration;
+            Configuration = configuration.Build();
         }
 
         public IConfiguration Configuration { get; private set; }
@@ -121,10 +121,10 @@ namespace OmniSharp
             IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ISharedTextWriter writer, IOptions<OmniSharpOptions> optionsAccessor)
         {
             var assemblies = manager.GetReferencingLibraries("OmniSharp.Abstractions")
-                .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                .SelectMany(libraryInformation => libraryInformation.Assemblies)
                 .Concat(
                     manager.GetReferencingLibraries("OmniSharp.Roslyn")
-                        .SelectMany(libraryInformation => libraryInformation.LoadableAssemblies)
+                        .SelectMany(libraryInformation => libraryInformation.Assemblies)
                 )
                 .Select(assemblyName => Assembly.Load(assemblyName));
 
@@ -170,7 +170,7 @@ namespace OmniSharp
             {
                 try
                 {
-                    projectSystem.Initalize(Configuration.GetSubKey(projectSystem.Key));
+                    projectSystem.Initalize(Configuration.GetSection(projectSystem.Key));
                 }
                 catch (Exception e)
                 {

@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.CodeAnalysis": "1.0.0-rc2"
+    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150916-04"
   },
   "frameworks": {
     "dnx451": {
@@ -28,8 +28,8 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.20-beta-23109",
-        "System.Xml.ReaderWriter": "4.0.10-beta-23109"
+        "System.Runtime": "4.0.21-beta-23225",
+        "System.Xml.ReaderWriter": "4.0.11-beta-23225"
       }
     }
   }

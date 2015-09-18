@@ -14,7 +14,7 @@ namespace OmniSharp.Tests
             return true;
         }
 
-        public IDisposable BeginScope(object owner)
+        public IDisposable BeginScopeImpl(object owner)
         {
             return null;
         }

@@ -5,8 +5,9 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "7.0.1",
-    "Microsoft.CodeAnalysis": "1.0.0-rc2",
+    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150916-04",
     "Microsoft.Framework.Configuration": "1.0.0-beta7",
+    "Microsoft.Framework.Configuration.Binder": "1.0.0-beta7",
     "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-beta7",
     "Microsoft.Framework.Logging.Console": "1.0.0-beta7",
     "Microsoft.Framework.Caching.Memory": "1.0.0-beta7",
@@ -32,22 +33,22 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.20-beta-23109",
-        "System.Collections": "4.0.10-beta-23109",
-        "System.Threading.Thread": "4.0.0-beta-23109",
-        "System.Threading.Tasks": "4.0.10-beta-23109",
-        "System.Linq": "4.0.0-beta-23109",
-        "System.Text.Encoding": "4.0.10-beta-23109",
-        "System.IO": "4.0.10-beta-23109",
-        "System.IO.FileSystem": "4.0.0-beta-23109",
-        "System.Globalization.Extensions": "4.0.0-beta-23109",
+        "System.Runtime": "4.0.21-beta-23225",
+        "System.Collections": "4.0.11-beta-23225",
+        "System.Threading.Thread": "4.0.0-beta-23225",
+        "System.Threading.Tasks": "4.0.11-beta-23225",
+        "System.Linq": "4.0.1-beta-23225",
+        "System.Text.Encoding": "4.0.11-beta-23225",
+        "System.IO": "4.0.11-beta-23225",
+        "System.IO.FileSystem": "4.0.1-beta-23225",
+        "System.Globalization.Extensions": "4.0.1-beta-23225",
         "System.ComponentModel.TypeConverter": "4.0.1-beta-23109",
-        "System.Reflection": "4.0.10-beta-23109",
-        "System.Threading": "4.0.10-beta-23109",
-        "System.IO.FileSystem.Watcher": "4.0.0-beta-23109",
-        "System.Net.Sockets": "4.0.0-beta-23109",
-        "System.Diagnostics.Process": "4.0.0-beta-23109",
-        "System.Xml.XDocument": "4.0.10-beta-23109"
+        "System.Reflection": "4.0.11-beta-23225",
+        "System.Threading": "4.0.11-beta-23225",
+        "System.IO.FileSystem.Watcher": "4.0.0-beta-23225",
+        "System.Net.Sockets": "4.0.1-beta-23225",
+        "System.Diagnostics.Process": "4.0.0-beta-23225",
+        "System.Xml.XDocument": "4.0.11-beta-23225"
       }
     }
   }

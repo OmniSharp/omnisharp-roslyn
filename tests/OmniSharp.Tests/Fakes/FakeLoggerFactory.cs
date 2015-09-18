@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Framework.Logging;
 
 namespace OmniSharp.Tests
@@ -15,5 +16,7 @@ namespace OmniSharp.Tests
         {
             return logger;
         }
+
+        public void Dispose() { }
     }
 }

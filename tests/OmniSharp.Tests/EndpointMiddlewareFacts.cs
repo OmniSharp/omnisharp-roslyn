@@ -10,14 +10,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Authentication;
-using Microsoft.AspNet.Http.Core;
+using Microsoft.AspNet.Http.Internal;
 using Microsoft.CodeAnalysis;
+using Microsoft.Dnx.Runtime;
 using Microsoft.Framework.Configuration;
 using Microsoft.Framework.Logging;
-using Microsoft.Framework.Runtime;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
@@ -94,13 +93,14 @@ namespace OmniSharp.Tests
             public LogLevel MinimumLevel { get; set; }
             public void AddProvider(ILoggerProvider provider) { }
             public ILogger CreateLogger(string categoryName) { return new Logger(); }
+            public void Dispose() { }
         }
 
         class Disposable : IDisposable { public void Dispose() { } }
 
         class Logger : ILogger
         {
-            public IDisposable BeginScope(object state) { return new Disposable(); }
+            public IDisposable BeginScopeImpl(object state) { return new Disposable(); }
             public bool IsEnabled(LogLevel logLevel) { return true; }
             public void Log(LogLevel logLevel, int eventId, object state, Exception exception, Func<object, Exception, string> formatter) { }
         }

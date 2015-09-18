@@ -64,9 +64,9 @@ namespace OmniSharp.ScriptCs
 
             _scriptServices = scriptServicesBuilder.Build();
 
-            var mscorlib = MetadataReference.CreateFromAssembly(typeof(object).GetTypeInfo().Assembly);
-            var systemCore = MetadataReference.CreateFromAssembly(typeof(Enumerable).GetTypeInfo().Assembly);
-            var scriptcsContracts = MetadataReference.CreateFromAssembly(typeof(IScriptHost).Assembly);
+            var mscorlib = MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
+            var systemCore = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
+            var scriptcsContracts = MetadataReference.CreateFromFile(typeof(IScriptHost).Assembly.Location);
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
 

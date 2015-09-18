@@ -1,4 +1,5 @@
-﻿using Microsoft.Framework.Runtime.Roslyn;
+﻿using Microsoft.Dnx.Compilation.CSharp;
+using Microsoft.Framework.Runtime.Roslyn;
 
 namespace Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages
 {

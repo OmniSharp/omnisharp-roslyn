@@ -77,7 +77,7 @@ namespace OmniSharp.Dnx
         public void Initalize(IConfiguration configuration)
         {
             _options = new DnxOptions();
-            OptionsServices.ReadProperties(_options, configuration);
+            ConfigurationBinder.Bind(configuration, _options);
 
             _dnxPaths = new DnxPaths(_env, _options, _loggerFactory);
             _packagesRestoreTool = new PackagesRestoreTool(_options, _loggerFactory, _emitter, _context, _dnxPaths); ;

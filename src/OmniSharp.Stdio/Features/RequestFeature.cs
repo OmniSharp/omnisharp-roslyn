@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Http;
+using Microsoft.AspNet.Http.Features;
 
 namespace OmniSharp.Stdio.Features
 {
