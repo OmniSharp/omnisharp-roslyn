@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using ICSharpCode.NRefactory6.CSharp.Refactoring;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CodeRefactorings;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
@@ -19,8 +20,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
         }
 
         public override IEnumerable<CodeFixProvider> CodeFixes => Enumerable.Empty<CodeFixProvider>();
+        public override IEnumerable<CodeRefactoringProvider> Refactorings => Enumerable.Empty<CodeRefactoringProvider>();
 
         public override string ProviderName => "NRefactory";
+        public override IEnumerable<Assembly> Assemblies { get; protected set; } = Enumerable.Empty<Assembly>();
     }
 }
 #endif
