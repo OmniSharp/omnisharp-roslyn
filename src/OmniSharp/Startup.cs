@@ -160,6 +160,7 @@ namespace OmniSharp
 
             app.UseMiddleware<EndpointMiddleware>();
             app.UseMiddleware<StatusMiddleware>();
+            app.UseMiddleware<StopServerMiddleware>();
 
             if (env.TransportType == TransportType.Stdio)
             {
