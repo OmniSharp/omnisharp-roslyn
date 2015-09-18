@@ -52,26 +52,26 @@ namespace OmniSharp.Tests
             Assert.Contains("using System;", refactorings);
         }
 
-        // [Fact]
-        // public async Task Can_sort_usings()
-        // {
-        //     var source =
-        //           @"using MyNamespace3;
-        //             using MyNamespace4;
-        //             using MyNamespace2;
-        //             using System;
-        //             u$sing MyNamespace1;";
-        //
-        //     var expected =
-        //           @"using System;
-        //             using MyNamespace1;
-        //             using MyNamespace2;
-        //             using MyNamespace3;
-        //             using MyNamespace4;";
-        //
-        //     var response = await RunRefactoring(source, "Sort usings");
-        //     Assert.Equal(expected, response.Changes.First().Buffer);
-        // }
+        [Fact]
+        public async Task Can_sort_usings()
+        {
+            var source =
+                  @"using MyNamespace3;
+                    using MyNamespace4;
+                    using MyNamespace2;
+                    using System;
+                    u$sing MyNamespace1;";
+
+            var expected =
+                  @"using System;
+                    using MyNamespace1;
+                    using MyNamespace2;
+                    using MyNamespace3;
+                    using MyNamespace4;";
+
+            var response = await RunRefactoring(source, "Sort usings");
+            Assert.Equal(expected, response.Changes.First().Buffer);
+        }
 
         [Fact]
         public async Task Can_remove_unnecessary_usings()

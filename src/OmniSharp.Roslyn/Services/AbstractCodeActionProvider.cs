@@ -1,4 +1,3 @@
-#if DNX451
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -14,7 +13,7 @@ namespace OmniSharp.Services
         private readonly IEnumerable<CodeRefactoringProvider> _refactorings;
         private readonly IEnumerable<CodeFixProvider> _codeFixes;
 
-        protected AbstractCodeActionProvider(string assemblyName) : this(Assembly.Load(assemblyName))
+        protected AbstractCodeActionProvider(string assemblyName) : this(Assembly.Load(new AssemblyName(assemblyName)))
         {
         }
 
@@ -22,15 +21,19 @@ namespace OmniSharp.Services
         {
             var features = codeActionAssemblies
                                 .SelectMany(assembly => assembly.GetTypes()
-                                .Where(type => !type.IsInterface
-                                        && !type.IsAbstract
-                                        && !type.ContainsGenericParameters)); // TODO: handle providers with generic params
+                                .Where(type => !type.GetTypeInfo().IsInterface
+                                        && !type.GetTypeInfo().IsAbstract
+                                        && !type.GetTypeInfo().ContainsGenericParameters)); // TODO: handle providers with generic params
 
             _refactorings = features.Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
                    .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
 
             _codeFixes = features.Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
                     .Select(type => (CodeFixProvider)Activator.CreateInstance(type));
+
+            /*foreach (var refactoring in _refactorings) {
+                Console.WriteLine(refactoring.GetType().FullName);
+            }*/
 
             Assemblies = codeActionAssemblies;
         }
@@ -44,4 +47,3 @@ namespace OmniSharp.Services
         public abstract string ProviderName { get; }
     }
 }
-#endif

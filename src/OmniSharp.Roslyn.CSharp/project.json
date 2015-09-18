@@ -13,7 +13,7 @@
   "frameworks": {
     "dnx451": {
       "dependencies": {
-        "ICSharpCode.NRefactory": "6.0.0-alpha3"
+        "RefactoringEssentials.Library": "1.2.0"
       },
       "frameworkAssemblies": {
         "System.Runtime": "",
