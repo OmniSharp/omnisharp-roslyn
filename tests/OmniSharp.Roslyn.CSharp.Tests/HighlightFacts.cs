@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 4 } });
 
             AssertSyntax(regions.Highlights, code, 3,
@@ -56,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
 
             AssertSyntax(regions.Highlights, code, 0,
@@ -90,7 +90,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
 
             AssertSyntax(regions.Highlights, code, 0,
@@ -162,7 +162,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Keyword } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "keyword");
@@ -183,7 +183,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Punctuation } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "punctuation");
@@ -204,7 +204,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Operator } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "operator");
@@ -225,7 +225,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Identifier } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "identifier");
@@ -246,7 +246,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "a.cs", code }
             });
 
-            var controller = new HighlightingService(workspace);
+            var controller = new HighlightingService(workspace, new FakeLoggerFactory());
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Name } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind.EndsWith(" name"));

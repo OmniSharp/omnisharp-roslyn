@@ -274,7 +274,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     }
                     catch (Exception e)
                     {
-                        logger.LogError("Error computing refactorings for " + refactoring, e);
+                        logger.LogWarning("Problem computing refactorings for " + refactoring, e);
                     }
                 }
             }

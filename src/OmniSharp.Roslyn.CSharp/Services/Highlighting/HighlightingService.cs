@@ -73,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
                             }
                             catch (Exception e)
                             {
-                                _logger.LogError("Exception when trying to get classifications from Classifier", e);
+                                _logger.LogWarning("Problem when trying to get classifications from Classifier", e);
                             }
                         }
                         foreach (var span in await Classifier.GetClassifiedSpansAsync(document, lineSpan))
