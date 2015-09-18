@@ -70,7 +70,8 @@ namespace OmniSharp
                 {
                     transportType = TransportType.Stdio;
                 }
-                else if (arg == "--plugin") {
+                else if (arg == "--plugin")
+                {
                     enumerator.MoveNext();
                     plugins.Add((string)enumerator.Current);
                 }
@@ -85,29 +86,27 @@ namespace OmniSharp
             var config = new ConfigurationBuilder()
              .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
-            var serviceCollection = new ServiceCollection();
-
             var writer = new SharedConsoleWriter();
-            serviceCollection.AddInstance<IOmnisharpEnvironment>(Environment);
-            serviceCollection.AddInstance<ISharedTextWriter>(writer);
-            serviceCollection.AddInstance<PluginAssemblies>(new PluginAssemblies(plugins));
-
-            var engine = new HostingEngine(serviceCollection, _startupLoader, config.Build());
+            var builder = new WebHostBuilder(_serviceProvider)
+                .UseEnvironment("OmniSharp")
+                .UseStartup("OmniSharp")
+                .UseServices(serviceCollection =>
+            {
+                serviceCollection.AddInstance<IOmnisharpEnvironment>(Environment);
+                serviceCollection.AddInstance<ISharedTextWriter>(writer);
+                serviceCollection.AddInstance<PluginAssemblies>(new PluginAssemblies(plugins));
+            });
 
             if (transportType == TransportType.Stdio)
             {
-                // Uppercase variable is intentional here
-                var ServerFactory = new Stdio.StdioServerFactory(Console.In, writer);
-                var propertyInfo = engine.GetType().GetTypeInfo().DeclaredProperties.First(prop => prop.Name == nameof(ServerFactory));
-                propertyInfo.SetValue(engine, ServerFactory);
-            } else {
-                // Uppercase variable is intentional here
-                var ServerFactoryLocation = "Kestrel";
-                var propertyInfo = engine.GetType().GetTypeInfo().DeclaredProperties.First(prop => prop.Name == nameof(ServerFactoryLocation));
-                propertyInfo.SetValue(engine, ServerFactoryLocation);
+                builder.UseServer(new Stdio.StdioServerFactory(Console.In, writer));
+            }
+            else
+            {
+                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
             }
 
-            var serverShutdown = engine.Start();
+            var serverShutdown = builder.Build().Start();
 
             var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
             var shutdownHandle = new ManualResetEvent(false);

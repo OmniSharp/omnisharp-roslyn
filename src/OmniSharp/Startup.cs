@@ -28,25 +28,24 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup()
+        public Startup(IApplicationEnvironment applicationEnvironment)
         {
-            var configuration = new ConfigurationBuilder()
-                 .AddJsonFile("config.json");
+            var configurationBuilder = new ConfigurationBuilder(applicationEnvironment.ApplicationBasePath)
+                 .AddJsonFile("config.json")
+                 .AddEnvironmentVariables();
 
             if (Program.Environment.OtherArgs != null)
             {
-                configuration.AddCommandLine(Program.Environment.OtherArgs);
+                configurationBuilder.AddCommandLine(Program.Environment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
             if (File.Exists(Program.Environment.ConfigurationPath))
             {
-                configuration.AddJsonFile(Program.Environment.ConfigurationPath);
+                configurationBuilder.AddJsonFile(Program.Environment.ConfigurationPath);
             }
 
-            configuration.AddEnvironmentVariables();
-
-            Configuration = configuration.Build();
+            Configuration = configurationBuilder.Build();
         }
 
         public IConfiguration Configuration { get; private set; }
