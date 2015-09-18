@@ -272,9 +272,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     {
                         await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        logger.LogError("Error computing refactorings for " + refactoring);
+                        logger.LogError("Error computing refactorings for " + refactoring, e);
                     }
                 }
             }
