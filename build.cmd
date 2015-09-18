@@ -22,42 +22,42 @@ call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 pushd tests\OmniSharp.Dnx.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.MSBuild.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Plugins.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Roslyn.CSharp.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.ScriptCs.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Stdio.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Tests
-call dnx . test
+call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 

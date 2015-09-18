@@ -13,37 +13,37 @@ dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 pushd tests/OmniSharp.Dnx.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.MSBuild.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Plugins.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Roslyn.CSharp.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.ScriptCs.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Stdio.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
