@@ -7,16 +7,6 @@ using V2 = OmniSharp.Models.V2;
 
 namespace OmniSharp
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-    public class EndpointNameAttribute : Attribute
-    {
-        public string Name { get; }
-        public EndpointNameAttribute(string name)
-        {
-            Name = name;
-        }
-    }
-
     public interface RequestHandler<TRequest, TResponse>
     {
         Task<TResponse> Handle(TRequest request);
@@ -27,7 +17,9 @@ namespace OmniSharp
         IMergeableResponse Merge(IMergeableResponse response);
     }
 
-    public static class Endpoints
+    public interface IRequest {}
+
+    /*public static class Endpoints
     {
         public static EndpointMapItem[] AvailableEndpoints = {
             EndpointMapItem.Create<GotoDefinitionRequest, GotoDefinitionResponse>("/gotodefinition"),
@@ -48,8 +40,8 @@ namespace OmniSharp
             EndpointMapItem.Create<NavigateUpRequest, NavigateResponse>("/navigateup"),
             EndpointMapItem.Create<NavigateDownRequest, NavigateResponse>("/navigatedown"),
             EndpointMapItem.Create<TypeLookupRequest, TypeLookupResponse>("/typelookup"),
-            EndpointMapItem.Create<CodeActionRequest , GetCodeActionsResponse>("/getcodeactions"),
-            EndpointMapItem.Create<CodeActionRequest , RunCodeActionResponse>("/runcodeaction"),
+            EndpointMapItem.Create<GetCodeActionRequest , GetCodeActionsResponse>("/getcodeactions"),
+            EndpointMapItem.Create<RunCodeActionRequest , RunCodeActionResponse>("/runcodeaction"),
             EndpointMapItem.Create<RenameRequest , RenameResponse>("/rename"),
             EndpointMapItem.Create<SignatureHelpRequest, SignatureHelp>("/signatureHelp"),
             EndpointMapItem.Create<MembersTreeRequest, FileMemberTree>("/currentfilemembersastree"),
@@ -88,5 +80,5 @@ namespace OmniSharp
             public Type ResponseType { get; }
             public bool TakeOne { get; }
         }
-    }
+    }*/
 }

@@ -1,5 +1,8 @@
+using OmniSharp.Mef;
+
 ﻿namespace OmniSharp.Models
 {
+    [OmniSharpEndpoint("/rename", typeof(RenameRequest), typeof(RenameResponse))]
     public class RenameRequest : Request
     {
         /// <summary>

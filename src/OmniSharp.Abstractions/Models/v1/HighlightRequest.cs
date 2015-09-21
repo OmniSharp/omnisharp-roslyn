@@ -1,5 +1,8 @@
+using OmniSharp.Mef;
+
 namespace OmniSharp.Models
 {
+    [OmniSharpEndpoint("/highlight", typeof(HighlightRequest), typeof(HighlightResponse))]
     public class HighlightRequest : Request
     {
         /// <summary>

@@ -1,5 +1,9 @@
+using System.Collections.Generic;
+using OmniSharp.Mef;
+
 namespace OmniSharp.Models
 {
+    [OmniSharpEndpoint("/autocomplete", typeof(AutoCompleteRequest), typeof(IEnumerable<AutoCompleteResponse>))]
     public class AutoCompleteRequest : Request
     {
         private string _wordToComplete;

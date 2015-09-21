@@ -1,6 +1,9 @@
+using OmniSharp.Mef;
+
 namespace OmniSharp.Models
 {
-    public class MetadataRequest : MetadataSource
+    [OmniSharpEndpoint("/metadata", typeof(MetadataRequest), typeof(MetadataResponse), TakeOne = true)]
+    public class MetadataRequest : MetadataSource, IRequest
     {
         public int Timeout { get; set; } = 2000;
     }

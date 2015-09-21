@@ -31,7 +31,7 @@ namespace OmniSharp.Tests
 {
     public class EndpointMiddlewareFacts
     {
-        [OmniSharpEndpoint(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+        [OmniSharpHandler(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
         public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
             [Import]
@@ -43,10 +43,10 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpEndpoint(typeof(Func<FindSymbolsRequest, Task<QuickFixResponse>>), LanguageNames.CSharp)]
+        [OmniSharpHandler(typeof(Func<FindSymbolsRequest, Task<QuickFixResponse>>), LanguageNames.CSharp)]
         public Func<FindSymbolsRequest, Task<QuickFixResponse>> FindSymbolsDelegate { get; } = (request) => { return Task.FromResult<QuickFixResponse>(null); };
 
-        [OmniSharpEndpoint(typeof(Func<UpdateBufferRequest, Task<object>>), LanguageNames.CSharp)]
+        [OmniSharpHandler(typeof(Func<UpdateBufferRequest, Task<object>>), LanguageNames.CSharp)]
         public Func<UpdateBufferRequest, Task<object>> UpdateBuffer { get; } = (request) => { return Task.FromResult<object>(true); };
 
         class Response { }
@@ -93,7 +93,7 @@ namespace OmniSharp.Tests
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/notvalid");
@@ -106,8 +106,8 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -136,8 +136,8 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -166,8 +166,8 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -193,8 +193,8 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), Endpoints.AvailableEndpoints);
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -220,7 +220,8 @@ namespace OmniSharp.Tests
             return Task.FromResult<ThrowResponse>(null);
         };
 
-        public class ThrowRequest { }
+        [OmniSharpEndpoint("/throw", typeof(ThrowRequest), typeof(ThrowResponse))]
+        public class ThrowRequest : IRequest { }
         public class ThrowResponse { }
 
         [Fact]
@@ -229,7 +230,7 @@ namespace OmniSharp.Tests
             RequestDelegate _next = async (ctx) => await Task.Run(() => { throw new NotImplementedException(); });
 
             var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory(), new[] { Endpoints.EndpointMapItem.Create<ThrowRequest, ThrowResponse>("/throw") });
+            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");

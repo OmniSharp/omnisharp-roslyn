@@ -3,7 +3,7 @@ using System.IO;
 
 namespace OmniSharp.Models
 {
-    public class Request
+    public class Request : IRequest
     {
         private string _fileName;
 

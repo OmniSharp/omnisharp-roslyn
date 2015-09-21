@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    public class PackageVersionRequest
+    [OmniSharpEndpoint("/packageversion", typeof(PackageVersionRequest), typeof(PackageVersionResponse), TakeOne = true)]
+    public class PackageVersionRequest : IRequest
     {
         /// <summary>
         /// The path to the project file

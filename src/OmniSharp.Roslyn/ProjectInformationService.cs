@@ -9,11 +9,11 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<ProjectInformationRequest, ProjectInformationResponse>), "Projects")]
+    [OmniSharpHandler(typeof(RequestHandler<ProjectInformationRequest, ProjectInformationResponse>), "Projects")]
     public class ProjectInformationService : RequestHandler<ProjectInformationRequest, ProjectInformationResponse>
     {
         private readonly IEnumerable<IProjectSystem> _projectSystems;
-        
+
         [ImportingConstructor]
         public ProjectInformationService([ImportMany] IEnumerable<IProjectSystem> projectSystems)
         {

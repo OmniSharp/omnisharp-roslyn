@@ -60,15 +60,8 @@ namespace OmniSharp
             // Add the omnisharp workspace to the container
             services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
-
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
-
-            foreach (var endpoint in Endpoints.AvailableEndpoints)
-            {
-                services.AddInstance(endpoint);
-            }
-
             services.AddOptions();
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);

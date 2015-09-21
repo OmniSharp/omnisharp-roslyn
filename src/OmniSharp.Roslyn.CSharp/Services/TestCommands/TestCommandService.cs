@@ -13,7 +13,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<TestCommandRequest, GetTestCommandResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(typeof(RequestHandler<TestCommandRequest, GetTestCommandResponse>), LanguageNames.CSharp)]
     public class TestCommandService : RequestHandler<TestCommandRequest, GetTestCommandResponse>
     {
         private OmnisharpWorkspace _workspace;

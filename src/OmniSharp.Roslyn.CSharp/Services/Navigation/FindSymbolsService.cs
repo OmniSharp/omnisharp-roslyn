@@ -10,7 +10,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
     public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
         private OmnisharpWorkspace _workspace;

@@ -54,7 +54,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly IEnumerable<Plugin> _plugins;
         private readonly Lazy<EndpointHandler> _updateBufferHandler;
 
-        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, OmniSharp.Endpoints.EndpointMapItem item, Lazy<EndpointHandler> updateBufferHandler, IEnumerable<Plugin> plugins)
+        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, EndpointDescriptor item, Lazy<EndpointHandler> updateBufferHandler, IEnumerable<Plugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;

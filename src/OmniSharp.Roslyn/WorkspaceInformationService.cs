@@ -9,7 +9,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>), "Projects")]
+    [OmniSharpHandler(typeof(RequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>), "Projects")]
     public class WorkspaceInformationService : RequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>
     {
         private readonly IEnumerable<IProjectSystem> _projectSystems;

@@ -11,7 +11,7 @@ using OmniSharp.Roslyn.CSharp.Workers.Format;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<FormatRangeRequest, FormatRangeResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(typeof(RequestHandler<FormatRangeRequest, FormatRangeResponse>), LanguageNames.CSharp)]
     public class FormatRangeService : RequestHandler<FormatRangeRequest, FormatRangeResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

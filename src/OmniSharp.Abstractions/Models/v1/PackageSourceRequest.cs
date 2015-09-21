@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    public class PackageSourceRequest
+    [OmniSharpEndpoint("/packagesource", typeof(PackageSourceRequest), typeof(PackageSourceResponse), TakeOne = true)]
+    public class PackageSourceRequest : IRequest
     {
         /// <summary>
         /// The path to the project file

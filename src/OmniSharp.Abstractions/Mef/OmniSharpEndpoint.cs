@@ -4,19 +4,27 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Mef
 {
-    public class OmniSharpLanguage
+    public class EndpointDescriptor
     {
-        public string Language { get; set; }
+        public string EndpointName { get; set; }
+        public Type RequestType { get; set; }
+        public Type ResponseType { get; set; }
+        public bool TakeOne { get; }
     }
 
     [MetadataAttribute]
     public class OmniSharpEndpointAttribute : ExportAttribute
     {
-        public string Language { get; }
+        public string EndpointName { get; }
+        public Type RequestType { get; }
+        public Type ResponseType { get; }
+        public bool TakeOne { get; set; }
 
-        public OmniSharpEndpointAttribute(Type type, string language) : base(type)
+        public OmniSharpEndpointAttribute(string endpointName, Type requestType, Type responseType) : base(typeof(IRequest))
         {
-            Language = language;
+            EndpointName = endpointName;
+            RequestType = requestType;
+            ResponseType = responseType;
         }
     }
 }

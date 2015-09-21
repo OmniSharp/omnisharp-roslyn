@@ -32,16 +32,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
             var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            RequestHandler<CodeActionRequest, GetCodeActionsResponse> controller = new CodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider() });
+            RequestHandler<GetCodeActionRequest, GetCodeActionsResponse> controller = new CodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider() });
             var request = CreateRequest(source);
             var response = await controller.Handle(request);
             return response.CodeActions;
         }
 
-        private CodeActionRequest CreateRequest(string source, string fileName = "dummy.cs")
+        private GetCodeActionRequest CreateRequest(string source, string fileName = "dummy.cs")
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new CodeActionRequest
+            return new GetCodeActionRequest
             {
                 Line = lineColumn.Line,
                 Column = lineColumn.Column,

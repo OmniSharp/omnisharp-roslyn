@@ -12,7 +12,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<FindUsagesRequest, QuickFixResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(typeof(RequestHandler<FindUsagesRequest, QuickFixResponse>), LanguageNames.CSharp)]
     public class FindUsagesService : RequestHandler<FindUsagesRequest, QuickFixResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

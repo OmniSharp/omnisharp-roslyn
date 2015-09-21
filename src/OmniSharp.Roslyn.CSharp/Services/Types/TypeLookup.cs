@@ -10,7 +10,7 @@ using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Types
 {
-    [OmniSharpEndpoint(typeof(RequestHandler<TypeLookupRequest, TypeLookupResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(typeof(RequestHandler<TypeLookupRequest, TypeLookupResponse>), LanguageNames.CSharp)]
     public class TypeLookupService : RequestHandler<TypeLookupRequest, TypeLookupResponse>
     {
         private readonly FormattingOptions _formattingOptions;

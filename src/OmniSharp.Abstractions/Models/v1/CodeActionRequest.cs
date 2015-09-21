@@ -1,6 +1,6 @@
-﻿namespace OmniSharp.Models
+namespace OmniSharp.Models
 {
-    public class CodeActionRequest : Request
+    public abstract class CodeActionRequest : Request
     {
         public int CodeAction { get; set; }
         public bool WantsTextChanges { get; set; }

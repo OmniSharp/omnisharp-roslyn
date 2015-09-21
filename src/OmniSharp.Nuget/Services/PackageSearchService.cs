@@ -21,7 +21,7 @@ using OmniSharp.NuGet;
 namespace OmniSharp
 {
 #if DNX451
-    [OmniSharpEndpoint(typeof(RequestHandler<PackageSearchRequest, PackageSearchResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(typeof(RequestHandler<PackageSearchRequest, PackageSearchResponse>), LanguageNames.CSharp)]
     public class PackageSearchService : RequestHandler<PackageSearchRequest, PackageSearchResponse>
     {
         [ImportingConstructor]

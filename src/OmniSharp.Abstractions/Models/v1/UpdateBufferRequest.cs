@@ -1,5 +1,8 @@
+using OmniSharp.Mef;
+
 namespace OmniSharp.Models
 {
+    [OmniSharpEndpoint("/updatebuffer", typeof(UpdateBufferRequest), typeof(object))]
     public class UpdateBufferRequest : Request
     {
         // Instead of updating the buffer from the editor,

@@ -27,12 +27,15 @@ namespace OmniSharp.Middleware
         private readonly ILogger _logger;
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
-        public EndpointMiddleware(RequestDelegate next, CompositionHost host, ILoggerFactory loggerFactory, IEnumerable<Endpoints.EndpointMapItem> endpoints)
+        public EndpointMiddleware(RequestDelegate next, CompositionHost host, ILoggerFactory loggerFactory)
         {
             _next = next;
             _host = host;
             _projectSystems = host.GetExports<IProjectSystem>();
             _logger = loggerFactory.CreateLogger<EndpointMiddleware>();
+            var endpoints = _host.GetExports<Lazy<IRequest, EndpointDescriptor>>()
+                .Select(x => x.Metadata);
+
             _endpoints = new HashSet<string>(
                     endpoints
                         .Select(x => x.EndpointName)
@@ -111,7 +114,7 @@ namespace OmniSharp.Middleware
     {
         public static IApplicationBuilder UseEndpointMiddleware(this IApplicationBuilder builder)
         {
-            return builder.UseMiddleware<EndpointMiddleware>(OmniSharp.Endpoints.AvailableEndpoints.AsEnumerable());
+            return builder.UseMiddleware<EndpointMiddleware>();
         }
     }
 }

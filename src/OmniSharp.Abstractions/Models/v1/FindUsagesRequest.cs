@@ -1,6 +1,8 @@
-﻿
+using OmniSharp.Mef;
+
 namespace OmniSharp.Models
 {
+    [OmniSharpEndpoint("/findusages", typeof(FindUsagesRequest), typeof(QuickFixResponse))]
     public class FindUsagesRequest : Request
     {
         /// <summary>
