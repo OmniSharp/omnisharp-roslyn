@@ -39,7 +39,7 @@ namespace OmniSharp.Plugins
         public string Language { get; }
         public IEnumerable<string> Extensions { get; }
 
-        public Task<object> Handle(string endpoint, object request, Type responseType)
+        public Task<TResponse> Handle<TRequest, TResponse>(string endpoint, TRequest request)
         {
             var oopRequest = new PluginRequest()
             {
@@ -49,11 +49,11 @@ namespace OmniSharp.Plugins
 
             _process.StandardInput.WriteLine(JsonConvert.SerializeObject(oopRequest));
             // Complete Task
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<TResponse>();
 
             _requests.TryAdd(oopRequest.Seq, (result) =>
             {
-                var response = JsonConvert.DeserializeObject(result, responseType);
+                var response = JsonConvert.DeserializeObject<TResponse>(result);
                 tcs.SetResult(response);
             });
 

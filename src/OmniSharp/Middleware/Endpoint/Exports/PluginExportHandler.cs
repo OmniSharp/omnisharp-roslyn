@@ -4,22 +4,20 @@ using OmniSharp.Plugins;
 
 namespace OmniSharp.Middleware.Endpoint.Exports
 {
-    class PluginExportHandler : ExportHandler
+    class PluginExportHandler<TRequest, TResponse> : ExportHandler<TRequest, TResponse>
     {
         private readonly string _endpoint;
         private readonly Plugin _plugin;
-        private readonly Type _responseType;
 
-        public PluginExportHandler(string endpoint, Plugin plugin, Type responseType) : base(plugin.Config.Language)
+        public PluginExportHandler(string endpoint, Plugin plugin) : base(plugin.Config.Language)
         {
             _endpoint = endpoint;
             _plugin = plugin;
-            _responseType = responseType;
         }
 
-        public override Task<object> Handle(object request)
+        public override Task<TResponse> Handle(TRequest request)
         {
-            return _plugin.Handle(_endpoint, request, _responseType);
+            return _plugin.Handle<TRequest, TResponse>(_endpoint, request);
         }
     }
 }

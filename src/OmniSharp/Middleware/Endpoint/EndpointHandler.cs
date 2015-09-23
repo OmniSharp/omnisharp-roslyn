@@ -22,38 +22,44 @@ namespace OmniSharp.Middleware.Endpoint
         public string FileName { get; set; }
     }
 
-    class EndpointHandler
+    abstract class EndpointHandler
     {
-        private static readonly MethodInfo GetDelegateExportsMethod = typeof(EndpointHandler)
-            .GetTypeInfo()
-            .DeclaredMethods
-            .Single(methodInfo => methodInfo.Name == nameof(GetDelegateExports));
+        public abstract Task<object> Handle(HttpContext context);
 
-        private static readonly MethodInfo GetRequestHandlerExportsMethod = typeof(EndpointHandler)
-            .GetTypeInfo()
-            .DeclaredMethods
-            .Single(methodInfo => methodInfo.Name == nameof(GetRequestHandlerExports));
+        public static EndpointHandler Create<TRequest, TResponse>(IPredicateHandler languagePredicateHandler, CompositionHost host,
+            ILogger logger, EndpointDescriptor item,
+            Lazy<EndpointHandler<UpdateBufferRequest, object>> updateBufferHandler,
+            IEnumerable<Plugin> plugins)
+            where TRequest : IRequest
+        {
+            return new EndpointHandler<TRequest, TResponse>(languagePredicateHandler, host, logger, item, updateBufferHandler, plugins);
+        }
 
-        private static Type TaskType = typeof(Task<>);
-        private static Type FuncType = typeof(Func<,>);
-        private static Type RequestHandlerType = typeof(RequestHandler<,>);
+        public static EndpointHandler Factory(IPredicateHandler languagePredicateHandler, CompositionHost host,
+            ILogger logger, EndpointDescriptor item,
+            Lazy<EndpointHandler<UpdateBufferRequest, object>> updateBufferHandler,
+            IEnumerable<Plugin> plugins)
+        {
+            var createMethod = typeof(EndpointHandler).GetTypeInfo().DeclaredMethods.First(x => x.Name == nameof(EndpointHandler.Create));
+            return (EndpointHandler)createMethod.MakeGenericMethod(item.RequestType, item.ResponseType).Invoke(null, new object[] { languagePredicateHandler, host, logger, item, updateBufferHandler, plugins });
+        }
+    }
 
+    class EndpointHandler<TRequest, TResponse> : EndpointHandler
+         where TRequest : IRequest
+    {
         private readonly CompositionHost _host;
-        private readonly Type _delegateType;
-        private readonly Type _requestHandlerType;
         private readonly IPredicateHandler _languagePredicateHandler;
-        private readonly Lazy<Task<Dictionary<string, ExportHandler>>> _exports;
-        private readonly Type _requestType;
-        private readonly Type _responseType;
+        private readonly Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>> _exports;
         private readonly OmnisharpWorkspace _workspace;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
-        private readonly Lazy<EndpointHandler> _updateBufferHandler;
+        private readonly Lazy<EndpointHandler<UpdateBufferRequest, object>> _updateBufferHandler;
 
-        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, EndpointDescriptor item, Lazy<EndpointHandler> updateBufferHandler, IEnumerable<Plugin> plugins)
+        public EndpointHandler(IPredicateHandler languagePredicateHandler, CompositionHost host, ILogger logger, EndpointDescriptor item, Lazy<EndpointHandler<UpdateBufferRequest, object>> updateBufferHandler, IEnumerable<Plugin> plugins)
         {
             EndpointName = item.EndpointName;
             _host = host;
@@ -62,36 +68,33 @@ namespace OmniSharp.Middleware.Endpoint
             _plugins = plugins;
             _workspace = host.GetExport<OmnisharpWorkspace>();
 
-            _delegateType = FuncType.MakeGenericType(item.RequestType, TaskType.MakeGenericType(item.ResponseType));
-            _requestHandlerType = RequestHandlerType.MakeGenericType(item.RequestType, item.ResponseType);
-            _requestType = item.RequestType;
-            _responseType = item.ResponseType;
-
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
             _isMergeable = typeof(IMergeableResponse).IsAssignableFrom(item.ResponseType);
             _updateBufferHandler = updateBufferHandler;
 
-            _exports = new Lazy<Task<Dictionary<string, ExportHandler>>>(() => LoadExportHandlers());
+            _exports = new Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>>(() => LoadExportHandlers());
         }
 
-        private Task<Dictionary<string, ExportHandler>> LoadExportHandlers()
+        private Task<Dictionary<string, ExportHandler<TRequest, TResponse>>> LoadExportHandlers()
         {
-            var delegateExports = (IEnumerable<ExportHandler>)GetDelegateExportsMethod.MakeGenericMethod(_delegateType).Invoke(this, new object[] { });
-            var interfaceExports = (IEnumerable<ExportHandler>)GetRequestHandlerExportsMethod.MakeGenericMethod(_requestHandlerType).Invoke(this, new object[] { });
+            var exports = _host.GetExports<Lazy<RequestHandler<TRequest, TResponse>, OmniSharpLanguage>>();
+            var interfaceHandlers = exports
+                .Select(export => new RequestHandlerExportHandler<TRequest, TResponse>(export.Metadata.Language, export.Value))
+                .Cast<ExportHandler<TRequest, TResponse>>();
 
             var plugins = _plugins.Where(x => x.Config.Endpoints.Contains(EndpointName))
-                .Select(plugin => new PluginExportHandler(EndpointName, plugin, _responseType));
+                .Select(plugin => new PluginExportHandler<TRequest, TResponse>(EndpointName, plugin))
+                .Cast<ExportHandler<TRequest, TResponse>>();
 
-            return Task.FromResult(delegateExports
-               .Concat(interfaceExports)
+            return Task.FromResult(interfaceHandlers
                .Concat(plugins)
                .ToDictionary(export => export.Language));
         }
 
         public string EndpointName { get; }
 
-        public Task<object> Handle(HttpContext context)
+        public override Task<object> Handle(HttpContext context)
         {
             var requestObject = DeserializeRequestObject(context.Request.Body);
             var model = GetLanguageModel(requestObject);
@@ -101,7 +104,7 @@ namespace OmniSharp.Middleware.Endpoint
 
         public async Task<object> Process(HttpContext context, LanguageModel model, JToken requestObject)
         {
-            var request = requestObject.ToObject(_requestType);
+            var request = requestObject.ToObject<TRequest>();
             if (request is Request && _updateBufferHandler.Value != null)
             {
                 var realRequest = request as Request;
@@ -132,7 +135,7 @@ namespace OmniSharp.Middleware.Endpoint
             return await HandleAllRequest(request, context);
         }
 
-        private Task<object> HandleLanguageRequest(string language, object request, HttpContext context)
+        private Task<object> HandleLanguageRequest(string language, TRequest request, HttpContext context)
         {
             if (!string.IsNullOrEmpty(language))
             {
@@ -142,10 +145,10 @@ namespace OmniSharp.Middleware.Endpoint
             return HandleAllRequest(request, context);
         }
 
-        private async Task<object> HandleSingleRequest(string language, object request, HttpContext context)
+        private async Task<object> HandleSingleRequest(string language, TRequest request, HttpContext context)
         {
             var exports = await _exports.Value;
-            ExportHandler handler;
+            ExportHandler<TRequest, TResponse> handler;
             if (exports.TryGetValue(language, out handler))
             {
                 return await handler.Handle(request);
@@ -154,7 +157,7 @@ namespace OmniSharp.Middleware.Endpoint
             throw new NotSupportedException($"{language} does not support {EndpointName}");
         }
 
-        private async Task<object> HandleAllRequest(object request, HttpContext context)
+        private async Task<object> HandleAllRequest(TRequest request, HttpContext context)
         {
             if (!_isMergeable)
             {
@@ -165,7 +168,7 @@ namespace OmniSharp.Middleware.Endpoint
 
             IMergeableResponse mergableResponse = null;
 
-            var responses = new List<Task<object>>();
+            var responses = new List<Task<TResponse>>();
             foreach (var handler in exports.Values)
             {
                 responses.Add(handler.Handle(request));
@@ -224,28 +227,6 @@ namespace OmniSharp.Middleware.Endpoint
                 return JToken.Load(new JsonTextReader(new StreamReader(readStream)));
             }
             return new JObject();
-        }
-
-        private IEnumerable<ExportHandler> GetRequestHandlerExports<T>()
-        {
-            var typeInfo = typeof(T).GetTypeInfo();
-            var exports = _host.GetExports<Lazy<T, OmniSharpLanguage>>();
-            foreach (var export in exports)
-            {
-                var genericType = typeof(RequestHandlerExportHandler<,>).MakeGenericType(_requestType, _responseType);
-                yield return (ExportHandler)Activator.CreateInstance(genericType, export.Metadata.Language, export.Value);
-            }
-        }
-
-        private IEnumerable<ExportHandler> GetDelegateExports<T>()
-        {
-            var typeInfo = typeof(T).GetTypeInfo();
-            var exports = _host.GetExports<Lazy<T, OmniSharpLanguage>>();
-            foreach (var export in exports)
-            {
-                var genericType = typeof(DelegateExportHandler<,>).MakeGenericType(_requestType, _responseType);
-                yield return (ExportHandler)Activator.CreateInstance(genericType, export.Metadata.Language, export.Value);
-            }
         }
     }
 }

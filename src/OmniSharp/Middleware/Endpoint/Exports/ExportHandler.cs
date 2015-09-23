@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Middleware.Endpoint.Exports
 {
-    abstract class ExportHandler
+    abstract class ExportHandler<TRequest, TResponse>
     {
         protected ExportHandler(string language)
         {
@@ -10,6 +10,6 @@ namespace OmniSharp.Middleware.Endpoint.Exports
         }
 
         public string Language { get; }
-        public abstract Task<object> Handle(object request);
+        public abstract Task<TResponse> Handle(TRequest request);
     }
 }

@@ -43,7 +43,7 @@ namespace OmniSharp.Middleware
                     StringComparer.OrdinalIgnoreCase
                 );
 
-            var updateBufferEndpointHandler = new Lazy<EndpointHandler>(() => _endpointHandlers["/updatebuffer"].Value);
+            var updateBufferEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(() => (EndpointHandler<UpdateBufferRequest, object>)_endpointHandlers["/updatebuffer"].Value);
             var languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
             var projectSystemPredicateHandler = new StaticLanguagePredicateHandler("Projects");
             var nugetPredicateHandler = new StaticLanguagePredicateHandler("NuGet");
@@ -68,10 +68,10 @@ namespace OmniSharp.Middleware
                         if (endpoint.EndpointName == "/updatebuffer")
                         {
                             // We don't want to call update buffer on update buffer.
-                            updateEndpointHandler = new Lazy<EndpointHandler>(() => null);
+                            updateEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(() => null);
                         }
 
-                        return new EndpointHandler(handler, _host, _logger, endpoint, updateEndpointHandler, Enumerable.Empty<Plugin>());
+                        return EndpointHandler.Factory(handler, _host, _logger, endpoint, updateEndpointHandler, Enumerable.Empty<Plugin>());
                     }),
                     StringComparer.OrdinalIgnoreCase
                 );
