@@ -42,8 +42,8 @@ namespace OmniSharp.Tests
                 return Task.FromResult<GotoDefinitionResponse>(null);
             }
         }
-        
-        [OmniSharpHandler(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+
+        [OmniSharpHandler(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
         public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
         {
             [Import]
