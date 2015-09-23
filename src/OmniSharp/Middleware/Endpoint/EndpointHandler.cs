@@ -101,7 +101,7 @@ namespace OmniSharp.Middleware.Endpoint
             return Process(context, model, requestObject);
         }
 
-        public async Task<object> Process(HttpContext context, LanguageModel model, JObject requestObject)
+        public async Task<object> Process(HttpContext context, LanguageModel model, JToken requestObject)
         {
             var request = requestObject.ToObject(_requestType);
             if (request is Request && _updateBufferHandler.Value != null)
@@ -120,7 +120,7 @@ namespace OmniSharp.Middleware.Endpoint
 
             if (_hasFileNameProperty)
             {
-                var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName);
+                var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName ?? string.Empty);
                 return await HandleLanguageRequest(language, request, context);
             }
 
@@ -203,9 +203,15 @@ namespace OmniSharp.Middleware.Endpoint
             return null;
         }
 
-        private LanguageModel GetLanguageModel(JObject jobject)
+        private LanguageModel GetLanguageModel(JToken jtoken)
         {
             var response = new LanguageModel();
+            var jobject = jtoken as JObject;
+            if (jobject == null)
+            {
+                return response;
+            }
+
             JToken token;
             if (jobject.TryGetValue(nameof(LanguageModel.Language), StringComparison.OrdinalIgnoreCase, out token))
             {
@@ -221,9 +227,13 @@ namespace OmniSharp.Middleware.Endpoint
             return response;
         }
 
-        private JObject DeserializeRequestObject(Stream readStream)
+        private JToken DeserializeRequestObject(Stream readStream)
         {
-            return JObject.Load(new JsonTextReader(new StreamReader(readStream)));
+            if (readStream.Length > 0)
+            {
+                return JToken.Load(new JsonTextReader(new StreamReader(readStream)));
+            }
+            return new JObject();
         }
 
         private IEnumerable<ExportHandler> GetRequestHandlerExports<T>()

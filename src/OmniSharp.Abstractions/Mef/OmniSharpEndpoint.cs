@@ -9,7 +9,7 @@ namespace OmniSharp.Mef
         public string EndpointName { get; set; }
         public Type RequestType { get; set; }
         public Type ResponseType { get; set; }
-        public bool TakeOne { get; }
+        public bool TakeOne { get; set; }
     }
 
     [MetadataAttribute]

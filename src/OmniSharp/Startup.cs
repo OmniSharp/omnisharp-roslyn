@@ -74,7 +74,7 @@ namespace OmniSharp
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly })
+                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
                 .Distinct();
 
             foreach (var assembly in assemblies)
