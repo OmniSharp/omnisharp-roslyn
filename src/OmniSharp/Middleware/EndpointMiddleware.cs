@@ -45,7 +45,8 @@ namespace OmniSharp.Middleware
 
             var updateBufferEndpointHandler = new Lazy<EndpointHandler>(() => _endpointHandlers["/updatebuffer"].Value);
             var languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
-            var projectSystemPredicateHandler = new ProjectSystemPredicateHandler();
+            var projectSystemPredicateHandler = new StaticLanguagePredicateHandler("Projects");
+            var nugetPredicateHandler = new StaticLanguagePredicateHandler("NuGet");
             var endpointHandlers = endpoints.ToDictionary(
                     x => x.EndpointName,
                     endpoint => new Lazy<EndpointHandler>(() =>
@@ -55,6 +56,8 @@ namespace OmniSharp.Middleware
                         // Projects are a special case, this allows us to select the correct "Projects" language for them
                         if (endpoint.EndpointName == "/project" || endpoint.EndpointName == "/projects")
                             handler = projectSystemPredicateHandler;
+                        else if (endpoint.EndpointName == "/packagesearch" || endpoint.EndpointName == "/packagesource" || endpoint.EndpointName == "/packageversion")
+                            handler = nugetPredicateHandler;
                         else
                             handler = languagePredicateHandler;
 

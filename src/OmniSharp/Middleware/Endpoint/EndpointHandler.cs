@@ -49,7 +49,6 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _isMergeable;
-        private readonly bool _isSpreadable;
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
         private readonly Lazy<EndpointHandler> _updateBufferHandler;
@@ -71,7 +70,6 @@ namespace OmniSharp.Middleware.Endpoint
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
             _isMergeable = typeof(IMergeableResponse).IsAssignableFrom(item.ResponseType);
-            _isSpreadable = _isMergeable || item.TakeOne;
             _updateBufferHandler = updateBufferHandler;
 
             _exports = new Lazy<Task<Dictionary<string, ExportHandler>>>(() => LoadExportHandlers());
@@ -117,11 +115,18 @@ namespace OmniSharp.Middleware.Endpoint
             {
                 return await HandleLanguageRequest(model.Language, request, context);
             }
-
-            if (_hasFileNameProperty)
+            else if (_hasFileNameProperty)
             {
                 var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName ?? string.Empty);
                 return await HandleLanguageRequest(language, request, context);
+            }
+            else
+            {
+                var language = _languagePredicateHandler.GetLanguageForFilePath(string.Empty);
+                if (!string.IsNullOrEmpty(language))
+                {
+                    return await HandleLanguageRequest(language, request, context);
+                }
             }
 
             return await HandleAllRequest(request, context);
@@ -151,49 +156,34 @@ namespace OmniSharp.Middleware.Endpoint
 
         private async Task<object> HandleAllRequest(object request, HttpContext context)
         {
-            if (!_isSpreadable)
+            if (!_isMergeable)
             {
                 throw new NotSupportedException($"Responses must be mergable to spread them out across all plugins for {EndpointName}");
             }
 
             var exports = await _exports.Value;
 
-            object response = null;
+            IMergeableResponse mergableResponse = null;
 
-            if (_isMergeable)
+            var responses = new List<Task<object>>();
+            foreach (var handler in exports.Values)
             {
-                IMergeableResponse mergableResponse = null;
-
-                var responses = new List<Task<object>>();
-                foreach (var handler in exports.Values)
-                {
-                    responses.Add(handler.Handle(request));
-                }
-
-                foreach (IMergeableResponse exportResponse in await Task.WhenAll(responses))
-                {
-                    if (mergableResponse != null)
-                    {
-                        mergableResponse = mergableResponse.Merge(exportResponse);
-                    }
-                    else
-                    {
-                        mergableResponse = exportResponse;
-                    }
-                }
-
-                response = mergableResponse;
+                responses.Add(handler.Handle(request));
             }
-            else
-            {
-                foreach (var handler in exports.Values)
-                {
-                    response = await handler.Handle(request);
 
-                    if (response != null)
-                        break;
+            foreach (IMergeableResponse exportResponse in await Task.WhenAll(responses))
+            {
+                if (mergableResponse != null)
+                {
+                    mergableResponse = mergableResponse.Merge(exportResponse);
+                }
+                else
+                {
+                    mergableResponse = exportResponse;
                 }
             }
+
+            object response = mergableResponse;
 
             if (response != null)
             {
