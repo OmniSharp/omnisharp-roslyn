@@ -30,7 +30,6 @@ namespace OmniSharp.Middleware.Endpoint
             ILogger logger, EndpointDescriptor item,
             Lazy<EndpointHandler<UpdateBufferRequest, object>> updateBufferHandler,
             IEnumerable<Plugin> plugins)
-            where TRequest : IRequest
         {
             return new EndpointHandler<TRequest, TResponse>(languagePredicateHandler, host, logger, item, updateBufferHandler, plugins);
         }
@@ -46,7 +45,6 @@ namespace OmniSharp.Middleware.Endpoint
     }
 
     class EndpointHandler<TRequest, TResponse> : EndpointHandler
-         where TRequest : IRequest
     {
         private readonly CompositionHost _host;
         private readonly IPredicateHandler _languagePredicateHandler;
