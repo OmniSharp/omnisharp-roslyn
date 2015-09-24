@@ -21,6 +21,8 @@ set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta7\bin;!PATH!
 call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+call dnx list -a
+
 pushd tests\OmniSharp.Dnx.Tests
 call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
