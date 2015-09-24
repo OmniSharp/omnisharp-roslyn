@@ -12,7 +12,9 @@ dnvm alias default 1.0.0-beta7
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
-dnx list -a
+pushd src\OmniSharp
+call dnu list -a
+popd
 
 pushd tests/OmniSharp.Dnx.Tests
 dnx test -parallel none
