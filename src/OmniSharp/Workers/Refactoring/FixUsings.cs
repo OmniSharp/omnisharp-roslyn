@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
@@ -27,20 +28,63 @@ namespace OmniSharp
             _workspace = workspace;
             _document = document;
             _semanticModel = await document.GetSemanticModelAsync();
-            var ambiguous = await AddMissingUsings();
+            var ambiguous = await GetAmbiguousUsings();
+            await AddMissingUsings();
             await RemoveUsings();
             await SortUsings();
-
+            await TryAddLinqQuerySyntax();
             var response = new FixUsingsResponse();
             response.AmbiguousResults = ambiguous;
+
             return response;
         }
 
-        private async Task<List<QuickFix>> AddMissingUsings()
+        private async Task<List<QuickFix>> GetAmbiguousUsings()
         {
-            bool processMore = true;
             var ambiguousNodes = new List<SimpleNameSyntax>();
             var ambiguous = new List<QuickFix>();
+
+            var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
+            var nodes = syntaxNode.DescendantNodes()
+                .OfType<SimpleNameSyntax>()
+                .Where(x => _semanticModel.GetSymbolInfo(x).Symbol == null && !ambiguousNodes.Contains(x)).ToList();
+
+            foreach (var node in nodes)
+            {
+                var pointDiagnostics = await GetPointDiagnostics(node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
+                if (pointDiagnostics.Any())
+                {
+                    var pointdiagfirst = pointDiagnostics.First().Location.SourceSpan;
+
+                    if (pointDiagnostics.Any(d => d.Location.SourceSpan != pointdiagfirst))
+                    {
+                        continue;
+                    }
+                    var usingOperations = await GetUsingActions(new RoslynCodeActionProvider(), pointDiagnostics, "using");
+
+                    if (usingOperations.Count() > 1)
+                    {
+                        //More than one operation - ambiguous
+                        ambiguousNodes.Add(node);
+                        var unresolvedText = node.Identifier.ValueText;
+                        var unresolvedLocation = node.GetLocation().GetLineSpan().StartLinePosition;
+                        ambiguous.Add(new QuickFix
+                        {
+                            Line = unresolvedLocation.Line + 1,
+                            Column = unresolvedLocation.Character + 1,
+                            FileName = _document.FilePath,
+                            Text = "`" + unresolvedText + "`" + " is ambiguous"
+                        });
+                    }
+                }
+            }
+
+            return ambiguous;
+        }
+
+        private async Task AddMissingUsings()
+        {
+            bool processMore = true;
 
             while (processMore)
             {
@@ -48,18 +92,11 @@ namespace OmniSharp
                 var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
                 var nodes = syntaxNode.DescendantNodes()
                     .OfType<SimpleNameSyntax>()
-                    .Where(x => _semanticModel.GetSymbolInfo(x).Symbol == null && !ambiguousNodes.Contains(x)).ToList();
+                    .Where(x => _semanticModel.GetSymbolInfo(x).Symbol == null).ToList();
 
                 foreach (var node in nodes)
                 {
-                    _document = _workspace.GetDocument(_document.FilePath);
-                    _semanticModel = await _document.GetSemanticModelAsync();
-                    var diagnostics = _semanticModel.GetDiagnostics();
-                    var location = node.Identifier.Span;
-
-                    //Restrict diagnostics only to missing usings
-                    var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location) &&
-                            (d.Id == "CS0246" || d.Id == "CS1061" || d.Id == "CS0103")).ToImmutableArray();
+                    var pointDiagnostics = await GetPointDiagnostics(node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
 
                     if (pointDiagnostics.Any())
                     {
@@ -76,27 +113,13 @@ namespace OmniSharp
                             usingOperations.Single().Apply(_workspace, CancellationToken.None);
                             updated = true;
                         }
-                        else if (usingOperations.Count() > 1)
-                        {
-                            //More than one operation - ambiguous
-                            ambiguousNodes.Add(node);
-                            var unresolvedText = node.Identifier.ValueText;
-                            var unresolvedLocation = node.GetLocation().GetLineSpan().StartLinePosition;
-                            ambiguous.Add(new QuickFix
-                            {
-                                Line = unresolvedLocation.Line + 1,
-                                Column = unresolvedLocation.Character + 1,
-                                FileName = _document.FilePath,
-                                Text = "`" + unresolvedText + "`" + " is ambiguous"
-                            });
-                        }
                     }
                 }
 
                 processMore = updated;
             }
 
-            return ambiguous;
+            return;
         }
 
         private async Task RemoveUsings()
@@ -108,15 +131,9 @@ namespace OmniSharp
 
             foreach (var node in nodes)
             {
-                _document = _workspace.GetDocument(_document.FilePath);
-                _semanticModel = await _document.GetSemanticModelAsync();
                 var sourceText = (await _document.GetTextAsync());
-                var diagnostics = _semanticModel.GetDiagnostics();
-                var location = node.Span;
                 var actions = new List<CodeAction>();
-                //Restrict diagnostics only to unneccessary and duplicate usings
-                var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location) &&
-                        (d.Id == "CS0105" || d.Id == "CS8019")).ToImmutableArray();
+                var pointDiagnostics = await GetPointDiagnostics(node.Span, new List<string>() { "CS0105", "CS8019" });
 
                 if (pointDiagnostics.Any())
                 {
@@ -170,6 +187,26 @@ namespace OmniSharp
             }
         }
 
+        private async Task TryAddLinqQuerySyntax()
+        {
+            var fileName = _document.FilePath;
+            var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
+            var compilationUnitSyntax = (CompilationUnitSyntax)syntaxNode;
+            var usings = GetUsings(syntaxNode);
+            if (HasLinqQuerySyntax(_semanticModel, syntaxNode) && !usings.Contains("using System.Linq;"))
+            {
+                var linqName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName("System"),
+                        SyntaxFactory.IdentifierName("Linq"));
+                var linq = SyntaxFactory.UsingDirective(linqName).NormalizeWhitespace()
+                            .WithTrailingTrivia(SyntaxFactory.Whitespace(Environment.NewLine));
+                var oldSolution = _workspace.CurrentSolution;
+                _document = _document.WithSyntaxRoot(compilationUnitSyntax.AddUsings(linq));
+                var newDocText = await _document.GetTextAsync();
+                var newSolution = oldSolution.WithDocumentText(_document.Id, newDocText);
+                _workspace.TryApplyChanges(newSolution);
+            }
+        }
+
         private static async Task<CodeRefactoringContext?> GetRefactoringContext(Document document, List<CodeAction> actionsDestination)
         {
             var firstUsing = (await document.GetSyntaxTreeAsync()).GetRoot().DescendantNodes().FirstOrDefault(n => n is UsingDirectiveSyntax);
@@ -199,13 +236,46 @@ namespace OmniSharp
 
             var tasks = actions.Where(a => a.Title.StartsWith(actionPrefix))
                     .Select(async a => await a.GetOperationsAsync(CancellationToken.None)).ToList();
+
             return (await Task.WhenAll(tasks)).SelectMany(x => x);
         }
 
         private static HashSet<string> GetUsings(SyntaxNode root)
         {
             var usings = root.DescendantNodes().OfType<UsingDirectiveSyntax>().Select(u => u.ToString().Trim());
+
             return new HashSet<string>(usings);
+        }
+
+        private async Task<ImmutableArray<Diagnostic>> GetPointDiagnostics(TextSpan location, List<string> diagnosticIds)
+        {
+            _document = _workspace.GetDocument(_document.FilePath);
+            _semanticModel = await _document.GetSemanticModelAsync();
+            var diagnostics = _semanticModel.GetDiagnostics();
+
+            //Restrict diagnostics only to missing usings
+            return diagnostics.Where(d => d.Location.SourceSpan.Contains(location) &&
+                    diagnosticIds.Contains(d.Id)).ToImmutableArray();
+        }
+
+        private bool HasLinqQuerySyntax(SemanticModel semanticModel, SyntaxNode syntaxNode)
+        {
+            return syntaxNode.DescendantNodes()
+                .Any(x => x.Kind() == SyntaxKind.QueryExpression
+                        || x.Kind() == SyntaxKind.QueryBody
+                        || x.Kind() == SyntaxKind.FromClause
+                        || x.Kind() == SyntaxKind.LetClause
+                        || x.Kind() == SyntaxKind.JoinClause
+                        || x.Kind() == SyntaxKind.JoinClause
+                        || x.Kind() == SyntaxKind.JoinIntoClause
+                        || x.Kind() == SyntaxKind.WhereClause
+                        || x.Kind() == SyntaxKind.OrderByClause
+                        || x.Kind() == SyntaxKind.AscendingOrdering
+                        || x.Kind() == SyntaxKind.DescendingOrdering
+                        || x.Kind() == SyntaxKind.SelectClause
+                        || x.Kind() == SyntaxKind.GroupClause
+                        || x.Kind() == SyntaxKind.QueryContinuation
+                    );
         }
     }
 }

@@ -26,40 +26,43 @@ namespace OmniSharp.Stdio
             _next = next;
             _cancellation = new CancellationTokenSource();
 
-            var ignored = Run();
+            Run();
         }
 
-        private async Task Run()
+        private void Run()
         {
-            _writer.WriteLine(new EventPacket()
+            Task.Factory.StartNew(async () =>
             {
-                Event = "started"
-            });
-
-            while (!_cancellation.IsCancellationRequested)
-            {
-                var line = await _input.ReadLineAsync();
-                if (line == null)
+                _writer.WriteLine(new EventPacket()
                 {
-                    break;
-                }
-
-                var ignored = Task.Factory.StartNew(async () =>
-                {
-                    try
-                    {
-                        await HandleRequest(line);
-                    }
-                    catch (Exception e)
-                    {
-                        _writer.WriteLine(new EventPacket()
-                        {
-                            Event = "error",
-                            Body = e.ToString()
-                        });
-                    }
+                    Event = "started"
                 });
-            }
+
+                while (!_cancellation.IsCancellationRequested)
+                {
+                    var line = await _input.ReadLineAsync();
+                    if (line == null)
+                    {
+                        break;
+                    }
+
+                    var ignored = Task.Factory.StartNew(async () =>
+                    {
+                        try
+                        {
+                            await HandleRequest(line);
+                        }
+                        catch (Exception e)
+                        {
+                            _writer.WriteLine(new EventPacket()
+                            {
+                                Event = "error",
+                                Body = e.ToString()
+                            });
+                        }
+                    });
+                }
+            });
         }
 
         private async Task HandleRequest(string json)

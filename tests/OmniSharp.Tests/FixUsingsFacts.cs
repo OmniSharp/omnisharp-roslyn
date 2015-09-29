@@ -328,6 +328,42 @@ namespace OmniSharp
         }
 
         [Fact]
+        public async Task FixUsings_AddsUsingLinqQuerySyntax()
+        {
+            const string fileContents = @"namespace OmniSharp
+{
+    public class class1 
+    {
+        public void method1()
+        {
+            int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
+            var lowNums = 
+                from n in numbers 
+                where n < 5 
+                select n; 
+        }
+     }
+}";
+            string expectedFileContents = @"using System.Linq;
+namespace OmniSharp
+{
+    public class class1 
+    {
+        public void method1()
+        {
+            int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
+            var lowNums = 
+                from n in numbers 
+                where n < 5 
+                select n; 
+        }
+     }
+}";
+
+            await AssertBufferContents(fileContents, expectedFileContents);
+        }
+
+        [Fact]
         public async Task FixUsings_RemoveDuplicateUsing()
         {
             const string fileContents = @"using System;
