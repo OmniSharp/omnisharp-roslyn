@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using OmniSharp.Models;
 
@@ -17,6 +16,7 @@ namespace OmniSharp
             if (document != null)
             {
                 response = await new FixUsingsWorker().FixUsings(_workspace, document);
+
                 if (!request.WantsTextChanges)
                 {
                     // return the new document
