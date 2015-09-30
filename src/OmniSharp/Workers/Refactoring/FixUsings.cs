@@ -28,11 +28,11 @@ namespace OmniSharp
             _workspace = workspace;
             _document = document;
             _semanticModel = await document.GetSemanticModelAsync();
-            var ambiguous = await GetAmbiguousUsings();
             await AddMissingUsings();
             await RemoveUsings();
             await SortUsings();
             await TryAddLinqQuerySyntax();
+            var ambiguous = await GetAmbiguousUsings();
             var response = new FixUsingsResponse();
             response.AmbiguousResults = ambiguous;
 
@@ -204,6 +204,7 @@ namespace OmniSharp
                 var newDocText = await _document.GetTextAsync();
                 var newSolution = oldSolution.WithDocumentText(_document.Id, newDocText);
                 _workspace.TryApplyChanges(newSolution);
+                _semanticModel = await _document.GetSemanticModelAsync();
             }
         }
 
