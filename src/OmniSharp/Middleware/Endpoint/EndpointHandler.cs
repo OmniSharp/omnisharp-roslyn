@@ -220,11 +220,14 @@ namespace OmniSharp.Middleware.Endpoint
 
         private JToken DeserializeRequestObject(Stream readStream)
         {
-            if (readStream.Length > 0)
+            try
             {
                 return JToken.Load(new JsonTextReader(new StreamReader(readStream)));
             }
-            return new JObject();
+            catch
+            {
+                return new JObject();
+            }
         }
     }
 }
