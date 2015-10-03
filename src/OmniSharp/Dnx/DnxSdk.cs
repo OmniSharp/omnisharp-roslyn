@@ -1,5 +1,6 @@
 
 using System;
+using System.IO;
 using System.Text;
 
 namespace OmniSharp.Dnx
@@ -10,8 +11,7 @@ namespace OmniSharp.Dnx
         {
             // Treat the folder name as the runtime name
             // ~/.dnx/runtimes/{runtimename}/
-
-            var slash = runtimePath.TrimEnd('/').LastIndexOf('/');
+            var slash = runtimePath.TrimEnd(Path.DirectorySeparatorChar).LastIndexOf(Path.DirectorySeparatorChar);
 
             return runtimePath.Substring(slash + 1);
         }
