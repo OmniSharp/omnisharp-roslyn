@@ -47,6 +47,8 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public IList<string> DefineConstants { get; private set; }
 
+        public bool AllowUnsafe { get; private set; }
+
         public OutputKind OutputKind { get; private set; }
 
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
@@ -125,6 +127,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                                    .Select(p => p.GetMetadataValue("FullPath"))
                                    .ToList();
 
+                var allowUnsafe = projectInstance.GetPropertyValue("AllowUnsafeBlocks");
+                if (!string.IsNullOrWhiteSpace(allowUnsafe))
+                {
+                    projectFileInfo.AllowUnsafe = Convert.ToBoolean(allowUnsafe);
+                }
+
                 var defineConstants = projectInstance.GetPropertyValue("DefineConstants");
                 if (!string.IsNullOrWhiteSpace(defineConstants))
                 {
@@ -201,6 +209,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 if (!string.IsNullOrWhiteSpace(defineConstants))
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
+                }
+
+                var allowUnsafe = properties["AllowUnsafeBlocks"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(allowUnsafe))
+                {
+                    projectFileInfo.AllowUnsafe = Convert.ToBoolean(allowUnsafe);
                 }
             }
 #else
