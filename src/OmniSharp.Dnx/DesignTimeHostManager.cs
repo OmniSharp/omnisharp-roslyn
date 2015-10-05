@@ -35,14 +35,40 @@ namespace OmniSharp.Dnx
 
                 int port = GetFreePort();
 
-                var dthPath = Path.Combine(_paths.RuntimePath.Value, "bin", "lib", "Microsoft.Dnx.DesignTimeHost", "Microsoft.Dnx.DesignTimeHost.dll");
+                string runtimePath = _paths.RuntimePath.Value;
+
+                // This gets the folder name (e.g. dnx-mono.1.0.0-beta5 or dnx-clr-x86.1.0.0-beta5)
+                var fullName = DnxSdk.GetRuntimeNameFromFullPath(runtimePath);
+                string flavor;
+                string os;
+                string arch;
+                string version;
+
+                if (DnxSdk.TryParseFullName(fullName, out flavor, out os, out arch, out version) &&
+                    string.Equals(flavor, "coreclr", StringComparison.OrdinalIgnoreCase) && 
+                    !string.Equals(os, "win", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Work around since DTH is broken on CoreCLR on *nix and OSX
+                    var runtimeName = DnxSdk.GetFullName(version, "mono", os, arch);
+                    runtimePath = Path.Combine(Path.GetDirectoryName(runtimePath), runtimeName);
+
+                    _logger.LogInformation("Using '{0}' for design time host.", runtimePath);
+                }
+
+                var dthPath = Path.Combine(runtimePath, "bin", "lib", "Microsoft.Dnx.DesignTimeHost", "Microsoft.Dnx.DesignTimeHost.dll");
+
                 // TODO: This is for backcompat. Once the dust settles, and MS.Framework.DTH goes away, remove this.
                 if (!File.Exists(dthPath))
-                  dthPath = Path.Combine(_paths.RuntimePath.Value, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll");
+                {
+                    dthPath = Path.Combine(runtimePath, "bin", "lib", "Microsoft.Framework.DesignTimeHost", "Microsoft.Framework.DesignTimeHost.dll");
+                }
+
+                var dnx = DnxPaths.FirstPath(runtimePath, "dnx", "dnx.exe");
+                var klr = DnxPaths.FirstPath(runtimePath, "klr", "klr.exe");
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = _paths.Dnx ?? _paths.Klr,
+                    FileName =  dnx ?? klr,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,
