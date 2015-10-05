@@ -13,8 +13,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 
 namespace OmniSharp
 {

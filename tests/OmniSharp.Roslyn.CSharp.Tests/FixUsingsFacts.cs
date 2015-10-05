@@ -5,9 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FixUsingsFacts
     {
@@ -227,7 +228,6 @@ namespace OmniSharp
                     Column = classLineColumn.Column,
                     FileName = fileName,
                     Text = "`classX` is ambiguous"
-
                 });
             await AssertUnresolvedReferences(fileContentNoDollarMarker, expectedUnresolved);
         }
