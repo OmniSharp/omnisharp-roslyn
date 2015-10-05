@@ -1,4 +1,4 @@
-using System.Composition;
+﻿using System.Composition;
 ﻿using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
                 if (symbol != null)
                 {
                     //non regular C# code semantics (interactive, script) don't allow namespaces
-                    if (document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType)
+                    if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType && !symbol.ContainingNamespace.IsGlobalNamespace)
                     {
                         response.Type = $"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
                     }

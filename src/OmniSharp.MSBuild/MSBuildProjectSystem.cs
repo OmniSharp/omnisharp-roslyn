@@ -130,6 +130,12 @@ namespace OmniSharp.MSBuild
 #if DNX451
                 compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
 #endif
+
+                if (projectFileInfo.AllowUnsafe)
+                {
+                    compilationOptions = compilationOptions.WithAllowUnsafe(true);
+                }
+
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
                                                      VersionStamp.Create(),
                                                      projectFileInfo.Name,

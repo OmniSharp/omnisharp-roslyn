@@ -23,6 +23,24 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task OmitsNamespaceForTypesInGlobalNamespace()
+        {
+            var source = @"namespace Bar {
+            class Foo {}
+            }
+            class Baz {}";
+
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
+            var responseInNormalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
+            var responseInGlobalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 4, Column = 20 });
+
+            Assert.Equal("Bar.Foo", responseInNormalNamespace.Type);
+            Assert.Equal("Baz", responseInGlobalNamespace.Type);
+        }
+
+        [Fact]
         public async Task IncludesNamespaceForRegularCSharpSyntax()
         {
             var source1 = @"namespace Bar {
