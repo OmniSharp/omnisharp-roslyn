@@ -24,23 +24,23 @@ namespace OmniSharp
         private Document _document;
         private SemanticModel _semanticModel;
 
-        public async Task<FixUsingsResponse> FixUsings(OmnisharpWorkspace workspace, Document document)
+        public async Task<FixUsingsResponse> FixUsings(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, Document document)
         {
             _workspace = workspace;
             _document = document;
             _semanticModel = await document.GetSemanticModelAsync();
-            await AddMissingUsings();
-            await RemoveUsings();
+            await AddMissingUsings(codeActionProviders);
+            await RemoveUsings(codeActionProviders);
             await SortUsings();
             await TryAddLinqQuerySyntax();
-            var ambiguous = await GetAmbiguousUsings();
+            var ambiguous = await GetAmbiguousUsings(codeActionProviders);
             var response = new FixUsingsResponse();
             response.AmbiguousResults = ambiguous;
 
             return response;
         }
 
-        private async Task<List<QuickFix>> GetAmbiguousUsings()
+        private async Task<List<QuickFix>> GetAmbiguousUsings(IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             var ambiguousNodes = new List<SimpleNameSyntax>();
             var ambiguous = new List<QuickFix>();
@@ -61,7 +61,7 @@ namespace OmniSharp
                     {
                         continue;
                     }
-                    var usingOperations = await GetUsingActions(new RoslynCodeActionProvider(), pointDiagnostics, "using");
+                    var usingOperations = await GetUsingActions(codeActionProviders, pointDiagnostics, "using");
 
                     if (usingOperations.Count() > 1)
                     {
@@ -83,7 +83,7 @@ namespace OmniSharp
             return ambiguous;
         }
 
-        private async Task AddMissingUsings()
+        private async Task AddMissingUsings(IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             bool processMore = true;
 
@@ -106,7 +106,7 @@ namespace OmniSharp
                         {
                             continue;
                         }
-                        var usingOperations = await GetUsingActions(new RoslynCodeActionProvider(), pointDiagnostics, "using");
+                        var usingOperations = await GetUsingActions(codeActionProviders, pointDiagnostics, "using");
 
                         if (usingOperations.Count() == 1)
                         {
@@ -123,9 +123,8 @@ namespace OmniSharp
             return;
         }
 
-        private async Task RemoveUsings()
+        private async Task RemoveUsings(IEnumerable<ICodeActionProvider> codeActionProviders)
         {
-            var codeActionProvider = new RoslynCodeActionProvider();
             //Remove unneccessary usings
             var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
             var nodes = syntaxNode.DescendantNodes().Where(x => x is UsingDirectiveSyntax);
@@ -143,7 +142,7 @@ namespace OmniSharp
                     {
                         continue;
                     }
-                    var usingActions = await GetUsingActions(codeActionProvider, pointDiagnostics, "Remove Unnecessary Usings");
+                    var usingActions = await GetUsingActions(codeActionProviders, pointDiagnostics, "Remove Unnecessary Usings");
 
                     foreach (var codeOperation in usingActions)
                     {
@@ -221,12 +220,12 @@ namespace OmniSharp
             return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
-        private async Task<IEnumerable<CodeActionOperation>> GetUsingActions(ICodeActionProvider codeActionProvider,
+        private async Task<IEnumerable<CodeActionOperation>> GetUsingActions(IEnumerable<ICodeActionProvider> codeActionProviders,
                 ImmutableArray<Diagnostic> pointDiagnostics, string actionPrefix)
         {
             var actions = new List<CodeAction>();
             var context = new CodeFixContext(_document, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actions.Add(a), CancellationToken.None);
-            var providers = codeActionProvider.CodeFixes;
+            var providers = codeActionProviders.SelectMany(x => x.CodeFixes);
 
             //Disable await warning since we dont need the result of the call. Else we need to use a throwaway variable.
 #pragma warning disable 4014
@@ -237,7 +236,6 @@ namespace OmniSharp
 #pragma warning restore 4014
 
             var tasks = actions.Where(a => a.Title.StartsWith(actionPrefix))
-                .Take(1)
                 .Select(async a => await a.GetOperationsAsync(CancellationToken.None)).ToList();
 
             return (await Task.WhenAll(tasks)).SelectMany(x => x);

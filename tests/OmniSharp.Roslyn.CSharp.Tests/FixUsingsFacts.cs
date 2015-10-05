@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -195,8 +197,7 @@ namespace OmniSharp
             await AssertBufferContents(fileContents, expectedFileContents);
         }
 
-        // TODO: Figure out why the remove using code action isn't showing up like it should
-        // [Fact]
+        [Fact]
         public async Task FixUsings_ReturnsAmbiguousResult()
         {
             const string fileContents = @"
@@ -233,8 +234,7 @@ namespace OmniSharp
             await AssertUnresolvedReferences(fileContentNoDollarMarker, expectedUnresolved);
         }
 
-        // TODO: Figure out why the remove using code action isn't showing up like it should
-        // [Fact]
+        [Fact]
         public async Task FixUsings_ReturnsNoUsingsForAmbiguousResult()
         {
             const string fileContents = @"namespace nsA {
@@ -365,8 +365,7 @@ namespace OmniSharp
             await AssertBufferContents(fileContents, expectedFileContents);
         }
 
-        // TODO: Figure out why the remove using code action isn't showing up like it should
-        // [Fact]
+        [Fact]
         public async Task FixUsings_RemoveDuplicateUsing()
         {
             const string fileContents = @"using System;
@@ -398,8 +397,7 @@ namespace OmniSharp
             await AssertBufferContents(fileContents, expectedFileContents);
         }
 
-        // TODO: Figure out why the remove using code action isn't showing up like it should
-        // [Fact]
+        [Fact]
         public async Task FixUsings_RemoveUnusedUsing()
         {
             const string fileContents = @"using System;
@@ -455,12 +453,14 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContents, fileName);
+            var host = TestHelpers.CreatePluginHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
 
             var fakeOptions = new FakeOmniSharpOptions();
             fakeOptions.Options = new OmniSharpOptions();
             fakeOptions.Options.FormattingOptions = new FormattingOptions() { NewLine = "\n" };
-            var controller = new FixUsingService(workspace);
+            var providers = host.GetExports<ICodeActionProvider>();
+            var controller = new FixUsingService(workspace, providers);
             var request = new FixUsingsRequest
             {
                 FileName = fileName,

@@ -1,21 +1,25 @@
+using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Services;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
 #if DNX451
     [OmniSharpHandler(typeof(RequestHandler<FixUsingsRequest, FixUsingsResponse>), LanguageNames.CSharp)]
     public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
+        private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FixUsingService(OmnisharpWorkspace workspace)
+        public FixUsingService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             _workspace = workspace;
+            _codeActionProviders = codeActionProviders;
         }
 
         public async Task<FixUsingsResponse> Handle(FixUsingsRequest request)
@@ -25,7 +29,7 @@ namespace OmniSharp
 
             if (document != null)
             {
-                response = await new FixUsingsWorker().FixUsings(_workspace, document);
+                response = await new FixUsingsWorker().FixUsings(_workspace, _codeActionProviders, document);
 
                 if (!request.WantsTextChanges)
                 {

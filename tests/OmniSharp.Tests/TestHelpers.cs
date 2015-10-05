@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 
 namespace OmniSharp.Tests
@@ -149,7 +150,7 @@ namespace OmniSharp.Tests
 
         public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
         {
-            var host = _host ?? CreatePluginHost(Enumerable.Empty<Assembly>());
+            var host = _host ?? CreatePluginHost(new [] { typeof(CodeCheckService).GetTypeInfo().Assembly });
             var workspace = host.GetExport<OmnisharpWorkspace>();
             await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
 
