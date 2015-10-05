@@ -462,7 +462,7 @@ namespace OmniSharp
                 FileName = fileName,
                 Buffer = fileContents
             };
-            return await controller.FixUsings(request);
+            return await controller.Handle(request);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace OmniSharp
 {
 #if DNX451
     [OmniSharpHandler(typeof(RequestHandler<FixUsingsRequest, FixUsingsResponse>), LanguageNames.CSharp)]
-    public class FixUsingService
+    public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
 
@@ -18,7 +18,7 @@ namespace OmniSharp
             _workspace = workspace;
         }
 
-        public async Task<FixUsingsResponse> FixUsings(FixUsingsRequest request)
+        public async Task<FixUsingsResponse> Handle(FixUsingsRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var response = new FixUsingsResponse();
