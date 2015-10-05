@@ -3,7 +3,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/changebuffer", typeof(ChangeBufferRequest), typeof(object))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.ChangeBuffer, typeof(ChangeBufferRequest), typeof(object))]
     public class ChangeBufferRequest : IRequest
     {
         public string FileName { get; set; }

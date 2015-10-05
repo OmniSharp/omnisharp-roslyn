@@ -3,7 +3,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/currentfilemembersasflat", typeof(MembersFlatRequest), typeof(IEnumerable<QuickFix>))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.MembersFlat, typeof(MembersFlatRequest), typeof(IEnumerable<QuickFix>))]
     public class MembersFlatRequest : Request
     {
     }

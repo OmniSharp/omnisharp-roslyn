@@ -6,7 +6,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Buffer
 {
-    [OmniSharpHandler(typeof(RequestHandler<ChangeBufferRequest, object>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.ChangeBuffer, LanguageNames.CSharp)]
     public class ChangeBufferService : RequestHandler<ChangeBufferRequest, object>
     {
         private OmnisharpWorkspace _workspace;

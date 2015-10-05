@@ -11,7 +11,7 @@ using OmniSharp.Roslyn.CSharp.Workers.Format;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
-    [OmniSharpHandler(typeof(RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.FormatAfterKeystroke, LanguageNames.CSharp)]
     public class FormatAfterKeystrokeService : RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

@@ -1,3 +1,5 @@
+using Microsoft.CodeAnalysis;
+
 namespace OmniSharp.Models
 {
     public class MetadataSource
@@ -6,5 +8,6 @@ namespace OmniSharp.Models
         public string TypeName { get; set; }
         public string ProjectName { get; set; }
         public string VersionNumber { get; set; }
+        public string Language { get; set; }
     }
 }

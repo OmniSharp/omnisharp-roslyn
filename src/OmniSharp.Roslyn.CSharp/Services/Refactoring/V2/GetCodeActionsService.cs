@@ -19,7 +19,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    [OmniSharpHandler(typeof(RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.V2.GetCodeActions, LanguageNames.CSharp)]
     public class GetCodeActionsService : RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

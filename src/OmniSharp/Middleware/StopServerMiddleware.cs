@@ -20,7 +20,7 @@ namespace OmniSharp
             if (httpContext.Request.Path.HasValue)
             {
                 var endpoint = httpContext.Request.Path.Value;
-                if (endpoint == "/stopserver")
+                if (endpoint == OmnisharpEndpoints.StopServer)
                 {
                     await Task.Run(() =>
                     {

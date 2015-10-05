@@ -7,7 +7,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(typeof(RequestHandler<GotoFileRequest, QuickFixResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.GotoFile, LanguageNames.CSharp)]
     public class GotoFileService : RequestHandler<GotoFileRequest, QuickFixResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

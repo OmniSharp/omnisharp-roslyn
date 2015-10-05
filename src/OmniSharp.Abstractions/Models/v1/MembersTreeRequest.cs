@@ -2,7 +2,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/currentfilemembersastree", typeof(MembersTreeRequest), typeof(FileMemberTree))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.MembersTree, typeof(MembersTreeRequest), typeof(FileMemberTree))]
     public class MembersTreeRequest : Request
     {
     }

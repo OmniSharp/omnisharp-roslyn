@@ -31,7 +31,7 @@ namespace OmniSharp.Tests
 {
     public class EndpointMiddlewareFacts
     {
-        [OmniSharpHandler(typeof(RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>), LanguageNames.CSharp)]
+        [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
         public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
             [Import]
@@ -43,7 +43,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpHandler(typeof(RequestHandler<FindSymbolsRequest, QuickFixResponse>), LanguageNames.CSharp)]
+        [OmniSharpHandler(OmnisharpEndpoints.FindSymbols, LanguageNames.CSharp)]
         public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
         {
             [Import]
@@ -55,7 +55,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpHandler(typeof(RequestHandler<UpdateBufferRequest, object>), LanguageNames.CSharp)]
+        [OmniSharpHandler(OmnisharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
         public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
         {
             [Import]

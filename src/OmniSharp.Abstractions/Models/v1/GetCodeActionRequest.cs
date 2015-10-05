@@ -2,6 +2,6 @@ using OmniSharp.Mef;
 
 ﻿namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/getcodeactions", typeof(GetCodeActionRequest), typeof(GetCodeActionsResponse))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.GetCodeAction, typeof(GetCodeActionRequest), typeof(GetCodeActionsResponse))]
     public class GetCodeActionRequest : CodeActionRequest { }
 }

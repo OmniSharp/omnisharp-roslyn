@@ -2,7 +2,7 @@ using OmniSharp.Mef;
 
 ﻿namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/findsymbols", typeof(FindSymbolsRequest), typeof(QuickFixResponse))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.FindSymbols, typeof(FindSymbolsRequest), typeof(QuickFixResponse))]
     public class FindSymbolsRequest : IRequest
     {
         public string Language { get; set; }

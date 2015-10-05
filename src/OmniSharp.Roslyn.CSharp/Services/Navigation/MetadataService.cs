@@ -9,7 +9,7 @@ using OmniSharp.Roslyn;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(typeof(RequestHandler<MetadataRequest, MetadataResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.Metadata, LanguageNames.CSharp)]
     public class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly OmnisharpWorkspace _workspace;

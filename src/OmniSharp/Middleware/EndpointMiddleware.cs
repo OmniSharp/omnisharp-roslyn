@@ -36,6 +36,8 @@ namespace OmniSharp.Middleware
             var endpoints = _host.GetExports<Lazy<IRequest, EndpointDescriptor>>()
                 .Select(x => x.Metadata);
 
+            var handlers = _host.GetExports<Lazy<IRequestHandler, OmniSharpLanguage>>();
+
             _endpoints = new HashSet<string>(
                     endpoints
                         .Select(x => x.EndpointName)
@@ -43,7 +45,7 @@ namespace OmniSharp.Middleware
                     StringComparer.OrdinalIgnoreCase
                 );
 
-            var updateBufferEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(() => (EndpointHandler<UpdateBufferRequest, object>)_endpointHandlers["/updatebuffer"].Value);
+            var updateBufferEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(() => (EndpointHandler<UpdateBufferRequest, object>)_endpointHandlers[OmnisharpEndpoints.UpdateBuffer].Value);
             var languagePredicateHandler = new LanguagePredicateHandler(_projectSystems);
             var projectSystemPredicateHandler = new StaticLanguagePredicateHandler("Projects");
             var nugetPredicateHandler = new StaticLanguagePredicateHandler("NuGet");
@@ -54,9 +56,9 @@ namespace OmniSharp.Middleware
                         IPredicateHandler handler;
 
                         // Projects are a special case, this allows us to select the correct "Projects" language for them
-                        if (endpoint.EndpointName == "/project" || endpoint.EndpointName == "/projects")
+                        if (endpoint.EndpointName == OmnisharpEndpoints.ProjectInformation || endpoint.EndpointName == OmnisharpEndpoints.WorkspaceInformation)
                             handler = projectSystemPredicateHandler;
-                        else if (endpoint.EndpointName == "/packagesearch" || endpoint.EndpointName == "/packagesource" || endpoint.EndpointName == "/packageversion")
+                        else if (endpoint.EndpointName == OmnisharpEndpoints.PackageSearch || endpoint.EndpointName == OmnisharpEndpoints.PackageSource || endpoint.EndpointName == OmnisharpEndpoints.PackageVersion)
                             handler = nugetPredicateHandler;
                         else
                             handler = languagePredicateHandler;
@@ -65,13 +67,13 @@ namespace OmniSharp.Middleware
                         // The language will be same language as the caller, this means any language service
                         // must implement update buffer.
                         var updateEndpointHandler = updateBufferEndpointHandler;
-                        if (endpoint.EndpointName == "/updatebuffer")
+                        if (endpoint.EndpointName == OmnisharpEndpoints.UpdateBuffer)
                         {
                             // We don't want to call update buffer on update buffer.
                             updateEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(() => null);
                         }
 
-                        return EndpointHandler.Factory(handler, _host, _logger, endpoint, updateEndpointHandler, Enumerable.Empty<Plugin>());
+                        return EndpointHandler.Factory(handler, _host, _logger, endpoint, handlers, updateEndpointHandler, Enumerable.Empty<Plugin>());
                     }),
                     StringComparer.OrdinalIgnoreCase
                 );

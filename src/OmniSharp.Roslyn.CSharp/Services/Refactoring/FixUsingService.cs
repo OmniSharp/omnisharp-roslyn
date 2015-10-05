@@ -9,7 +9,7 @@ using OmniSharp.Services;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
 #if DNX451
-    [OmniSharpHandler(typeof(RequestHandler<FixUsingsRequest, FixUsingsResponse>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.FixUsings, LanguageNames.CSharp)]
     public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;

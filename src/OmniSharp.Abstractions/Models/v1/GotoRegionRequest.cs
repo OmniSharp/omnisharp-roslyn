@@ -2,7 +2,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/gotoregion", typeof(GotoRegionRequest), typeof(QuickFixResponse))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.GotoRegion, typeof(GotoRegionRequest), typeof(QuickFixResponse))]
     public class GotoRegionRequest : Request
     {
     }

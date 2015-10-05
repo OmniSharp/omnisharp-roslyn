@@ -3,7 +3,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/autocomplete", typeof(AutoCompleteRequest), typeof(IEnumerable<AutoCompleteResponse>))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.AutoComplete, typeof(AutoCompleteRequest), typeof(IEnumerable<AutoCompleteResponse>))]
     public class AutoCompleteRequest : Request
     {
         private string _wordToComplete;

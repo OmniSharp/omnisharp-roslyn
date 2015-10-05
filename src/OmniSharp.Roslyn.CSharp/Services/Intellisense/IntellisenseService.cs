@@ -16,7 +16,7 @@ using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
-    [OmniSharpHandler(typeof(RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>), LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.AutoComplete, LanguageNames.CSharp)]
     public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
         private readonly OmnisharpWorkspace _workspace;

@@ -22,13 +22,13 @@ namespace OmniSharp
             if (httpContext.Request.Path.HasValue)
             {
                 var endpoint = httpContext.Request.Path.Value;
-                if (endpoint == "/checkalivestatus")
+                if (endpoint == OmnisharpEndpoints.CheckAliveStatus)
                 {
                     SerializeResponseObject(httpContext.Response, true);
                     return;
                 }
 
-                if (endpoint == "/checkreadystatus")
+                if (endpoint == OmnisharpEndpoints.CheckReadyStatus)
                 {
                     SerializeResponseObject(httpContext.Response, _workspace.Initialized);
                     return;

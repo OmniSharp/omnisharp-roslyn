@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using V2 = OmniSharp.Models.V2;
 
 namespace OmniSharp
 {
-    public interface RequestHandler<TRequest, TResponse>
+    public interface RequestHandler<TRequest, TResponse> : IRequestHandler
     {
         Task<TResponse> Handle(TRequest request);
     }
@@ -17,68 +18,51 @@ namespace OmniSharp
         IMergeableResponse Merge(IMergeableResponse response);
     }
 
-    public interface IRequest {}
+    public interface IRequest { }
 
-    /*public static class Endpoints
+    public static class OmnisharpEndpoints
     {
-        public static EndpointMapItem[] AvailableEndpoints = {
-            EndpointMapItem.Create<GotoDefinitionRequest, GotoDefinitionResponse>("/gotodefinition"),
-            EndpointMapItem.Create<FindSymbolsRequest, QuickFixResponse>("/findsymbols"),
-            EndpointMapItem.Create<UpdateBufferRequest, object>("/updatebuffer"),
-            EndpointMapItem.Create<ChangeBufferRequest, object>("/changebuffer"),
-            EndpointMapItem.Create<CodeCheckRequest, QuickFixResponse>("/codecheck"),
-            EndpointMapItem.Create<IEnumerable<Request>, object>( "/filesChanged"),
-            EndpointMapItem.Create<FormatAfterKeystrokeRequest, FormatRangeResponse>("/formatAfterKeystroke"),
-            EndpointMapItem.Create<FormatRangeRequest, FormatRangeResponse>("/formatRange"),
-            EndpointMapItem.Create<CodeFormatRequest, CodeFormatResponse>("/codeformat"),
-            EndpointMapItem.Create<HighlightRequest, HighlightResponse>("/highlight"),
-            EndpointMapItem.Create<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>("/autocomplete"),
-            EndpointMapItem.Create<FindImplementationsRequest, QuickFixResponse>("/findimplementations"),
-            EndpointMapItem.Create<FindUsagesRequest, QuickFixResponse>("/findusages"),
-            EndpointMapItem.Create<GotoFileRequest, QuickFixResponse>("/gotofile"),
-            EndpointMapItem.Create<GotoRegionRequest, QuickFixResponse>("/gotoregion"),
-            EndpointMapItem.Create<NavigateUpRequest, NavigateResponse>("/navigateup"),
-            EndpointMapItem.Create<NavigateDownRequest, NavigateResponse>("/navigatedown"),
-            EndpointMapItem.Create<TypeLookupRequest, TypeLookupResponse>("/typelookup"),
-            EndpointMapItem.Create<GetCodeActionRequest , GetCodeActionsResponse>("/getcodeactions"),
-            EndpointMapItem.Create<RunCodeActionRequest , RunCodeActionResponse>("/runcodeaction"),
-            EndpointMapItem.Create<RenameRequest , RenameResponse>("/rename"),
-            EndpointMapItem.Create<SignatureHelpRequest, SignatureHelp>("/signatureHelp"),
-            EndpointMapItem.Create<MembersTreeRequest, FileMemberTree>("/currentfilemembersastree"),
-            EndpointMapItem.Create<MembersFlatRequest, IEnumerable<QuickFix>>("/currentfilemembersasflat"),
-            EndpointMapItem.Create<TestCommandRequest, GetTestCommandResponse>("/gettestcontext"),
+        public const string GotoDefinition = "/gotodefinition";
+        public const string FindSymbols = "/findsymbols";
+        public const string UpdateBuffer = "/updatebuffer";
+        public const string ChangeBuffer = "/changebuffer";
+        public const string CodeCheck = "/codecheck";
+        public const string FilesChanged = "/filesChanged";
+        public const string FormatAfterKeystroke = "/formatAfterKeystroke";
+        public const string FormatRange = "/formatRange";
+        public const string CodeFormat = "/codeformat";
+        public const string Highlight = "/highlight";
+        public const string AutoComplete = "/autocomplete";
+        public const string FindImplementations = "/findimplementations";
+        public const string FindUsages = "/findusages";
+        public const string GotoFile = "/gotofile";
+        public const string GotoRegion = "/gotoregion";
+        public const string NavigateUp = "/navigateup";
+        public const string NavigateDown = "/navigatedown";
+        public const string TypeLookup = "/typelookup";
+        public const string GetCodeAction = "/getcodeactions";
+        public const string RunCodeAction = "/runcodeaction";
+        public const string Rename = "/rename";
+        public const string SignatureHelp = "/signatureHelp";
+        public const string MembersTree = "/currentfilemembersastree";
+        public const string MembersFlat = "/currentfilemembersasflat";
+        public const string TestCommand = "/gettestcontext";
+        public const string Metadata = "/metadata";
+        public const string PackageSource = "/packagesource";
+        public const string PackageSearch = "/packagesearch";
+        public const string PackageVersion = "/packageversion";
+        public const string WorkspaceInformation = "/projects";
+        public const string ProjectInformation = "/project";
+        public const string FixUsings = "/fixusings";
 
-            EndpointMapItem.Create<MetadataRequest, MetadataResponse>("/metadata", takeOne: true),
-            EndpointMapItem.Create<PackageSourceRequest ,PackageSourceResponse >("/packagesource", takeOne: true),
-            EndpointMapItem.Create<PackageSearchRequest , PackageSearchResponse>("/packagesearch", takeOne: true),
-            EndpointMapItem.Create<PackageVersionRequest , PackageVersionResponse>("/packageversion", takeOne: true),
+        public const string CheckAliveStatus = "/checkalivestatus";
+        public const string CheckReadyStatus = "/checkreadystatus";
+        public const string StopServer = "/stopserver";
 
-            EndpointMapItem.Create<WorkspaceInformationRequest, WorkspaceInformationResponse>("/projects", takeOne: true),
-            EndpointMapItem.Create<ProjectInformationRequest, ProjectInformationResponse>("/project"),
-
-            EndpointMapItem.Create<V2.GetCodeActionsRequest, V2.GetCodeActionsResponse>("/v2/getcodeactions"),
-            EndpointMapItem.Create<V2.RunCodeActionRequest, V2.RunCodeActionResponse>("/v2/runcodeaction"),
-        };
-
-        public class EndpointMapItem
+        public static class V2
         {
-            public static EndpointMapItem Create<TRequest, TResponse>(string endpoint, bool takeOne = false)
-            {
-                return new EndpointMapItem(endpoint, typeof(TRequest), typeof(TResponse), takeOne);
-            }
-
-            public EndpointMapItem(string endpointName, Type requestType, Type responseType, bool takeOne)
-            {
-                EndpointName = endpointName;
-                RequestType = requestType;
-                ResponseType = responseType;
-                TakeOne = takeOne;
-            }
-
-            public string EndpointName { get; }
-            public Type RequestType { get; }
-            public Type ResponseType { get; }
-            public bool TakeOne { get; }
+            public const string GetCodeActions = "/v2/getcodeactions";
+            public const string RunCodeAction = "/v2/runcodeaction";
         }
-    }*/
+    }
 }

@@ -2,7 +2,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint("/codeformat", typeof(CodeFormatRequest), typeof(CodeFormatResponse))]
+    [OmniSharpEndpoint(OmnisharpEndpoints.CodeFormat, typeof(CodeFormatRequest), typeof(CodeFormatResponse))]
     public class CodeFormatRequest : Request
     {
     }
