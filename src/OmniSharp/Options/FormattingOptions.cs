@@ -7,5 +7,7 @@ namespace OmniSharp.Options
         public bool UseTabs { get; set; }
         
         public int TabSize { get; set; }
+
+        public int IndentationSize { get; set; }
     }   
 }
