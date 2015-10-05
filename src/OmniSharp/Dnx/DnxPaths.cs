@@ -196,7 +196,7 @@ namespace OmniSharp.Dnx
             }
         }
 
-        private static string FirstPath(string runtimePath, params string[] candidates)
+        internal static string FirstPath(string runtimePath, params string[] candidates)
         {
             if (runtimePath == null)
             {
