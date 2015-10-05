@@ -13,8 +13,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
-using OmniSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
+using OmniSharp.Services;
 
 namespace OmniSharp
 {
@@ -237,7 +237,8 @@ namespace OmniSharp
 #pragma warning restore 4014
 
             var tasks = actions.Where(a => a.Title.StartsWith(actionPrefix))
-                    .Select(async a => await a.GetOperationsAsync(CancellationToken.None)).ToList();
+                .Take(1)
+                .Select(async a => await a.GetOperationsAsync(CancellationToken.None)).ToList();
 
             return (await Task.WhenAll(tasks)).SelectMany(x => x);
         }
