@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -192,6 +194,32 @@ class C {
             var controller = new OmnisharpController(workspace, null);
 
             return (await controller.FormatRange(req)).Changes;
+        }
+
+        [Fact]
+        public async Task FormatRespectsIndentationSize()
+        {
+            var source = "namespace Bar\n{\n    class Foo {}\n}";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions
+            {
+                Options = new OmniSharpOptions
+                {
+                    FormattingOptions = new FormattingOptions
+                    {
+                        NewLine = "\n",
+                        IndentationSize = 1
+                    }
+                }
+            });
+
+            var result = await controller.FormatDocument(new Request
+            {
+                FileName = "dummy.cs"
+            });
+
+            Assert.Equal("namespace Bar\n{\n class Foo { }\n}", result.Buffer);
         }
     }
 }
