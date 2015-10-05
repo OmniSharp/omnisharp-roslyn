@@ -17,8 +17,26 @@ namespace OmniSharp.Tests
             var response = await controller.TypeLookup(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 8 });
             
             Assert.Equal("Foo", response.Type);   
-        } 
-        
+        }
+
+        [Fact]
+        public async Task OmitsNamespaceForTypesInGlobalNamespace()
+        {
+            var source = @"namespace Bar {
+            class Foo {}
+            }
+            class Baz {}";
+
+            var workspace = TestHelpers.CreateSimpleWorkspace(source);
+
+            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions());
+            var responseInNormalNamespace = await controller.TypeLookup(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
+            var responseInGlobalNamespace = await controller.TypeLookup(new TypeLookupRequest { FileName = "dummy.cs", Line = 4, Column = 20 });
+
+            Assert.Equal("Bar.Foo", responseInNormalNamespace.Type);
+            Assert.Equal("Baz", responseInGlobalNamespace.Type);
+        }
+
         [Fact]
         public async Task IncludesNamespaceForRegularCSharpSyntax()
         {

@@ -24,7 +24,7 @@ namespace OmniSharp
                 if (symbol != null)
                 {
                     //non regular C# code semantics (interactive, script) don't allow namespaces
-                    if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType)
+                    if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType && !symbol.ContainingNamespace.IsGlobalNamespace)
                     {
                         response.Type = $"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
                     }
