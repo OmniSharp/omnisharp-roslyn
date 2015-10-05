@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using Xunit;
- 
+
 namespace OmniSharp.Tests
-{ 
+{
     public class FixUsingsFacts
     {
         string fileName = "test.cs";
@@ -16,14 +16,14 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task FixUsings_AddsUsingSingle()
         {
-            const string fileContents = @"namespace nsA 
+            const string fileContents = @"namespace nsA
 {
     public class classX{}
 }
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -33,14 +33,14 @@ namespace OmniSharp
 }";
             string expectedFileContents = @"using nsA;
 
-namespace nsA 
+namespace nsA
 {
     public class classX{}
 }
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -57,7 +57,7 @@ namespace OmniSharp
         {
             const string fileContents = @"namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -69,7 +69,7 @@ namespace OmniSharp
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -86,7 +86,7 @@ namespace OmniSharp
         {
             const string fileContents = @"namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()()
         {
@@ -98,7 +98,7 @@ namespace OmniSharp
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()()
         {
@@ -125,7 +125,7 @@ namespace nsB
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -149,7 +149,7 @@ namespace nsB
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -167,7 +167,7 @@ namespace OmniSharp
         {
             const string fileContents = @"namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -181,7 +181,7 @@ using System.Text;
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -210,7 +210,7 @@ namespace nsB
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -244,7 +244,7 @@ namespace nsB {
 }
 
 namespace OmniSharp {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -265,7 +265,7 @@ namespace OmniSharp {
 }
 
 namespace OmniSharp {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -282,7 +282,7 @@ namespace nsA {
 }
 
 namespace OmniSharp {
-    public class class1 
+    public class class1
     {
         public method1()
         {
@@ -300,7 +300,7 @@ namespace OmniSharp {
         {
             const string fileContents = @"namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -314,7 +314,7 @@ using System.Linq;
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -332,30 +332,30 @@ namespace OmniSharp
         {
             const string fileContents = @"namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
             int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-            var lowNums = 
-                from n in numbers 
-                where n < 5 
-                select n; 
+            var lowNums =
+                from n in numbers
+                where n < 5
+                select n;
         }
      }
 }";
             string expectedFileContents = @"using System.Linq;
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
             int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-            var lowNums = 
-                from n in numbers 
-                where n < 5 
-                select n; 
+            var lowNums =
+                from n in numbers
+                where n < 5
+                select n;
         }
      }
 }";
@@ -371,7 +371,7 @@ using System;
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -384,7 +384,7 @@ namespace OmniSharp
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -403,7 +403,7 @@ using System.Linq;
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -416,7 +416,7 @@ namespace OmniSharp
 
 namespace OmniSharp
 {
-    public class class1 
+    public class class1
     {
         public void method1()
         {
@@ -451,12 +451,12 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
         {
-            var workspace = TestHelpers.CreateSimpleWorkspace(fileContents, fileName);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContents, fileName);
 
             var fakeOptions = new FakeOmniSharpOptions();
             fakeOptions.Options = new OmniSharpOptions();
             fakeOptions.Options.FormattingOptions = new FormattingOptions() {NewLine = "\n"};
-            var controller = new OmnisharpController(workspace, fakeOptions);
+            var controller = new FixUsingService(workspace);
             var request = new FixUsingsRequest
             {
                 FileName = fileName,

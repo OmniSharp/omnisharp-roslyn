@@ -1,13 +1,23 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
+using System.Composition;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using OmniSharp.Mef;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
 #if DNX451
-    public partial class OmnisharpController
+    [OmniSharpHandler(typeof(RequestHandler<FixUsingsRequest, FixUsingsResponse>), LanguageNames.CSharp)]
+    public class FixUsingService
     {
-        [HttpPost("fixusings")]
+        private readonly OmnisharpWorkspace _workspace;
+
+        [ImportingConstructor]
+        public FixUsingService(OmnisharpWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
         public async Task<FixUsingsResponse> FixUsings(FixUsingsRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
