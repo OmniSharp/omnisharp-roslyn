@@ -205,16 +205,16 @@ namespace OmniSharp.MSBuild.ProjectFile
                     .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                     .ToList();
 
-                var defineConstants = properties["DefineConstants"].FinalValue;
-                if (!string.IsNullOrWhiteSpace(defineConstants))
-                {
-                    projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
-                }
-
                 var allowUnsafe = properties["AllowUnsafeBlocks"].FinalValue;
                 if (!string.IsNullOrWhiteSpace(allowUnsafe))
                 {
                     projectFileInfo.AllowUnsafe = Convert.ToBoolean(allowUnsafe);
+                }
+
+                var defineConstants = properties["DefineConstants"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(defineConstants))
+                {
+                    projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
             }
 #else
