@@ -12,6 +12,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
 {
     public static class Formatting
     {
+        public static OptionSet GetOptions(OmnisharpWorkspace workspace, OmniSharp.Options.FormattingOptions formattingOptions)
+        {
+            return workspace.Options
+                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)
+                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.UseTabs, LanguageNames.CSharp, formattingOptions.UseTabs)
+                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.TabSize, LanguageNames.CSharp, formattingOptions.TabSize)
+                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.IndentationSize, LanguageNames.CSharp, formattingOptions.IndentationSize);
+        }
+
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
         {
             var tree = await document.GetSyntaxTreeAsync();
@@ -21,12 +30,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
                 // format previous line on new line
                 var lines = (await document.GetTextAsync()).Lines;
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
-                if(!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
+                if (!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
                 {
                     return await GetFormattingChangesForRange(workspace, options, document, targetLine.Start, targetLine.End);
                 }
             }
-            else if(character == '}' || character == ';')
+            else if (character == '}' || character == ';')
             {
                 // format after ; and }
                 var node = FindFormatTarget(tree, position);
@@ -65,7 +74,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
         {
-            var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end));
+            var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), options);
             var textChanges = await changedDocument.GetTextChangesAsync(document);
 
             return (await LinePositionSpanTextChange.Convert(document, textChanges)).Select(change =>

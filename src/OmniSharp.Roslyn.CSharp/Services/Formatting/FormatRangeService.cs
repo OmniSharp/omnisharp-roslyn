@@ -21,10 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
         public FormatRangeService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
-            _options = _workspace.Options
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.UseTabs, LanguageNames.CSharp, formattingOptions.UseTabs)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.TabSize, LanguageNames.CSharp, formattingOptions.TabSize);
+            _options = OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetOptions(_workspace, formattingOptions);
         }
 
         public async Task<FormatRangeResponse> Handle(FormatRangeRequest request)
