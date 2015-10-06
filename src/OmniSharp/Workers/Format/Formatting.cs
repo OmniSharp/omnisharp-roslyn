@@ -65,7 +65,7 @@ namespace OmniSharp
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(Workspace workspace, OptionSet options, Document document, int start, int end)
         {
-            var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end));
+            var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), options);
             var textChanges = await changedDocument.GetTextChangesAsync(document);
 
             return (await LinePositionSpanTextChange.Convert(document, textChanges)).Select(change =>
