@@ -204,20 +204,14 @@ class C {
         {
             var source = "namespace Bar\n{\n    class Foo {}\n}";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new OmnisharpController(workspace, new FakeOmniSharpOptions
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var controller = new CodeFormatService(workspace, new FormattingOptions
             {
-                Options = new OmniSharpOptions
-                {
-                    FormattingOptions = new FormattingOptions
-                    {
-                        NewLine = "\n",
-                        IndentationSize = 1
-                    }
-                }
+                NewLine = "\n",
+                IndentationSize = 1
             });
 
-            var result = await controller.FormatDocument(new Request
+            var result = await controller.Handle(new CodeFormatRequest
             {
                 FileName = "dummy.cs"
             });
