@@ -10,6 +10,6 @@ namespace OmniSharp.Models
         /// </summary>
         public bool OnlyThisFile { get; set; }
         public bool ExcludeDefinition { get; set; }
-        public bool WantWhitespace { get; set; }
+        public bool TrimWhitespace { get; set; } = true;
     }
 }
