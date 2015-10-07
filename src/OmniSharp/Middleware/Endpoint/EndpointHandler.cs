@@ -55,7 +55,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly OmnisharpWorkspace _workspace;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
-        private readonly bool _isMergeable;
+        private readonly bool _canBeAggregated;
         private readonly ILogger _logger;
         private readonly IEnumerable<Plugin> _plugins;
         private readonly Lazy<EndpointHandler<UpdateBufferRequest, object>> _updateBufferHandler;
@@ -71,7 +71,7 @@ namespace OmniSharp.Middleware.Endpoint
 
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
-            _isMergeable = typeof(IAggregateResponse).IsAssignableFrom(item.ResponseType);
+            _canBeAggregated = typeof(IAggregateResponse).IsAssignableFrom(item.ResponseType);
             _updateBufferHandler = updateBufferHandler;
 
             _exports = new Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>>(() => LoadExportHandlers(handlers));
@@ -118,7 +118,7 @@ namespace OmniSharp.Middleware.Endpoint
             {
                 // Handle cases where a request isn't aggrgate and a language isn't specified.
                 // This helps with editors calling a legacy end point, for example /metadata
-                if (!_isMergeable && string.IsNullOrWhiteSpace(model.Language))
+                if (!_canBeAggregated && string.IsNullOrWhiteSpace(model.Language))
                 {
                     model.Language = LanguageNames.CSharp;
                 }
@@ -165,7 +165,7 @@ namespace OmniSharp.Middleware.Endpoint
 
         private async Task<object> HandleAllRequest(TRequest request, HttpContext context)
         {
-            if (!_isMergeable)
+            if (!_canBeAggregated)
             {
                 throw new NotSupportedException($"Must be able aggregate the response to spread them out across all plugins for {EndpointName}");
             }
