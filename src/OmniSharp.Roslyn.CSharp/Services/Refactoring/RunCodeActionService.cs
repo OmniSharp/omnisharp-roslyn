@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading;
@@ -13,31 +13,20 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GetCodeAction, LanguageNames.CSharp)]
     [OmniSharpHandler(OmnisharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
-    public class CodeActionsService :
-        RequestHandler<GetCodeActionRequest, GetCodeActionsResponse>,
-        RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
+    public class RunCodeActionsService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
         [ImportingConstructor]
-        public CodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
+        public RunCodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
         }
 
-        async Task<GetCodeActionsResponse> RequestHandler<GetCodeActionRequest, GetCodeActionsResponse>.Handle(GetCodeActionRequest request)
-        {
-            var actions = new List<CodeAction>();
-            var context = await GetContext(request, actions);
-            await GetContextualCodeActions(context);
-            return new GetCodeActionsResponse() { CodeActions = actions.Select(a => a.Title) };
-        }
-
-        async Task<RunCodeActionResponse> RequestHandler<RunCodeActionRequest, RunCodeActionResponse>.Handle(RunCodeActionRequest request)
+        public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var context = await GetContext(request, actions);

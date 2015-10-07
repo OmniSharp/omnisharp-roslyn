@@ -13,9 +13,9 @@ namespace OmniSharp
         Task<TResponse> Handle(TRequest request);
     }
 
-    public interface IMergeableResponse
+    public interface IAggregateResponse
     {
-        IMergeableResponse Merge(IMergeableResponse response);
+        IAggregateResponse Merge(IAggregateResponse response);
     }
 
     public interface IRequest { }

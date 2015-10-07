@@ -22,7 +22,7 @@ namespace OmniSharp.Dnx
         public string Dnu { get; private set; }
         public string Klr { get; private set; }
         public string Kpm { get; private set; }
-        public string K   { get; private set; }
+        public string K { get; private set; }
 
         public DnxPaths(IOmnisharpEnvironment env,
                             DnxOptions options,
@@ -37,7 +37,7 @@ namespace OmniSharp.Dnx
             Dnu = FirstPath(RuntimePath.Value, "dnu", "dnu.cmd");
             Klr = FirstPath(RuntimePath.Value, "klr", "klr.exe");
             Kpm = FirstPath(RuntimePath.Value, "kpm", "kpm.cmd");
-            K   = FirstPath(RuntimePath.Value, "k", "k.cmd");
+            K = FirstPath(RuntimePath.Value, "k", "k.cmd");
         }
 
         private DnxRuntimePathResult GetRuntimePath()
@@ -98,8 +98,14 @@ namespace OmniSharp.Dnx
 
                 using (var stream = File.OpenRead(globalJson))
                 {
-                    var obj = JObject.Load(new JsonTextReader(new StreamReader(stream)));
-                    return obj["sdk"]?["version"];
+                    using (var streamReader = new StreamReader(stream))
+                    {
+                        using (var textReader = new JsonTextReader(streamReader))
+                        {
+                            var obj = JObject.Load(textReader);
+                            return obj["sdk"]?["version"];
+                        }
+                    }
                 }
             }
 

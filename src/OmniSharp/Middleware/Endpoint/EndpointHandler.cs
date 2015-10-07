@@ -71,7 +71,7 @@ namespace OmniSharp.Middleware.Endpoint
 
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;
-            _isMergeable = typeof(IMergeableResponse).IsAssignableFrom(item.ResponseType);
+            _isMergeable = typeof(IAggregateResponse).IsAssignableFrom(item.ResponseType);
             _updateBufferHandler = updateBufferHandler;
 
             _exports = new Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>>(() => LoadExportHandlers(handlers));
@@ -116,7 +116,7 @@ namespace OmniSharp.Middleware.Endpoint
 
             if (_hasLanguageProperty)
             {
-                // Handle cases where a request isn't mergable and a language isn't specified.
+                // Handle cases where a request isn't aggrgate and a language isn't specified.
                 // This helps with editors calling a legacy end point, for example /metadata
                 if (!_isMergeable && string.IsNullOrWhiteSpace(model.Language))
                 {
@@ -167,12 +167,12 @@ namespace OmniSharp.Middleware.Endpoint
         {
             if (!_isMergeable)
             {
-                throw new NotSupportedException($"Responses must be mergable to spread them out across all plugins for {EndpointName}");
+                throw new NotSupportedException($"Must be able aggregate the response to spread them out across all plugins for {EndpointName}");
             }
 
             var exports = await _exports.Value;
 
-            IMergeableResponse mergableResponse = null;
+            IAggregateResponse aggregateResponse = null;
 
             var responses = new List<Task<TResponse>>();
             foreach (var handler in exports.Values)
@@ -180,19 +180,19 @@ namespace OmniSharp.Middleware.Endpoint
                 responses.Add(handler.Handle(request));
             }
 
-            foreach (IMergeableResponse exportResponse in await Task.WhenAll(responses))
+            foreach (IAggregateResponse exportResponse in await Task.WhenAll(responses))
             {
-                if (mergableResponse != null)
+                if (aggregateResponse != null)
                 {
-                    mergableResponse = mergableResponse.Merge(exportResponse);
+                    aggregateResponse = aggregateResponse.Merge(exportResponse);
                 }
                 else
                 {
-                    mergableResponse = exportResponse;
+                    aggregateResponse = exportResponse;
                 }
             }
 
-            object response = mergableResponse;
+            object response = aggregateResponse;
 
             if (response != null)
             {

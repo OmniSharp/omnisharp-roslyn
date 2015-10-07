@@ -4,9 +4,9 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    public class FilesChangedResponse : IMergeableResponse
+    public class FilesChangedResponse : IAggregateResponse
     {
-        public IMergeableResponse Merge(IMergeableResponse response)
+        public IAggregateResponse Merge(IAggregateResponse response)
         {
             // File Changes just need to inform plugins, editors are not expecting any kind of real response
             return response ?? new FilesChangedResponse();
