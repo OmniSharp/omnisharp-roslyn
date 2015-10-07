@@ -230,7 +230,13 @@ namespace OmniSharp.Middleware.Endpoint
         {
             try
             {
-                return JToken.Load(new JsonTextReader(new StreamReader(readStream)));
+                using (var streamReader = new StreamReader(readStream))
+                {
+                    using (var textReader = new JsonTextReader(streamReader))
+                    {
+                        return JToken.Load(textReader);
+                    }
+                }
             }
             catch
             {
