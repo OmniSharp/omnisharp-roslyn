@@ -80,7 +80,7 @@ namespace OmniSharp.Roslyn
             foreach (var projectSystem in _projectSystems) {
                 var project = projectSystem.GetProjectModel(fileName);
                 if (project != null)
-                    response.Add(projectSystem.Key, project);
+                    response.Add($"{projectSystem.Key}Project", project);
             }
 
             return response;

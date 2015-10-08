@@ -27,7 +27,7 @@ namespace OmniSharp
             foreach (var projectSystem in _projectSystems)
             {
                 var project = await projectSystem.GetProjectModel(request.FileName);
-                response.Add(projectSystem.Key, project);
+                response.Add($"{projectSystem.Key}Project", project);
             }
 
             return response;
