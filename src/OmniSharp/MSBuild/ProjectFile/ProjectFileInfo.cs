@@ -205,13 +205,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                     .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
                     .ToList();
 
-                var allowUnsafe = properties["AllowUnsafeBlocks"].FinalValue;
+                var allowUnsafe = properties.GetPropertyValue("AllowUnsafeBlocks");
                 if (!string.IsNullOrWhiteSpace(allowUnsafe))
                 {
                     projectFileInfo.AllowUnsafe = Convert.ToBoolean(allowUnsafe);
                 }
 
-                var defineConstants = properties["DefineConstants"].FinalValue;
+                var defineConstants = properties.GetPropertyValue("DefineConstants");
                 if (!string.IsNullOrWhiteSpace(defineConstants))
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
@@ -241,4 +241,16 @@ namespace OmniSharp.MSBuild.ProjectFile
             return null;
         }
     }
+
+    #if DNX451
+    static class DictionaryExt
+    {
+        public static string GetPropertyValue(this Dictionary<string, BuildProperty> dict, string key)
+        {
+            return dict.ContainsKey(key)
+                ? dict[key].FinalValue
+                : null;
+        }
+    }
+    #endif
 }
