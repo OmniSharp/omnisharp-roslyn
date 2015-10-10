@@ -45,7 +45,7 @@ namespace OmniSharp.Dnx
                 string version;
 
                 if (DnxSdk.TryParseFullName(fullName, out flavor, out os, out arch, out version) &&
-                    string.Equals(flavor, "coreclr", StringComparison.OrdinalIgnoreCase) && 
+                    string.Equals(flavor, "coreclr", StringComparison.OrdinalIgnoreCase) &&
                     !string.Equals(os, "win", StringComparison.OrdinalIgnoreCase))
                 {
                     // Work around since DTH is broken on CoreCLR on *nix and OSX
@@ -95,7 +95,7 @@ namespace OmniSharp.Dnx
                 using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
                     var t1 = DateTime.UtcNow;
-                    var dthTimeout = TimeSpan.FromSeconds(10);
+                    var dthTimeout = TimeSpan.FromSeconds(30);
                     while (!socket.Connected && DateTime.UtcNow - t1 < dthTimeout)
                     {
                         Thread.Sleep(500);
