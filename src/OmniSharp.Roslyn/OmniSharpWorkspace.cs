@@ -24,12 +24,9 @@ namespace OmniSharp
     {
         public bool Initialized { get; set; }
 
-        public BufferManager BufferManager { get; private set; }
-
         [ImportingConstructor]
         public OmnisharpWorkspace(HostServicesBuilder builder) : base(builder.GetHostServices(), "Custom")
         {
-            BufferManager = new BufferManager(this);
         }
 
         public void AddProject(ProjectInfo projectInfo)

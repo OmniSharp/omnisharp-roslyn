@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -75,7 +76,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new FindImplementationsService(workspace);
             var request = CreateRequest(source);
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            await new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter()))).UpdateBuffer(request);
 
             var implementations = await controller.Handle(request);
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);

@@ -63,6 +63,7 @@ namespace OmniSharp
         {
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
+            public const string CodeCheck = "/v2/codecheck";
         }
     }
 }

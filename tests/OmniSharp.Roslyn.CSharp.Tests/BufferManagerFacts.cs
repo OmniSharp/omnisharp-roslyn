@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using Xunit;
 
@@ -14,17 +16,19 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferIgnoresVoidRequests()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace("class C {}", "test.cs");
+            var host = TestHelpers.CreatePluginHost(Enumerable.Empty<Assembly>());
+            var workspace = await TestHelpers.CreateSimpleWorkspace(host, "class C {}", "test.cs");
+            var bufferManager = host.GetExport<BufferManager>();
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { });
+            await bufferManager.UpdateBuffer(new Request() { });
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = "", Buffer = "enum E {}" });
+            await bufferManager.UpdateBuffer(new Request() { FileName = "", Buffer = "enum E {}" });
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
@@ -34,8 +38,9 @@ namespace OmniSharp.Tests
         public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
         {
             var workspace = await GetWorkspaceWithProjects();
+            var bufferManager = new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter())));
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
+            await bufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
             Assert.Equal(0, documents.Count());
         }
@@ -44,8 +49,9 @@ namespace OmniSharp.Tests
         public async Task UpdateBufferFindsProjectBasedOnPath()
         {
             var workspace = await GetWorkspaceWithProjects();
+            var bufferManager = new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter())));
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
+            await bufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "newFile.cs"));
             Assert.Equal(2, documents.Count());
 
@@ -61,9 +67,10 @@ namespace OmniSharp.Tests
             var code = "public class MyClass {}";
             string fileName = Path.GetTempPath() + Guid.NewGuid().ToString() + ".cs";
             var workspace = await TestHelpers.CreateSimpleWorkspace("", fileName);
+            var bufferManager = new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter())));
 
             File.WriteAllText(fileName, code);
-            await workspace.BufferManager.UpdateBuffer(new UpdateBufferRequest { FileName = fileName, FromDisk = true });
+            await bufferManager.UpdateBuffer(new UpdateBufferRequest { FileName = fileName, FromDisk = true });
 
             var document = workspace.GetDocument(fileName);
             var text = await document.GetTextAsync();
@@ -75,6 +82,7 @@ namespace OmniSharp.Tests
         public async Task UpdateBufferFindsProjectBasedOnNearestPath()
         {
             var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            var bufferManager = new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter())));
 
             await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
                 new[] { "" },
@@ -84,13 +92,13 @@ namespace OmniSharp.Tests
                 new[] { "" },
                 new Dictionary<string, string>() { { Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}" } });
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
+            await bufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "root", "bar.cs"));
             Assert.Equal(1, documents.Count());
             Assert.Equal(Path.Combine("src", "root", "foo.csproj"), documents.ElementAt(0).Project.FilePath);
             Assert.Equal(2, documents.ElementAt(0).Project.Documents.Count());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"), Buffer = "enum E {}" });
+            await bufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"), Buffer = "enum E {}" });
             documents = workspace.GetDocuments(Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"));
             Assert.Equal(1, documents.Count());
             Assert.Equal(Path.Combine("src", "root", "foo", "bar", "insane.csproj"), documents.ElementAt(0).Project.FilePath);
@@ -100,10 +108,10 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateRequestHandleChanges()
         {
-
             var workspace = await GetWorkspaceWithProjects();
+            var bufferManager = new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter())));
 
-            await workspace.BufferManager.UpdateBuffer(new Request()
+            await bufferManager.UpdateBuffer(new Request()
             {
                 FileName = Path.Combine("src", "a.cs"),
                 Changes = new LinePositionSpanTextChange[]

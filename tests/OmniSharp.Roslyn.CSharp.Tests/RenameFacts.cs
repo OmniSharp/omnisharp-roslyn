@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
+using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -19,6 +20,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(fileContent);
             var controller = new RenameService(workspace);
+            var bufferManager = new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter())));
             var request = new RenameRequest
             {
                 Line = lineColumn.Line,
@@ -30,7 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ApplyTextChanges = applyTextChanges
             };
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            await bufferManager.UpdateBuffer(request);
 
             return await controller.Handle(request);
         }

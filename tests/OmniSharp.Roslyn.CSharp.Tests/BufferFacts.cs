@@ -13,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
         {
             workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
-            controller = new ChangeBufferService(workspace);
+            controller = new ChangeBufferService(new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter()))));
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
                 "ProjectNameVal", "AssemblyNameVal", LanguageNames.CSharp);

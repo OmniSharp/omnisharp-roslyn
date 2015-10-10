@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -237,7 +238,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new FindUsagesService(workspace);
             var request = CreateRequest(sources[currentFile], currentFile, excludeDefinition);
             request.OnlyThisFile = onlyThisFile;
-            await workspace.BufferManager.UpdateBuffer(request);
+            await new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter()))).UpdateBuffer(request);
             return await controller.Handle(request);
         }
     }

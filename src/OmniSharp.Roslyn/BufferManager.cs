@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,17 +10,21 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn
 {
+    [Export, Shared]
     public class BufferManager
     {
         private readonly OmnisharpWorkspace _workspace;
         private readonly IDictionary<string, IEnumerable<DocumentId>> _transientDocuments = new Dictionary<string, IEnumerable<DocumentId>>(StringComparer.OrdinalIgnoreCase);
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
-        
-        public BufferManager(OmnisharpWorkspace workspace)
+        private readonly DocumentDiagnosticService _documentDiagnosticService;
+
+        [ImportingConstructor]
+        public BufferManager(OmnisharpWorkspace workspace, DocumentDiagnosticService documentDiagnosticService)
         {
             _workspace = workspace;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _documentDiagnosticService = documentDiagnosticService;
         }
 
         public async Task UpdateBuffer(Request request)
@@ -69,10 +74,12 @@ namespace OmniSharp.Roslyn
                     }
                 }
             }
-            else if(buffer != null)
+            else if (buffer != null)
             {
                 TryAddTransientDocument(request.FileName, buffer);
             }
+
+            _documentDiagnosticService.EmitDiagnostics(request.FileName);
         }
 
         public async Task UpdateBuffer(ChangeBufferRequest request)
@@ -104,6 +111,8 @@ namespace OmniSharp.Roslyn
                 // TODO@joh ensure the edit is an insert at offset zero
                 TryAddTransientDocument(request.FileName, request.NewText);
             }
+
+            _documentDiagnosticService.EmitDiagnostics(request.FileName);
         }
 
         private bool TryAddTransientDocument(string fileName, string fileContent)

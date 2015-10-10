@@ -207,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Type = testType
             };
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            await new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter()))).UpdateBuffer(request);
 
             var testCommand = await controller.Handle(request);
             return testCommand.TestCommand;

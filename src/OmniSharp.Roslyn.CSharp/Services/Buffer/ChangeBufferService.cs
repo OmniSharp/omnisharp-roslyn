@@ -9,17 +9,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Buffer
     [OmniSharpHandler(OmnisharpEndpoints.ChangeBuffer, LanguageNames.CSharp)]
     public class ChangeBufferService : RequestHandler<ChangeBufferRequest, object>
     {
-        private OmnisharpWorkspace _workspace;
+        private readonly BufferManager _bufferManager;
 
         [ImportingConstructor]
-        public ChangeBufferService(OmnisharpWorkspace workspace)
+        public ChangeBufferService(BufferManager bufferManager)
         {
-            _workspace = workspace;
+            _bufferManager = bufferManager;
         }
 
         public async Task<object> Handle(ChangeBufferRequest request)
         {
-            await _workspace.BufferManager.UpdateBuffer(request);
+            await _bufferManager.UpdateBuffer(request);
             return true;
         }
     }

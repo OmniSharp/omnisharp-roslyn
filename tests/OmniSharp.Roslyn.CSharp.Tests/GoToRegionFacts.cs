@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -52,7 +53,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var workspace = await TestHelpers.CreateSimpleWorkspace(source);
             var controller = new GotoRegionService(workspace);
             var request = CreateRequest(source);
-            await workspace.BufferManager.UpdateBuffer(request);
+            await new BufferManager(workspace, new DocumentDiagnosticService(workspace, new DiagnosticEventForwarder(new NullEventEmitter()))).UpdateBuffer(request);
             return await controller.Handle(request);
         }
 
