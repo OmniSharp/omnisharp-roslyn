@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Services;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2
 {
@@ -39,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2
             var paths = documents.Select(document => document.FilePath).Distinct().ToArray();
             _diagnostics.EmitDiagnostics(paths);
 
-            return Task.FromResult(new CodeCheckResponse);
+            return Task.FromResult(new CodeCheckResponse());
         }
     }
 }

@@ -10,6 +10,6 @@ namespace OmniSharp.Models.V2
 
     public class CodeCheckResponse : IAggregateResponse
     {
-        public IAggregateResponse Merge(IAggregateResponse response) { }
+        public IAggregateResponse Merge(IAggregateResponse response) { return response; }
     }
 }

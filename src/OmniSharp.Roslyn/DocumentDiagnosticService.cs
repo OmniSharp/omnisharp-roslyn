@@ -63,9 +63,9 @@ namespace OmniSharp.Roslyn
                 {
                     concurrentTasks++;
                     remainingTime = (_queue.Count * 100) / concurrentTasks;
-                } while (remainingTime > 10000);
+                } while (remainingTime > 1000);
 
-                concurrentTasks = Math.Min(concurrentTasks, 6);
+                concurrentTasks = Math.Min(concurrentTasks, 4);
 
                 var tasks = new List<Task>();
                 for (var i = 0; i < concurrentTasks; i++)
@@ -96,8 +96,6 @@ namespace OmniSharp.Roslyn
 
         private async Task ProcessNextItem(string filePath)
         {
-            await Task.Delay(80);
-
             var documents = _workspace.GetDocuments(filePath);
 
             if (documents.Any())
