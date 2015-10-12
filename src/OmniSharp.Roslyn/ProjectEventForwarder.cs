@@ -56,15 +56,15 @@ namespace OmniSharp.Roslyn
                         {
                             await Task.Delay(500);
 
+                            object payload = null;
+                            if (e.EventType != EventTypes.ProjectRemoved)
+                            {
+                                payload = await GetProjectInformation(e.FileName);
+                            }
+
                             lock (_lock)
                             {
                                 _queue.Remove(e);
-
-                                object payload = null;
-                                if (e.EventType != EventTypes.ProjectRemoved)
-                                {
-                                    payload = GetProjectInformation(e.FileName);
-                                }
                                 _emitter.Emit(e.EventType, payload);
                             }
                         });
@@ -73,12 +73,12 @@ namespace OmniSharp.Roslyn
             }
         }
 
-        private ProjectInformationResponse GetProjectInformation(string fileName)
+        private async Task<ProjectInformationResponse> GetProjectInformation(string fileName)
         {
             var response = new ProjectInformationResponse();
 
             foreach (var projectSystem in _projectSystems) {
-                var project = projectSystem.GetProjectModel(fileName);
+                var project = await projectSystem.GetProjectModel(fileName);
                 if (project != null)
                     response.Add($"{projectSystem.Key}Project", project);
             }
