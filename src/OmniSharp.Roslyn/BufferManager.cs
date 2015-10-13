@@ -46,9 +46,14 @@ namespace OmniSharp.Roslyn
             var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
             if (!documentIds.IsEmpty)
             {
+                var fileChanged = false;
+                var document = _workspace.GetDocument(request.FileName);
+                var currentText = await document.GetTextAsync();
+
                 if (changes == null)
                 {
                     var sourceText = SourceText.From(buffer);
+                    if (!currentText.ContentEquals(sourceText)) fileChanged = true;
                     foreach (var documentId in documentIds)
                     {
                         _workspace.OnDocumentChanged(documentId, sourceText);
@@ -58,7 +63,7 @@ namespace OmniSharp.Roslyn
                 {
                     foreach (var documentId in documentIds)
                     {
-                        var document = _workspace.CurrentSolution.GetDocument(documentId);
+                        document = _workspace.CurrentSolution.GetDocument(documentId);
                         var sourceText = await document.GetTextAsync();
 
                         foreach (var change in request.Changes)
@@ -70,16 +75,19 @@ namespace OmniSharp.Roslyn
                                 new TextChange(new TextSpan(startOffset, endOffset - startOffset), change.NewText)
                             });
                         }
+                        if (!currentText.ContentEquals(sourceText)) fileChanged = true;
                         _workspace.OnDocumentChanged(documentId, sourceText);
                     }
                 }
+                if (fileChanged)
+                    _documentDiagnosticService.EmitDiagnostics(request.FileName);
             }
             else if (buffer != null)
             {
                 TryAddTransientDocument(request.FileName, buffer);
+                _documentDiagnosticService.EmitDiagnostics(request.FileName);
             }
 
-            _documentDiagnosticService.EmitDiagnostics(request.FileName);
         }
 
         public async Task UpdateBuffer(ChangeBufferRequest request)
