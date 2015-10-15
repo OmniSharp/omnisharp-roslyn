@@ -15,7 +15,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
-    <DevelopmentServerPort>24080</DevelopmentServerPort>
     <DebugTarget>OmniSharp</DebugTarget>
     <CommandLineArguments />
   </PropertyGroup>
