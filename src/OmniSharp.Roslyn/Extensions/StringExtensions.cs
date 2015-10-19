@@ -44,7 +44,7 @@ namespace OmniSharp.Extensions
 
         private static bool FirstLetterMatches(string word, string match)
         {
-            if(string.IsNullOrEmpty(match))
+            if (string.IsNullOrEmpty(match))
             {
                 return false;
             }
