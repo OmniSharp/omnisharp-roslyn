@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "Microsoft.CodeAnalysis": "1.0.0-rc2"
+  },
+  "frameworks": {
+    "dnx451": {
+      "dependencies": {
+        "ICSharpCode.NRefactory": "6.0.0-alpha3"
+      },
+      "frameworkAssemblies": {
+        "System.Runtime": "",
+        "System.Threading":"",
+        "System.Threading.Tasks":"",
+        "System.Collections":"",
+        "System.Globalization":"",
+        "System.Linq": "",
+        "System.Text.Encoding":"",
+        "System.IO":"",
+        "System.Reflection":"",
+        "System.Security":"",
+        "System.Xml":""
+      }
+    },
+    "dnxcore50": {
+      "dependencies": {
+        "System.Runtime": "4.0.20-beta-22816",
+        "System.Xml.ReaderWriter": "4.0.10-beta-22816"
+      }
+    }
+  }
+}

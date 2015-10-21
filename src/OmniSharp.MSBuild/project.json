@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "OmniSharp.Roslyn.CSharp": "1.0.0-*",
+    "Microsoft.Framework.Logging.Console": "1.0.0-beta4"
+  },
+  "frameworks": {
+    "dnx451": {
+      "frameworkAssemblies": {
+        "Microsoft.Build": "",
+        "Microsoft.Build.Engine": "",
+        "Microsoft.Build.Framework": ""
+      }
+    }
+  }
+}

@@ -12,10 +12,10 @@ namespace OmniSharp.Tests
         {
             var source =
                 @"public class Far {
-                    
+
                 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
@@ -34,7 +34,7 @@ namespace OmniSharp.Tests
                     public event Action E;
                 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
@@ -55,10 +55,10 @@ namespace OmniSharp.Tests
         {
             var source =
                 @"public interface Far {
-                    
+
                 }";
 
-            var workspace = TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());

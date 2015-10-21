@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Services;
 
 namespace OmniSharp.Tests
 {
@@ -38,13 +40,13 @@ namespace OmniSharp.Tests
             public LineColumn Start { get; private set; }
             public LineColumn End { get; private set; }
 
-            public Range (LineColumn start, LineColumn end)
+            public Range(LineColumn start, LineColumn end)
             {
                 Start = start;
                 End = end;
             }
 
-            public bool IsEmpty { get { return Start.Equals(End);  } }
+            public bool IsEmpty { get { return Start.Equals(End); } }
         }
 
         public static LineColumn GetLineAndColumnFromDollar(string text)
@@ -113,7 +115,7 @@ namespace OmniSharp.Tests
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
             var systemCore = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(Enumerable)));
             var references = new[] { mscorlib, systemCore };
-            var workspace = new OmnisharpWorkspace();
+            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
 
@@ -131,19 +133,41 @@ namespace OmniSharp.Tests
             return workspace;
         }
 
-        public static OmnisharpWorkspace CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
         {
-            return CreateSimpleWorkspace(new Dictionary<string, string> { { fileName, source } });
+            return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), new Dictionary<string, string> { { fileName, source } });
         }
 
-        public static OmnisharpWorkspace CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, string source, string fileName = "dummy.cs")
         {
-            var workspace = Startup.CreateWorkspace();
-            AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
+            return CreateSimpleWorkspace(host, new Dictionary<string, string> { { fileName, source } });
+        }
+
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
+        {
+            return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), sourceFiles);
+        }
+
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
+        {
+            var host = _host ?? CreatePluginHost(new [] { typeof(CodeCheckService).GetTypeInfo().Assembly });
+            var workspace = host.GetExport<OmnisharpWorkspace>();
+            await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
+
+            await Task.Delay(50);
             return workspace;
         }
 
-        public static OmnisharpWorkspace AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
+        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+        {
+            return Startup.ConfigureMef(
+                new FakeServiceProvider(),
+                new FakeOmniSharpOptions().Options,
+                assemblies,
+                configure);
+        }
+
+        public static Task<OmnisharpWorkspace> AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
         {
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromAssembly(AssemblyFromType(typeof(object)));
@@ -155,8 +179,8 @@ namespace OmniSharp.Tests
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
                                                      "OmniSharp+" + framework, "AssemblyName",
                                                      LanguageNames.CSharp, filePath, metadataReferences: references);
-                workspace.AddProject(projectInfo);
 
+                workspace.AddProject(projectInfo);
                 foreach (var file in sourceFiles)
                 {
                     var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), file.Key,
@@ -167,7 +191,7 @@ namespace OmniSharp.Tests
                 }
             }
 
-            return workspace;
+            return Task.FromResult(workspace);
         }
 
         private static Assembly AssemblyFromType(Type type)
@@ -192,13 +216,6 @@ namespace OmniSharp.Tests
                 symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix));
             }
             return symbols;
-        }
-
-        public static ActionExecutingContext CreateActionExecutingContext(Request req, object controller = null)
-        {
-            var actionContext = new ActionContext(null, null, null);
-            var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilter>(), new Dictionary<string, object> { { "request", req } }, controller);
-            return actionExecutingContext;
         }
     }
 }
