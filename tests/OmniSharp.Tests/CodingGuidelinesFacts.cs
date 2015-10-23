@@ -14,6 +14,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void Usings_are_ordered_system_first_then_alphabetically()
         {
+            var invalidItems = false;
             foreach (var sourcePath in GetSourcePaths())
             {
                 var source = File.ReadAllText(sourcePath);
@@ -26,23 +27,13 @@ namespace OmniSharp.Tests
 
                 if (!usings.SequenceEqual(sorted))
                 {
-                    Console.WriteLine("Usings ordered incorrectly in " + sourcePath);
-                    Console.WriteLine(string.Join(",", sorted));
+                    invalidItems = true;
+                    Console.WriteLine("Usings ordered incorrectly in '" + sourcePath+"'");
+                    Console.WriteLine(string.Join(", ", sorted));
                 }
             }
 
-            foreach (var sourcePath in GetSourcePaths())
-            {
-                var source = File.ReadAllText(sourcePath);
-                var syntaxTree = CSharpSyntaxTree.ParseText(source);
-                var usings = ((CompilationUnitSyntax)syntaxTree.GetRoot()).Usings
-                    .Select(u => u.Name.ToString());
-
-                var sorted = usings.OrderByDescending(u => u.StartsWith("System"))
-                                   .ThenBy(u => u);
-
-                Assert.Equal(sorted, usings);
-            }
+            Assert.False(invalidItems);
         }
 
         [Fact]
