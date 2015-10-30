@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "7.0.1",
-    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150916-04",
+    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150928-02",
     "Microsoft.Framework.Configuration": "1.0.0-beta8",
     "Microsoft.Framework.Configuration.Binder": "1.0.0-beta8",
     "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-beta8",

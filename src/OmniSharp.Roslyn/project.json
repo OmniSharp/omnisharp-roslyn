@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150916-04"
+    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150928-02"
   },
   "frameworks": {
     "dnx451": {

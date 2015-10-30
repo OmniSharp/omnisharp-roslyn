@@ -6,11 +6,11 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
     "Newtonsoft.Json":"7.0.1",
-    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150916-04",
-    "Microsoft.CodeAnalysis.CSharp": "1.1.0-beta1-20150916-04",
-    "Microsoft.CodeAnalysis.CSharp.Features": "1.1.0-beta1-20150916-04",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.0-beta1-20150916-04",
-    "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.1.0-beta1-20150916-04",
+    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150928-02",
+    "Microsoft.CodeAnalysis.CSharp": "1.1.0-beta1-20150928-02",
+    "Microsoft.CodeAnalysis.CSharp.Features": "1.1.0-beta1-20150928-02",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.0-beta1-20150928-02",
+    "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.1.0-beta1-20150928-02",
   },
   "frameworks": {
     "dnx451": {
