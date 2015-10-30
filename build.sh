@@ -67,6 +67,7 @@ rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 curl -LO http://nuget.org/nuget.exe
 mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta8 -Prerelease -OutputDirectory artifacts/build/omnisharp/approot/packages
+mono nuget.exe install dnx-mono -Version 1.0.0-beta8 -Prerelease -OutputDirectory artifacts/build/omnisharp/approot/packages
 
 if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-beta8" ]; then
     echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta8 in output exiting!'
