@@ -61,6 +61,7 @@ popd
 
 dnvm use 1.0.0-beta4
 dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
+dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts
 dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
 dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
 dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
