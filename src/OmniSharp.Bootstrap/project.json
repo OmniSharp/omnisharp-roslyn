@@ -10,7 +10,7 @@
   },
 
   "dependencies": {
-    "OmniSharp": "1.0.0-*",
+    "OmniSharp.Abstractions": "1.0.0-*",
     "Newtonsoft.Json": "7.0.1"
   },
 
