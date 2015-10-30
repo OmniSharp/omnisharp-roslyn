@@ -5,8 +5,8 @@
     },
     "dependencies": {
         "OmniSharp.Plugins": "1.0.0-*",
-        "xunit": "2.1.0-rc2-*",
-        "xunit.runner.dnx": "2.1.0-beta5-*",
+        "xunit": "2.1.0-*",
+        "xunit.runner.dnx": "2.1.0-beta6-*",
         "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.0-beta1-20150916-04"
     },
     "commands": {

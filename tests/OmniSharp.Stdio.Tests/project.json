@@ -5,8 +5,8 @@
   },
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0-*",
-    "xunit": "2.1.0-rc2-*",
-    "xunit.runner.dnx": "2.1.0-beta5-*",
+    "xunit": "2.1.0-*",
+    "xunit.runner.dnx": "2.1.0-beta6-*",
     "Newtonsoft.Json": "6.0.8"
   },
   "commands": {
