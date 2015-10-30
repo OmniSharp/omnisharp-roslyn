@@ -20,17 +20,18 @@ namespace OmniSharp.Stdio
             _output = output;
         }
 
-        public IServerInformation Initialize(IConfiguration configuration)
+        public IFeatureCollection Initialize(IConfiguration configuration)
         {
-            return new StdioServerInformation();
+            return new FeatureCollection();
         }
 
-        public IDisposable Start(IServerInformation serverInformation, Func<IFeatureCollection, Task> application)
+        public IDisposable Start(IFeatureCollection serverInformation, Func<IFeatureCollection, Task> application)
         {
-            if (serverInformation.GetType() != typeof(StdioServerInformation))
+            if (serverInformation.GetType() != typeof(FeatureCollection))
             {
                 throw new ArgumentException("wrong server", "serverInformation");
             }
+            
             return new StdioServer(_input, _output, application);
         }
     }

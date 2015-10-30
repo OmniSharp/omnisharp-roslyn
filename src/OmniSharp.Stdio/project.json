@@ -6,8 +6,8 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.AspNet.Hosting": "1.0.0-beta7",
-    "Microsoft.AspNet.Http.Features": "1.0.0-beta7",
+    "Microsoft.AspNet.Hosting": "1.0.0-beta8",
+    "Microsoft.AspNet.Http.Features": "1.0.0-beta8",
     "Newtonsoft.Json": "7.0.1"
   },
     "frameworks": {
@@ -17,7 +17,7 @@
         },
         "dnxcore50": {
             "dependencies": {
-                "System.Runtime": "4.0.21-beta-23225"
+                "System.Runtime": "4.0.21-beta-23409"
             }
         }
     }

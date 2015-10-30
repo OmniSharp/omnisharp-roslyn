@@ -166,7 +166,7 @@ namespace OmniSharp
             if (refactoringContext != null)
             {
                 var sortUsingsAction = nRefactoryProvider.Refactorings
-                    .First(r => r is ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction);
+                    .First(r => r is RefactoringEssentials.CSharp.CodeRefactorings.SortUsingsAction);
 
                 await sortUsingsAction.ComputeRefactoringsAsync(refactoringContext.Value);
 

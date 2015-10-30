@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Http.Features;
 using Newtonsoft.Json;
 using OmniSharp.Stdio.Protocol;
 using Xunit;
@@ -20,7 +21,7 @@ namespace OmniSharp.Stdio.Tests
             });
 
             var factory = new StdioServerFactory(new StringReader(""), writer);
-            factory.Start(new StdioServerInformation(), features => Task.FromResult<object>(null));
+            factory.Start(new FeatureCollection(), features => Task.FromResult<object>(null));
 
             await writer.Completion;
         }
@@ -41,7 +42,7 @@ namespace OmniSharp.Stdio.Tests
             });
 
             var factory = new StdioServerFactory(new StringReader("notjson\r\n"), writer);
-            factory.Start(new StdioServerInformation(), features => Task.FromResult<object>(null));
+            factory.Start(new FeatureCollection(), features => Task.FromResult<object>(null));
 
             await writer.Completion;
         }
@@ -62,7 +63,7 @@ namespace OmniSharp.Stdio.Tests
             });
 
             var factory = new StdioServerFactory(new StringReader("{}\r\n"), writer);
-            factory.Start(new StdioServerInformation(), features => Task.FromResult<object>(null));
+            factory.Start(new FeatureCollection(), features => Task.FromResult<object>(null));
 
             await writer.Completion;
         }
@@ -92,14 +93,14 @@ namespace OmniSharp.Stdio.Tests
             });
 
             var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            factory.Start(new StdioServerInformation(), features =>
+            factory.Start(new FeatureCollection(), features =>
             {
                 return Task.FromResult<object>(null);
             });
 
             await writer.Completion;
         }
-        
+
         [Fact]
         public async Task ServerRepliesWithResponseWhenTaskDoesNotReturnAnything()
         {
@@ -128,7 +129,7 @@ namespace OmniSharp.Stdio.Tests
             });
 
             var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            factory.Start(new StdioServerInformation(), features =>
+            factory.Start(new FeatureCollection(), features =>
             {
                 return Task.WhenAll();
             });
@@ -161,7 +162,7 @@ namespace OmniSharp.Stdio.Tests
             });
 
             var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            factory.Start(new StdioServerInformation(), features =>
+            factory.Start(new FeatureCollection(), features =>
             {
                 throw new Exception();
             });

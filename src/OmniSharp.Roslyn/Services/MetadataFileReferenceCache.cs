@@ -7,6 +7,7 @@ using Microsoft.Framework.Caching;
 using Microsoft.Framework.Caching.Distributed;
 using Microsoft.Framework.Caching.Memory;
 using Microsoft.Framework.Logging;
+using Microsoft.Framework.Primitives;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp.Services
@@ -40,7 +41,7 @@ namespace OmniSharp.Services
                     var moduleMetadata = ModuleMetadata.CreateFromStream(stream, PEStreamOptions.PrefetchMetadata);
                     metadata = AssemblyMetadata.Create(moduleMetadata);
                     var options = new MemoryCacheEntryOptions();
-                    options.Triggers.Add(new FileWriteTimeTrigger(path));
+                    options.ExpirationTokens.Add(new FileWriteTimeTrigger(path));
                     _cache.Set(cacheKey, metadata, options);
                 }
             };
@@ -54,7 +55,7 @@ namespace OmniSharp.Services
             return metadata.GetReference();
         }
 
-        private class FileWriteTimeTrigger : IExpirationTrigger
+        private class FileWriteTimeTrigger : IChangeToken
         {
             private readonly string _path;
             private readonly DateTime _lastWriteTime;
@@ -64,7 +65,7 @@ namespace OmniSharp.Services
                 _lastWriteTime = File.GetLastWriteTime(path).ToUniversalTime();
             }
 
-            public bool ActiveExpirationCallbacks
+            public bool ActiveChangeCallbacks
             {
                 get
                 {
@@ -72,7 +73,7 @@ namespace OmniSharp.Services
                 }
             }
 
-            public bool IsExpired
+            public bool HasChanged
             {
                 get
                 {
@@ -80,7 +81,7 @@ namespace OmniSharp.Services
                 }
             }
 
-            public IDisposable RegisterExpirationCallback(Action<object> callback, object state)
+            public IDisposable RegisterChangeCallback(Action<object> callback, object state)
             {
                 throw new NotImplementedException();
             }

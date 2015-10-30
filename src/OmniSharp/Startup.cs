@@ -30,7 +30,8 @@ namespace OmniSharp
     {
         public Startup(IApplicationEnvironment applicationEnvironment)
         {
-            var configurationBuilder = new ConfigurationBuilder(applicationEnvironment.ApplicationBasePath)
+            var configurationBuilder = new ConfigurationBuilder()
+                 .SetBasePath(applicationEnvironment.ApplicationBasePath)
                  .AddJsonFile("config.json")
                  .AddEnvironmentVariables();
 
@@ -127,12 +128,12 @@ namespace OmniSharp
                 )
                 .Select(assemblyName => Assembly.Load(assemblyName));
 
-            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Options, assemblies);
+            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
             Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
 
             Func<string, LogLevel, bool> logFilter = (category, type) =>
-                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ErrorHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
+                (category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) || string.Equals(category, typeof(ExceptionHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
                 && env.TraceType <= type;
 
             if (env.TransportType == TransportType.Stdio)
@@ -148,7 +149,7 @@ namespace OmniSharp
 
             app.UseRequestLogging();
 
-            app.UseErrorHandler("/error");
+            app.UseExceptionHandler("/error");
 
             app.UseMiddleware<EndpointMiddleware>();
             app.UseMiddleware<StatusMiddleware>();

@@ -162,7 +162,7 @@ namespace OmniSharp.Tests
         {
             return Startup.ConfigureMef(
                 new FakeServiceProvider(),
-                new FakeOmniSharpOptions().Options,
+                new FakeOmniSharpOptions().Value,
                 assemblies,
                 configure);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
+using Microsoft.Framework.Primitives;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -13,7 +14,7 @@ namespace OmniSharp.Stdio.Features
         public RequestFeature()
         {
             Body = Stream.Null;
-            Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            Headers = new Dictionary<string, StringValues>(StringComparer.OrdinalIgnoreCase);
             Protocol = "HTTP/1.1";
             Scheme = "http";
             Method = "POST";
@@ -24,7 +25,7 @@ namespace OmniSharp.Stdio.Features
 
         public Stream Body { get; set; }
 
-        public IDictionary<string, string[]> Headers { get; set; }
+        public IDictionary<string, StringValues> Headers { get; set; }
 
         public string Method { get; set; }
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
+using Microsoft.Framework.Primitives;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -11,7 +12,7 @@ namespace OmniSharp.Stdio.Features
     {
         public ResponseFeature()
         {
-            Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            Headers = new Dictionary<string, StringValues>(StringComparer.OrdinalIgnoreCase);
             StatusCode = 200;
         }
 
@@ -19,7 +20,7 @@ namespace OmniSharp.Stdio.Features
 
         public string ReasonPhrase { get; set; }
 
-        public IDictionary<string, string[]> Headers { get; set; }
+        public IDictionary<string, StringValues> Headers { get; set; }
 
         public Stream Body { get; set; }
 
