@@ -208,7 +208,7 @@ namespace OmniSharp.Bootstrap
 
             Console.WriteLine(Path.Combine(omnisharpPath, "bootstrap", "Bootstrapper"));
 
-            PackageRestore(bootstrapProjectPath, "1.0.0-beta4");
+            //PackageRestore(bootstrapProjectPath, "1.0.0-beta4");
 
             return 0;
         }
