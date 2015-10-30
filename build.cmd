@@ -19,46 +19,46 @@ rem set the runtime path because the above commands set \.dnx<space>\runtimes
 set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
 
 call dnu restore
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 pushd tests\OmniSharp.Dnx.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.MSBuild.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Plugins.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Roslyn.CSharp.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.ScriptCs.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Stdio.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Tests
 call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 call dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts

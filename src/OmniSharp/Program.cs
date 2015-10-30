@@ -21,7 +21,6 @@ namespace OmniSharp
 
         public static OmnisharpEnvironment Environment { get; set; }
 
-        // Tied to bootstrapper, any new arguments here need to be added there.
         public Program(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
