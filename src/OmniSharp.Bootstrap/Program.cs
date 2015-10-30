@@ -26,6 +26,7 @@ namespace OmniSharp.Bootstrap
         {
             var enumerator = args.GetEnumerator();
             var pluginPaths = new List<string>();
+            var pluginNames = new List<string>();
 
             var bootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
             var omnisharpProjectPath = Path.Combine(bootstrapPath, "OmniSharp", "project.json");
@@ -43,9 +44,16 @@ namespace OmniSharp.Bootstrap
                     enumerator.MoveNext();
                     pluginPaths.Add((string)enumerator.Current);
                 }
+
+                if (arg == "--plugin-name")
+                {
+                    enumerator.MoveNext();
+                    pluginNames.Add((string)enumerator.Current);
+                }
             }
 
-            if (!pluginPaths.Any()) {
+            if (!pluginPaths.Any() && !pluginNames.Any())
+            {
                 Console.WriteLine(Path.GetDirectoryName(omnisharpProjectPath));
                 return 0;
             }
@@ -117,6 +125,11 @@ namespace OmniSharp.Bootstrap
 
             var allDeps = new Dictionary<string, string>();
             allDeps.Add("OmniSharp", "1.0.0-*");
+            foreach (var pluginName in pluginNames)
+            {
+                allDeps.Add(pluginName, "");
+            }
+
             var frameworkDeps = new Dictionary<string, Dictionary<string, string>>();
             foreach (var framework in defaultFrameworks)
             {
