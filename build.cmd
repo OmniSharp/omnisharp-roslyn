@@ -62,6 +62,7 @@ rem if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 call dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
+call dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts
 call dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
 call dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
 call dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
