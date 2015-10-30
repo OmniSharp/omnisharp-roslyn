@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0-*",
+  "description": "OmniSharp.Bootstrap Console Application",
+  "authors": [""],
+  "tags": [""],
+  "projectUrl": "",
+  "licenseUrl": "",
+  "tooling": {
+    "defaultNamespace": "OmniSharp.Bootstrap"
+  },
+
+  "dependencies": {
+    "OmniSharp": "1.0.0-*",
+    "Newtonsoft.Json": "7.0.1"
+  },
+
+  "commands": {
+    "ConsoleApplication": "ConsoleApplication"
+  },
+
+  "frameworks": {
+    "dnx451": {},
+    "dnxcore50": {
+      "dependencies": {
+        "System.Security.Cryptography.Hashing": "4.0.0-beta-22816"
+      }
+    }
+  }
+}
