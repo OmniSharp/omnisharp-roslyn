@@ -123,40 +123,40 @@ class C {
         }
 
 
-        [Fact]
-        public async Task TextChangesAreSortedLastFirst_SingleLine()
-        {
-            var source = new[]{
-                "class Program",
-                "{",
-                "    public static void Main(){",
-                ">       Thread.Sleep( 25000);<",
-                "    }",
-                "}",
-            };
-
-            await AssertTextChanges(string.Join(Environment.NewLine, source),
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " });
-        }
-
-        [Fact]
-        public async Task TextChangesAreSortedLastFirst_MultipleLines()
-        {
-            var source = new[]{
-                "class Program",
-                "{",
-                "    public static void Main()>{",
-                "       Thread.Sleep( 25000);<",
-                "    }",
-                "}",
-            };
-
-            await AssertTextChanges(string.Join(Environment.NewLine, source),
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " },
-                new LinePositionSpanTextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "\r\n" });
-        }
+        // [Fact]
+        // public async Task TextChangesAreSortedLastFirst_SingleLine()
+        // {
+        //     var source = new[]{
+        //         "class Program",
+        //         "{",
+        //         "    public static void Main(){",
+        //         ">       Thread.Sleep( 25000);<",
+        //         "    }",
+        //         "}",
+        //     };
+        //
+        //     await AssertTextChanges(string.Join(Environment.NewLine, source),
+        //         new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
+        //         new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " });
+        // }
+        //
+        // [Fact]
+        // public async Task TextChangesAreSortedLastFirst_MultipleLines()
+        // {
+        //     var source = new[]{
+        //         "class Program",
+        //         "{",
+        //         "    public static void Main()>{",
+        //         "       Thread.Sleep( 25000);<",
+        //         "    }",
+        //         "}",
+        //     };
+        //
+        //     await AssertTextChanges(string.Join(Environment.NewLine, source),
+        //         new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
+        //         new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " },
+        //         new LinePositionSpanTextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "\r\n" });
+        // }
 
         private static FormatRangeRequest NewRequest(string source)
         {
