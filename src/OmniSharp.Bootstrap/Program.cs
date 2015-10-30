@@ -15,7 +15,7 @@ namespace OmniSharp.Bootstrap
     public class Program
     {
         private readonly IApplicationEnvironment _appEnv;
-        private readonly string[] _nonPlugins = { "OmniSharp.Plugins", "OmniSharp.Abstractions", "OmniSharp.Stdio", "OmniSharp", "OmniSharp.Stdio" };
+        private readonly string[] _nonPlugins = { "OmniSharp.Plugins", "OmniSharp.Abstractions", "OmniSharp.Stdio", "OmniSharp" };
 
         public Program(IApplicationEnvironment appEnv)
         {
@@ -26,18 +26,13 @@ namespace OmniSharp.Bootstrap
         {
             var enumerator = args.GetEnumerator();
             var pluginPaths = new List<string>();
+
             var bootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
             var omnisharpProjectPath = Path.Combine(bootstrapPath, "OmniSharp", "project.json");
             if (!File.Exists(omnisharpProjectPath))
             {
                 omnisharpProjectPath = Path.Combine(bootstrapPath, "OmniSharp", "1.0.0", "root", "project.json");
             }
-
-            var defaultFrameworks = JObject.Parse(File.ReadAllText(omnisharpProjectPath))["frameworks"]
-                .Select(x => x.Path.Replace("frameworks.", ""))
-                .OrderBy(x => x).ToArray();
-
-            pluginPaths.Add(bootstrapPath);
 
             while (enumerator.MoveNext())
             {
@@ -49,6 +44,17 @@ namespace OmniSharp.Bootstrap
                     pluginPaths.Add((string)enumerator.Current);
                 }
             }
+
+            if (!pluginPaths.Any()) {
+                Console.WriteLine(Path.GetDirectoryName(omnisharpProjectPath));
+                return 0;
+            }
+
+            var defaultFrameworks = JObject.Parse(File.ReadAllText(omnisharpProjectPath))["frameworks"]
+                .Select(x => x.Path.Replace("frameworks.", ""))
+                .OrderBy(x => x).ToArray();
+
+            pluginPaths.Add(bootstrapPath);
 
             // Find a repeatable user based location
             var home = new string[] { Environment.GetEnvironmentVariable("HOME"), Environment.GetEnvironmentVariable("USERPROFILE") }.Where(s => !string.IsNullOrEmpty(s)).First();
@@ -116,8 +122,6 @@ namespace OmniSharp.Bootstrap
             {
                 frameworkDeps.Add(framework, new Dictionary<string, string>());
             }
-
-            Console.WriteLine(string.Join(",", pluginDirectories));
 
             foreach (var dir in pluginDirectories)
             {
