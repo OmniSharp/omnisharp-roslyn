@@ -8,7 +8,7 @@
     "Newtonsoft.Json": "7.0.1"
   },
   "commands": {
-    "ConsoleApplication": "ConsoleApplication"
+    "omnisharp.bootstrap": "run"
   },
   "frameworks": {
     "dnx451": {},

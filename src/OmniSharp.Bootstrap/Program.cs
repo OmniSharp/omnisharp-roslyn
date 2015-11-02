@@ -26,7 +26,8 @@ namespace OmniSharp.Bootstrap
         {
             var enumerator = args.GetEnumerator();
             var pluginPaths = new List<string>();
-            var pluginNames = new List<string>();
+            var pluginNames = new List<KeyValuePair<string, string>>();
+            var solutionRoot = Directory.GetCurrentDirectory();
 
             var bootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
             var omnisharpProjectPath = Path.Combine(bootstrapPath, "OmniSharp", "project.json");
@@ -48,13 +49,50 @@ namespace OmniSharp.Bootstrap
                 if (arg == "--plugin-name")
                 {
                     enumerator.MoveNext();
-                    pluginNames.Add((string)enumerator.Current);
+                    pluginNames.Add(new KeyValuePair<string, string>((string)enumerator.Current, string.Empty));
+                }
+
+                if (arg == "-s")
+                {
+                    enumerator.MoveNext();
+                    solutionRoot = Path.GetFullPath((string)enumerator.Current);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(solutionRoot))
+            {
+                var pluginsFolder = Path.Combine(solutionRoot, ".omnisharp", "plugins");
+                if (Directory.Exists(pluginsFolder))
+                {
+                    pluginPaths.Add(pluginsFolder);
+                }
+
+                var omnisharpJsonPath = Path.Combine(solutionRoot, "omnisharp.json");
+                if (File.Exists(omnisharpJsonPath))
+                {
+                    var omnisharpJson = JObject.Parse(File.ReadAllText(omnisharpJsonPath));
+                    if (omnisharpJson["plugins"] != null)
+                    {
+                        var omnisharpJsonPlugins = omnisharpJson["plugins"];
+                        foreach (var plugin in omnisharpJsonPlugins)
+                        {
+                            if (plugin is JObject)
+                            {
+                                var pluginJobject = plugin as JObject;
+                                pluginNames.Add(new KeyValuePair<string, string>(pluginJobject["name"].ToString(), pluginJobject["version"].ToString()));
+                            }
+                            else if (plugin is JToken)
+                            {
+                                pluginNames.Add(new KeyValuePair<string, string>(plugin.ToString(), string.Empty));
+                            }
+                        }
+                    }
                 }
             }
 
             if (!pluginPaths.Any() && !pluginNames.Any())
             {
-                Console.WriteLine(Path.GetDirectoryName(omnisharpProjectPath));
+                Console.Write(Path.GetDirectoryName(omnisharpProjectPath));
                 return 0;
             }
 
@@ -95,11 +133,16 @@ namespace OmniSharp.Bootstrap
                 }
             }
 
-            var hash = string.Join("", Convert.ToBase64String(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))).Except(Path.GetInvalidFileNameChars()));
+            foreach (var path in pluginNames.Select(x => string.Join(":", x.Key, x.Value)))
+            {
+                sb.Append(path);
+            }
+
+            var hash = string.Join("", Convert.ToBase64String(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))).Except(Path.GetInvalidFileNameChars().Concat(new[] { '=', '+' })));
             var omnisharpPath = Path.Combine(omnisharpHome, hash);
             if (Directory.Exists(omnisharpPath))
             {
-                Console.WriteLine(Path.Combine(omnisharpPath, "bootstrap", "Bootstrapper"));
+                Console.Write(Path.Combine(omnisharpPath, "bootstrap", "Bootstrapper"));
                 return 0;
             }
 
@@ -125,9 +168,9 @@ namespace OmniSharp.Bootstrap
 
             var allDeps = new Dictionary<string, string>();
             allDeps.Add("OmniSharp", "1.0.0-*");
-            foreach (var pluginName in pluginNames)
+            foreach (var pluginPair in pluginNames)
             {
-                allDeps.Add(pluginName, "");
+                allDeps.Add(pluginPair.Key, pluginPair.Value);
             }
 
             var frameworkDeps = new Dictionary<string, Dictionary<string, string>>();
@@ -160,7 +203,7 @@ namespace OmniSharp.Bootstrap
                     {
                         if (!allDeps.ContainsKey(name))
                         {
-                            allDeps.Add(name, "1.0.0-*");
+                            allDeps.Add(name, "");
                         }
                     }
                     else
@@ -172,7 +215,8 @@ namespace OmniSharp.Bootstrap
                                 Dictionary<string, string> deps = null;
                                 if (frameworkDeps.TryGetValue(framework, out deps))
                                 {
-                                    if (!deps.ContainsKey(name)) {
+                                    if (!deps.ContainsKey(name))
+                                    {
                                         deps.Add(name, "1.0.0-*");
                                     }
                                 }
@@ -206,7 +250,7 @@ namespace OmniSharp.Bootstrap
             // Put that in a temporary directory
             // return the full Path to the folder that will Run omnisharp
 
-            Console.WriteLine(Path.Combine(omnisharpPath, "bootstrap", "Bootstrapper"));
+            Console.Write(Path.Combine(omnisharpPath, "bootstrap", "Bootstrapper"));
 
             //PackageRestore(bootstrapProjectPath, "1.0.0-beta4");
 
