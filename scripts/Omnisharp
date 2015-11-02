@@ -9,5 +9,7 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 BOOTSTRAP=$("$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnx" "$DIR/../src/OmniSharp" run "$@")
-"$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnu" restore "$BOOTSTRAP"
+if test -e "$BOOTSTRAP/project.lock.json";then
+  "$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnu" restore "$BOOTSTRAP"
+fi
 "$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnx" "$BOOTSTRAP" run "$@"
