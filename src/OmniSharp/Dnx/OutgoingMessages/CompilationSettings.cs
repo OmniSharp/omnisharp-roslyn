@@ -41,6 +41,9 @@ namespace Microsoft.Framework.Runtime.Roslyn
         public int WarningLevel { get; set; }
         public bool ConcurrentBuild { get; set; }
         public int GeneralDiagnosticOption { get; set; }
+        public string CryptoKeyFile { get; set; }
+        public bool? DelaySign { get; set; }
+        public byte[] CryptoPublicKey { get; set; }
         public Dictionary<string, int> SpecificDiagnosticOptions { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -325,9 +326,17 @@ namespace OmniSharp.Dnx
                                 specificDiagnosticOptions: specificDiagnosticOptions
                             );
 
+                        // Handle strong naming
+                        csharpOptions = csharpOptions.WithCryptoKeyFile(options.CryptoKeyFile)
+                                                     .WithDelaySign(options.DelaySign);
+
+                        if (options.CryptoPublicKey != null)
+                        {
+                            csharpOptions = csharpOptions.WithCryptoPublicKey(ImmutableArray.Create(options.CryptoPublicKey));
+                        }
+
                         var parseOptions = new CSharpParseOptions(val.CompilationOptions.LanguageVersion,
                                                                   preprocessorSymbols: val.CompilationOptions.Defines);
-
                         _workspace.SetCompilationOptions(projectId, csharpOptions);
                         _workspace.SetParseOptions(projectId, parseOptions);
                     }
