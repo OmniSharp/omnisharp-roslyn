@@ -4,7 +4,9 @@ echo $0
 thispwd=`pwd`
 echo $thispwd
 
-#pushd "$(dirname "$0")"
+if (! $TRAVIS) then
+    pushd "$(dirname "$0")"
+fi
 
 echo $0
 thispwd=`pwd`
@@ -100,4 +102,6 @@ cd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
 cd ../../..
 
-popd
+if (! $TRAVIS) then
+    popd
+fi
