@@ -1,6 +1,16 @@
 #!/bin/bash
 
-pushd "$(dirname "$0")"
+echo $0
+thispwd=`pwd`
+echo $thispwd
+
+if (! $TRAVIS) then
+    pushd "$(dirname "$0")"
+fi
+
+echo $0
+thispwd=`pwd`
+echo $thispwd
 
 rm -rf artifacts
 if ! type dnvm > /dev/null 2>&1; then
@@ -15,12 +25,13 @@ fi
 # Fetch the latest dnu and use that instead
 #export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetmaster/api/v2/
 dnvm update-self
-dnvm upgrade -unstable
-dnu restore
+dnvm install 1.0.0-beta8
+dnvm use 1.0.0-beta8
+dnu restore --ignore-failed-sources
 # end hack
 
 dnvm install 1.0.0-beta4
-dnvm alias default 1.0.0-beta4
+dnvm use 1.0.0-beta4
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
@@ -61,6 +72,7 @@ popd
 
 dnvm use 1.0.0-beta4
 dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
+dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts
 dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
 dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
 dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
@@ -90,4 +102,6 @@ cd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
 cd ../../..
 
-popd
+if (! $TRAVIS) then
+    popd
+fi
