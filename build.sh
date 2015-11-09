@@ -1,6 +1,9 @@
 #!/bin/bash
 
 echo $0
+thispwd=`pwd`
+echo $thispwd
+
 #pushd "$(dirname "$0")"
 
 rm -rf artifacts
