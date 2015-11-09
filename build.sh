@@ -15,12 +15,13 @@ fi
 # Fetch the latest dnu and use that instead
 #export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetmaster/api/v2/
 dnvm update-self
-dnvm upgrade -unstable
+dnvm install 1.0.0-beta8
+dnvm use 1.0.0-beta8
 dnu restore
 # end hack
 
 dnvm install 1.0.0-beta4
-dnvm alias default 1.0.0-beta4
+dnvm use 1.0.0-beta4
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
