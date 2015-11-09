@@ -103,14 +103,12 @@ namespace OmniSharp.Middleware
 
         private void SerializeResponseObject(HttpResponse response, object value)
         {
-            using (var writer = new StreamWriter(response.Body))
+            using (var writer = new StreamWriter(response.Body, System.Text.Encoding.UTF8, 1024, true))
+            using (var jsonWriter = new JsonTextWriter(writer))
             {
-                using (var jsonWriter = new JsonTextWriter(writer))
-                {
-                    jsonWriter.CloseOutput = false;
-                    var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-                    jsonSerializer.Serialize(jsonWriter, value);
-                }
+                jsonWriter.CloseOutput = false;
+                var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
+                jsonSerializer.Serialize(jsonWriter, value);
             }
         }
     }
