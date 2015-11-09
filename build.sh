@@ -1,7 +1,5 @@
 #!/bin/bash
 
-pushd "$(dirname "$0")"
-
 rm -rf artifacts
 if ! type dnvm > /dev/null 2>&1; then
     curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | DNX_BRANCH=dev sh && source ~/.dnx/dnvm/dnvm.sh
@@ -91,5 +89,3 @@ fi
 cd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
 cd ../../..
-
-popd
