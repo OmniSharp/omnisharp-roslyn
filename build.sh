@@ -1,16 +1,8 @@
 #!/bin/bash
 
-echo $0
-thispwd=`pwd`
-echo $thispwd
-
 if (! $TRAVIS) then
     pushd "$(dirname "$0")"
 fi
-
-echo $0
-thispwd=`pwd`
-echo $thispwd
 
 rm -rf artifacts
 if ! type dnvm > /dev/null 2>&1; then
@@ -27,7 +19,7 @@ fi
 dnvm update-self
 dnvm install 1.0.0-beta8
 dnvm use 1.0.0-beta8
-dnu restore --ignore-failed-sources
+dnu restore
 # end hack
 
 dnvm install 1.0.0-beta4
