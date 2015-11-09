@@ -17,7 +17,7 @@ fi
 dnvm update-self
 dnvm install 1.0.0-beta8
 dnvm use 1.0.0-beta8
-dnu restore
+dnu restore --ignore-failed-sources
 # end hack
 
 dnvm install 1.0.0-beta4
