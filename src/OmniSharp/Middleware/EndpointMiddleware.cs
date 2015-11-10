@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;

@@ -19,57 +19,63 @@ rem set the runtime path because the above commands set \.dnx<space>\runtimes
 set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
 
 call dnu restore
-if %errorlevel% neq 0 exit /b %errorlevel%
+rem if %errorlevel% neq 0 exit /b %errorlevel%
 
-pushd tests\OmniSharp.Dnx.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.Dnx.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.MSBuild.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.MSBuild.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.Plugins.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.Plugins.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.Roslyn.CSharp.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.Roslyn.CSharp.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.ScriptCs.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.ScriptCs.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.Stdio.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.Stdio.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-pushd tests\OmniSharp.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+rem pushd tests\OmniSharp.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
 
-call dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
-call dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts
-call dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
-call dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
-call dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
-call dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
-call dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
-call dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
-call dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
-call dnu publish src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+call dnu pack src\OmniSharp --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Abstractions --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Bootstrap --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Dnx --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.MSBuild --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Nuget --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Roslyn --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Roslyn.CSharp --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.ScriptCs --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Stdio --configuration Release --out artifacts\build\nuget
+
+rem Build both into the omnisharp package
+call dnu publish src\OmniSharp --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+call dnu publish src\OmniSharp.Bootstrap --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+
+
 
 popd

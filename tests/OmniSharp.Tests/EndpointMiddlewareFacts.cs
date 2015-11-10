@@ -23,7 +23,6 @@ using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
-using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Services;
 using Xunit;
 

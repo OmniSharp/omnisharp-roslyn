@@ -1,10 +1,3 @@
 SETLOCAL
 
-rem make sure we're bootstrapped
-for /f "delims=" %%a in ('%~dp0Bootstrap.cmd') do @set LOCATION=%%a
-echo exist %LOCATION%\project.lock.json
-if not exist %LOCATION%\project.lock.json (
-  call "%USERPROFILE%\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin\dnu.cmd" restore %LOCATION%
-)
-echo %LOCATION%
-"%USERPROFILE%\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin\dnx" %LOCATION% run %*
+"%USERPROFILE%\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin\dnx" %~dp0..\src\OmniSharp run %*
