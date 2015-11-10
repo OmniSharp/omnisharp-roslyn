@@ -1,6 +1,7 @@
 @echo off
 
 pushd %~dp0
+
 set "DNX_FEED=https://www.nuget.org/api/v2"
 setlocal EnableDelayedExpansion
 where dnvm
@@ -12,6 +13,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :install
+rmdir /s /q artifacts
 set
 call dnvm install 1.0.0-beta4
 call dnvm use 1.0.0-beta4
@@ -19,7 +21,7 @@ rem set the runtime path because the above commands set \.dnx<space>\runtimes
 set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
 
 call dnu restore
-rem if %errorlevel% neq 0 exit /b %errorlevel%
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 rem pushd tests\OmniSharp.Dnx.Tests
 rem call dnx . test
@@ -72,10 +74,11 @@ call dnu pack src\OmniSharp.Roslyn.CSharp --configuration Release --out artifact
 call dnu pack src\OmniSharp.ScriptCs --configuration Release --out artifacts\build\nuget
 call dnu pack src\OmniSharp.Stdio --configuration Release --out artifacts\build\nuget
 
-rem Build both into the omnisharp package
-call dnu publish src\OmniSharp --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
-call dnu publish src\OmniSharp.Bootstrap --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
-
-
+mkdir artifacts\OmniSharp.Bootstrapper
+rem Publish our common base omnisharp configuration (all language services)
+copy bootstrap\bootstrap.json artifacts\OmniSharp.Bootstrapper\project.json
+copy src\OmniSharp\config.json artifacts\OmniSharp.Bootstrapper\config.json
+call dnu restore artifacts\OmniSharp.Bootstrapper
+call dnu publish artifacts\OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
 
 popd

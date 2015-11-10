@@ -64,16 +64,20 @@ popd
 
 dnvm use 1.0.0-beta4
 
-dnu build src/OmniSharp --configuration Release --out artifacts
-dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
-dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts
-dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
-dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
-dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
-dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
-dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
-dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
-dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
+OMNISHARP_VERSION="v1.0.0-dev";
+# Update version numbers on tags
+if ( $TRAVIS_TAG ) then OMNISHARP_VERSION=$TRAVIS_TAG; fi
+
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Abstractions/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Bootstrap/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Dnx/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.MSBuild/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Nuget/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Roslyn/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Roslyn.CSharp/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.ScriptCs/project.json
+sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Stdio/project.json
 
 dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget
 dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget
@@ -86,9 +90,12 @@ dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/bui
 dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget
 dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget
 
-# build both apps into the published package
-dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
-dnu publish src/OmniSharp.Bootstrap --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
+mkdir artifacts/OmniSharp.Bootstrapper
+# Publish our common base omnisharp configuration (all default language services)
+cp bootstrap/bootstrap.json artifacts/OmniSharp.Bootstrapper/project.json
+cp src/OmniSharp/config.json artifacts/OmniSharp.Bootstrapper/config.json
+dnu restore artifacts/OmniSharp.Bootstrapper
+dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
@@ -109,6 +116,11 @@ fi
 
 pushd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
+popd
+
+pushd artifacts
+# list a tree of the results
+ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
 popd
 
 if (! $TRAVIS) then

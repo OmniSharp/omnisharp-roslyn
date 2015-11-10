@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
+    "OmniSharp.Nuget": "1.0.0-*",
     "OmniSharp.Stdio": "1.0.0-*",
     "OmniSharp.Plugins": "1.0.0-*",
     "OmniSharp.Roslyn": "1.0.0-*",
