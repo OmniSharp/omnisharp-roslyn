@@ -71,6 +71,8 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 dnvm use 1.0.0-beta4
+
+dnu build src/OmniSharp --configuration Release --out artifacts
 dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
 dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts
 dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
@@ -80,6 +82,18 @@ dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
 dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
 dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
 dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
+
+dnu build src/OmniSharp --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Nuget --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget
+dnu build src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget
+
 dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
@@ -98,9 +112,31 @@ if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; t
     exit 1
 fi
 
-cd artifacts/build/omnisharp
+pushd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
-cd ../../..
+popd
+
+dnu publish src/OmniSharp.Bootstrap --configuration Release --no-source --out artifacts/build/omnisharp.bootstrap --runtime dnx-mono.1.0.0-beta4 2>&1 | tee buildlog
+# work around for kpm bundle returning an exit code 0 on failure
+grep "Build failed" buildlog
+rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
+
+curl -LO http://nuget.org/nuget.exe
+mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta4 -Prerelease -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
+
+if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-clr-win-x86.1.0.0-beta4" ]; then
+    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta4 in output exiting!'
+    exit 1
+fi
+
+if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-beta4" ]; then
+    echo 'ERROR: Can not find dnx-mono.1.0.0-beta4 in output exiting!'
+    exit 1
+fi
+
+pushd artifacts/build/omnisharp.bootstrap
+tar -zcf ../../../omnisharp.bootstrap.tar.gz .
+popd
 
 if (! $TRAVIS) then
     popd
