@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
@@ -57,7 +58,7 @@ namespace OmniSharp.Stdio
                             _writer.WriteLine(new EventPacket()
                             {
                                 Event = "error",
-                                Body = e.ToString()
+                                Body = JsonConvert.ToString(e.ToString(), '"', StringEscapeHandling.Default)
                             });
                         }
                     });
@@ -107,7 +108,7 @@ namespace OmniSharp.Stdio
                     // updating the response object here so that the ResponseStream
                     // prints the latest state when being closed
                     response.Success = false;
-                    response.Message = e.ToString();
+                    response.Message = JsonConvert.ToString(e.ToString(), '"', StringEscapeHandling.Default);
                 }
                 finally
                 {
