@@ -132,6 +132,30 @@ pushd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
 popd
 
+# Publish just the bootstrap
+dnu publish src/OmniSharp.Bootstrap --configuration Release --no-source --out artifacts/build/omnisharp.bootstrap --runtime dnx-mono.1.0.0-beta4
+
+# work around for kpm bundle returning an exit code 0 on failure
+grep "Build failed" buildlog
+rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
+
+curl -LO http://nuget.org/nuget.exe
+mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta4 -Prerelease -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
+
+if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-clr-win-x86.1.0.0-beta4" ]; then
+    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta4 in output exiting!'
+    exit 1
+fi
+
+if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-beta4" ]; then
+    echo 'ERROR: Can not find dnx-mono.1.0.0-beta4 in output exiting!'
+    exit 1
+fi
+
+pushd artifacts/build/omnisharp.bootstrap
+tar -zcf ../../../omnisharp.bootstrap.tar.gz .
+popd
+
 pushd artifacts
 # list a tree of the results
 ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
