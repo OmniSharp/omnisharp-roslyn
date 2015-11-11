@@ -64,20 +64,34 @@ popd
 
 dnvm use 1.0.0-beta4
 
-OMNISHARP_VERSION="v1.0.0-dev";
-# Update version numbers on tags
-if ( $TRAVIS_TAG ) then OMNISHARP_VERSION=$TRAVIS_TAG; fi
+OMNISHARP_VERSION="1.0.0-dev";
+if [ $TRAVIS_TAG ]; then
+  OMNISHARP_VERSION=${TRAVIS_TAG:1};
+fi
 
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Abstractions/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Bootstrap/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Dnx/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.MSBuild/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Nuget/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Roslyn/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Roslyn.CSharp/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.ScriptCs/project.json
-sed -i "s/\"1.0.0-*\"/\"$OMNISHARP_VERSION\"/g" src/OmniSharp.Stdio/project.json
+if [ $TRAVIS ]; then
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Abstractions/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Bootstrap/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Dnx/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.MSBuild/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Nuget/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn.CSharp/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.ScriptCs/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Stdio/project.json.temp
+  
+  mv src/OmniSharp/project.json.temp src/OmniSharp/project.json
+  mv src/OmniSharp.Abstractions/project.json.temp src/OmniSharp.Abstractions/project.json
+  mv src/OmniSharp.Bootstrap/project.json.temp src/OmniSharp.Bootstrap/project.json
+  mv src/OmniSharp.Dnx/project.json.temp src/OmniSharp.Dnx/project.json
+  mv src/OmniSharp.MSBuild/project.json.temp src/OmniSharp.MSBuild/project.json
+  mv src/OmniSharp.Nuget/project.json.temp src/OmniSharp.Nuget/project.json
+  mv src/OmniSharp.Roslyn/project.json.temp src/OmniSharp.Roslyn/project.json
+  mv src/OmniSharp.Roslyn.CSharp/project.json.temp src/OmniSharp.Roslyn.CSharp/project.json
+  mv src/OmniSharp.ScriptCs/project.json.temp src/OmniSharp.ScriptCs/project.json
+  mv src/OmniSharp.Stdio/project.json.temp src/OmniSharp.Stdio/project.json
+fi
 
 dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget
 dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget
