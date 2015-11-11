@@ -4,8 +4,8 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "OmniSharp.Abstractions": "1.0.0-*",
-    "Newtonsoft.Json": "7.0.1"
+    "Newtonsoft.Json": "7.0.1",
+    "Microsoft.Framework.Runtime.Interfaces": "1.0.0-beta4"
   },
   "commands": {
     "omnisharp.bootstrap": "run"
@@ -15,6 +15,11 @@
     "dnxcore50": {
       "dependencies": {
         "System.Runtime": "4.0.20-beta-22816",
+        "System.Collections": "4.0.10-beta-22816",
+        "System.Threading.Thread": "4.0.0-beta-22816",
+        "System.Threading.Tasks": "4.0.10-beta-22816",
+        "System.Linq": "4.0.0-beta-22816",
+        "System.Console": "4.0.0-beta-22816",
         "System.IO.FileSystem": "4.0.0-beta-22816",
         "System.Dynamic.Runtime": "4.0.10-beta-22816",
         "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-22816"

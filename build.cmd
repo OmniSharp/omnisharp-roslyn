@@ -23,6 +23,11 @@ set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
 call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+rem pushd tests\OmniSharp.Bootstrap.Tests
+rem call dnx . test
+rem if %errorlevel% neq 0 exit /b %errorlevel%
+rem popd
+
 rem pushd tests\OmniSharp.Dnx.Tests
 rem call dnx . test
 rem if %errorlevel% neq 0 exit /b %errorlevel%
@@ -80,5 +85,15 @@ copy bootstrap\bootstrap.json artifacts\OmniSharp.Bootstrapper\project.json
 copy src\OmniSharp\config.json artifacts\OmniSharp.Bootstrapper\config.json
 call dnu restore artifacts\OmniSharp.Bootstrapper
 call dnu publish artifacts\OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+
+pushd artifacts\build\omnisharp
+call tar -zcf ..\..\..\omnisharp.tar.gz .
+popd
+
+call dnu publish src\OmniSharp.Bootstrap --configuration Release --no-source --out artifacts\build\omnisharp.bootstrap --runtime dnx-clr-win-x86.1.0.0-beta4
+
+pushd artifacts\build\omnisharp.bootstrap
+call tar -zcf ..\..\..\omnisharp.bootstrap.tar.gz .
+popd
 
 popd

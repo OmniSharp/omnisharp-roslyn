@@ -27,6 +27,11 @@ dnvm use 1.0.0-beta4
 dnu restore
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
+pushd tests/OmniSharp.Bootstrap.Tests
+dnx . test -parallel none
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+popd
+
 pushd tests/OmniSharp.Dnx.Tests
 dnx . test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
@@ -80,7 +85,7 @@ if [ $TRAVIS ]; then
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn.CSharp/project.json.temp
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.ScriptCs/project.json.temp
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Stdio/project.json.temp
-  
+
   mv src/OmniSharp/project.json.temp src/OmniSharp/project.json
   mv src/OmniSharp.Abstractions/project.json.temp src/OmniSharp.Abstractions/project.json
   mv src/OmniSharp.Bootstrap/project.json.temp src/OmniSharp.Bootstrap/project.json
