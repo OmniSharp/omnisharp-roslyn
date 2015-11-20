@@ -1,6 +1,11 @@
 {
-    "projects": [ "src" ],
-    "sdk": {
-        "version": "1.0.0-beta8"
-    }
+  "projects": [
+    "src",
+    "tests",
+    "../cli/src"
+  ],
+  "sdk": {
+    "version": "1.0.0-rc2-16219",
+    "runtime": "coreclr"
+  }
 }

@@ -5,18 +5,18 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "OmniSharp.Dnx": "1.0.0-*",
     "OmniSharp.Stdio": "1.0.0-*",
     "OmniSharp.Nuget": "1.0.0-*",
     "OmniSharp.Plugins": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-    "Microsoft.AspNet.Server.Kestrel": "1.0.0-beta8",
-    "Microsoft.Framework.OptionsModel": "1.0.0-beta8",
-    "Microsoft.AspNet.Diagnostics": "1.0.0-beta8",
-    "Microsoft.Framework.Logging.Console": "1.0.0-beta8",
-    "Microsoft.Framework.Configuration.Json": "1.0.0-beta8",
-    "Microsoft.Framework.Caching.Memory": "1.0.0-beta8",
-    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta8"
+    "Microsoft.AspNet.Diagnostics": "1.0.0-rc2-*",
+    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc2-*",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-*",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-*",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
+    "Microsoft.Extensions.OptionsModel": "1.0.0-rc2-*"
   },
   "commands": {
     "omnisharp": "run"
@@ -28,8 +28,16 @@
         "OmniSharp.ScriptCs": "1.0.0-*"
       }
     },
+    "dotnet5.4": {
+      "dependencies": {
+        "System.Threading.Tasks": "4.0.11-*"
+      }
+    },
     "dnxcore50": {
-      "dependencies": {}
+      "dependencies": {
+        "System.Threading.Tasks": "4.0.11-*",
+        "OmniSharp.DotNet": "1.0.0-*"
+      }
     }
   }
 }

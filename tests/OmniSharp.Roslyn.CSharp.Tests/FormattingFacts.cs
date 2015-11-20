@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Framework.OptionsModel;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
 using OmniSharp.Roslyn.CSharp.Workers.Format;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -193,7 +190,7 @@ class C {
 
         private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChangesForRange(FormatRangeRequest req)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
             RequestHandler<FormatRangeRequest, FormatRangeResponse> controller = new FormatRangeService(workspace, new FormattingOptions());
 
             return (await controller.Handle(req)).Changes;
@@ -204,7 +201,7 @@ class C {
         {
             var source = "namespace Bar\n{\n    class Foo {}\n}";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var controller = new CodeFormatService(workspace, new FormattingOptions
             {
                 NewLine = "\n",

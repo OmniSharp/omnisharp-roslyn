@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using OmniSharp.Mef;
 
 namespace OmniSharp.Models

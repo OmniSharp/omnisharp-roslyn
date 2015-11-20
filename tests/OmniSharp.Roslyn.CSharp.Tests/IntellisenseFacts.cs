@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -104,7 +104,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
+#if DNX451
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(2), "WindowLeft", "WriteLine");
+#elif DNXCORE50 || DOTNET5_4
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "WriteLine");
+#endif
         }
 
         [Fact]
@@ -193,12 +197,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     System.Console.WriteLine(completion);
                 }
             }
-            Assert.Equal(expected, completions);
+
+            Assert.True(Enumerable.SequenceEqual(expected, completions));
         }
 
         private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
 
             if (request == null)

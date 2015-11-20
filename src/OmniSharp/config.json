@@ -1,14 +1,20 @@
 ﻿{
-    "dnx": {
-        "alias": "default",
-        "projects": "**/project.json",
-        "enablePackageRestore": true,
-        "packageRestoreTimeout": "180"
-    },
-    "formattingOptions": {
-        "newLine": "\n",
-        "useTabs": false,
-        "tabSize": 4,
-        "indentationSize": 4
-    }
+  "dnx": {
+    "_comment": "DNX project system",
+    "alias": "default",
+    "projects": "**/project.json",
+    "enablePackageRestore": true,
+    "packageRestoreTimeout": "180"
+  },
+  "dotnet": {
+    "_comment": ".NET project system",
+    "alias": "dotnet",
+    "projects": "**/project.json"
+  },
+  "formattingOptions": {
+    "newLine": "\n",
+    "useTabs": false,
+    "tabSize": 4,
+    "indentationSize": 4
+  }
 }

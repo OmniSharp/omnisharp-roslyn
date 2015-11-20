@@ -8,6 +8,7 @@ using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.TestCommands;
 using OmniSharp.Services;
+using OmniSharp.TestCommon;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -182,20 +183,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<string> GetTestCommandArgumentsAsync(string source, TestCommandType testType = TestCommandType.Single)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var context = new DnxContext();
             var projectName = "project.json";
             var projectCounter = 1;
 
             context.ProjectContextMapping.Add(projectName, projectCounter);
-            context.Projects.Add(projectCounter, new Project
-            {
-                Path = "project.json",
-                Commands = { { "test", "Xunit.KRunner" } }
-            });
+            context.AddProject(
+                projectCounter,
+                "project.json", 
+                new Dictionary<string, string> { { "test", "Xunit.KRunner" }});
 
             ITestCommandProvider testCommandProvider = new DnxTestCommandProvider(context, new FakeEnvironment(), new FakeLoggerFactory(), new NullEventEmitter());
-            var controller = new TestCommandService(workspace, new [] { testCommandProvider });
+            var controller = new TestCommandService(workspace, new[] { testCommandProvider });
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
 
             var request = new TestCommandRequest

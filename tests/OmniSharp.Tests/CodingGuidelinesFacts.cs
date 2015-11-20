@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,32 +11,31 @@ namespace OmniSharp.Tests
     public class CodingGuidelinesFacts
     {
         [Fact]
-        public void Usings_are_ordered_system_first_then_alphabetically()
+        public void UsingsAreOrderedSystemFirstThenAlphabetically()
         {
-            var invalidItems = false;
+            var invalidSources = new List<string>();
             foreach (var sourcePath in GetSourcePaths())
             {
                 var source = File.ReadAllText(sourcePath);
                 var syntaxTree = CSharpSyntaxTree.ParseText(source);
                 var usings = ((CompilationUnitSyntax)syntaxTree.GetRoot()).Usings
-                    .Select(u => u.Name.ToString());
+                                .Where(u => u.Alias == null)
+                                .Select(u => u.Name.ToString());
 
                 var sorted = usings.OrderByDescending(u => u.StartsWith("System"))
                                    .ThenBy(u => u);
 
                 if (!usings.SequenceEqual(sorted))
                 {
-                    invalidItems = true;
-                    Console.WriteLine("Usings ordered incorrectly in '" + sourcePath+"'");
-                    Console.WriteLine(string.Join(", ", sorted));
+                    invalidSources.Add(sourcePath);
                 }
             }
 
-            Assert.False(invalidItems);
+            Assert.False(invalidSources.Any(), $"Following files has unordered using statements: {string.Join(", ", invalidSources)}");
         }
 
         [Fact]
-        public void Source_code_does_not_contain_tabs()
+        public void SourceCodeDoesNotContainTabs()
         {
             foreach (var sourcePath in GetSourcePaths())
             {

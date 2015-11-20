@@ -14,7 +14,8 @@ namespace OmniSharp.Models
                 .Projects
                 .Values
                 .OrderBy(x => x.AssemblyName)
-                .Select(p => {
+                .Select(p =>
+                {
                     var project = new MSBuildProject(p);
                     if (excludeSourceFiles)
                         project.SourceFiles = null;

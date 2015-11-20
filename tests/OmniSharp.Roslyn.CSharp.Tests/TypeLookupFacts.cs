@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -14,7 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var source1 = @"class Foo {}";
 
-            var workspace = TestHelpers.CreateCsxWorkspace(source1);
+            var workspace = WorkspaceHelpers.CreateCsxWorkspace(source1);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 8 });
@@ -30,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
             class Baz {}";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var responseInNormalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             class Foo {}
             }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source1);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source1);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });

@@ -1,7 +1,7 @@
 #if DNX451
 using System;
 using System.Collections.Generic;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 
 namespace OmniSharp.MSBuild

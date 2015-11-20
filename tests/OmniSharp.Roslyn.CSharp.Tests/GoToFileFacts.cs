@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var source1 = @"class Foo {}";
             var source2 = @"class Bar {}";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new GotoFileService(workspace);
@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task ReturnsEmptyResponseForEmptyWorskpace()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
             var controller = new GotoFileService(workspace);
             var response = await controller.Handle(new GotoFileRequest());
 

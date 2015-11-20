@@ -29,3 +29,6 @@ debugSettings.json
 buildlog
 /.vs
 *.lock.json
+/omnisharp.tar.gz
+Properties/
+build.log

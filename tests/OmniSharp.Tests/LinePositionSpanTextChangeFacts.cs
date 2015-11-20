@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -11,7 +12,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task ExtendsTextChangeAtStart()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace("class {\r\n }");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace("class {\r\n }");
             var document = workspace.GetDocument("dummy.cs");
 
             var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {
@@ -28,7 +29,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task ExtendsTextChangeAtEnd()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace("class {\n}");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace("class {\n}");
             var document = workspace.GetDocument("dummy.cs");
 
             var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {

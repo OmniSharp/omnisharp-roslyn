@@ -1,6 +1,6 @@
-namespace OmniSharp.Options 
+namespace OmniSharp.Options
 {
-    public class FormattingOptions 
+    public class FormattingOptions
     {
         public FormattingOptions()
         {
@@ -12,11 +12,11 @@ namespace OmniSharp.Options
         }
 
         public string NewLine { get; set; }
-        
+
         public bool UseTabs { get; set; }
-        
+
         public int TabSize { get; set; }
 
         public int IndentationSize { get; set; }
-    }   
+    }
 }

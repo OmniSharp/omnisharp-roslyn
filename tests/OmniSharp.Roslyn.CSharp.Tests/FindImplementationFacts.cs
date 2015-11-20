@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -71,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var controller = new FindImplementationsService(workspace);
             var request = CreateRequest(source);
 

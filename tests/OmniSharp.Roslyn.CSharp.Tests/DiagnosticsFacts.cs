@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -13,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", "class C { int n = true; }" }
             });
@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CheckAllFiles()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", "class C1 { int n = true; }" },
                 { "b.cs", "class C2 { int n = true; }" },

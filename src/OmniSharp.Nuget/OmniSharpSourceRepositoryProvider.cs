@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis;
 #if DNX451
 using NuGet.Protocol.Core.Types;
 using NuGet.Configuration;

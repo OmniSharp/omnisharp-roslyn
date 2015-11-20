@@ -2,28 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Reflection;
-using System.Security.Claims;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Http.Authentication;
 using Microsoft.AspNet.Http.Internal;
 using Microsoft.CodeAnalysis;
-using Microsoft.Dnx.Runtime;
-using Microsoft.Framework.Configuration;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
-using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Services;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -110,7 +103,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var host = PluginHostHelpers.CreatePluginHost(typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
@@ -124,7 +117,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var host = PluginHostHelpers.CreatePluginHost(typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
@@ -154,7 +147,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var host = PluginHostHelpers.CreatePluginHost(typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
@@ -184,7 +177,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var host = PluginHostHelpers.CreatePluginHost(typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
@@ -211,7 +204,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
+            var host = PluginHostHelpers.CreatePluginHost(typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();
@@ -247,7 +240,7 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = async (ctx) => await Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
+            var host = PluginHostHelpers.CreatePluginHost(typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
 
             var context = new DefaultHttpContext();

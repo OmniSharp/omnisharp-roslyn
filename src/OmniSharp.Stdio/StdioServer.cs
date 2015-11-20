@@ -3,8 +3,10 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Hosting.Server;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
+using Microsoft.AspNet.Http.Internal;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
 using OmniSharp.Stdio.Protocol;
@@ -12,24 +14,36 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio
 {
-    class StdioServer : IDisposable
+    public class StdioServer : IServer
     {
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
-        private readonly Func<IFeatureCollection, Task> _next;
         private readonly CancellationTokenSource _cancellation;
+        private readonly RequestFeature _requestFeature;
+        private readonly ResponseFeature _responseFeature;
+        private readonly IHttpContextFactory _httpContextFactory;
+        private readonly HttpContextAccessor _httpContextAccessor;
 
-        public StdioServer(TextReader input, ISharedTextWriter writer, Func<IFeatureCollection, Task> next)
+        public StdioServer(TextReader input, ISharedTextWriter output)
         {
             _input = input;
-            _writer = writer;
-            _next = next;
+            _writer = output;
             _cancellation = new CancellationTokenSource();
 
-            Run();
+            _httpContextAccessor = new HttpContextAccessor();
+            _httpContextFactory = new HttpContextFactory(_httpContextAccessor);
+
+            var features = new FeatureCollection();
+            _requestFeature = new RequestFeature();
+            _responseFeature = new ResponseFeature();
+            features.Set<IHttpRequestFeature>(_requestFeature);
+            features.Set<IHttpResponseFeature>(_responseFeature);
+            Features = features;
         }
 
-        private void Run()
+        public IFeatureCollection Features { get; }
+
+        public void Start(RequestDelegate requestDelegate)
         {
             Task.Factory.StartNew(async () =>
             {
@@ -50,7 +64,7 @@ namespace OmniSharp.Stdio
                     {
                         try
                         {
-                            await HandleRequest(line);
+                            await HandleRequest(line, requestDelegate);
                         }
                         catch (Exception e)
                         {
@@ -65,7 +79,11 @@ namespace OmniSharp.Stdio
             });
         }
 
-        private async Task HandleRequest(string json)
+        public void Dispose()
+        {
+            _cancellation.Cancel();
+        }
+        private async Task HandleRequest(string json, RequestDelegate requestDelegate)
         {
             var request = RequestPacket.Parse(json);
             var response = request.Reply();
@@ -75,22 +93,22 @@ namespace OmniSharp.Stdio
             {
                 try
                 {
-                    var httpRequest = new RequestFeature();
-                    httpRequest.Path = request.Command;
-                    httpRequest.Body = inputStream;
-                    httpRequest.Headers["Content-Type"] = new[] { "application/json" };
+                    _requestFeature.Reset();
+                    _requestFeature.Path = request.Command;
+                    _requestFeature.Body = inputStream;
+                    _requestFeature.Headers["Content-Type"] = new[] { "application/json" };
 
-                    var httpResponse = new ResponseFeature();
-                    httpResponse.Body = outputStream;
+                    _responseFeature.Reset();
+                    _responseFeature.Body = outputStream;
 
-                    var collection = new FeatureCollection();
-                    collection[typeof(IHttpRequestFeature)] = httpRequest;
-                    collection[typeof(IHttpResponseFeature)] = httpResponse;
+                    var context = _httpContextFactory.Create(Features);
 
                     // hand off request to next layer
-                    await _next(collection);
+                    await requestDelegate.Invoke(context);
 
-                    if (httpResponse.StatusCode != 200)
+                    _httpContextFactory.Dispose(context);
+
+                    if (_responseFeature.StatusCode != 200)
                     {
                         response.Success = false;
                     }
@@ -115,11 +133,6 @@ namespace OmniSharp.Stdio
                     _writer.WriteLine(response);
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            _cancellation.Cancel();
         }
     }
 }

@@ -1,75 +1,95 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Http.Features;
+using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNet.Http;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using OmniSharp.Stdio.Protocol;
+using OmniSharp.Stdio.Services;
 using Xunit;
 
 namespace OmniSharp.Stdio.Tests
 {
     public class StdioServerFacts
     {
-        [Fact]
-        public async Task ServerPrintsStartedMessage()
+        private IServer BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, RequestDelegate application)
         {
-            var writer = new TestTextWriter(new Action<string>[] {
-                value => {
-                    var packet = JsonConvert.DeserializeObject<EventPacket>(value);
-                    Assert.Equal("started", packet.Event);
-                }
-            });
+            var factory = new StdioServerFactory(reader, writer);
+            var server = factory.CreateServer(new ConfigurationBuilder().Build());
+            server.Start(application);
 
-            var factory = new StdioServerFactory(new StringReader(""), writer);
-            factory.Start(new FeatureCollection(), features => Task.FromResult<object>(null));
+            return server;
+        }
 
-            await writer.Completion;
+        private IServer BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer)
+        {
+            return BuildTestServerAndStart(reader, writer, context => Task.FromResult(0));
         }
 
         [Fact]
-        public async Task ServerRepliesWithErrorToInvalidJson()
+        public void ServerPrintsStartedMessage()
         {
-            var writer = new TestTextWriter(new Action<string>[] {
-                value => {
+            var writer = new TestTextWriter(
+                value =>
+                {
+                    var packet = JsonConvert.DeserializeObject<EventPacket>(value);
+                    Assert.Equal("started", packet.Event);
+                }
+            );
+
+            BuildTestServerAndStart(new StringReader(""), writer);
+
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+            Assert.Null(writer.Exception);
+        }
+
+        [Fact]
+        public void ServerRepliesWithErrorToInvalidJson()
+        {
+            var writer = new TestTextWriter(
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("started", packet.Event);
                 },
-                value => {
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("error", packet.Event);
                     Assert.NotNull(packet.Body);
                 }
-            });
+            );
 
-            var factory = new StdioServerFactory(new StringReader("notjson\r\n"), writer);
-            factory.Start(new FeatureCollection(), features => Task.FromResult<object>(null));
-
-            await writer.Completion;
+            BuildTestServerAndStart(new StringReader("notjson\r\n"), writer);
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+            Assert.Null(writer.Exception);
         }
 
         [Fact]
-        public async Task ServerRepliesWithErrorToInvalidRequest()
+        public void ServerRepliesWithErrorToInvalidRequest()
         {
-            var writer = new TestTextWriter(new Action<string>[] {
-                value => {
+            var writer = new TestTextWriter(
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("started", packet.Event);
                 },
-                value => {
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("error", packet.Event);
                     Assert.NotNull(packet.Body);
                 }
-            });
+            );
 
-            var factory = new StdioServerFactory(new StringReader("{}\r\n"), writer);
-            factory.Start(new FeatureCollection(), features => Task.FromResult<object>(null));
-
-            await writer.Completion;
+            BuildTestServerAndStart(new StringReader("{}\r\n"), writer);
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+            Assert.Null(writer.Exception);
         }
 
         [Fact]
-        public async Task ServerRepliesWithResponse()
+        public void ServerRepliesWithResponse()
         {
             var request = new RequestPacket()
             {
@@ -77,12 +97,14 @@ namespace OmniSharp.Stdio.Tests
                 Command = "foo"
             };
 
-            var writer = new TestTextWriter(new Action<string>[] {
-                value => {
+            var writer = new TestTextWriter(
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("started", packet.Event);
                 },
-                value => {
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
                     Assert.Equal(request.Command, packet.Command);
@@ -90,19 +112,15 @@ namespace OmniSharp.Stdio.Tests
                     Assert.Equal(true, packet.Running);
                     Assert.Null(packet.Message);
                 }
-            });
+            );
 
-            var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            factory.Start(new FeatureCollection(), features =>
-            {
-                return Task.FromResult<object>(null);
-            });
-
-            await writer.Completion;
+            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(1000)), "Timeout");
+            Assert.Null(writer.Exception);
         }
 
         [Fact]
-        public async Task ServerRepliesWithResponseWhenTaskDoesNotReturnAnything()
+        public void ServerRepliesWithResponseWhenTaskDoesNotReturnAnything()
         {
             var request = new RequestPacket()
             {
@@ -110,13 +128,16 @@ namespace OmniSharp.Stdio.Tests
                 Command = "foo"
             };
 
-            var writer = new TestTextWriter(new Action<string>[] {
-                value => {
+            var writer = new TestTextWriter(
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("started", packet.Event);
                 },
-                value => {
+                value =>
+                {
                     Assert.True(value.Contains("\"Body\":null"));
+
                     // Deserialize is too relaxed...
                     var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
@@ -126,19 +147,15 @@ namespace OmniSharp.Stdio.Tests
                     Assert.Null(packet.Message);
                     Assert.Null(packet.Body);
                 }
-            });
+            );
 
-            var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            factory.Start(new FeatureCollection(), features =>
-            {
-                return Task.WhenAll();
-            });
-
-            await writer.Completion;
+            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+            Assert.Null(writer.Exception);
         }
 
         [Fact]
-        public async Task ServerRepliesWithResponseWhenHandlerFails()
+        public void ServerRepliesWithResponseWhenHandlerFails()
         {
             var request = new RequestPacket()
             {
@@ -146,12 +163,14 @@ namespace OmniSharp.Stdio.Tests
                 Command = "foo"
             };
 
-            var writer = new TestTextWriter(new Action<string>[] {
-                value => {
+            var writer = new TestTextWriter(
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<EventPacket>(value);
                     Assert.Equal("started", packet.Event);
                 },
-                value => {
+                value =>
+                {
                     var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
                     Assert.Equal(request.Command, packet.Command);
@@ -159,15 +178,16 @@ namespace OmniSharp.Stdio.Tests
                     Assert.Equal(true, packet.Running);
                     Assert.NotNull(packet.Message);
                 }
-            });
+            );
 
-            var factory = new StdioServerFactory(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            factory.Start(new FeatureCollection(), features =>
-            {
-                throw new Exception();
-            });
+            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer,
+                _ =>
+                {
+                    throw new Exception("Boom");
+                });
 
-            await writer.Completion;
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromHours(10)), "Timeout");
+            Assert.Null(writer.Exception);
         }
     }
 }

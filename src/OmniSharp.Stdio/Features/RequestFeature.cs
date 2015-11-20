@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
-using Microsoft.Framework.Primitives;
+using Microsoft.AspNet.Http.Internal;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -13,28 +11,18 @@ namespace OmniSharp.Stdio.Features
 
         public RequestFeature()
         {
-            Body = Stream.Null;
-            Headers = new Dictionary<string, StringValues>(StringComparer.OrdinalIgnoreCase);
-            Protocol = "HTTP/1.1";
-            Scheme = "http";
-            Method = "POST";
-            Path = "";
-            PathBase = "";
-            QueryString = "";
+            Reset();
         }
 
         public Stream Body { get; set; }
 
-        public IDictionary<string, StringValues> Headers { get; set; }
+        public IHeaderDictionary Headers { get; set; }
 
         public string Method { get; set; }
 
         public string Path
         {
-            get
-            {
-                return _path;
-            }
+            get { return _path; }
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -59,5 +47,20 @@ namespace OmniSharp.Stdio.Features
         public string QueryString { get; set; }
 
         public string Scheme { get; set; }
+
+        public void Reset()
+        {
+            Headers = Headers ?? new HeaderDictionary();
+            Headers.Clear();
+
+            Body = Stream.Null;
+            Headers.Clear();
+            Protocol = "HTTP/1.1";
+            Scheme = "http";
+            Method = "POST";
+            Path = "";
+            PathBase = "";
+            QueryString = "";
+        }
     }
 }

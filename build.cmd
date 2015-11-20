@@ -1,7 +1,7 @@
 @echo off
 
 pushd %~dp0
-set "DNX_FEED=https://www.nuget.org/api/v2"
+set "DNX_FEED=https://www.myget.org/F/aspnetvolatiledev/api/v2"
 setlocal EnableDelayedExpansion
 where dnvm
 if %ERRORLEVEL% neq 0 (
@@ -13,10 +13,10 @@ if %ERRORLEVEL% neq 0 (
 
 :install
 set
-call dnvm install 1.0.0-beta8
-call dnvm use 1.0.0-beta8
-rem set the runtime path because the above commands set \.dnx<space>\runtimes
-set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta8\bin;!PATH!
+
+call dnvm upgrade
+call dnvm install default -r coreclr -nonative
+call dnvm use default
 
 call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
@@ -35,18 +35,8 @@ call dnx test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
-pushd tests\OmniSharp.Plugins.Tests
-call dnx test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
 pushd tests\OmniSharp.Roslyn.CSharp.Tests
-call dnx test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.ScriptCs.Tests
-call dnx test
+call dnx test -parallel none
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
@@ -56,12 +46,7 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
 pushd tests\OmniSharp.Tests
-call dnx test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.Tests
-call dnx test
+call dnx test -parallel none
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
@@ -73,6 +58,6 @@ call dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
 call dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts
 call dnu build src/OmniSharp.ScriptCs --configuration Release --out artifacts
 call dnu build src/OmniSharp.Stdio --configuration Release --out artifacts
-call dnu publish src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta8
+call dnu publish src\OmniSharp --no-source --out artifacts\build\omnisharp --runtime active
 
 popd

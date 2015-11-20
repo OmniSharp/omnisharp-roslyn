@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -15,7 +16,7 @@ namespace OmniSharp.Tests
 
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source, "d.cs");
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
@@ -34,7 +35,7 @@ namespace OmniSharp.Tests
                     public event Action E;
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source, "d.cs");
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());
@@ -58,7 +59,7 @@ namespace OmniSharp.Tests
 
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source, "d.cs");
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
             Assert.Equal(1, nodes.Count());

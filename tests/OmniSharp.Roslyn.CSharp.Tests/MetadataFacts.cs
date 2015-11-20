@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -20,10 +20,11 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new MetadataService(workspace);
+
             var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
@@ -45,13 +46,17 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new MetadataService(workspace);
             var response = await controller.Handle(new MetadataRequest
             {
+#if DNX451
                 AssemblyName = "System.Core",
+#elif DNXCORE50 || DOTNET5_4
+                AssemblyName = "System.Linq",
+#endif
                 TypeName = "System.Linq.Enumerable",
                 Timeout = 60000
             });
@@ -70,7 +75,7 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
             var controller = new MetadataService(workspace);

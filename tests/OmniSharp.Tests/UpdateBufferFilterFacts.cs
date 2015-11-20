@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -12,7 +13,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBuffer_HandlesVoidRequest()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "test.cs", "class C {}" }
             });
@@ -45,7 +46,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBuffer_AddsNewDocumentsIfNeeded()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "test.cs", "class C {}" }
             });
@@ -67,7 +68,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBuffer_TransientDocumentsDisappearWhenProjectAddsThem()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "test.cs", "class C {}" }
             });

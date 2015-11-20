@@ -1,8 +1,5 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Microsoft.Framework.Configuration;
-
+using Microsoft.Extensions.Configuration;
 
 namespace OmniSharp.Options
 {

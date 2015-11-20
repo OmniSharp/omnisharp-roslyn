@@ -3,11 +3,9 @@ using System.Composition;
 using System.IO;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.Caching;
-using Microsoft.Framework.Caching.Distributed;
-using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.Primitives;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp.Services
@@ -33,7 +31,8 @@ namespace OmniSharp.Services
 
             var metadata = _cache.Get<AssemblyMetadata>(cacheKey);
 
-            if (metadata == null ) {
+            if (metadata == null)
+            {
                 _logger.LogVerbose(string.Format("Cache miss {0}", path));
 
                 using (var stream = File.OpenRead(path))

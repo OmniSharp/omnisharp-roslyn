@@ -4,9 +4,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
-using OmniSharp.Services;
-using OmniSharp.Tests;
-using Xunit;
+using OmniSharp.TestCommon;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -29,14 +27,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         //      Assert.Contains("Use 'var' keyword", refactorings);
         //  }
 
-        private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
-        {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new GetCodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider() });
-            var request = CreateRequest(source);
-            var response = await controller.Handle(request);
-            return response.CodeActions;
-        }
+        //private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
+        //{
+        //    var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
+        //    var controller = new GetCodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider() });
+        //    var request = CreateRequest(source);
+        //    var response = await controller.Handle(request);
+        //    return response.CodeActions;
+        //}
 
         private GetCodeActionRequest CreateRequest(string source, string fileName = "dummy.cs")
         {

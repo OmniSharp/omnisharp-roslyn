@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Services;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -14,7 +15,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferIgnoresVoidRequests()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace("class C {}", "test.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace("class C {}", "test.cs");
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
@@ -33,7 +34,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
         {
-            var workspace = await GetWorkspaceWithProjects();
+            var workspace = GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
@@ -43,7 +44,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnPath()
         {
-            var workspace = await GetWorkspaceWithProjects();
+            var workspace = GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "newFile.cs"));
@@ -60,7 +61,7 @@ namespace OmniSharp.Tests
         {
             var code = "public class MyClass {}";
             string fileName = Path.GetTempPath() + Guid.NewGuid().ToString() + ".cs";
-            var workspace = await TestHelpers.CreateSimpleWorkspace("", fileName);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace("", fileName);
 
             File.WriteAllText(fileName, code);
             await workspace.BufferManager.UpdateBuffer(new UpdateBufferRequest { FileName = fileName, FromDisk = true });
@@ -74,15 +75,13 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnNearestPath()
         {
-            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
-
-            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
-                new[] { "" },
-                new Dictionary<string, string>() { { Path.Combine("src", "root", "foo.cs"), "class C1 {}" } });
-
-            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
-                new[] { "" },
-                new Dictionary<string, string>() { { Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}" } });
+            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()))
+                .AddProject(Path.Combine("src", "root", "foo.csproj"),
+                            new[] { "" },
+                            new Dictionary<string, string>() { { Path.Combine("src", "root", "foo.cs"), "class C1 {}" } })
+                .AddProject(Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
+                            new[] { "" },
+                            new Dictionary<string, string>() { { Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}" } });
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "root", "bar.cs"));
@@ -101,7 +100,7 @@ namespace OmniSharp.Tests
         public async Task UpdateRequestHandleChanges()
         {
 
-            var workspace = await GetWorkspaceWithProjects();
+            var workspace = GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request()
             {
@@ -133,17 +132,15 @@ namespace OmniSharp.Tests
             Assert.Equal("interface I {}", (await document.GetTextAsync()).ToString());
         }
 
-        private async static Task<OmnisharpWorkspace> GetWorkspaceWithProjects()
+        private static OmnisharpWorkspace GetWorkspaceWithProjects()
         {
-            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
-
-            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
-                new[] { "dnx451", "dnxcore50" },
-                new Dictionary<string, string>() { { Path.Combine("src", "a.cs"), "class C {}" } });
-
-            await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("test", "project.json"),
-                new[] { "dnx451", "dnxcore50" },
-                new Dictionary<string, string>() { { Path.Combine("test", "b.cs"), "class C {}" } });
+            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()))
+                .AddProject(Path.Combine("src", "project.json"),
+                            new[] { "dnx451", "dnxcore50" },
+                            new Dictionary<string, string>() { { Path.Combine("src", "a.cs"), "class C {}" } })
+                .AddProject(Path.Combine("test", "project.json"),
+                            new[] { "dnx451", "dnxcore50" },
+                            new Dictionary<string, string>() { { Path.Combine("test", "b.cs"), "class C {}" } });
 
             Assert.Equal(4, workspace.CurrentSolution.Projects.Count());
             foreach (var project in workspace.CurrentSolution.Projects)

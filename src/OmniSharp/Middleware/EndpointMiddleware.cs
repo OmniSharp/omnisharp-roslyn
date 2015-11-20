@@ -4,11 +4,10 @@ using System.Collections.ObjectModel;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware.Endpoint;
@@ -86,6 +85,8 @@ namespace OmniSharp.Middleware
             if (httpContext.Request.Path.HasValue)
             {
                 var endpoint = httpContext.Request.Path.Value;
+                //_logger.LogInformation($"Request endpoint {endpoint}");
+
                 if (_endpoints.Contains(endpoint))
                 {
                     Lazy<EndpointHandler> handler;

@@ -1,5 +1,3 @@
-using Microsoft.CodeAnalysis;
-
 namespace OmniSharp.Models
 {
     public class MetadataSource

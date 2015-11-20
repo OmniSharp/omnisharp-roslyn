@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -717,7 +717,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task AssertPosition(string fileContent, NavigateDirection navigateDirection)
         {
             var fileContentNoPercentMarker = TestHelpers.RemovePercentMarker(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContentNoPercentMarker, "test.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(fileContentNoPercentMarker, "test.cs");
             var response = await SendRequest(workspace, "test.cs", fileContentNoPercentMarker, navigateDirection);
             var finalCursorLineColumn = TestHelpers.GetLineAndColumnFromPercent(TestHelpers.RemoveDollarMarker(fileContent));
             Assert.Equal(finalCursorLineColumn.Line, response.Line);

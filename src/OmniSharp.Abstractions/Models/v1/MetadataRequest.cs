@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 
 namespace OmniSharp.Models

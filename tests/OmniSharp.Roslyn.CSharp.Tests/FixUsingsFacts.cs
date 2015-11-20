@@ -455,7 +455,7 @@
 //         private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
 //         {
 //             var host = TestHelpers.CreatePluginHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
-//             var workspace = await TestHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
+//             var workspace = WorkspaceHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
 //
 //             var fakeOptions = new FakeOmniSharpOptions();
 //             fakeOptions.Value = new OmniSharpOptions();

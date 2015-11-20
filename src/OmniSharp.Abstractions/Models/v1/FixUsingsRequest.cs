@@ -1,6 +1,6 @@
 using OmniSharp.Mef;
 
-﻿namespace OmniSharp.Models
+namespace OmniSharp.Models
 {
     [OmniSharpEndpoint(OmnisharpEndpoints.FixUsings, typeof(FixUsingsRequest), typeof(FixUsingsResponse))]
     public class FixUsingsRequest : Request

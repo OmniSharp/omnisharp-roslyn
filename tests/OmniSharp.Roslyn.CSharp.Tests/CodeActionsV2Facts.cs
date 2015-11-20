@@ -1,16 +1,16 @@
 #if DNX451
-using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models.V2;
-using OmniSharp.Services;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
-using Xunit;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
-using System.Reflection;
-using System.Composition.Hosting;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
+using OmniSharp.Services;
+using OmniSharp.TestCommon;
+using Xunit;
 
 namespace OmniSharp.Tests
 {
@@ -20,39 +20,23 @@ namespace OmniSharp.Tests
         private CompositionHost _host;
         private string bufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
-        // [Fact]
-        // public async Task Can_get_code_actions_from_nrefactory()
-        // {
-        //     var source =
-        //         @"public class Class1
-        //           {
-        //               public void Whatever()
-        //               {
-        //                   int$ i = 1;
-        //               }
-        //           }";
-        //
-        //     var refactorings = await FindRefactoringNamesAsync(source);
-        //     Assert.Contains("Use 'var' keyword", refactorings);
-        // }
-
         [Fact]
         public async Task Can_get_code_actions_from_roslyn()
         {
             var source =
-                  @"public class Class1
+                @"public class Class1
+                {
+                    public void Whatever()
                     {
-                        public void Whatever()
-                        {
-                            Conso$le.Write(""should be using System;"");
-                        }
-                    }";
+                        Conso$le.Write(""should be using System;"");
+                    }
+                }";
 
             var refactorings = await FindRefactoringNamesAsync(source);
             Assert.Contains("using System;", refactorings);
         }
 
-        [Fact]
+        [Fact(Skip = "RefactoringEssential is temporarily removed.")]
         public async Task Can_sort_usings()
         {
             var source =
@@ -73,7 +57,7 @@ namespace OmniSharp.Tests
             Assert.Equal(expected, response.Changes.First().Buffer);
         }
 
-        [Fact]
+        [Fact(Skip = "RefactoringEssential is temporarily removed.")]
         public async Task Can_remove_unnecessary_usings()
         {
             var source =
@@ -94,7 +78,7 @@ namespace OmniSharp.Tests
             AssertIgnoringIndent(expected, response.Changes.First().Buffer);
         }
 
-        [Fact]
+        [Fact(Skip = "Extract Method is missing.")]
         public async Task Can_get_ranged_code_action()
         {
             var source =
@@ -110,8 +94,8 @@ namespace OmniSharp.Tests
             Assert.Contains("Extract Method", refactorings);
         }
 
-        [Fact]
-        public async Task Can_extract_method()
+        [Fact(Skip = "Extract Method is missing.")]
+        public async Task CanExtractMethod()
         {
             var source =
                 @"public class Class1
@@ -213,9 +197,17 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
         {
             var request = CreateGetCodeActionsRequest(source);
-            _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
-            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
-            var controller = new GetCodeActionsService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            _host = _host ?? PluginHostHelpers.CreatePluginHost(
+                typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly,
+                //typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly,
+                typeof(GetCodeActionsService).GetTypeInfo().Assembly
+            );
+
+            _workspace = _workspace ?? WorkspaceHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
+            var controller = new GetCodeActionsService(_workspace, new ICodeActionProvider[] {
+                new RoslynCodeActionProvider(),
+                //new NRefactoryCodeActionProvider()
+            }, new FakeLoggerFactory());
             var response = await controller.Handle(request);
             return response.CodeActions;
         }
@@ -223,9 +215,12 @@ namespace OmniSharp.Tests
         private async Task<RunCodeActionResponse> RunRefactoringsAsync(string source, string identifier, bool wantsChanges = false)
         {
             var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
-            _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
-            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
-            var controller = new RunCodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            _host = _host ?? PluginHostHelpers.CreatePluginHost(
+                typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly,
+                //typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly,
+                typeof(GetCodeActionsService).GetTypeInfo().Assembly);
+            _workspace = _workspace ?? WorkspaceHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
+            var controller = new RunCodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(),/* new NRefactoryCodeActionProvider()*/ }, new FakeLoggerFactory());
             var response = await controller.Handle(request);
             return response;
         }
@@ -275,6 +270,25 @@ namespace OmniSharp.Tests
             return selection;
         }
 
+
+
+        /*
+        [Fact]
+        public async Task Can_get_code_actions_from_nrefactory()
+        {
+            var source =
+                @"public class Class1
+                   {
+                       public void Whatever()
+                       {
+                           int$ i = 1;
+                       }
+                   }";
+
+            var refactorings = await FindRefactoringNamesAsync(source);
+            Assert.Contains("Use 'var' keyword", refactorings);
+        }
+        */
     }
 }
 #endif

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Composition;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,17 +9,18 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.Logging;
-using OmniSharp.Mef;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
-using OmniSharp.Roslyn.CSharp.Extensions;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     public static class CodeActionHelper
     {
-        public static async Task<IEnumerable<CodeAction>> GetActions(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, ICodeActionRequest request)
+        public static async Task<IEnumerable<CodeAction>> GetActions(OmnisharpWorkspace workspace,
+                                                                     IEnumerable<ICodeActionProvider> codeActionProviders,
+                                                                     ILogger logger,
+                                                                     ICodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var originalDocument = workspace.GetDocument(request.FileName);

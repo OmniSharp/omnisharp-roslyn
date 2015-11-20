@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Framework.Logging;
 
 #if DNX451
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
 #endif
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
 
@@ -95,14 +95,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
                 var outputType = projectInstance.GetPropertyValue("OutputType");
-                switch(outputType)
+                switch (outputType)
                 {
-                    case "Library": projectFileInfo.OutputKind = OutputKind.DynamicallyLinkedLibrary;
+                    case "Library":
+                        projectFileInfo.OutputKind = OutputKind.DynamicallyLinkedLibrary;
                         break;
-                    case "WinExe": projectFileInfo.OutputKind = OutputKind.WindowsApplication;
+                    case "WinExe":
+                        projectFileInfo.OutputKind = OutputKind.WindowsApplication;
                         break;
                     default:
-                    case "Exe": projectFileInfo.OutputKind = OutputKind.ConsoleApplication;
+                    case "Exe":
+                        projectFileInfo.OutputKind = OutputKind.ConsoleApplication;
                         break;
                 }
 
@@ -242,7 +245,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
     }
 
-    #if DNX451
+#if DNX451
     static class DictionaryExt
     {
         public static string GetPropertyValue(this Dictionary<string, BuildProperty> dict, string key)
@@ -252,5 +255,5 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : null;
         }
     }
-    #endif
+#endif
 }

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -48,7 +48,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
                         }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
             var result = await SendRequest(workspace, "foo", "test.cs", fileContent, applyTextChanges: true);
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
@@ -85,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
                         }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
             var result = await SendRequest(workspace, "foo", "test.cs", fileContent, applyTextChanges: false);
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
@@ -104,7 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                                     public Foo Property {get; set;}
                                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { "test1.cs", file1 }, { "test2.cs", file2 } });
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { "test1.cs", file1 }, { "test2.cs", file2 } });
             var result = await SendRequest(workspace, "xxx", "test1.cs", file1);
 
             var doc1Id = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test1.cs").First();
@@ -141,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                                     public Foo Property {get; set;}
                                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { "test1.cs", file1 }, { "test2.cs", file2 } });
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { "test1.cs", file1 }, { "test2.cs", file2 } });
             var result = await SendRequest(workspace, "xxx", "test1.cs", file1, true);
 
             Assert.Equal(2, result.Changes.Count());
@@ -166,7 +166,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Rename_DoesTheRightThingWhenDocumentIsNotFound()
         {
             const string fileContent = "class f$oo{}";
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContent);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(fileContent);
 
             var result = await SendRequest(workspace, "xxx", "test.cs", fileContent);
 
@@ -187,7 +187,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
             var result = await SendRequest(workspace, "foo", "test.cs", fileContent);
 
             Assert.Equal(0, result.Changes.Count());
@@ -207,7 +207,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(fileContent, "test.cs");
             var result = await SendRequest(workspace, "foo", "test.cs", fileContent, true);
 
             Assert.Equal(1, result.Changes.Count());

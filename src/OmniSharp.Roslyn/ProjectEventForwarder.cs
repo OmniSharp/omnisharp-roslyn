@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Composition;
-using System.Composition.Hosting;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Services;
 
@@ -16,10 +16,12 @@ namespace OmniSharp.Roslyn
         private readonly ISet<SimpleWorkspaceEvent> _queue = new HashSet<SimpleWorkspaceEvent>();
         private readonly object _lock = new object();
         private readonly IEnumerable<IProjectSystem> _projectSystems;
+        private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public ProjectEventForwarder(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems, IEventEmitter emitter)
+        public ProjectEventForwarder(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems, IEventEmitter emitter, ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger<ProjectEventForwarder>();
             _projectSystems = projectSystems;
             _workspace = workspace;
             _emitter = emitter;
@@ -75,10 +77,13 @@ namespace OmniSharp.Roslyn
 
         private async Task<ProjectInformationResponse> GetProjectInformation(string fileName)
         {
+            _logger.LogInformation($"GetProjectInformation({fileName})");
             var response = new ProjectInformationResponse();
 
-            foreach (var projectSystem in _projectSystems) {
+            foreach (var projectSystem in _projectSystems)
+            {
                 var project = await projectSystem.GetProjectModel(fileName);
+                _logger.LogInformation($"with system {projectSystem.Key}, project == null => {project == null}.");
                 if (project != null)
                     response.Add($"{projectSystem.Key}Project", project);
             }

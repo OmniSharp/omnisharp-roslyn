@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Http.Features;
-using Microsoft.Framework.Primitives;
+using Microsoft.AspNet.Http.Internal;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -12,15 +11,15 @@ namespace OmniSharp.Stdio.Features
     {
         public ResponseFeature()
         {
-            Headers = new Dictionary<string, StringValues>(StringComparer.OrdinalIgnoreCase);
-            StatusCode = 200;
+            Headers = new HeaderDictionary();
+            Reset();
         }
 
         public int StatusCode { get; set; }
 
         public string ReasonPhrase { get; set; }
 
-        public IDictionary<string, StringValues> Headers { get; set; }
+        public IHeaderDictionary Headers { get; set; }
 
         public Stream Body { get; set; }
 
@@ -28,20 +27,24 @@ namespace OmniSharp.Stdio.Features
 
         public bool HasStarted
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get { return false; }
+        }
+
+        public void Reset()
+        {
+            Headers = Headers ?? new HeaderDictionary();
+            Headers.Clear();
+            StatusCode = 200;
         }
 
         public void OnStarting(Func<object, Task> callback, object state)
         {
-            //nothing again
+            // nothing again
         }
 
         public void OnCompleted(Func<object, Task> callback, object state)
         {
-            //nothing again
+            // nothing again
         }
     }
 }

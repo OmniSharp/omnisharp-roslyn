@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.v1;
-using V2 = OmniSharp.Models.V2;
 
 namespace OmniSharp
 {

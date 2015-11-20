@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -187,7 +187,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindSymbols(string source)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             return await requestHandler.Handle(null);
@@ -195,7 +195,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindSymbolsWithFilter(string source, string filter)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             var request = new FindSymbolsRequest { Filter = filter };

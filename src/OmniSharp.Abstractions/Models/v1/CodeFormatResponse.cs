@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OmniSharp.Models
+﻿namespace OmniSharp.Models
 {
     public class CodeFormatResponse
     {

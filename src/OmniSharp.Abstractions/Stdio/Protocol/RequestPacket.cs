@@ -16,12 +16,12 @@ namespace OmniSharp.Stdio.Protocol
             {
                 throw new ArgumentException("invalid seq-value");
             }
-            
+
             if (string.IsNullOrWhiteSpace(result.Command))
             {
                 throw new ArgumentException("missing command");
             }
-            
+
             JToken arguments;
             if (obj.TryGetValue("arguments", StringComparison.OrdinalIgnoreCase, out arguments))
             {

@@ -157,34 +157,36 @@ namespace OmniSharp
             return;
         }
 
-        private async Task SortUsings()
+        private Task SortUsings()
         {
             //Sort usings
-            var nRefactoryProvider = new NRefactoryCodeActionProvider();
-            var sortActions = new List<CodeAction>();
-            var refactoringContext = await GetRefactoringContext(_document, sortActions);
-            if (refactoringContext != null)
-            {
-                var sortUsingsAction = nRefactoryProvider.Refactorings
-                    .First(r => r is RefactoringEssentials.CSharp.CodeRefactorings.SortUsingsAction);
+            //var nRefactoryProvider = new NRefactoryCodeActionProvider();
+            //var sortActions = new List<CodeAction>();
+            //var refactoringContext = await GetRefactoringContext(_document, sortActions);
+            //if (refactoringContext != null)
+            //{
+            //    var sortUsingsAction = nRefactoryProvider.Refactorings
+            //        .First(r => r is RefactoringEssentials.CSharp.CodeRefactorings.SortUsingsAction);
 
-                await sortUsingsAction.ComputeRefactoringsAsync(refactoringContext.Value);
+            //    await sortUsingsAction.ComputeRefactoringsAsync(refactoringContext.Value);
 
-                foreach (var action in sortActions)
-                {
-                    var operations = await action.GetOperationsAsync(CancellationToken.None).ConfigureAwait(false);
-                    if (operations != null)
-                    {
-                        foreach (var codeOperation in operations)
-                        {
-                            if (codeOperation != null)
-                            {
-                                codeOperation.Apply(_workspace, CancellationToken.None);
-                            }
-                        }
-                    }
-                }
-            }
+            //    foreach (var action in sortActions)
+            //    {
+            //        var operations = await action.GetOperationsAsync(CancellationToken.None).ConfigureAwait(false);
+            //        if (operations != null)
+            //        {
+            //            foreach (var codeOperation in operations)
+            //            {
+            //                if (codeOperation != null)
+            //                {
+            //                    codeOperation.Apply(_workspace, CancellationToken.None);
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+
+            return Task.Run(() => { });
         }
 
         private async Task TryAddLinqQuerySyntax()

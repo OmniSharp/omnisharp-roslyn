@@ -346,7 +346,7 @@
 //
 //         private async Task<IEnumerable<string>> FindCompletionsAsync(string source)
 //         {
-//             var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+//             var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
 //             var controller = new IntellisenseService(workspace, new FormattingOptions());
 //             var request = CreateRequest(source);
 //             var response = await controller.Handle(request);

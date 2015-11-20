@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Signatures;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -78,15 +78,24 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Main(){
-        System.Console.Clear($);
+        System.Console.WriteLine($);
     }
 }";
             var actual = await GetSignatureHelp(source);
-            Assert.Equal(1, actual.Signatures.Count());
+
+#if DNX451
+            Assert.Equal(19, actual.Signatures.Count());
+#elif DNXCORE50
+            Assert.Equal(10, actual.Signatures.Count());
+#else
+            Assert.False("Unknown target framework");
+#endif
+
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
-            Assert.Equal("Clear", actual.Signatures.ElementAt(0).Name);
+            Assert.Equal("WriteLine", actual.Signatures.ElementAt(0).Name);
             Assert.Equal(0, actual.Signatures.ElementAt(0).Parameters.Count());
+
         }
 
         [Fact]
@@ -372,7 +381,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Buffer = source
             };
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(source);
             var controller = new SignatureHelpService(workspace);
             return await controller.Handle(request);
         }

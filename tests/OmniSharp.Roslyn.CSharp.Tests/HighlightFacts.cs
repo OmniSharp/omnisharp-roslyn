@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Highlighting;
+using OmniSharp.TestCommon;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -51,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -85,7 +86,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
@@ -122,12 +123,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var region = arr[i];
                 string line;
                 int start, end;
-                do {
+                do
+                {
                     line = lines[lineNo].ToString();
                     start = line.IndexOf(tokenSpec.Text, lastIndex);
                     if (start == -1)
                     {
-                        if(++lineNo >= lines.Count)
+                        if (++lineNo >= lines.Count)
                         {
                             throw new Exception($"Could not find token {tokenSpec.Text} in the code");
                         }
@@ -157,13 +159,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
 
             var controller = new HighlightingService(workspace, new FakeLoggerFactory());
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Keyword } });
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new[] { HighlightClassification.Keyword } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "keyword");
         }
@@ -178,13 +180,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
 
             var controller = new HighlightingService(workspace, new FakeLoggerFactory());
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Punctuation } });
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new[] { HighlightClassification.Punctuation } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "punctuation");
         }
@@ -199,13 +201,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
 
             var controller = new HighlightingService(workspace, new FakeLoggerFactory());
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Operator } });
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new[] { HighlightClassification.Operator } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "operator");
         }
@@ -220,13 +222,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
 
             var controller = new HighlightingService(workspace, new FakeLoggerFactory());
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Identifier } });
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new[] { HighlightClassification.Identifier } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind == "identifier");
         }
@@ -241,13 +243,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
             {
                 { "a.cs", code }
             });
 
             var controller = new HighlightingService(workspace, new FakeLoggerFactory());
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Name } });
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new[] { HighlightClassification.Name } });
 
             Assert.DoesNotContain(regions.Highlights, x => x.Kind.EndsWith(" name"));
         }

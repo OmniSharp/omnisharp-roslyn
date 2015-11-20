@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using OmniSharp.TestCommon;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -233,7 +233,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(sources);
+            var workspace = WorkspaceHelpers.CreateSimpleWorkspace(sources);
             var controller = new FindUsagesService(workspace);
             var request = CreateRequest(sources[currentFile], currentFile, excludeDefinition);
             request.OnlyThisFile = onlyThisFile;

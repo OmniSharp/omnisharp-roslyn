@@ -2,19 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
-using Microsoft.AspNet.Hosting.Internal;
 using Microsoft.AspNet.Hosting.Startup;
-using Microsoft.Dnx.Runtime;
-using Microsoft.Framework.Configuration;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
+using OmniSharp.Stdio;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
@@ -34,6 +31,8 @@ namespace OmniSharp
 
         public void Main(string[] args)
         {
+            Console.WriteLine($"Omnisharp: {string.Join(" ", args)}");
+
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
             var logLevel = LogLevel.Information;
@@ -83,27 +82,27 @@ namespace OmniSharp
 
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
-            var config = new ConfigurationBuilder()
-             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+            var config = new ConfigurationBuilder().AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var writer = new SharedConsoleWriter();
-            var builder = new WebHostBuilder(_serviceProvider)
+            var builder = new WebHostBuilder(config.Build())
                 .UseEnvironment("OmniSharp")
                 .UseStartup("OmniSharp")
                 .UseServices(serviceCollection =>
-            {
-                serviceCollection.AddInstance<IOmnisharpEnvironment>(Environment);
-                serviceCollection.AddInstance<ISharedTextWriter>(writer);
-                serviceCollection.AddInstance<PluginAssemblies>(new PluginAssemblies(plugins));
-            });
+                {
+                    serviceCollection.AddSingleton<IOmnisharpEnvironment>(Environment);
+                    serviceCollection.AddSingleton<ISharedTextWriter>(writer);
+                    serviceCollection.AddSingleton(_serviceProvider.GetRequiredService<IApplicationShutdown>());
+                    serviceCollection.AddSingleton(new PluginAssemblies(plugins));
+                });
 
             if (transportType == TransportType.Stdio)
             {
-                builder.UseServer(new Stdio.StdioServerFactory(Console.In, writer));
+                builder.UseServerFactory(new StdioServerFactory(Console.In, writer));
             }
             else
             {
-                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
+                builder.UseServerFactory("Microsoft.AspNet.Server.Kestrel");
             }
 
             var serverShutdown = builder.Build().Start();
@@ -117,19 +116,10 @@ namespace OmniSharp
                 shutdownHandle.Set();
             });
 
-#if DNXCORE50
-            var ignored = Task.Run(() =>
-            {
-                Console.WriteLine("Started");
-                Console.ReadLine();
-                appShutdownService.RequestShutdown();
-            });
-#else
             Console.CancelKeyPress += (sender, e) =>
             {
                 appShutdownService.RequestShutdown();
             };
-#endif
 
             if (hostPID != -1)
             {

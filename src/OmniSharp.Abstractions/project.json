@@ -5,14 +5,13 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "7.0.1",
-    "Microsoft.CodeAnalysis": "1.1.0-beta1-20150928-02",
-    "Microsoft.Framework.Configuration": "1.0.0-beta8",
-    "Microsoft.Framework.Configuration.Binder": "1.0.0-beta8",
-    "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-beta8",
-    "Microsoft.Framework.Logging.Console": "1.0.0-beta8",
-    "Microsoft.Framework.Caching.Memory": "1.0.0-beta8",
-    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta8",
-    "Microsoft.Composition": "1.0.30"
+    "Microsoft.CodeAnalysis": "1.1.0-*",
+    "Microsoft.Composition": "1.0.30",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
+    "Microsoft.Extensions.Configuration": "1.0.0-rc2-*",
+    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-*",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*"
   },
   "frameworks": {
     "dnx451": {
@@ -31,24 +30,23 @@
         "System.Xml.Linq": ""
       }
     },
-    "dnxcore50": {
+    "dotnet5.4": {
       "dependencies": {
-        "System.Runtime": "4.0.21-beta-23409",
-        "System.Collections": "4.0.11-beta-23409",
-        "System.Threading.Thread": "4.0.0-beta-23409",
-        "System.Threading.Tasks": "4.0.11-beta-23409",
-        "System.Linq": "4.0.1-beta-23409",
-        "System.Text.Encoding": "4.0.11-beta-23409",
-        "System.IO": "4.0.11-beta-23409",
-        "System.IO.FileSystem": "4.0.1-beta-23409",
-        "System.Globalization.Extensions": "4.0.1-beta-23409",
-        "System.ComponentModel.TypeConverter": "4.0.1-beta-23109",
-        "System.Reflection": "4.0.11-beta-23409",
-        "System.Threading": "4.0.11-beta-23409",
-        "System.IO.FileSystem.Watcher": "4.0.0-beta-23409",
-        "System.Net.Sockets": "4.0.1-beta-23409",
-        "System.Diagnostics.Process": "4.0.0-beta-23409",
-        "System.Xml.XDocument": "4.0.11-beta-23409"
+        "System.Collections": "4.0.11-rc2-*",
+        "System.ComponentModel.TypeConverter": "4.0.1-rc2-*",
+        "System.Diagnostics.Process": "4.1.0-rc2-*",
+        "System.Globalization.Extensions": "4.0.1-rc2-*",
+        "System.IO": "4.0.11-rc2-*",
+        "System.IO.FileSystem": "4.0.1-rc2-*",
+        "System.IO.FileSystem.Watcher": "4.0.0-rc2-*",
+        "System.Linq": "4.0.1-rc2-*",
+        "System.Net.Sockets": "4.1.0-rc2-*",
+        "System.Runtime": "4.0.21-rc2-*",
+        "System.Text.Encoding": "4.0.11-rc2-*",
+        "System.Threading": "4.0.11-rc2-*",
+        "System.Threading.Thread": "4.0.0-rc2-*",
+        "System.Threading.Tasks": "4.0.11-rc2-*",
+        "System.Xml.XDocument": "4.0.11-rc2-*"
       }
     }
   }
