@@ -24,6 +24,7 @@
   "frameworks": {
     "dnx451": {
       "dependencies": {
+        "OmniSharp.Protobuild": "1.0.0-*",
         "OmniSharp.MSBuild": "1.0.0-*",
         "OmniSharp.ScriptCs": "1.0.0-*"
       }

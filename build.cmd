@@ -64,6 +64,7 @@ popd
 call dnu build src/OmniSharp.Abstractions --configuration Release --out artifacts
 call dnu build src/OmniSharp.Dnx --configuration Release --out artifacts
 call dnu build src/OmniSharp.MSBuild --configuration Release --out artifacts
+call dnu build src/OmniSharp.Protobuild --configuration Release --out artifacts
 call dnu build src/OmniSharp.Nuget --configuration Release --out artifacts
 call dnu build src/OmniSharp.Roslyn --configuration Release --out artifacts
 call dnu build src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts

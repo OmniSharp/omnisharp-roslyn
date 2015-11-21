@@ -28,7 +28,6 @@ namespace OmniSharp.MSBuild
         private readonly OmnisharpWorkspace _workspace;
         private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IOmnisharpEnvironment _env;
-        private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
         private static readonly Guid[] _supportsProjectTypes = new[] {
             new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
@@ -37,6 +36,8 @@ namespace OmniSharp.MSBuild
         private readonly MSBuildContext _context;
         private readonly IFileSystemWatcher _watcher;
 
+        protected ILogger _logger;
+        
         private MSBuildOptions _options;
 
         [ImportingConstructor]
@@ -57,12 +58,22 @@ namespace OmniSharp.MSBuild
             _context = context;
         }
 
-        public string Key { get { return "MsBuild"; } }
+        public virtual string Key { get { return "MsBuild"; } }
         public string Language { get { return LanguageNames.CSharp; } }
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
-        public void Initalize(IConfiguration configuration)
+        public virtual void Initalize(IConfiguration configuration)
         {
+            if (_context.AlreadyInitialised)
+            {
+                // When the Protobuild project system imports projects, we
+                // don't want the raw non-Protobuild MSBuild import to occur.
+                // To avoid this, the Protobuild project system sets
+                // AlreadyInitialised to true after it finishes running (if
+                // it has detected projects), and to false again before it starts.
+                return;
+            }
+            
             _options = new MSBuildOptions();
             OptionsServices.ReadProperties(_options, configuration);
 
