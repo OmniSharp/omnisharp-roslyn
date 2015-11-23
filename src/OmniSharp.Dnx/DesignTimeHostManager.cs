@@ -71,6 +71,7 @@ namespace OmniSharp.Dnx
                     FileName =  dnx ?? klr,
                     CreateNoWindow = true,
                     UseShellExecute = false,
+                    RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     Arguments = string.Format(@"""{0}"" {1} {2} {3}",
                                               dthPath,
@@ -89,7 +90,12 @@ namespace OmniSharp.Dnx
 
                 _logger.LogVerbose(psi.FileName + " " + psi.Arguments);
 
-                _designTimeHostProcess = Process.Start(psi);
+                _designTimeHostProcess = new Process();
+                _designTimeHostProcess.StartInfo = psi;
+                _designTimeHostProcess.OutputDataReceived += (sender, args) => this._logger.LogInformation(args.Data ?? string.Empty);
+
+                this._designTimeHostProcess.Start();
+                this._designTimeHostProcess.BeginOutputReadLine();
 
                 // Wait a little bit for it to conncet before firing the callback
                 using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
