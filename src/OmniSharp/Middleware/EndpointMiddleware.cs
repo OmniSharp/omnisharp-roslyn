@@ -101,13 +101,8 @@ namespace OmniSharp.Middleware
 
             await _next(httpContext);
         }
-        
-#if DNXCORE50
-        private static readonly Encoding _encoding = System.Text.Encoding.GetEncoding(1252);
-#else
-        private static readonly Encoding _encoding = System.Text.Encoding.Default;
-#endif
 
+        private static readonly Encoding _encoding = new System.Text.UTF8Encoding(false);
 
         private void SerializeResponseObject(HttpResponse response, object value)
         {
