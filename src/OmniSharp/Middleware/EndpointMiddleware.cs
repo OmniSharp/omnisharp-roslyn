@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
@@ -100,9 +102,11 @@ namespace OmniSharp.Middleware
             await _next(httpContext);
         }
 
+        private static readonly Encoding _encoding = new System.Text.UTF8Encoding(false);
+
         private void SerializeResponseObject(HttpResponse response, object value)
         {
-            using (var writer = new StreamWriter(response.Body, System.Text.Encoding.UTF8, 1024, true))
+            using (var writer = new StreamWriter(response.Body, _encoding, 1024, true))
             using (var jsonWriter = new JsonTextWriter(writer))
             {
                 jsonWriter.CloseOutput = false;

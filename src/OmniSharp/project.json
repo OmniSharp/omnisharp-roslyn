@@ -30,7 +30,8 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.ObjectModel": "4.0.10-beta-22816"
+        "System.ObjectModel": "4.0.10-beta-22816",
+        "System.Text.Encoding.Extensions": "4.0.10-beta-22816"
       }
     }
   }
