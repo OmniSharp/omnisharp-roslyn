@@ -33,7 +33,7 @@ after_deploy: |
   git push origin $BRANCH_NAME
   curl -X POST -H 'Authorization: token $GITHUB_API_TOKEN -d '{"title":"Upgrade to OmniSharp/omnisharp-roslyn $TRAVIS_TAG","body":"*Automated PR*\n\Upgrade omnisharp-roslyn to $TRAVIS_TAG. [release patch]","head":"$BRANCH_NAME","base":"master"} https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls'
 before_install:
-  - openssl aes-256-cbc -K $encrypted_e2a4fd9ff260_key -iv $encrypted_e2a4fd9ff260_iv -in travis_id_rsa.enc -out C:\\Users\\David\\OneDrive\\OmniSharp\\travis_id_rsa -d
+  - openssl aes-256-cbc -K $encrypted_e2a4fd9ff260_key -iv $encrypted_e2a4fd9ff260_iv -in travis_id_rsa.enc -out ~/.ssh/id_rsa -d
   - chmod 600 ~/.ssh/id_rsa
   - eval `ssh-agent -s`
   - ssh-add ~/.ssh/id_rsa
