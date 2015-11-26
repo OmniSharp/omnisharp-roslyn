@@ -12,5 +12,6 @@ namespace OmniSharp.MSBuild
         public Dictionary<Guid, ProjectId> ProjectGuidToWorkspaceMapping { get; } = new Dictionary<Guid, ProjectId>();
         public Dictionary<string, ProjectFileInfo> Projects { get; } = new Dictionary<string, ProjectFileInfo>();
         public string SolutionPath { get; set; }
+        public bool AlreadyInitialised { get; set; }
     }
 }

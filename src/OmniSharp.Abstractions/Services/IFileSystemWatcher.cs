@@ -6,6 +6,8 @@ namespace OmniSharp.Services
     public interface IFileSystemWatcher
     {
         void Watch(string path, Action<string> callback);
+        
+        void WatchGlobal(Action<string> callback);
 
         void TriggerChange(string path);
     }
