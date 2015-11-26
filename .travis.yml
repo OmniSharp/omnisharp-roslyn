@@ -31,7 +31,7 @@ after_deploy: |
   git add package.json
   git commit -m "Update omnisharp-roslyn to $TRAVIS_TAG"
   git push origin $BRANCH_NAME
-  curl -X POST -H 'Authorization: token $GITHUB_API_TOKEN -d '{"title":"Upgrade to OmniSharp/omnisharp-roslyn $TRAVIS_TAG","body":"*Automated PR*\n\Upgrade omnisharp-roslyn to $TRAVIS_TAG. [release patch]","head":"$BRANCH_NAME","base":"master"} https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls'
+  curl -X POST -H 'Authorization: token $GITHUB_API_TOKEN -d '{"title":"Upgrade to OmniSharp/omnisharp-roslyn $TRAVIS_TAG","body":"*Automated PR*\n\Upgrade omnisharp-roslyn to $TRAVIS_TAG. [release patch]","head":"$BRANCH_NAME","base":"master"}' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
 before_install:
   - openssl des3 -k $OPENSSL_PASSKEY -in travis_rsa.enc -out ~/.ssh/id_rsa -d
   - chmod 600 ~/.ssh/id_rsa
