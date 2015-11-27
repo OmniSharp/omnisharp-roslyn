@@ -75,16 +75,16 @@ if [ $TRAVIS_TAG ]; then
 fi
 
 if [ $TRAVIS ]; then
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Abstractions/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Bootstrap/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Dnx/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.MSBuild/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Nuget/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn.CSharp/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.ScriptCs/project.json.temp
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Stdio/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp/project.json > src/OmniSharp/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Abstractions/project.json > src/OmniSharp.Abstractions/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Bootstrap/project.json > src/OmniSharp.Bootstrap/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Dnx/project.json > src/OmniSharp.Dnx/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.MSBuild/project.json > src/OmniSharp.MSBuild/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Nuget/project.json > src/OmniSharp.Nuget/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn/project.json > src/OmniSharp.Roslyn/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Roslyn.CSharp/project.json > src/OmniSharp.Roslyn.CSharp/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.ScriptCs/project.json > src/OmniSharp.ScriptCs/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Stdio/project.json > src/OmniSharp.Stdio/project.json.temp
 
   mv src/OmniSharp/project.json.temp src/OmniSharp/project.json
   mv src/OmniSharp.Abstractions/project.json.temp src/OmniSharp.Abstractions/project.json
@@ -98,21 +98,22 @@ if [ $TRAVIS ]; then
   mv src/OmniSharp.Stdio/project.json.temp src/OmniSharp.Stdio/project.json
 fi
 
-dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.MSBuild --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Nuget --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Roslyn --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget
+dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.MSBuild --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Nuget --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Roslyn --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget --quiet
 
 mkdir artifacts/OmniSharp.Bootstrapper
 # Publish our common base omnisharp configuration (all default language services)
 cp bootstrap/bootstrap.json artifacts/OmniSharp.Bootstrapper/project.json
 cp src/OmniSharp/config.json artifacts/OmniSharp.Bootstrapper/config.json
+
 dnu restore artifacts/OmniSharp.Bootstrapper
 dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
@@ -133,6 +134,7 @@ if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; t
     exit 1
 fi
 
+tree -if artifacts/build/omnisharp | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp
 tar -zcf ../../../omnisharp.tar.gz .
 popd
@@ -157,14 +159,12 @@ if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-b
     exit 1
 fi
 
+tree -if artifacts/build/omnisharp.bootstrap | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp.bootstrap
 tar -zcf ../../../omnisharp.bootstrap.tar.gz .
 popd
 
-pushd artifacts
-# list a tree of the results
-ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
-popd
+tree artifacts
 
 if (! $TRAVIS) then
     popd
