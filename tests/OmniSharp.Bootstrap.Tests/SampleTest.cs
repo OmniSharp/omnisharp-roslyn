@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Xunit;
-using OmniSharp.Bootstrap;
-using Microsoft.Framework.Runtime;
-using System.Runtime.Versioning;
 using System.IO;
+using System.Linq;
+using System.Runtime.Versioning;
+using Microsoft.Framework.Runtime;
+using OmniSharp.Bootstrap;
+using Xunit;
 
 namespace OmniSharp.Bootstrap.Tests
 {
