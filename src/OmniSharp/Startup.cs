@@ -14,7 +14,6 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.OptionsModel;
 using Microsoft.Framework.Runtime;
-using OmniSharp.Dnx;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+BOOTSTRAP=$("$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnx" "$DIR/../src/OmniSharp" run "$@")
+if test -e "$BOOTSTRAP/project.lock.json";then
+  "$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnu" restore "$BOOTSTRAP"
+fi
+"$HOME/.dnx/runtimes/dnx-mono.1.0.0-beta4/bin/dnx" "$BOOTSTRAP" run "$@"
