@@ -1,13 +1,18 @@
 language: csharp
 sudo: false
+env:
+  global:
+    secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
 install: curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh
   | sh && source ~/.dnx/dnvm/dnvm.sh && dnvm upgrade
+before_script:
+  - chmod +x build.sh
 script:
-- ". ./build.sh"
+  - ". ./build.sh"
 deploy:
   provider: releases
   api_key:
-    secure: XpiQ/auMJrjwgd7uP/I6HFK7F4Yd0AUkpdud8JUoRt8ZSYKfAW31bevE0CQF7K+SKLy/OeP5Ftut4BnRDpoU0EpRZWhVn85VEOAooEF1l7iQPCS3qScx02jr8pBhRoHr3o73JS+S8GYDxf8ElJf31QilNadFxyK6EDsgabqEAAE=
+    secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
   file:
     - 'omnisharp.tar.gz'
     - 'omnisharp.bootstrap.tar.gz'
@@ -15,4 +20,21 @@ deploy:
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
-    # all_branches: true
+after_deploy: |
+  BRANCH_NAME="upgrade/omnisharp-roslyn-$TRAVIS_TAG"
+  git config --global user.name "OmniSharp Bot"
+  git config --global user.email "omnisharp-bot@users.noreply.github.com"
+  git clone git@github.com:OmniSharp/omnisharp-node-client.git ~/omnisharp-node-client
+  pushd ~/omnisharp-node-client
+  git checkout -b $BRANCH_NAME
+  cat package.json > package2.json
+  cat package2.json | jq '."omnisharp-roslyn"="'$TRAVIS_TAG'"' > package.json
+  git add package.json
+  git commit -m "Update omnisharp-roslyn to $TRAVIS_TAG"
+  git push origin $BRANCH_NAME
+  curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
+before_install:
+  - openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
+  - chmod 600 ~/.ssh/id_rsa
+  - eval `ssh-agent -s`
+  - ssh-add ~/.ssh/id_rsa
