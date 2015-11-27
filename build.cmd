@@ -23,50 +23,50 @@ set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
 call dnu restore
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-rem pushd tests\OmniSharp.Bootstrap.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Bootstrap.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.Dnx.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Dnx.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.MSBuild.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.MSBuild.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.Plugins.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Plugins.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.Roslyn.CSharp.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Roslyn.CSharp.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.ScriptCs.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.ScriptCs.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.Stdio.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Stdio.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
-rem pushd tests\OmniSharp.Tests
-rem call dnx . test
-rem if %errorlevel% neq 0 exit /b %errorlevel%
-rem popd
+pushd tests\OmniSharp.Tests
+call dnx . test
+if %errorlevel% neq 0 exit /b %errorlevel%
+popd
 
 call dnu pack src\OmniSharp --configuration Release --out artifacts\build\nuget
 call dnu pack src\OmniSharp.Abstractions --configuration Release --out artifacts\build\nuget
