@@ -117,6 +117,12 @@ cp src/OmniSharp/config.json artifacts/OmniSharp.Bootstrapper/config.json
 dnu restore artifacts/OmniSharp.Bootstrapper
 dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
+pushd artifacts/build/omnisharp/approot/packages/OmniSharp.Bootstrapper/1.0.0/root/
+jq '.entryPoint="OmniSharp"' project.json > project.json.temp
+mv project.json.temp project.json
+cat project.json
+popd
+
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
