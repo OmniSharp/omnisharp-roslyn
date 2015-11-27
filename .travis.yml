@@ -22,8 +22,8 @@ after_deploy: |
   BRANCH_NAME="upgrade/omnisharp-roslyn-$TRAVIS_TAG"
   git config user.name "OmniSharp Bot"
   git config user.email "omnisharp-bot@users.noreply.github.com"
-  mkdir omnisharp-node-client
-  pushd omnisharp-node-client
+  mkdir ~/omnisharp-node-client
+  pushd ~/omnisharp-node-client
   git clone git@github.com:OmniSharp/omnisharp-node-client.git
   git checkout -b $BRANCH_NAME
   cat package.json > package2.json
@@ -33,7 +33,7 @@ after_deploy: |
   git push origin $BRANCH_NAME
   curl -X POST -H 'Authorization: token $GITHUB_API_TOKEN -d '{"title":"Upgrade to OmniSharp/omnisharp-roslyn $TRAVIS_TAG","body":"*Automated PR*\n\Upgrade omnisharp-roslyn to $TRAVIS_TAG. [release patch]","head":"$BRANCH_NAME","base":"master"}' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
 before_install:
-  - openssl des3 -k $OPENSSL_PASSKEY -in travis_rsa.enc -out ~/.ssh/id_rsa -d
+  - openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
   - chmod 600 ~/.ssh/id_rsa
   - eval `ssh-agent -s`
   - ssh-add ~/.ssh/id_rsa
