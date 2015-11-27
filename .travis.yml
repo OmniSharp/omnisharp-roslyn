@@ -9,6 +9,11 @@ before_script:
   - chmod +x build.sh
 script:
   - ". ./build.sh"
+addons:
+  apt:
+    packages:
+      - curl
+      - tree
 deploy:
   provider: releases
   api_key:
@@ -21,6 +26,18 @@ deploy:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
 after_deploy: |
+  OMNISHARP_VERSION="1.0.0-dev";
+  if [ $TRAVIS_TAG ]; then
+    OMNISHARP_VERSION=${TRAVIS_TAG:1};
+  fi
+  nuget push artifacts/build/nuget/Release/OmniSharp.Bootstrap.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.Dnx.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.MSBuild.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.Nuget.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.Roslyn.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.Roslyn.CSharp.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.ScriptCs.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.Stdio.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
   BRANCH_NAME="upgrade/omnisharp-roslyn-$TRAVIS_TAG"
   git config --global user.name "OmniSharp Bot"
   git config --global user.email "omnisharp-bot@users.noreply.github.com"

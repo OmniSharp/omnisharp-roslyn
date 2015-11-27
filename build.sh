@@ -134,6 +134,8 @@ if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; t
 fi
 
 pushd artifacts/build/omnisharp
+rm -rf *.nupkg
+rm -rf *.nupkg.sha512
 tar -zcf ../../../omnisharp.tar.gz .
 popd
 
@@ -158,13 +160,12 @@ if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-b
 fi
 
 pushd artifacts/build/omnisharp.bootstrap
+rm -rf *.nupkg
+rm -rf *.nupkg.sha512
 tar -zcf ../../../omnisharp.bootstrap.tar.gz .
 popd
 
-pushd artifacts
-# list a tree of the results
-ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
-popd
+tree artifacts
 
 if (! $TRAVIS) then
     popd
