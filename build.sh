@@ -98,21 +98,22 @@ if [ $TRAVIS ]; then
   mv src/OmniSharp.Stdio/project.json.temp src/OmniSharp.Stdio/project.json
 fi
 
-dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.MSBuild --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Nuget --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Roslyn --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget
-dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget
+dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.MSBuild --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Nuget --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Roslyn --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget --quiet
 
 mkdir artifacts/OmniSharp.Bootstrapper
 # Publish our common base omnisharp configuration (all default language services)
 cp bootstrap/bootstrap.json artifacts/OmniSharp.Bootstrapper/project.json
 cp src/OmniSharp/config.json artifacts/OmniSharp.Bootstrapper/config.json
+
 dnu restore artifacts/OmniSharp.Bootstrapper
 dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
@@ -133,9 +134,8 @@ if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; t
     exit 1
 fi
 
+tree -if artifacts/build/omnisharp | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp
-rm -rf *.nupkg
-rm -rf *.nupkg.sha512
 tar -zcf ../../../omnisharp.tar.gz .
 popd
 
@@ -159,9 +159,8 @@ if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-b
     exit 1
 fi
 
+tree -if artifacts/build/omnisharp.bootstrap | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp.bootstrap
-rm -rf *.nupkg
-rm -rf *.nupkg.sha512
 tar -zcf ../../../omnisharp.bootstrap.tar.gz .
 popd
 
