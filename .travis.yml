@@ -22,9 +22,8 @@ after_deploy: |
   BRANCH_NAME="upgrade/omnisharp-roslyn-$TRAVIS_TAG"
   git config user.name "OmniSharp Bot"
   git config user.email "omnisharp-bot@users.noreply.github.com"
-  mkdir ~/omnisharp-node-client
+  git clone git@github.com:OmniSharp/omnisharp-node-client.git ~/omnisharp-node-client
   pushd ~/omnisharp-node-client
-  git clone git@github.com:OmniSharp/omnisharp-node-client.git
   git checkout -b $BRANCH_NAME
   cat package.json > package2.json
   cat package2.json | jq '."omnisharp-roslyn"="$TRAVIS_TAG"' > package.json
