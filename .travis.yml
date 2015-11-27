@@ -26,7 +26,7 @@ after_deploy: |
   pushd ~/omnisharp-node-client
   git checkout -b $BRANCH_NAME
   cat package.json > package2.json
-  cat package2.json | jq '."omnisharp-roslyn"="$TRAVIS_TAG"' > package.json
+  cat package2.json | jq '."omnisharp-roslyn"="'$TRAVIS_TAG'"' > package.json
   git add package.json
   git commit -m "Update omnisharp-roslyn to $TRAVIS_TAG"
   git push origin $BRANCH_NAME
