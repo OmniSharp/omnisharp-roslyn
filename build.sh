@@ -142,6 +142,8 @@ fi
 
 tree -if artifacts/build/omnisharp | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp
+mv Bootstrapper omnisharp
+mv roslyn/Bootstrapper.cmd omnisharp.cmd
 tar -zcf ../../../omnisharp.tar.gz .
 popd
 
