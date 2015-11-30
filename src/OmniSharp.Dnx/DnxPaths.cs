@@ -20,9 +20,6 @@ namespace OmniSharp.Dnx
         public DnxRuntimePathResult RuntimePath { get; private set; }
         public string Dnx { get; private set; }
         public string Dnu { get; private set; }
-        public string Klr { get; private set; }
-        public string Kpm { get; private set; }
-        public string K { get; private set; }
 
         public DnxPaths(IOmnisharpEnvironment env,
                             DnxOptions options,
@@ -35,9 +32,6 @@ namespace OmniSharp.Dnx
             RuntimePath = GetRuntimePath();
             Dnx = FirstPath(RuntimePath.Value, "dnx", "dnx.exe");
             Dnu = FirstPath(RuntimePath.Value, "dnu", "dnu.cmd");
-            Klr = FirstPath(RuntimePath.Value, "klr", "klr.exe");
-            Kpm = FirstPath(RuntimePath.Value, "kpm", "kpm.cmd");
-            K = FirstPath(RuntimePath.Value, "k", "k.cmd");
         }
 
         private DnxRuntimePathResult GetRuntimePath()
@@ -138,12 +132,6 @@ namespace OmniSharp.Dnx
             {
                 // Newer path
                 yield return Path.Combine(home, ".dnx");
-
-                // New path
-                yield return Path.Combine(home, ".k");
-
-                // Old path
-                yield return Path.Combine(home, ".kre");
             }
 
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ProgramFiles")))
@@ -158,13 +146,6 @@ namespace OmniSharp.Dnx
         {
             // Newer format
             yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, "dnx-mono.{0}", "dnx-clr-win-x86.{0}", "runtimes");
-
-            // New format
-
-            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, "kre-mono.{0}", "kre-clr-win-x86.{0}", "runtimes");
-
-            // Old format
-            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, "KRE-Mono.{0}", "KRE-CLR-x86.{0}", "packages");
         }
 
         private string GetRuntimePathFromVersionOrAlias(string versionOrAlias,

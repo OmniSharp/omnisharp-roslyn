@@ -88,7 +88,7 @@ namespace OmniSharp.Dnx
         {
             var psi = new ProcessStartInfo()
             {
-                FileName = _paths.Dnu ?? _paths.Kpm,
+                FileName = _paths.Dnu,
                 WorkingDirectory = Path.GetDirectoryName(project.Path),
                 CreateNoWindow = true,
                 UseShellExecute = false,
