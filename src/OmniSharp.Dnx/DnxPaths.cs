@@ -134,9 +134,19 @@ namespace OmniSharp.Dnx
                 yield return Path.Combine(home, ".dnx");
             }
 
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ProgramData")))
+            {
+                yield return Path.Combine(Environment.GetEnvironmentVariable("ProgramData"), "Microsoft DNX");
+            }
+
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AllUsersProfile")))
+            {
+                yield return Path.Combine(Environment.GetEnvironmentVariable("AllUsersProfile"), "Microsoft DNX");
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ProgramFiles")))
             {
-                yield return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), "DNX");
+                yield return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), "Microsoft DNX");
             }
 
             yield return Path.Combine(@"/usr/local/lib/dnx");
