@@ -126,29 +126,22 @@ namespace OmniSharp.Middleware.Endpoint
             }
             else if (_hasFileNameProperty)
             {
-                var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName ?? string.Empty);
-                return await HandleLanguageRequest(language, request, context);
-            }
-            else
-            {
-                var language = _languagePredicateHandler.GetLanguageForFilePath(string.Empty);
-                if (!string.IsNullOrEmpty(language))
-                {
-                    return await HandleLanguageRequest(language, request, context);
-                }
+                var lang = _languagePredicateHandler.GetLanguageForFilePath(model.FileName ?? string.Empty);
+                return await HandleLanguageRequest(lang, request, context);
             }
 
-            return await HandleAllRequest(request, context);
+            var language = _languagePredicateHandler.GetLanguageForFilePath(string.Empty);
+            return await HandleLanguageRequest(language, request, context);
         }
 
         private Task<object> HandleLanguageRequest(string language, TRequest request, HttpContext context)
         {
-            if (!string.IsNullOrEmpty(language))
+            if (_canBeAggregated)
             {
-                return HandleSingleRequest(language, request, context);
+                return HandleAllRequest(request, context);
             }
 
-            return HandleAllRequest(request, context);
+            return HandleSingleRequest(language ?? LanguageNames.CSharp, request, context);
         }
 
         private async Task<object> HandleSingleRequest(string language, TRequest request, HttpContext context)
