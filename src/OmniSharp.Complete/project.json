@@ -5,7 +5,7 @@
     "OmniSharp.Dnx": "1.0.0-*"
   },
   "commands": {
-    "Bootstrapper": "Bootstrapper"
+    "OmniSharp.Complete": "OmniSharp.Complete"
   },
   "frameworks": {
     "dnx451": {
