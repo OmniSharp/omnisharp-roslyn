@@ -99,6 +99,7 @@ if [ $TRAVIS ]; then
 fi
 
 dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Host --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget --quiet
@@ -109,18 +110,11 @@ dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/bui
 dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget --quiet
 
-mkdir artifacts/OmniSharp.Bootstrapper
-# Publish our common base omnisharp configuration (all default language services)
-cp bootstrap/bootstrap.json artifacts/OmniSharp.Bootstrapper/project.json
-cp src/OmniSharp/config.json artifacts/OmniSharp.Bootstrapper/config.json
+dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
-dnu restore artifacts/OmniSharp.Bootstrapper
-dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
-
-pushd artifacts/build/omnisharp/approot/packages/OmniSharp.Bootstrapper/1.0.0/root/
+pushd artifacts/build/omnisharp/approot/packages/OmniSharp/1.0.0/root/
 jq '.entryPoint="OmniSharp.Host"' project.json > project.json.temp
 mv project.json.temp project.json
-cat project.json
 popd
 
 # work around for kpm bundle returning an exit code 0 on failure

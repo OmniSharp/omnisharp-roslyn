@@ -1,11 +1,11 @@
 {
   "version": "1.0.0-*",
   "dependencies": {
-    "OmniSharp": "1.0.0-*",
+    "OmniSharp.Host": "1.0.0-*",
     "OmniSharp.Dnx": "1.0.0-*"
   },
   "commands": {
-    "OmniSharp.Complete": "OmniSharp.Complete"
+    "OmniSharp": "OmniSharp"
   },
   "frameworks": {
     "dnx451": {

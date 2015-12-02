@@ -30,7 +30,7 @@ after_deploy: |
   if [ $TRAVIS_TAG ]; then
     OMNISHARP_VERSION=${TRAVIS_TAG:1};
   fi
-  nuget push artifacts/build/nuget/Release/OmniSharp.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+  nuget push artifacts/build/nuget/Release/OmniSharp.Host.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
   nuget push artifacts/build/nuget/Release/OmniSharp.Bootstrap.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
   nuget push artifacts/build/nuget/Release/OmniSharp.Dnx.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
   nuget push artifacts/build/nuget/Release/OmniSharp.MSBuild.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package

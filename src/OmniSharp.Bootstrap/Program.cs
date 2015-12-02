@@ -15,7 +15,7 @@ namespace OmniSharp.Bootstrap
     public class Program
     {
         private readonly IApplicationEnvironment _appEnv;
-        private readonly string[] _nonPlugins = { "OmniSharp.Plugins", "OmniSharp.Abstractions", "OmniSharp.Stdio", "OmniSharp" };
+        private readonly string[] _nonPlugins = { "OmniSharp.Plugins", "OmniSharp.Abstractions", "OmniSharp.Stdio", "OmniSharp", "OmniSharp.Host" };
 
         public Program(IApplicationEnvironment appEnv)
         {
@@ -66,10 +66,10 @@ namespace OmniSharp.Bootstrap
             }
 
             BootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
-            OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp", "project.json");
+            OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp.Host", "project.json");
             if (!File.Exists(OmnisharpProjectPath))
             {
-                OmnisharpProjectPath = Path.Combine(OmnisharpProjectPath, "OmniSharp", "1.0.0", "root", "project.json");
+                OmnisharpProjectPath = Path.Combine(OmnisharpProjectPath, "OmniSharp.Host", "1.0.0", "root", "project.json");
             }
 
             if (!string.IsNullOrEmpty(SolutionRoot))
@@ -197,7 +197,7 @@ namespace OmniSharp.Bootstrap
                     .ToArray();
 
             var allDeps = new Dictionary<string, string>();
-            allDeps.Add("OmniSharp", "1.0.0-*");
+            allDeps.Add("OmniSharp.Host", "1.0.0-*");
             foreach (var pluginPair in PluginNames)
             {
                 allDeps.Add(pluginPair.Key, pluginPair.Value);
