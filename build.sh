@@ -118,7 +118,7 @@ dnu restore artifacts/OmniSharp.Bootstrapper
 dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
 pushd artifacts/build/omnisharp/approot/packages/OmniSharp.Bootstrapper/1.0.0/root/
-jq '.entryPoint="OmniSharp"' project.json > project.json.temp
+jq '.entryPoint="OmniSharp.Host"' project.json > project.json.temp
 mv project.json.temp project.json
 cat project.json
 popd

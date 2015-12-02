@@ -270,7 +270,7 @@ namespace OmniSharp.Bootstrap
             }
 
             projectJobject["frameworks"] = frameworksJobject;
-            projectJobject["entryPoint"] = new JValue("OmniSharp");
+            projectJobject["entryPoint"] = new JValue("OmniSharp.Host");
 
             var bootstrapProjectPath = Path.Combine(OmnisharpPath, "bootstrap", "Bootstrapper", "project.json");
             var bootstrapConfigPath = Path.Combine(OmnisharpPath, "bootstrap", "Bootstrapper", "config.json");

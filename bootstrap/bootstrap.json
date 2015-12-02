@@ -16,5 +16,5 @@
 	},
     "dnxcore50": {}
   },
-  "entryPoint": "OmniSharp"
+  "entryPoint": "OmniSharp.Host"
 }
