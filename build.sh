@@ -75,7 +75,7 @@ if [ $TRAVIS_TAG ]; then
 fi
 
 if [ $TRAVIS ]; then
-  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp/project.json > src/OmniSharp/project.json.temp
+  jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Host/project.json > src/OmniSharp.Host/project.json.temp
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Abstractions/project.json > src/OmniSharp.Abstractions/project.json.temp
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Bootstrap/project.json > src/OmniSharp.Bootstrap/project.json.temp
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Dnx/project.json > src/OmniSharp.Dnx/project.json.temp
@@ -86,7 +86,7 @@ if [ $TRAVIS ]; then
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.ScriptCs/project.json > src/OmniSharp.ScriptCs/project.json.temp
   jq '.version="'$OMNISHARP_VERSION'"' src/OmniSharp.Stdio/project.json > src/OmniSharp.Stdio/project.json.temp
 
-  mv src/OmniSharp/project.json.temp src/OmniSharp/project.json
+  mv src/OmniSharp.Host/project.json.temp src/OmniSharp.Host/project.json
   mv src/OmniSharp.Abstractions/project.json.temp src/OmniSharp.Abstractions/project.json
   mv src/OmniSharp.Bootstrap/project.json.temp src/OmniSharp.Bootstrap/project.json
   mv src/OmniSharp.Dnx/project.json.temp src/OmniSharp.Dnx/project.json
@@ -98,7 +98,7 @@ if [ $TRAVIS ]; then
   mv src/OmniSharp.Stdio/project.json.temp src/OmniSharp.Stdio/project.json
 fi
 
-dnu pack src/OmniSharp --configuration Release --out artifacts/build/nuget --quiet
+dnu pack src/OmniSharp.Host --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Abstractions --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Bootstrap --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Dnx --configuration Release --out artifacts/build/nuget --quiet
@@ -109,18 +109,11 @@ dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/bui
 dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget --quiet
 
-mkdir artifacts/OmniSharp.Bootstrapper
-# Publish our common base omnisharp configuration (all default language services)
-cp bootstrap/bootstrap.json artifacts/OmniSharp.Bootstrapper/project.json
-cp src/OmniSharp/config.json artifacts/OmniSharp.Bootstrapper/config.json
+dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
 
-dnu restore artifacts/OmniSharp.Bootstrapper
-dnu publish artifacts/OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
-
-pushd artifacts/build/omnisharp/approot/packages/OmniSharp.Bootstrapper/1.0.0/root/
-jq '.entryPoint="OmniSharp"' project.json > project.json.temp
+pushd artifacts/build/omnisharp/approot/packages/OmniSharp/1.0.0/root/
+jq '.entryPoint="OmniSharp.Host"' project.json > project.json.temp
 mv project.json.temp project.json
-cat project.json
 popd
 
 # work around for kpm bundle returning an exit code 0 on failure
@@ -142,8 +135,6 @@ fi
 
 tree -if artifacts/build/omnisharp | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp
-mv Bootstrapper omnisharp
-mv roslyn/Bootstrapper.cmd omnisharp.cmd
 tar -zcf ../../../omnisharp.tar.gz .
 popd
 
