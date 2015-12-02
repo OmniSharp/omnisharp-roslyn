@@ -68,27 +68,27 @@ call dnx . test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
-call dnu pack src\OmniSharp.Host --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Abstractions --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Bootstrap --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Dnx --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.MSBuild --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Nuget --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Roslyn --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Roslyn.CSharp --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.ScriptCs --configuration Release --out artifacts\build\nuget
-call dnu pack src\OmniSharp.Stdio --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Host --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Abstractions --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Bootstrap --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Dnx --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.MSBuild --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Nuget --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Roslyn --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Roslyn.CSharp --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.ScriptCs --configuration Release --out artifacts\build\nuget
+rem call dnu pack src\OmniSharp.Stdio --configuration Release --out artifacts\build\nuget
 
-call dnu publish artifacts\OmniSharp --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+rem call dnu publish artifacts\OmniSharp --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
 
-pushd artifacts\build\omnisharp
-call tar -zcf ..\..\..\omnisharp.tar.gz .
-popd
+rem pushd artifacts\build\omnisharp
+rem call tar -zcf ..\..\..\omnisharp.tar.gz .
+rem popd
 
-call dnu publish src\OmniSharp.Bootstrap --configuration Release --no-source --out artifacts\build\omnisharp.bootstrap --runtime dnx-clr-win-x86.1.0.0-beta4
+rem call dnu publish src\OmniSharp.Bootstrap --configuration Release --no-source --out artifacts\build\omnisharp.bootstrap --runtime dnx-clr-win-x86.1.0.0-beta4
 
-pushd artifacts\build\omnisharp.bootstrap
-call tar -zcf ..\..\..\omnisharp.bootstrap.tar.gz .
-popd
+rem pushd artifacts\build\omnisharp.bootstrap
+rem call tar -zcf ..\..\..\omnisharp.bootstrap.tar.gz .
+rem popd
 
 popd
