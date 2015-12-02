@@ -5,7 +5,7 @@
     "OmniSharp.Dnx": "1.0.0-*"
   },
   "commands": {
-    "OmniSharp": "OmniSharp"
+    "omnisharp": "run"
   },
   "frameworks": {
     "dnx451": {

@@ -68,7 +68,7 @@ call dnx . test
 if %errorlevel% neq 0 exit /b %errorlevel%
 popd
 
-call dnu pack src\OmniSharp --configuration Release --out artifacts\build\nuget
+call dnu pack src\OmniSharp.Host --configuration Release --out artifacts\build\nuget
 call dnu pack src\OmniSharp.Abstractions --configuration Release --out artifacts\build\nuget
 call dnu pack src\OmniSharp.Bootstrap --configuration Release --out artifacts\build\nuget
 call dnu pack src\OmniSharp.Dnx --configuration Release --out artifacts\build\nuget
@@ -79,12 +79,7 @@ call dnu pack src\OmniSharp.Roslyn.CSharp --configuration Release --out artifact
 call dnu pack src\OmniSharp.ScriptCs --configuration Release --out artifacts\build\nuget
 call dnu pack src\OmniSharp.Stdio --configuration Release --out artifacts\build\nuget
 
-mkdir artifacts\OmniSharp.Bootstrapper
-rem Publish our common base omnisharp configuration (all language services)
-copy bootstrap\bootstrap.json artifacts\OmniSharp.Bootstrapper\project.json
-copy src\OmniSharp\config.json artifacts\OmniSharp.Bootstrapper\config.json
-call dnu restore artifacts\OmniSharp.Bootstrapper
-call dnu publish artifacts\OmniSharp.Bootstrapper --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
+call dnu publish artifacts\OmniSharp --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
 
 pushd artifacts\build\omnisharp
 call tar -zcf ..\..\..\omnisharp.tar.gz .
