@@ -108,10 +108,11 @@ namespace OmniSharp.Dnx
             _designTimeHostManager.Start(_context.HostId, port =>
             {
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
-
+                
+                new SocketConnection(socket, port, "DnxProjectSystem" , _logger);
+                
                 var networkStream = new NetworkStream(socket);
-
+                
                 _logger.LogInformation("Connected");
 
                 _context.DesignTimeHostPort = port;
@@ -647,5 +648,6 @@ namespace OmniSharp.Dnx
         {
             return Task.FromResult<object>(new DnxWorkspaceInformation(_context));
         }
+        
     }
 }
