@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using Microsoft.Framework.Logging;
 
 namespace OmniSharp.Dnx
@@ -96,33 +95,11 @@ namespace OmniSharp.Dnx
 
                 this._designTimeHostProcess.Start();
                 this._designTimeHostProcess.BeginOutputReadLine();
+                
+                var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                // Wait a little bit for it to conncet before firing the callback
-                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    var t1 = DateTime.UtcNow;
-                    var dthTimeout = TimeSpan.FromSeconds(30);
-                    while (!socket.Connected && DateTime.UtcNow - t1 < dthTimeout)
-                    {
-                        Thread.Sleep(500);
-                        try
-                        {
-                            socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
-                        }
-                        catch (SocketException)
-                        {
-                            // this happens when the DTH isn't listening yet
-                        }
-                    }
-
-                    if (!socket.Connected)
-                    {
-                        // reached timeout
-                        _logger.LogError("Failed to launch DesignTimeHost in a timely fashion.");
-                        return;
-                    }
-                }
-
+                new SocketConnection(socket, port, "DesignTimeHost" , _logger);
+                        
                 if (_designTimeHostProcess.HasExited)
                 {
                     // REVIEW: Should we quit here or retry?
@@ -139,8 +116,8 @@ namespace OmniSharp.Dnx
 
                     Start(hostId, onConnected);
                 });
-
-                onConnected(port);
+  
+                 onConnected(port); 
             }
         }
 
@@ -166,12 +143,13 @@ namespace OmniSharp.Dnx
         }
 
         private static int GetFreePort()
-        {
+        {       
             var l = new TcpListener(IPAddress.Loopback, 0);
             l.Start();
             int port = ((IPEndPoint)l.LocalEndpoint).Port;
             l.Stop();
             return port;
         }
+            
     }
 }
