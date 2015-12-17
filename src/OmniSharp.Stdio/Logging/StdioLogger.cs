@@ -1,5 +1,5 @@
 using System;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
 
@@ -19,9 +19,9 @@ namespace OmniSharp.Stdio.Logging
             _filter = filter;
         }
 
-        public IDisposable BeginScope(object state)
+        public IDisposable BeginScopeImpl(object state)
         {
-            return null;
+            return new NoopDisposable();
         }
 
         public bool IsEnabled(LogLevel logLevel)
@@ -71,6 +71,11 @@ namespace OmniSharp.Stdio.Logging
 
             // don't block the logger
             _writer.WriteLineAsync(packet);
+        }
+
+        private class NoopDisposable : IDisposable
+        {
+            public void Dispose() { }
         }
     }
 }

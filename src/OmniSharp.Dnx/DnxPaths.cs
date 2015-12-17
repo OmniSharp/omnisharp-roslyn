@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Models;
@@ -25,8 +25,8 @@ namespace OmniSharp.Dnx
         public string K { get; private set; }
 
         public DnxPaths(IOmnisharpEnvironment env,
-                            DnxOptions options,
-                            ILoggerFactory loggerFactory)
+                        DnxOptions options,
+                        ILoggerFactory loggerFactory)
         {
             _env = env;
             _options = options;
@@ -45,7 +45,7 @@ namespace OmniSharp.Dnx
             var root = ResolveRootDirectory(_env.Path);
             var globalJson = Path.Combine(root, "global.json");
             var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
-            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.Alias ?? "default";
+            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options?.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())

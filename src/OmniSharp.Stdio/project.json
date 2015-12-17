@@ -2,23 +2,21 @@
   "version": "1.0.0-*",
   "description": "ASP.NET 5 web server for stdio",
   "compilationOptions": {
-      "warningsAsErrors": true
+    "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.AspNet.Hosting": "1.0.0-beta4",
-    "Microsoft.AspNet.Http.Interfaces": "1.0.0-beta4",
+    "Microsoft.AspNet.Hosting": "1.0.0-rc2-*",
+    "Microsoft.AspNet.Http.Features": "1.0.0-rc2-*",
     "Newtonsoft.Json": "7.0.1"
   },
-    "frameworks": {
-        "dnx451": {
-            "frameworkAssemblies": {
-            }
-        },
-        "dnxcore50": {
-            "dependencies": {
-                "System.Runtime": "4.0.20-beta-22816"
-            }
-        }
+  "frameworks": {
+    "dnx451": { },
+    "dnxcore50": {
+      "dependencies": {
+        "System.Runtime": "4.0.21-rc2-16319",
+        "System.Runtime.Serialization.Primitives": "4.0.11-*"
+      }
     }
+  }
 }

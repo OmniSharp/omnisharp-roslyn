@@ -1,8 +1,17 @@
 language: csharp
-sudo: false
+sudo: required
+dist: trusty
 env:
   global:
     secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
+mono:
+  - 4.2.1
+os:
+  - linux
+  - osx
+before_install:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
 install: curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh
   | sh && source ~/.dnx/dnvm/dnvm.sh && dnvm upgrade
 before_script:
@@ -12,6 +21,12 @@ script:
 addons:
   apt:
     packages:
+      - gettext
+      - libcurl4-openssl-dev
+      - libicu-dev
+      - libssl-dev
+      - libunwind8
+      - zlib1g
       - curl
       - tree
 before_deploy:

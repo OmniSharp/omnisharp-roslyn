@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using Microsoft.Framework.DesignTimeHost.Models;
-using Microsoft.Framework.Logging;
 using Newtonsoft.Json;
 
 namespace OmniSharp
@@ -25,7 +25,7 @@ namespace OmniSharp
 
         public void Start()
         {
-            Logger.LogVerbose("[ProcessingQueue]: Start()");
+            Logger.LogDebug("[ProcessingQueue]: Start()");
             new Thread(ReceiveMessages) { IsBackground = true }.Start();
         }
 
@@ -33,9 +33,9 @@ namespace OmniSharp
         {
             lock (_writer)
             {
-                if (Logger.IsEnabled(LogLevel.Verbose))
+                if (Logger.IsEnabled(LogLevel.Debug))
                 {
-                    Logger.LogVerbose(string.Format("[ProcessingQueue]: Post({0})", message));
+                    Logger.LogDebug(string.Format("[ProcessingQueue]: Post({0})", message));
                 }
 
                 _writer.Write(JsonConvert.SerializeObject(message));
@@ -50,9 +50,9 @@ namespace OmniSharp
                 {
                     var message = JsonConvert.DeserializeObject<Message>(_reader.ReadString());
 
-                    if (Logger.IsEnabled(LogLevel.Verbose))
+                    if (Logger.IsEnabled(LogLevel.Debug))
                     {
-                        Logger.LogVerbose(string.Format("[ProcessingQueue]: Receive ({0})", message));
+                        Logger.LogDebug(string.Format("[ProcessingQueue]: Receive ({0})", message));
                     }
 
                     OnReceive(message);

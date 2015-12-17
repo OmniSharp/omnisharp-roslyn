@@ -1,9 +1,9 @@
-#if DNX451
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FixUsingsFacts
     {
-        string fileName = "test.cs";
+        private readonly string fileName = "test.cs";
 
         [Fact]
         public async Task FixUsings_AddsUsingSingle()
@@ -65,7 +65,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""abc"");
+            Guid.NewGuid();
         }
     }
 }";
@@ -77,7 +77,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""abc"");
+            Guid.NewGuid();
         }
     }
 }";
@@ -175,7 +175,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""abc"");
+            Guid.NewGuid();
             var sb = new StringBuilder();
         }
     }
@@ -189,7 +189,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""abc"");
+            Guid.NewGuid();
             var sb = new StringBuilder();
         }
     }
@@ -298,7 +298,7 @@ namespace OmniSharp {
         }
 
 
-        [Fact]
+        [Fact(Skip = "Need to find a way to load System.Linq in to test host.")]
         public async Task FixUsings_AddsUsingLinqMethodSyntax()
         {
             const string fileContents = @"namespace OmniSharp
@@ -378,7 +378,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""test"");
+            Guid.NewGuid();
         }
     }
 }";
@@ -391,7 +391,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""test"");
+            Guid.NewGuid();
         }
     }
 }";
@@ -400,7 +400,7 @@ namespace OmniSharp
 
         [Fact]
         public async Task FixUsings_RemoveUnusedUsing()
-        {
+        {            
             const string fileContents = @"using System;
 using System.Linq;
 
@@ -410,7 +410,7 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""test"");
+            Guid.NewGuid();
         }
     }
 }";
@@ -423,17 +423,24 @@ namespace OmniSharp
     {
         public void method1()
         {
-            Console.WriteLine(""test"");
+            Guid.NewGuid();
         }
     }
 }";
             await AssertBufferContents(fileContents, expectedFileContents);
         }
-
+        
         private async Task AssertBufferContents(string fileContents, string expectedFileContents)
         {
             var response = await RunFixUsings(fileContents);
-            Assert.Equal(expectedFileContents, response.Buffer);
+            if (PlatformServices.Default.Runtime.OperatingSystem == "Windows")
+            {
+                Assert.Equal(expectedFileContents, response.Buffer);
+            }
+            else
+            {
+                Assert.Equal(expectedFileContents, response.Buffer.Replace("\r\n", "\n"));
+            }
         }
 
         private async Task AssertUnresolvedReferences(string fileContents, List<QuickFix> expectedUnresolved)
@@ -471,4 +478,3 @@ namespace OmniSharp
         }
     }
 }
-#endif

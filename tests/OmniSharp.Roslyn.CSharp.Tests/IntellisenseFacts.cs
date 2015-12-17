@@ -99,12 +99,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Console.wl$
+                            System.Guid.tp$
                         }
                     }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions.Select(c => c.CompletionText).Take(2), "WindowLeft", "WriteLine");
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "TryParse");
         }
 
         [Fact]
@@ -114,12 +114,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Console.wln$
+                            System.Guid.ng$
                         }
                     }";
 
             var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "WriteLine");
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
         }
 
         [Fact]
@@ -129,12 +129,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Console.wln$
+                            System.Guid.ng$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
-            ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "WriteLine()");
+            var completions = await FindCompletionsAsync(source);            
+            ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "NewGuid()");
         }
 
         [Fact]
@@ -193,7 +193,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     System.Console.WriteLine(completion);
                 }
             }
-            Assert.Equal(expected, completions);
+            Assert.Equal(expected, completions.ToArray());
         }
 
         private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)

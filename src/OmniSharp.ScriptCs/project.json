@@ -9,9 +9,8 @@
   },
   "frameworks": {
     "dnx451": {
-      "frameworkAssemblies": {},
       "dependencies": {
-          "ScriptCs.Hosting": "0.14.1"
+        "ScriptCs.Hosting": "0.14.1"
       }
     }
   }

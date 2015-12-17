@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services;
@@ -71,13 +72,13 @@ class Foo {
         [Fact]
         public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
         {
-            var controller = new GotoDefinitionService( await CreateTestWorkspace());
+            var controller = new GotoDefinitionService(await CreateTestWorkspace());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 7,
-                Column = 20,
+                Line = 13,
+                Column = 18,
                 Timeout = 60000,
                 WantMetadata = true
             });
@@ -85,7 +86,7 @@ class Foo {
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
             Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.Console", definitionResponse.MetadataSource.TypeName);
+            Assert.Equal("System.Guid", definitionResponse.MetadataSource.TypeName);
             // We probably shouldn't hard code metadata locations (they could change randomly)
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -107,8 +108,8 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Core", definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.Linq.Enumerable", definitionResponse.MetadataSource.TypeName);
+            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
         }
@@ -194,9 +195,10 @@ class Bar {
         Console.WriteLine(""Stuff"");
 
         var foo = new List<string>();
-        var str = String.Emtpy;
-        foo.ToList();
+        var str = String.Empty;
+        foo.ToArray();
         var dict = new Dictionary<string, string>();
+        Guid.NewGuid();
     }
 }";
 

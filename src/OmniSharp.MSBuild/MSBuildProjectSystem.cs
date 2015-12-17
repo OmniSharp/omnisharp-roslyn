@@ -11,11 +11,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.ConfigurationModel;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
+using OmniSharp.MSBuild.Analyzers;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -64,7 +64,7 @@ namespace OmniSharp.MSBuild
         public void Initalize(IConfiguration configuration)
         {
             _options = new MSBuildOptions();
-            OptionsServices.ReadProperties(_options, configuration);
+            ConfigurationBinder.Bind(configuration, _options);
 
             var solutionFilePath = _env.SolutionFilePath;
 
@@ -318,7 +318,7 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 #if DNX451
-                    var analyzerReference = new AnalyzerFileReference(analyzerPath);
+                    var analyzerReference = new AnalyzerFileReference(analyzerPath, new SimpleAnalyzerAssemblyLoader());
                     project.AddAnalyzerReference(analyzerReference);
 #endif
                 }
@@ -346,7 +346,7 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _logger.LogVerbose($"Adding reference '{referencePath}' to '{projectFileInfo.ProjectFilePath}'.");
+                    _logger.LogDebug($"Adding reference '{referencePath}' to '{projectFileInfo.ProjectFilePath}'.");
                     _workspace.AddMetadataReference(project.Id, metadataReference);
                 }
             }

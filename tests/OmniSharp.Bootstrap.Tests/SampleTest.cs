@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.Framework.Runtime;
-using OmniSharp.Bootstrap;
+using Microsoft.Extensions.PlatformAbstractions;
 using Xunit;
 
 namespace OmniSharp.Bootstrap.Tests
@@ -20,6 +18,14 @@ namespace OmniSharp.Bootstrap.Tests
         }
 
         public string ApplicationName
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public string ApplicationVersion
         {
             get
             {

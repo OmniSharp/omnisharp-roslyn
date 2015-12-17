@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
@@ -51,7 +53,11 @@ class Foo {
             var controller = new MetadataService(workspace);
             var response = await controller.Handle(new MetadataRequest
             {
+#if DNXCORE50
+                AssemblyName = "System.Linq",
+#else
                 AssemblyName = "System.Core",
+#endif
                 TypeName = "System.Linq.Enumerable",
                 Timeout = 60000
             });

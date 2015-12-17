@@ -4,25 +4,29 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "Newtonsoft.Json": "7.0.1",
-    "Microsoft.Framework.Runtime.Interfaces": "1.0.0-beta4"
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*",
+    "Newtonsoft.Json": "7.0.1"
   },
   "commands": {
     "omnisharp.bootstrap": "run"
   },
   "frameworks": {
-    "dnx451": {},
+    "dnx451": {
+      "frameworkAssemblies": {
+        "System.Runtime": ""
+      }
+    },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.20-beta-22816",
-        "System.Collections": "4.0.10-beta-22816",
-        "System.Threading.Thread": "4.0.0-beta-22816",
-        "System.Threading.Tasks": "4.0.10-beta-22816",
-        "System.Linq": "4.0.0-beta-22816",
-        "System.Console": "4.0.0-beta-22816",
-        "System.IO.FileSystem": "4.0.0-beta-22816",
-        "System.Dynamic.Runtime": "4.0.10-beta-22816",
-        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-22816"
+        "System.Runtime": "4.0.21-rc2-*",
+        "System.Collections": "4.0.11-rc2-*",
+        "System.Console": "4.0.0-rc2-*",
+        "System.Dynamic.Runtime": "4.0.11-rc2-*",
+        "System.IO.FileSystem": "4.0.1-rc2-*",
+        "System.Linq": "4.0.1-rc2-*",
+        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-*",
+        "System.Threading.Tasks": "4.0.11-rc2-*",
+        "System.Threading.Thread": "4.0.0-rc2-*"
       }
     }
   }

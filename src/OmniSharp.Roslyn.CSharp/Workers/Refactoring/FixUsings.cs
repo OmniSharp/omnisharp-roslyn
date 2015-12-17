@@ -1,4 +1,3 @@
-#if DNX451
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -31,7 +30,9 @@ namespace OmniSharp
             _semanticModel = await document.GetSemanticModelAsync();
             await AddMissingUsings(codeActionProviders);
             await RemoveUsings(codeActionProviders);
+#if DNX451
             await SortUsings();
+#endif
             await TryAddLinqQuerySyntax();
             var ambiguous = await GetAmbiguousUsings(codeActionProviders);
             var response = new FixUsingsResponse();
@@ -157,6 +158,7 @@ namespace OmniSharp
             return;
         }
 
+#if DNX451
         private async Task SortUsings()
         {
             //Sort usings
@@ -165,10 +167,9 @@ namespace OmniSharp
             var refactoringContext = await GetRefactoringContext(_document, sortActions);
             if (refactoringContext != null)
             {
-                var sortUsingsAction = nRefactoryProvider.Refactorings
-                    .First(r => r is ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction);
-
-                await sortUsingsAction.ComputeRefactoringsAsync(refactoringContext.Value);
+                nRefactoryProvider.Refactorings
+                                  .FirstOrDefault(r => r is ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction)
+                                 ?.ComputeRefactoringsAsync(refactoringContext.Value);
 
                 foreach (var action in sortActions)
                 {
@@ -186,6 +187,7 @@ namespace OmniSharp
                 }
             }
         }
+#endif
 
         private async Task TryAddLinqQuerySyntax()
         {
@@ -280,4 +282,3 @@ namespace OmniSharp
         }
     }
 }
-#endif

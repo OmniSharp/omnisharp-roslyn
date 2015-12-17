@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Framework.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using Xunit;
 
