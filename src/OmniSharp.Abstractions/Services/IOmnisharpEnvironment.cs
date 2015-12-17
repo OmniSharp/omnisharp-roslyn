@@ -11,5 +11,6 @@ namespace OmniSharp.Services
         string SolutionFilePath { get; }
         string ConfigurationPath { get; }
         TransportType TransportType { get; }
+        string[] OtherArgs { get; }
     }
 }
