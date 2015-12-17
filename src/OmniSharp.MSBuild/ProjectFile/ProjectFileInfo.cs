@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Framework.Logging;
 
 #if DNX451
 using Microsoft.Build.BuildEngine;
@@ -14,6 +13,7 @@ using Microsoft.Build.Evaluation;
 
 using OmniSharp.Models;
 using OmniSharp.Options;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
