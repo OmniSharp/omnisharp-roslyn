@@ -3,9 +3,9 @@ using System.Composition;
 using System.IO;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.Expiration.Interfaces;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp.Services
@@ -29,18 +29,23 @@ namespace OmniSharp.Services
         {
             var cacheKey = _cacheKeyPrefix + path.ToLowerInvariant();
 
-            var metadata = _cache.GetOrSet(cacheKey, ctx =>
+            var metadata = _cache.Get<AssemblyMetadata>(cacheKey);
+            
+            if (metadata == null)
             {
-                _logger.LogVerbose(string.Format("Cache miss {0}", path));
-
-                ctx.AddExpirationTrigger(new FileWriteTimeTrigger(path));
+                _logger.LogDebug(string.Format("Cache miss {0}", path));
 
                 using (var stream = File.OpenRead(path))
                 {
                     var moduleMetadata = ModuleMetadata.CreateFromStream(stream, PEStreamOptions.PrefetchMetadata);
-                    return AssemblyMetadata.Create(moduleMetadata);
+                    metadata = AssemblyMetadata.Create(moduleMetadata);
+
+                    var options = new MemoryCacheEntryOptions();
+                    options.ExpirationTokens.Add(new FileWriteTimeTrigger(path));
+
+                    _cache.Set(cacheKey, metadata, options);
                 }
-            });
+            }
 
             var documentationFile = Path.ChangeExtension(path, ".xml");
             if (File.Exists(documentationFile))
@@ -51,7 +56,7 @@ namespace OmniSharp.Services
             return metadata.GetReference();
         }
 
-        private class FileWriteTimeTrigger : IExpirationTrigger
+        private class FileWriteTimeTrigger : IChangeToken
         {
             private readonly string _path;
             private readonly DateTime _lastWriteTime;
@@ -61,7 +66,7 @@ namespace OmniSharp.Services
                 _lastWriteTime = File.GetLastWriteTime(path).ToUniversalTime();
             }
 
-            public bool ActiveExpirationCallbacks
+            public bool ActiveChangeCallbacks
             {
                 get
                 {
@@ -69,7 +74,7 @@ namespace OmniSharp.Services
                 }
             }
 
-            public bool IsExpired
+            public bool HasChanged
             {
                 get
                 {
@@ -77,7 +82,7 @@ namespace OmniSharp.Services
                 }
             }
 
-            public IDisposable RegisterExpirationCallback(Action<object> callback, object state)
+            public IDisposable RegisterChangeCallback(Action<object> callback, object state)
             {
                 throw new NotImplementedException();
             }
