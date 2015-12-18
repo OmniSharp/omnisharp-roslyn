@@ -48,6 +48,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Bootstrap.Tests",
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Dnx.Tests", "tests\OmniSharp.Dnx.Tests\OmniSharp.Dnx.Tests.xproj", "{C3AB0A0C-D850-40AF-874D-805C5948FE25}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.MSBuild.Tests", "tests\OmniSharp.MSBuild.Tests\OmniSharp.MSBuild.Tests.xproj", "{194A88AE-1429-416B-86C1-BF6F7FF47404}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -114,6 +116,10 @@ Global
 		{C3AB0A0C-D850-40AF-874D-805C5948FE25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3AB0A0C-D850-40AF-874D-805C5948FE25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3AB0A0C-D850-40AF-874D-805C5948FE25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{194A88AE-1429-416B-86C1-BF6F7FF47404}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{194A88AE-1429-416B-86C1-BF6F7FF47404}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{194A88AE-1429-416B-86C1-BF6F7FF47404}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{194A88AE-1429-416B-86C1-BF6F7FF47404}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -134,5 +140,6 @@ Global
 		{664A740A-D0E1-4E1E-B4C9-CAD5236FA3CA} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{690F50E5-49AC-4F3B-9D0C-52FA68C77F52} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 		{C3AB0A0C-D850-40AF-874D-805C5948FE25} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
+		{194A88AE-1429-416B-86C1-BF6F7FF47404} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 	EndGlobalSection
 EndGlobal
