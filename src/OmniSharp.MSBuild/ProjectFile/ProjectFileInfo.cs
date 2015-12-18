@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-
 #if DNX451
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
 #endif
-
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {

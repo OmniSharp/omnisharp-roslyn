@@ -11,20 +11,20 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.DesignTimeHost.Models;
-using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
-using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
+using Microsoft.Extensions.Configuration;
 #if DNX451
 using Microsoft.Extensions.FileSystemGlobbing;
 #endif
 using Microsoft.Extensions.Logging;
+using Microsoft.Framework.DesignTimeHost.Models;
+using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
+using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using Microsoft.Extensions.Configuration;
 
 namespace OmniSharp.Dnx
 {
