@@ -1,18 +1,17 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Builder;
+using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Http;
-using Microsoft.Framework.Runtime;
 
 namespace OmniSharp
 {
     public class StopServerMiddleware
     {
-        private readonly IApplicationShutdown _applicationShutdown;
+        private readonly IApplicationLifetime _lifetime;
 
-        public StopServerMiddleware(RequestDelegate next, IApplicationShutdown applicationShutdown)
+        public StopServerMiddleware(RequestDelegate next, IApplicationLifetime lifetime)
         {
-            _applicationShutdown = applicationShutdown;
+            _lifetime = lifetime;
         }
 
         public async Task Invoke(HttpContext httpContext)
@@ -25,7 +24,7 @@ namespace OmniSharp
                     await Task.Run(() =>
                     {
                         Thread.Sleep(200);
-                        _applicationShutdown.RequestShutdown();
+                        _lifetime.StopApplication();
                     });
                 }
             }

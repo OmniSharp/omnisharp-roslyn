@@ -58,7 +58,7 @@ namespace OmniSharp.Intellisense
             typeInfo = Type.GetType("Microsoft.CodeAnalysis.CSharp.Extensions.MemberDeclarationSyntaxExtensions+LocalDeclarationMap" + ReflectionNamespaces.CSWorkspacesAsmName, true);
             localDeclarationMapIndexer = typeInfo.GetProperties().Single(p => p.GetIndexParameters().Any());
 
-            typeInfo = Type.GetType("Microsoft.CodeAnalysis.Shared.Extensions.CommonSyntaxTokenExtensions" + ReflectionNamespaces.WorkspacesAsmName, true);
+            typeInfo = Type.GetType("Microsoft.CodeAnalysis.Shared.Extensions.SyntaxTokenExtensions" + ReflectionNamespaces.WorkspacesAsmName, true);
             getAncestorsMethod = typeInfo.GetMethods().Single(m => m.Name == "GetAncestors" && m.IsGenericMethod);
         }
 

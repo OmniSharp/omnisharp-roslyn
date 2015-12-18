@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Composition;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,10 +8,8 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.Logging;
-using OmniSharp.Mef;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
-using OmniSharp.Roslyn.CSharp.Extensions;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2

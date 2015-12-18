@@ -1,21 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
-using System.Composition.Convention;
-using System.Composition.Hosting;
-using System.Composition.Hosting.Core;
 using System.Linq;
-using System.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.Runtime;
-using OmniSharp.Mef;
-using OmniSharp.Options;
 using OmniSharp.Roslyn;
-using OmniSharp.Services;
-using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {

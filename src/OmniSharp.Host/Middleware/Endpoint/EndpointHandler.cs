@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Mef;

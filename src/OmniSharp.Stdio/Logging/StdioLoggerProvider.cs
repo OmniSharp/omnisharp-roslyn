@@ -1,5 +1,5 @@
 using System;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio.Logging
@@ -19,5 +19,7 @@ namespace OmniSharp.Stdio.Logging
         {
             return new StdioLogger(_writer, name, _filter);
         }
+
+        public void Dispose() { }
     }
 }

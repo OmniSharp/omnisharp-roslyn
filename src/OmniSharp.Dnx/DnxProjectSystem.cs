@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -12,15 +11,14 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Framework.ConfigurationModel;
+using Microsoft.Extensions.Configuration;
+#if DNX451
+using Microsoft.Extensions.FileSystemGlobbing;
+#endif
+using Microsoft.Extensions.Logging;
 using Microsoft.Framework.DesignTimeHost.Models;
 using Microsoft.Framework.DesignTimeHost.Models.IncomingMessages;
 using Microsoft.Framework.DesignTimeHost.Models.OutgoingMessages;
-#if DNX451
-using Microsoft.Framework.FileSystemGlobbing;
-#endif
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
@@ -49,13 +47,13 @@ namespace OmniSharp.Dnx
 
         [ImportingConstructor]
         public DnxProjectSystem(OmnisharpWorkspace workspace,
-                                    IOmnisharpEnvironment env,
-                                    ILoggerFactory loggerFactory,
-                                    IMetadataFileReferenceCache metadataFileReferenceCache,
-                                    IApplicationLifetime lifetime,
-                                    IFileSystemWatcher watcher,
-                                    IEventEmitter emitter,
-                                    DnxContext context)
+                                IOmnisharpEnvironment env,
+                                ILoggerFactory loggerFactory,
+                                IMetadataFileReferenceCache metadataFileReferenceCache,
+                                IApplicationLifetime lifetime,
+                                IFileSystemWatcher watcher,
+                                IEventEmitter emitter,
+                                DnxContext context)
         {
             _workspace = workspace;
             _env = env;
@@ -77,7 +75,7 @@ namespace OmniSharp.Dnx
         public void Initalize(IConfiguration configuration)
         {
             _options = new DnxOptions();
-            OptionsServices.ReadProperties(_options, configuration);
+            ConfigurationBinder.Bind(configuration, _options);
 
             _dnxPaths = new DnxPaths(_env, _options, _loggerFactory);
             _packagesRestoreTool = new PackagesRestoreTool(_options, _loggerFactory, _emitter, _context, _dnxPaths); ;
@@ -627,7 +625,11 @@ namespace OmniSharp.Dnx
 
         private static Task ConnectAsync(Socket socket, IPEndPoint endPoint)
         {
+#if DNX451
             return Task.Factory.FromAsync((cb, state) => socket.BeginConnect(endPoint, cb, state), ar => socket.EndConnect(ar), null);
+#else
+            return Task.Run(() => socket.Connect(endPoint));
+#endif
         }
 
         Task<object> IProjectSystem.GetProjectModel(string path)

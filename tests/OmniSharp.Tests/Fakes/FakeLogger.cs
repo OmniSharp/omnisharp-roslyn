@@ -1,22 +1,19 @@
 using System;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Tests
 {
     public class FakeLogger : ILogger
     {
-        public void Log(LogLevel level, int number, object obj, Exception ex, Func<object, Exception, string> iThinkThisIsTheNextLoggerMaybe)
-        {
-        }
+        public bool IsEnabled(LogLevel level) => true;
 
-        public bool IsEnabled(LogLevel level)
-        {
-            return true;
-        }
+        public IDisposable BeginScopeImpl(object owner) => new NoopDisposable();
 
-        public IDisposable BeginScope(object owner)
+        public void Log(LogLevel logLevel, int eventId, object state, Exception exception, Func<object, Exception, string> formatter) { }
+
+        private class NoopDisposable : IDisposable
         {
-            return null;
+            public void Dispose() { }
         }
     }
 }
