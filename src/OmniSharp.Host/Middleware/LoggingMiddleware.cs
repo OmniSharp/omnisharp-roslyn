@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Middleware
 {
@@ -23,7 +23,7 @@ namespace OmniSharp.Middleware
             var responseBody = context.Response.Body;
             var requestBody = context.Request.Body;
 
-            if (_logger.IsEnabled(LogLevel.Verbose))
+            if (_logger.IsEnabled(LogLevel.Debug))
             {
                 // TODO: Add the feature interface to disable this memory stream
                 // when we add signalr
@@ -40,7 +40,7 @@ namespace OmniSharp.Middleware
             await _next(context);
             stopwatch.Stop();
 
-            if (_logger.IsEnabled(LogLevel.Verbose))
+            if (_logger.IsEnabled(LogLevel.Debug))
             {
                 LogResponse(context);
 
@@ -52,37 +52,37 @@ namespace OmniSharp.Middleware
 
         private void LogRequest(HttpContext context)
         {
-            _logger.LogVerbose("************ Request ************");
-            _logger.LogVerbose(string.Format("{0} - {1}", context.Request.Method, context.Request.Path));
-            _logger.LogVerbose("************ Headers ************");
+            _logger.LogDebug("************ Request ************");
+            _logger.LogDebug(string.Format("{0} - {1}", context.Request.Method, context.Request.Path));
+            _logger.LogDebug("************ Headers ************");
 
             foreach (var headerGroup in context.Request.Headers)
             {
                 foreach (var header in headerGroup.Value)
                 {
-                    _logger.LogVerbose(string.Format("{0} - {1}", headerGroup.Key, header));
+                    _logger.LogDebug(string.Format("{0} - {1}", headerGroup.Key, header));
                 }
             }
 
             context.Request.Body.Position = 0;
 
-            _logger.LogVerbose("************  Body ************");
+            _logger.LogDebug("************  Body ************");
             var reader = new StreamReader(context.Request.Body);
             var content = reader.ReadToEnd();
-            _logger.LogVerbose(content);
+            _logger.LogDebug(content);
 
             context.Request.Body.Position = 0;
         }
 
         private void LogResponse(HttpContext context)
         {
-            _logger.LogVerbose("************  Response ************ ");
+            _logger.LogDebug("************  Response ************ ");
 
             context.Response.Body.Position = 0;
 
             var reader = new StreamReader(context.Response.Body);
             var content = reader.ReadToEnd();
-            _logger.LogVerbose(content);
+            _logger.LogDebug(content);
             context.Response.Body.Position = 0;
         }
     }
