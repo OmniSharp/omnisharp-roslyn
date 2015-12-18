@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
@@ -433,7 +434,14 @@ namespace OmniSharp
         private async Task AssertBufferContents(string fileContents, string expectedFileContents)
         {
             var response = await RunFixUsings(fileContents);
-            Assert.Equal(expectedFileContents, response.Buffer.Replace("\r\n", "\n"));
+            if (PlatformServices.Default.Runtime.OperatingSystem == "Windows")
+            {
+                Assert.Equal(expectedFileContents, response.Buffer);
+            }
+            else
+            {
+                Assert.Equal(expectedFileContents, response.Buffer.Replace("\r\n", "\n"));
+            }
         }
 
         private async Task AssertUnresolvedReferences(string fileContents, List<QuickFix> expectedUnresolved)
