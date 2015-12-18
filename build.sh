@@ -12,62 +12,57 @@ fi
 # work around restore timeouts on Mono
 [ -z "$MONO_THREADS_PER_CPU" ] && export MONO_THREADS_PER_CPU=50
 
-# HACK - dnu restore with beta4 fails most of the time
-# due to timeouts or other failures.
-# Fetch the latest dnu and use that instead
-#export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetmaster/api/v2/
+export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetcidev/api/v2/
 dnvm update-self
-dnvm install 1.0.0-beta8
-dnvm use 1.0.0-beta8
-dnu restore
-# end hack
+dnvm upgrade -u
+dnvm install default -r coreclr -u
 
-dnvm install 1.0.0-beta4
-dnvm use 1.0.0-beta4
+# use coreclr dnx to restore
+dnvm use default -r coreclr
 dnu restore
+
+dnvm use default -r mono
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 pushd tests/OmniSharp.Bootstrap.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Dnx.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.MSBuild.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Plugins.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Roslyn.CSharp.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.ScriptCs.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Stdio.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
 
 pushd tests/OmniSharp.Tests
-dnx . test -parallel none
+dnx test -parallel none
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 popd
-
-dnvm use 1.0.0-beta4
 
 OMNISHARP_VERSION="1.0.0-dev";
 if [ $TRAVIS_TAG ]; then
@@ -109,7 +104,7 @@ dnu pack src/OmniSharp.Roslyn.CSharp --configuration Release --out artifacts/bui
 dnu pack src/OmniSharp.ScriptCs --configuration Release --out artifacts/build/nuget --quiet
 dnu pack src/OmniSharp.Stdio --configuration Release --out artifacts/build/nuget --quiet
 
-dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime dnx-mono.1.0.0-beta4
+dnu publish src/OmniSharp --configuration Release --no-source --out artifacts/build/omnisharp --runtime active
 
 pushd artifacts/build/omnisharp/approot/packages/OmniSharp/1.0.0/root/
 jq '.entryPoint="OmniSharp.Host"' project.json > project.json.temp
@@ -121,17 +116,17 @@ grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 curl -LO http://nuget.org/nuget.exe
-mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta4 -Prerelease -OutputDirectory artifacts/build/omnisharp/approot/packages
+mono nuget.exe install dnx-clr-win-x86 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp/approot/packages
 
-if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-beta4" ]; then
-    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta4 in output exiting!'
-    exit 1
-fi
+# if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-clr-win-x86.1.0.0-rc2-*" ]; then
+#     echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-rc2-* in output exiting!'
+#     exit 1
+# fi
 
-if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-beta4" ]; then
-    echo 'ERROR: Can not find dnx-mono.1.0.0-beta4 in output exiting!'
-    exit 1
-fi
+# if [ ! -d "artifacts/build/omnisharp/approot/packages/dnx-mono.1.0.0-rc2-*" ]; then
+#     echo 'ERROR: Can not find dnx-mono.1.0.0-rc2-* in output exiting!'
+#     exit 1
+# fi
 
 tree -if artifacts/build/omnisharp | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp
@@ -139,24 +134,24 @@ tar -zcf ../../../omnisharp.tar.gz .
 popd
 
 # Publish just the bootstrap
-dnu publish src/OmniSharp.Bootstrap --configuration Release --no-source --out artifacts/build/omnisharp.bootstrap --runtime dnx-mono.1.0.0-beta4
+dnu publish src/OmniSharp.Bootstrap --configuration Release --no-source --out artifacts/build/omnisharp.bootstrap --runtime active
 
 # work around for kpm bundle returning an exit code 0 on failure
 grep "Build failed" buildlog
 rc=$?; if [[ $rc == 0 ]]; then exit 1; fi
 
 curl -LO http://nuget.org/nuget.exe
-mono nuget.exe install dnx-clr-win-x86 -Version 1.0.0-beta4 -Prerelease -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
+mono nuget.exe install dnx-clr-win-x86 -Prerelease -Source https://www.myget.org/F/aspnetcidev/api/v2 -OutputDirectory artifacts/build/omnisharp.bootstrap/approot/packages
 
-if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-clr-win-x86.1.0.0-beta4" ]; then
-    echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-beta4 in output exiting!'
-    exit 1
-fi
+# if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-clr-win-x86.1.0.0-rc2-*" ]; then
+#     echo 'ERROR: Can not find dnx-clr-win-x86.1.0.0-rc2-* in output exiting!'
+#     exit 1
+# fi
 
-if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-beta4" ]; then
-    echo 'ERROR: Can not find dnx-mono.1.0.0-beta4 in output exiting!'
-    exit 1
-fi
+# if [ ! -d "artifacts/build/omnisharp.bootstrap/approot/packages/dnx-mono.1.0.0-rc2-*" ]; then
+#     echo 'ERROR: Can not find dnx-mono.1.0.0-rc2-* in output exiting!'
+#     exit 1
+# fi
 
 tree -if artifacts/build/omnisharp.bootstrap | grep .nupkg | xargs rm
 pushd artifacts/build/omnisharp.bootstrap

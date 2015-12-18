@@ -433,7 +433,7 @@ namespace OmniSharp
         private async Task AssertBufferContents(string fileContents, string expectedFileContents)
         {
             var response = await RunFixUsings(fileContents);
-            Assert.Equal(expectedFileContents, response.Buffer);
+            Assert.Equal(expectedFileContents, response.Buffer.Replace("\r\n", "\n"));
         }
 
         private async Task AssertUnresolvedReferences(string fileContents, List<QuickFix> expectedUnresolved)
