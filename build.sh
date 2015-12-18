@@ -18,10 +18,9 @@ dnvm upgrade -u
 dnvm install default -r coreclr -u
 
 # use coreclr dnx to restore
-dnvm use default -r coreclr
+dnvm use default -r mono
 dnu restore
 
-dnvm use default -r mono
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 pushd tests/OmniSharp.Bootstrap.Tests
