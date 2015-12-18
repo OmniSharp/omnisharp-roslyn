@@ -14,6 +14,7 @@ addons:
     packages:
       - curl
       - tree
+      - libunwind8
 before_deploy:
   - openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
   - chmod 600 ~/.ssh/id_rsa
