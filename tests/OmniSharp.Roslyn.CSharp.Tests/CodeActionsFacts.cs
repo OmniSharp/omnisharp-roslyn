@@ -12,7 +12,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class CodingActionsFacts
     {
-        [Fact]
+        [Fact(Skip = "Microsoft.CodeAnalysis.Shared.Extensions.CommonSyntaxTokenExtensions is renamed. ICSharpCode.NRefactory6.CSharp.SyntaxExtensions is not update-to-date")]
         public async Task Can_get_code_actions()
         {
             var source =
