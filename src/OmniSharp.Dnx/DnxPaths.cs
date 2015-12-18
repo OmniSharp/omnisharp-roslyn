@@ -45,7 +45,7 @@ namespace OmniSharp.Dnx
             var root = ResolveRootDirectory(_env.Path);
             var globalJson = Path.Combine(root, "global.json");
             var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
-            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options.Alias ?? "default";
+            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options?.Alias ?? "default";
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())

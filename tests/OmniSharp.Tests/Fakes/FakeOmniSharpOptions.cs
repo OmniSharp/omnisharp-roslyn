@@ -1,14 +1,10 @@
-using Microsoft.Framework.OptionsModel;
+using Microsoft.Extensions.OptionsModel;
 using OmniSharp.Options;
 
 namespace OmniSharp.Tests
 {
     public class FakeOmniSharpOptions : IOptions<OmniSharpOptions>
     {
-        public OmniSharpOptions Options { get; set; }
-        public OmniSharpOptions GetNamedOptions(string name)
-        {
-            return new OmniSharpOptions();
-        }
+        public OmniSharpOptions Value => new OmniSharpOptions();
     }
 }

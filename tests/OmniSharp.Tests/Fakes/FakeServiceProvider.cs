@@ -1,9 +1,7 @@
 using System;
 using Microsoft.AspNet.Hosting;
-using Microsoft.Framework.Caching.Memory;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
-using OmniSharp.Options;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Services;
 
