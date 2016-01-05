@@ -6,9 +6,9 @@ import platform
 import shutil
 import sys
 import tarfile
+
 from subprocess import call
 from subprocess import check_call
-from glob import glob
 
 print "Build OmniSharp-Roslyn with dotnet \n"
 
@@ -24,7 +24,14 @@ if '-h' in sys.argv:
     print "Print help"
     exit(0)
 
-if call("dotnet > /dev/null", shell=True) != 0:
+# check dotnet existence
+dotnet_check_cmd = 'dotnet'
+if os.name == 'nt':
+    dotnet_check_cmd += ' > nul'
+else:
+    dotnet_check_cmd += ' > /dev/null'
+
+if call(dotnet_check_cmd, shell=True) != 0:
     print "dotnet is missing"
     exit(1)
 
@@ -48,7 +55,8 @@ if not '--skip-build' in sys.argv:
 if not '--skip-package' in sys.argv:
     print "Packaging the OmniSharp.CliHost"
 
-    tar = tarfile.open(os.path.join(working_dir, 'artifacts', "omnisharp-cli.tar"), mode='w:gz')
+    archive_filename = os.path.join(working_dir, 'artifacts', 'omnisharp-cli.tar.gz');
+    tar = tarfile.open(archive_filename, mode='w:gz')
     tar.add(output_dir, "omnisharp-cli/" + os.name)
     tar.close()
 
