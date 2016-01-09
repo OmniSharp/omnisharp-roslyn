@@ -88,16 +88,17 @@ namespace OmniSharp
 
             if (transportType == TransportType.Stdio)
             {
-                builder.UseServerFactory(new StdioServerFactory(Console.In, writer));
+                builder.UseServer(new StdioServerFactory(Console.In, writer));
             }
             else
             {
-                builder.UseServerFactory("Microsoft.AspNet.Server.Kestrel");
+                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
             }
 
             var app = builder.Build();
-            using (app.Start())
+            using (app)
             {
+                app.Start();
                 var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
 
                 Console.CancelKeyPress += (sender, e) =>

@@ -20,10 +20,9 @@ namespace OmniSharp.Stdio
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
         private readonly CancellationTokenSource _cancellation;
-        private readonly RequestFeature _requestFeature;
-        private readonly ResponseFeature _responseFeature;
         private readonly IHttpContextFactory _httpContextFactory;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly object _lock = new object();
 
         public StdioServer(TextReader input, ISharedTextWriter writer)
         {
@@ -35,11 +34,11 @@ namespace OmniSharp.Stdio
             _httpContextFactory = new HttpContextFactory(_httpContextAccessor);
 
             var features = new FeatureCollection();
-            _requestFeature = new RequestFeature();
-            _responseFeature = new ResponseFeature();
+            var requestFeature = new RequestFeature();
+            var responseFeature = new ResponseFeature();
 
-            features.Set<IHttpRequestFeature>(_requestFeature);
-            features.Set<IHttpResponseFeature>(_responseFeature);
+            features.Set<IHttpRequestFeature>(requestFeature);
+            features.Set<IHttpResponseFeature>(responseFeature);
             Features = features;
         }
 
@@ -96,20 +95,24 @@ namespace OmniSharp.Stdio
             {
                 try
                 {
-                    _requestFeature.Reset();
-                    _requestFeature.Path = request.Command;
-                    _requestFeature.Body = inputStream;
-                    _requestFeature.Headers["Content-Type"] = new[] { "application/json" };
+                    var features = new FeatureCollection();
+                    var requestFeature = new RequestFeature();
+                    var responseFeature = new ResponseFeature();
 
-                    _responseFeature.Reset();
-                    _responseFeature.Body = outputStream;
+                    requestFeature.Path = request.Command;
+                    requestFeature.Body = inputStream;
+                    requestFeature.Headers["Content-Type"] = new[] { "application/json" };
+                    responseFeature.Body = outputStream;
 
-                    var context = application.CreateContext(Features);
+                    features.Set<IHttpRequestFeature>(requestFeature);
+                    features.Set<IHttpResponseFeature>(responseFeature);
+
+                    var context = application.CreateContext(features);
 
                     // hand off request to next layer
                     await application.ProcessRequestAsync(context);
 
-                    if (_responseFeature.StatusCode != 200)
+                    if (responseFeature.StatusCode != 200)
                     {
                         response.Success = false;
                     }
