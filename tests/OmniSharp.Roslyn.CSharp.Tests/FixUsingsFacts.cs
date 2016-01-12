@@ -433,14 +433,11 @@ namespace OmniSharp
         private async Task AssertBufferContents(string fileContents, string expectedFileContents)
         {
             var response = await RunFixUsings(fileContents);
-            if (PlatformServices.Default.Runtime.OperatingSystem == "Windows")
-            {
-                Assert.Equal(expectedFileContents, response.Buffer);
-            }
-            else
-            {
-                Assert.Equal(expectedFileContents, response.Buffer.Replace("\r\n", "\n"));
-            }
+            Assert.Equal(FlattenNewLines(expectedFileContents), FlattenNewLines(response.Buffer));
+        }
+
+        private string FlattenNewLines(string input) {
+            return input.Replace("\r\n", "\n");
         }
 
         private async Task AssertUnresolvedReferences(string fileContents, List<QuickFix> expectedUnresolved)
