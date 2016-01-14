@@ -1,4 +1,3 @@
 SETLOCAL
 
-for /F "delims=" %%I in ('dir %USERPROFILE%\.dnx\runtimes\dnx-coreclr-win-*-rc2-* /b /ad /on') do set RUNTIME=%%I
-"%USERPROFILE%\.dnx\runtimes\%RUNTIME%\bin\dnx" -p %~dp0..\src\OmniSharp run %*
+"%USERPROFILE%\.dnx\runtimes\dnx-coreclr-win-x64.1.0.0-rc2-16386\bin\dnx" %~dp0..\src\OmniSharp run %*

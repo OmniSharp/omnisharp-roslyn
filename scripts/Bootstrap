@@ -1,5 +1,13 @@
 #!/bin/bash
 
+RUNTIME="dnx-mono.1.0.0-rc2-16386"
+# Enable if you wish to run on coreclr
+#if [[ "$OSTYPE" == "linux-gnu" ]]; then
+#  RUNTIME="dnx-coreclr-linux-x64.1.0.0-rc2-16386"
+#elif [[ "$OSTYPE" == "darwin"* ]]; then
+#  RUNTIME="dnx-coreclr-darwin-x64.1.0.0-rc2-16386"
+#fi
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -8,8 +16,8 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-BOOTSTRAP=$("$HOME/.dnx/runtimes/dnx-mono.1.0.0-rc2-16337/bin/dnx" "$DIR/../src/OmniSharp" run "$@")
+BOOTSTRAP=$("$HOME/.dnx/runtimes/$RUNTIME/bin/dnx" "$DIR/../src/OmniSharp" run "$@")
 if test -e "$BOOTSTRAP/project.lock.json";then
-  "$HOME/.dnx/runtimes/dnx-mono.1.0.0-rc2-16337/bin/dnu" restore "$BOOTSTRAP"
+  "$HOME/.dnx/runtimes/$RUNTIME/bin/dnu" restore "$BOOTSTRAP"
 fi
-"$HOME/.dnx/runtimes/dnx-mono.1.0.0-rc2-16337/bin/dnx" "$BOOTSTRAP" run "$@"
+"$HOME/.dnx/runtimes/$RUNTIME/bin/dnx" "$BOOTSTRAP" run "$@"

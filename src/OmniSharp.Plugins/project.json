@@ -20,9 +20,9 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Collections.Concurrent": "4.0.11-rc2-16319",
-        "System.Diagnostics.Process": "4.1.0-rc2-16319",
-        "System.Runtime": "4.0.21-rc2-16319"
+        "System.Collections.Concurrent": "4.0.11-rc2-23629",
+        "System.Diagnostics.Process": "4.1.0-rc2-23629",
+        "System.Runtime": "4.0.21-rc2-23629"
       }
     }
   }

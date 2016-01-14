@@ -16,14 +16,14 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Diagnostics.Process": "4.1.0-rc2-16319",
-        "System.Dynamic.Runtime": "4.0.11-rc2-16319",
-        "System.IO.FileSystem.Watcher": "4.0.0-rc2-16319",
-        "System.Net.Sockets": "4.1.0-rc2-16319",
-        "System.Runtime": "4.0.21-rc2-16319",
-        "System.Threading": "4.0.11-rc2-16319",
-        "System.Threading.Tasks": "4.0.11-rc2-16319",
-        "System.Threading.Thread": "4.0.0-rc2-16319"
+        "System.Diagnostics.Process": "4.1.0-rc2-23629",
+        "System.Dynamic.Runtime": "4.0.11-rc2-23629",
+        "System.IO.FileSystem.Watcher": "4.0.0-rc2-23629",
+        "System.Net.Sockets": "4.1.0-rc2-23629",
+        "System.Runtime": "4.0.21-rc2-23629",
+        "System.Threading": "4.0.11-rc2-23629",
+        "System.Threading.Tasks": "4.0.11-rc2-23629",
+        "System.Threading.Thread": "4.0.0-rc2-23629"
       }
     }
   }

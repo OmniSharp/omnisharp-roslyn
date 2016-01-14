@@ -29,45 +29,51 @@ addons:
       - zlib1g
       - curl
       - tree
-before_deploy:
-  - openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
-  - chmod 600 ~/.ssh/id_rsa
-  - eval `ssh-agent -s`
-  - ssh-add ~/.ssh/id_rsa
 deploy:
   provider: releases
   api_key:
     secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
   file:
-    - 'omnisharp.tar.gz'
-    - 'omnisharp.bootstrap.tar.gz'
+    - 'artifacts/omnisharp-coreclr-darwin-x64.tar.gz'
+    - 'artifacts/omnisharp-coreclr-darwin-x64.tar.gz'
+    - 'artifacts/omnisharp.boostrap-coreclr-darwin-x64.tar.gz'
+    - 'artifacts/omnisharp-coreclr-linux-x64.tar.gz'
+    - 'artifacts/omnisharp-mono.tar.gz'
+    - 'artifacts/omnisharp-coreclr-linux-x64.tar.gz'
+    - 'artifacts/omnisharp-mono.tar.gz'
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
 after_deploy: |
-  OMNISHARP_VERSION="1.0.0-dev";
-  if [ $TRAVIS_TAG ]; then
-    OMNISHARP_VERSION=${TRAVIS_TAG:1};
+  openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
+  chmod 600 ~/.ssh/id_rsa
+  eval `ssh-agent -s`
+  ssh-add ~/.ssh/id_rsa
+  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    OMNISHARP_VERSION="1.0.0-dev";
+    if [ $TRAVIS_TAG ]; then
+      OMNISHARP_VERSION=${TRAVIS_TAG:1};
+    fi
+    nuget push artifacts/nuget/Release/OmniSharp.Host.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.Bootstrap.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.Dnx.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.MSBuild.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.Nuget.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.Roslyn.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.Roslyn.CSharp.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.ScriptCs.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    nuget push artifacts/nuget/Release/OmniSharp.Stdio.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
+    BRANCH_NAME="upgrade/omnisharp-roslyn-$TRAVIS_TAG"
+    git config --global user.name "OmniSharp Bot"
+    git config --global user.email "omnisharp-bot@users.noreply.github.com"
+    git clone git@github.com:OmniSharp/omnisharp-node-client.git ~/omnisharp-node-client
+    pushd ~/omnisharp-node-client
+    git checkout -b $BRANCH_NAME
+    cat package.json > package2.json
+    cat package2.json | jq '."omnisharp-roslyn"="'$TRAVIS_TAG'"' > package.json
+    git add package.json
+    git commit -m "Update omnisharp-roslyn to $TRAVIS_TAG"
+    git push origin $BRANCH_NAME
+    curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
   fi
-  nuget push artifacts/build/nuget/Release/OmniSharp.Host.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.Bootstrap.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.Dnx.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.MSBuild.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.Nuget.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.Roslyn.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.Roslyn.CSharp.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.ScriptCs.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  nuget push artifacts/build/nuget/Release/OmniSharp.Stdio.$OMNISHARP_VERSION.nupkg $MYGET_AUTH -Source https://www.myget.org/F/omnisharp/api/v2/package
-  BRANCH_NAME="upgrade/omnisharp-roslyn-$TRAVIS_TAG"
-  git config --global user.name "OmniSharp Bot"
-  git config --global user.email "omnisharp-bot@users.noreply.github.com"
-  git clone git@github.com:OmniSharp/omnisharp-node-client.git ~/omnisharp-node-client
-  pushd ~/omnisharp-node-client
-  git checkout -b $BRANCH_NAME
-  cat package.json > package2.json
-  cat package2.json | jq '."omnisharp-roslyn"="'$TRAVIS_TAG'"' > package.json
-  git add package.json
-  git commit -m "Update omnisharp-roslyn to $TRAVIS_TAG"
-  git push origin $BRANCH_NAME
-  curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
