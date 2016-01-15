@@ -62,7 +62,7 @@ call:_publish "OmniSharp.Bootstrap" "coreclr" "x86" "artifacts\boot-coreclr-win-
 call:_publish "OmniSharp.Bootstrap" "clr" "x64" "artifacts\boot-clr-win-x64" "..\omnisharp.bootstrap-clr-win-x64"
 :: omnisharp.bootstrap-coreclr-win-x64.zip
 call:_publish "OmniSharp.Bootstrap" "coreclr" "x64" "artifacts\boot-coreclr-win-x64" "..\omnisharp.bootstrap-coreclr-win-x64"
-:: omnisharp.boostrap.zip
+:: omnisharp.bootstrap.zip
 :::: TODO
 
 call dnvm use 1.0.0-rc2-16386 -r coreclr -arch x86
