@@ -110,19 +110,19 @@ fi
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   # omnisharp-coreclr-darwin-x64.tar.gz
-  _publish "OmniSharp" "coreclr" "artifacts/build/omnisharp-coreclr" "../omnisharp-coreclr-darwin-x64"
+  _publish "OmniSharp" "coreclr" "artifacts/omnisharp-coreclr" "../omnisharp-coreclr-darwin-x64"
   # omnisharp.boostrap-coreclr-darwin-x64.tar.gz
-  _publish "OmniSharp.Bootstrap" "coreclr" "artifacts/build/omnisharp.boostrap-coreclr" "../omnisharp.boostrap-coreclr-darwin-x64"
+  _publish "OmniSharp.Bootstrap" "coreclr" "artifacts/omnisharp.boostrap-coreclr" "../omnisharp.boostrap-coreclr-darwin-x64"
 else
   # omnisharp-coreclr-linux-x64.tar.gz
-  _publish "OmniSharp" "coreclr" "artifacts/build/omnisharp-coreclr" "../omnisharp-coreclr-linux-x64"
+  _publish "OmniSharp" "coreclr" "artifacts/omnisharp-coreclr" "../omnisharp-coreclr-linux-x64"
   # omnisharp-mono.tar.gz
-  _publish "OmniSharp" "mono" "artifacts/build/omnisharp-coreclr" "../omnisharp-mono"
+  _publish "OmniSharp" "mono" "artifacts/omnisharp-coreclr" "../omnisharp-mono"
 
   # omnisharp-coreclr-linux-x64.tar.gz
-  _publish "OmniSharp.Bootstrap" "coreclr" "artifacts/build/omnisharp.boostrap-coreclr" "../omnisharp.boostrap-coreclr-linux-x64"
+  _publish "OmniSharp.Bootstrap" "coreclr" "artifacts/omnisharp.boostrap-coreclr" "../omnisharp.boostrap-coreclr-linux-x64"
   # omnisharp-mono.tar.gz
-  _publish "OmniSharp.Bootstrap" "mono" "artifacts/build/omnisharp.boostrap-coreclr" "../omnisharp.boostrap-mono"
+  _publish "OmniSharp.Bootstrap" "mono" "artifacts/omnisharp.boostrap-coreclr" "../omnisharp.boostrap-mono"
 
   if [ $TRAVIS ]; then
     _patch_project "OmniSharp.Host"

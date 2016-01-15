@@ -33,14 +33,8 @@ deploy:
   provider: releases
   api_key:
     secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
-  file:
-    - 'artifacts/omnisharp-coreclr-darwin-x64.tar.gz'
-    - 'artifacts/omnisharp-coreclr-darwin-x64.tar.gz'
-    - 'artifacts/omnisharp.boostrap-coreclr-darwin-x64.tar.gz'
-    - 'artifacts/omnisharp-coreclr-linux-x64.tar.gz'
-    - 'artifacts/omnisharp-mono.tar.gz'
-    - 'artifacts/omnisharp-coreclr-linux-x64.tar.gz'
-    - 'artifacts/omnisharp-mono.tar.gz'
+  file_glob: true
+  file: artifacts/*.tar.gz
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
