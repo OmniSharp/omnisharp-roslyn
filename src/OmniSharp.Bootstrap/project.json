@@ -4,7 +4,7 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16519",
     "Newtonsoft.Json": "7.0.1"
   },
   "commands": {
@@ -18,15 +18,15 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.21-rc2-*",
-        "System.Collections": "4.0.11-rc2-*",
-        "System.Console": "4.0.0-rc2-*",
-        "System.Dynamic.Runtime": "4.0.11-rc2-*",
-        "System.IO.FileSystem": "4.0.1-rc2-*",
-        "System.Linq": "4.0.1-rc2-*",
-        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-*",
-        "System.Threading.Tasks": "4.0.11-rc2-*",
-        "System.Threading.Thread": "4.0.0-rc2-*"
+        "System.Runtime": "4.0.21-rc2-23705",
+        "System.Collections": "4.0.11-rc2-23705",
+        "System.Console": "4.0.0-rc2-23705",
+        "System.Dynamic.Runtime": "4.0.11-rc2-23705",
+        "System.IO.FileSystem": "4.0.1-rc2-23705",
+        "System.Linq": "4.0.1-rc2-23705",
+        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23302",
+        "System.Threading.Tasks": "4.0.11-rc2-23705",
+        "System.Threading.Thread": "4.0.0-rc2-23705"
       }
     }
   }

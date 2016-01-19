@@ -9,16 +9,16 @@
     "OmniSharp.Stdio": "1.0.0-*",
     "OmniSharp.Plugins": "1.0.0-*",
     "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.AspNet.Diagnostics": "1.0.0-rc2-*",
-    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc2-*",
+    "Microsoft.AspNet.Diagnostics": "1.0.0-rc2-16499",
+    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc2-16321",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-*",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-*",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Options": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-*"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-16034",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-15995",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-15966",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-15965",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-16004",
+    "Microsoft.Extensions.Options": "1.0.0-rc2-15988",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-15988"
   },
   "commands": {
     "omnisharp.host": "run"

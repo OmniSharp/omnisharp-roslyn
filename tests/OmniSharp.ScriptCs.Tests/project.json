@@ -6,7 +6,7 @@
   "dependencies": {
     "OmniSharp.ScriptCs": "1.0.0-*",
     "OmniSharp.Tests": "1.0.0-*",
-    "Microsoft.AspNet.Testing": "1.0.0-rc2-*",
+    "Microsoft.AspNet.Testing": "1.0.0-rc2-16090",
     "xunit.runner.aspnet": "2.0.0-aspnet-*"
   },
   "commands": {

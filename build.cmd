@@ -93,8 +93,8 @@ if "%~2" == "" (
   call dnx test -parallel none
 )
 if %errorlevel% neq 0 (
-  echo "Tests failed for src/%~1 with runtime %~2"
-  exit /b 1
+  echo Tests failed for src/%~1 with runtime %~2
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
 )
 popd
 endlocal
@@ -105,8 +105,8 @@ setlocal
 call dnu restore src\%~1 --quiet
 call dnu pack src\%~1 --configuration Release --quiet --out artifacts\nuget
 if %errorlevel% neq 0 (
-  echo "Package failed for src/%~1, destination: %~4"
-  exit /b 1
+  echo Package failed for src/%~1, destination: %~4
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
 )
 endlocal
 GOTO:EOF
@@ -116,14 +116,14 @@ setlocal
 call dnvm use 1.0.0-rc2-16386 -r %~2 -arch %~3
 call dnu publish "src\%~1" --configuration Release --no-source --quiet --runtime active --out "%~4"
 if %errorlevel% neq 0 (
-  echo "Publish failed for src/%~1 with runtime %~2-%~3, destination: %~4"
-  exit /b 1
+  echo Publish failed for src/%~1 with runtime %~2-%~3, destination: %~4
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
 )
 pushd %~4\approot
 call 7z a -r ..\%~5.zip .
 if %errorlevel% neq 0 (
-  echo "Zip failed for src/%~1 with runtime %~2-%~3, destination: %~4"
-  exit /b 1
+  echo Zip failed for src/%~1 with runtime %~2-%~3, destination: %~4
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
 )
 popd
 endlocal

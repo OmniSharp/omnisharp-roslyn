@@ -7,12 +7,12 @@
     "Newtonsoft.Json": "7.0.1",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Configuration": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-16034",
+    "Microsoft.Extensions.Configuration": "1.0.0-rc2-15995",
+    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-15995",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-16004",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-15965",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16519"
   },
   "frameworks": {
     "dnx451": {

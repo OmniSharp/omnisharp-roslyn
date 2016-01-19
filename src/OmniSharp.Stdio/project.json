@@ -6,8 +6,8 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.AspNet.Hosting": "1.0.0-rc2-*",
-    "Microsoft.AspNet.Http.Features": "1.0.0-rc2-*",
+    "Microsoft.AspNet.Hosting": "1.0.0-rc2-16231",
+    "Microsoft.AspNet.Http.Features": "1.0.0-rc2-16154",
     "Newtonsoft.Json": "7.0.1"
   },
   "frameworks": {

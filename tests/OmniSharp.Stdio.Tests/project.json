@@ -6,7 +6,7 @@
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0-*",
     "Newtonsoft.Json": "7.0.1",
-    "Microsoft.AspNet.Testing": "1.0.0-rc2-*",
+    "Microsoft.AspNet.Testing": "1.0.0-rc2-16090",
     "xunit.runner.aspnet": "2.0.0-aspnet-*"
   },
   "commands": {
