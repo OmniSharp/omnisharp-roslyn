@@ -28,7 +28,7 @@ namespace OmniSharp.Tests
                 if (!usings.SequenceEqual(sorted))
                 {
                     invalidItems = true;
-                    Console.WriteLine("Usings ordered incorrectly in '" + sourcePath+"'");
+                    Console.WriteLine("Usings ordered incorrectly in '" + sourcePath + "'");
                     Console.WriteLine(string.Join(", ", sorted));
                 }
             }

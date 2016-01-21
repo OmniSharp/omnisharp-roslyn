@@ -30,7 +30,7 @@ namespace OmniSharp
         public Task<PackageSourceResponse> Handle(PackageSourceRequest request)
         {
             var projectPath = request.ProjectPath;
-            if (request.ProjectPath.EndsWith(".json"))
+            if (!string.IsNullOrWhiteSpace(projectPath) && projectPath.EndsWith(".json"))
             {
                 projectPath = Path.GetDirectoryName(projectPath);
             }

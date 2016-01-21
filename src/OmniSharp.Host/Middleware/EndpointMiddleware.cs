@@ -4,12 +4,11 @@ using System.Collections.ObjectModel;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware.Endpoint;
@@ -93,26 +92,13 @@ namespace OmniSharp.Middleware
                     if (_endpointHandlers.TryGetValue(endpoint, out handler))
                     {
                         var response = await handler.Value.Handle(httpContext);
-                        SerializeResponseObject(httpContext.Response, response);
+                        MiddlewareHelpers.WriteTo(httpContext.Response, response);
                         return;
                     }
                 }
             }
 
             await _next(httpContext);
-        }
-
-        private static readonly Encoding _encoding = new System.Text.UTF8Encoding(false);
-
-        private void SerializeResponseObject(HttpResponse response, object value)
-        {
-            using (var writer = new StreamWriter(response.Body, _encoding, 1024, true))
-            using (var jsonWriter = new JsonTextWriter(writer))
-            {
-                jsonWriter.CloseOutput = false;
-                var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-                jsonSerializer.Serialize(jsonWriter, value);
-            }
         }
     }
 

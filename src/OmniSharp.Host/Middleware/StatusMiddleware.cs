@@ -4,7 +4,7 @@ using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Http;
 using Newtonsoft.Json;
 
-namespace OmniSharp
+namespace OmniSharp.Middleware
 {
     public class StatusMiddleware
     {
@@ -24,31 +24,18 @@ namespace OmniSharp
                 var endpoint = httpContext.Request.Path.Value;
                 if (endpoint == OmnisharpEndpoints.CheckAliveStatus)
                 {
-                    SerializeResponseObject(httpContext.Response, true);
+                    MiddlewareHelpers.WriteTo(httpContext.Response, true);
                     return;
                 }
 
                 if (endpoint == OmnisharpEndpoints.CheckReadyStatus)
                 {
-                    SerializeResponseObject(httpContext.Response, _workspace.Initialized);
+                    MiddlewareHelpers.WriteTo(httpContext.Response, _workspace.Initialized);
                     return;
                 }
             }
 
             await _next(httpContext);
-        }
-
-        private void SerializeResponseObject(HttpResponse response, object value)
-        {
-            using (var writer = new StreamWriter(response.Body))
-            {
-                using (var jsonWriter = new JsonTextWriter(writer))
-                {
-                    jsonWriter.CloseOutput = false;
-                    var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-                    jsonSerializer.Serialize(jsonWriter, value);
-                }
-            }
         }
     }
 }

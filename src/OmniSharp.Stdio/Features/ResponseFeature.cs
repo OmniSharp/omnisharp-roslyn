@@ -1,7 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
+using Microsoft.AspNet.Http.Features;
+using Microsoft.AspNet.Http.Internal;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -9,28 +11,31 @@ namespace OmniSharp.Stdio.Features
     {
         public ResponseFeature()
         {
-            Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
-            StatusCode = 200;
+            Headers = new HeaderDictionary();
+            Reset();
         }
 
         public int StatusCode { get; set; }
 
         public string ReasonPhrase { get; set; }
 
-        public IDictionary<string, string[]> Headers { get; set; }
+        public IHeaderDictionary Headers { get; set; }
 
         public Stream Body { get; set; }
 
         public bool HeadersSent { get; set; }
 
-        public void OnSendingHeaders(Action<object> callback, object state)
+        public bool HasStarted { get { return false; } }
+
+        public void Reset()
         {
-            // nothing
+            Headers = Headers ?? new HeaderDictionary();
+            Headers.Clear();
+            StatusCode = 200;
         }
-        
-        public void OnResponseCompleted(Action<object> act, object state)
-        {
-            //nothing again
-        }
+
+        public void OnStarting(Func<object, Task> callback, object state) { }
+
+        public void OnCompleted(Func<object, Task> callback, object state) { }
     }
 }

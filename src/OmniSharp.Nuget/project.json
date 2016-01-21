@@ -17,20 +17,20 @@
       },
       "frameworkAssemblies": {
         "System.Runtime": "",
-        "System.Threading":"",
-        "System.Threading.Tasks":"",
-        "System.Collections":"",
-        "System.Globalization":"",
+        "System.Threading": "",
+        "System.Threading.Tasks": "",
+        "System.Collections": "",
+        "System.Globalization": "",
         "System.Linq": "",
-        "System.Text.Encoding":"",
-        "System.IO":"",
-        "System.Reflection":"",
-        "System.Security":""
+        "System.Text.Encoding": "",
+        "System.IO": "",
+        "System.Reflection": "",
+        "System.Security": ""
       }
     },
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.0.20-beta-22816"
+        "System.Runtime": "4.0.21-rc2-23629"
       }
     }
   }

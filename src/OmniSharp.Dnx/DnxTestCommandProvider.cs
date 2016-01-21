@@ -1,8 +1,6 @@
 using System.Composition;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.OptionsModel;
-using OmniSharp.Options;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 
 namespace OmniSharp.Dnx
@@ -15,9 +13,9 @@ namespace OmniSharp.Dnx
 
         [ImportingConstructor]
         public DnxTestCommandProvider(DnxContext context,
-                                          IOmnisharpEnvironment env,
-                                          ILoggerFactory loggerFactory,
-                                          IEventEmitter emitter)
+                                      IOmnisharpEnvironment env,
+                                      ILoggerFactory loggerFactory,
+                                      IEventEmitter emitter)
         {
             _context = context;
             var dnxPaths = new DnxPaths(env, context.Options, loggerFactory);

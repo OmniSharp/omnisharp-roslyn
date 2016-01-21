@@ -4,7 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Dnx
 {
@@ -88,7 +88,7 @@ namespace OmniSharp.Dnx
                 psi.Environment["DNX_APPBASE"] = Directory.GetCurrentDirectory();
 #endif
 
-                _logger.LogVerbose(psi.FileName + " " + psi.Arguments);
+                _logger.LogDebug(psi.FileName + " " + psi.Arguments);
 
                 _designTimeHostProcess = new Process();
                 _designTimeHostProcess.StartInfo = psi;

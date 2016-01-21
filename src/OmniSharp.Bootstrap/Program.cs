@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Framework.Runtime;
-using Newtonsoft.Json;
+using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json.Linq;
 
 namespace OmniSharp.Bootstrap
@@ -273,8 +270,10 @@ namespace OmniSharp.Bootstrap
             projectJobject["entryPoint"] = new JValue("OmniSharp.Host");
 
             var bootstrapProjectPath = Path.Combine(OmnisharpPath, "bootstrap", "Bootstrapper", "project.json");
+            var programPath = Path.Combine(OmnisharpPath, "bootstrap", "Bootstrapper", "Startup.cs");
             var bootstrapConfigPath = Path.Combine(OmnisharpPath, "bootstrap", "Bootstrapper", "config.json");
             File.WriteAllText(bootstrapProjectPath, projectJobject.ToString());
+            File.WriteAllText(programPath, @"public class Program { public static void Main(string[] args) { OmniSharp.Program.Main(args); } }");
             File.Copy(Path.Combine(Path.GetDirectoryName(OmnisharpProjectPath), "config.json"), bootstrapConfigPath);
 
             // Scaffold out an app that uses OmniSharp, has a global.json that references all the Plugins that we want to load.

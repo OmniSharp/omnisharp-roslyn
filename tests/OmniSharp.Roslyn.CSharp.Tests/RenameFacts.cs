@@ -183,7 +183,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public static void Main()
                     {
-                        Console.Wri$te(1);
+                        Guid.New$Guid*();
                     }
                 }";
 

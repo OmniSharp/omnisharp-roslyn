@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Ma$in(){
-        System.Console.Clear();
+        System.Guid.NoSuchMethod();
     }
 }";
             var actual = await GetSignatureHelp(source);
@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Main(){
-        System.Cons$ole.Clear();
+        System.Gu$id.NoSuchMethod();
     }
 }";
             actual = await GetSignatureHelp(source);
@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Main(){
-        System.Console.Clear()$;
+        System.Guid.NoSuchMethod()$;
     }
 }";
             actual = await GetSignatureHelp(source);
@@ -50,7 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Main(){
-        System.Console.Foo$Bar();
+        System.Guid.Foo$Bar();
     }
 }";
             var actual = await GetSignatureHelp(source);
@@ -64,7 +64,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Main(){
-        System.Conso$le;
+        System.Gu$id;
     }
 }";
             var actual = await GetSignatureHelp(source);
@@ -78,14 +78,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 @"class Program
 {
     public static void Main(){
-        System.Console.Clear($);
+        System.Guid.NewGuid($);
     }
 }";
+
             var actual = await GetSignatureHelp(source);
             Assert.Equal(1, actual.Signatures.Count());
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
-            Assert.Equal("Clear", actual.Signatures.ElementAt(0).Name);
+            Assert.Equal("NewGuid", actual.Signatures.ElementAt(0).Name);
             Assert.Equal(0, actual.Signatures.ElementAt(0).Parameters.Count());
         }
 

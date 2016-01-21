@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Stdio.Services;
 
@@ -8,18 +9,23 @@ namespace OmniSharp.Stdio.Tests
     public class TestTextWriter : ISharedTextWriter
     {
         private readonly IEnumerator<Action<string>> _callbacks;
-        private readonly TaskCompletionSource<object> _completion;
+        private readonly ManualResetEvent _completion;
 
-        public TestTextWriter(IEnumerable<Action<string>> callback)
+        public TestTextWriter(params Action<string>[] callback)
         {
-            _callbacks = callback.GetEnumerator();
+            _callbacks = new List<Action<string>>(callback).GetEnumerator();
             _callbacks.MoveNext();
-            _completion = new TaskCompletionSource<object>();
+            _completion = new ManualResetEvent(false);
         }
 
-        public Task Completion
+        public WaitHandle Completion
         {
-            get { return _completion.Task; }
+            get { return _completion; }
+        }
+
+        public Exception Exception
+        {
+            get; private set;
         }
 
         public void WriteLine(object value)
@@ -27,15 +33,16 @@ namespace OmniSharp.Stdio.Tests
             try
             {
                 _callbacks.Current(value.ToString());
-                
+
                 if (!_callbacks.MoveNext())
                 {
-                    _completion.SetResult(null);
+                    _completion.Set();
                 }
             }
             catch (Exception e)
             {
-                _completion.SetException(e);
+                Exception = e;
+                _completion.Set();
             }
         }
 

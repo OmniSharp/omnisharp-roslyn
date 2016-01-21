@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace OmniSharp.Roslyn
 {
@@ -25,7 +26,6 @@ namespace OmniSharp.Roslyn
 
         public static Task<Document> GetDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
-#if DNX451
             var filePath = GetFilePathForSymbol(project, symbol);
             var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
             var temporaryDocument = project.AddDocument(filePath, string.Empty);
@@ -34,22 +34,15 @@ namespace OmniSharp.Roslyn
             var method = _CSharpMetadataAsSourceService.Value.GetMethod("AddSourceToAsync");
 
             return (Task<Document>)method.Invoke(service, new object[] { temporaryDocument, topLevelSymbol, cancellationToken });
-#else
-            return Task.FromResult<Document>(null);
-#endif
         }
 
         public static async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
         {
-#if DNX451
             var metadataSemanticModel = await metadataDocument.GetSemanticModelAsync();
             var symbolKeyCreateMethod = _SymbolKey.Value.GetMethod("Create", BindingFlags.Static | BindingFlags.NonPublic);
             var symboldId = symbolKeyCreateMethod.Invoke(null, new object[] { symbol, metadataSemanticModel.Compilation, cancellationToken });
 
             return await (Task<Location>)_GetLocationInGeneratedSourceAsync.Value.Invoke(null, new object[] { symboldId, metadataDocument, cancellationToken });
-#else
-            return await Task.FromResult<Location>(null);
-#endif
         }
 
         private static string GetTypeDisplayString(INamedTypeSymbol symbol)
@@ -103,10 +96,9 @@ namespace OmniSharp.Roslyn
             return (INamedTypeSymbol)topLevelNamedType;
         }
 
-#if DNX451
-        private static Lazy<Assembly> featuresAssembly = new Lazy<Assembly>(() => Assembly.Load("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-        private static Lazy<Assembly> csharpFeaturesAssembly = new Lazy<Assembly>(() => Assembly.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-        private static Lazy<Assembly> workspacesAssembly = new Lazy<Assembly>(() => Assembly.Load("Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+        private static Lazy<Assembly> featuresAssembly = new Lazy<Assembly>(() => PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+        private static Lazy<Assembly> csharpFeaturesAssembly = new Lazy<Assembly>(() => PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+        private static Lazy<Assembly> workspacesAssembly = new Lazy<Assembly>(() => PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
 
         private static Lazy<Type> _CSharpMetadataAsSourceService = new Lazy<Type>(() =>
         {
@@ -120,13 +112,17 @@ namespace OmniSharp.Roslyn
 
         private static Lazy<Type> _MetadataAsSourceHelpers = new Lazy<Type>(() =>
         {
-            return featuresAssembly.Value.GetType("Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers", true);
+            var type = featuresAssembly.Value.GetType("Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers");
+            if (type == null)
+            {
+                throw new IndexOutOfRangeException($"Could not find type Microsoft.CodeAnalysis.MetadataAsSource.MetadataAsSourceHelpers");
+            }
+            return type;
         });
 
         private static Lazy<MethodInfo> _GetLocationInGeneratedSourceAsync = new Lazy<MethodInfo>(() =>
         {
             return _MetadataAsSourceHelpers.Value.GetMethod("GetLocationInGeneratedSourceAsync");
         });
-#endif
     }
 }

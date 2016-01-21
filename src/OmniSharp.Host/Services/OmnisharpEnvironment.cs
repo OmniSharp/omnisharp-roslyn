@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Framework.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Services
 {

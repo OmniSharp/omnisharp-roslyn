@@ -2,32 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
-using Microsoft.Framework.ConfigurationModel;
-using Microsoft.Framework.DependencyInjection;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.Runtime;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
+using OmniSharp.Stdio;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
     public class Program
     {
-        private readonly IServiceProvider _serviceProvider;
-
         public static OmnisharpEnvironment Environment { get; set; }
 
-        public Program(IServiceProvider serviceProvider)
+        public static void Main(string[] args)
         {
-            _serviceProvider = serviceProvider;
-        }
+            Console.WriteLine($"OmniSharp: {string.Join(" ", args)}");
 
-        public void Main(string[] args)
-        {
             var applicationRoot = Directory.GetCurrentDirectory();
             var serverPort = 2000;
             var logLevel = LogLevel.Information;
@@ -53,7 +46,7 @@ namespace OmniSharp
                 }
                 else if (arg == "-v")
                 {
-                    logLevel = LogLevel.Verbose;
+                    logLevel = LogLevel.Debug;
                 }
                 else if (arg == "--hostPID")
                 {
@@ -64,7 +57,8 @@ namespace OmniSharp
                 {
                     transportType = TransportType.Stdio;
                 }
-                else if (arg == "--plugin") {
+                else if (arg == "--plugin")
+                {
                     enumerator.MoveNext();
                     plugins.Add((string)enumerator.Current);
                 }
@@ -76,70 +70,61 @@ namespace OmniSharp
 
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
-            var config = new Configuration()
-             .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
-
-            var engine = new HostingEngine(_serviceProvider);
-
-            var context = new HostingContext()
-            {
-                ServerFactoryLocation = "Kestrel",
-                Configuration = config,
-            };
+            var config = new ConfigurationBuilder()
+                .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
 
             var writer = new SharedConsoleWriter();
-            context.Services.AddInstance<IOmnisharpEnvironment>(Environment);
-            context.Services.AddInstance<ISharedTextWriter>(writer);
-            context.Services.AddInstance<PluginAssemblies>(new PluginAssemblies(plugins));
+
+            var builder = new WebApplicationBuilder()
+                .UseConfiguration(config.Build())
+                .UseEnvironment("OmniSharp")
+                .UseStartup(typeof(Startup))
+                .ConfigureServices(serviceCollection =>
+                {
+                    serviceCollection.AddSingleton<IOmnisharpEnvironment>(Environment);
+                    serviceCollection.AddSingleton<ISharedTextWriter>(writer);
+                    serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
+                });
 
             if (transportType == TransportType.Stdio)
             {
-                context.Server = null;
-                context.ServerFactory = new Stdio.StdioServerFactory(Console.In, writer);
+                builder.UseServer(new StdioServerFactory(Console.In, writer));
+            }
+            else
+            {
+                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
             }
 
-            var serverShutdown = engine.Start(context);
-
-            var appShutdownService = _serviceProvider.GetRequiredService<IApplicationShutdown>();
-            var shutdownHandle = new ManualResetEvent(false);
-
-            appShutdownService.ShutdownRequested.Register(() =>
+            var app = builder.Build();
+            using (app)
             {
-                serverShutdown.Dispose();
-                shutdownHandle.Set();
-            });
+                app.Start();
+                var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
 
-#if DNXCORE50
-            var ignored = Task.Run(() =>
-            {
-                Console.WriteLine("Started");
-                Console.ReadLine();
-                appShutdownService.RequestShutdown();
-            });
-#else
-            Console.CancelKeyPress += (sender, e) =>
-            {
-                appShutdownService.RequestShutdown();
-            };
-#endif
-
-            if (hostPID != -1)
-            {
-                try
+                Console.CancelKeyPress += (sender, e) =>
                 {
-                    var hostProcess = Process.GetProcessById(hostPID);
-                    hostProcess.EnableRaisingEvents = true;
-                    hostProcess.OnExit(() => appShutdownService.RequestShutdown());
-                }
-                catch
+                    appLifeTime.StopApplication();
+                    e.Cancel = true;
+                };
+
+                if (hostPID != -1)
                 {
-                    // If the process dies before we get here then request shutdown
-                    // immediately
-                    appShutdownService.RequestShutdown();
+                    try
+                    {
+                        var hostProcess = Process.GetProcessById(hostPID);
+                        hostProcess.EnableRaisingEvents = true;
+                        hostProcess.OnExit(() => appLifeTime.StopApplication());
+                    }
+                    catch
+                    {
+                        // If the process dies before we get here then request shutdown
+                        // immediately
+                        appLifeTime.StopApplication();
+                    }
                 }
+
+                appLifeTime.ApplicationStopping.WaitHandle.WaitOne();
             }
-
-            shutdownHandle.WaitOne();
         }
     }
 }

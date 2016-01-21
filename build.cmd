@@ -2,7 +2,7 @@
 
 pushd %~dp0
 
-set "DNX_FEED=https://www.nuget.org/api/v2"
+set "DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetcidev/api/v2"
 setlocal EnableDelayedExpansion
 where dnvm
 if %ERRORLEVEL% neq 0 (
@@ -15,80 +15,116 @@ if %ERRORLEVEL% neq 0 (
 :install
 rmdir /s /q artifacts
 set
-call dnvm install 1.0.0-beta4
-call dnvm use 1.0.0-beta4
-rem set the runtime path because the above commands set \.dnx<space>\runtimes
-set PATH=!USERPROFILE!\.dnx\runtimes\dnx-clr-win-x86.1.0.0-beta4\bin;!PATH!
+call dnvm update-self
+call dnvm install 1.0.0-rc2-16386 -u -r clr -arch x86
+call dnvm install 1.0.0-rc2-16386 -u -r clr -arch x64
+call dnvm install 1.0.0-rc2-16386 -u -r coreclr -arch x86
+call dnvm install 1.0.0-rc2-16386 -u -r coreclr -arch x64
 
-call dnu restore
+call dnu restore --quiet --parallel
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-pushd tests\OmniSharp.Bootstrap.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+call:_test "OmniSharp.Bootstrap.Tests" "clr"
+call:_test "OmniSharp.Bootstrap.Tests" "coreclr"
+call:_test "OmniSharp.Dnx.Tests" "clr"
+call:_test "OmniSharp.Dnx.Tests" "coreclr"
+call:_test "OmniSharp.MSBuild.Tests" "clr"
+:: Not supported yet
+::call:_test "OmniSharp.MSBuild.Tests" "coreclr"
+call:_test "OmniSharp.Plugins.Tests" "clr"
+call:_test "OmniSharp.Plugins.Tests" "coreclr"
+call:_test "OmniSharp.Roslyn.CSharp.Tests" "clr" "none"
+call:_test "OmniSharp.Roslyn.CSharp.Tests" "coreclr" "none"
+call:_test "OmniSharp.ScriptCs.Tests" "clr"
+:: Not supported yet
+::call:_test "OmniSharp.ScriptCs.Tests" "coreclr"
+call:_test "OmniSharp.Stdio.Tests" "clr"
+call:_test "OmniSharp.Stdio.Tests" "coreclr"
+call:_test "OmniSharp.Tests" "clr"
+call:_test "OmniSharp.Tests" "coreclr"
 
-pushd tests\OmniSharp.Dnx.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+:: omnisharp-clr-win-x86.zip
+call:_publish "OmniSharp" "clr" "x86" "artifacts\clr-win-x86" "..\omnisharp-clr-win-x86"
+:: omnisharp-coreclr-win-x86.zip
+call:_publish "OmniSharp" "coreclr" "x86" "artifacts\coreclr-win-x86" "..\omnisharp-coreclr-win-x86"
+:: omnisharp-clr-win-x64.zip
+call:_publish "OmniSharp" "clr" "x64" "artifacts\clr-win-x64" "..\omnisharp-clr-win-x64"
+:: omnisharp-coreclr-win-x64.zip
+call:_publish "OmniSharp" "coreclr" "x64" "artifacts\coreclr-win-x64" "..\omnisharp-coreclr-win-x64"
+:: omnisharp.zip
+:::: TODO
 
-pushd tests\OmniSharp.MSBuild.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
+:: omnisharp.bootstrap-clr-win-x86.zip
+call:_publish "OmniSharp.Bootstrap" "clr" "x86" "artifacts\boot-clr-win-x86" "..\omnisharp.bootstrap-clr-win-x86"
+:: omnisharp.bootstrap-coreclr-win-x86.zip
+call:_publish "OmniSharp.Bootstrap" "coreclr" "x86" "artifacts\boot-coreclr-win-x86" "..\omnisharp.bootstrap-coreclr-win-x86"
+:: omnisharp.bootstrap-clr-win-x64.zip
+call:_publish "OmniSharp.Bootstrap" "clr" "x64" "artifacts\boot-clr-win-x64" "..\omnisharp.bootstrap-clr-win-x64"
+:: omnisharp.bootstrap-coreclr-win-x64.zip
+call:_publish "OmniSharp.Bootstrap" "coreclr" "x64" "artifacts\boot-coreclr-win-x64" "..\omnisharp.bootstrap-coreclr-win-x64"
+:: omnisharp.bootstrap.zip
+:::: TODO
 
-pushd tests\OmniSharp.Plugins.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.Roslyn.CSharp.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.ScriptCs.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.Stdio.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-pushd tests\OmniSharp.Tests
-call dnx . test
-if %errorlevel% neq 0 exit /b %errorlevel%
-popd
-
-rem call dnu pack src\OmniSharp.Host --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Abstractions --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Bootstrap --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Dnx --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.MSBuild --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Nuget --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Roslyn --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Roslyn.CSharp --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.ScriptCs --configuration Release --out artifacts\build\nuget
-rem call dnu pack src\OmniSharp.Stdio --configuration Release --out artifacts\build\nuget
-
-rem call dnu publish artifacts\OmniSharp --configuration Release --no-source --out artifacts\build\omnisharp --runtime dnx-clr-win-x86.1.0.0-beta4
-
-rem pushd artifacts\build\omnisharp
-rem call tar -zcf ..\..\..\omnisharp.tar.gz .
-rem popd
-
-rem call dnu publish src\OmniSharp.Bootstrap --configuration Release --no-source --out artifacts\build\omnisharp.bootstrap --runtime dnx-clr-win-x86.1.0.0-beta4
-
-rem pushd artifacts\build\omnisharp.bootstrap
-rem call tar -zcf ..\..\..\omnisharp.bootstrap.tar.gz .
-rem popd
+call dnvm use 1.0.0-rc2-16386 -r coreclr -arch x86
+call:_pack OmniSharp.Host
+call:_pack OmniSharp.Abstractions
+call:_pack OmniSharp.Bootstrap
+call:_pack OmniSharp.Dnx
+call:_pack OmniSharp.MSBuild
+call:_pack OmniSharp.Nuget
+call:_pack OmniSharp.Roslyn
+call:_pack OmniSharp.Roslyn.CSharp
+call:_pack OmniSharp.ScriptCs
+call:_pack OmniSharp.Stdio
 
 popd
+GOTO:EOF
+
+::--------------------------------------------------------
+::-- Functions
+::--------------------------------------------------------
+:_test - %~1=project %~2=parallel
+setlocal
+call dnvm use 1.0.0-rc2-16386 -r %~2 -arch x86
+pushd tests\%~1
+if "%~2" == "" (
+  call dnx test
+) else (
+  call dnx test -parallel none
+)
+if %errorlevel% neq 0 (
+  echo Tests failed for src/%~1 with runtime %~2
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
+)
+popd
+endlocal
+GOTO:EOF
+
+:_pack - %~1=project
+setlocal
+call dnu restore src\%~1 --quiet
+call dnu pack src\%~1 --configuration Release --quiet --out artifacts\nuget
+if %errorlevel% neq 0 (
+  echo Package failed for src/%~1, destination: %~4
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
+)
+endlocal
+GOTO:EOF
+
+:_publish - %~1=project %~2=runtime %~3=arch %~4=dest %~5=zip
+setlocal
+call dnvm use 1.0.0-rc2-16386 -r %~2 -arch %~3
+call dnu publish "src\%~1" --configuration Release --no-source --quiet --runtime active --out "%~4"
+if %errorlevel% neq 0 (
+  echo Publish failed for src/%~1 with runtime %~2-%~3, destination: %~4
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
+)
+pushd %~4\approot
+call 7z a -r ..\%~5.zip .
+if %errorlevel% neq 0 (
+  echo Zip failed for src/%~1 with runtime %~2-%~3, destination: %~4
+  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
+)
+popd
+endlocal
+GOTO:EOF

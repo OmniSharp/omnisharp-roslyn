@@ -5,15 +5,15 @@
     "OmniSharp.Dnx": "1.0.0-*"
   },
   "commands": {
-    "omnisharp": "run"
+    "run": "run"
   },
   "frameworks": {
     "dnx451": {
-	  "dependencies": {
-		"OmniSharp.MSBuild": "1.0.0-*",
-		"OmniSharp.ScriptCs": "1.0.0-*"
-	  }
-	},
+      "dependencies": {
+        "OmniSharp.MSBuild": "1.0.0-*",
+        "OmniSharp.ScriptCs": "1.0.0-*"
+      }
+    },
     "dnxcore50": {}
   },
   "entryPoint": "OmniSharp.Host"

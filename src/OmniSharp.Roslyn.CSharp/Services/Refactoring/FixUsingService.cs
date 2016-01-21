@@ -8,7 +8,6 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-#if DNX451
     [OmniSharpHandler(OmnisharpEndpoints.FixUsings, LanguageNames.CSharp)]
     public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
@@ -48,5 +47,4 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return response;
         }
     }
-#endif
 }

@@ -9,14 +9,16 @@
     "OmniSharp.Stdio": "1.0.0-*",
     "OmniSharp.Plugins": "1.0.0-*",
     "OmniSharp.Roslyn": "1.0.0-*",
-    "Kestrel": "1.0.0-beta4",
-    "Microsoft.Framework.OptionsModel": "1.0.0-beta4",
-    "Microsoft.AspNet.Diagnostics": "1.0.0-beta4",
-    "Microsoft.Framework.Logging.Console": "1.0.0-beta4",
-    "Microsoft.Framework.ConfigurationModel.Json": "1.0.0-beta4",
-    "Microsoft.Framework.Caching.Memory": "1.0.0-beta4",
-    "Microsoft.Framework.FileSystemGlobbing": "1.0.0-beta4",
-    "Microsoft.Composition": "1.0.30"
+    "Microsoft.AspNet.Diagnostics": "1.0.0-rc2-16499",
+    "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc2-16321",
+    "Microsoft.Composition": "1.0.30",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-16034",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-15995",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-15966",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-15965",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-16004",
+    "Microsoft.Extensions.Options": "1.0.0-rc2-15988",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-15988"
   },
   "commands": {
     "omnisharp.host": "run"
@@ -26,12 +28,12 @@
       "frameworkAssemblies": {
         "System.ComponentModel.Composition": ""
       },
-      "dependencies": {}
+      "dependencies": { }
     },
     "dnxcore50": {
       "dependencies": {
-        "System.ObjectModel": "4.0.10-beta-22816",
-        "System.Text.Encoding.Extensions": "4.0.10-beta-22816"
+        "System.Threading.Tasks": "4.0.11-rc2-23629",
+        "System.Linq.Expressions": "4.0.11-rc2-23629"
       }
     }
   }

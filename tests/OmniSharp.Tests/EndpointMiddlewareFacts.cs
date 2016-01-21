@@ -2,22 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Reflection;
-using System.Security.Claims;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.FeatureModel;
 using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Http.Authentication;
-using Microsoft.AspNet.Http.Core;
+using Microsoft.AspNet.Http.Internal;
 using Microsoft.CodeAnalysis;
-using Microsoft.Framework.ConfigurationModel;
-using Microsoft.Framework.Logging;
-using Microsoft.Framework.Runtime;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
@@ -92,15 +84,16 @@ namespace OmniSharp.Tests
         {
             public LogLevel MinimumLevel { get; set; }
             public void AddProvider(ILoggerProvider provider) { }
-            public ILogger CreateLogger(string categoryName) { return new Logger(); }
+            public ILogger CreateLogger(string categoryName) => new Logger();
+            public void Dispose() { }
         }
 
         class Disposable : IDisposable { public void Dispose() { } }
 
         class Logger : ILogger
         {
-            public IDisposable BeginScope(object state) { return new Disposable(); }
-            public bool IsEnabled(LogLevel logLevel) { return true; }
+            public IDisposable BeginScopeImpl(object state) => new Disposable();
+            public bool IsEnabled(LogLevel logLevel) => true;
             public void Log(LogLevel logLevel, int eventId, object state, Exception exception, Func<object, Exception, string> formatter) { }
         }
 
