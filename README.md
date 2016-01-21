@@ -16,11 +16,11 @@ Check out the issue tracker https://huboard.com/OmniSharp/omnisharp-roslyn
 
 ## ASPNET RC2 Note
 For the latest version you must have one of the specific pinned versions of ASPNET RC2 installed, they are as follows...
-* `dnx-clr-win-x86.1.0.0-rc2-16386`
-* `dnx-mono.1.0.0-rc2-16386`
-* `dnx-coreclr-win-x64.1.0.0-rc2-16386`
-* `dnx-coreclr-darwin-x64.1.0.0-rc2-16386`
-* `dnx-coreclr-linux-x64.1.0.0-rc2-16386`
+* `dnx-clr-win-x86.1.0.0-rc2-16388`
+* `dnx-mono.1.0.0-rc2-16388`
+* `dnx-coreclr-win-x64.1.0.0-rc2-16388`
+* `dnx-coreclr-darwin-x64.1.0.0-rc2-16388`
+* `dnx-coreclr-linux-x64.1.0.0-rc2-16388`
 
 ## Help wanted!
 Visit https://jabbr.net/#/rooms/omnisharp if you'd like to help out.
