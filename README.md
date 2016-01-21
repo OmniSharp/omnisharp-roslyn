@@ -2,7 +2,7 @@ omnisharp-roslyn
 ================
 
 [![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)](https://travis-ci.org/OmniSharp/omnisharp-roslyn)
-[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/OmniSharp/omnisharp-roslyn?branch=master&svg=true)](https://ci.appveyor.com/project/nosami/omnisharp-roslyn)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/dj36uvllv0qmkljr?svg=true)](https://ci.appveyor.com/project/david-driscoll/omnisharp-roslyn)
 
 Omnisharp based on [Roslyn](https://github.com/dotnet/roslyn) workspaces
 
