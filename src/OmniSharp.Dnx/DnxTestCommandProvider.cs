@@ -19,7 +19,7 @@ namespace OmniSharp.Dnx
         {
             _context = context;
             var dnxPaths = new DnxPaths(env, context.Options, loggerFactory);
-            _dnx = dnxPaths.Dnx != null ? dnxPaths.Dnx + " ." : dnxPaths.K;
+            _dnx = dnxPaths.Dnx + " .";
         }
 
         public string GetTestCommand(TestContext testContext)
