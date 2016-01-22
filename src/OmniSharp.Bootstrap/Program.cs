@@ -63,10 +63,14 @@ namespace OmniSharp.Bootstrap
             }
 
             BootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
-            OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp.Host", "project.json");
+            if (BootstrapPath.Contains("OmniSharp.Bootstrap")) {
+                BootstrapPath = BootstrapPath.Substring(0, BootstrapPath.IndexOf("OmniSharp.Bootstrap") - 1);
+            }
+
+            OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp", "project.json");
             if (!File.Exists(OmnisharpProjectPath))
             {
-                OmnisharpProjectPath = Path.Combine(OmnisharpProjectPath, "OmniSharp.Host", "1.0.0", "root", "project.json");
+                OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp", "1.0.0", "root", "project.json");
             }
 
             if (!string.IsNullOrEmpty(SolutionRoot))
@@ -89,7 +93,7 @@ namespace OmniSharp.Bootstrap
                             if (plugin is JObject)
                             {
                                 var pluginJobject = plugin as JObject;
-                                PluginNames.Add(new KeyValuePair<string, string>(pluginJobject["name"].ToString(), pluginJobject["version"].ToString()));
+                                PluginNames.Add(new KeyValuePair<string, string>(pluginJobject["name"].ToString(), pluginJobject?["version"]?.ToString()));
                             }
                             else if (plugin is JToken)
                             {
@@ -116,7 +120,6 @@ namespace OmniSharp.Bootstrap
 
             if (!PluginPaths.Any() && !PluginNames.Any())
             {
-                Console.Write(Path.GetDirectoryName(OmnisharpProjectPath));
                 return 0;
             }
 
