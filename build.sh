@@ -74,7 +74,7 @@ fi
 # work around restore timeouts on Mono
 [ -z "$MONO_THREADS_PER_CPU" ] && export MONO_THREADS_PER_CPU=50
 
-export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetcidev/api/v2
+export DNX_UNSTABLE_FEED=https://www.myget.org/F/omnisharp/api/v2
 dnvm update-self
 
 dnvm install 1.0.0-rc2-16444 -u -r mono
@@ -83,7 +83,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 dnvm install 1.0.0-rc2-16444 -u -r coreclr
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
-dnu restore --quiet --parallel
+dnu restore --parallel
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 _test "OmniSharp.Bootstrap.Tests" "coreclr"
