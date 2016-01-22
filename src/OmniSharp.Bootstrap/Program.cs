@@ -134,7 +134,7 @@ namespace OmniSharp.Bootstrap
 
             if (String.IsNullOrEmpty(OmnisharpPath))
             {
-                var md5 = MD5.Create();
+                var md5 = HashAlgorithmName.MD5.Create();
 
                 var pluginAges = new Dictionary<string, string>();
                 var sb = new StringBuilder();
