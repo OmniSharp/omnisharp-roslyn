@@ -26,7 +26,7 @@ namespace OmniSharp.Host
 
             var writer = new SharedConsoleWriter();
 
-            var builder = new WebApplicationBuilder()
+            var host = new WebHostBuilder()
                 .UseConfiguration(config.Build())
                 .UseEnvironment("OmniSharp")
                 .UseStartup<TStartup>()
@@ -39,16 +39,17 @@ namespace OmniSharp.Host
 
             if (arguments.TransportType == TransportType.Stdio)
             {
-                builder.UseServerFactory(new StdioServerFactory(Console.In, writer));
+                host.UseServer(new StdioServerFactory(Console.In, writer));
             }
             else
             {
-                builder.UseServerFactory("Microsoft.AspNet.Server.Kestrel");
+                host.UseServer("Microsoft.AspNet.Server.Kestrel");
             }
 
-            var app = builder.Build();
-            using (app.Start())
+            using (var app = host.Build())
             {
+                app.Start();
+
                 var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
 
                 Console.CancelKeyPress += (sender, e) =>

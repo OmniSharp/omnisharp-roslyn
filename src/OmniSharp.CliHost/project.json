@@ -10,8 +10,6 @@
     "OmniSharp.Host": "1.0.0-*",
     "OmniSharp.DotNet": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-    "System.Threading.Tasks": "4.0.11-rc2-23631",
-    "System.Linq.Expressions": "4.0.11-rc2-23631",
     "Microsoft.AspNet.Diagnostics": "1.0.0-rc2-*",
     "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc2-*",
     "Microsoft.Composition": "1.0.30",
@@ -21,9 +19,14 @@
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
     "Microsoft.Extensions.Options": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-*"
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-*",
   },
   "frameworks": {
-    "dnxcore50": { }
+    "dnxcore50": { 
+      "imports": "portable-net45+win8",
+      "dependencies": {
+        "NETStandard.Library": "1.0.0-rc2-23720"
+      }
+    }
   }
 }

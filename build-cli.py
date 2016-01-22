@@ -38,8 +38,6 @@ if call(dotnet_check_cmd, shell=True) != 0:
 # restore packages
 if not '--skip-restore' in sys.argv:
     restore_cmd = 'dotnet restore'
-    if platform.system() == 'Darwin':
-        restore_cmd += ' --runtime osx.10.10-x64'
     check_call(restore_cmd, shell=True)
 
 # publish
@@ -48,7 +46,7 @@ if not '--skip-build' in sys.argv:
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     project_dir = os.path.join(working_dir, 'src', project_name)
-    publish_cmd = 'dotnet publish --output {0} --framework dnxcore50'.format(output_dir)
+    publish_cmd = 'dotnet publish --output {0}'.format(output_dir)
     check_call(publish_cmd, shell=True, cwd=project_dir)
 
 # zip
