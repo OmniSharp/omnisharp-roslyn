@@ -6,8 +6,8 @@
   "dependencies": {
     "OmniSharp.Host": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
+    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-*",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "Microsoft.AspNet.Testing": "1.0.0-rc2-16090",
     "xunit.runner.aspnet": "2.0.0-aspnet-*"
   },
   "commands": {
@@ -17,7 +17,7 @@
     "dnx451": { },
     "dnxcore50": {
       "dependencies": {
-        "System.Collections": "4.0.11-rc2-16319"
+        "NETStandard.Library": "1.0.0-rc2-23722"
       }
     }
   }

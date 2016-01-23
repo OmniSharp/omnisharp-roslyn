@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.AspNet.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -75,7 +75,7 @@ namespace OmniSharp
 
             var writer = new SharedConsoleWriter();
 
-            var builder = new WebApplicationBuilder()
+            var builder = new WebHostBuilder()
                 .UseConfiguration(config.Build())
                 .UseEnvironment("OmniSharp")
                 .UseStartup(typeof(Startup))
@@ -95,10 +95,10 @@ namespace OmniSharp
                 builder.UseServer("Microsoft.AspNet.Server.Kestrel");
             }
 
-            var app = builder.Build();
-            using (app)
+            using (var app = builder.Build())
             {
                 app.Start();
+
                 var appLifeTime = app.Services.GetRequiredService<IApplicationLifetime>();
 
                 Console.CancelKeyPress += (sender, e) =>

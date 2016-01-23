@@ -5,9 +5,9 @@
   },
   "dependencies": {
     "OmniSharp.Bootstrap": "1.0.0-*",
-    "Microsoft.AspNet.Testing": "1.0.0-rc2-16090",
+    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-16119",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "xunit.runner.aspnet": "2.0.0-aspnet-*"
+    "xunit.runner.aspnet": "2.0.0-aspnet-16076"
   },
   "commands": {
     "test": "xunit.runner.aspnet"
@@ -16,7 +16,7 @@
     "dnx451": { },
     "dnxcore50": {
       "dependencies": {
-        "System.Collections": "4.0.11-rc2-23629"
+        "NETStandard.Library": "1.0.0-rc2-23722"
       }
     }
   }

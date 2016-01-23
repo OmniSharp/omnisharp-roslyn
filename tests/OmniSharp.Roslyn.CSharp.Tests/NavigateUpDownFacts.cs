@@ -20,7 +20,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -81,7 +81,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -117,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -165,7 +165,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -200,7 +200,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -241,7 +241,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -287,7 +287,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -338,7 +338,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace $%OmniSharp
@@ -368,7 +368,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -397,7 +397,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -431,7 +431,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -480,7 +480,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -516,7 +516,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -549,7 +549,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -590,7 +590,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -639,7 +639,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
@@ -690,7 +690,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = @"using System;
                 using System.Collections.Generic;
                 using System.Threading.Tasks;
-                using Microsoft.AspNet.Mvc;
+                using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
                 namespace OmniSharp
