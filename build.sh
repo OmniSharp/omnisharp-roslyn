@@ -2,7 +2,7 @@
 _test() {
   local _project="$1"
   local _runtime="$2"
-  dnvm use 1.0.0-rc2-16388 -r $_runtime
+  dnvm use 1.0.0-rc2-16401 -r $_runtime
   pushd tests/$_project
   dnx test -parallel none
   rc=$?; if [[ $rc != 0 ]]; then
@@ -31,7 +31,7 @@ _pack() {
 _publish() {
   local _project="$1"
   local _runtime="$2"
-  local _version="1.0.0-rc2-16388"
+  local _version="1.0.0-rc2-16401"
   local _dest="$3"
   local _tar="$4"
 
@@ -77,10 +77,10 @@ fi
 export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetcidev/api/v2
 dnvm update-self
 
-dnvm install 1.0.0-rc2-16388 -u -r mono
+dnvm install 1.0.0-rc2-16401 -u -r mono
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
-dnvm install 1.0.0-rc2-16388 -u -r coreclr
+dnvm install 1.0.0-rc2-16401 -u -r coreclr
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 dnu restore --quiet --parallel
