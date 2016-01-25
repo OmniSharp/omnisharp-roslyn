@@ -16,10 +16,10 @@ if %ERRORLEVEL% neq 0 (
 rmdir /s /q artifacts
 set
 call dnvm update-self
-call dnvm install 1.0.0-rc2-16420 -u -r clr -arch x86
-call dnvm install 1.0.0-rc2-16420 -u -r clr -arch x64
-call dnvm install 1.0.0-rc2-16420 -u -r coreclr -arch x86
-call dnvm install 1.0.0-rc2-16420 -u -r coreclr -arch x64
+call dnvm install 1.0.0-rc2-16425 -u -r clr -arch x86
+call dnvm install 1.0.0-rc2-16425 -u -r clr -arch x64
+call dnvm install 1.0.0-rc2-16425 -u -r coreclr -arch x86
+call dnvm install 1.0.0-rc2-16425 -u -r coreclr -arch x64
 
 call dnu restore --quiet --parallel
 if %errorlevel% neq 0 exit /b %errorlevel%
@@ -65,7 +65,7 @@ call:_publish "OmniSharp.Bootstrap" "coreclr" "x64" "artifacts\boot-coreclr-win-
 :: omnisharp.bootstrap.zip
 :::: TODO
 
-call dnvm use 1.0.0-rc2-16420 -r coreclr -arch x86
+call dnvm use 1.0.0-rc2-16425 -r coreclr -arch x86
 call:_pack OmniSharp.Host
 call:_pack OmniSharp.Abstractions
 call:_pack OmniSharp.Bootstrap
@@ -85,7 +85,7 @@ GOTO:EOF
 ::--------------------------------------------------------
 :_test - %~1=project %~2=parallel
 setlocal
-call dnvm use 1.0.0-rc2-16420 -r %~2 -arch x86
+call dnvm use 1.0.0-rc2-16425 -r %~2 -arch x86
 pushd tests\%~1
 if "%~2" == "" (
   call dnx test
@@ -113,7 +113,7 @@ GOTO:EOF
 
 :_publish - %~1=project %~2=runtime %~3=arch %~4=dest %~5=zip
 setlocal
-call dnvm use 1.0.0-rc2-16420 -r %~2 -arch %~3
+call dnvm use 1.0.0-rc2-16425 -r %~2 -arch %~3
 call dnu publish "src\%~1" --configuration Release --no-source --quiet --runtime active --out "%~4"
 if %errorlevel% neq 0 (
   echo Publish failed for src/%~1 with runtime %~2-%~3, destination: %~4
