@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
@@ -22,6 +23,14 @@ namespace OmniSharp
         private OmnisharpWorkspace _workspace;
         private Document _document;
         private SemanticModel _semanticModel;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IOmnisharpAssemblyLoader _loader;
+
+        public FixUsingsWorker(ILoggerFactory loggerFactory, IOmnisharpAssemblyLoader loader)
+        {
+            _loggerFactory = loggerFactory;
+            _loader = loader;
+        }
 
         public async Task<FixUsingsResponse> FixUsings(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, Document document)
         {
@@ -161,8 +170,8 @@ namespace OmniSharp
 #if DNX451
         private async Task SortUsings()
         {
-            //Sort usings
-            var nRefactoryProvider = new NRefactoryCodeActionProvider();
+            // Sort usings
+        var nRefactoryProvider = new NRefactoryCodeActionProvider(_loader);
             var sortActions = new List<CodeAction>();
             var refactoringContext = await GetRefactoringContext(_document, sortActions);
             if (refactoringContext != null)

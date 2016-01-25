@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 
@@ -16,12 +15,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
     public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private readonly MetadataHelper _metadataHelper;
+        private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoDefinitionService(OmnisharpWorkspace workspace)
+        public GotoDefinitionService(OmnisharpWorkspace workspace, MetadataHelper metadataHelper)
         {
             _workspace = workspace;
+            _metadataHelper = metadataHelper;
         }
 
         public async Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
@@ -55,11 +56,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     else if (location.IsInMetadata && request.WantMetadata)
                     {
                         var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                        var metadataDocument = await MetadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+                        var metadataDocument = await _metadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
                         if (metadataDocument != null)
                         {
                             cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                            var metadataLocation = await MetadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+                            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
                             var lineSpan = metadataLocation.GetMappedLineSpan();
 
                             response = new GotoDefinitionResponse
@@ -70,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                                 {
                                     AssemblyName = symbol.ContainingAssembly.Name,
                                     ProjectName = document.Project.Name,
-                                    TypeName = MetadataHelper.GetSymbolName(symbol)
+                                    TypeName = _metadataHelper.GetSymbolName(symbol)
                                 },
                             };
                         }

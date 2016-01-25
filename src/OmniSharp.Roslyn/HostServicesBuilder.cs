@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Host.Mef;
@@ -25,7 +26,20 @@ namespace OmniSharp
 
         public MefHostServices GetHostServices()
         {
-            return MefHostServices.Create(_assemblies);
+            try
+            {
+                return MefHostServices.Create(_assemblies);
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var exceptions = ex.LoaderExceptions;
+                foreach (var e in exceptions)
+                {
+                    Console.WriteLine(e.Message);
+                }
+
+                throw;
+            }
         }
     }
 }

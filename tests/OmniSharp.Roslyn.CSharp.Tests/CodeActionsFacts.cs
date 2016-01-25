@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
-using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -11,6 +11,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class CodingActionsFacts
     {
+        private readonly ILoggerFactory _loggerFactory;
+
+        public CodingActionsFacts()
+        {
+            _loggerFactory = new LoggerFactory();
+            _loggerFactory.AddConsole();
+        }
+
         [Fact(Skip = "Microsoft.CodeAnalysis.Shared.Extensions.CommonSyntaxTokenExtensions is renamed. ICSharpCode.NRefactory6.CSharp.SyntaxExtensions is not update-to-date")]
         public async Task Can_get_code_actions()
         {
@@ -30,8 +38,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<string>> FindRefactoringsAsync(string source)
         {
+            var loader = new TestOmnisharpAssemblyLoader(_loggerFactory.CreateLogger<CodingActionsFacts>());
             var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new GetCodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider() });
+            var controller = new GetCodeActionsService(workspace, new[] { new NRefactoryCodeActionProvider(loader) });
             var request = CreateRequest(source);
             var response = await controller.Handle(request);
             return response.CodeActions;
