@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Host.Loader;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
 using OmniSharp.Stdio;
@@ -84,6 +86,7 @@ namespace OmniSharp
                     serviceCollection.AddSingleton<IOmnisharpEnvironment>(Environment);
                     serviceCollection.AddSingleton<ISharedTextWriter>(writer);
                     serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
+                    serviceCollection.AddSingleton<IOmnisharpAssemblyLoader>(new OmnisharpAssemblyLoader());
                 });
 
             if (transportType == TransportType.Stdio)
@@ -92,7 +95,7 @@ namespace OmniSharp
             }
             else
             {
-                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
+                builder.UseServer("Microsoft.AspNetCore.Server.Kestrel");
             }
 
             using (var app = builder.Build())
