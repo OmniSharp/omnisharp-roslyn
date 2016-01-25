@@ -4,9 +4,9 @@ using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Diagnostics;
-using Microsoft.AspNet.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,22 +25,23 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup(IApplicationEnvironment applicationEnvironment)
+        public Startup(IApplicationEnvironment applicationEnvironment,
+                       IOmnisharpEnvironment omnisharpEnvironment)
         {
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(applicationEnvironment.ApplicationBasePath)
-                .AddJsonFile("config.json")
+                .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
-            if (Program.Environment.OtherArgs != null)
+            if (omnisharpEnvironment.OtherArgs != null)
             {
-                configBuilder.AddCommandLine(Program.Environment.OtherArgs);
+                configBuilder.AddCommandLine(omnisharpEnvironment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
-            if (File.Exists(Program.Environment.ConfigurationPath))
+            if (File.Exists(omnisharpEnvironment.ConfigurationPath))
             {
-                configBuilder.AddJsonFile(Program.Environment.ConfigurationPath);
+                configBuilder.AddJsonFile(omnisharpEnvironment.ConfigurationPath);
             }
 
             Configuration = configBuilder.Build();
@@ -65,9 +66,9 @@ namespace OmniSharp
         }
 
         public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
-                                                          OmniSharpOptions options,
-                                                          IEnumerable<Assembly> assemblies,
-                                                          Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+                                                   OmniSharpOptions options,
+                                                   IEnumerable<Assembly> assemblies,
+                                                   Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
@@ -121,15 +122,7 @@ namespace OmniSharp
                               ISharedTextWriter writer,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
-            var assemblies = PlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Abstractions")
-                .SelectMany(libraryInformation => libraryInformation.Assemblies)
-                .Concat(
-                    PlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Roslyn")
-                        .SelectMany(libraryInformation => libraryInformation.Assemblies)
-                )
-                .Select(assemblyName => Assembly.Load(assemblyName));
-
-            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
+            PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, LoadAssemblies());
 
             Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
 
@@ -179,6 +172,24 @@ namespace OmniSharp
             Workspace.Initialized = true;
 
             logger.LogInformation("Solution has finished loading");
+        }
+
+        protected virtual IEnumerable<Assembly> LoadAssemblies()
+        {
+            var assemblies = new List<Assembly>();
+            var libraryManager = PlatformServices.Default.LibraryManager;
+
+            foreach (var info in libraryManager.GetReferencingLibraries("OmniSharp.Abstractions"))
+            {
+                assemblies.AddRange(info.Assemblies.Select(assemblyName => Assembly.Load(assemblyName)));
+            }
+
+            foreach (var info in libraryManager.GetReferencingLibraries("OmniSharp.Roslyn"))
+            {
+                assemblies.AddRange(info.Assemblies.Select(assemblyName => Assembly.Load(assemblyName)));
+            }
+
+            return assemblies;
         }
 
         private static bool LogFilter(string category, LogLevel level, IOmnisharpEnvironment environment)

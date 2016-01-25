@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16519",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16534",
     "Microsoft.CodeAnalysis": "1.1.1"
   },
   "frameworks": {
@@ -28,12 +28,10 @@
       }
     },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
-        "System.Linq.Parallel": "4.0.1-rc2-23629",
-        "System.Reflection": "4.1.0-rc2-23629",
-        "System.Reflection.TypeExtensions": "4.1.0-rc2-23629",
-        "System.Runtime": "4.0.21-rc2-23629",
-        "System.Xml.ReaderWriter": "4.0.11-rc2-23629"
+        "NETStandard.Library": "1.0.0-rc2-23722",
+        "System.Xml.XDocument": "4.0.11-rc2-23722"
       }
     }
   }

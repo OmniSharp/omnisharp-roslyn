@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0-*",
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "OmniSharp.Roslyn": "1.0.0-*",
+    "Microsoft.CodeAnalysis": "1.1.1",
+    "Microsoft.CodeAnalysis.Common": "1.1.1",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-*",
+    "NETStandard.Library": "1.0.0-rc2-23720"
+  },
+  "frameworks": {
+    "dnxcore50": {
+      "imports": "portable-net45+win8"
+    }
+  }
+}

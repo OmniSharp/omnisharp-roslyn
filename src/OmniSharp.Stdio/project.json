@@ -6,16 +6,16 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.AspNet.Hosting": "1.0.0-rc2-16231",
-    "Microsoft.AspNet.Http.Features": "1.0.0-rc2-16154",
+    "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-16256",
+    "Microsoft.AspNetCore.Http.Features": "1.0.0-rc2-16180",
     "Newtonsoft.Json": "7.0.1"
   },
   "frameworks": {
     "dnx451": { },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
-        "System.Runtime": "4.0.21-rc2-23629",
-        "System.Runtime.Serialization.Primitives": "4.0.11-*"
+        "NETStandard.Library": "1.0.0-rc2-23722"
       }
     }
   }

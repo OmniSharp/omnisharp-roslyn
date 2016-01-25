@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Services
@@ -34,7 +35,7 @@ namespace OmniSharp.Services
         public string Path { get; }
 
         public string SolutionFilePath { get; }
-        
+
         public string ConfigurationPath { get; }
 
         public TransportType TransportType { get; }

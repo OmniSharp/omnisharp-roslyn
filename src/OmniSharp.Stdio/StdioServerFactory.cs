@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Microsoft.AspNet.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.Extensions.Configuration;
 using OmniSharp.Stdio.Services;
 

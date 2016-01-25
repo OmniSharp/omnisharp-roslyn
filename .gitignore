@@ -30,3 +30,7 @@ buildlog
 /.vs
 *.lock.json
 /omnisharp*.tar.gz
+
+# nuget
+*.nuget.targets
+*.nuget.props

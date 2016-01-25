@@ -6,7 +6,7 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-    "Microsoft.AspNet.Hosting": "1.0.0-rc2-16231"
+    "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-16256"
   },
   "frameworks": {
     "dnx451": {
@@ -15,15 +15,9 @@
       }
     },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
-        "System.Diagnostics.Process": "4.1.0-rc2-23629",
-        "System.Dynamic.Runtime": "4.0.11-rc2-23629",
-        "System.IO.FileSystem.Watcher": "4.0.0-rc2-23629",
-        "System.Net.Sockets": "4.1.0-rc2-23629",
-        "System.Runtime": "4.0.21-rc2-23629",
-        "System.Threading": "4.0.11-rc2-23629",
-        "System.Threading.Tasks": "4.0.11-rc2-23629",
-        "System.Threading.Thread": "4.0.0-rc2-23629"
+        "NETStandard.Library": "1.0.0-rc2-23722"
       }
     }
   }

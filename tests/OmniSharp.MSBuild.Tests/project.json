@@ -6,9 +6,9 @@
   "dependencies": {
     "OmniSharp.MSBuild": "1.0.0-*",
     "OmniSharp.Tests": "1.0.0-*",
-    "Microsoft.AspNet.Testing": "1.0.0-rc2-16090",
+    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-16119",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "xunit.runner.aspnet": "2.0.0-aspnet-*"
+    "xunit.runner.aspnet": "2.0.0-aspnet-16076"
   },
   "commands": {
     "test": "xunit.runner.aspnet"
