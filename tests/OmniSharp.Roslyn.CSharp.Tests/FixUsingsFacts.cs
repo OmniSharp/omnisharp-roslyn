@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.PlatformAbstractions;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
@@ -16,6 +15,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public class FixUsingsFacts
     {
         private readonly string fileName = "test.cs";
+        private readonly LoggerFactory _loggerFactory;
+        private readonly ILogger<FixUsingsFacts> _logger;
+        private readonly IOmnisharpAssemblyLoader _loader;
+
+        public FixUsingsFacts()
+        {
+            _loggerFactory = new LoggerFactory();
+            _loggerFactory.AddConsole();
+            _logger = _loggerFactory.CreateLogger<FixUsingsFacts>();
+            _loader = new TestOmnisharpAssemblyLoader(_logger);
+        }
 
         [Fact]
         public async Task FixUsings_AddsUsingSingle()
@@ -400,7 +410,7 @@ namespace OmniSharp
 
         [Fact]
         public async Task FixUsings_RemoveUnusedUsing()
-        {            
+        {
             const string fileContents = @"using System;
 using System.Linq;
 
@@ -429,14 +439,15 @@ namespace OmniSharp
 }";
             await AssertBufferContents(fileContents, expectedFileContents);
         }
-        
+
         private async Task AssertBufferContents(string fileContents, string expectedFileContents)
         {
             var response = await RunFixUsings(fileContents);
             Assert.Equal(FlattenNewLines(expectedFileContents), FlattenNewLines(response.Buffer));
         }
 
-        private string FlattenNewLines(string input) {
+        private string FlattenNewLines(string input)
+        {
             return input.Replace("\r\n", "\n");
         }
 
@@ -465,7 +476,7 @@ namespace OmniSharp
             fakeOptions.Options = new OmniSharpOptions();
             fakeOptions.Options.FormattingOptions = new FormattingOptions() { NewLine = "\n" };
             var providers = host.GetExports<ICodeActionProvider>();
-            var controller = new FixUsingService(workspace, providers);
+            var controller = new FixUsingService(workspace, new FakeLoggerFactory(), _loader, providers);
             var request = new FixUsingsRequest
             {
                 FileName = fileName,

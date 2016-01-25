@@ -1,21 +1,23 @@
 {
   "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true,
+    "emitEntryPoint": true
+  },
   "dependencies": {
     "OmniSharp.Host": "1.0.0-*",
-    "OmniSharp.Dnx": "1.0.0-*",
     "Microsoft.NETCore.Platforms": "1.0.1-rc2-*"
-  },
-  "commands": {
-    "run": "run"
   },
   "frameworks": {
     "dnx451": {
       "dependencies": {
         "OmniSharp.MSBuild": "1.0.0-*",
-        "OmniSharp.ScriptCs": "1.0.0-*"
+        "OmniSharp.ScriptCs": "1.0.0-*",
+        "OmniSharp.Dnx": "1.0.0-*",
       }
     },
-    "dnxcore50": {}
-  },
-  "entryPoint": "OmniSharp.Host"
+    "dnxcore50": {
+      "imports": "portable-net45+win8"
+    }
+  }
 }

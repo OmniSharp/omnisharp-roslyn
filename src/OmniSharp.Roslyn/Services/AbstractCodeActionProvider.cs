@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace OmniSharp.Services
 {
@@ -14,25 +12,32 @@ namespace OmniSharp.Services
         private readonly IEnumerable<CodeRefactoringProvider> _refactorings;
         private readonly IEnumerable<CodeFixProvider> _codeFixes;
 
-        protected AbstractCodeActionProvider(string assemblyName) : this(DnxPlatformServices.Default.AssemblyLoadContextAccessor.Default.Load(assemblyName))
+        protected AbstractCodeActionProvider(string providerName,
+                                             IOmnisharpAssemblyLoader loader,
+                                             params string[] assembliesNames)
         {
-        }
+            if (loader == null)
+            {
+                throw new ArgumentNullException(nameof(loader));
+            }
 
-        protected AbstractCodeActionProvider(params Assembly[] codeActionAssemblies)
-        {
-            var features = codeActionAssemblies
-                                .SelectMany(assembly => assembly.GetTypes()
-                                .Where(type => !type.GetTypeInfo().IsInterface
-                                        && !type.GetTypeInfo().IsAbstract
-                                        && !type.GetTypeInfo().ContainsGenericParameters)); // TODO: handle providers with generic params
+            ProviderName = providerName;
+
+            Assemblies = assembliesNames.Select(name => loader.Load(name));
+
+            var features = Assemblies.SelectMany(assembly => assembly.GetTypes()
+                                     .Where(type => !type.GetTypeInfo().IsInterface &&
+                                                    !type.GetTypeInfo().IsAbstract &&
+                                                    !type.GetTypeInfo().ContainsGenericParameters));
+            // TODO: handle providers with generic params
 
             _refactorings = features.Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
-                   .Select(type => (CodeRefactoringProvider)Activator.CreateInstance(type));
+                                    .Select(type => CreateInstance<CodeRefactoringProvider>(type))
+                                    .Where(instance => instance != null);
 
             _codeFixes = features.Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
-                    .Select(type => (CodeFixProvider)Activator.CreateInstance(type));
-
-            Assemblies = codeActionAssemblies;
+                                 .Select(type => CreateInstance<CodeFixProvider>(type))
+                                 .Where(instance => instance != null);
         }
 
         public virtual IEnumerable<CodeRefactoringProvider> Refactorings => _refactorings;
@@ -41,7 +46,27 @@ namespace OmniSharp.Services
 
         public virtual IEnumerable<Assembly> Assemblies { get; protected set; }
 
-        public abstract string ProviderName { get; }
+        public string ProviderName { get; }
+
+        private T CreateInstance<T>(Type type) where T : class
+        {
+            try
+            {
+                var defaultCtor = type.GetConstructor(new Type[] { });
+                if (defaultCtor != null)
+                {
+                    return (T)Activator.CreateInstance(type);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
+            }
+        }
     }
 }
 

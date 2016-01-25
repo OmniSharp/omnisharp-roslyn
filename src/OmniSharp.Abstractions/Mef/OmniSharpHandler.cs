@@ -1,6 +1,4 @@
-using System;
 using System.Composition;
-using System.Threading.Tasks;
 
 namespace OmniSharp.Mef
 {
@@ -9,6 +7,7 @@ namespace OmniSharp.Mef
     public class OmniSharpLanguage
     {
         public string EndpointName { get; set; }
+
         public string Language { get; set; }
     }
 
@@ -16,6 +15,7 @@ namespace OmniSharp.Mef
     public class OmniSharpHandlerAttribute : ExportAttribute
     {
         public string Language { get; }
+
         public string EndpointName { get; }
 
         public OmniSharpHandlerAttribute(string endpoint, string language) : base(typeof(IRequestHandler))

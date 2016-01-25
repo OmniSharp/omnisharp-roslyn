@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Services;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -11,6 +11,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class MetadataFacts
     {
+        private readonly TestAssistant _assistant = new TestAssistant();
+        private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IOmnisharpAssemblyLoader _loader;
+
+        public MetadataFacts()
+        {
+            _loggerFactory = new LoggerFactory();
+            _loggerFactory.AddConsole();
+            _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
+
+            _loader = new TestOmnisharpAssemblyLoader(_logger);
+        }
+
         [Fact]
         public async Task ReturnsSource_ForSpecialType()
         {
@@ -25,7 +39,7 @@ class Foo {
             var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new MetadataService(workspace);
+            var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
@@ -50,7 +64,7 @@ class Foo {
             var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
                 { "foo.cs", source1 }, { "bar.cs", source2}
             });
-            var controller = new MetadataService(workspace);
+            var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
 #if DNXCORE50
@@ -76,10 +90,13 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
-            var controller = new MetadataService(workspace);
+            var workspace = _assistant.CreateWorkspace(
+                new Dictionary<string, string>
+                {
+                    { "foo.cs", source1 }, { "bar.cs", source2 }
+                });
+
+            var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = "mscorlib",
