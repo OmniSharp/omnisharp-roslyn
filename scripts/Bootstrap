@@ -1,11 +1,11 @@
 #!/bin/bash
 
-RUNTIME="dnx-mono.1.0.0-rc2-16425"
+RUNTIME="dnx-mono.1.0.0-rc2-16430"
 # Enable if you wish to run on coreclr
 #if [[ "$OSTYPE" == "linux-gnu" ]]; then
-#  RUNTIME="dnx-coreclr-linux-x64.1.0.0-rc2-16425"
+#  RUNTIME="dnx-coreclr-linux-x64.1.0.0-rc2-16430"
 #elif [[ "$OSTYPE" == "darwin"* ]]; then
-#  RUNTIME="dnx-coreclr-darwin-x64.1.0.0-rc2-16425"
+#  RUNTIME="dnx-coreclr-darwin-x64.1.0.0-rc2-16430"
 #fi
 
 SOURCE="${BASH_SOURCE[0]}"
