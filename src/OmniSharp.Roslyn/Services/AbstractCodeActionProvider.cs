@@ -14,7 +14,7 @@ namespace OmniSharp.Services
         private readonly IEnumerable<CodeRefactoringProvider> _refactorings;
         private readonly IEnumerable<CodeFixProvider> _codeFixes;
 
-        protected AbstractCodeActionProvider(string assemblyName) : this(PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load(assemblyName))
+        protected AbstractCodeActionProvider(string assemblyName) : this(DnxPlatformServices.Default.AssemblyLoadContextAccessor.Default.Load(assemblyName))
         {
         }
 

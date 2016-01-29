@@ -94,7 +94,7 @@ namespace OmniSharp.Tests
         {
             public IDisposable BeginScopeImpl(object state) => new Disposable();
             public bool IsEnabled(LogLevel logLevel) => true;
-            public void Log(LogLevel logLevel, int eventId, object state, Exception exception, Func<object, Exception, string> formatter) { }
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
         }
 
         [Fact]

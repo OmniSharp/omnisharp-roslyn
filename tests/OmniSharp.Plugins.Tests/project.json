@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Plugins": "1.0.0-*",
-    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-16119",
+    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-16128",
     "xunit.runner.aspnet": "2.0.0-aspnet-16076"
   },
   "commands": {

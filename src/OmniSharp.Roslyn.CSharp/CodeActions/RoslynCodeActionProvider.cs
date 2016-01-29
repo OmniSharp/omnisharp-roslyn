@@ -13,8 +13,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
     {
         private static ImmutableArray<Assembly> _mefAssemblies =>
             ImmutableArray.Create<Assembly>(
-                PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"),
-                PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35")
+                DnxPlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"),
+                DnxPlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35")
             );
 
         // TODO: Come in and pass Microsoft.CodeAnalysis.Features as well (today this breaks)

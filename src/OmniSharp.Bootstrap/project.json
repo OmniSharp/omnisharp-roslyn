@@ -4,7 +4,8 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16534",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16538",
+    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-16444",
     "Newtonsoft.Json": "7.0.1"
   },
   "commands": {

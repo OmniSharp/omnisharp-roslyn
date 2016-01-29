@@ -7,12 +7,12 @@
     "Newtonsoft.Json": "7.0.1",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-16055",
-    "Microsoft.Extensions.Configuration": "1.0.0-rc2-16019",
-    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-16019",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-15988",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-16028",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16534"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-16063",
+    "Microsoft.Extensions.Configuration": "1.0.0-rc2-16025",
+    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-16024",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-15993",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-16041",
+    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-16444"
   },
   "frameworks": {
     "dnx451": {
@@ -34,8 +34,8 @@
     "dnxcore50": {
       "dependencies": {
         "NETStandard.Library": "1.0.0-rc2-23722",
-        "System.IO.FileSystem.Watcher": "4.0.0-rc2-23722",
-        "System.Threading.Thread": "4.0.0-rc2-23722"
+        "System.IO.FileSystem.Watcher": "4.0.0-rc2-23727",
+        "System.Threading.Thread": "4.0.0-rc2-23727"
       }
     }
   }

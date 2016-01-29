@@ -121,10 +121,10 @@ namespace OmniSharp
                               ISharedTextWriter writer,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
-            var assemblies = PlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Abstractions")
+            var assemblies = DnxPlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Abstractions")
                 .SelectMany(libraryInformation => libraryInformation.Assemblies)
                 .Concat(
-                    PlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Roslyn")
+                    DnxPlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Roslyn")
                         .SelectMany(libraryInformation => libraryInformation.Assemblies)
                 )
                 .Select(assemblyName => Assembly.Load(assemblyName));

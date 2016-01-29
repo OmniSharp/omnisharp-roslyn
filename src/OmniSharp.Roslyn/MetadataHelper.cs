@@ -96,9 +96,12 @@ namespace OmniSharp.Roslyn
             return (INamedTypeSymbol)topLevelNamedType;
         }
 
-        private static Lazy<Assembly> featuresAssembly = new Lazy<Assembly>(() => PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-        private static Lazy<Assembly> csharpFeaturesAssembly = new Lazy<Assembly>(() => PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
-        private static Lazy<Assembly> workspacesAssembly = new Lazy<Assembly>(() => PlatformServices.Default.AssemblyLoadContextAccessor.Default.Load("Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+        private static Lazy<Assembly> featuresAssembly = new Lazy<Assembly>(() => LoadAssemblyFromName(
+            "Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+        private static Lazy<Assembly> csharpFeaturesAssembly = new Lazy<Assembly>(() => LoadAssemblyFromName(
+            "Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
+        private static Lazy<Assembly> workspacesAssembly = new Lazy<Assembly>(() => LoadAssemblyFromName(
+            "Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
 
         private static Lazy<Type> _CSharpMetadataAsSourceService = new Lazy<Type>(() =>
         {
@@ -124,5 +127,10 @@ namespace OmniSharp.Roslyn
         {
             return _MetadataAsSourceHelpers.Value.GetMethod("GetLocationInGeneratedSourceAsync");
         });
+        
+        private static Assembly LoadAssemblyFromName(string name)
+        {
+            return DnxPlatformServices.Default.AssemblyLoadContextAccessor.Default.Load(name);
+        }
     }
 }
