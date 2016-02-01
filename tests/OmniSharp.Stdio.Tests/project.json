@@ -7,7 +7,7 @@
     "OmniSharp.Stdio": "1.0.0-*",
     "Newtonsoft.Json": "7.0.1",
     "Microsoft.AspNetCore.Testing": "1.0.0-rc2-*",
-    "xunit.runner.aspnet": "2.0.0-aspnet-16076"
+    "xunit.runner.aspnet": "2.0.0-aspnet-*"
   },
   "commands": {
     "test": "xunit.runner.aspnet"
@@ -16,7 +16,7 @@
     "dnx451": { },
     "dnxcore50": {
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23722"
+        "NETStandard.Library": "1.0.0-rc2-*"
       }
     }
   }

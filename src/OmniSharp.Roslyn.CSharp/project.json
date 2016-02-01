@@ -31,7 +31,7 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23722"
+        "NETStandard.Library": "1.0.0-rc2-*"
       }
     }
   }

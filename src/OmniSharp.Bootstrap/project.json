@@ -4,8 +4,8 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16538",
-    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-16444",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*",
+    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-*",
     "Newtonsoft.Json": "7.0.1"
   },
   "commands": {
@@ -19,9 +19,9 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23722",
-        "System.Dynamic.Runtime": "4.0.11-rc2-23722",
-        "System.Security.Cryptography.Algorithms": "4.0.0-rc2-23722"
+        "NETStandard.Library": "1.0.0-rc2-*",
+        "System.Dynamic.Runtime": "4.0.11-rc2-*",
+        "System.Security.Cryptography.Algorithms": "4.0.0-rc2-*"
       }
     }
   }
