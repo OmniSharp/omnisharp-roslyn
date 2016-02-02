@@ -44,24 +44,24 @@ call:_test "OmniSharp.Tests" "clr"
 call:_test "OmniSharp.Tests" "coreclr"
 
 :: omnisharp-clr-win-x86.zip
-call:_publish "OmniSharp" "clr" "x86" "artifacts\clr-win-x86" "..\omnisharp-clr-win-x86"
+call:_publish "OmniSharp" "clr" "x86" "clr-win-x86" "omnisharp-clr-win-x86"
 :: omnisharp-coreclr-win-x86.zip
-call:_publish "OmniSharp" "coreclr" "x86" "artifacts\coreclr-win-x86" "..\omnisharp-coreclr-win-x86"
+call:_publish "OmniSharp" "coreclr" "x86" "coreclr-win-x86" "omnisharp-coreclr-win-x86"
 :: omnisharp-clr-win-x64.zip
-call:_publish "OmniSharp" "clr" "x64" "artifacts\clr-win-x64" "..\omnisharp-clr-win-x64"
+call:_publish "OmniSharp" "clr" "x64" "clr-win-x64" "omnisharp-clr-win-x64"
 :: omnisharp-coreclr-win-x64.zip
-call:_publish "OmniSharp" "coreclr" "x64" "artifacts\coreclr-win-x64" "..\omnisharp-coreclr-win-x64"
+call:_publish "OmniSharp" "coreclr" "x64" "coreclr-win-x64" "omnisharp-coreclr-win-x64"
 :: omnisharp.zip
 :::: TODO
 
 :: omnisharp.bootstrap-clr-win-x86.zip
-call:_publish "OmniSharp.Bootstrap" "clr" "x86" "artifacts\boot-clr-win-x86" "..\omnisharp.bootstrap-clr-win-x86"
+call:_publish "OmniSharp.Bootstrap" "clr" "x86" "boot-clr-win-x86" "omnisharp.bootstrap-clr-win-x86"
 :: omnisharp.bootstrap-coreclr-win-x86.zip
-call:_publish "OmniSharp.Bootstrap" "coreclr" "x86" "artifacts\boot-coreclr-win-x86" "..\omnisharp.bootstrap-coreclr-win-x86"
+call:_publish "OmniSharp.Bootstrap" "coreclr" "x86" "boot-coreclr-win-x86" "omnisharp.bootstrap-coreclr-win-x86"
 :: omnisharp.bootstrap-clr-win-x64.zip
-call:_publish "OmniSharp.Bootstrap" "clr" "x64" "artifacts\boot-clr-win-x64" "..\omnisharp.bootstrap-clr-win-x64"
+call:_publish "OmniSharp.Bootstrap" "clr" "x64" "boot-clr-win-x64" "omnisharp.bootstrap-clr-win-x64"
 :: omnisharp.bootstrap-coreclr-win-x64.zip
-call:_publish "OmniSharp.Bootstrap" "coreclr" "x64" "artifacts\boot-coreclr-win-x64" "..\omnisharp.bootstrap-coreclr-win-x64"
+call:_publish "OmniSharp.Bootstrap" "coreclr" "x64" "boot-coreclr-win-x64" "omnisharp.bootstrap-coreclr-win-x64"
 :: omnisharp.bootstrap.zip
 :::: TODO
 
@@ -105,7 +105,7 @@ setlocal
 call dnu restore src\%~1 --quiet
 call dnu pack src\%~1 --configuration Release --quiet --out artifacts\nuget
 if %errorlevel% neq 0 (
-  echo Package failed for src/%~1, destination: %~4
+  echo Package failed for src/%~1
   (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
 )
 endlocal
@@ -114,16 +114,19 @@ GOTO:EOF
 :_publish - %~1=project %~2=runtime %~3=arch %~4=dest %~5=zip
 setlocal
 call dnvm use 1.0.0-rc2-16444 -r %~2 -arch %~3
-call dnu publish "src\%~1" --configuration Release --no-source --quiet --runtime active --out "%~4"
+call dnu publish "src\%~1" --configuration Release --no-source --quiet --runtime active --out "artifacts\%~4"
 if %errorlevel% neq 0 (
-  echo Publish failed for src/%~1 with runtime %~2-%~3, destination: %~4
+  echo Publish failed for src/%~1 with runtime %~2-%~3, destination: artifacts\%~4
   (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
 )
-pushd %~4\approot
-call 7z a -r ..\%~5.zip .
-if %errorlevel% neq 0 (
-  echo Zip failed for src/%~1 with runtime %~2-%~3, destination: %~4
-  (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
+if "%APPVEYOR%" == "True" (
+  pushd artifacts\%~4\approot
+  echo Compressing %~5.zip
+  call 7z a -r ..\..\%~5.zip . > NUL
+  if %errorlevel% neq 0 (
+    echo Zip failed for src/%~1 with runtime %~2-%~3, destination: artifacts\%~4
+    (goto) 2>nul & endlocal & exit /b YOUR_EXITCODE_HERE
+  )
 )
 popd
 endlocal

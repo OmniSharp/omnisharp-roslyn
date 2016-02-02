@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-16444",
+    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-*",
     "Microsoft.CodeAnalysis": "1.1.1"
   },
   "frameworks": {
@@ -29,8 +29,8 @@
     },
     "dnxcore50": {
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23722",
-        "System.Xml.XDocument": "4.0.11-rc2-23722"
+        "NETStandard.Library": "1.0.0-rc2-*",
+        "System.Xml.XDocument": "4.0.11-rc2-*"
       }
     }
   }
