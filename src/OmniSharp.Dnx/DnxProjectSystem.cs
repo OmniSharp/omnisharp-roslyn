@@ -78,7 +78,7 @@ namespace OmniSharp.Dnx
             ConfigurationBinder.Bind(configuration, _options);
 
             _dnxPaths = new DnxPaths(_env, _options, _loggerFactory);
-            _packagesRestoreTool = new PackagesRestoreTool(_options, _loggerFactory, _emitter, _context, _dnxPaths); ;
+            _packagesRestoreTool = new PackagesRestoreTool(_options, _emitter, _context, _dnxPaths); ;
             _designTimeHostManager = new DesignTimeHostManager(_loggerFactory, _dnxPaths);
 
             var runtimePath = _dnxPaths.RuntimePath;
