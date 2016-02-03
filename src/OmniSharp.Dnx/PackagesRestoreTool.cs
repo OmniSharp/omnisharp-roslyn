@@ -15,7 +15,7 @@ namespace OmniSharp.Dnx
     public class PackagesRestoreTool
     {
         private readonly DnxOptions _options;
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
         private readonly DnxContext _context;
         private readonly DnxPaths _paths;
@@ -23,10 +23,10 @@ namespace OmniSharp.Dnx
         private readonly IDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
-        public PackagesRestoreTool(DnxOptions options, ILoggerFactory logger, IEventEmitter emitter, DnxContext context, DnxPaths paths)
+        public PackagesRestoreTool(DnxOptions options, IEventEmitter emitter, DnxContext context, DnxPaths paths)
         {
             _options = options;
-            _logger = logger.CreateLogger<PackagesRestoreTool>();
+            //_logger = logger.CreateLogger<PackagesRestoreTool>();
             _emitter = emitter;
             _context = context;
             _paths = paths;
@@ -97,12 +97,12 @@ namespace OmniSharp.Dnx
                 Arguments = "restore"
             };
 
-            _logger.LogInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
+            //_logger.LogInformation("restore packages {0} {1} for {2}", psi.FileName, psi.Arguments, psi.WorkingDirectory);
 
             var restoreProcess = Process.Start(psi);
             if (restoreProcess.HasExited)
             {
-                _logger.LogError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
+                //_logger.LogError("restore command ({0}) failed with error code {1}", psi.FileName, restoreProcess.ExitCode);
                 return restoreProcess.ExitCode;
             }
 
@@ -115,7 +115,7 @@ namespace OmniSharp.Dnx
                 {
                     if (DateTime.UtcNow - lastSignal > TimeSpan.FromSeconds(_options.PackageRestoreTimeout))
                     {
-                        _logger.LogError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
+                        //_logger.LogError("killing restore comment ({0}) because it seems be stuck. retrying {1} more time(s)...", restoreProcess.Id, retry);
                         wasKilledByWatchDog = true;
                         restoreProcess.KillAll();
                     }
@@ -125,12 +125,12 @@ namespace OmniSharp.Dnx
 
             restoreProcess.OutputDataReceived += (sender, e) =>
             {
-                _logger.LogInformation(e.Data);
+                //_logger.LogInformation(e.Data);
                 lastSignal = DateTime.UtcNow;
             };
             restoreProcess.ErrorDataReceived += (sender, e) =>
             {
-                _logger.LogError(e.Data);
+                //_logger.LogError(e.Data);
                 lastSignal = DateTime.UtcNow;
             };
 
