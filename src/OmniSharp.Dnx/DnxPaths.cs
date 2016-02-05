@@ -38,14 +38,31 @@ namespace OmniSharp.Dnx
         {
             var root = ResolveRootDirectory(_env.Path);
             var globalJson = Path.Combine(root, "global.json");
-            var versionOrAliasToken = GetRuntimeVersionOrAlias(globalJson);
-            var versionOrAlias = versionOrAliasToken?.Value<string>() ?? _options?.Alias ?? "default";
+            var aliasToken = GetRuntimeSpec(globalJson, "alias");
+            var alias = aliasToken?.Value<string>() ?? _options?.Alias ?? "default";
+            var versionToken = GetRuntimeSpec(globalJson, "version");
+            var version = versionToken?.Value<string>();
+            // Fill in runtime and architecture if version exists
+            if (version != null)
+            {
+                var nameToken = GetRuntimeSpec(globalJson, "runtime");
+                // Default to mono on Mono systems, to clr otherwise
+                var name = nameToken?.Value<string>() ?? (PlatformHelper.IsMono ? "mono" : "clr");
+                // clr and coreclr also use OS and architecture suffix
+                if (name.Contains("clr"))
+                {
+                    name = string.Format("{0}-{1}-{2}", name,
+                            PlatformHelper.OSString, 
+                            GetRuntimeSpec(globalJson, "architecture")?.Value<string>() ?? "x86");
+                }
+                version = string.Format("{0}.{1}", name, version);
+            }
             var seachedLocations = new List<string>();
 
             foreach (var location in GetRuntimeLocations())
             {
                 //  Need to expand variables, because DNX_HOME variable might include %USERPROFILE%.
-                var paths = GetRuntimePathsFromVersionOrAlias(versionOrAlias, Environment.ExpandEnvironmentVariables(location));
+                var paths = GetRuntimePathsFromVersionOrAlias(version, alias, Environment.ExpandEnvironmentVariables(location));
 
                 foreach (var path in paths)
                 {
@@ -67,15 +84,20 @@ namespace OmniSharp.Dnx
                 }
             }
 
-            var message = new ErrorMessage()
+            var message = new ErrorMessage();
+            if (versionToken != null)
             {
-                Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}.\nVisit https://github.com/aspnet/Home for an installation guide.", versionOrAlias, string.Join("\n", seachedLocations))
-            };
-            if (versionOrAliasToken != null)
-            {
+                message.Text = string.Format("The specified runtime path '{0}' does not exist. Searched locations {1}.\nVisit https://github.com/aspnet/Home for an installation guide.", version, string.Join("\n", seachedLocations));
                 message.FileName = globalJson;
-                message.Line = ((IJsonLineInfo)versionOrAliasToken).LineNumber;
-                message.Column = ((IJsonLineInfo)versionOrAliasToken).LinePosition;
+                message.Line = ((IJsonLineInfo)versionToken).LineNumber;
+                message.Column = ((IJsonLineInfo)versionToken).LinePosition;
+            }
+            else
+            {
+                message.Text = string.Format("The specified runtime alias '{0}' does not exist.\nVisit https://github.com/aspnet/Home for an installation guide.", alias);
+                message.FileName = globalJson;
+                message.Line = ((IJsonLineInfo)aliasToken).LineNumber;
+                message.Column = ((IJsonLineInfo)aliasToken).LinePosition;
             }
             _logger.LogError(message.Text);
             return new DnxRuntimePathResult()
@@ -84,11 +106,11 @@ namespace OmniSharp.Dnx
             };
         }
 
-        private JToken GetRuntimeVersionOrAlias(string globalJson)
+        private JToken GetRuntimeSpec(string globalJson, string spec)
         {
             if (File.Exists(globalJson))
             {
-                _logger.LogInformation("Looking for sdk version in '{0}'.", globalJson);
+                _logger.LogInformation("Looking for sdk {0} in '{1}'.", spec, globalJson);
 
                 using (var stream = File.OpenRead(globalJson))
                 {
@@ -97,7 +119,7 @@ namespace OmniSharp.Dnx
                         using (var textReader = new JsonTextReader(streamReader))
                         {
                             var obj = JObject.Load(textReader);
-                            return obj["sdk"]?["version"];
+                            return obj["sdk"]?[spec];
                         }
                     }
                 }
@@ -152,16 +174,16 @@ namespace OmniSharp.Dnx
             yield return Path.Combine(@"/usr/local/lib/dnx");
         }
 
-        private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string versionOrAlias, string runtimePath)
+        private IEnumerable<string> GetRuntimePathsFromVersionOrAlias(string version, string alias, string runtimePath)
         {
             // Newer format
-            yield return GetRuntimePathFromVersionOrAlias(versionOrAlias, runtimePath, "dnx-mono.{0}", "dnx-clr-win-x86.{0}", "runtimes");
+            yield return GetRuntimePathFromVersionOrAlias(version, alias, runtimePath, "dnx-{0}", "runtimes");
         }
 
-        private string GetRuntimePathFromVersionOrAlias(string versionOrAlias,
+        private string GetRuntimePathFromVersionOrAlias(string version,
+                                                        string alias,
                                                         string runtimeHome,
-                                                        string monoFormat,
-                                                        string windowsFormat,
+                                                        string runtimeFormat,
                                                         string runtimeFolder)
         {
             if (string.IsNullOrEmpty(runtimeHome))
@@ -169,14 +191,20 @@ namespace OmniSharp.Dnx
                 return null;
             }
 
+            // Return version if given
+            if (version != null)
+            {
+                return Path.Combine(runtimeHome, runtimeFolder, string.Format(runtimeFormat, version));
+            }
+
             var aliasDirectory = Path.Combine(runtimeHome, "alias");
 
             var aliasFiles = new[] { "{0}.alias", "{0}.txt" };
 
-            // Check alias first
+            // Check alias if no version given
             foreach (var shortAliasFile in aliasFiles)
             {
-                var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, versionOrAlias));
+                var aliasFile = Path.Combine(aliasDirectory, string.Format(shortAliasFile, alias));
 
                 if (File.Exists(aliasFile))
                 {
@@ -185,18 +213,8 @@ namespace OmniSharp.Dnx
                     return Path.Combine(runtimeHome, runtimeFolder, fullName);
                 }
             }
-
-            // There was no alias, look for the input as a version
-            var version = versionOrAlias;
-
-            if (PlatformHelper.IsMono)
-            {
-                return Path.Combine(runtimeHome, runtimeFolder, string.Format(monoFormat, versionOrAlias));
-            }
-            else
-            {
-                return Path.Combine(runtimeHome, runtimeFolder, string.Format(windowsFormat, versionOrAlias));
-            }
+            
+            return null;
         }
 
         internal static string FirstPath(string runtimePath, params string[] candidates)
