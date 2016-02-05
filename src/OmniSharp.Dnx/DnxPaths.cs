@@ -42,10 +42,13 @@ namespace OmniSharp.Dnx
             var alias = aliasToken?.Value<string>() ?? _options?.Alias ?? "default";
             var versionToken = GetRuntimeSpec(globalJson, "version");
             var version = versionToken?.Value<string>();
+            // Fill in runtime and architecture if version exists
             if (version != null)
             {
                 var nameToken = GetRuntimeSpec(globalJson, "runtime");
+                // Default to mono on Mono systems, to clr otherwise
                 var name = nameToken?.Value<string>() ?? (PlatformHelper.IsMono ? "mono" : "clr");
+                // clr and coreclr also use OS and architecture suffix
                 if (name.Contains("clr"))
                 {
                     name = string.Format("{0}-{1}-{2}", name,
