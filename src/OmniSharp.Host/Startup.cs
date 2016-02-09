@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -125,7 +126,30 @@ namespace OmniSharp
                               IOmnisharpAssemblyLoader loader,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
-            var assemblies = new List<Assembly>(loader.Load("OmniSharp.Abstractions", "OmniSharp.Roslyn"));
+            var assemblies = new List<Assembly>();
+
+            foreach (var dependency in DependencyContext.Default
+                                                        .CompileLibraries
+                                                        .SelectMany(lib => lib.Assemblies)
+                                                        .Select(path => Path.GetFileNameWithoutExtension(path)))
+            {
+                var assembly = loader.Load(dependency);
+
+                using (var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + ".deps.json"))
+                {
+                    if (stream == null)
+                    {
+                        continue;
+                    }
+
+                    if (DependencyContext.Load(stream).CompileLibraries.Any(
+                            lib => lib.PackageName == "OmniSharp.Abstractions" ||
+                                   lib.PackageName == "OmniSharp.Roslyn"))
+                    {
+                        assemblies.Add(assembly);
+                    }
+                }
+            }
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
@@ -141,6 +165,11 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
+            foreach(var assembly in assemblies)
+            {
+                logger.LogInformation($"Loaded {assembly.FullName}");
+            }
+
             app.UseRequestLogging();
             app.UseExceptionHandler("/error");
             app.UseMiddleware<EndpointMiddleware>();
@@ -166,9 +195,10 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    //if a project system throws an unhandled exception
-                    //it should not crash the entire server
-                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
+                    // if a project system throws an unhandled exception
+                    // it should not crash the entire server
+                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw exception during initialization.", e);
+                    Console.WriteLine(e.Message);
                 }
             }
 

@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "preserveCompilationContext": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "OmniSharp.Roslyn": "1.0.0-*",
+    "Microsoft.CodeAnalysis": "1.1.1",
+    "Microsoft.CodeAnalysis.Common": "1.1.1",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-*",
+    "NETStandard.Library": "1.0.0-rc2-*",
+    "System.Runtime.Serialization.Primitives": "4.1.0-rc2-*"
+  },
+  "frameworks": {
+    "dnxcore50": {
+      "imports": "portable-net45+win8"
+    }
+  }
+}

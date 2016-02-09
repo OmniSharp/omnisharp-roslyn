@@ -92,10 +92,10 @@ function _run_tests() {
         & $nuget_path install xunit.runner.console -ExcludeVersion -o $build_tools -nocache -pre
     }
 
-    # pass: _test_coreclr OmniSharp.Bootstrap.Tests
-    # pass: _test_coreclr OmniSharp.Dnx.Tests 
-    # pass: _test_coreclr OmniSharp.Roslyn.CSharp.Tests 
-    # pass: _test_coreclr OmniSharp.Stdio.Tests 
+    _test_coreclr OmniSharp.Bootstrap.Tests
+    _test_coreclr OmniSharp.Dnx.Tests 
+    _test_coreclr OmniSharp.Roslyn.CSharp.Tests 
+    _test_coreclr OmniSharp.Stdio.Tests 
 
     # pass: _test_clr OmniSharp.Bootstrap.Tests 
     # pass: _test_clr OmniSharp.Stdio.Tests 
@@ -172,7 +172,7 @@ function _publish() {
     $projects_coreclr_publish | % {
         $name = "$_"
         $src = "src\$_"
-        $output = "$publish_output\$_"
+        $output = "$publish_output\dnxcore50\$_"
 
         dotnet publish $src --framework dnxcore50 --output $output --configuration $configuration
         ls $src\config.json | % { cp $src\config.json $output\config.json | Out-Null }
@@ -185,8 +185,8 @@ function _package() {
 
 # _cleanup
 _prerequisite
-# _restore
-# _build_verify
+_restore
+_build_verify
 _run_tests
 _publish
 # _package
