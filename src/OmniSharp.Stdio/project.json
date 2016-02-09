@@ -2,7 +2,8 @@
   "version": "1.0.0-*",
   "description": "ASP.NET 5 web server for stdio",
   "compilationOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",

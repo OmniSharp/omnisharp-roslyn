@@ -15,7 +15,7 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio
 {
-    class StdioServer : IServer
+    public class StdioServer : IServer
     {
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
