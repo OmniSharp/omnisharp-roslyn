@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,7 +90,7 @@ namespace OmniSharp
 
             if (transportType == TransportType.Stdio)
             {
-                builder.UseServer(new StdioServerFactory(Console.In, writer));
+                builder.UseServer(new StdioServer(Console.In, writer));
             }
             else
             {

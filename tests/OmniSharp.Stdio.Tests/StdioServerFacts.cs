@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
@@ -15,8 +14,7 @@ namespace OmniSharp.Stdio.Tests
                                                 ISharedTextWriter writer,
                                                 IHttpApplication<int> application)
         {
-            var factory = new StdioServerFactory(reader, writer);
-            var server = factory.CreateServer(new ConfigurationBuilder().Build());
+            var server = new StdioServer(reader, writer);
             server.Start(application);
 
             return server;
