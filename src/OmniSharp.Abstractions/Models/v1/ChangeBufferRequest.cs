@@ -1,4 +1,6 @@
 ﻿
+using Newtonsoft.Json;
+using OmniSharp.Json;
 using OmniSharp.Mef;
 
 namespace OmniSharp.Models
@@ -7,9 +9,13 @@ namespace OmniSharp.Models
     public class ChangeBufferRequest : IRequest
     {
         public string FileName { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartColumn { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndColumn { get; set; }
         public string NewText { get; set; }
     }

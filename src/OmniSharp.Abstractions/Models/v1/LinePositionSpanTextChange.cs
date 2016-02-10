@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Newtonsoft.Json;
+using OmniSharp.Json;
 
 namespace OmniSharp.Models
 {
@@ -57,9 +59,13 @@ namespace OmniSharp.Models
         }
 
         public string NewText { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartColumn { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndColumn { get; set; }
 
         public override bool Equals(object obj)

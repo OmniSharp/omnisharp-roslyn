@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using OmniSharp.Json;
 
 namespace OmniSharp.Models
 {
@@ -11,9 +13,13 @@ namespace OmniSharp.Models
         }
 
         public string FileName { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int Line { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int Column { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndColumn { get; set; }
         public string Text { get; set; }
         public ICollection<string> Projects { get; set; }
