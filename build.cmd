@@ -2,7 +2,7 @@
 
 pushd %~dp0
 
-set "DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetcidev/api/v2"
+set "DNX_UNSTABLE_FEED=https://www.myget.org/F/omnisharp/api/v2"
 setlocal EnableDelayedExpansion
 where dnvm
 if %ERRORLEVEL% neq 0 (
@@ -21,7 +21,7 @@ call dnvm install 1.0.0-rc2-16444 -u -r clr -arch x64
 call dnvm install 1.0.0-rc2-16444 -u -r coreclr -arch x86
 call dnvm install 1.0.0-rc2-16444 -u -r coreclr -arch x64
 
-call dnu restore --quiet --parallel
+call dnu restore --parallel
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 call:_test "OmniSharp.Bootstrap.Tests" "clr"
