@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using OmniSharp.Json;
 using OmniSharp.Mef;
 
 namespace OmniSharp.Models
@@ -10,6 +12,7 @@ namespace OmniSharp.Models
         ///   If none are given, highlight the entire
         ///   file.
         /// </summary>
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int[] Lines { get; set; }
         /// <summary>
         ///   Specifies which projects to highlight for.
