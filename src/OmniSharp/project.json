@@ -13,15 +13,14 @@
     "dnx451": {
       "dependencies": {
         "OmniSharp.MSBuild": "1.0.0-*",
-        "OmniSharp.ScriptCs": "1.0.0-*",
-        "OmniSharp.Dnx": "1.0.0-*"
+        "OmniSharp.ScriptCs": "1.0.0-*"
       }
     },
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
+        "OmniSharp.Roslyn.CSharp": "1.0.0-*",
         "OmniSharp.DotNet": "1.0.0-*",
-        "OmniSharp.Roslyn.CSharp": "1.0.0-*"
       }
     }
   }
