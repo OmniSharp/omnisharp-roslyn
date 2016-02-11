@@ -97,9 +97,9 @@ function _run_tests() {
     _test_coreclr OmniSharp.Roslyn.CSharp.Tests 
     _test_coreclr OmniSharp.Stdio.Tests 
 
-    # pass: _test_clr OmniSharp.Bootstrap.Tests 
-    # pass: _test_clr OmniSharp.Stdio.Tests 
-    # pass: _test_clr OmniSharp.MSBuild.Tests
+    _test_clr OmniSharp.Bootstrap.Tests 
+    _test_clr OmniSharp.Stdio.Tests 
+    _test_clr OmniSharp.MSBuild.Tests
 
     # skip: _test_clr OmniSharp.Dnx.Tests: 
     # skip: _test_clr OmniSharp.Roslyn.CSharp.Tests 
@@ -183,10 +183,10 @@ function _package() {
     _header "Packaging"
 }
 
-# _cleanup
+ _cleanup
 _prerequisite
 _restore
 _build_verify
 _run_tests
 _publish
-# _package
+_package

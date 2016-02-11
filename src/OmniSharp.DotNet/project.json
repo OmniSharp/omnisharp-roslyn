@@ -8,7 +8,8 @@
     "OmniSharp.Roslyn": "1.0.0-*",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.CodeAnalysis.Common": "1.1.1",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-*",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*",
     "NETStandard.Library": "1.0.0-rc2-*",
     "System.Runtime.Serialization.Primitives": "4.1.0-rc2-*"
   },

@@ -15,7 +15,7 @@
     "Microsoft.Composition": "1.0.30",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-*",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-*",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-*",
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",

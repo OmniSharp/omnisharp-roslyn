@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,7 +53,6 @@ namespace OmniSharp.DotNet
             _watcher = watcher;
 
             _packageRestore = new PackagesRestoreTool(loggerFactory, _emitter);
-
             _projectStates = new ProjectStatesCache(loggerFactory);
         }
 
@@ -99,12 +97,12 @@ namespace OmniSharp.DotNet
                 throw new NotImplementedException($"Failed to initialize {typeof(WorkspaceContext)} at {_environment.Path}.");
             }
 
-            Update();
+            Update(allowRestore: true);
         }
 
-        private void Update()
+        public void Update(bool allowRestore)
         {
-            _logger.LogInformation("Refresh workspace context ...");
+            _logger.LogInformation("Update workspace context");
             _workspaceContext.Refresh();
 
             var projectPaths = _workspaceContext.GetAllProjects();
@@ -128,7 +126,7 @@ namespace OmniSharp.DotNet
                 var lens = new ProjectContextLens(state.ProjectContext, _compilationConfiguration);
                 UpdateFileReferences(state, lens.FileReferences);
                 UpdateProjectReferences(state, lens.ProjectReferences);
-                UpdateUnresolvedDependencies(state);
+                UpdateUnresolvedDependencies(state, allowRestore);
                 UpdateCompilationOption(state);
                 UpdateSourceFiles(state, lens.SourceFiles);
             }
@@ -166,15 +164,15 @@ namespace OmniSharp.DotNet
 
             _watcher.Watch(projectFilePath, file =>
             {
-                _logger.LogInformation($"Watcher {file} updated.");
-                Update();
+                _logger.LogInformation($"Watcher: {file} updated.");
+                Update(true);
             });
 
             _watcher.Watch(Path.ChangeExtension(projectFilePath, "lock.json"), file =>
-            {
-                _logger.LogInformation($"Watcher {file} updated.");
-                Update();
-            });
+           {
+               _logger.LogInformation($"Watcher: {file} updated.");
+               Update(false);
+           });
         }
 
         private void UpdateFileReferences(ProjectState state, IEnumerable<string> fileReferences)
@@ -253,19 +251,27 @@ namespace OmniSharp.DotNet
             _logger.LogInformation($"    Added {projectReferences.Count} and removed {projectReferencesToRemove.Count} project references");
         }
 
-        private void UpdateUnresolvedDependencies(ProjectState state)
+        private void UpdateUnresolvedDependencies(ProjectState state, bool allowRestore)
         {
-            var unresolved = state.ProjectContext.LibraryManager.GetLibraries().Where(dep => !dep.Resolved);
-            if (unresolved.Any())
-            {
-                _logger.LogInformation($"Project {state.ProjectContext.ProjectFile.Name} has these unresolved references: {string.Join(",", unresolved.Select(d => d.Identity.Name))} under {state.ProjectContext.TargetFramework}.");
-                _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
-                {
-                    FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                    UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version.ToString() })
-                });
+            var libraryManager = state.ProjectContext.LibraryManager;
+            var allDiagnostics = libraryManager.GetAllDiagnostics();
+            var unresolved = libraryManager.GetLibraries().Where(dep => !dep.Resolved);
+            var needRestore = allDiagnostics.Any(diag => diag.ErrorCode == ErrorCodes.NU1006) || unresolved.Any();
 
-                _packageRestore.Restore(state.ProjectContext.ProjectFile.ProjectFilePath);
+            if (needRestore)
+            {
+                if (allowRestore)
+                {
+                    _packageRestore.Restore(state.ProjectContext.ProjectDirectory);
+                }
+                else
+                {
+                    _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
+                    {
+                        FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
+                        UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version.ToString() })
+                    });
+                }
             }
         }
 

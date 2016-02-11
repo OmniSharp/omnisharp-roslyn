@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.DotNet": "1.0.0-*",
+    "OmniSharp.Tests": "1.0.0-*",
+    "xunit": "2.1.0", 
+    "xunit.runner.utility": "2.1.0"
+  },
+  "frameworks": {
+    "dnxcore50": {
+      "imports": "portable-net45+win8",
+      "dependencies": {
+        "Microsoft.NETCore.Platforms": "1.0.1-*", 
+        "Microsoft.NETCore.TestHost" : "1.0.0-*",
+        "xunit.console.netcore": "1.0.2-prerelease-00101",
+        "xunit.netcore.extensions": "1.0.0-prerelease-*"
+      }
+    }
+  }
+}
