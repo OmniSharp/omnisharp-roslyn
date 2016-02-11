@@ -83,8 +83,13 @@ function _publish($project) {
   $src = "src\$project"
   $output = "$publish_output\$project"
 
-  & $dotnet publish $src --output $output --configuration $configuration
-  ls $src\config.json | % { cp $src\config.json $output\config.json | Out-Null }
+  & $dotnet publish $src --framework dnxcore50 --output $output\dnxcore50 --configuration $configuration
+  & $dotnet publish $src --framework dnx451 --output $output\dnx451 --configuration $configuration
+
+  ls $src\config.json | % {
+    cp $src\config.json $output\dnxcore50\config.json | Out-Null 
+    cp $src\config.json $output\dnx451\config.json | Out-Null 
+  }
 }
 
 _header "Cleanup"
@@ -93,7 +98,10 @@ rm -r -force artifacts -ErrorAction SilentlyContinue
 _header "Pre-requisite"
 
 $env:DOTNET_INSTALL_DIR=$PWD.Path+"\.dotnet"
-Start-Process "powershell.exe" -NoNewWindow -Wait -ArgumentList "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/dotnet/cli/master/scripts/obtain/install.ps1'))"
+mkdir -p .dotnet -ErrorAction SilentlyContinue | Out-Null
+
+invoke-webrequest -uri 'https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.ps1' -outfile .dotnet\install.ps1
+& .dotnet\install.ps1 beta
 
 mkdir $build_tools -ErrorAction SilentlyContinue | Out-Null
 
@@ -129,7 +137,6 @@ _build "OmniSharp.Abstractions"
 _build "OmniSharp.Stdio"
 _build "OmniSharp.Roslyn"
 _build "OmniSharp.Roslyn.CSharp"
-_build "OmniSharp.Dnx"
 _build "OmniSharp.Plugins"
 _build "OmniSharp.Bootstrap"
 _build "OmniSharp.Host"
