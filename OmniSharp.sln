@@ -60,6 +60,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp", "src\OmniSharp\
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.DotNet", "src\OmniSharp.DotNet\OmniSharp.DotNet.xproj", "{07CDB87A-6906-4B04-9622-164FE04A3F9A}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.DotNet.Tests", "tests\OmniSharp.DotNet.Tests\OmniSharp.DotNet.Tests.xproj", "{5D350A1B-10F9-4FC9-8E37-5AF8610E9BE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -150,6 +152,10 @@ Global
 		{07CDB87A-6906-4B04-9622-164FE04A3F9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07CDB87A-6906-4B04-9622-164FE04A3F9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07CDB87A-6906-4B04-9622-164FE04A3F9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D350A1B-10F9-4FC9-8E37-5AF8610E9BE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D350A1B-10F9-4FC9-8E37-5AF8610E9BE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D350A1B-10F9-4FC9-8E37-5AF8610E9BE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D350A1B-10F9-4FC9-8E37-5AF8610E9BE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -176,5 +182,6 @@ Global
 		{A1B54CA5-7F82-4487-8150-B4CB3952A2AD} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{CD970E2E-CEC1-454D-AC7E-23D0000DCC94} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{07CDB87A-6906-4B04-9622-164FE04A3F9A} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
+		{5D350A1B-10F9-4FC9-8E37-5AF8610E9BE2} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 	EndGlobalSection
 EndGlobal

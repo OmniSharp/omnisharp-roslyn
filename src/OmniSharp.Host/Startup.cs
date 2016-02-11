@@ -165,9 +165,9 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
-            foreach(var assembly in assemblies)
+            foreach (var assembly in assemblies)
             {
-                logger.LogInformation($"Loaded {assembly.FullName}");
+                logger.LogDebug($"Loaded {assembly.FullName}");
             }
 
             app.UseRequestLogging();
@@ -178,7 +178,7 @@ namespace OmniSharp
 
             if (env.TransportType == TransportType.Stdio)
             {
-                logger.LogInformation($"Omnisharp server running using stdio at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{env.Path}' on host {env.HostPID}.");
             }
             else
             {
