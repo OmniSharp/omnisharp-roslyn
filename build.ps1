@@ -98,7 +98,7 @@ rm -r -force artifacts -ErrorAction SilentlyContinue
 _header "Pre-requisite"
 
 $env:DOTNET_INSTALL_DIR=$PWD.Path+"\.dotnet"
-mkdir -p .dotnet -ErrorAction SilentlyContinue | Out-Null
+mkdir .dotnet -ErrorAction SilentlyContinue | Out-Null
 
 invoke-webrequest -uri 'https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.ps1' -outfile .dotnet\install.ps1
 & .dotnet\install.ps1 beta
@@ -143,19 +143,21 @@ _build "OmniSharp.Host"
 _build "OmniSharp"
 
 _header "Testing"
-_test OmniSharp.Bootstrap.Tests
-# TODO: Migrate to use _test once clr xunit behaves
-# Failure repo: https://github.com/troydai/loaderfailure
-_test_coreclr OmniSharp.Dnx.Tests
-_test_clr OmniSharp.MSBuild.Tests
-# TODO: Migrate to use _test once clr xunit behaves
-# Failure repo: https://github.com/troydai/loaderfailure
+_test_coreclr OmniSharp.Bootstrap.Tests
+_test_clr     OmniSharp.Bootstrap.Tests
+
+_test_clr     OmniSharp.MSBuild.Tests
+
 _test_coreclr OmniSharp.Roslyn.CSharp.Tests
-_test_clr OmniSharp.ScriptCs.Tests
-_test OmniSharp.Stdio.Tests
+
+_test_coreclr OmniSharp.Stdio.Tests
+_test_clr     OmniSharp.Stdio.Tests
+
+# OmniSharp.Roslyn.CSharp.Tests is skipped on dnx451 target because an issue in MEF assembly load on xunit
+# Failure repo: https://github.com/troydai/loaderfailure
 
 _header "Publishing"
-mkdir -p $publish_output -ErrorAction SilentlyContinue | Out-Null
+mkdir $publish_output -ErrorAction SilentlyContinue | Out-Null
 _publish "OmniSharp"
 
 #_header "Packaging"
