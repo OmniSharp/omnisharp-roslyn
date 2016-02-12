@@ -65,10 +65,6 @@ _prerequisite() {
   chmod +x $dotnet_install_script
   $dotnet_install_script -c beta -d .dotnet
 
-  ls
-  ls .dotnet
-  ls .dotnet/bin
-
   dotnet="./.dotnet/bin/dotnet"
 
   _header "Installing NuGet"
@@ -154,9 +150,6 @@ _prerequisite
 # Restore
 _header "Restoring packages"
 
-ls -all
-ls .dotnet -all
-ls .dotnet/bin -all
 if [ "$TRAVIS" == true ]; then
   $dotnet restore -v Error || { echo >&2 "Failed to restore packages."; exit 1; }
 else
