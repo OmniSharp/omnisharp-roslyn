@@ -149,12 +149,7 @@ _prerequisite
 
 # Restore
 _header "Restoring packages"
-
-if [ "$TRAVIS" == true ]; then
-  $dotnet restore -v Error || { echo >&2 "Failed to restore packages."; exit 1; }
-else
-  $dotnet restore || { echo >&2 "Failed to restore packages."; exit 1; }
-fi
+$dotnet restore || { echo >&2 "Failed to restore packages."; exit 1; }
 
 _header "Testing"
 
