@@ -37,7 +37,7 @@ _Update path to fit your environment_
 
 ``` JSON
 {
-  "csharp.omnisharp": "<replace>/omnisharp-roslyn/artifacts/publish/coreclr/OmniSharp/OmniSharp.exe"
+  "csharp.omnisharp": "C:\\code\\omnisharp-roslyn\\artifacts\\publish\\OmniSharp\\dnx451\\omnisharp.exe"
 }
 ```
 
