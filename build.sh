@@ -147,6 +147,12 @@ rm -rf artifacts
 # Set up pre-requisite
 _prerequisite
 
+# Quick build
+if [ "$1" == "--quick-build" ]; then
+  _publish "OmniSharp"
+  exit 0
+fi
+
 # Restore
 _header "Restoring packages"
 $dotnet restore || { echo >&2 "Failed to restore packages."; exit 1; }

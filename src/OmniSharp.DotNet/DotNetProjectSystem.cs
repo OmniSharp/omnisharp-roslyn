@@ -262,7 +262,14 @@ namespace OmniSharp.DotNet
             {
                 if (allowRestore)
                 {
-                    _packageRestore.Restore(state.ProjectContext.ProjectDirectory);
+                    _packageRestore.Restore(state.ProjectContext.ProjectDirectory, onFailure: () =>
+                    {
+                        _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
+                        {
+                            FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
+                            UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version.ToString() })
+                        });
+                    });
                 }
                 else
                 {
