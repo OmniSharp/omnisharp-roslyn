@@ -14,7 +14,6 @@ namespace OmniSharp.DotNet.Tools
     {
         private readonly ILogger _logger;
         private readonly IEventEmitter _emitter;
-        private readonly string _dotnetExecutable;
         private readonly ConcurrentDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
@@ -25,10 +24,9 @@ namespace OmniSharp.DotNet.Tools
 
             _projectLocks = new ConcurrentDictionary<string, object>();
             _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
-            _dotnetExecutable = ResolveDotNetExecutable();
         }
 
-        public void Restore(string projectPath)
+        public void Restore(string projectPath, Action onFailure)
         {
             Task.Factory.StartNew(() =>
             {
@@ -55,6 +53,11 @@ namespace OmniSharp.DotNet.Tools
 
                         _emitter.RestoreFinished(projectPath, exitCode == 0);
 
+                        if (exitCode != 0)
+                        {
+                            onFailure();
+                        }
+
                         _logger.LogInformation($"Finish restoring project {projectPath}. Exit code {exitCode}");
                     }
                 }
@@ -63,7 +66,7 @@ namespace OmniSharp.DotNet.Tools
 
         private int RunRestoreProcess(string projectPath)
         {
-            var startInfo = new ProcessStartInfo(_dotnetExecutable, "restore")
+            var startInfo = new ProcessStartInfo("dotnet", "restore")
             {
                 WorkingDirectory = projectPath,
                 CreateNoWindow = true,
@@ -101,19 +104,6 @@ namespace OmniSharp.DotNet.Tools
             restoreProcess.WaitForExit();
 
             return restoreProcess.ExitCode;
-        }
-
-        private string ResolveDotNetExecutable()
-        {
-            var path = string.Empty;
-            var os = PlatformServices.Default.Runtime.OperatingSystem;
-            if (string.Equals(os, "windows", StringComparison.OrdinalIgnoreCase))
-            {
-                path = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "Microsoft", "dotnet", "cli", "bin", "dotnet.exe");
-            }
-
-            _logger.LogDebug("Find dotnet.exe {path}.");
-            return path;
         }
     }
 }
