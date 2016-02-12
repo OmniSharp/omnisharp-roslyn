@@ -37,7 +37,7 @@ _Update path to fit your environment_
 
 ``` JSON
 {
-  "cssharp.omnisharp": "~/code/omnisharp-roslyn/artifacts/publish/coreclr/OmniSharp"
+  "csharp.omnisharp": "~/code/omnisharp-roslyn/artifacts/publish/coreclr/OmniSharp"
 }
 ```
 
