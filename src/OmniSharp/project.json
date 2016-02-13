@@ -7,6 +7,8 @@
   },
   "dependencies": {
     "OmniSharp.Host": "1.0.0-*",
+    "OmniSharp.Roslyn.CSharp": "1.0.0-*",
+     "OmniSharp.DotNet": "1.0.0-*",
     "Microsoft.NETCore.Platforms": "1.0.1-rc2-*"
   },
   "frameworks": {
@@ -18,10 +20,7 @@
     },
     "dnxcore50": {
       "imports": "portable-net45+win8",
-      "dependencies": {
-        "OmniSharp.Roslyn.CSharp": "1.0.0-*",
-        "OmniSharp.DotNet": "1.0.0-*",
-      }
+      "dependencies": { }
     }
   }
 }

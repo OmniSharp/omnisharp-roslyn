@@ -128,12 +128,9 @@ namespace OmniSharp
         {
             var assemblies = new List<Assembly>();
 
-            foreach (var dependency in DependencyContext.Default
-                                                        .CompileLibraries
-                                                        .SelectMany(lib => lib.Assemblies)
-                                                        .Select(path => Path.GetFileNameWithoutExtension(path)))
+            foreach (var dependency in DependencyContext.Default.RuntimeLibraries.SelectMany(lib => lib.Assemblies))
             {
-                var assembly = loader.Load(dependency);
+                var assembly = loader.Load(dependency.Name);
 
                 using (var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + ".deps.json"))
                 {

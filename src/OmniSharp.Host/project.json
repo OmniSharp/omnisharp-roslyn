@@ -13,6 +13,7 @@
     "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-*",
     "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-*",
     "Microsoft.Composition": "1.0.30",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-*",
     "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
