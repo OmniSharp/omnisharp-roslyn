@@ -38,7 +38,7 @@ namespace OmniSharp.Json
                 return results.Select(x => x + 1);
             }
 
-            var deserializedValue = reader.ReadAsInt32();
+            var deserializedValue = serializer.Deserialize<int?>(reader);
             if (objectType == typeof(int?))
             {
                 deserializedValue = deserializedValue.Value + 1;
@@ -77,22 +77,23 @@ namespace OmniSharp.Json
                 }
             }
 
-            if (objectType == typeof(IEnumerable<int>))
+            else if (objectType == typeof(IEnumerable<int>))
             {
                 var results = (IEnumerable<int>)value;
-                value = results.Select(x => x + 1);
+                value = results.Select(x => x - 1);
             }
 
-            if (objectType == typeof(int?))
+            else if (objectType == typeof(int?))
             {
                 var nullable = (int?)value;
-                if (nullable.HasValue) {
+                if (nullable.HasValue)
+                {
                     nullable = nullable.Value - 1;
                 }
                 value = nullable;
             }
 
-            if (objectType == typeof(int))
+            else if (objectType == typeof(int))
             {
                 var intValue = (int)value;
                 value = intValue - 1;
