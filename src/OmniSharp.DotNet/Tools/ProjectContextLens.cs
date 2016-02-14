@@ -51,7 +51,10 @@ namespace OmniSharp.DotNet.Tools
 
         private void ResolveFileReferences(LibraryExport export)
         {
-            _fileReferences.AddRange(export.CompilationAssemblies.Select(asset => asset.ResolvedPath));
+            if (export.Library.Identity.Type != LibraryType.Project)
+            {
+                _fileReferences.AddRange(export.CompilationAssemblies.Select(asset => asset.ResolvedPath));
+            }
         }
 
         private void ResolveProjectReference(LibraryExport export)
