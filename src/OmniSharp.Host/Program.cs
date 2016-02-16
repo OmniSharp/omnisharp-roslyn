@@ -92,7 +92,7 @@ namespace OmniSharp
             }
             else
             {
-                builder.UseServer("Microsoft.AspNet.Server.Kestrel");
+                builder.UseServer("Microsoft.AspNetCore.Server.Kestrel");
             }
 
             using (var app = builder.Build())
