@@ -59,7 +59,8 @@ namespace OmniSharp.DotNet.Tools
 
         private void ResolveProjectReference(LibraryExport export)
         {
-            if (export.Library.Identity.Type != LibraryType.Project)
+            var desc = export.Library as ProjectDescription;
+            if (desc == null || export.Library.Identity.Type != LibraryType.Project)
             {
                 return;
             }
@@ -69,8 +70,7 @@ namespace OmniSharp.DotNet.Tools
                 return;
             }
 
-            var desc = export.Library as ProjectDescription;
-            if (!string.IsNullOrEmpty(desc.TargetFrameworkInfo?.AssemblyPath))
+            if (!string.IsNullOrEmpty(desc?.TargetFrameworkInfo?.AssemblyPath))
             {
                 return;
             }

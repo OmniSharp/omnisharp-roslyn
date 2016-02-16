@@ -267,7 +267,7 @@ namespace OmniSharp.DotNet
                         _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
                         {
                             FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                            UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version.ToString() })
+                            UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version?.ToString() })
                         });
                     });
                 }
@@ -276,7 +276,7 @@ namespace OmniSharp.DotNet
                     _emitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
                     {
                         FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                        UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version.ToString() })
+                        UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version?.ToString() })
                     });
                 }
             }
