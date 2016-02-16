@@ -19,6 +19,10 @@
         "System.Runtime.Serialization.Primitives": "4.1.0-rc2-*"
       }
     },
-    "dnx451": { }
+    "dnx451": {
+      "frameworkAssemblies": {
+        "System.IO": ""
+      }
+    }
   }
 }
