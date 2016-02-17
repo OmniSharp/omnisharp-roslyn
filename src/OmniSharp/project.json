@@ -22,5 +22,8 @@
       "imports": "portable-net45+win8",
       "dependencies": { }
     }
-  }
+  },
+  "content": [
+    "config.json"
+  ]
 }

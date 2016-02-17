@@ -48,8 +48,8 @@ _publish() {
   $dotnet publish $_src --framework dnxcore50 -o $_output/dnxcore50/ --configuration $configuration
   $dotnet publish $_src --framework dnx451 -o $_output/dnx451/ --configuration $configuration
 
-  cp $_src/config.json $_output/coreclr
-  cp $_src/config.json $_output/clr
+  # copy binding redirect configuration respectively to mitigate dotnet publish bug
+  cp $_src/bin/$configuration/dnx451/*/$1.exe.config $_output/dnx451/
 }
 
 _prerequisite() {

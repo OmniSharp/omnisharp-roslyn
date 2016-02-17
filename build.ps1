@@ -61,12 +61,7 @@ function _publish($project) {
   & $dotnet publish $src --framework dnxcore50 --output $output\dnxcore50 --configuration $configuration
   & $dotnet publish $src --framework dnx451 --output $output\dnx451 --configuration $configuration
 
-  # copy config.json and binding redirect configuration respectively to mitigate dotnet publish bug
-  ls $src\config.json | % {
-    cp $_ $output\dnxcore50\config.json | Out-Null 
-    cp $_ $output\dnx451\config.json | Out-Null 
-  }
-  
+  # copy binding redirect configuration respectively to mitigate dotnet publish bug
   ls $src\bin\$configuration\dnx451\*\$project.exe.config | % {
     cp $_ $output\dnx451\ | Out-Null
   }
