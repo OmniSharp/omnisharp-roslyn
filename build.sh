@@ -122,6 +122,15 @@ _prerequisite() {
   fi
 }
 
+_restore() {
+  _header "Restoring packages"
+  if [ "$TRAVIS" == true ]; then 
+    $dotnet restore -v Warning || { echo >&2 "Failed to restore packages."; exit 1; }
+  else
+    $dotnet restore || { echo >&2 "Failed to restore packages."; exit 1; }
+  fi
+}
+
 #########################
 # Clean up
 _header "Cleanup"
@@ -131,8 +140,6 @@ rm -rf artifacts
 _prerequisite
 
 # Restore
-_header "Restoring packages"
-$dotnet restore || { echo >&2 "Failed to restore packages."; exit 1; }
 
 _header "Testing"
 
