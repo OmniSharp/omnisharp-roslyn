@@ -1,4 +1,5 @@
 # Build OmniSharp
+Param([switch] $quick)
 
 $build_tools="$pwd\.build"
 $nuget_path="$build_tools\nuget.exe"
@@ -64,6 +65,21 @@ function _publish($project) {
   # copy binding redirect configuration respectively to mitigate dotnet publish bug
   ls $src\bin\$configuration\dnx451\*\$project.exe.config | % {
     cp $_ $output\dnx451\ | Out-Null
+  }
+}
+
+##########################
+# Main
+
+if ($quick) {
+  _header "Quick process"
+  _publish OmniSharp
+  if ($LASTEXITCODE -ne 0) {
+    Write-Error "Failed to build in quick process. Try run the full build process without switch -quick.";
+    exit 1
+  }
+  else {
+    exit 0
   }
 }
 
