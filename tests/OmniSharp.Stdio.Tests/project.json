@@ -6,17 +6,15 @@
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0-*",
     "Newtonsoft.Json": "8.0.2",
-    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-*",
+    "xunit": "2.1.0"
   },
   "frameworks": {
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "Microsoft.NETCore.Platforms": "1.0.1-rc2-*", 
-        "Microsoft.NETCore.TestHost" : "1.0.0-rc2-*",
+        "Microsoft.NETCore.Platforms": "1.0.1-rc2-*",
         "System.Runtime.Serialization.Primitives": "4.1.0-rc2-*",
-        "xunit.console.netcore": "1.0.2-prerelease-00101", 
-        "xunit.netcore.extensions": "1.0.0-prerelease-*"
+        "dotnet-test-xunit": "1.0.0-dev-*"
       }
     },
     "dnx451": {
@@ -24,5 +22,6 @@
         "xunit.runner.console": "2.1.0"
       }
     }
-  }
+  },
+  "testRunner": "xunit"
 }

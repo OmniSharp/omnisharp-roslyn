@@ -1,11 +1,11 @@
 # Build OmniSharp
 
-$build_tools=".build"
+$build_tools="$pwd\.build"
 $nuget_path="$build_tools\nuget.exe"
 $configuration="Debug" # temporarily setting
-$dotnet=".\.dotnet\cli\bin\dotnet.exe"
+$dotnet="$pwd\.dotnet\cli\bin\dotnet.exe"
 
-$artifacts="artifacts"
+$artifacts="$pwd\artifacts"
 $publish_output="$artifacts\publish"
 $log_output="$artifacts\logs"
 $test_output="$artifacts\tests"
@@ -23,59 +23,34 @@ function _build($project) {
   }
 }
 
-function _test($project) {
-  _test_coreclr $project
-  _test_clr $project
-}
-
-function _test_coreclr($project) {
-  $target="$test_output\$project\coreclr"
-  $log="$log_output\$project-core-result.xml"
-
-  Write-Host ""
-  Write-Host "$project / CoreCLR"
-
-  & $dotnet publish ./tests/$project --output $target --framework dnxcore50 |
-      Out-File "$log_output\$project-core-build.log"
-
-  if ($LASTEXITCODE -ne 0) {
-      Write-Error "Failed to build $project under CoreCLR."
+function _test([string] $project, [switch] $skipdnxcore50, [switch] $skipdnx451) {
+  pushd .\tests\$project
+  
+  & $dotnet build --configuration $configuration | Out-File "$log_output\$project-build.log"
+   
+  if (-not $skipdnxcore50) {
+    & $dotnet test -xml "$log_output\$project-dnxcore50-result.xml" -notrait category=failing
+    
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Test failed: $project / dnxcore50"
       exit 1
+    }   
   }
+  
+  if (-not $skipdnx451) {
+    $test_output = ls .\bin\$configuration\dnx451\*\$project.dll | split-path -Parent
+    
+    cp $build_tools\xunit.runner.console\tools\* $test_output
+    & $test_output\xunit.console.x86.exe $test_output\$project.dll `
+     -xml "$log_output\$project-dnx451-result.xml" -parallel none  -notrait category=failing
 
-  & $target/corerun $target/xunit.console.netcore.exe $target/$project.dll `
-     -xml $log -parallel none  -notrait category=failing
-
-  if ($LASTEXITCODE -ne 0) {
-      Write-Error "Test failed [Log $log]"
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Test failed: $project / dnx451"
       exit 1
+    }
   }
-}
-
-function _test_clr($project) {
-  $target="$test_output\$project\clr"
-  $log="$log_output\$project-clr-result.xml"
-
-  Write-Host ""
-  Write-Host "$project / CLR"
-
-  & $dotnet publish ./tests/$project --output $target --framework dnx451 --configuration $configuration |
-      Out-File "$log_output\$project-clr-build.log"
-
-  if ($LASTEXITCODE -ne 0) {
-      Write-Error "Failed to build $project under CLR."
-      exit 1
-  }
-
-  cp $build_tools/xunit.runner.console/tools/* $target/
-
-  & $target/xunit.console.x86.exe $target/$project.dll `
-     -xml $log -parallel none  -notrait category=failing
-
-  if ($LASTEXITCODE -ne 0) {
-      Write-Error "Test failed [Log $log]"
-      exit 1
-  }
+  
+  popd  
 }
 
 function _publish($project) {
@@ -148,15 +123,10 @@ _build "OmniSharp.Host"
 _build "OmniSharp"
 
 _header "Testing"
-_test_coreclr OmniSharp.Bootstrap.Tests
-_test_clr     OmniSharp.Bootstrap.Tests
-
-_test_clr     OmniSharp.MSBuild.Tests
-
-_test_coreclr OmniSharp.Roslyn.CSharp.Tests
-
-_test_coreclr OmniSharp.Stdio.Tests
-_test_clr     OmniSharp.Stdio.Tests
+_test OmniSharp.Bootstrap.Tests
+_test OmniSharp.MSBuild.Tests       -skipdnxcore50
+_test OmniSharp.Roslyn.CSharp.Tests -skipdnx451
+_test OmniSharp.Stdio.Tests
 
 # OmniSharp.Roslyn.CSharp.Tests is skipped on dnx451 target because an issue in MEF assembly load on xunit
 # Failure repo: https://github.com/troydai/loaderfailure
