@@ -140,7 +140,9 @@ rm -rf artifacts
 _prerequisite
 
 # Restore
+_restore
 
+# Testing
 _header "Testing"
 
 _test OmniSharp.Bootstrap.Tests
