@@ -26,7 +26,7 @@ _test() {
     || { echo >&2 "Failed to build $1"; cat $log_output/$1-build.log; exit 1; }
 
   if [ "$2" != "-skipdnxcore50" ]; then
-    $dotnet test -xml $log_output\$1-dnxcore50-result.xml -notrait category=failing \
+    $dotnet test -xml $log_output/$1-dnxcore50-result.xml -notrait category=failing \
       || { echo >&2 "Test failed: $1 / dnxcore50"; exit 1; }
   fi
 
