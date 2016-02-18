@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -65,9 +66,9 @@ namespace OmniSharp
         }
 
         public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
-                                                          OmniSharpOptions options,
-                                                          IEnumerable<Assembly> assemblies,
-                                                          Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+                                                   OmniSharpOptions options,
+                                                   IEnumerable<Assembly> assemblies,
+                                                   Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
@@ -84,6 +85,7 @@ namespace OmniSharp
             var env = serviceProvider.GetService<IOmnisharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
+            var loader = serviceProvider.GetService<IOmnisharpAssemblyLoader>();
 
             config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
@@ -94,7 +96,9 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(writer))
                 .WithProvider(MefValueProvider.From(applicationLifetime))
                 .WithProvider(MefValueProvider.From(options))
-                .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()));
+                .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()))
+                .WithProvider(MefValueProvider.From(loader))
+                .WithProvider(MefValueProvider.From(new MetadataHelper(loader))); // other way to do singleton and autowire?
 
             if (env.TransportType == TransportType.Stdio)
             {
@@ -119,15 +123,30 @@ namespace OmniSharp
                               IOmnisharpEnvironment env,
                               ILoggerFactory loggerFactory,
                               ISharedTextWriter writer,
+                              IOmnisharpAssemblyLoader loader,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
-            var assemblies = DnxPlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Abstractions")
-                .SelectMany(libraryInformation => libraryInformation.Assemblies)
-                .Concat(
-                    DnxPlatformServices.Default.LibraryManager.GetReferencingLibraries("OmniSharp.Roslyn")
-                        .SelectMany(libraryInformation => libraryInformation.Assemblies)
-                )
-                .Select(assemblyName => Assembly.Load(assemblyName));
+            var assemblies = new List<Assembly>();
+
+            foreach (var dependency in DependencyContext.Default.RuntimeLibraries.SelectMany(lib => lib.Assemblies))
+            {
+                var assembly = loader.Load(dependency.Name);
+
+                using (var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + ".deps.json"))
+                {
+                    if (stream == null)
+                    {
+                        continue;
+                    }
+
+                    if (DependencyContext.Load(stream).CompileLibraries.Any(
+                            lib => lib.PackageName == "OmniSharp.Abstractions" ||
+                                   lib.PackageName == "OmniSharp.Roslyn"))
+                    {
+                        assemblies.Add(assembly);
+                    }
+                }
+            }
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
@@ -143,6 +162,10 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
+            foreach (var assembly in assemblies)
+            {
+                logger.LogDebug($"Loaded {assembly.FullName}");
+            }
 
             app.UseRequestLogging();
             app.UseExceptionHandler("/error");
@@ -152,7 +175,7 @@ namespace OmniSharp
 
             if (env.TransportType == TransportType.Stdio)
             {
-                logger.LogInformation($"Omnisharp server running using stdio at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{env.Path}' on host {env.HostPID}.");
             }
             else
             {
@@ -169,9 +192,10 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    //if a project system throws an unhandled exception
-                    //it should not crash the entire server
-                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw an exception.", e);
+                    // if a project system throws an unhandled exception
+                    // it should not crash the entire server
+                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw exception during initialization.", e);
+                    Console.WriteLine(e.Message);
                 }
             }
 

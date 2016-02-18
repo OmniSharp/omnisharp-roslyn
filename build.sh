@@ -1,156 +1,157 @@
 #!/bin/bash
+
+work_dir=`pwd`
+build_tools=$work_dir/.build
+nuget_path=$build_tools/nuget.exe
+configuration="Debug"
+dotnet=$work_dir/.dotnet/bin/dotnet
+
+artifacts=$work_dir/artifacts
+publish_output=$artifacts/publish
+log_output=$artifacts/logs
+
+_header() {
+  if [ "$TRAVIS" == true ]; then 
+    printf "%b\n" "*** $1 ***"
+  else
+    printf "%b\n" "\e[1;32m*** $1 ***\e[0m"
+  fi
+}
+
 _test() {
-  local _project="$1"
-  local _runtime="$2"
-  dnvm use 1.0.0-rc2-16444 -r $_runtime
-  pushd tests/$_project
-  dnx test -parallel none
-  rc=$?; if [[ $rc != 0 ]]; then
-    echo "Tests failed for tests/$_project with runtime $_runtime"
-    exit $rc;
-  fi
-  popd
-}
+  cd $work_dir/tests/$1 
 
-_patch_project() {
-  local _project="$1"
-  jq '.version="'$OMNISHARP_VERSION'"' src/$_project/project.json > src/$_project/project.json.temp
-  mv src/$_project/project.json.temp src/$_project/project.json
-}
+  $dotnet build --configuration $configuration \
+    >$log_output/$1-build.log 2>&1 \
+    || { echo >&2 "Failed to build $1"; cat $log_output/$1-build.log; exit 1; }
 
-_pack() {
-  local _project="$1"
-  dnu restore src/$_project --quiet
-  dnu pack src/$_project --configuration Release --out artifacts/nuget --quiet
-  rc=$?; if [[ $rc != 0 ]]; then
-    echo "Pack failed for src/$_project"
-    exit 1;
+  if [ "$2" != "-skipdnxcore50" ]; then
+    $dotnet test -xml $log_output/$1-dnxcore50-result.xml -notrait category=failing \
+      || { echo >&2 "Test failed: $1 / dnxcore50"; exit 1; }
   fi
+
+  if [ "$2" != "-skipdnx451" ]; then
+    test_output="$(dirname `ls ./bin/$configuration/dnx451/*/$1.dll`)"
+    cp $build_tools/xunit.runner.console/tools/* $test_output
+    mono $test_output/xunit.console.x86.exe $test_output/$1.dll \
+      -xml $log_output/$1-dnx451-result.xml -notrait category=failing \
+      || { echo >&2 "Test failed: $1 / dnx451"; exit 1; }
+  fi
+
+  cd $work_dir
 }
 
 _publish() {
-  local _project="$1"
-  local _runtime="$2"
-  local _version="1.0.0-rc2-16444"
-  local _dest="$3"
-  local _tar="$4"
+  local _src="src/$1"
+  local _output="artifacts/publish/$1"
 
-  dnvm use $_version -r $_runtime
-  dnu publish src/$_project --configuration Release --no-source --quiet --runtime active --out $_dest
-  rc=$?; if [[ $rc != 0 ]]; then
-    echo "Publish failed for src/$_project with runtime $_runtime, destination: $_dest"
-    exit 1;
-  fi
+  $dotnet publish $_src --framework dnxcore50 -o $_output/dnxcore50/ --configuration $configuration
+  $dotnet publish $_src --framework dnx451 -o $_output/dnx451/ --configuration $configuration
 
-  pushd $_dest/approot/packages/$_project/1.0.0/root/
-  jq '.entryPoint="OmniSharp.Host"' project.json > project.json.temp
-  mv project.json.temp project.json
-  popd
-
-  tree -if $_dest | grep .nupkg | xargs rm
-  pushd $_dest/approot
-  tar -zcf "../$_tar.tar.gz" .
-  rc=$?; if [[ $rc != 0 ]]; then
-    echo "Tar failed for src/$_project with runtime $_runtime, destination: $_dest"
-    exit 1;
-  fi
-  popd
+  # copy binding redirect configuration respectively to mitigate dotnet publish bug
+  cp $_src/bin/$configuration/dnx451/*/$1.exe.config $_output/dnx451/
 }
-#########################
-if (! $TRAVIS) then
-    pushd "$(dirname "$0")"
-fi
 
-rm -rf artifacts
-if ! type dnvm > /dev/null 2>&1; then
-    curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | DNX_BRANCH=dev sh && source ~/.dnx/dnvm/dnvm.sh
-fi
+_prerequisite() {
+  _header "Installing dotnet from beta channel"
+  mkdir -p .dotnet
 
-# Handle to many files on osx
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  ulimit -n 4096
-fi
+  local dotnet_install_script_source="https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.sh"
+  local dotnet_install_script=.dotnet/install.sh
 
-# work around restore timeouts on Mono
-[ -z "$MONO_THREADS_PER_CPU" ] && export MONO_THREADS_PER_CPU=50
+  curl -o $dotnet_install_script $dotnet_install_script_source -s
+  chmod +x $dotnet_install_script
+  $dotnet_install_script -c beta -d .dotnet
 
-export DNX_UNSTABLE_FEED=https://www.myget.org/F/aspnetcidev/api/v2
-dnvm update-self
+  _header "Installing NuGet"
+  mkdir -p $build_tools
 
-dnvm install 1.0.0-rc2-16444 -u -r mono
-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+  nuget_version=latest
+  nuget_download_url=https://dist.nuget.org/win-x86-commandline/$nuget_version/nuget.exe
+  if [ "$TRAVIS" == true ]; then
+    echo "get nuget.exe under travis"
+    wget -O $nuget_path $nuget_download_url 2>/dev/null || curl -o $nuget_path --location $nuget_download_url /dev/null
+  else
+    # Ensure NuGet is downloaded to .build folder
+    if test ! -f $nuget_path; then
+      if test `uname` = Darwin; then
+        cachedir=~/Library/Caches/OmniSharpBuild
+      else
+        if test -z $XDG_DATA_HOME; then
+          cachedir=$HOME/.local/share
+        else
+          cachedir=$XDG_DATA_HOME
+        fi
+      fi
+      mkdir -p $cachedir
+      cache_nuget=$cachedir/nuget.$nuget_version.exe
 
-dnvm install 1.0.0-rc2-16444 -u -r coreclr
-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+      if test ! -f $cache_nuget; then
+        wget -O $cache_nuget $nuget_download_url 2>/dev/null || curl -o $cache_nuget --location $nuget_download_url /dev/null
+      fi
 
-dnu restore --quiet --parallel
-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
-
-_test "OmniSharp.Bootstrap.Tests" "coreclr"
-_test "OmniSharp.Bootstrap.Tests" "mono"
-_test "OmniSharp.Dnx.Tests" "coreclr"
-_test "OmniSharp.Dnx.Tests" "mono"
-#_test "OmniSharp.MSBuild.Tests" "coreclr"
-_test "OmniSharp.MSBuild.Tests" "mono"
-_test "OmniSharp.Plugins.Tests" "coreclr"
-_test "OmniSharp.Plugins.Tests" "mono"
-_test "OmniSharp.Roslyn.CSharp.Tests" "coreclr"
-_test "OmniSharp.Roslyn.CSharp.Tests" "mono"
-#_test "OmniSharp.ScriptCs.Tests" "coreclr"
-_test "OmniSharp.ScriptCs.Tests" "mono"
-_test "OmniSharp.Stdio.Tests" "coreclr"
-_test "OmniSharp.Stdio.Tests" "mono"
-_test "OmniSharp.Tests" "coreclr"
-_test "OmniSharp.Tests" "mono"
-
-OMNISHARP_VERSION="1.0.0-dev";
-if [ $TRAVIS_TAG ]; then
-  OMNISHARP_VERSION=${TRAVIS_TAG:1};
-fi
-
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  # omnisharp-coreclr-darwin-x64.tar.gz
-  _publish "OmniSharp" "coreclr" "artifacts/omnisharp-coreclr" "../omnisharp-coreclr-darwin-x64"
-  # omnisharp.bootstrap-coreclr-darwin-x64.tar.gz
-  _publish "OmniSharp.Bootstrap" "coreclr" "artifacts/omnisharp.bootstrap-coreclr" "../omnisharp.bootstrap-coreclr-darwin-x64"
-else
-  # omnisharp-coreclr-linux-x64.tar.gz
-  _publish "OmniSharp" "coreclr" "artifacts/omnisharp-coreclr" "../omnisharp-coreclr-linux-x64"
-  # omnisharp-mono.tar.gz
-  _publish "OmniSharp" "mono" "artifacts/omnisharp-coreclr" "../omnisharp-mono"
-
-  # omnisharp-coreclr-linux-x64.tar.gz
-  _publish "OmniSharp.Bootstrap" "coreclr" "artifacts/omnisharp.bootstrap-coreclr" "../omnisharp.bootstrap-coreclr-linux-x64"
-  # omnisharp-mono.tar.gz
-  _publish "OmniSharp.Bootstrap" "mono" "artifacts/omnisharp.bootstrap-coreclr" "../omnisharp.bootstrap-mono"
-
-  if [ $TRAVIS ]; then
-    _patch_project "OmniSharp.Host"
-    _patch_project "OmniSharp.Abstractions"
-    _patch_project "OmniSharp.Bootstrap"
-    _patch_project "OmniSharp.Dnx"
-    _patch_project "OmniSharp.MSBuild"
-    _patch_project "OmniSharp.Nuget"
-    _patch_project "OmniSharp.Roslyn"
-    _patch_project "OmniSharp.Roslyn.CSharp"
-    _patch_project "OmniSharp.ScriptCs"
-    _patch_project "OmniSharp.Stdio"
+      cp $cache_nuget $nuget_path
+    fi
   fi
 
-  _pack "OmniSharp.Host"
-  _pack "OmniSharp.Abstractions"
-  _pack "OmniSharp.Bootstrap"
-  _pack "OmniSharp.Dnx"
-  _pack "OmniSharp.MSBuild"
-  _pack "OmniSharp.Nuget"
-  _pack "OmniSharp.Roslyn"
-  _pack "OmniSharp.Roslyn.CSharp"
-  _pack "OmniSharp.ScriptCs"
-  _pack "OmniSharp.Stdio"
-fi
+  _header "Download xunit console runner"
+  # Download xunit console runner for CLR based tests
+  if test ! -d $build_tools/xunit.runner.console; then
+    mono $nuget_path install xunit.runner.console -ExcludeVersion -o $build_tools -nocache -pre
+  fi
 
-tree artifacts
+  xunit_clr_runner=$build_tools/xunit.runner.console/tools
 
-if (! $TRAVIS) then
-    popd
-fi
+  # Handle to many files on osx
+  if [ "$TRAVIS_OS_NAME" == "osx" ] || [ `uname` == "Darwin" ]; then
+    ulimit -n 4096
+  fi
+  
+  mkdir -p $log_output
+
+  # set the DOTNET_REFERENCE_ASSEMBLIES_PATH to mono reference assemblies folder
+  # https://github.com/dotnet/cli/issues/531
+  if [ -z "$DOTNET_REFERENCE_ASSEMBLIES_PATH" ]; then
+    if [ $(uname) == Darwin ] && [ -d "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks" ]; then
+        export DOTNET_REFERENCE_ASSEMBLIES_PATH="/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks"
+    elif [ -d "/usr/local/lib/mono/xbuild-frameworks" ]; then
+        export DOTNET_REFERENCE_ASSEMBLIES_PATH="/usr/local/lib/mono/xbuild-frameworks"
+    elif [ -d "/usr/lib/mono/xbuild-frameworks" ]; then
+        export DOTNET_REFERENCE_ASSEMBLIES_PATH="/usr/lib/mono/xbuild-frameworks"
+    fi
+  fi
+}
+
+_restore() {
+  _header "Restoring packages"
+  if [ "$TRAVIS" == true ]; then 
+    $dotnet restore -v Warning || { echo >&2 "Failed to restore packages."; exit 1; }
+  else
+    $dotnet restore || { echo >&2 "Failed to restore packages."; exit 1; }
+  fi
+}
+
+#########################
+# Clean up
+_header "Cleanup"
+rm -rf artifacts
+
+# Set up pre-requisite
+_prerequisite
+
+# Restore
+_restore
+
+# Testing
+_header "Testing"
+
+_test OmniSharp.Bootstrap.Tests
+_test OmniSharp.MSBuild.Tests       -skipdnxcore50
+_test OmniSharp.Roslyn.CSharp.Tests -skipdnx451
+_test OmniSharp.Stdio.Tests
+
+# OmniSharp.Roslyn.CSharp.Tests is skipped on dnx451 target because an issue in MEF assembly load on xunit
+# Failure repo: https://github.com/troydai/loaderfailure
+
+# Publish
+_publish "OmniSharp"

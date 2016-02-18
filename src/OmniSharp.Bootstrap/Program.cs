@@ -11,8 +11,10 @@ namespace OmniSharp.Bootstrap
 {
     public class Program
     {
-        private readonly IApplicationEnvironment _appEnv;
         private readonly string[] _nonPlugins = { "OmniSharp.Plugins", "OmniSharp.Abstractions", "OmniSharp.Stdio", "OmniSharp", "OmniSharp.Host" };
+        private readonly IApplicationEnvironment _appEnv;
+
+        public Program() : this(PlatformServices.Default.Application) { }
 
         public Program(IApplicationEnvironment appEnv)
         {
@@ -26,91 +28,12 @@ namespace OmniSharp.Bootstrap
         public string BootstrapPath { get; set; }
         public string OmnisharpProjectPath { get; set; }
 
-        public void ParseArguments(string[] args)
+        public static int Main(string[] args)
         {
-            var enumerator = args.GetEnumerator();
-
-            while (enumerator.MoveNext())
-            {
-                var arg = (string)enumerator.Current;
-
-                if (arg == "--plugins")
-                {
-                    enumerator.MoveNext();
-                    PluginPaths.Add((string)enumerator.Current);
-                }
-
-                if (arg == "--plugin-name")
-                {
-                    enumerator.MoveNext();
-                    var v = (string)enumerator.Current;
-                    var s = v.Split('@');
-                    if (s.Length > 1)
-                    {
-                        PluginNames.Add(new KeyValuePair<string, string>(s[0], s[1]));
-                    }
-                    else
-                    {
-                        PluginNames.Add(new KeyValuePair<string, string>(s[0], string.Empty));
-                    }
-                }
-
-                if (arg == "-s")
-                {
-                    enumerator.MoveNext();
-                    SolutionRoot = Path.GetFullPath((string)enumerator.Current);
-                }
-            }
-
-            BootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
-            OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp.Host", "project.json");
-            if (!File.Exists(OmnisharpProjectPath))
-            {
-                OmnisharpProjectPath = Path.Combine(OmnisharpProjectPath, "OmniSharp.Host", "1.0.0", "root", "project.json");
-            }
-
-            if (!string.IsNullOrEmpty(SolutionRoot))
-            {
-                var pluginsFolder = Path.Combine(SolutionRoot, ".omnisharp", "plugins");
-                if (Directory.Exists(pluginsFolder))
-                {
-                    PluginPaths.Add(pluginsFolder);
-                }
-
-                var omnisharpJsonPath = Path.Combine(SolutionRoot, "omnisharp.json");
-                if (File.Exists(omnisharpJsonPath))
-                {
-                    var omnisharpJson = JObject.Parse(File.ReadAllText(omnisharpJsonPath));
-                    if (omnisharpJson["plugins"] != null)
-                    {
-                        var omnisharpJsonPlugins = omnisharpJson["plugins"];
-                        foreach (var plugin in omnisharpJsonPlugins)
-                        {
-                            if (plugin is JObject)
-                            {
-                                var pluginJobject = plugin as JObject;
-                                PluginNames.Add(new KeyValuePair<string, string>(pluginJobject["name"].ToString(), pluginJobject["version"].ToString()));
-                            }
-                            else if (plugin is JToken)
-                            {
-                                var pluginString = plugin.ToString();
-                                var pluginSplitString = pluginString.Split('@');
-                                if (pluginSplitString.Length > 1)
-                                {
-                                    PluginNames.Add(new KeyValuePair<string, string>(pluginSplitString[0], pluginSplitString[1]));
-                                }
-                                else
-                                {
-                                    PluginNames.Add(new KeyValuePair<string, string>(pluginSplitString[0], string.Empty));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            return new Program().Run(args);
         }
 
-        public int Main(string[] args)
+        public int Run(string[] args)
         {
             ParseArguments(args);
 
@@ -282,6 +205,90 @@ namespace OmniSharp.Bootstrap
 
             Console.Write(Path.Combine(OmnisharpPath, "bootstrap", "Bootstrapper"));
             return 0;
+        }
+
+        public void ParseArguments(string[] args)
+        {
+            var enumerator = args.GetEnumerator();
+
+            while (enumerator.MoveNext())
+            {
+                var arg = (string)enumerator.Current;
+
+                if (arg == "--plugins")
+                {
+                    enumerator.MoveNext();
+                    PluginPaths.Add((string)enumerator.Current);
+                }
+
+                if (arg == "--plugin-name")
+                {
+                    enumerator.MoveNext();
+                    var v = (string)enumerator.Current;
+                    var s = v.Split('@');
+                    if (s.Length > 1)
+                    {
+                        PluginNames.Add(new KeyValuePair<string, string>(s[0], s[1]));
+                    }
+                    else
+                    {
+                        PluginNames.Add(new KeyValuePair<string, string>(s[0], string.Empty));
+                    }
+                }
+
+                if (arg == "-s")
+                {
+                    enumerator.MoveNext();
+                    SolutionRoot = Path.GetFullPath((string)enumerator.Current);
+                }
+            }
+
+            BootstrapPath = Path.GetDirectoryName(_appEnv.ApplicationBasePath);
+            OmnisharpProjectPath = Path.Combine(BootstrapPath, "OmniSharp.Host", "project.json");
+            if (!File.Exists(OmnisharpProjectPath))
+            {
+                OmnisharpProjectPath = Path.Combine(OmnisharpProjectPath, "OmniSharp.Host", "1.0.0", "root", "project.json");
+            }
+
+            if (!string.IsNullOrEmpty(SolutionRoot))
+            {
+                var pluginsFolder = Path.Combine(SolutionRoot, ".omnisharp", "plugins");
+                if (Directory.Exists(pluginsFolder))
+                {
+                    PluginPaths.Add(pluginsFolder);
+                }
+
+                var omnisharpJsonPath = Path.Combine(SolutionRoot, "omnisharp.json");
+                if (File.Exists(omnisharpJsonPath))
+                {
+                    var omnisharpJson = JObject.Parse(File.ReadAllText(omnisharpJsonPath));
+                    if (omnisharpJson["plugins"] != null)
+                    {
+                        var omnisharpJsonPlugins = omnisharpJson["plugins"];
+                        foreach (var plugin in omnisharpJsonPlugins)
+                        {
+                            if (plugin is JObject)
+                            {
+                                var pluginJobject = plugin as JObject;
+                                PluginNames.Add(new KeyValuePair<string, string>(pluginJobject["name"].ToString(), pluginJobject["version"].ToString()));
+                            }
+                            else if (plugin is JToken)
+                            {
+                                var pluginString = plugin.ToString();
+                                var pluginSplitString = pluginString.Split('@');
+                                if (pluginSplitString.Length > 1)
+                                {
+                                    PluginNames.Add(new KeyValuePair<string, string>(pluginSplitString[0], pluginSplitString[1]));
+                                }
+                                else
+                                {
+                                    PluginNames.Add(new KeyValuePair<string, string>(pluginSplitString[0], string.Empty));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

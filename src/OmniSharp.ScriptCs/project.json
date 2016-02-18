@@ -1,7 +1,8 @@
 {
   "version": "1.0.0-*",
   "compilationOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
@@ -10,7 +11,8 @@
   "frameworks": {
     "dnx451": {
       "dependencies": {
-        "ScriptCs.Hosting": "0.14.1"
+        "ScriptCs.Hosting": "0.14.1",
+        "Microsoft.Web.Xdt": "2.1.1"
       }
     }
   }

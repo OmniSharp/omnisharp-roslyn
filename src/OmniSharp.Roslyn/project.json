@@ -1,11 +1,12 @@
 {
   "version": "1.0.0-*",
   "compilationOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-*",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*",
     "Microsoft.CodeAnalysis": "1.1.1"
   },
   "frameworks": {
@@ -21,13 +22,13 @@
         "System.Globalization": "",
         "System.Linq": "",
         "System.Text.Encoding": "",
-        "System.IO": "",
         "System.Reflection": "",
         "System.Security": "",
         "System.Xml": ""
       }
     },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
         "NETStandard.Library": "1.0.0-rc2-*",
         "System.Xml.XDocument": "4.0.11-rc2-*"

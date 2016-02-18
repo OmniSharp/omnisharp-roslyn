@@ -1,18 +1,20 @@
 {
   "version": "1.0.0-*",
   "compilationOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
-    "Newtonsoft.Json": "7.0.1",
+    "Newtonsoft.Json": "8.0.2",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.Composition": "1.0.30",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
     "Microsoft.Extensions.Configuration": "1.0.0-rc2-*",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
     "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-*",
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
-    "Microsoft.Extensions.PlatformAbstractions.Dnx": "1.0.0-rc2-*"
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*"
   },
   "frameworks": {
     "dnx451": {
@@ -23,7 +25,6 @@
         "System.Collections": "",
         "System.Linq": "",
         "System.Text.Encoding": "",
-        "System.IO": "",
         "System.Reflection": "",
         "System.Security": "",
         "System.Globalization": "",
@@ -32,8 +33,10 @@
       }
     },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
         "NETStandard.Library": "1.0.0-rc2-*",
+        "System.Diagnostics.Process": "4.1.0-rc2-*",
         "System.IO.FileSystem.Watcher": "4.0.0-rc2-*",
         "System.Threading.Thread": "4.0.0-rc2-*"
       }

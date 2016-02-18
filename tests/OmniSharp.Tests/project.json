@@ -8,16 +8,21 @@
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
     "Microsoft.AspNetCore.Testing": "1.0.0-rc2-*",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "xunit.runner.aspnet": "2.0.0-aspnet-*"
-  },
-  "commands": {
-    "test": "xunit.runner.aspnet"
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*"
   },
   "frameworks": {
-    "dnx451": { },
-    "dnxcore50": {
+    "dnx451": { 
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-*"
+        "xunit.runner.console": "2.1.0"
+      }
+    },
+    "dnxcore50": {
+      "imports": "portable-net45+win8",
+      "dependencies": {
+        "Microsoft.NETCore.Platforms": "1.0.1-rc2-*", 
+        "Microsoft.NETCore.TestHost" : "1.0.0-rc2-*",
+        "xunit.console.netcore": "1.0.2-prerelease-00101", 
+        "xunit.netcore.extensions": "1.0.0-prerelease-*", 
       }
     }
   }
