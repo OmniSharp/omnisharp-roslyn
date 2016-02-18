@@ -69,7 +69,7 @@ namespace OmniSharp.DotNet
 
         public Task<object> GetProjectModel(string path)
         {
-            _logger.LogInformation($"GetProjectModel {path}");
+            _logger.LogDebug($"GetProjectModel {path}");
             var document = _omnisharpWorkspace.GetDocument(path);
             if (document == null)
             {
@@ -77,7 +77,7 @@ namespace OmniSharp.DotNet
             }
 
             var projectPath = document.Project.FilePath;
-            _logger.LogInformation($"GetProjectModel {path}=>{projectPath}");
+            _logger.LogDebug($"GetProjectModel {path}=>{projectPath}");
             //var projectInformation = _projectStates.Get(projectPath).FirstOrDefault()?.Information;
             //if (projectInformation == null)
             //{
@@ -211,7 +211,10 @@ namespace OmniSharp.DotNet
                 _logger.LogDebug($"    Remove file reference {reference}");
             }
 
-            _logger.LogInformation($"    Added {metadataReferences.Count} and removed {fileReferencesToRemove.Count} file references");
+            if (metadataReferences.Count != 0 || fileReferencesToRemove.Count != 0)
+            {
+                _logger.LogInformation($"    Added {metadataReferences.Count} and removed {fileReferencesToRemove.Count} file references");
+            }
         }
 
         private void UpdateProjectReferences(ProjectState state, IEnumerable<ProjectDescription> projectReferencesLatest)
@@ -248,7 +251,10 @@ namespace OmniSharp.DotNet
                 _logger.LogDebug($"    Remove project reference {reference}");
             }
 
-            _logger.LogInformation($"    Added {projectReferences.Count} and removed {projectReferencesToRemove.Count} project references");
+            if (projectReferences.Count != 0 || projectReferencesToRemove.Count != 0)
+            {
+                _logger.LogInformation($"    Added {projectReferences.Count} and removed {projectReferencesToRemove.Count} project references");
+            }
         }
 
         private void UpdateUnresolvedDependencies(ProjectState state, bool allowRestore)
@@ -359,7 +365,10 @@ namespace OmniSharp.DotNet
                 removed++;
             }
 
-            _logger.LogInformation($"    Added {added} and removed {removed} documents.");
+            if (added != 0 || removed != 0)
+            {
+                _logger.LogInformation($"    Added {added} and removed {removed} documents.");
+            }
         }
 
         private void AddProject(ProjectId id, ProjectContext context)

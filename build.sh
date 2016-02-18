@@ -132,6 +132,12 @@ _restore() {
 }
 
 #########################
+# Main
+if [ "$1" == "--quick" ]; then
+  _publish "OmniSharp" || { echo >&2 "Failed to quick build. Try to build the OmniSharp without --quick switch."; exist 1; }
+  exit 0
+fi
+
 # Clean up
 _header "Cleanup"
 rm -rf artifacts
