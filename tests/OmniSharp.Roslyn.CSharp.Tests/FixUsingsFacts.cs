@@ -473,8 +473,7 @@ namespace OmniSharp
             var workspace = await TestHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
 
             var fakeOptions = new FakeOmniSharpOptions();
-            fakeOptions.Options = new OmniSharpOptions();
-            fakeOptions.Options.FormattingOptions = new FormattingOptions() { NewLine = "\n" };
+            fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });
             var providers = host.GetExports<ICodeActionProvider>();
             var controller = new FixUsingService(workspace, new FakeLoggerFactory(), _loader, providers);
             var request = new FixUsingsRequest

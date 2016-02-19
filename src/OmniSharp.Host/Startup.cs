@@ -30,7 +30,7 @@ namespace OmniSharp
         {
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(applicationEnvironment.ApplicationBasePath)
-                .AddJsonFile("config.json")
+                .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
             if (Program.Environment.OtherArgs != null)
@@ -47,7 +47,7 @@ namespace OmniSharp
             Configuration = configBuilder.Build();
         }
 
-        public IConfiguration Configuration { get; private set; }
+        public IConfiguration Configuration { get; }
 
         public OmnisharpWorkspace Workspace { get; set; }
 
@@ -58,9 +58,11 @@ namespace OmniSharp
             // Add the omnisharp workspace to the container
             services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
+            
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddOptions();
+            
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
         }
@@ -96,7 +98,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(writer))
                 .WithProvider(MefValueProvider.From(applicationLifetime))
                 .WithProvider(MefValueProvider.From(options))
-                .WithProvider(MefValueProvider.From(options?.FormattingOptions ?? new FormattingOptions()))
+                .WithProvider(MefValueProvider.From(options.FormattingOptions))
                 .WithProvider(MefValueProvider.From(loader))
                 .WithProvider(MefValueProvider.From(new MetadataHelper(loader))); // other way to do singleton and autowire?
 
@@ -182,8 +184,10 @@ namespace OmniSharp
                 logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
             }
 
-            // Forward workspace events
+            // ProjectEventForwarder register event to OmnisharpWorkspace during instantiation
             PluginHost.GetExport<ProjectEventForwarder>();
+            
+            // Initialize all the project systems
             foreach (var projectSystem in PluginHost.GetExports<IProjectSystem>())
             {
                 try
@@ -192,17 +196,15 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    // if a project system throws an unhandled exception
-                    // it should not crash the entire server
+                    // if a project system throws an unhandled exception it should not crash the entire server
                     logger.LogError($"The project system '{projectSystem.GetType().Name}' threw exception during initialization.", e);
-                    Console.WriteLine(e.Message);
                 }
             }
 
             // Mark the workspace as initialized
             Workspace.Initialized = true;
 
-            logger.LogInformation("Solution has finished loading");
+            logger.LogInformation("Configuration finished.");
         }
 
         private static bool LogFilter(string category, LogLevel level, IOmnisharpEnvironment environment)

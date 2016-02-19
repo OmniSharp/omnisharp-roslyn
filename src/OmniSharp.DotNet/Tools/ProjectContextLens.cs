@@ -10,7 +10,6 @@ namespace OmniSharp.DotNet.Tools
     {
         private readonly string _configuration;
         private readonly ProjectContext _context;
-
         private List<string> _sourceFiles = new List<string>();
         private List<string> _fileReferences = new List<string>();
         private List<ProjectDescription> _projectReferenes = new List<ProjectDescription>();

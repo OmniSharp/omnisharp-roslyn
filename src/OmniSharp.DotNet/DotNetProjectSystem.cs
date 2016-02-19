@@ -30,12 +30,11 @@ namespace OmniSharp.DotNet
         private readonly IOmnisharpEnvironment _environment;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly string _compilationConfiguration = "Debug";
-
         private readonly PackagesRestoreTool _packageRestore;
         private readonly OmnisharpWorkspace _omnisharpWorkspace;
         private readonly ProjectStatesCache _projectStates;
-
         private WorkspaceContext _workspaceContext;
+        private bool _enableRestorePackages = false;
 
         [ImportingConstructor]
         public DotNetProjectSystem(IOmnisharpEnvironment environment,
@@ -58,9 +57,9 @@ namespace OmniSharp.DotNet
 
         public IEnumerable<string> Extensions { get; } = new string[] { ".cs" };
 
-        public string Key { get { return "DotNet"; } }
+        public string Key => "DotNet";
 
-        public string Language { get { return LanguageNames.CSharp; } }
+        public string Language => LanguageNames.CSharp;
 
         public Task<object> GetInformationModel(WorkspaceInformationRequest request)
         {
@@ -90,6 +89,13 @@ namespace OmniSharp.DotNet
         public void Initalize(IConfiguration configuration)
         {
             _logger.LogInformation($"Initializing in {_environment.Path}");
+                        
+            if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))
+            {
+                _enableRestorePackages = false;
+            }
+            
+            _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
             _workspaceContext = WorkspaceContext.CreateFrom(_environment.Path);
             if (_workspaceContext == null)
@@ -266,7 +272,7 @@ namespace OmniSharp.DotNet
 
             if (needRestore)
             {
-                if (allowRestore)
+                if (allowRestore && _enableRestorePackages)
                 {
                     _packageRestore.Restore(state.ProjectContext.ProjectDirectory, onFailure: () =>
                     {
