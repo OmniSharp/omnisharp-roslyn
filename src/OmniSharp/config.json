@@ -2,7 +2,7 @@
     "dotnet": {
         "alias": "default",
         "projects": "**/project.json",
-        "enablePackageRestore": false,
+        "enablePackageRestore": true,
         "packageRestoreTimeout": "180"
     },
     "formattingOptions": {
