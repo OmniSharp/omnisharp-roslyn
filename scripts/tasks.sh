@@ -74,7 +74,6 @@ install_nuget() {
     nuget_download_url=https://dist.nuget.org/win-x86-commandline/$nuget_version/nuget.exe
 
     if [ "$TRAVIS" == true ]; then
-        echo "get nuget.exe under travis"
         wget -O $nuget_path $nuget_download_url 2>/dev/null || curl -o $nuget_path --location $nuget_download_url /dev/null
     else
         # Ensure NuGet is downloaded to .build folder
@@ -105,7 +104,7 @@ install_xunit_runner() {
     header "Downloading xunit console runner"
     
     if test ! -d $build_tools/xunit.runner.console; then
-        mono $nuget_path install xunit.runner.console -ExcludeVersion -o $build_tools -nocache -pre
+        mono $nuget_path install xunit.runner.console -ExcludeVersion -o $build_tools -nocache -pre -Source https://api.nuget.org/v3/index.json
     fi
 
     xunit_clr_runner=$build_tools/xunit.runner.console/tools
