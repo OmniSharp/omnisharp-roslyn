@@ -4,7 +4,6 @@ work_dir=`pwd`
 build_tools=$work_dir/.build
 nuget_path=$build_tools/nuget.exe
 configuration="Debug"
-dotnet=$work_dir/.dotnet/bin/dotnet
 
 artifacts=$work_dir/artifacts
 log_output=$artifacts/logs
@@ -21,6 +20,7 @@ if [ "$1" == "--quick" ]; then
 fi
 
 if [ "$1" == "--install" ]; then
+    install_dotnet
     if [ -d ~/.omnisharp/local ]; then
         echo "Removing local omnisharp ..."
         rm -rf ~/.omnisharp/local
