@@ -8,15 +8,18 @@
     "OmniSharp.Roslyn": "1.0.0-*",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.CodeAnalysis.Common": "1.1.1",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*"
+    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001517",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16599"
   },
   "frameworks": {
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-*",
-        "System.Runtime.Serialization.Primitives": "4.1.0-rc2-*"
+        "NETStandard.Library": "1.0.0-rc2-23819",
+        "System.IO.Compression": "4.1.0-rc2-23819",
+        "System.Runtime.Loader": "4.0.0-rc2-23819",
+        "System.Runtime.Serialization.Primitives": "4.1.0-rc2-23819",
+        "System.Security.Cryptography.Algorithms": "4.0.0-rc2-23819"
       }
     },
     "dnx451": {

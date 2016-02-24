@@ -11,10 +11,12 @@
   "frameworks": {
     "dnx451": {
       "dependencies": {
-        "NuGet.Configuration": "3.1.0-*",
-        "NuGet.Packaging.Core": "3.1.0-*",
-        "NuGet.Protocol.Core.v2": "3.1.0-*",
-        "NuGet.Protocol.Core.v3": "3.1.0-*"
+        "NuGet.Configuration": "3.4.0-*",
+        "NuGet.Protocol.Core.v2": "3.3.0",
+        "NuGet.Protocol.Core.v3": "3.3.0",
+        "NuGet.Packaging": "3.4.0-*",
+        "NuGet.Packaging.Core": "3.4.0-*",
+        "Microsoft.Web.Xdt": "2.1.1"
       },
       "frameworkAssemblies": {
         "System.Runtime": "",
@@ -31,7 +33,7 @@
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-*"
+        "NETStandard.Library": "1.0.0-rc2-23819"
       }
     }
   }
