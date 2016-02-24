@@ -74,7 +74,7 @@ namespace OmniSharp.DotNet.Tools
                 return;
             }
 
-            _sourceFiles.AddRange(export.SourceReferences);
+            _sourceFiles.AddRange(export.SourceReferences.Select(asset => asset.ResolvedPath));
             _projectReferenes.Add(desc);
         }
     }
