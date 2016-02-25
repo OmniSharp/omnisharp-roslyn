@@ -28,7 +28,7 @@ if [ "$1" == "--install" ]; then
 
     mkdir -p ~/.omnisharp/local
 
-    publish "OmniSharp" "~/.omnisharp/local" || \
+    publish "OmniSharp" "$HOME/.omnisharp/local" || \
         { echo >&2 "Failed to quick build. Try to build the OmniSharp without --install switch."; exit 1; }
     
     exit 0
