@@ -18,11 +18,11 @@ In addition if you need the HTTP interface and you want to run on Linux, you'll 
 
 ```
 On Windows:
-> git checkout troy/use.dotnet
+> git checkout dev
 > ./build.ps1
 
 On Linux / Unix:
-$ git checkout troy/use.dotnet
+$ git checkout dev
 $ ./build.sh
 
 ```
@@ -31,20 +31,18 @@ You cand find the output under `artifacts/publish/<target framework>/`. The exec
 
 ### VS Code
 
-Add following setting to your User Settings or Workspace Settings. 
+Add following setting to your User Settings or Workspace Settings.
 
 _Update path to fit your environment_
 
 ``` JSON
 {
-  "csharp.omnisharp": "C:\\code\\omnisharp-roslyn\\artifacts\\publish\\OmniSharp\\dnxcore50\\omnisharp.exe"
+  "csharp.omnisharp": "<Path to the omnisharp executable>"
 }
 ```
 
-### Issues
-Check out the issue tracker https://huboard.com/OmniSharp/omnisharp-roslyn
-
-1. As of now, the new DotNet project system works on dnxcore50 target framework only. Pending on this [change](https://github.com/dotnet/cli/commit/c881516abf4ee50ebea4e6d8fd065939248ec9e6) to go into the build.
-
 ## Help wanted!
+
 Visit https://jabbr.net/#/rooms/omnisharp if you'd like to help out.
+
+Please feel free to file issue.
