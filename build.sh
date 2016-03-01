@@ -30,7 +30,7 @@ if [ "$1" == "--install" ]; then
 
     publish "OmniSharp" "$HOME/.omnisharp/local" || \
         { echo >&2 "Failed to quick build. Try to build the OmniSharp without --install switch."; exit 1; }
-    
+
     exit 0
 fi
 
@@ -56,13 +56,9 @@ run_test OmniSharp.MSBuild.Tests       -skipdnxcore50
 run_test OmniSharp.Roslyn.CSharp.Tests -skipdnx451
 run_test OmniSharp.Stdio.Tests
 
-# Packaging
-for project in `ls src`; do
-    package "OmniSharp.Abstractions"
-done
-
 # OmniSharp.Roslyn.CSharp.Tests is skipped on dnx451 target because an issue in MEF assembly load on xunit
 # Failure repo: https://github.com/troydai/loaderfailure
 
 # Publish
 publish "OmniSharp"
+

@@ -34,12 +34,12 @@ run_test() {
 
 restore_packages() {
     header "Restoring packages"
-    
+
     # Handle to many files on osx
     if [ "$TRAVIS_OS_NAME" == "osx" ] || [ `uname` == "Darwin" ]; then
         ulimit -n 4096
     fi
-  
+
     if [ "$TRAVIS" == true ]; then
         $dotnet restore -v Warning || { echo >&2 "Failed to restore packages."; exit 1; }
     else
@@ -102,7 +102,7 @@ install_nuget() {
 # Install xunit console runner for CLR
 install_xunit_runner() {
     header "Downloading xunit console runner"
-    
+
     if test ! -d $build_tools/xunit.runner.console; then
         mono $nuget_path install xunit.runner.console -ExcludeVersion -o $build_tools -nocache -pre -Source https://api.nuget.org/v3/index.json
     fi
@@ -110,7 +110,7 @@ install_xunit_runner() {
     xunit_clr_runner=$build_tools/xunit.runner.console/tools
 }
 
-set_dotnet_reference_path() { 
+set_dotnet_reference_path() {
     # set the DOTNET_REFERENCE_ASSEMBLIES_PATH to mono reference assemblies folder
     # https://github.com/dotnet/cli/issues/531
     if [ -z "$DOTNET_REFERENCE_ASSEMBLIES_PATH" ]; then
@@ -128,27 +128,56 @@ set_dotnet_reference_path() {
 
 publish() {
     header "Publishing $1"
-    
+
     _output="$artifacts/publish/$1"
     if [ -n "$2" ]; then
         _output="$2"
     fi
-    
+
     echo "Publish project to $_output"
     for framework in dnx451 dnxcore50; do
         $dotnet publish $work_dir/src/$1 \
                 --framework $framework \
                 --output $_output/$framework \
                 --configuration $configuration
+
+        # is there a better way? not sure.
+        if [ "$TRAVIS_OS_NAME" == "osx" ] then
+            if [ "$framework" == "dnxcore50" ]; then
+                # omnisharp-coreclr-darwin-x64.tar.gz
+                tar $_output/$framework "../../../omnisharp-coreclr-darwin-x64"
+            fi
+        else
+            if [ "$framework" == "dnxcore50" ]; then
+                # omnisharp-coreclr-linux-x64.tar.gz
+                tar $_output/$framework "../../../omnisharp-coreclr-linux-x64"
+            else
+                # omnisharp-mono.tar.gz
+                tar $_output/$framework "../../../omnisharp-mono"
+            fi
+        fi
     done
 
     # copy binding redirect configuration respectively to mitigate dotnet publish bug
     cp $work_dir/src/$1/bin/$configuration/dnx451/*/$1.exe.config $_output/dnx451/
 }
 
+tar() {
+  $path = $1
+  $name = $2
+
+  pushd $path
+  tar -zcf "$name.tar.gz" .
+  rc=$?; if [[ $rc != 0 ]]; then
+    echo "Tar failed for src/$1 with runtime $framework, destination: $_output"
+    exit 1;
+  fi
+  popd
+}
+
 package() {
     header "Packaging $1"
-    
+
     for c in Release Debug; do
         $dotnet pack $work_dir/src/$1 \
                 --output $artifacts/packages/$c/ \
