@@ -142,19 +142,15 @@ publish() {
                 --configuration $configuration
 
         # is there a better way? not sure.
-        if [ "$TRAVIS_OS_NAME" == "osx" ] then
-            if [ "$framework" == "dnxcore50" ]; then
-                # omnisharp-coreclr-darwin-x64.tar.gz
-                tar $_output/$framework "../../../omnisharp-coreclr-darwin-x64"
-            fi
-        else
-            if [ "$framework" == "dnxcore50" ]; then
-                # omnisharp-coreclr-linux-x64.tar.gz
-                tar $_output/$framework "../../../omnisharp-coreclr-linux-x64"
-            else
-                # omnisharp-mono.tar.gz
-                tar $_output/$framework "../../../omnisharp-mono"
-            fi
+        if [ "$TRAVIS_OS_NAME" == "osx" ] && [ "$framework" == "dnxcore50" ]; then
+            # omnisharp-coreclr-darwin-x64.tar.gz
+            tar $_output/$framework "../../../omnisharp-coreclr-darwin-x64"
+        elif [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$framework" == "dnxcore50" ]; then
+            # omnisharp-coreclr-linux-x64.tar.gz
+            tar $_output/$framework "../../../omnisharp-coreclr-linux-x64"
+        elif [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$framework" == "dnx451" ]; then
+            # omnisharp-mono.tar.gz
+            tar $_output/$framework "../../../omnisharp-mono"
         fi
     done
 
