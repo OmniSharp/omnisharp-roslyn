@@ -159,8 +159,8 @@ publish() {
 }
 
 tar() {
-  $path = $1
-  $name = $2
+  path = $1
+  name = $2
 
   pushd $path
   tar -zcf "$name.tar.gz" .
