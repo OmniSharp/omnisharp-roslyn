@@ -159,11 +159,11 @@ publish() {
 }
 
 tar() {
-  path = $1
-  name = $2
+  _path=$1
+  _name=$2
 
-  pushd $path
-  tar -zcf "$name.tar.gz" .
+  pushd $_path
+  tar -zcf "$_name.tar.gz" .
   rc=$?; if [[ $rc != 0 ]]; then
     echo "Tar failed for src/$1 with runtime $framework, destination: $_output"
     exit 1;
