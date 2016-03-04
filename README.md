@@ -43,7 +43,7 @@ _Update path to fit your environment_
 
 ### For Linux / Unix
 
-If you're running OmniSharp on Linux or Unit, you need to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` for projects target desktop CLR. You can use following bash script to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` to mono's reference assemblies folder
+If you're running OmniSharp on Linux or Unix, you need to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` for projects targetting desktop CLR. You can use following bash script to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` to mono's reference assemblies folder.
 
 ``` Bash
 if [ -z "$DOTNET_REFERENCE_ASSEMBLIES_PATH" ]; then
