@@ -26,21 +26,21 @@ function _build($project) {
 
 function _test([string] $project, [switch] $skipdnxcore50, [switch] $skipdnx451) {
   pushd .\tests\$project
-  
+
   & $dotnet build --configuration $configuration | Out-File "$log_output\$project-build.log"
-   
+
   if (-not $skipdnxcore50) {
     & $dotnet test -xml "$log_output\$project-dnxcore50-result.xml" -notrait category=failing
-    
+
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Test failed: $project / dnxcore50"
       exit 1
-    }   
+    }
   }
-  
+
   if (-not $skipdnx451) {
     $test_output = ls .\bin\$configuration\dnx451\*\$project.dll | split-path -Parent
-    
+
     cp $build_tools\xunit.runner.console\tools\* $test_output
     & $test_output\xunit.console.x86.exe $test_output\$project.dll `
      -xml "$log_output\$project-dnx451-result.xml" -parallel none  -notrait category=failing
@@ -50,22 +50,40 @@ function _test([string] $project, [switch] $skipdnxcore50, [switch] $skipdnx451)
       exit 1
     }
   }
-  
-  popd  
+
+  popd
 }
 
-function _publish($project) {
+function _publish($project, $runtime) {
   $name = "$project"
   $src = "src\$project"
   $output = "$publish_output\$project"
 
-  & $dotnet publish $src --framework dnxcore50 --output $output\dnxcore50 --configuration $configuration
-  & $dotnet publish $src --framework dnx451 --output $output\dnx451 --configuration $configuration
+  & $dotnet publish $src --framework dnxcore50 --output $output\$runtime\dnxcore50 --configuration $configuration --runtime $runtime
+  & $dotnet publish $src --framework dnx451 --output $output\$runtime\dnx451 --configuration $configuration --runtime $runtime
 
   # copy binding redirect configuration respectively to mitigate dotnet publish bug
   ls $src\bin\$configuration\dnx451\*\$project.exe.config | % {
     cp $_ $output\dnx451\ | Out-Null
   }
+
+  # Use to the current naming, we may need to address this in the future
+  $package_runtime = $runtime.Replace("win7-", "win-");
+  if ($ENV:APPVEYOR -eq  "True") {
+    _zip "$output\$runtime\dnx451" "omnisharp-clr-$package_runtime"
+    _zip "$output\$runtime\dnxcore50" "omnisharp-coreclr-$package_runtime"
+  }
+}
+
+function _zip($path, $file) {
+    pushd $path
+    Write-Host "Compressing $file.zip"
+    7z a -r ..\..\..\..\$file.zip | out-null
+    if ($LASTEXITCODE -ne 0) {
+      write-error "Zip failed for $path, destination: artifacts\$file.zip"
+      exit 1;
+    }
+    popd
 }
 
 ##########################
@@ -144,6 +162,7 @@ _test OmniSharp.Stdio.Tests
 
 _header "Publishing"
 mkdir $publish_output -ErrorAction SilentlyContinue | Out-Null
-_publish "OmniSharp"
+_publish "OmniSharp" "win7-x64"
+_publish "OmniSharp" "win7-x86"
 
 #_header "Packaging"
