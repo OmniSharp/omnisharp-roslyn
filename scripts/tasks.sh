@@ -159,13 +159,17 @@ publish() {
 }
 
 tar() {
-  pushd $1
-  tar -zcf "$2.tar.gz" .
-  rc=$?; if [[ $rc != 0 ]]; then
-    echo "Tar failed for $1 with runtime $framework"
-    exit 1;
-  fi
-  popd
+    pushd $1;
+
+    tar -zcf "$2.tar.gz" .;
+
+    rc=$?;
+    if [[ $rc != 0 ]]; then
+        echo "Tar failed for $1 with runtime $framework";
+        exit 1;
+    fi
+
+    popd;
 }
 
 package() {
