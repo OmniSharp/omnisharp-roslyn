@@ -8,6 +8,8 @@ configuration="Debug"
 artifacts=$work_dir/artifacts
 log_output=$artifacts/logs
 
+rids="osx.10.11-x64;win7-x64;ubuntu.14.04-x64"
+
 . ./scripts/tasks.sh
 
 #########################
@@ -30,7 +32,7 @@ if [ "$1" == "--install" ]; then
 
     publish "OmniSharp" "$HOME/.omnisharp/local" || \
         { echo >&2 "Failed to quick build. Try to build the OmniSharp without --install switch."; exit 1; }
-    
+
     exit 0
 fi
 
@@ -47,22 +49,18 @@ install_nuget
 install_xunit_runner
 set_dotnet_reference_path
 
-# Restore
-restore_packages
-
 # Testing
+restore_packages
 run_test OmniSharp.Bootstrap.Tests
 run_test OmniSharp.MSBuild.Tests       -skipdnxcore50
 run_test OmniSharp.Roslyn.CSharp.Tests -skipdnx451
 run_test OmniSharp.Stdio.Tests
 
-# Packaging
-for project in `ls src`; do
-    package "OmniSharp.Abstractions"
-done
-
 # OmniSharp.Roslyn.CSharp.Tests is skipped on dnx451 target because an issue in MEF assembly load on xunit
 # Failure repo: https://github.com/troydai/loaderfailure
+
+# Build tools
+build_tools
 
 # Publish
 publish "OmniSharp"

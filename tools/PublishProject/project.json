@@ -1,0 +1,21 @@
+{
+    "version": "1.0.0-*",
+    "compilationOptions": {
+        "emitEntryPoint": true
+    },
+
+    "dependencies": {
+        "NETStandard.Library": "1.0.0-rc2-23819",
+        "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16599",
+        "System.Diagnostics.Process": "4.1.0-rc2-23819",
+        "System.IO.Compression": "4.1.0-rc2-23819",
+        "System.IO.Compression.ZipFile": "4.0.1-rc2-23819",
+        "System.IO.FileSystem": "4.0.1-rc2-23819"
+    },
+
+    "frameworks": {
+        "netstandardapp1.5": {
+            "imports": "dnxcore50"
+        }
+    }
+}
