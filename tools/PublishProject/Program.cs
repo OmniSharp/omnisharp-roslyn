@@ -1,124 +1,74 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using Microsoft.Extensions.PlatformAbstractions;
 
-namespace ConsoleApplication
+namespace OmniSharp.Tools.PublishProject
 {
     public class Program
     {
         public static int Main(string[] args)
         {
+            Console.WriteLine("Publish project OmniSharp");
             var root = FindRoot();
-
-            var projectPath = Path.Combine(root, "src", args[0]);
-            var projectName = args[0];
+            var buildPlan = BuildPlan.Parse(root);
+            
+            var projectPath = Path.Combine(root, "src", buildPlan.MainProject);
             if (!Directory.Exists(projectPath))
             {
-                Console.WriteLine($"Can't find project {args[0]}");
+                Console.WriteLine($"Can't find project {buildPlan.MainProject}");
                 return 1;
             }
 
-            var dotnetExecutable = args[1];
-            if (!File.Exists(dotnetExecutable) && dotnetExecutable != "dotnet")
-            {
-                Console.WriteLine($"Can't find dotnet executable {args[1]}");
-                return 1;
-            }
-
-            var publishOutput = Path.Combine(root, args[2], "publish");
+            var publishOutput = Path.Combine(root, buildPlan.ArtifactsFolder, "publish");
             if (!Directory.Exists(publishOutput))
             {
                 Directory.CreateDirectory(publishOutput);
             }
 
-            var packageOutput = Path.Combine(root, args[2], "package");
+            var packageOutput = Path.Combine(root, buildPlan.ArtifactsFolder, "package");
             if (!Directory.Exists(packageOutput))
             {
                 Directory.CreateDirectory(packageOutput);
             }
 
-            var frameworks = new List<string>();
-            if (args.Length > 3 && !string.IsNullOrEmpty(args[3]))
-            {
-                frameworks.AddRange(args[3].Split(';'));
-            }
-            else
-            {
-                // TODO: not to hard code default option
-                frameworks.Add("dnxcore50");
-            }
-
-            var rids = new HashSet<string>();
-            rids.Add(PlatformServices.Default.Runtime.GetRuntimeIdentifier());
-            if (args.Length > 4 && !string.IsNullOrEmpty(args[4]))
-            {
-                foreach (var each in args[4].Split(';'))
-                {
-                    rids.Add(each);
-                }
-            }
-
+            var dotnetExecutable = new DotNetExecutor(buildPlan);
+            
             Console.WriteLine($"       root: {root}");
-            Console.WriteLine($"    project: {projectName}");
+            Console.WriteLine($"    project: {buildPlan.MainProject}");
             Console.WriteLine($"     source: {projectPath}");
             Console.WriteLine($"     dotnet: {dotnetExecutable}");
             Console.WriteLine($"publish out: {publishOutput}");
             Console.WriteLine($"package out: {packageOutput}");
-            Console.WriteLine($" frameworks: {string.Join(", ", frameworks)}");
-            Console.WriteLine($"    runtime: {string.Join(", ", rids)}");
-
-            foreach (var rid in rids)
+            Console.WriteLine($" frameworks: {string.Join(", ", buildPlan.Frameworks)}");
+            Console.WriteLine($"    runtime: {string.Join(", ", buildPlan.Rids)}");            
+            
+            if (!TestActions.RunTests(buildPlan))
             {
-                Restore(Path.Combine(root, "src"), rid, dotnetExecutable);
+                return 1;
+            }
 
-                foreach (var framework in frameworks)
+            foreach (var rid in buildPlan.Rids)
+            {
+                if (dotnetExecutable.Restore(Path.Combine(root, "src"), rid, TimeSpan.FromMinutes(10)) != 0)
                 {
-                    var publish = Path.Combine(publishOutput, projectName, rid, framework);
-                    Publish(publish, projectPath, rid, framework, dotnetExecutable);
-                    Package(publish, packageOutput, projectName, rid, framework);
+                    Console.Error.WriteLine("Fail to restore projects for {rid}");
+                    return 1;
+                }
+
+                foreach (var framework in buildPlan.Frameworks)
+                {
+                    var publish = Path.Combine(publishOutput, buildPlan.MainProject, rid, framework);
+                    if( dotnetExecutable.Publish(publish, projectPath, rid, framework) != 0)
+                    {
+                        Console.Error.WriteLine($"Fail to publish {projectPath} on {framework} for {rid}");
+                        return 1;
+                    }
+                    
+                    Package(publish, packageOutput, buildPlan.MainProject, rid, framework);
                 }
             }
 
             return 0;
-        }
-
-        private static void Restore(string path, string rid, string dotnetExecutable)
-        {
-            // restore the package for under given runtime
-            var restoreArgument = $"restore --runtime {rid}";
-            var restoreStartInfo = new ProcessStartInfo(dotnetExecutable, restoreArgument)
-            {
-                UseShellExecute = false,
-                WorkingDirectory = path
-            };
-
-            if (!Process.Start(restoreStartInfo).WaitForExit((int)TimeSpan.FromMinutes(10).TotalMilliseconds))
-            {
-                throw new InvalidOperationException($"Restore timeout for {path}");
-            }
-        }
-
-        private static void Publish(string publishOutput,
-                                    string projectPath,
-                                    string rid,
-                                    string framework,
-                                    string dotnetExecutable)
-        {
-            var publishArgument = $"publish -o {publishOutput} -f {framework} -r {rid}";
-            var publisStartInfo = new ProcessStartInfo(dotnetExecutable, publishArgument)
-            {
-                UseShellExecute = false,
-                WorkingDirectory = projectPath
-            };
-
-            var process = Process.Start(publisStartInfo);
-            if (!process.WaitForExit((int)TimeSpan.FromMinutes(10).TotalMilliseconds))
-            {
-                throw new InvalidOperationException($"Publish timeout for {projectPath}/{framework}/{rid}");
-            }
         }
 
         private static void Package(string publishOutput,

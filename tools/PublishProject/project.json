@@ -7,10 +7,15 @@
     "dependencies": {
         "NETStandard.Library": "1.0.0-rc2-23819",
         "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16599",
+        "Newtonsoft.Json": "8.0.2",
         "System.Diagnostics.Process": "4.1.0-rc2-23819",
+        "System.Dynamic.Runtime": "4.0.11-rc2-23819",
         "System.IO.Compression": "4.1.0-rc2-23819",
         "System.IO.Compression.ZipFile": "4.0.1-rc2-23819",
-        "System.IO.FileSystem": "4.0.1-rc2-23819"
+        "System.IO.FileSystem": "4.0.1-rc2-23819",
+        "System.Runtime.Serialization.Primitives": "4.1.0-rc2-23819",
+        "System.Xml.XDocument": "4.0.11-rc2-23819",
+        "System.Net.Http": "4.0.1-rc2-23819"
     },
 
     "frameworks": {
