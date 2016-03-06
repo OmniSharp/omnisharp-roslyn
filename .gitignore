@@ -41,4 +41,4 @@ buildlog
 
 # Cake build
 tools/
-cake-bootstrap.*
+cake-bootstrap.ps1
