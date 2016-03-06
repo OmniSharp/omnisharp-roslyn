@@ -15,6 +15,6 @@ if [ $(uname) == Darwin ]; then
 elif [ $(uname) == Linux ]; then
     export OSSTRING=linux
 fi
-curl -Lsfo cake-bootstrap.sh http://cakebuild.net/bootstrapper/$OSSTRING
-chmod +x cake-bootstrap.sh
+#curl -Lsfo cake-bootstrap.sh http://cakebuild.net/bootstrapper/$OSSTRING
+#chmod +x cake-bootstrap.sh
 ./cake-bootstrap.sh $@

@@ -5,18 +5,22 @@ var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 
 var shell = IsRunningOnWindows() ? "powershell" : "sh";
-var shellArgument = IsRunningOnWindows() ? "/Command" : "-c";
+var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
-string[] runtimes = IsRunningOnWindows() ? new string[] { "win7-x64", "win7-x86" } : 
-                        (HasEnvironmentVariable("TRAVIS_OS_NAME")?
-                            (EnvironmentVariable("TRAVIS_OS_NAME").Equals("osx")? new string[] { "darwin-x64" } :
-                                new string[] { "linux-x64" }) :
-                            new string[] { "" }
-                        );
+string[] runtimes = { "win7-x64", "win7-x86" };
+// Cannot use ternary operator on Mono with array initializer
+if (!IsRunningOnWindows())
+{
+    if (EnvironmentVariable("OSSTRING").Equals("osx"))
+        runtimes = new string[] { "darwin-x64" };
+    else
+        runtimes = new string[] { "linux-x64" };
+}
 
 var dotnetFolder = "./.dotnet";
-var dotnetcli = String.Format("{0}/cli/bin/dotnet", dotnetFolder);
+var dotnetcli = IsRunningOnWindows() ? String.Format("{0}/cli/bin/dotnet", dotnetFolder) :
+                    String.Format("{0}/bin/dotnet", dotnetFolder);
 var toolsFolder = "./tools";
 var xunitRunner = "xunit.runner.console";
 
@@ -52,9 +56,14 @@ Task("BuildEnvironment")
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath(String.Format("{0}/{1}", dotnetFolder, installScript));
     //DownloadFile(String.Format("https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/{0}", installScript), scriptPath);
+    if (!IsRunningOnWindows())
+    {
+        StartProcess("chmod", new ProcessSettings{ Arguments = String.Format("+x {0}",
+            scriptPath) });
+    }
     var installArgs = IsRunningOnWindows() ? String.Format("beta -InstallDir {0}", dotnetFolder) :
                             String.Format("-c beta -d {0}", dotnetFolder);
-    StartProcess("powershell", new ProcessSettings{ Arguments = String.Format("{0} {1} {2}", 
+    StartProcess(shell, new ProcessSettings{ Arguments = String.Format("{0} {1} {2}", 
             shellArgument, scriptPath, installArgs) });
     CreateDirectory(toolsFolder);
     if (!FileExists(String.Format("{0}/{1}", toolsFolder, xunitRunner)))
