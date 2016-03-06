@@ -219,7 +219,7 @@ Task("TestNet4")
     {
         if(skipTestNet4.Contains(project.GetDirectoryName()))
             continue;
-        XUnit(String.Format("{0}/bin/{1}/dnx451/", project.FullPath, testConfiguration),
+        XUnit(String.Format("{0}/bin/{1}/dnx451/*/{2}.dll", project.FullPath, testConfiguration, project.GetDirectoryName()),
                 new XUnitSettings
                 { 
                     ArgumentCustomization = builder =>
