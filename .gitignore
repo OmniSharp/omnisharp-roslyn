@@ -37,7 +37,7 @@ buildlog
 
 # Build folder
 .build/
-.dotnet/
+#.dotnet
 
 # Cake build
 tools/

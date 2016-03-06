@@ -61,8 +61,8 @@ Task("BuildEnvironment")
         StartProcess("chmod", new ProcessSettings{ Arguments = String.Format("+x {0}",
             scriptPath) });
     }
-    var installArgs = IsRunningOnWindows() ? String.Format("beta -InstallDir {0} -version latest", dotnetFolder) :
-                            String.Format("-c beta -d {0} -v latest", dotnetFolder);
+    var installArgs = IsRunningOnWindows() ? String.Format("beta -InstallDir {0}", dotnetFolder) :
+                            String.Format("-c beta -d {0}", dotnetFolder);
     StartProcess(shell, new ProcessSettings{ Arguments = String.Format("{0} {1} {2}", 
             shellArgument, scriptPath, installArgs) });
     CreateDirectory(toolsFolder);
