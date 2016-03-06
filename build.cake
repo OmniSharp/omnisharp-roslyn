@@ -4,7 +4,7 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 
-var shell = IsRunningOnWindows() ? "powershell" : "sh";
+var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
