@@ -13,9 +13,9 @@ string[] runtimes = { "win7-x64", "win7-x86" };
 if (!IsRunningOnWindows())
 {
     if (EnvironmentVariable("OSSTRING").Equals("osx"))
-        runtimes = new string[] { "darwin-x64" };
+        runtimes = new string[] { "osx.10.10" };
     else
-        runtimes = new string[] { "linux-x64" };
+        runtimes = new string[] { "ubuntu.14.04-x64" };
 }
 
 var dotnetFolder = "./.dotnet";
@@ -168,6 +168,8 @@ Task("OnlyPublishCore")
                 throw new Exception(String.Format("Failed to publish {0} / dnxcore50", project.GetDirectoryName()));
             }
             var publishedRuntime = runtime.Replace("win7-", "win-");
+            publishedRuntime = publishedRuntime.Replace("ubuntu.14.04-", "linux-");
+            publishedRuntime = publishedRuntime.Replace("osx.10.10", "darwin-x4");
             Zip(outputFolder, String.Format("{0}/omnisharp-coreclr-{1}.zip", artifactFolder, publishedRuntime));
         }
     }
@@ -254,6 +256,8 @@ Task("OnlyPublishNet4")
             CopyFile(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.exe.config", project.FullPath, configuration, runtime, project.GetDirectoryName()),
                 outputFolder);
             var publishedRuntime = runtime.Replace("win7-", "win-");
+            publishedRuntime = publishedRuntime.Replace("ubuntu.14.04-", "linux-");
+            publishedRuntime = publishedRuntime.Replace("osx.10.10", "darwin-x4");
             if (IsRunningOnWindows())
                 Zip(outputFolder, String.Format("{0}/omnisharp-clr-{1}.zip", artifactFolder, publishedRuntime));
             else
