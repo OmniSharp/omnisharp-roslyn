@@ -239,7 +239,12 @@ Task("TestNet4")
     {
         if(skipTestNet4.Contains(project.GetDirectoryName()))
             continue;
-        XUnit2(String.Format("{0}/bin/{1}/dnx451/*/{2}.dll", project.FullPath, testConfiguration, project.GetDirectoryName()),
+        Information(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.dll", project.FullPath, testConfiguration, runtimes[0], project.GetDirectoryName()));
+        foreach (var f in GetFiles(String.Format("{0}/bin/{1}/dnx451/{2}/*", project.FullPath, testConfiguration, runtimes[0])))
+        {
+            Information(f.FullPath);
+        }
+        XUnit2(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.dll", project.FullPath, testConfiguration, runtimes[0], project.GetDirectoryName()),
                 new XUnit2Settings
                 { 
                     ArgumentCustomization = builder =>
