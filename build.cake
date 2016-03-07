@@ -239,23 +239,18 @@ Task("TestNet4")
     {
         if(skipTestNet4.Contains(project.GetDirectoryName()))
             continue;
-        Information(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.dll", project.FullPath, testConfiguration, runtimes[0], project.GetDirectoryName()));
-        foreach (var f in GetFiles(String.Format("{0}/bin/{1}/dnx451/{2}/*", project.FullPath, testConfiguration, runtimes[0])))
+        var xunitSettings = new XUnit2Settings
         {
-            Information(f.FullPath);
-        }
-        XUnit2(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.dll", project.FullPath, testConfiguration, runtimes[0], project.GetDirectoryName()),
-                new XUnit2Settings
-                { 
-                    ArgumentCustomization = builder =>
-                    {
-                        var xunitArgs = new ProcessArgumentBuilder().Append("-notrait");
-                        xunitArgs.Append("category=failing");
-                        xunitArgs.Append("-xml");
-                        xunitArgs.Append(String.Format("{0}/{1}-dnx451-result.xml", logFolder, project.GetDirectoryName()));
-                        return xunitArgs;
-                    }
-                });
+            ArgumentCustomization = builder =>
+            {
+                builder.Append("-xml");
+                builder.Append(String.Format("{0}/{1}-dnx451-result.xml", logFolder, project.GetDirectoryName()));
+                return builder;
+            }
+        };
+        xunitSettings.ExcludeTrait("category", new[] { "failing" });
+        XUnit2(String.Format("{0}/bin/{1}/dnx451/*/{2}.dll", project.FullPath, testConfiguration, project.GetDirectoryName()),
+                xunitSettings);
     }
 });
 
