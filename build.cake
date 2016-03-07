@@ -231,6 +231,16 @@ Task("TestBuildNet4")
     }
 });
 
+string GetRuntimeInPath(string path)
+{
+    var potentialRuntimes = GetDirectories(path);
+    if (potentialRuntimes.Count != 1)
+        throw new Exception(String.Format("Multiple runtimes when only one expected in {0}", path));
+    var enumerator = potentialRuntimes.GetEnumerator();
+    enumerator.MoveNext();
+    return enumerator.Current.GetDirectoryName();
+}
+
 Task("TestNet4")
     .IsDependentOn("TestBuildNet4")
     .Does(() =>
@@ -239,9 +249,12 @@ Task("TestNet4")
     {
         if(skipTestNet4.Contains(project.GetDirectoryName()))
             continue;
+        var runtime = GetRuntimeInPath(String.Format("{0}/bin/{1}/dnx451/", project.FullPath, testConfiguration));
+        var testFolder = String.Format("{0}/bin/{1}/dnx451/{2}/", project.FullPath, testConfiguration, runtime);
+        CopyFile("./tools/xunit.runner.console/tools/xunit.console.exe", testFolder);
         var xunitSettings = new XUnit2Settings
         {
-            ShadowCopy = false,
+            ToolPath = testFolder,
             ArgumentCustomization = builder =>
             {
                 builder.Append("-xml");
@@ -250,7 +263,7 @@ Task("TestNet4")
             }
         };
         xunitSettings.ExcludeTrait("category", new[] { "failing" });
-        XUnit2(String.Format("{0}/bin/{1}/dnx451/*/{2}.dll", project.FullPath, testConfiguration, project.GetDirectoryName()),
+        XUnit2(String.Format("{0}/{1}.dll", testFolder, project.GetDirectoryName()),
                 xunitSettings);
     }
 });
