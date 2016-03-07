@@ -157,7 +157,7 @@ namespace OmniSharp.Tools.PublishProject
                     home = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
                     if (string.IsNullOrEmpty(home))
                     {
-                        home = Environment.GetEnvironmentVariables("HOME");
+                        home = Environment.GetEnvironmentVariable("HOME");
                         nugetCache = Path.Combine(home, ".local", "share");
                     }
                     else
@@ -178,7 +178,7 @@ namespace OmniSharp.Tools.PublishProject
             {
                 var client = new HttpClient();
                 var response = client.GetAsync("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe").Result;
-                using (var fs = File.Create(Path.Combine(buildPlan.Root, buildPlan.BuildToolsFolder, "nuget.exe")))
+                using (var fs = File.Create(nugetCache))
                 {
                     response.Content.CopyToAsync(fs).Wait();
                 }
