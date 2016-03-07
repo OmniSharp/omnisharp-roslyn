@@ -157,7 +157,8 @@ namespace OmniSharp.Tools.PublishProject
                     home = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
                     if (string.IsNullOrEmpty(home))
                     {
-                        nugetCache = Path.Combine(Environment.GetEnvironmentVariable("Home"), ".local", "share");
+                        home = Environment.GetEnvironmentVariables("HOME");
+                        nugetCache = Path.Combine(home, ".local", "share");
                     }
                     else
                     {
