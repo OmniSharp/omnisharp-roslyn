@@ -250,11 +250,12 @@ Task("TestNet4")
         if(skipTestNet4.Contains(project.GetDirectoryName()))
             continue;
         var runtime = GetRuntimeInPath(String.Format("{0}/bin/{1}/dnx451/*", project.FullPath, testConfiguration));
-        var testFolder = String.Format("{0}/bin/{1}/dnx451/{2}/", project.FullPath, testConfiguration, runtime);
-        CopyFile("./tools/xunit.runner.console/tools/xunit.console.exe", testFolder);
+        var testFolder = String.Format("{0}/bin/{1}/dnx451/{2}", project.FullPath, testConfiguration, runtime);
+        CopyFileToDirectory("./tools/xunit.runner.console/tools/xunit.console.exe", testFolder);
+        CopyFileToDirectory("./tools/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", testFolder);
         var xunitSettings = new XUnit2Settings
         {
-            ToolPath = testFolder,
+            ToolPath = String.Format("{0}/xunit.console.exe", testFolder),
             ArgumentCustomization = builder =>
             {
                 builder.Append("-xml");
@@ -263,6 +264,7 @@ Task("TestNet4")
             }
         };
         xunitSettings.ExcludeTrait("category", new[] { "failing" });
+        Information(String.Format("{0}/{1}.dll", testFolder, project.GetDirectoryName()));
         XUnit2(String.Format("{0}/{1}.dll", testFolder, project.GetDirectoryName()),
                 xunitSettings);
     }
@@ -288,8 +290,9 @@ Task("OnlyPublishNet4")
                 throw new Exception(String.Format("Failed to publish {0} / dnx451", project.GetDirectoryName()));
             }
             // Copy binding redirect configuration respectively to mitigate dotnet publish bug
-            CopyFile(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.exe.config", project.FullPath, configuration, runtime, project.GetDirectoryName()),
-                outputFolder);
+            CopyFileToDirectory(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.exe.config",
+                                        project.FullPath, configuration, runtime, project.GetDirectoryName()),
+                                    outputFolder);
             var publishedRuntime = runtime.Replace("win7-", "win-");
             if (publishedRuntime.Contains("Ubuntu"))
                 publishedRuntime = "linux-x64";
