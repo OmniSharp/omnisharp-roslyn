@@ -249,7 +249,7 @@ Task("TestNet4")
     {
         if(skipTestNet4.Contains(project.GetDirectoryName()))
             continue;
-        var runtime = GetRuntimeInPath(String.Format("{0}/bin/{1}/dnx451/", project.FullPath, testConfiguration));
+        var runtime = GetRuntimeInPath(String.Format("{0}/bin/{1}/dnx451/*", project.FullPath, testConfiguration));
         var testFolder = String.Format("{0}/bin/{1}/dnx451/{2}/", project.FullPath, testConfiguration, runtime);
         CopyFile("./tools/xunit.runner.console/tools/xunit.console.exe", testFolder);
         var xunitSettings = new XUnit2Settings
