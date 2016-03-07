@@ -241,6 +241,7 @@ Task("TestNet4")
             continue;
         var xunitSettings = new XUnit2Settings
         {
+            ShadowCopy = false,
             ArgumentCustomization = builder =>
             {
                 builder.Append("-xml");
