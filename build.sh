@@ -25,8 +25,8 @@ chmod +x $_dotnet_install_script
 if [ "$TRAVIS" == true ]; then
     echo "Installing dotnet from beta channel for CI environment ..."
 
-    $_dotnet_install_script -c beta -d "$build_tools/.dotnet"
-    dotnet="$build_tools/.dotnet/bin/dotnet"
+    $_dotnet_install_script -c beta -d "$work_dir/.dotnet"
+    dotnet="$work_dir/.dotnet/bin/dotnet"
 else
     echo "Installing dotnet from beta channel for local environment ..."
 

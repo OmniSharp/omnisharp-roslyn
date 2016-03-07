@@ -25,7 +25,7 @@ namespace OmniSharp.Tools.PublishProject
             if (Directory.Exists(Path.Combine(plan.Root, plan.DotNetFolder)))
             {
                 _executablePath = Directory.GetFiles(Path.Combine(plan.Root, plan.DotNetFolder), _executableName, SearchOption.AllDirectories)
-                                           .Single();
+                                           .First();
             }
             else
             {
