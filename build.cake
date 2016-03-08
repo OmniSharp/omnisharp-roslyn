@@ -55,7 +55,7 @@ Task("BuildEnvironment")
     var installScript = String.Format("install.{0}", shellExtension);
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
-    DownloadFile(String.Format("https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/{0}", installScript), scriptPath);
+    DownloadFile($"https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/{installScript}", scriptPath);
     if (!IsRunningOnWindows())
     {
         StartProcess("chmod", new ProcessSettings{ Arguments = String.Format("+x {0}",
@@ -264,9 +264,7 @@ Task("TestNet4")
             }
         };
         xunitSettings.ExcludeTrait("category", new[] { "failing" });
-        Information(String.Format("{0}/{1}.dll", testFolder, project.GetDirectoryName()));
-        XUnit2(String.Format("{0}/{1}.dll", testFolder, project.GetDirectoryName()),
-                xunitSettings);
+        XUnit2($"{testFolder}/{project.GetDirectoryName()}.dll", xunitSettings);
     }
 });
 
