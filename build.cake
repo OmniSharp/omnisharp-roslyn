@@ -54,7 +54,7 @@ Task("BuildEnvironment")
 {
     var installScript = String.Format("install.{0}", shellExtension);
     CreateDirectory(dotnetFolder);
-    var scriptPath = new FilePath(String.Format("{0}/{1}", dotnetFolder, installScript));
+    var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
     DownloadFile(String.Format("https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/{0}", installScript), scriptPath);
     if (!IsRunningOnWindows())
     {
