@@ -8,13 +8,13 @@ omnisharp-roslyn
 
 OmniSharp-Roslyn is a .NET development platform based on on [Roslyn](https://github.com/dotnet/roslyn) workspaces. It provides project dependencies and language syntax to various IDE and plugins.
 
-OmniSharp-Roslyn is now built with [dotnet-cli]( http://dotnet.github.io/getting-started/). It targets both __dnxcore50__ and __dnx451__ targets. The __dnxcore50__ build is self contained, while __dnx451__ build requires __mono__ (>4.0.1) if it is ran on platform other than Windows.
+OmniSharp-Roslyn is now built with [dotnet-cli]( http://dotnet.github.io/getting-started/). It targets both __dnxcore50__ and __dnx451__ targets. The __dnxcore50__ build is self contained, while __dnx451__ build requires __mono__ (>4.0.1) if it is run on a platform other than Windows.
 
-In addition if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed.
+In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed.
 
-## Use the latest OmniSharp-Roslyn in VS Code
+## Using the latest OmniSharp-Roslyn with VS Code
 
-### Build
+### Building
 
 ```
 On Windows:
@@ -43,7 +43,7 @@ Add the following setting to your [User Settings or Workspace Settings](https://
 
 ### For Linux / Unix
 
-If you're running OmniSharp on Linux or Unix, you need to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` for projects targetting desktop CLR. You can use following bash script to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` to mono's reference assemblies folder.
+If you're running OmniSharp on Linux or Unix, you'll need to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` for projects targetting desktop CLR. You can use the following bash script to set `DOTNET_REFERENCE_ASSEMBLIES_PATH` to mono's reference assemblies folder.
 
 ``` Bash
 if [ -z "$DOTNET_REFERENCE_ASSEMBLIES_PATH" ]; then
