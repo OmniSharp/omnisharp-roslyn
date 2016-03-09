@@ -39,6 +39,22 @@ string[] skipTestNet4 = {   "OmniSharp.Roslyn.CSharp.Tests",
                             
 string[] doPublish = {      "OmniSharp" };
 
+void DoArchive(DirectoryPath inputFolder, FilePath outputFile)
+{
+    if (IsRunningOnWindows())
+    {
+        Zip(inputFolder, $"{outputFile}.zip");
+    }
+    else
+    {
+        StartProcess("tar", new ProcessSettings
+        {
+            Arguments = $"czf {outputFile.FullPath}.tar.gz",
+            WorkingDirectory = inputFolder
+        });
+    }
+}
+
 Task("Cleanup")
     .Does(() =>
 {
@@ -186,11 +202,12 @@ Task("OnlyPublishCore")
                 throw new Exception(String.Format("Failed to publish {0} / dnxcore50", project.GetDirectoryName()));
             }
             var publishedRuntime = runtime.Replace("win7-", "win-");
-            if (publishedRuntime.Contains("Ubuntu"))
-                publishedRuntime = "linux-x64";
-            else if (publishedRuntime.Contains("osx"))
-                publishedRuntime = "darwin-x64";
-            Zip(outputFolder, String.Format("{0}/omnisharp-coreclr-{1}.zip", artifactFolder, publishedRuntime));
+            // Remove version number on Unix
+            if (!IsRunningOnWindows())
+            {
+                publishedRuntime = $"{publishedRuntime.Substring(0, publishedRuntime.IndexOf('.'))}-x64";
+            }
+            DoArchive(outputFolder, $"{artifactFolder}/omnisharp-coreclr-{publishedRuntime}");
         }
     }
 });
@@ -298,9 +315,9 @@ Task("OnlyPublishNet4")
             else if (publishedRuntime.Contains("osx"))
                 publishedRuntime = "darwin-x64";
             if (IsRunningOnWindows())
-                Zip(outputFolder, String.Format("{0}/omnisharp-clr-{1}.zip", artifactFolder, publishedRuntime));
+                DoArchive(outputFolder, $"{artifactFolder}/omnisharp-clr-{publishedRuntime}");
             else
-                Zip(outputFolder, String.Format("{0}/omnisharp-mono.zip", artifactFolder));
+                DoArchive(outputFolder, $"{artifactFolder}/omnisharp-mono");
         }
     }
 });
