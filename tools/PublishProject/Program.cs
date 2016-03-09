@@ -86,7 +86,7 @@ namespace OmniSharp.Tools.PublishProject
             var buildIdentifier = $"{runtimeString}-{framework}";
             // Linux + dnx451 is renamed to Mono
             if (runtimeString.Contains("linux-") && framework.Equals("dnx451"))
-                buildIdentifier ="mono";
+                buildIdentifier ="linux-mono";
             // No need to package OSX + dnx451
             else if (runtimeString.Contains("osx-") && framework.Equals("dnx451"))
                 return;
