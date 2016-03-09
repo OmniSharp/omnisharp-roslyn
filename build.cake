@@ -253,13 +253,14 @@ Task("TestNet4")
         var testFolder = String.Format("{0}/bin/{1}/dnx451/{2}", project.FullPath, testConfiguration, runtime);
         CopyFileToDirectory("./tools/xunit.runner.console/tools/xunit.console.exe", testFolder);
         CopyFileToDirectory("./tools/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", testFolder);
+        var logFile = $"{logFolder}/{project.GetDirectoryName()}-dnx451-result.xml";
         var xunitSettings = new XUnit2Settings
         {
             ToolPath = String.Format("{0}/xunit.console.exe", testFolder),
             ArgumentCustomization = builder =>
             {
                 builder.Append("-xml");
-                builder.Append(String.Format("{0}/{1}-dnx451-result.xml", logFolder, project.GetDirectoryName()));
+                builder.Append(logFile);
                 return builder;
             }
         };
