@@ -77,7 +77,8 @@ namespace OmniSharp.Tools.PublishProject
                                     string rid,
                                     string framework)
         {
-            var zipFilePath = Path.Combine(packageOutput, $"{projectName}-{rid}-{framework}.zip");
+            var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
+            var zipFilePath = Path.Combine(packageOutput, $"{projectName}-{runtimeString}-{framework}");
             ZipFile.CreateFromDirectory(publishOutput, zipFilePath); 
         }
 
