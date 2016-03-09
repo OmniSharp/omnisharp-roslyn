@@ -27,13 +27,13 @@ $ ./build.sh
 
 ```
 
-You cand find the output under `artifacts/publish/<runtime id>/<target framework>/`.
+You can find the output under `artifacts/publish/<runtime id>/<target framework>/`.
 
-The executable is `OmniSharp.exe` or `OmniSharp`.
+The executable is either `OmniSharp.exe` or `OmniSharp`.
 
 ### VS Code
 
-Add following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace). 
+Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace). 
 
 ``` JSON
 {
