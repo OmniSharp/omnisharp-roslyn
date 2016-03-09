@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace OmniSharp.Tools.PublishProject
 {
@@ -78,8 +81,51 @@ namespace OmniSharp.Tools.PublishProject
                                     string framework)
         {
             var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
-            var zipFilePath = Path.Combine(packageOutput, $"{projectName}-{runtimeString}-{framework}");
-            ZipFile.CreateFromDirectory(publishOutput, zipFilePath); 
+            var baseFilePath = Path.GetFullPath(Path.Combine(packageOutput, $"{projectName}-{runtimeString}-{framework}"));
+            if (runtimeString.Contains("win-"))
+            {
+                var zipFilePath = Path.ChangeExtension(baseFilePath, "zip");
+                ZipFile.CreateFromDirectory(publishOutput, zipFilePath);
+            }
+            else
+            {
+                var tarFilePath = Path.ChangeExtension(baseFilePath, "tar.gz");
+                if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Windows)
+                {
+                    var tempFilePath = Path.ChangeExtension(baseFilePath, "tar");
+                    var tarStartInfo = new ProcessStartInfo("7z", $"a {tempFilePath}")
+                    {
+                        UseShellExecute = false,
+                        WorkingDirectory = publishOutput
+                    };
+                    var tarProcess = Process.Start(tarStartInfo);
+                    tarProcess.WaitForExit();
+                    if (tarProcess.ExitCode != 0)
+                        throw new InvalidOperationException($"Tar-ing failed for {projectName} {rid}");
+                    var compressStartInfo = new ProcessStartInfo("7z", $"a {tarFilePath} {tempFilePath}")
+                    {
+                        UseShellExecute = false,
+                        WorkingDirectory = publishOutput
+                    };
+                    var compressProcess = Process.Start(compressStartInfo);
+                    compressProcess.WaitForExit();
+                    if (tarProcess.ExitCode != 0)
+                        throw new InvalidOperationException($"Compression failed for {projectName} {rid}");
+                    File.Delete(tempFilePath);
+                }
+                else
+                {
+                    var tarStartInfo = new ProcessStartInfo("tar", $"czf {tarFilePath}")
+                    {
+                        UseShellExecute = false,
+                        WorkingDirectory = publishOutput
+                    };
+                    var tarProcess = Process.Start(tarStartInfo);
+                    tarProcess.WaitForExit();
+                    if (tarProcess.ExitCode != 0)
+                        throw new InvalidOperationException($"Compression failed for {projectName} {rid}");
+                }
+            }
         }
 
         private static string FindRoot()
