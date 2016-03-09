@@ -35,8 +35,8 @@ namespace OmniSharp.Tools.PublishProject
             
             Console.WriteLine($"       root: {root}");
             Console.WriteLine($"    project: {buildPlan.MainProject}");
-            Console.WriteLine($"     source: {projectPath}");
             Console.WriteLine($"     dotnet: {dotnetExecutable}");
+            Console.WriteLine($"     source: {projectPath}");
             Console.WriteLine($"publish out: {publishOutput}");
             Console.WriteLine($"package out: {packageOutput}");
             Console.WriteLine($" frameworks: {string.Join(", ", buildPlan.Frameworks)}");
@@ -46,19 +46,19 @@ namespace OmniSharp.Tools.PublishProject
             {
                 return 1;
             }
-
+                
+            if (dotnetExecutable.Restore(Path.Combine(root, "src")) != 0)
+            {
+                Console.Error.WriteLine("Fail to restore projects for {rid}");
+                return 1;
+            }
+                
             foreach (var rid in buildPlan.Rids)
             {
-                if (dotnetExecutable.Restore(Path.Combine(root, "src"), rid, TimeSpan.FromMinutes(10)) != 0)
-                {
-                    Console.Error.WriteLine("Fail to restore projects for {rid}");
-                    return 1;
-                }
-
                 foreach (var framework in buildPlan.Frameworks)
                 {
                     var publish = Path.Combine(publishOutput, buildPlan.MainProject, rid, framework);
-                    if( dotnetExecutable.Publish(publish, projectPath, rid, framework) != 0)
+                    if(dotnetExecutable.Publish(publish, projectPath, rid, framework) != 0)
                     {
                         Console.Error.WriteLine($"Fail to publish {projectPath} on {framework} for {rid}");
                         return 1;

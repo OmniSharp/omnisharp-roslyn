@@ -77,28 +77,6 @@ namespace OmniSharp.Tools.PublishProject
             return process.ExitCode;
         }
 
-        public int Restore(string folder, string rid, TimeSpan timeSpan)
-        {
-            // restore the package for under given runtime
-            var restoreArgument = $"restore --runtime {rid}";
-            var restoreStartInfo = new ProcessStartInfo(_executablePath, restoreArgument)
-            {
-                UseShellExecute = false,
-                WorkingDirectory = folder
-            };
-
-            var process = Process.Start(restoreStartInfo);
-
-            if (!process.WaitForExit((int)timeSpan.TotalMilliseconds))
-            {
-                return -1;
-            }
-            else
-            {
-                return process.ExitCode;
-            }
-        }
-
         public int Publish(string publishOutput, string projectPath, string rid, string framework)
         {
             var publishArgument = $"publish -o {publishOutput} -f {framework} -r {rid}";
