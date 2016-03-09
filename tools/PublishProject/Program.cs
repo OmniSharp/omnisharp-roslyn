@@ -128,7 +128,7 @@ namespace OmniSharp.Tools.PublishProject
                 // Use tar to create TAR.GZ on Unix
                 else
                 {
-                    var tarStartInfo = new ProcessStartInfo("tar", $"czf {tarFilePath}")
+                    var tarStartInfo = new ProcessStartInfo("tar", $"czf {tarFilePath} .")
                     {
                         UseShellExecute = false,
                         WorkingDirectory = publishOutput
