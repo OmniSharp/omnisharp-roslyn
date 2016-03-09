@@ -32,7 +32,7 @@ deploy:
   api_key:
     secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
   file_glob: true
-  file: artifacts/package/*.tar.gz
+  file: artifacts/package/*${TRAVIS_OS_NAME}*.tar.gz
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
