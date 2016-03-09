@@ -81,7 +81,10 @@ namespace OmniSharp.Tools.PublishProject
                                     string framework)
         {
             var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
-            var baseFilePath = Path.GetFullPath(Path.Combine(packageOutput, $"{projectName}-{runtimeString}-{framework}"));
+            var buildIdentifier = $"{runtimeString}-{framework}";
+            if (!runtimeString.Contains("win-") && framework.Equals("dnx451"))
+                buildIdentifier ="mono";
+            var baseFilePath = Path.GetFullPath(Path.Combine(packageOutput, $"{projectName.ToLower()}-{buildIdentifier}"));
             if (runtimeString.Contains("win-"))
             {
                 var zipFilePath = Path.ChangeExtension(baseFilePath, "zip");
