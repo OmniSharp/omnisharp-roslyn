@@ -43,7 +43,7 @@ void DoArchive(DirectoryPath inputFolder, FilePath outputFile)
 {
     if (IsRunningOnWindows())
     {
-        Zip(inputFolder, $"{outputFile}.zip");
+        Zip(inputFolder, $"{outputFile.FullPath}.zip");
     }
     else
     {
