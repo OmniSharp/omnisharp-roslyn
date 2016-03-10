@@ -184,8 +184,9 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
+                    var message = $"The project system '{projectSystem.GetType().Name}' threw exception during initialization.\n{e.Message}\n{e.StackTrace}";
                     // if a project system throws an unhandled exception it should not crash the entire server
-                    logger.LogError($"The project system '{projectSystem.GetType().Name}' threw exception during initialization.", e);
+                    logger.LogError(message);
                 }
             }
 
