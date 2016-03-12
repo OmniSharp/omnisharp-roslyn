@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-*",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143",
     "Microsoft.CodeAnalysis": "1.1.1"
   },
   "frameworks": {
@@ -31,8 +31,9 @@
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23819",
-        "System.Xml.XDocument": "4.0.11-rc2-23819"
+        "NETStandard.Library": "1.0.0-rc2-23910",
+        "System.Reflection.TypeExtensions": "4.1.0-rc2-23911",
+        "System.Xml.XDocument": "4.0.11-rc2-23911"
       }
     }
   }

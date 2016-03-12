@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
-    "Newtonsoft.Json":"8.0.2",
+    "Newtonsoft.Json": "8.0.2",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.CodeAnalysis.CSharp": "1.1.1",
     "Microsoft.CodeAnalysis.CSharp.Features": "1.1.1",
@@ -22,7 +22,7 @@
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23819"
+        "NETStandard.Library": "1.0.0-rc2-23910"
       }
     }
   }

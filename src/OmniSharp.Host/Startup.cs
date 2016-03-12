@@ -128,27 +128,15 @@ namespace OmniSharp
                               IOmnisharpAssemblyLoader loader,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
-            var assemblies = new List<Assembly>();
-
-            foreach (var dependency in DependencyContext.Default.RuntimeLibraries.SelectMany(lib => lib.Assemblies))
-            {
-                var assembly = loader.Load(dependency.Name);
-
-                using (var stream = assembly.GetManifestResourceStream(assembly.GetName().Name + ".deps.json"))
-                {
-                    if (stream == null)
-                    {
-                        continue;
-                    }
-
-                    if (DependencyContext.Load(stream).CompileLibraries.Any(
-                            lib => lib.PackageName == "OmniSharp.Abstractions" ||
-                                   lib.PackageName == "OmniSharp.Roslyn"))
-                    {
-                        assemblies.Add(assembly);
-                    }
-                }
-            }
+            Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
+                                                                                       dep.Name == "OmniSharp.Roslyn");
+                       
+            var assemblies = DependencyContext.Default
+                                              .RuntimeLibraries
+                                              .Where(shouldLoad)
+                                              .SelectMany(lib => lib.Assemblies)
+                                              .Select(each => loader.Load(each.Name))
+                                              .ToList();
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
