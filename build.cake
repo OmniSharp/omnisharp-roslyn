@@ -1,59 +1,144 @@
 #addin "Cake.FileHelpers"
+#addin "Cake.Json"
+
+using System.Text.RegularExpressions;
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 
+var environment = new CakeEnvironment();
+
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
-string[] runtimes = { "win7-x64", "win7-x86" };
-// Cannot use ternary operator on Mono with array initializer
-if (!IsRunningOnWindows())
+public class BuildPlan
 {
-    runtimes = new string[] { "" };
+    public IDictionary<string, string[]> TestProjects { get; set; }
+    public string BuildToolsFolder { get; set; }
+    public string ArtifactsFolder { get; set; }
+    public string DotNetFolder { get; set; }
+    public string[] Frameworks { get; set; }
+    public string[] Rids { get; set; }
+    public string MainProject { get; set; }
 }
 
-var dotnetFolder = "./.dotnet";
-var dotnetcli = IsRunningOnWindows() ? String.Format("{0}/cli/bin/dotnet", dotnetFolder) :
-                    String.Format("{0}/bin/dotnet", dotnetFolder);
-var toolsFolder = "./tools";
+var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{environment.WorkingDirectory}/build.json");
+
+var dotnetFolder = $"{environment.WorkingDirectory}/{buildPlan.DotNetFolder}";
+var dotnetcli = IsRunningOnWindows() ? $"{dotnetFolder}/cli/bin/dotnet" :
+                    $"{dotnetFolder}/bin/dotnet";
+var toolsFolder = $"{environment.WorkingDirectory}/tools";
 var xunitRunner = "xunit.runner.console";
 
-var artifactFolder = "./artifacts";
-var publishFolder = String.Format("{0}/publish", artifactFolder);
-var logFolder = String.Format("{0}/logs", artifactFolder);
-var installFolder = IsRunningOnWindows() ? "./fakeinstall/local" : "~/.omnisharp/local";
+var sourceFolder = $"{environment.WorkingDirectory}/src";
+var testFolder = $"{environment.WorkingDirectory}/tests";
 
-string[] skipBuild = {      "OmniSharp.DotNet",
-                            "OmniSharp.MSBuild",
-                            "OmniSharp.NuGet",
-                            "OmniSharp.ScriptCs" };
-                       
-string[] skipTestCore = {   "OmniSharp.MSBuild.Tests",
-                            "OmniSharp.Tests" };
+var artifactFolder = $"{environment.WorkingDirectory}/{buildPlan.ArtifactsFolder}";
+var publishFolder = $"{artifactFolder}/publish";
+var logFolder = $"{artifactFolder}/logs";
+var packageFolder = $"{artifactFolder}/package";
+var installFolder = IsRunningOnWindows() ? $"{environment.WorkingDirectory}/fakeinstall/local" : "~/.omnisharp/local";
 
-string[] skipTestNet4 = {   "OmniSharp.Roslyn.CSharp.Tests",
-                            "OmniSharp.Tests" };
-                            
-string[] doPublish = {      "OmniSharp" };
-
-void DoArchive(DirectoryPath inputFolder, FilePath outputFile)
+string GetLocalRuntimeID()
 {
-    if (IsRunningOnWindows())
+    var process = StartAndReturnProcess(dotnetcli, 
+        new ProcessSettings
+        { 
+            Arguments = "--version",
+            RedirectStandardOutput = true
+        });
+    process.WaitForExit();
+    if (process.GetExitCode() != 0)
+        throw new Exception("Failed to get run dotnet --version");
+    foreach (var line in process.GetStandardOutput())
     {
-        Zip(inputFolder, $"{outputFile.FullPath}.zip");
+        if (!line.Contains("Runtime Id"))
+            continue;
+        var colonIndex = line.IndexOf(':');
+       return line.Substring(colonIndex + 1).Trim();
     }
+    throw new Exception("Failed to get default RID for system");
+}
+
+void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
+{
+    // On all platforms use ZIP for Windows runtimes
+    if (runtime.Contains("win"))
+    {
+        var zipFile = outputFile.AppendExtension("zip");
+        Zip(inputFolder, zipFile);
+    }
+    // On all platforms use TAR.GZ for Unix runtimes
     else
     {
-        StartProcess("tar", new ProcessSettings
+        var tarFile = outputFile.AppendExtension("tar.gz");
+        // Use 7z to create TAR.GZ on Windows
+        if (IsRunningOnWindows())
         {
-            Arguments = $"czf {outputFile.FullPath}.tar.gz",
-            WorkingDirectory = inputFolder
-        });
+            var tempFile = outputFile.AppendExtension("tar");
+            var exitCode = StartProcess("7z", new ProcessSettings
+            {
+                Arguments = $"a {tempFile}",
+                WorkingDirectory = inputFolder
+            });
+            if (exitCode != 0)
+                throw new Exception($"Tar-ing failed for {inputFolder} {outputFile}");
+            exitCode = StartProcess("7z", new ProcessSettings
+            {
+                Arguments = $"a {tarFile} {tempFile}",
+                WorkingDirectory = inputFolder
+            });
+            if (exitCode != 0)
+                throw new Exception($"Compression failed for {inputFolder} {outputFile}");
+            DeleteFile(tempFile);
+        }
+        // Use tar to create TAR.GZ on Unix
+        else
+        {
+            var exitCode =  StartProcess("tar", new ProcessSettings
+            {
+                Arguments = $"czf {tarFile} .",
+                WorkingDirectory = inputFolder
+            });
+            if (exitCode != 0)
+                throw new Exception($"Compression failed for {inputFolder} {outputFile}");
+        }
     }
 }
+
+string GetRuntimeInPath(string path)
+{
+    var potentialRuntimes = GetDirectories(path);
+    if (potentialRuntimes.Count != 1)
+        throw new Exception($"Multiple runtimes when only one expected in {path}");
+    var enumerator = potentialRuntimes.GetEnumerator();
+    enumerator.MoveNext();
+    return enumerator.Current.GetDirectoryName();
+}
+
+Task("RestrictToLocalRuntime")
+    .Does(() =>
+{
+    var localRuntime = GetLocalRuntimeID();
+    if (buildPlan.Rids.Contains(localRuntime))
+        buildPlan.Rids = new string[] { localRuntime };
+    else
+    {
+        foreach (var runtime in buildPlan.Rids)
+        {
+            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
+            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            if (localRuntimeWithoutVersion.Equals(runtimeWithoutVersion))
+            {
+                buildPlan.Rids = new string[] { runtime };
+                return;
+            }
+        }
+    }
+    throw new Exception("Local default runtime is not in supported by configured runtimes");
+});
 
 Task("Cleanup")
     .Does(() =>
@@ -63,6 +148,7 @@ Task("Cleanup")
     else
         CreateDirectory(artifactFolder);
     CreateDirectory(logFolder);
+    CreateDirectory(packageFolder);
 });
 
 Task("BuildEnvironment")
@@ -93,26 +179,6 @@ Task("BuildEnvironment")
     }
 });
 
-Task("GetUnixRuntimeID")
-    .WithCriteria(!IsRunningOnWindows())
-    .Does(() =>
-{
-    var process = StartAndReturnProcess(dotnetcli, 
-        new ProcessSettings
-        { 
-            Arguments = String.Format("--version"),
-            RedirectStandardOutput = true
-        });
-    process.WaitForExit();
-    foreach (var line in process.GetStandardOutput())
-    {
-        if (!line.Contains("Runtime Id"))
-            continue;
-        var colonIndex = line.IndexOf(':');
-        runtimes = new string[] { line.Substring(colonIndex + 1).Trim() };
-    }
-});
-
 Task("Restore")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
@@ -125,201 +191,133 @@ Task("Restore")
     }
 });
 
-Task("BuildCore")
+Task("TestBuild")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-    foreach (var project in GetDirectories("./src/*"))
+    foreach (var pair in buildPlan.TestProjects)
     {
-        if(skipBuild.Contains(project.GetDirectoryName()))
-            continue;
-        var exitCode = StartProcess(dotnetcli, 
-            new ProcessSettings{ Arguments = String.Format("build --framework dnxcore50 --configuration {0} {1}", configuration, project) });
-        if (exitCode != 0)
+        foreach (var framework in pair.Value)
         {
-            throw new Exception(String.Format("Failed to build {0} / dnxcore50", project.GetDirectoryName()));
+            var project = pair.Key;
+            var process = StartAndReturnProcess(dotnetcli, 
+                new ProcessSettings
+                { 
+                    Arguments = $"build --framework {framework} --configuration {testConfiguration} {testFolder}/{project}",
+                    RedirectStandardOutput = true
+                });
+            process.WaitForExit();
+            FileWriteLines($"{logFolder}/{project}-{framework}-build.log", process.GetStandardOutput().ToArray());
         }
-    }
-});
-
-Task("TestBuildCore")
-    .IsDependentOn("Restore")
-    .Does(() =>
-{
-    foreach (var project in GetDirectories("./tests/*"))
-    {
-        if(skipTestCore.Contains(project.GetDirectoryName()))
-            continue;
-        var process = StartAndReturnProcess(dotnetcli, 
-            new ProcessSettings
-            { 
-                Arguments = String.Format("build --framework dnxcore50 --configuration {0} {1}", testConfiguration, project),
-                RedirectStandardOutput = true
-            });
-        process.WaitForExit();
-        FileWriteLines(String.Format("{0}/{1}-dnxcore50-build.log", logFolder, project.GetDirectoryName()), process.GetStandardOutput().ToArray());
     }
 });
 
 Task("TestCore")
-    .IsDependentOn("TestBuildCore")
+    .IsDependentOn("TestBuild")
     .Does(() =>
 {
-    foreach (var project in GetDirectories("./tests/*"))
+    foreach (var pair in buildPlan.TestProjects)
     {
-        if(skipTestCore.Contains(project.GetDirectoryName()))
-            continue;
-        var exitCode = StartProcess(dotnetcli, 
-            new ProcessSettings
-            { 
-                Arguments = String.Format("test -xml {0}/{1}-dnxcore50-result.xml -notrait category=failing", logFolder, project.GetDirectoryName()),
-                WorkingDirectory = project
-            });
-        if (exitCode != 0)
+        foreach (var framework in pair.Value)
         {
-            throw new Exception(String.Format("Test failed {0} / dnxcore50", project.GetDirectoryName()));
-        }
-    }
-});
-
-Task("OnlyPublishCore")
-    .IsDependentOn("GetUnixRuntimeID")
-    .Does(() =>
-{
-    foreach (var project in GetDirectories("./src/*"))
-    {
-        if(!doPublish.Contains(project.GetDirectoryName()))
-            continue;
-        foreach (var runtime in runtimes)
-        {
-            var runtimeOption = String.Format("--runtime {0}", runtime);
-            var outputFolder = String.Format("{0}/{1}/{2}/dnxcore50", publishFolder, project.GetDirectoryName(), runtime);
+            if (!framework.Equals("dnxcore50"))
+            {
+                continue;
+            }
+            
+            var project = pair.Key;
             var exitCode = StartProcess(dotnetcli, 
-                new ProcessSettings{ Arguments = String.Format("publish --framework dnxcore50 {0} --configuration {1} --output {2} {3}", 
-                                                    runtimeOption, configuration, outputFolder, project) });
+                new ProcessSettings
+                { 
+                    Arguments = $"test -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
+                    WorkingDirectory = $"{testFolder}/{project}"
+                });
             if (exitCode != 0)
             {
-                throw new Exception(String.Format("Failed to publish {0} / dnxcore50", project.GetDirectoryName()));
+                throw new Exception($"Test failed {project} / {framework}");
             }
-            var publishedRuntime = runtime.Replace("win7-", "win-");
-            // Remove version number on Unix
-            if (!IsRunningOnWindows())
-            {
-                publishedRuntime = $"{publishedRuntime.Substring(0, publishedRuntime.IndexOf('.'))}-x64";
-            }
-            DoArchive(outputFolder, $"{artifactFolder}/omnisharp-coreclr-{publishedRuntime}");
         }
     }
 });
 
-Task("BuildNet4")
-    .IsDependentOn("Restore")
+Task("Test")
+    .IsDependentOn("TestBuild")
     .Does(() =>
 {
-    foreach (var project in GetDirectories("./src/*"))
+    foreach (var pair in buildPlan.TestProjects)
     {
-        if(skipBuild.Contains(project.GetDirectoryName()))
-            continue;
-        var exitCode = StartProcess(dotnetcli, 
-            new ProcessSettings{ Arguments = String.Format("build --framework dnx451 --configuration {0} {1}", configuration, project) });
-        if (exitCode != 0)
+        foreach (var framework in pair.Value)
         {
-            throw new Exception(String.Format("Failed to build {0} / dnx451", project.GetDirectoryName()));
+            if (framework.Equals("dnxcore50"))
+            {
+                continue;
+            }
+
+            var project = pair.Key;
+            var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
+            var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
+            CopyFileToDirectory($"{environment.WorkingDirectory}/tools/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
+            CopyFileToDirectory($"{environment.WorkingDirectory}/tools/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
+            var logFile = $"{logFolder}/{project}-{framework}-result.xml";
+            var xunitSettings = new XUnit2Settings
+            {
+                ToolPath = $"{instanceFolder}/xunit.console.exe",
+                ArgumentCustomization = builder =>
+                {
+                    builder.Append("-xml");
+                    builder.Append(logFile);
+                    return builder;
+                }
+            };
+            xunitSettings.ExcludeTrait("category", new[] { "failing" });
+            XUnit2($"{instanceFolder}/{project}.dll", xunitSettings);
         }
     }
 });
 
-Task("TestBuildNet4")
-    .IsDependentOn("Restore")
+Task("OnlyPublish")
     .Does(() =>
 {
-    foreach (var project in GetDirectories("./tests/*"))
+    var project = buildPlan.MainProject;
+    foreach (var framework in buildPlan.Frameworks)
     {
-        if(skipTestNet4.Contains(project.GetDirectoryName()))
-            continue;
-        var process = StartAndReturnProcess(dotnetcli, 
-            new ProcessSettings
-            { 
-                Arguments = String.Format("build --framework dnx451 --configuration {0} {1}", testConfiguration, project),
-                RedirectStandardOutput = true
-            });
-        process.WaitForExit();
-        FileWriteLines(String.Format("{0}/{1}-dnx451-build.log", logFolder, project.GetDirectoryName()), process.GetStandardOutput().ToArray());
-    }
-});
-
-string GetRuntimeInPath(string path)
-{
-    var potentialRuntimes = GetDirectories(path);
-    if (potentialRuntimes.Count != 1)
-        throw new Exception(String.Format("Multiple runtimes when only one expected in {0}", path));
-    var enumerator = potentialRuntimes.GetEnumerator();
-    enumerator.MoveNext();
-    return enumerator.Current.GetDirectoryName();
-}
-
-Task("TestNet4")
-    .IsDependentOn("TestBuildNet4")
-    .Does(() =>
-{
-    foreach (var project in GetDirectories("./tests/*"))
-    {
-        if(skipTestNet4.Contains(project.GetDirectoryName()))
-            continue;
-        var runtime = GetRuntimeInPath(String.Format("{0}/bin/{1}/dnx451/*", project.FullPath, testConfiguration));
-        var testFolder = String.Format("{0}/bin/{1}/dnx451/{2}", project.FullPath, testConfiguration, runtime);
-        CopyFileToDirectory("./tools/xunit.runner.console/tools/xunit.console.exe", testFolder);
-        CopyFileToDirectory("./tools/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", testFolder);
-        var logFile = $"{logFolder}/{project.GetDirectoryName()}-dnx451-result.xml";
-        var xunitSettings = new XUnit2Settings
+        foreach (var runtime in buildPlan.Rids)
         {
-            ToolPath = String.Format("{0}/xunit.console.exe", testFolder),
-            ArgumentCustomization = builder =>
-            {
-                builder.Append("-xml");
-                builder.Append(logFile);
-                return builder;
-            }
-        };
-        xunitSettings.ExcludeTrait("category", new[] { "failing" });
-        XUnit2($"{testFolder}/{project.GetDirectoryName()}.dll", xunitSettings);
-    }
-});
-
-Task("OnlyPublishNet4")
-    .IsDependentOn("GetUnixRuntimeID")
-    .Does(() =>
-{
-    foreach (var project in GetDirectories("./src/*"))
-    {
-        if(!doPublish.Contains(project.GetDirectoryName()))
-            continue;
-        foreach (var runtime in runtimes)
-        {
-            var runtimeOption = String.Format("--runtime {0}", runtime);
-            var outputFolder = String.Format("{0}/{1}/{2}/dnx451", publishFolder, project.GetDirectoryName(), runtime);
+            var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
             var exitCode = StartProcess(dotnetcli, 
-                new ProcessSettings{ Arguments = String.Format("publish --framework dnx451 {0} --configuration {1} --output {2} {3}", 
-                                                    runtimeOption, configuration, outputFolder, project) });
+                new ProcessSettings
+                {
+                    Arguments = $"publish --framework {framework} --runtime {runtime} " +
+                                    $"--configuration {configuration} --output {outputFolder} " +
+                                    $"{sourceFolder}/{project}"
+                });
             if (exitCode != 0)
             {
-                throw new Exception(String.Format("Failed to publish {0} / dnx451", project.GetDirectoryName()));
+                throw new Exception($"Failed to publish {project} / {framework}");
             }
-            // Copy binding redirect configuration respectively to mitigate dotnet publish bug
-            CopyFileToDirectory(String.Format("{0}/bin/{1}/dnx451/{2}/{3}.exe.config",
-                                        project.FullPath, configuration, runtime, project.GetDirectoryName()),
-                                    outputFolder);
-            var publishedRuntime = runtime.Replace("win7-", "win-");
-            if (publishedRuntime.Contains("Ubuntu"))
-                publishedRuntime = "linux-x64";
-            else if (publishedRuntime.Contains("osx"))
-                publishedRuntime = "darwin-x64";
-            if (IsRunningOnWindows())
-                DoArchive(outputFolder, $"{artifactFolder}/omnisharp-clr-{publishedRuntime}");
-            else
-                DoArchive(outputFolder, $"{artifactFolder}/omnisharp-mono");
+            
+            // Remove version number on Windows
+            var runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            // Simplify Ubuntu to Linux
+            runtimeShort = runtimeShort.Replace("ubuntu", "linux");
+            var buildIdentifier = $"{runtimeShort}-{framework}";
+            // Linux + dnx451 is renamed to Mono
+            if (runtimeShort.Contains("linux-") && framework.Equals("dnx451"))
+                buildIdentifier ="linux-mono";
+            // No need to package OSX + dnx451
+            else if (runtimeShort.Contains("osx-") && framework.Equals("dnx451"))
+                continue;
+            
+            DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
         }
     }
+});
+
+Task("Publish")
+    .IsDependentOn("Restore")
+    .IsDependentOn("OnlyPublish")
+    .Does(() =>
+{
 });
 
 Task("CleanupInstall")
@@ -332,40 +330,40 @@ Task("CleanupInstall")
 });
 
 Task("Quick")
+    .IsDependentOn("RestrictToLocalRuntime")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("OnlyPublishCore")
-    .IsDependentOn("OnlyPublishNet4")
+    .IsDependentOn("OnlyPublish")
     .Does(() =>
 {
 });
 
 Task("Install")
+    .IsDependentOn("RestrictToLocalRuntime")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("OnlyPublishCore")
-    .IsDependentOn("OnlyPublishNet4")
+    .IsDependentOn("OnlyPublish")
     .IsDependentOn("CleanupInstall")
     .Does(() =>
 {
-    foreach (var project in GetDirectories("./src/*"))
+    var project = buildPlan.MainProject;
+    foreach (var framework in buildPlan.Frameworks)
     {
-        if(!doPublish.Contains(project.GetDirectoryName()))
-            continue;
-        foreach (var runtime in runtimes)
-        {
-            var outputFolder = String.Format("{0}/{1}/{2}", publishFolder, project.GetDirectoryName(), runtime);
-            CopyDirectory(outputFolder, installFolder);
-        }
+        var outputFolder = $"{publishFolder}/{project}/{buildPlan.Rids[0]()}/{framework}";
+        CopyDirectory(outputFolder, installFolder);
     }
+});
+
+Task("Local")
+    .IsDependentOn("RestrictToLocalRuntime")
+    .IsDependentOn("Default")
+    .Does(() =>
+{
 });
 
 Task("Default")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("BuildCore")
     .IsDependentOn("TestCore")
-    .IsDependentOn("OnlyPublishCore")
-    .IsDependentOn("BuildNet4")
-    .IsDependentOn("TestNet4")
-    .IsDependentOn("OnlyPublishNet4")
+    .IsDependentOn("Test")
+    .IsDependentOn("Publish")
     .Does(() =>
 {
 });
