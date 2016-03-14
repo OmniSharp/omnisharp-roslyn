@@ -7,21 +7,21 @@
     "OmniSharp.Host": "1.0.0-*",
     "OmniSharp.Roslyn.CSharp": "1.0.0-*",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "Microsoft.DotNet.InternalAbstractions": "1.0.0-beta-001517",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001517",
+    "Microsoft.DotNet.InternalAbstractions": "1.0.0-beta-001718",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001718",
     "xunit": "2.1.0"
   },
   "frameworks": {
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "dotnet-test-xunit": "1.0.0-dev-69987-33",
-        "Microsoft.NETCore.Platforms": "1.0.1-rc2-23819",
-        "System.Runtime.Serialization.Primitives": "4.1.0-rc2-23819",
-        "System.IO.Compression": "4.1.0-rc2-23819"
+        "dotnet-test-xunit": "1.0.0-dev-79755-47",
+        "Microsoft.NETCore.Platforms": "1.0.1-rc2-23911",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-23911",
+        "System.IO.Compression": "4.1.0-rc2-23911"
       }
     },
-    "dnx451": { 
+    "dnx451": {
       "dependencies": {
         "xunit.runner.console": "2.1.0"
       }

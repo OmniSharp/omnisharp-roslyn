@@ -8,14 +8,14 @@
     "Newtonsoft.Json": "8.0.2",
     "Microsoft.CodeAnalysis": "1.1.1",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-16131",
-    "Microsoft.Extensions.Configuration": "1.0.0-rc2-16090",
-    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-16090",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001517",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-16053",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-16110",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-16599",
-    "System.Reflection.Metadata": "1.2.0-rc2-23819"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Configuration": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001718",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143",
+    "System.Reflection.Metadata": "1.2.0"
   },
   "frameworks": {
     "dnx451": {
@@ -36,11 +36,11 @@
     "dnxcore50": {
       "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23819",
-        "System.Dynamic.Runtime": "4.0.11-rc2-23819",
-        "System.Diagnostics.Process": "4.1.0-rc2-23819",
-        "System.IO.FileSystem.Watcher": "4.0.0-rc2-23819",
-        "System.Threading.Thread": "4.0.0-rc2-23819"
+        "NETStandard.Library": "1.0.0-rc2-23910",
+        "System.Dynamic.Runtime": "4.0.11-rc2-23911",
+        "System.Diagnostics.Process": "4.1.0-rc2-23911",
+        "System.IO.FileSystem.Watcher": "4.0.0-rc2-23911",
+        "System.Threading.Thread": "4.0.0-rc2-23911"
       }
     }
   }
