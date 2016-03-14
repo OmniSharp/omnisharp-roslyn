@@ -320,6 +320,27 @@ Task("Publish")
 {
 });
 
+Task("TestPublish")
+    .IsDependentOn("Publish")
+    .IsDependentOn("RestrictToLocalRuntime")
+    .Does(() =>
+{
+    var project = buildPlan.MainProject;
+    foreach (var framework in buildPlan.Frameworks)
+    {
+        foreach (var runtime in buildPlan.Rids)
+        {
+            var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
+            var process = StartAndReturnProcess($"{outputFolder}/{project}", 
+                new ProcessSettings
+                { 
+                    Arguments = $"-s {sourceFolder}/{project}",
+                });
+            bool exitsWithError = process.WaitForExit(3000);
+        }
+    }
+});
+
 Task("CleanupInstall")
     .Does(() =>
 {
@@ -347,7 +368,7 @@ Task("Install")
     var project = buildPlan.MainProject;
     foreach (var framework in buildPlan.Frameworks)
     {
-        var outputFolder = $"{publishFolder}/{project}/{buildPlan.Rids[0]()}/{framework}";
+        var outputFolder = $"{publishFolder}/{project}/{buildPlan.Rids[0]}/{framework}";
         CopyDirectory(outputFolder, installFolder);
     }
 });
@@ -364,6 +385,7 @@ Task("Default")
     .IsDependentOn("TestCore")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
+    .IsDependentOn("TestPublish")
     .Does(() =>
 {
 });
