@@ -6,12 +6,16 @@ using System.Text.RegularExpressions;
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
+var installFolder = Argument("install-path", IsRunningOnWindows() ?
+                        $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : "~/.omnisharp/local");
 
 var environment = new CakeEnvironment();
 
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
+
+var dotnetScriptURL = "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain";
 
 public class BuildPlan
 {
@@ -39,7 +43,6 @@ var artifactFolder = $"{environment.WorkingDirectory}/{buildPlan.ArtifactsFolder
 var publishFolder = $"{artifactFolder}/publish";
 var logFolder = $"{artifactFolder}/logs";
 var packageFolder = $"{artifactFolder}/package";
-var installFolder = IsRunningOnWindows() ? $"{environment.WorkingDirectory}/fakeinstall/local" : "~/.omnisharp/local";
 
 string GetLocalRuntimeID(string dotnetcli)
 {
@@ -51,13 +54,17 @@ string GetLocalRuntimeID(string dotnetcli)
         });
     process.WaitForExit();
     if (process.GetExitCode() != 0)
+    {
         throw new Exception("Failed to get run dotnet --version");
+    }
     foreach (var line in process.GetStandardOutput())
     {
         if (!line.Contains("Runtime Id"))
+        {
             continue;
+        }
         var colonIndex = line.IndexOf(':');
-       return line.Substring(colonIndex + 1).Trim();
+        return line.Substring(colonIndex + 1).Trim();
     }
     throw new Exception("Failed to get default RID for system");
 }
@@ -78,32 +85,41 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
         if (IsRunningOnWindows())
         {
             var tempFile = outputFile.AppendExtension("tar");
-            var exitCode = StartProcess("7z", new ProcessSettings
-            {
-                Arguments = $"a {tempFile}",
-                WorkingDirectory = inputFolder
-            });
+            var exitCode = StartProcess("7z",
+                new ProcessSettings
+                {
+                    Arguments = $"a {tempFile}",
+                    WorkingDirectory = inputFolder
+                });
             if (exitCode != 0)
+            {
                 throw new Exception($"Tar-ing failed for {inputFolder} {outputFile}");
-            exitCode = StartProcess("7z", new ProcessSettings
-            {
-                Arguments = $"a {tarFile} {tempFile}",
-                WorkingDirectory = inputFolder
-            });
+            }
+            exitCode = StartProcess("7z",
+                new ProcessSettings
+                {
+                    Arguments = $"a {tarFile} {tempFile}",
+                    WorkingDirectory = inputFolder
+                });
             if (exitCode != 0)
+            {
                 throw new Exception($"Compression failed for {inputFolder} {outputFile}");
+            }
             DeleteFile(tempFile);
         }
         // Use tar to create TAR.GZ on Unix
         else
         {
-            var exitCode =  StartProcess("tar", new ProcessSettings
-            {
-                Arguments = $"czf {tarFile} .",
-                WorkingDirectory = inputFolder
-            });
+            var exitCode =  StartProcess("tar",
+                new ProcessSettings
+                {
+                    Arguments = $"czf {tarFile} .",
+                    WorkingDirectory = inputFolder
+                });
             if (exitCode != 0)
+            {
                 throw new Exception($"Compression failed for {inputFolder} {outputFile}");
+            }
         }
     }
 }
@@ -112,7 +128,9 @@ string GetRuntimeInPath(string path)
 {
     var potentialRuntimes = GetDirectories(path);
     if (potentialRuntimes.Count != 1)
+    {
         throw new Exception($"Multiple runtimes when only one expected in {path}");
+    }
     var enumerator = potentialRuntimes.GetEnumerator();
     enumerator.MoveNext();
     return enumerator.Current.GetDirectoryName();
@@ -148,9 +166,13 @@ Task("Cleanup")
     .Does(() =>
 {
     if (DirectoryExists(artifactFolder))
+    {
         CleanDirectory(artifactFolder);
+    }
     else
+    {
         CreateDirectory(artifactFolder);
+    }
     CreateDirectory(logFolder);
     CreateDirectory(packageFolder);
 });
@@ -158,37 +180,47 @@ Task("Cleanup")
 Task("BuildEnvironment")
     .Does(() =>
 {
-    var installScript = String.Format("install.{0}", shellExtension);
+    var installScript = $"install.{shellExtension}";
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
-    DownloadFile($"https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/{installScript}", scriptPath);
+    DownloadFile($"{dotnetScriptURL}/{installScript}", scriptPath);
     if (!IsRunningOnWindows())
     {
-        StartProcess("chmod", new ProcessSettings{ Arguments = String.Format("+x {0}",
-            scriptPath) });
+        StartProcess("chmod",
+            new ProcessSettings
+            { 
+                Arguments = $"+x {scriptPath}"
+            });
     }
-    var installArgs = IsRunningOnWindows() ? String.Format("beta -InstallDir {0}", dotnetFolder) :
-                            String.Format("-c beta -d {0}", dotnetFolder);
-    StartProcess(shell, new ProcessSettings{ Arguments = String.Format("{0} {1} {2}", 
-            shellArgument, scriptPath, installArgs) });
+    var installArgs = IsRunningOnWindows() ? $"beta -InstallDir {dotnetFolder}" :
+                            $"-c beta -d {dotnetFolder}";
+    StartProcess(shell,
+        new ProcessSettings
+        {
+            Arguments = $"{shellArgument} {scriptPath} {installArgs}"
+        });
+
     CreateDirectory(toolsFolder);
-    if (!FileExists(String.Format("{0}/{1}", toolsFolder, xunitRunner)))
-    {
-        NuGetInstall(xunitRunner, new NuGetInstallSettings {
+
+    NuGetInstall(xunitRunner,
+        new NuGetInstallSettings
+        {
             ExcludeVersion  = true,
             OutputDirectory = toolsFolder,
             NoCache = true,
             Prerelease = true
         });
-    }
 });
 
 Task("Restore")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    var exitCode = StartProcess(dotnetcli, 
-        new ProcessSettings{ Arguments = "restore" });
+    var exitCode = StartProcess(dotnetcli,
+        new ProcessSettings
+        {
+            Arguments = "restore"
+        });
     if (exitCode != 0)
     {
         throw new Exception("Failed to restore.");
@@ -204,7 +236,7 @@ Task("TestBuild")
         foreach (var framework in pair.Value)
         {
             var project = pair.Key;
-            var process = StartAndReturnProcess(dotnetcli, 
+            var process = StartAndReturnProcess(dotnetcli,
                 new ProcessSettings
                 { 
                     Arguments = $"build --framework {framework} --configuration {testConfiguration} {testFolder}/{project}",
@@ -230,9 +262,9 @@ Task("TestCore")
             }
             
             var project = pair.Key;
-            var exitCode = StartProcess(dotnetcli, 
+            var exitCode = StartProcess(dotnetcli,
                 new ProcessSettings
-                { 
+                {
                     Arguments = $"test -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
                     WorkingDirectory = $"{testFolder}/{project}"
                 });
@@ -252,6 +284,7 @@ Task("Test")
     {
         foreach (var framework in pair.Value)
         {
+            // Testing against core happens in TestCore
             if (framework.Equals("dnxcore50"))
             {
                 continue;
@@ -260,6 +293,7 @@ Task("Test")
             var project = pair.Key;
             var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
             var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
+            // Copy xunit executable to test folder to solve path errors
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
             var logFile = $"{logFolder}/{project}-{framework}-result.xml";
@@ -288,7 +322,7 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
-            var exitCode = StartProcess(dotnetcli, 
+            var exitCode = StartProcess(dotnetcli,
                 new ProcessSettings
                 {
                     Arguments = $"publish --framework {framework} --runtime {runtime} " +
@@ -307,10 +341,14 @@ Task("OnlyPublish")
             var buildIdentifier = $"{runtimeShort}-{framework}";
             // Linux + dnx451 is renamed to Mono
             if (runtimeShort.Contains("linux-") && framework.Equals("dnx451"))
+            {
                 buildIdentifier ="linux-mono";
+            }
             // No need to package OSX + dnx451
             else if (runtimeShort.Contains("osx-") && framework.Equals("dnx451"))
+            {
                 continue;
+            }
             
             DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
         }
@@ -340,17 +378,22 @@ Task("TestPublished")
     {
         // Skip testing mono executables
         if (!IsRunningOnWindows() && !framework.Equals("dnxcore50"))
+        {
             continue;
+        }
         var runtime = GetLocalRuntimeID(dotnetcli);
         var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
-        var process = StartAndReturnProcess($"{outputFolder}/{project}", 
+        var process = StartAndReturnProcess($"{outputFolder}/{project}",
             new ProcessSettings
             { 
                 Arguments = $"-s {sourceFolder}/{project} --stdio",
             });
+        // Wait 10 seconds to see if project terminates early with error
         bool exitsWithError = process.WaitForExit(10000);
         if (exitsWithError)
+        {
             throw new Exception($"Could not run {project} on {runtime}-{framework}");
+        }
     }
 });
 
@@ -358,9 +401,13 @@ Task("CleanupInstall")
     .Does(() =>
 {
     if (DirectoryExists(installFolder))
+    {
         CleanDirectory(installFolder);
+    }
     else
+    {
         CreateDirectory(installFolder);
+    }
 });
 
 Task("Quick")
