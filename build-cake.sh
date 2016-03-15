@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # set the DOTNET_REFERENCE_ASSEMBLIES_PATH to mono reference assemblies folder
 # https://github.com/dotnet/cli/issues/531
 if [ -z "$DOTNET_REFERENCE_ASSEMBLIES_PATH" ]; then
@@ -17,4 +19,4 @@ elif [ $(uname) == Linux ]; then
 fi
 #curl -Lsfo cake-bootstrap.sh http://cakebuild.net/bootstrapper/$OSSTRING
 #chmod +x cake-bootstrap.sh
-./cake-bootstrap.sh $@
+./cake-bootstrap.sh "$@"
