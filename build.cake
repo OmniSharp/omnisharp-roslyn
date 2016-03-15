@@ -124,7 +124,10 @@ Task("RestrictToLocalRuntime")
 {
     var localRuntime = GetLocalRuntimeID(dotnetcli);
     if (buildPlan.Rids.Contains(localRuntime))
+    {
         buildPlan.Rids = new string[] { localRuntime };
+        return;
+    }
     else
     {
         foreach (var runtime in buildPlan.Rids)
