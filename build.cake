@@ -341,7 +341,7 @@ Task("TestPublish")
             var process = StartAndReturnProcess($"{outputFolder}/{project}", 
                 new ProcessSettings
                 { 
-                    Arguments = $"-s {sourceFolder}/{project}",
+                    Arguments = $"-s {sourceFolder}/{project} --stdio",
                 });
             bool exitsWithError = process.WaitForExit(10000);
             if (exitsWithError)
