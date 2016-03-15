@@ -63,7 +63,12 @@ namespace OmniSharp.DotNet
 
         public Task<object> GetInformationModel(WorkspaceInformationRequest request)
         {
-            return Task.FromResult<object>(new DotNetWorkspaceInformation());
+            var workspaceInfo = new DotNetWorkspaceInformation(
+                projectContexts: _projectStates.GetValues().Select(state => state.ProjectContext),
+                configuration: _compilationConfiguration,
+                includeSourceFiles: !request.ExcludeSourceFiles);
+
+            return Task.FromResult<object>(workspaceInfo);
         }
 
         public Task<object> GetProjectModel(string path)
@@ -125,7 +130,7 @@ namespace OmniSharp.DotNet
             }
 
             _logger.LogInformation("Resolving projects references");
-            foreach (var state in _projectStates.Values)
+            foreach (var state in _projectStates.GetValues())
             {
                 _logger.LogInformation($"  Processing {state}");
 
