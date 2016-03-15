@@ -138,7 +138,7 @@ Task("RestrictToLocalRuntime")
             }
         }
     }
-    throw new Exception("Local default runtime is not in supported by configured runtimes");
+    throw new Exception("Local default runtime ({localRuntime}) is not in supported by configured runtimes");
 });
 
 Task("Cleanup")
