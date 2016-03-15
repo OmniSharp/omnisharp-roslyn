@@ -41,7 +41,7 @@ var logFolder = $"{artifactFolder}/logs";
 var packageFolder = $"{artifactFolder}/package";
 var installFolder = IsRunningOnWindows() ? $"{environment.WorkingDirectory}/fakeinstall/local" : "~/.omnisharp/local";
 
-string GetLocalRuntimeID()
+string GetLocalRuntimeID(string dotnetcli)
 {
     var process = StartAndReturnProcess(dotnetcli, 
         new ProcessSettings
@@ -119,9 +119,10 @@ string GetRuntimeInPath(string path)
 }
 
 Task("RestrictToLocalRuntime")
+    .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    var localRuntime = GetLocalRuntimeID();
+    var localRuntime = GetLocalRuntimeID(dotnetcli);
     if (buildPlan.Rids.Contains(localRuntime))
         buildPlan.Rids = new string[] { localRuntime };
     else
@@ -256,8 +257,8 @@ Task("Test")
             var project = pair.Key;
             var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
             var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
-            CopyFileToDirectory($"{environment.WorkingDirectory}/tools/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
-            CopyFileToDirectory($"{environment.WorkingDirectory}/tools/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
+            CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
+            CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
             var logFile = $"{logFolder}/{project}-{framework}-result.xml";
             var xunitSettings = new XUnit2Settings
             {
