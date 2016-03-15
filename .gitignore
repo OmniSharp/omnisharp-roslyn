@@ -6,7 +6,6 @@ TestResults/
 _ReSharper.*/
 packages/
 artifacts/
-fakeinstall/
 PublishProfiles/
 *.user
 *.suo
@@ -36,9 +35,8 @@ buildlog
 *.nuget.targets
 
 # Build folder
-.build/
 .dotnet
 
 # Cake build
 tools/
-cake-bootstrap.ps1
+cake-bootstrap.*
