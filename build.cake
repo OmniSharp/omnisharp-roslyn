@@ -2,6 +2,7 @@
 #addin "Cake.Json"
 
 using System.Text.RegularExpressions;
+using System.ComponentModel;
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
@@ -85,27 +86,34 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
         if (IsRunningOnWindows())
         {
             var tempFile = outputFile.AppendExtension("tar");
-            var exitCode = StartProcess("7z",
-                new ProcessSettings
-                {
-                    Arguments = $"a {tempFile}",
-                    WorkingDirectory = inputFolder
-                });
-            if (exitCode != 0)
+            try
             {
-                throw new Exception($"Tar-ing failed for {inputFolder} {outputFile}");
-            }
-            exitCode = StartProcess("7z",
-                new ProcessSettings
+                var exitCode = StartProcess("7z",
+                    new ProcessSettings
+                    {
+                        Arguments = $"a {tempFile}",
+                        WorkingDirectory = inputFolder
+                    });
+                if (exitCode != 0)
                 {
-                    Arguments = $"a {tarFile} {tempFile}",
-                    WorkingDirectory = inputFolder
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Compression failed for {inputFolder} {outputFile}");
+                    throw new Exception($"Tar-ing failed for {inputFolder} {outputFile}");
+                }
+                exitCode = StartProcess("7z",
+                    new ProcessSettings
+                    {
+                        Arguments = $"a {tarFile} {tempFile}",
+                        WorkingDirectory = inputFolder
+                    });
+                if (exitCode != 0)
+                {
+                    throw new Exception($"Compression failed for {inputFolder} {outputFile}");
+                }
+                DeleteFile(tempFile);
             }
-            DeleteFile(tempFile);
+            catch(Win32Exception)
+            {
+                Information("Warning: 7z not available on PATH to pack tar.gz results");
+            }
         }
         // Use tar to create TAR.GZ on Unix
         else
