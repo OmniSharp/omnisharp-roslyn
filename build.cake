@@ -336,7 +336,9 @@ Task("TestPublish")
                 { 
                     Arguments = $"-s {sourceFolder}/{project}",
                 });
-            bool exitsWithError = process.WaitForExit(3000);
+            bool exitsWithError = process.WaitForExit(10000);
+            if (exitsWithError)
+                throw new Exception($"Could not run {project} on {runtime}-{framework}");
         }
     }
 });
