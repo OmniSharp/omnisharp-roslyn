@@ -27,6 +27,7 @@ addons:
       - libunwind8
       - zlib1g
       - curl
+      - libuv
 deploy:
   provider: releases
   api_key:
