@@ -138,7 +138,7 @@ Task("RestrictToLocalRuntime")
             }
         }
     }
-    throw new Exception("Local default runtime ({localRuntime}) is not in supported by configured runtimes");
+    throw new Exception($"Local default runtime ({localRuntime}) is not in supported by configured runtimes");
 });
 
 Task("Cleanup")
@@ -329,6 +329,9 @@ Task("TestPublish")
     var project = buildPlan.MainProject;
     foreach (var framework in buildPlan.Frameworks)
     {
+        // Skip testing mono executables
+        if (!IsRunningOnWindows() && !framework.Equals("dnxcore50"))
+            continue;
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
