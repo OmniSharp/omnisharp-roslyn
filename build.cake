@@ -4,20 +4,28 @@
 using System.Text.RegularExpressions;
 using System.ComponentModel;
 
+// Basic arguments
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
+// Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path", IsRunningOnWindows() ?
                         $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : "~/.omnisharp/local");
 
-var environment = new CakeEnvironment();
+// Working directory
+var workingDirectory = (new CakeEnvironment()).WorkingDirectory;
 
+// System specific shell configuration
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
+// .NET CLI install script URL
 var dotnetScriptURL = "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain";
 
+/// <summary>
+///  Class representing build.json
+/// </summary>
 public class BuildPlan
 {
     public IDictionary<string, string[]> TestProjects { get; set; }
@@ -28,23 +36,28 @@ public class BuildPlan
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
 }
+var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.json");
 
-var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{environment.WorkingDirectory}/build.json");
-
-var dotnetFolder = $"{environment.WorkingDirectory}/{buildPlan.DotNetFolder}";
+// Folders and tools
+var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
 var dotnetcli = IsRunningOnWindows() ? $"{dotnetFolder}/cli/bin/dotnet" :
                     $"{dotnetFolder}/bin/dotnet";
-var toolsFolder = $"{environment.WorkingDirectory}/tools";
+var toolsFolder = $"{workingDirectory}/tools";
 var xunitRunner = "xunit.runner.console";
 
-var sourceFolder = $"{environment.WorkingDirectory}/src";
-var testFolder = $"{environment.WorkingDirectory}/tests";
+var sourceFolder = $"{workingDirectory}/src";
+var testFolder = $"{workingDirectory}/tests";
 
-var artifactFolder = $"{environment.WorkingDirectory}/{buildPlan.ArtifactsFolder}";
+var artifactFolder = $"{workingDirectory}/{buildPlan.ArtifactsFolder}";
 var publishFolder = $"{artifactFolder}/publish";
 var logFolder = $"{artifactFolder}/logs";
 var packageFolder = $"{artifactFolder}/package";
 
+/// <summary>
+///  Retrieve the default local RID from .NET CLI.
+/// </summary>
+/// <param name="dotnetcli">Full path to .NET CLI binary</param>
+/// <returns>Default RID</returns>
 string GetLocalRuntimeID(string dotnetcli)
 {
     var process = StartAndReturnProcess(dotnetcli, 
@@ -70,6 +83,46 @@ string GetLocalRuntimeID(string dotnetcli)
     throw new Exception("Failed to get default RID for system");
 }
 
+/// <summary>
+///  Match the local RID with the ones specified in build.json.
+///  Return exact match if found.
+///  Return first OS match (without version number) otherwise.
+///  Report error if no OS match found.
+/// </summary>
+/// <param name="dotnetcli">Full path to .NET CLI binary</param>
+/// <param name="buildPlan">BuildPlan from build.json</param>
+/// <returns>Matched RID</returns>
+string MatchLocalRuntimeID(string dotnetcli, BuildPlan buildplan)
+{
+    var localRuntime = GetLocalRuntimeID(dotnetcli);
+    if (buildPlan.Rids.Contains(localRuntime))
+    {
+        return localRuntime;
+    }
+    else
+    {
+        foreach (var runtime in buildPlan.Rids)
+        {
+            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
+            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            if (localRuntimeWithoutVersion.Equals(runtimeWithoutVersion))
+            {
+                return runtime;
+            }
+        }
+    }
+    throw new Exception($"Local default runtime ({localRuntime}) is not in supported by configured runtimes");
+}
+
+/// <summary>
+///  Generate an archive out of the given published folder.
+///  Use ZIP for Windows runtimes.
+///  Use TAR.GZ for non-Windows runtimes.
+///  Use 7z to generate TAR.GZ on Windows if available.
+/// </summary>
+/// <param name="runtime">The runtime targeted by the published folder</param>
+/// <param name="inputFolder">The published folder</param>
+/// <param name="outputFile">The target archive name (without extension)</param>
 void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
 {
     // On all platforms use ZIP for Windows runtimes
@@ -88,6 +141,7 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
             var tempFile = outputFile.AppendExtension("tar");
             try
             {
+                // First create tarball
                 var exitCode = StartProcess("7z",
                     new ProcessSettings
                     {
@@ -98,6 +152,7 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
                 {
                     throw new Exception($"Tar-ing failed for {inputFolder} {outputFile}");
                 }
+                // Then compress
                 exitCode = StartProcess("7z",
                     new ProcessSettings
                     {
@@ -108,6 +163,7 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
                 {
                     throw new Exception($"Compression failed for {inputFolder} {outputFile}");
                 }
+                // Delete temporary tarball
                 DeleteFile(tempFile);
             }
             catch(Win32Exception)
@@ -132,6 +188,13 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
     }
 }
 
+/// <summary>
+///  Extract the RID from a generated build folder.
+///  Used when targeting unknown RID (for example during testing).
+///  Throws exception when multiple RID folders found.
+/// </summary>
+/// <param name="path">Build path including RID folders</param>
+/// <returns>RID found</returns>
 string GetRuntimeInPath(string path)
 {
     var potentialRuntimes = GetDirectories(path);
@@ -144,32 +207,19 @@ string GetRuntimeInPath(string path)
     return enumerator.Current.GetDirectoryName();
 }
 
+/// <summary>
+///  Restrict the RIDs defined in build.json to a RID matching the local one.
+/// </summary>
 Task("RestrictToLocalRuntime")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    var localRuntime = GetLocalRuntimeID(dotnetcli);
-    if (buildPlan.Rids.Contains(localRuntime))
-    {
-        buildPlan.Rids = new string[] { localRuntime };
-        return;
-    }
-    else
-    {
-        foreach (var runtime in buildPlan.Rids)
-        {
-            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
-            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
-            if (localRuntimeWithoutVersion.Equals(runtimeWithoutVersion))
-            {
-                buildPlan.Rids = new string[] { runtime };
-                return;
-            }
-        }
-    }
-    throw new Exception($"Local default runtime ({localRuntime}) is not in supported by configured runtimes");
+    buildPlan.Rids = new string[] { MatchLocalRuntimeID(dotnetcli, buildPlan) };
 });
 
+/// <summary>
+///  Clean artifacts.
+/// </summary>
 Task("Cleanup")
     .Does(() =>
 {
@@ -185,6 +235,9 @@ Task("Cleanup")
     CreateDirectory(packageFolder);
 });
 
+/// <summary>
+///  Install/update build environment.
+/// </summary>
 Task("BuildEnvironment")
     .Does(() =>
 {
@@ -220,6 +273,9 @@ Task("BuildEnvironment")
         });
 });
 
+/// <summary>
+///  Restore required NuGet packages.
+/// </summary>
 Task("Restore")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
@@ -235,6 +291,9 @@ Task("Restore")
     }
 });
 
+/// <summary>
+///  Build Test projects.
+/// </summary>
 Task("TestBuild")
     .IsDependentOn("Restore")
     .Does(() =>
@@ -256,6 +315,9 @@ Task("TestBuild")
     }
 });
 
+/// <summary>
+///  Run tests for .NET Core (using .NET CLI).
+/// </summary>
 Task("TestCore")
     .IsDependentOn("TestBuild")
     .Does(() =>
@@ -284,6 +346,9 @@ Task("TestCore")
     }
 });
 
+/// <summary>
+///  Run tests for other frameworks (using XUnit2).
+/// </summary>
 Task("Test")
     .IsDependentOn("TestBuild")
     .Does(() =>
@@ -292,7 +357,7 @@ Task("Test")
     {
         foreach (var framework in pair.Value)
         {
-            // Testing against core happens in TestCore
+            // Testing with .NET Core happens in TestCore
             if (framework.Equals("dnxcore50"))
             {
                 continue;
@@ -321,6 +386,11 @@ Task("Test")
     }
 });
 
+/// <summary>
+///  Build publish and package artifacts.
+///  Targets all RIDs specified in build.json unless restricted by RestrictToLocalRuntime.
+///  No dependencies on other tasks to support quick builds.
+/// </summary>
 Task("OnlyPublish")
     .Does(() =>
 {
@@ -339,10 +409,10 @@ Task("OnlyPublish")
                 });
             if (exitCode != 0)
             {
-                throw new Exception($"Failed to publish {project} / {framework}");
+                throw new Exception($"Failed to publish {project} / {runtime} / {framework}");
             }
             
-            // Remove version number on Windows
+            // Remove version number from OS
             var runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
             // Simplify Ubuntu to Linux
             runtimeShort = runtimeShort.Replace("ubuntu", "linux");
@@ -363,21 +433,31 @@ Task("OnlyPublish")
     }
 });
 
+/// <summary>
+///  Alias for OnlyPublish.
+///  Restricts publishing to local RID.
+/// </summary>
 Task("LocalPublish")
-    .IsDependentOn("Restore")
     .IsDependentOn("RestrictToLocalRuntime")
     .IsDependentOn("OnlyPublish")
     .Does(() =>
 {
 });
 
+/// <summary>
+///  Alias for OnlyPublish.
+///  Targets all RIDs as specified in build.json.
+/// </summary>
 Task("AllPublish")
-    .IsDependentOn("Restore")
     .IsDependentOn("OnlyPublish")
     .Does(() =>
 {
 });
 
+/// <summary>
+///  Test the published binaries if they start up without errors.
+///  Uses builds corresponding to local RID.
+/// </summary>
 Task("TestPublished")
     .Does(() =>
 {
@@ -389,7 +469,7 @@ Task("TestPublished")
         {
             continue;
         }
-        var runtime = GetLocalRuntimeID(dotnetcli);
+        var runtime = MatchLocalRuntimeID(dotnetcli, buildPlan);
         var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
         var process = StartAndReturnProcess($"{outputFolder}/{project}",
             new ProcessSettings
@@ -400,11 +480,14 @@ Task("TestPublished")
         bool exitsWithError = process.WaitForExit(10000);
         if (exitsWithError)
         {
-            throw new Exception($"Could not run {project} on {runtime}-{framework}");
+            throw new Exception($"Failed to run {project} / {runtime} / {framework}");
         }
     }
 });
 
+/// <summary>
+///  Clean install path.
+/// </summary>
 Task("CleanupInstall")
     .Does(() =>
 {
@@ -418,6 +501,9 @@ Task("CleanupInstall")
     }
 });
 
+/// <summary>
+///  Quick build.
+/// </summary>
 Task("Quick")
     .IsDependentOn("Cleanup")
     .IsDependentOn("LocalPublish")
@@ -425,6 +511,9 @@ Task("Quick")
 {
 });
 
+/// <summary>
+///  Quick build + install.
+/// </summary>
 Task("Install")
     .IsDependentOn("Cleanup")
     .IsDependentOn("LocalPublish")
@@ -439,8 +528,12 @@ Task("Install")
     }
 });
 
+/// <summary>
+///  Full build targeting all RIDs specified in build.json.
+/// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("Restore")
     .IsDependentOn("TestCore")
     .IsDependentOn("Test")
     .IsDependentOn("AllPublish")
@@ -449,8 +542,12 @@ Task("All")
 {
 });
 
+/// <summary>
+///  Full build targeting local RID.
+/// </summary>
 Task("Local")
     .IsDependentOn("Cleanup")
+    .IsDependentOn("Restore")
     .IsDependentOn("TestCore")
     .IsDependentOn("Test")
     .IsDependentOn("LocalPublish")
@@ -459,6 +556,9 @@ Task("Local")
 {
 });
 
+/// <summary>
+///  Default to Local.
+/// </summary>
 Task("Default")
     .IsDependentOn("Local")
     .Does(() =>
