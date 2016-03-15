@@ -26,8 +26,8 @@ namespace OmniSharp
 
             foreach (var projectSystem in _projectSystems)
             {
-                var project = await projectSystem.GetInformationModel(request);
-                response.Add(projectSystem.Key, project);
+                var informationModel = await projectSystem.GetInformationModel(request);
+                response.Add(projectSystem.Key, informationModel);
             }
 
             return response;
