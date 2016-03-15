@@ -375,19 +375,25 @@ Task("Install")
     }
 });
 
-Task("Local")
-    .IsDependentOn("RestrictToLocalRuntime")
-    .IsDependentOn("Default")
-    .Does(() =>
-{
-});
-
-Task("Default")
+Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("TestCore")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
     .IsDependentOn("TestPublish")
+    .Does(() =>
+{
+});
+
+Task("Local")
+    .IsDependentOn("RestrictToLocalRuntime")
+    .IsDependentOn("All")
+    .Does(() =>
+{
+});
+
+Task("Default")
+    .IsDependentOn("Local")
     .Does(() =>
 {
 });
