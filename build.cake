@@ -317,16 +317,22 @@ Task("OnlyPublish")
     }
 });
 
-Task("Publish")
+Task("LocalPublish")
+    .IsDependentOn("Restore")
+    .IsDependentOn("RestrictToLocalRuntime")
+    .IsDependentOn("OnlyPublish")
+    .Does(() =>
+{
+});
+
+Task("AllPublish")
     .IsDependentOn("Restore")
     .IsDependentOn("OnlyPublish")
     .Does(() =>
 {
 });
 
-Task("TestPublish")
-    .IsDependentOn("Publish")
-    .IsDependentOn("RestrictToLocalRuntime")
+Task("TestPublished")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
@@ -335,18 +341,16 @@ Task("TestPublish")
         // Skip testing mono executables
         if (!IsRunningOnWindows() && !framework.Equals("dnxcore50"))
             continue;
-        foreach (var runtime in buildPlan.Rids)
-        {
-            var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
-            var process = StartAndReturnProcess($"{outputFolder}/{project}", 
-                new ProcessSettings
-                { 
-                    Arguments = $"-s {sourceFolder}/{project} --stdio",
-                });
-            bool exitsWithError = process.WaitForExit(10000);
-            if (exitsWithError)
-                throw new Exception($"Could not run {project} on {runtime}-{framework}");
-        }
+        var runtime = GetLocalRuntimeID(dotnetcli);
+        var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
+        var process = StartAndReturnProcess($"{outputFolder}/{project}", 
+            new ProcessSettings
+            { 
+                Arguments = $"-s {sourceFolder}/{project} --stdio",
+            });
+        bool exitsWithError = process.WaitForExit(10000);
+        if (exitsWithError)
+            throw new Exception($"Could not run {project} on {runtime}-{framework}");
     }
 });
 
@@ -360,17 +364,15 @@ Task("CleanupInstall")
 });
 
 Task("Quick")
-    .IsDependentOn("RestrictToLocalRuntime")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("OnlyPublish")
+    .IsDependentOn("LocalPublish")
     .Does(() =>
 {
 });
 
 Task("Install")
-    .IsDependentOn("RestrictToLocalRuntime")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("OnlyPublish")
+    .IsDependentOn("LocalPublish")
     .IsDependentOn("CleanupInstall")
     .Does(() =>
 {
@@ -386,15 +388,18 @@ Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("TestCore")
     .IsDependentOn("Test")
-    .IsDependentOn("Publish")
-    .IsDependentOn("TestPublish")
+    .IsDependentOn("AllPublish")
+    .IsDependentOn("TestPublished")
     .Does(() =>
 {
 });
 
 Task("Local")
-    .IsDependentOn("RestrictToLocalRuntime")
-    .IsDependentOn("All")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("TestCore")
+    .IsDependentOn("Test")
+    .IsDependentOn("LocalPublish")
+    .IsDependentOn("TestPublished")
     .Does(() =>
 {
 });
