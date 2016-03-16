@@ -1,5 +1,5 @@
-﻿using Microsoft.DotNet.ProjectModel;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.DotNet.ProjectModel;
 
 namespace OmniSharp.DotNet.Models
 {
@@ -9,7 +9,11 @@ namespace OmniSharp.DotNet.Models
         {
             this.Path = projectContext.RootProject.Path;
             this.Name = projectContext.ProjectFile.Name;
-            this.CompilationOutputPath = projectContext.GetOutputPaths(configuration).CompilationOutputPath;
+
+            var outputPaths = projectContext.GetOutputPaths(configuration);
+            this.CompilationOutputPath = outputPaths.CompilationOutputPath;
+            this.CompilationOutputAssemblyFile = outputPaths.CompilationFiles.Assembly;
+            this.CompilationOutputPdbFile = outputPaths.CompilationFiles.PdbPath;
 
             var sourceFiles = new List<string>();
 
@@ -23,7 +27,11 @@ namespace OmniSharp.DotNet.Models
 
         public string Path { get; }
         public string Name { get; }
+
         public string CompilationOutputPath { get; }
+        public string CompilationOutputAssemblyFile { get; }
+        public string CompilationOutputPdbFile { get; }
+
         public IReadOnlyList<string> SourceFiles { get; }
 
         //public DotNetProjectInformation(string projectPath, ProjectInformation info)
