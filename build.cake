@@ -92,7 +92,7 @@ string GetLocalRuntimeID(string dotnetcli)
 /// <param name="dotnetcli">Full path to .NET CLI binary</param>
 /// <param name="buildPlan">BuildPlan from build.json</param>
 /// <returns>Matched RID</returns>
-string MatchLocalRuntimeID(string dotnetcli, BuildPlan buildplan)
+string MatchLocalRuntimeID(string dotnetcli, BuildPlan buildPlan)
 {
     var localRuntime = GetLocalRuntimeID(dotnetcli);
     if (buildPlan.Rids.Contains(localRuntime))
