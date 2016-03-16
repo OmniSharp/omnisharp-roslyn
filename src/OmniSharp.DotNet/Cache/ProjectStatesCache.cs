@@ -20,9 +20,11 @@ namespace OmniSharp.DotNet.Cache
             _logger = loggerFactory?.CreateLogger<ProjectStatesCache>() ?? new DummyLogger<ProjectStatesCache>();
         }
 
-        public IReadOnlyCollection<ProjectState> Values
+        public IReadOnlyCollection<ProjectState> GetValues()
         {
-            get { return _projects.Select(p=>p.Value).SelectMany(entry=>entry.ProjectStates).ToList(); }
+            return _projects.Select(p => p.Value)
+                            .SelectMany(entry => entry.ProjectStates)
+                            .ToList();
         }
 
         public void Update(string projectDirectory,
