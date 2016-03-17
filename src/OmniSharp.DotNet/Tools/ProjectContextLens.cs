@@ -45,6 +45,15 @@ namespace OmniSharp.DotNet.Tools
             {
                 ResolveFileReferences(export);
                 ResolveProjectReference(export);
+                ResolveSourceFiles(export);
+            }
+        }
+
+        private void ResolveSourceFiles(LibraryExport export)
+        {
+            foreach (var file in export.SourceReferences)
+            {
+                _sourceFiles.Add(file.ResolvedPath);
             }
         }
 
