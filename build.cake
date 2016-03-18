@@ -40,8 +40,8 @@ var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.js
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
-var dotnetcli = IsRunningOnWindows() ? $"{dotnetFolder}/cli/bin/dotnet" :
-                    $"{dotnetFolder}/bin/dotnet";
+var dotnetcli = IsRunningOnWindows() ? $"{dotnetFolder}/cli/dotnet" :
+                    $"{dotnetFolder}/dotnet";
 var toolsFolder = $"{workingDirectory}/tools";
 var xunitRunner = "xunit.runner.console";
 
