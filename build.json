@@ -1,5 +1,6 @@
 {
     "DotNetFolder": ".dotnet",
+    "DotNetVersion": "Latest",
     "BuildToolsFolder": ".build",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {
