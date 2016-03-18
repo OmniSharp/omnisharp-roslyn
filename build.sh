@@ -1,12 +1,22 @@
 #!/bin/bash
 
-if [ $(uname) == Darwin ]; then
-    export OSSTRING=osx
-elif [ $(uname) == Linux ]; then
-    export OSSTRING=linux
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+TOOLS_DIR=$SCRIPT_DIR/tools
+
+# Make sure the tools folder exist.
+if [ ! -d "$TOOLS_DIR" ]; then
+  mkdir "$TOOLS_DIR"
 fi
 
-export NUGET_EXE=./tools/nuget.exe
+# Make sure that packages.config exist.
+if [ ! -f "$TOOLS_DIR/packages.config" ]; then
+    echo "Downloading packages.config..."
+    curl -Lsfo "$TOOLS_DIR/packages.config" https://raw.githubusercontent.com/cake-build/website/master/tools/packages.config
+    if [ $? -ne 0 ]; then
+        echo "An error occured while downloading packages.config."
+        exit 1
+    fi
+fi
 
-curl -Lsfo cake-bootstrap.sh http://cakebuild.net/bootstrapper/$OSSTRING
+curl -Lsfo cake-bootstrap.sh https://raw.githubusercontent.com/cake-build/cake/main/build.sh
 bash ./cake-bootstrap.sh "$@"
