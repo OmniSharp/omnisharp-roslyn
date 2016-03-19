@@ -18,5 +18,4 @@ if (!(Test-Path $PACKAGES_CONFIG)) {
     }
 }
 
-Invoke-WebRequest https://raw.githubusercontent.com/cake-build/cake/main/build.ps1 -OutFile cake-bootstrap.ps1
 .\cake-bootstrap.ps1 --experimental @args

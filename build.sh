@@ -18,5 +18,4 @@ if [ ! -f "$TOOLS_DIR/packages.config" ]; then
     fi
 fi
 
-curl -Lsfo cake-bootstrap.sh https://raw.githubusercontent.com/cake-build/cake/main/build.sh
 bash ./cake-bootstrap.sh "$@"
