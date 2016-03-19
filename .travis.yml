@@ -13,10 +13,8 @@ osx_image: xcode7.1
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
-before_script:
-  - chmod +x build.sh
 script:
-  - ". ./build.sh"
+  - ./build.sh
 addons:
   apt:
     packages:
