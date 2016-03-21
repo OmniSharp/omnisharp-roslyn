@@ -26,7 +26,7 @@ DOTNET="$work_dir/.dotnet/cli/dotnet"
 if [ `uname` == "Linux" ]; then
     # dotnet build on Ubuntu is currently broken, pin to the 001793 build and install script
     DOTNET_VERSION="1.0.0.001793"
-    DOTNET_INSTALL="https://raw.githubusercontent.com/dotnet/cli/42a0eec967f878c4a374d2b297aaedb0f14c20d2/scripts/obtain/install.sh"
+    DOTNET_SCRIPT="https://raw.githubusercontent.com/dotnet/cli/42a0eec967f878c4a374d2b297aaedb0f14c20d2/scripts/obtain/install.sh"
     DOTNET="$work_dir/.dotnet/bin/dotnet"
 fi
 
