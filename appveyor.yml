@@ -3,9 +3,9 @@ init:
   - git config --global core.autocrlf true
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
-  - build.cmd
+  - ps: .\build.ps1
 artifacts:
-  - path: artifacts/*.zip
+  - path: artifacts/package/*.zip
 deploy:
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)
@@ -14,3 +14,8 @@ deploy:
     artifact: /.*\.zip/
     on:
       appveyor_repo_tag: true
+notifications:
+  - provider: Slack
+    auth_token:
+      secure: OU7mWtP+JWLRV2Ofq3/QMQbudeN632xLgWb4zMJtOssi2v5HER4qe0GFoj/rnIYOBXd3d/5+glfKG3ijvCU3bA==
+    channel: '#general'

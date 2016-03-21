@@ -1,23 +1,33 @@
-﻿{
+{
   "version": "1.0.0-*",
   "compilationOptions": {
     "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0-*",
-    "Newtonsoft.Json": "7.0.1",
-    "Microsoft.AspNetCore.Testing": "1.0.0-rc2-*",
-    "xunit.runner.aspnet": "2.0.0-aspnet-*"
-  },
-  "commands": {
-    "test": "xunit.runner.aspnet"
+    "Newtonsoft.Json": "8.0.2",
+    "xunit": "2.1.0"
   },
   "frameworks": {
-    "dnx451": { },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-*"
+        "dotnet-test-xunit": "1.0.0-dev-79755-47",
+        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001718",
+        "Microsoft.NETCore.Platforms": "1.0.1-rc2-23911",
+        "NuGet.Packaging": "3.4.0-rtm-0733",
+        "System.IO.Compression": "4.1.0-rc2-23911",
+        "System.Runtime.Loader": "4.0.0-rc2-23911",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-23911",
+        "System.Threading.ThreadPool": "4.0.10-rc2-23911",
+        "System.Xml.XDocument": "4.0.11-rc2-23911"
+      }
+    },
+    "dnx451": {
+      "dependencies": {
+        "xunit.runner.console": "2.1.0"
       }
     }
-  }
+  },
+  "testRunner": "xunit"
 }

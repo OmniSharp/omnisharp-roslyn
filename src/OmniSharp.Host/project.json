@@ -1,7 +1,8 @@
 {
   "version": "1.0.0-*",
   "compilationOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
@@ -9,30 +10,32 @@
     "OmniSharp.Stdio": "1.0.0-*",
     "OmniSharp.Plugins": "1.0.0-*",
     "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-*",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-*",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20143",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20143",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-*",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-*",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Options": "1.0.0-rc2-*",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-*"
-  },
-  "commands": {
-    "omnisharp.host": "run"
+    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001718",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001718",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Options": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20143"
   },
   "frameworks": {
     "dnx451": {
       "frameworkAssemblies": {
         "System.ComponentModel.Composition": ""
       },
-      "dependencies": { }
+      "dependencies": {}
     },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-*"
+        "NETStandard.Library": "1.0.0-rc2-23910",
+        "System.Runtime.Loader": "4.0.0-rc2-23911",
+        "System.IO.Compression": "4.1.0-rc2-23911"
       }
     }
   }

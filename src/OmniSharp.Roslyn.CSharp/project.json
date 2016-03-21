@@ -1,7 +1,8 @@
 {
   "version": "1.0.0-*",
   "compilationOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
@@ -23,15 +24,16 @@
         "System.Globalization": "",
         "System.Linq": "",
         "System.Text.Encoding": "",
-        "System.IO": "",
         "System.Reflection": "",
         "System.Security": "",
         "System.Xml": ""
       }
     },
     "dnxcore50": {
+      "imports": "portable-net45+win8",
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-*"
+        "NETStandard.Library": "1.0.0-rc2-23910",
+        "System.Threading.Tasks.Parallel": "4.0.1-rc2-23911"
       }
     }
   }

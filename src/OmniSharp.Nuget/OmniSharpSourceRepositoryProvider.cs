@@ -38,7 +38,9 @@ namespace OmniSharp.NuGet
         public OmniSharpSourceRepositoryProvider(string root)
         {
             var settings = global::NuGet.Configuration.Settings.LoadDefaultSettings(root: root, configFileName: null, machineWideSettings: null);
-            _packageSourceProvider = new PackageSourceProvider(settings, DefaultPrimarySources, DefaultSecondarySources, migratePackageSources: null);
+            _packageSourceProvider = new PackageSourceProvider(settings, 
+                                                               migratePackageSources: null,
+                                                               configurationDefaultSources: DefaultPrimarySources.Concat(DefaultSecondarySources));
             _resourceProviders = Repository.Provider.GetCoreV3()
                 .Concat(Repository.Provider.GetCoreV2());
             _repositories = new List<SourceRepository>();

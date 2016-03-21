@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0-*",
+  "compilationOptions": {
+    "preserveCompilationContext": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0-*",
+    "OmniSharp.Roslyn": "1.0.0-*",
+    "Microsoft.CodeAnalysis": "1.1.1",
+    "Microsoft.CodeAnalysis.Common": "1.1.1",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001718",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143"
+  },
+  "frameworks": {
+    "dnxcore50": {
+      "imports": "portable-net45+win8",
+      "dependencies": {
+        "NETStandard.Library": "1.0.0-rc2-23910",
+        "System.IO.Compression": "4.1.0-rc2-23911",
+        "System.Runtime.Loader": "4.0.0-rc2-23911",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-23911",
+        "System.Security.Cryptography.Algorithms": "4.0.0-rc2-23907"
+      }
+    },
+    "dnx451": {
+      "frameworkAssemblies": {
+        "System.IO": ""
+      }
+    }
+  }
+}

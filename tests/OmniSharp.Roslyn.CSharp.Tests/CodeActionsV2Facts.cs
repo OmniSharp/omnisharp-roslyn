@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
@@ -16,7 +17,19 @@ namespace OmniSharp.Tests
     {
         private OmnisharpWorkspace _workspace;
         private CompositionHost _host;
-        private string bufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
+        private readonly string bufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
+        private readonly LoggerFactory _loggerFactory;
+        private readonly IOmnisharpAssemblyLoader _loader;
+        private readonly ILogger<CodingActionsV2Facts> _logger;
+
+        public CodingActionsV2Facts()
+        {
+            _loggerFactory = new LoggerFactory();
+            _loggerFactory.AddConsole();
+            _logger = _loggerFactory.CreateLogger<CodingActionsV2Facts>();
+
+            _loader = new TestOmnisharpAssemblyLoader(_logger);
+        }
 
         [Fact(Skip = "Broken after upgrade to rc2, need to re-enable nrefactory")]
         public async Task Can_get_code_actions_from_nrefactory()
@@ -210,20 +223,28 @@ namespace OmniSharp.Tests
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
         {
+            var loggerFactory = new FakeLoggerFactory();
             var request = CreateGetCodeActionsRequest(source);
             _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
             _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
-            var controller = new GetCodeActionsService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            var controller = new GetCodeActionsService(
+                _workspace,
+                CreateCodeActionProviders(),
+                loggerFactory);
             var response = await controller.Handle(request);
             return response.CodeActions;
         }
 
         private async Task<RunCodeActionResponse> RunRefactoringsAsync(string source, string identifier, bool wantsChanges = false)
         {
+            var loggerFactory = new FakeLoggerFactory();
             var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
             _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
             _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
-            var controller = new RunCodeActionService(_workspace, new ICodeActionProvider[] { new RoslynCodeActionProvider(), new NRefactoryCodeActionProvider() }, new FakeLoggerFactory());
+            var controller = new RunCodeActionService(
+                _workspace,
+                CreateCodeActionProviders(),
+                loggerFactory);
             var response = await controller.Handle(request);
             return response;
         }
@@ -273,5 +294,10 @@ namespace OmniSharp.Tests
             return selection;
         }
 
+        private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
+        {
+            yield return new RoslynCodeActionProvider(_loader);
+            yield return new NRefactoryCodeActionProvider(_loader);
+        }
     }
 }

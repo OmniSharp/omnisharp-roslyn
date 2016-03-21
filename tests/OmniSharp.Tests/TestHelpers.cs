@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
@@ -151,6 +151,7 @@ namespace OmniSharp.Tests
         public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
         {
             var host = _host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
+
             var workspace = host.GetExport<OmnisharpWorkspace>();
             await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
 
@@ -161,7 +162,7 @@ namespace OmniSharp.Tests
         public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             return Startup.ConfigureMef(
-                new FakeServiceProvider(),
+                new TestServiceProvider(new FakeLoggerFactory()),
                 new FakeOmniSharpOptions().Value,
                 assemblies,
                 configure);

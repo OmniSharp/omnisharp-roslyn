@@ -1,0 +1,32 @@
+{
+    "DotNetFolder": ".dotnet",
+    "BuildToolsFolder": ".build",
+    "ArtifactsFolder": "artifacts",
+    "TestProjects": {
+        "OmniSharp.Bootstrap.Tests": [
+            "dnxcore50",
+            "dnx451"
+        ],
+        "OmniSharp.MSBuild.Tests": [
+            "dnx451"
+        ],
+        "OmniSharp.Roslyn.CSharp.Tests": [
+            "dnxcore50"
+        ],
+        "OmniSharp.Stdio.Tests": [
+            "dnxcore50",
+            "dnx451"
+        ]
+    },
+    "Frameworks": [
+        "dnx451",
+        "dnxcore50"
+    ],
+    "Rids": [
+        "osx.10.11-x64",
+        "win7-x64",
+        "win7-x86",
+        "ubuntu.14.04-x64"
+    ],
+    "MainProject": "OmniSharp"
+}

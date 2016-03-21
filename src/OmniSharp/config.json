@@ -1,5 +1,5 @@
 ﻿{
-    "dnx": {
+    "dotnet": {
         "alias": "default",
         "projects": "**/project.json",
         "enablePackageRestore": true,
