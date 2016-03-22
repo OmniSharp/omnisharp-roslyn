@@ -18,17 +18,10 @@ mkdir -p $build_tools
 header "Installing dotnet"
 
 DOTNET_CHANNEL="beta"
-DOTNET_VERSION="Latest"
+DOTNET_VERSION="1.0.0.001897"
 DOTNET_INSTALL="$work_dir/.dotnet"
-DOTNET_SCRIPT="https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.sh"
+DOTNET_SCRIPT="https://raw.githubusercontent.com/dotnet/cli/43ac2b45f4173b8228b44c8a9693ac7774104cbb/scripts/obtain/install.sh"
 DOTNET="$work_dir/.dotnet/cli/dotnet"
-
-if [ `uname` == "Linux" ]; then
-    # dotnet build on Ubuntu is currently broken, pin to the 001793 build and install script
-    DOTNET_VERSION="1.0.0.001793"
-    DOTNET_SCRIPT="https://raw.githubusercontent.com/dotnet/cli/42a0eec967f878c4a374d2b297aaedb0f14c20d2/scripts/obtain/install.sh"
-    DOTNET="$work_dir/.dotnet/bin/dotnet"
-fi
 
 echo "Installing dotnet from $DOTNET_CHANNEL channel for version $DOTNET_VERSION"
 echo "Execute install script"
@@ -37,7 +30,7 @@ echo "  version: $DOTNET_VERSION"
 echo "  channel: $DOTNET_CHANNEL"
 echo "  install: $DOTNET_INSTALL"
 
-sh -c "`curl -s $DOTNET_SCRIPT`" "install.sh" "-c" "$DOTNET_CHANNEL" "-v" "$DOTNET_VERSION" "-d" "$DOTNET_INSTALL"
+bash -c "`curl -s $DOTNET_SCRIPT`" install.sh -c $DOTNET_CHANNEL -v $DOTNET_VERSION -d $DOTNET_INSTALL
 
 $DOTNET --version # || { echo >&2 "dotnet is not installed correctly" && exit 1 }
 
