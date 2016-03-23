@@ -15,6 +15,8 @@ namespace OmniSharp.DotNet.Models
             this.CompilationOutputAssemblyFile = outputPaths.CompilationFiles.Assembly;
             this.CompilationOutputPdbFile = outputPaths.CompilationFiles.PdbPath;
 
+            this.EntryPoint = projectContext.ProjectFile.EntryPoint;
+
             var sourceFiles = new List<string>();
 
             if (includeSourceFiles)
@@ -31,6 +33,7 @@ namespace OmniSharp.DotNet.Models
         public string CompilationOutputPath { get; }
         public string CompilationOutputAssemblyFile { get; }
         public string CompilationOutputPdbFile { get; }
+        public string EntryPoint { get; }
 
         public IReadOnlyList<string> SourceFiles { get; }
 
