@@ -20,9 +20,6 @@ var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
-// .NET CLI install script URL
-var dotnetScriptURL = "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain";
-
 /// <summary>
 ///  Class representing build.json
 /// </summary>
@@ -32,6 +29,7 @@ public class BuildPlan
     public string BuildToolsFolder { get; set; }
     public string ArtifactsFolder { get; set; }
     public string DotNetFolder { get; set; }
+    public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string[] Frameworks { get; set; }
@@ -245,7 +243,7 @@ Task("BuildEnvironment")
     var installScript = $"install.{shellExtension}";
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
-    DownloadFile($"{dotnetScriptURL}/{installScript}", scriptPath);
+    DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
     if (!IsRunningOnWindows())
     {
         StartProcess("chmod",
@@ -255,7 +253,7 @@ Task("BuildEnvironment")
             });
     }
     var installArgs = IsRunningOnWindows() ? $"{buildPlan.DotNetChannel} -version {buildPlan.DotNetVersion} -InstallDir {dotnetFolder}" :
-                            $"-c {buildPlan.DotNetChannel} -v {buildPlan.DotNetVersion} -i {dotnetFolder}";
+                            $"-c {buildPlan.DotNetChannel} -v {buildPlan.DotNetVersion} -d {dotnetFolder}";
     StartProcess(shell,
         new ProcessSettings
         {
