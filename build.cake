@@ -32,6 +32,7 @@ public class BuildPlan
     public string BuildToolsFolder { get; set; }
     public string ArtifactsFolder { get; set; }
     public string DotNetFolder { get; set; }
+    public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
@@ -253,8 +254,8 @@ Task("BuildEnvironment")
                 Arguments = $"+x {scriptPath}"
             });
     }
-    var installArgs = IsRunningOnWindows() ? $"beta -version {buildPlan.DotNetVersion} -InstallDir {dotnetFolder}" :
-                            $"-c beta -v {buildPlan.DotNetVersion} -d {dotnetFolder}";
+    var installArgs = IsRunningOnWindows() ? $"{buildPlan.DotNetChannel} -version {buildPlan.DotNetVersion} -InstallDir {dotnetFolder}" :
+                            $"-c {buildPlan.DotNetChannel} -v {buildPlan.DotNetVersion} -i {dotnetFolder}";
     StartProcess(shell,
         new ProcessSettings
         {
