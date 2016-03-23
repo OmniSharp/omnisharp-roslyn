@@ -67,7 +67,10 @@ namespace OmniSharp.Tools.PublishProject
                         return 1;
                     }
 
-                    Package(publish, packageOutput, buildPlan.MainProject, rid, framework);
+                    if (!buildPlan.SkipPackaging)
+                    {
+                        Package(publish, packageOutput, buildPlan.MainProject, rid, framework);
+                    }
                 }
             }
 
