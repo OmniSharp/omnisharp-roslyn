@@ -13,10 +13,8 @@ osx_image: xcode7.1
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
-before_script:
-  - chmod +x build.sh
 script:
-  - ". ./build.sh -target=All"
+  - "./build.sh -target=All"
 addons:
   apt:
     packages:
@@ -27,6 +25,13 @@ addons:
       - libunwind8
       - zlib1g
       - curl
+notifications:
+  slack: 
+    rooms:
+      - omnisharp:U358j4McaEOIzFqXvGexVokC#general
+    on_success: change
+    on_failure: always
+    on_pull_requests: false
 deploy:
   provider: releases
   api_key:
@@ -60,5 +65,8 @@ after_deploy: |
     git push origin $BRANCH_NAME
     curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
   fi
+<<<<<<< HEAD
 notifications:
   slack: omnisharp:U358j4McaEOIzFqXvGexVokC
+=======
+>>>>>>> base/dev

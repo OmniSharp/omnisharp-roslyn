@@ -86,12 +86,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             var sourceText = await document.GetTextAsync();
             var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
             var tree = await document.GetSyntaxTreeAsync();
-            var node = tree.GetRoot().FindToken(position).Parent;
+            var root = await tree.GetRootAsync();
+            var node = root.FindToken(position).Parent;
 
+            // Walk up until we find a node that we're interested in.
             while (node != null)
             {
                 var invocation = node as InvocationExpressionSyntax;
-                if (invocation != null && invocation.ArgumentList.FullSpan.IntersectsWith(position))
+                if (invocation != null && invocation.ArgumentList.Span.Contains(position))
                 {
                     return new InvocationContext()
                     {
@@ -103,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 }
 
                 var objectCreation = node as ObjectCreationExpressionSyntax;
-                if (objectCreation != null && objectCreation.ArgumentList.FullSpan.IntersectsWith(position))
+                if (objectCreation != null && objectCreation.ArgumentList.Span.Contains(position))
                 {
                     return new InvocationContext()
                     {
