@@ -1,5 +1,8 @@
 {
     "DotNetFolder": ".dotnet",
+    "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/43ac2b45f4173b8228b44c8a9693ac7774104cbb/scripts/obtain",
+    "DotNetChannel": "beta",
+    "DotNetVersion": "1.0.0.001897",
     "BuildToolsFolder": ".build",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {

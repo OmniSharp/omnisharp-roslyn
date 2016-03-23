@@ -35,5 +35,7 @@ buildlog
 *.nuget.targets
 
 # Build folder
-.build/
-.dotnet/
+.dotnet
+
+# Cake build
+tools/
