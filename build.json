@@ -2,7 +2,7 @@
     "DotNetFolder": ".dotnet",
     "BuildToolsFolder": ".build",
     "ArtifactsFolder": "artifacts",
-    "SkipPackaging": true,
+    "SkipPackaging": false,
     "TestProjects": {
         "OmniSharp.Bootstrap.Tests": [
             "dnxcore50",
