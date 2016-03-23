@@ -9,11 +9,15 @@ namespace OmniSharp.DotNet.Models
         {
             this.Path = projectContext.RootProject.Path;
             this.Name = projectContext.ProjectFile.Name;
+            this.TargetFramework = new DotNetFramework(projectContext.TargetFramework);
 
             var outputPaths = projectContext.GetOutputPaths(configuration);
             this.CompilationOutputPath = outputPaths.CompilationOutputPath;
             this.CompilationOutputAssemblyFile = outputPaths.CompilationFiles.Assembly;
             this.CompilationOutputPdbFile = outputPaths.CompilationFiles.PdbPath;
+
+            var compilationOptions = projectContext.ProjectFile.GetCompilerOptions(targetFramework: projectContext.TargetFramework, configurationName: configuration);
+            this.EmitEntryPoint = compilationOptions.EmitEntryPoint;
 
             var sourceFiles = new List<string>();
 
@@ -27,28 +31,14 @@ namespace OmniSharp.DotNet.Models
 
         public string Path { get; }
         public string Name { get; }
+        public DotNetFramework TargetFramework { get; }
 
         public string CompilationOutputPath { get; }
         public string CompilationOutputAssemblyFile { get; }
         public string CompilationOutputPdbFile { get; }
+        public bool? EmitEntryPoint { get; }
 
         public IReadOnlyList<string> SourceFiles { get; }
 
-        //public DotNetProjectInformation(string projectPath, ProjectInformation info)
-        //{
-        //    Path = projectPath;
-        //    Name = info.Name;
-        //    Commands = info.Commands;
-        //    Configurations = info.Configurations;
-        //    ProjectSearchPaths = info.ProjectSearchPaths;
-        //    Frameworks = info.Frameworks.Select(framework => new DotNetFramework(framework));
-        //    GlobalJsonPath = info.GlobalJsonPath;
-        //}
-
-        //public IDictionary<string, string> Commands { get; }
-        //public IEnumerable<string> Configurations { get; }
-        //public IEnumerable<string> ProjectSearchPaths { get; }
-        //public IEnumerable<DotNetFramework> Frameworks { get; }
-        //public string GlobalJsonPath { get; }
     }
 }
