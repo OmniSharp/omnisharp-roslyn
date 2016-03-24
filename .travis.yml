@@ -9,6 +9,9 @@ mono:
 os:
   - linux
   - osx
+matrix:
+  allow_failures:
+    - os: osx
 osx_image: xcode7.1
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
