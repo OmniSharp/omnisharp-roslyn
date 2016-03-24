@@ -81,11 +81,6 @@ namespace OmniSharp.Tools.PublishProject
                                     string framework)
         {
             var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
-
-            // Disable for now, while travis isn't working correctly.
-            if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Darwin) {
-                return;
-            }
             
             // Simplify Ubuntu to Linux
             runtimeString = runtimeString.Replace("ubuntu", "linux");
