@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -94,12 +95,12 @@ namespace OmniSharp.DotNet
         public void Initalize(IConfiguration configuration)
         {
             _logger.LogInformation($"Initializing in {_environment.Path}");
-                        
+
             if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))
             {
                 _enableRestorePackages = false;
             }
-            
+
             _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
             _workspaceContext = WorkspaceContext.CreateFrom(_environment.Path);
@@ -325,6 +326,18 @@ namespace OmniSharp.DotNet
                 })
                 .WithConcurrentBuild(false); // TODO: actually just need to disable on mono
 
+            if (!string.IsNullOrEmpty(option.KeyFile))
+            {
+                var cryptoKeyFile = Path.GetFullPath(Path.Combine(project.ProjectDirectory, option.KeyFile));
+                if (File.Exists(cryptoKeyFile))
+                {
+                    var strongNameProvider = new DesktopStrongNameProvider(ImmutableArray.Create(project.ProjectDirectory));
+                    csharpOptions = csharpOptions
+                        .WithStrongNameProvider(strongNameProvider)
+                        .WithCryptoPublicKey(SnkUtils.ExtractPublicKey(File.ReadAllBytes(cryptoKeyFile)));
+                }
+            }
+
             var parseOptions = new CSharpParseOptions(languageVersion: ParseLanguageVersion(option.LanguageVersion),
                                                       preprocessorSymbols: option.Defines);
 
@@ -385,12 +398,12 @@ namespace OmniSharp.DotNet
         private void AddProject(ProjectId id, ProjectContext context)
         {
             var info = ProjectInfo.Create(
-                id,
-                VersionStamp.Create(),
-                $"{context.ProjectFile.Name}+{context.TargetFramework.GetShortFolderName()}",
-                context.ProjectFile.Name,
-                LanguageNames.CSharp,
-                context.ProjectFile.ProjectFilePath);
+                id: id,
+                version: VersionStamp.Create(),
+                name: $"{context.ProjectFile.Name}+{context.TargetFramework.GetShortFolderName()}",
+                assemblyName: context.ProjectFile.Name,
+                language: LanguageNames.CSharp,
+                filePath: context.ProjectFile.ProjectFilePath);
 
             _omnisharpWorkspace.AddProject(info);
 
