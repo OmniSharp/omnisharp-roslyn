@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.PlatformAbstractions;
 
@@ -56,21 +57,20 @@ namespace OmniSharp.Tools.PublishProject
                 return 1;
             }
 
-            foreach (var rid in buildPlan.Rids)
+            foreach (var combination in from rid in buildPlan.Rids
+                                        from framework in buildPlan.Frameworks
+                                        select new { Rid = rid, Framework = framework })
             {
-                foreach (var framework in buildPlan.Frameworks)
+                var publish = Path.Combine(publishOutput, buildPlan.MainProject, combination.Rid, combination.Framework);
+                if (dotnetExecutable.Publish(publish, projectPath, combination.Rid, combination.Framework) != 0)
                 {
-                    var publish = Path.Combine(publishOutput, buildPlan.MainProject, rid, framework);
-                    if(dotnetExecutable.Publish(publish, projectPath, rid, framework) != 0)
-                    {
-                        Console.Error.WriteLine($"Fail to publish {projectPath} on {framework} for {rid}");
-                        return 1;
-                    }
+                    Console.Error.WriteLine($"Fail to publish {projectPath} on {combination.Framework} for {combination.Rid}");
+                    return 1;
+                }
 
-                    if (!buildPlan.SkipPackaging)
-                    {
-                        Package(publish, packageOutput, buildPlan.MainProject, rid, framework);
-                    }
+                if (!buildPlan.SkipPackaging)
+                {
+                    Package(publish, packageOutput, buildPlan.MainProject, combination.Rid, combination.Framework);
                 }
             }
 
@@ -83,69 +83,86 @@ namespace OmniSharp.Tools.PublishProject
                                     string rid,
                                     string framework)
         {
-            var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
+            var runtimeString = Regex.Replace(rid, @"(\d|\.)*-", "-");
+            var buildIdentifier = $"{runtimeString}-{framework}";
 
             // Disable for now, while travis isn't working correctly.
-            if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Darwin) {
+            if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Darwin)
+            {
                 return;
             }
+
+            // Rename framework name to mono for non-windows platforms
+            if (runtimeString.Contains("ubuntu-") || runtimeString.Contains("osx-"))
+            {
+                buildIdentifier.Replace("dnx451", "mono");
+            }
             
-            // Simplify Ubuntu to Linux
-            runtimeString = runtimeString.Replace("ubuntu", "linux");
-            var buildIdentifier = $"{runtimeString}-{framework}";
-            // Linux + dnx451 is renamed to Mono
-            if (runtimeString.Contains("linux-") && framework.Equals("dnx451"))
-                buildIdentifier ="linux-mono";
-            // No need to package OSX + dnx451
-            else if (runtimeString.Contains("osx-") && framework.Equals("dnx451"))
-                return;
             var baseFilePath = Path.GetFullPath(Path.Combine(packageOutput, $"{projectName.ToLower()}-{buildIdentifier}"));
-            // On all platforms use ZIP for Windows runtimes
             if (runtimeString.Contains("win-"))
             {
+                // ZIP for Windows targeted packages
                 var zipFilePath = Path.ChangeExtension(baseFilePath, "zip");
                 ZipFile.CreateFromDirectory(publishOutput, zipFilePath);
             }
-            // On all platforms use TAR.GZ for Unix runtimes
             else
             {
+                // TAR.GZ for Unix targeted packages
                 var tarFilePath = Path.ChangeExtension(baseFilePath, "tar.gz");
-                // Use 7z to create TAR.GZ on Windows
+
                 if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Windows)
                 {
+                    // if the build is running on Windows, use 7z
+                    var probeStartInfo = new ProcessStartInfo("where", "7z") { UseShellExecute = false };
+                    var probe = Process.Start(probeStartInfo);
+                    if (!probe.WaitForExit(1000) || probe.ExitCode != 0)
+                    {
+                        throw new InvalidOperationException($"7z is not installed on this machine. It is required for packaging.");
+                    }
+
                     var tempFilePath = Path.ChangeExtension(baseFilePath, "tar");
                     var tarStartInfo = new ProcessStartInfo("7z", $"a {tempFilePath}")
                     {
                         UseShellExecute = false,
                         WorkingDirectory = publishOutput
                     };
+
                     var tarProcess = Process.Start(tarStartInfo);
                     tarProcess.WaitForExit();
                     if (tarProcess.ExitCode != 0)
+                    {
                         throw new InvalidOperationException($"Tar-ing failed for {projectName} {rid}");
+                    }
+
                     var compressStartInfo = new ProcessStartInfo("7z", $"a {tarFilePath} {tempFilePath}")
                     {
                         UseShellExecute = false,
                         WorkingDirectory = publishOutput
                     };
+
                     var compressProcess = Process.Start(compressStartInfo);
                     compressProcess.WaitForExit();
                     if (tarProcess.ExitCode != 0)
+                    {
                         throw new InvalidOperationException($"Compression failed for {projectName} {rid}");
+                    }
                     File.Delete(tempFilePath);
                 }
-                // Use tar to create TAR.GZ on Unix
                 else
                 {
+                    // if build is running on *nix, use tar
                     var tarStartInfo = new ProcessStartInfo("tar", $"czf {tarFilePath} .")
                     {
                         UseShellExecute = false,
                         WorkingDirectory = publishOutput
                     };
+                    
                     var tarProcess = Process.Start(tarStartInfo);
                     tarProcess.WaitForExit();
                     if (tarProcess.ExitCode != 0)
+                    {
                         throw new InvalidOperationException($"Compression failed for {projectName} {rid}");
+                    }
                 }
             }
         }
