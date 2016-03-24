@@ -10,11 +10,14 @@ os:
   - linux
   - osx
 osx_image: xcode7.1
+matrix:
+  allow_failures:
+    - os: osx
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
 script:
-  - ./build.sh
+  - "./build.sh -target=All"
 addons:
   apt:
     packages:
@@ -26,7 +29,7 @@ addons:
       - zlib1g
       - curl
 notifications:
-  slack: 
+  slack:
     rooms:
       - omnisharp:U358j4McaEOIzFqXvGexVokC#general
     on_success: change
@@ -37,7 +40,7 @@ deploy:
   api_key:
     secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
   file_glob: true
-  file: artifacts/package/*${TRAVIS_OS_NAME}*.tar.gz
+  file: artifacts/package/*.tar.gz
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
