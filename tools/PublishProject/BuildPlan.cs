@@ -38,6 +38,8 @@ namespace OmniSharp.Tools.PublishProject
 
         public string MainProject { get; set; }
 
+        public bool SkipPackaging { get; set; }
+
         [JsonIgnore]
         public string Root { get; set; }
     }

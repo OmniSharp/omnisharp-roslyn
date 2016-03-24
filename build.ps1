@@ -6,22 +6,23 @@ function _header($title) {
 _header "Cleanup"
 rm -r -force artifacts -ErrorAction SilentlyContinue
 
-_header "Installing dotnet"
 $build_tools="$pwd\.build"
 mkdir $build_tools -ErrorAction SilentlyContinue | Out-Null
-invoke-webrequest -uri 'https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.ps1' -outfile $build_tools\install.ps1
 
 if ($env:APPVEYOR -eq "True")
 {
+    _header "Installing dotnet"
+    invoke-webrequest -uri 'https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.ps1' -outfile $build_tools\install.ps1
     $env:DOTNET_INSTALL_DIR=$PWD.Path+"\.dotnet"
     $env:PATH=$env:PATH+";$pwd\.dotnet\cli"
+    & $build_tools\install.ps1 beta
 }
 else
 {
-    $env:PATH=$env:PATH+";$env:LocalAppData\Microsoft\dotnet\cli"
+    _header "Use local dotnet"
 }
 
-& $build_tools\install.ps1 beta
+& dotnet --version
 
 _header "Build tools"
 & dotnet restore tools 
