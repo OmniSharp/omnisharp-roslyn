@@ -29,6 +29,7 @@ public class BuildPlan
     public IDictionary<string, string[]> TestProjects { get; set; }
     public string BuildToolsFolder { get; set; }
     public string ArtifactsFolder { get; set; }
+    public bool UseSystemDotNetPath { get; set; }
     public string DotNetFolder { get; set; }
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
@@ -42,7 +43,8 @@ var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.js
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
-var dotnetcli = $"{dotnetFolder}/cli/dotnet";
+var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" :
+                    $"{dotnetFolder}/dotnet";
 var toolsFolder = $"{workingDirectory}/{buildPlan.BuildToolsFolder}";
 var xunitRunner = "xunit.runner.console";
 
@@ -241,8 +243,13 @@ Task("BuildEnvironment")
                 Arguments = $"+x {scriptPath}"
             });
     }
-    var installArgs = IsRunningOnWindows() ? $"{buildPlan.DotNetChannel} -version {buildPlan.DotNetVersion} -InstallDir {dotnetFolder}" :
-                            $"-c {buildPlan.DotNetChannel} -v {buildPlan.DotNetVersion} -d {dotnetFolder}";
+    var installArgs = IsRunningOnWindows() ? $"{buildPlan.DotNetChannel} -version {buildPlan.DotNetVersion}" :
+                            $"-c {buildPlan.DotNetChannel} -v {buildPlan.DotNetVersion}";
+    if (!buildPlan.UseSystemDotNetPath)
+    {
+        installArgs = IsRunningOnWindows() ? $"{installArgs} -InstallDir {dotnetFolder}" :
+                            $"{installArgs} -i {dotnetFolder}";
+    }
     StartProcess(shell,
         new ProcessSettings
         {
