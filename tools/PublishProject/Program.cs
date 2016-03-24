@@ -83,7 +83,7 @@ namespace OmniSharp.Tools.PublishProject
             var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
 
             // Disable for now, while travis isn't working correctly.
-            if (runtimeString.Contains("osx-")) {
+            if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Darwin) {
                 return;
             }
             
