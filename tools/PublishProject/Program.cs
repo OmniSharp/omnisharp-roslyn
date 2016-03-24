@@ -14,7 +14,7 @@ namespace OmniSharp.Tools.PublishProject
             Console.WriteLine("Publish project OmniSharp");
             var root = FindRoot();
             var buildPlan = BuildPlan.Parse(root);
-            
+
             var projectPath = Path.Combine(root, "src", buildPlan.MainProject);
             if (!Directory.Exists(projectPath))
             {
@@ -35,7 +35,7 @@ namespace OmniSharp.Tools.PublishProject
             }
 
             var dotnetExecutable = new DotNetExecutor(buildPlan);
-            
+
             Console.WriteLine($"       root: {root}");
             Console.WriteLine($"    project: {buildPlan.MainProject}");
             Console.WriteLine($"     dotnet: {dotnetExecutable}");
@@ -43,19 +43,19 @@ namespace OmniSharp.Tools.PublishProject
             Console.WriteLine($"publish out: {publishOutput}");
             Console.WriteLine($"package out: {packageOutput}");
             Console.WriteLine($" frameworks: {string.Join(", ", buildPlan.Frameworks)}");
-            Console.WriteLine($"    runtime: {string.Join(", ", buildPlan.Rids)}");            
-            
+            Console.WriteLine($"    runtime: {string.Join(", ", buildPlan.Rids)}");
+
             if (!TestActions.RunTests(buildPlan))
             {
                 return 1;
             }
-                
+
             if (dotnetExecutable.Restore(Path.Combine(root, "src")) != 0)
             {
                 Console.Error.WriteLine("Fail to restore projects for {rid}");
                 return 1;
             }
-                
+
             foreach (var rid in buildPlan.Rids)
             {
                 foreach (var framework in buildPlan.Frameworks)
@@ -66,7 +66,7 @@ namespace OmniSharp.Tools.PublishProject
                         Console.Error.WriteLine($"Fail to publish {projectPath} on {framework} for {rid}");
                         return 1;
                     }
-                    
+
                     Package(publish, packageOutput, buildPlan.MainProject, rid, framework);
                 }
             }
@@ -81,6 +81,12 @@ namespace OmniSharp.Tools.PublishProject
                                     string framework)
         {
             var runtimeString = Regex.Replace(rid, "(\\d|\\.)*-", "-");
+
+            // Disable for now, while travis isn't working correctly.
+            if (PlatformServices.Default.Runtime.OperatingSystemPlatform == Platform.Darwin) {
+                return;
+            }
+            
             // Simplify Ubuntu to Linux
             runtimeString = runtimeString.Replace("ubuntu", "linux");
             var buildIdentifier = $"{runtimeString}-{framework}";
