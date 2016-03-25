@@ -40,6 +40,18 @@ public class BuildPlan
 }
 
 var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.json");
+// Limit scope if things we build
+buildPlan.Rids = buildPlan.Rids.Where(rid => {
+    if (IsRunningOnWindows())
+    {
+        return rid.StartsWith("win");
+    }
+    else
+    {
+        // Need to fix this for osx / linux
+        return !rid.StartsWith("win");
+    }
+}).ToArray();
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
