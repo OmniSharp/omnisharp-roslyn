@@ -1,6 +1,10 @@
 {
+    "UseSystemDotNetPath" : "false",
     "DotNetFolder": ".dotnet",
-    "BuildToolsFolder": ".build",
+    "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/78e60bcb8b06c7787a9eb0356cf9ab3f1e76b86e/scripts/obtain",
+    "DotNetChannel": "beta",
+    "DotNetVersion": "1.0.0.001897",
+    "BuildToolsFolder": ".tools",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {
         "OmniSharp.Bootstrap.Tests": [

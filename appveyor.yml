@@ -3,7 +3,7 @@ init:
   - git config --global core.autocrlf true
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
-  - ps: .\build.ps1
+  - ps: .\build.ps1 -target=All
 artifacts:
   - path: artifacts/package/*.zip
 deploy:
