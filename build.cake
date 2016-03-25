@@ -41,15 +41,17 @@ public class BuildPlan
 
 var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.json");
 // Limit scope if things we build
-buildPlan.Rids = buildPlan.Rids.Where(rid => {
+buildPlan.Rids = buildPlan.Rids.Where(runtime => {
     if (IsRunningOnWindows())
     {
-        return rid.StartsWith("win");
+        return runtime.StartsWith("win");
     }
     else
     {
-        // Need to fix this for osx / linux
-        return !rid.StartsWith("win");
+        var localRuntime = GetLocalRuntimeID(dotnetcli);
+        var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
+        var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+        return localRuntimeWithoutVersion.Equals(runtimeWithoutVersion);
     }
 }).ToArray();
 
