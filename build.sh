@@ -1,3 +1,3 @@
 #!/bin/bash
 
-bash ./cake-bootstrap.sh "$@"
+bash ./scripts/cake-bootstrap.sh "$@"
