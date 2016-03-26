@@ -65,13 +65,17 @@ string GetLocalRuntimeID(string dotnetcli)
     var process = StartAndReturnProcess(dotnetcli,
         new ProcessSettings
         {
-            Arguments = "--info",
+            // Soon to be --info
+            // Arguments = "--info",
+            Arguments = "--version",
             RedirectStandardOutput = true
         });
     process.WaitForExit();
     foreach (var line in process.GetStandardOutput())
     {
-        if (!line.Contains("RID"))
+        // Soon to be RID
+        // if (!line.Contains("RID"))
+        if (!line.Contains("Runtime Id"))
         {
             continue;
         }
