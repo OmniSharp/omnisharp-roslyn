@@ -2,7 +2,7 @@
 
 namespace OmniSharp.DotNet.Models
 {
-    internal class DotNetFramework
+    public class DotNetFramework
     {
         public DotNetFramework(NuGetFramework framework)
         {

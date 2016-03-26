@@ -1,22 +1,24 @@
 ﻿using Microsoft.DotNet.ProjectModel;
 using System.Collections.Generic;
+using OmniSharp.DotNet.Cache;
 
 namespace OmniSharp.DotNet.Models
 {
-    internal class DotNetWorkspaceInformation
+    public class DotNetWorkspaceInformation
     {
-        public DotNetWorkspaceInformation(IEnumerable<ProjectContext> projectContexts, string configuration, bool includeSourceFiles = false)
+        public DotNetWorkspaceInformation(IEnumerable<ProjectEntry> entries, bool includeSourceFiles = false)
         {
             var projects = new List<DotNetProjectInformation>();
 
-            foreach (var projectContext in projectContexts)
+            foreach (var entry in entries)
             {
-                projects.Add(new DotNetProjectInformation(projectContext, configuration, includeSourceFiles));
+                projects.Add(new DotNetProjectInformation(entry, includeSourceFiles));
             }
 
             this.Projects = projects;
         }
 
         public IEnumerable<DotNetProjectInformation> Projects { get; }
+        public string RuntimePath { get; }
     }
 }

@@ -5,20 +5,72 @@ using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Logging;
 using NuGet.Frameworks;
+using OmniSharp.DotNet.Models;
+using OmniSharp.Models;
+using OmniSharp.Services;
 
 namespace OmniSharp.DotNet.Cache
 {
+    public class ProjectEntry
+    {
+        private readonly Dictionary<NuGetFramework, ProjectState> _states
+                   = new Dictionary<NuGetFramework, ProjectState>();
+
+        public ProjectEntry(string projectDirectory)
+        {
+            ProjectDirectory = projectDirectory;
+        }
+
+        public string ProjectDirectory { get; }
+
+        public IEnumerable<NuGetFramework> Frameworks => _states.Keys;
+
+        public IEnumerable<ProjectState> ProjectStates => _states.Values;
+
+        public ProjectState Get(NuGetFramework framework)
+        {
+            ProjectState result;
+            if (_states.TryGetValue(framework, out result))
+            {
+                return result;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void Set(ProjectState state)
+        {
+            _states[state.ProjectContext.TargetFramework] = state;
+        }
+
+        public bool Remove(NuGetFramework framework)
+        {
+            return _states.Remove(framework);
+        }
+
+        public override string ToString()
+        {
+            return $"ProjectEntry {ProjectDirectory}, {_states.Count} states";
+        }
+    }
+
     public class ProjectStatesCache
     {
         private readonly Dictionary<string, ProjectEntry> _projects
                    = new Dictionary<string, ProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
         private readonly ILogger _logger;
+        private readonly IEventEmitter _emitter;
 
-        public ProjectStatesCache(ILoggerFactory loggerFactory)
+        public ProjectStatesCache(ILoggerFactory loggerFactory, IEventEmitter emitter)
         {
             _logger = loggerFactory?.CreateLogger<ProjectStatesCache>() ?? new DummyLogger<ProjectStatesCache>();
+            _emitter = emitter;
         }
+
+        public IEnumerable<ProjectEntry> GetStates => _projects.Values;
 
         public IReadOnlyCollection<ProjectState> GetValues()
         {
@@ -34,7 +86,8 @@ namespace OmniSharp.DotNet.Cache
         {
             _logger.LogDebug($"Updating project ${projectDirectory}");
 
-            var entry = GetOrAddEntry(projectDirectory);
+            bool added;
+            var entry = GetOrAddEntry(projectDirectory, out added);
 
             // remove frameworks which don't exist after update
             var remove = entry.Frameworks.Except(contexts.Select(c => c.TargetFramework));
@@ -62,6 +115,15 @@ namespace OmniSharp.DotNet.Cache
                     addAction(projectId, context);
                 }
             }
+
+            var projectInformation = new DotNetProjectInformation(entry);
+            if (added)
+            {
+                EmitProject(EventTypes.ProjectChanged, projectInformation);
+            }
+            else {
+                EmitProject(EventTypes.ProjectAdded, projectInformation);
+            }
         }
 
         /// <summary>
@@ -69,7 +131,7 @@ namespace OmniSharp.DotNet.Cache
         /// </summary>
         /// <param name="perservedProjects">Projects to perserve</param>
         /// <param name="removeAction"></param>
-        public void RemoveExcept(IEnumerable<string> perservedProjects, Action<ProjectId> removeAction)
+        public void RemoveExcept(IEnumerable<string> perservedProjects, Action<ProjectEntry> removeAction)
         {
             var removeList = new HashSet<string>(_projects.Keys, StringComparer.OrdinalIgnoreCase);
             removeList.ExceptWith(perservedProjects);
@@ -77,10 +139,10 @@ namespace OmniSharp.DotNet.Cache
             foreach (var key in removeList)
             {
                 var entry = _projects[key];
-                foreach (var state in entry.ProjectStates)
-                {
-                    removeAction(state.Id);
-                }
+                var projectInformation = new DotNetProjectInformation(entry);
+
+                EmitProject(EventTypes.ProjectRemoved, projectInformation);
+                removeAction(entry);
 
                 _projects.Remove(key);
             }
@@ -112,7 +174,7 @@ namespace OmniSharp.DotNet.Cache
             }
         }
 
-        private ProjectEntry GetOrAddEntry(string projectDirectory)
+        internal ProjectEntry GetOrAddEntry(string projectDirectory)
         {
             ProjectEntry result;
             if (_projects.TryGetValue(projectDirectory, out result))
@@ -128,49 +190,34 @@ namespace OmniSharp.DotNet.Cache
             }
         }
 
-        private class ProjectEntry
+        private ProjectEntry GetOrAddEntry(string projectDirectory, out bool added)
         {
-            private readonly Dictionary<NuGetFramework, ProjectState> _states
-                       = new Dictionary<NuGetFramework, ProjectState>();
-
-            public ProjectEntry(string projectDirectory)
+            added = false;
+            ProjectEntry result;
+            if (_projects.TryGetValue(projectDirectory, out result))
             {
-                ProjectDirectory = projectDirectory;
+
+                return result;
             }
-
-            public string ProjectDirectory { get; }
-
-            public IEnumerable<NuGetFramework> Frameworks => _states.Keys;
-
-            public IEnumerable<ProjectState> ProjectStates => _states.Values;
-
-            public ProjectState Get(NuGetFramework framework)
+            else
             {
-                ProjectState result;
-                if (_states.TryGetValue(framework, out result))
+                result = new ProjectEntry(projectDirectory);
+                _projects[projectDirectory] = result;
+                added = true;
+
+                return result;
+            }
+        }
+
+        private void EmitProject(string eventType, DotNetProjectInformation information) {
+            _emitter.Emit(
+                eventType,
+                new ProjectInformationResponse()
                 {
-                    return result;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-            public void Set(ProjectState state)
-            {
-                _states[state.ProjectContext.TargetFramework] = state;
-            }
-
-            public bool Remove(NuGetFramework framework)
-            {
-                return _states.Remove(framework);
-            }
-
-            public override string ToString()
-            {
-                return $"ProjectEntry {ProjectDirectory}, {_states.Count} states";
-            }
+                    { "DotNetProject", information },
+                    // the key is hard coded in VSCode
+                    { "DnxProject", information }
+                });
         }
     }
 }
