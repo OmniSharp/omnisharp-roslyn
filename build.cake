@@ -12,7 +12,6 @@ var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path", IsRunningOnWindows() ?
                         $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : "~/.omnisharp/local");
 
-
 // Working directory
 var workingDirectory = (new CakeEnvironment()).WorkingDirectory;
 
@@ -40,20 +39,6 @@ public class BuildPlan
 }
 
 var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.json");
-// Limit scope if things we build
-buildPlan.Rids = buildPlan.Rids.Where(runtime => {
-    if (IsRunningOnWindows())
-    {
-        return runtime.StartsWith("win");
-    }
-    else
-    {
-        var localRuntime = GetLocalRuntimeID(dotnetcli);
-        var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
-        var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
-        return localRuntimeWithoutVersion.Equals(runtimeWithoutVersion);
-    }
-}).ToArray();
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
@@ -77,15 +62,19 @@ var packageFolder = $"{artifactFolder}/package";
 /// <returns>Default RID</returns>
 string GetLocalRuntimeID(string dotnetcli)
 {
-    var process = StartAndReturnProcess(dotnetcli, 
+    var process = StartAndReturnProcess(dotnetcli,
         new ProcessSettings
-        { 
+        {
+            // Soon to be --info
+            // Arguments = "--info",
             Arguments = "--version",
             RedirectStandardOutput = true
         });
     process.WaitForExit();
     foreach (var line in process.GetStandardOutput())
     {
+        // Soon to be RID
+        // if (!line.Contains("RID"))
         if (!line.Contains("Runtime Id"))
         {
             continue;
@@ -115,8 +104,8 @@ string MatchLocalRuntimeID(string dotnetcli, BuildPlan buildPlan)
     else
     {
         return buildPlan.Rids.First(runtime => {
-            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
-            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*?-", "-");
+            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*?-", "-");
             return localRuntimeWithoutVersion.Equals(runtimeWithoutVersion);
         });
     }
@@ -215,11 +204,36 @@ string GetRuntimeInPath(string path)
 ///  Restrict the RIDs defined in build.json to a RID matching the local one.
 /// </summary>
 Task("RestrictToLocalRuntime")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .Does(() =>
 {
     buildPlan.Rids = new string[] { MatchLocalRuntimeID(dotnetcli, buildPlan) };
 });
+
+/// <summary>
+///  Restrict the RIDs for the specific environment
+/// </summary>
+Task("RestrictToEnvironmentRuntimes")
+    .IsDependentOn("BuildEnvironment")
+    .Does(() =>
+{
+    // Limit scope if things we build
+    buildPlan.Rids = buildPlan.Rids.Where(runtime => {
+        if (IsRunningOnWindows())
+        {
+            return runtime.StartsWith("win");
+        }
+        else
+        {
+            var localRuntime = GetLocalRuntimeID(dotnetcli);
+            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
+            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            return localRuntimeWithoutVersion.Equals(runtimeWithoutVersion);
+        }
+    }).ToArray();
+});
+
+
 
 /// <summary>
 ///  Clean artifacts.
@@ -240,6 +254,16 @@ Task("Cleanup")
 });
 
 /// <summary>
+///  Pre-build setup tasks
+/// </summary>
+Task("Setup")
+    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("RestrictToEnvironmentRuntimes")
+    .Does(() =>
+{
+});
+
+/// <summary>
 ///  Install/update build environment.
 /// </summary>
 Task("BuildEnvironment")
@@ -249,21 +273,31 @@ Task("BuildEnvironment")
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
     DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
-    if (!IsRunningOnWindows())
+    string installArgs = "";
+
+    if (IsRunningOnWindows())
+    {
+        installArgs = $"{buildPlan.DotNetChannel}";
+        if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
+            installArgs = $"{installArgs} -version {buildPlan.DotNetVersion}";
+        if (!buildPlan.UseSystemDotNetPath)
+            installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
+    }
+    else
     {
         StartProcess("chmod",
             new ProcessSettings
-            { 
+            {
                 Arguments = $"+x {scriptPath}"
             });
+
+        installArgs = $"-c {buildPlan.DotNetChannel}";
+        if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
+            installArgs = $"{installArgs} -v {buildPlan.DotNetVersion}";
+        if (!buildPlan.UseSystemDotNetPath)
+            installArgs = $"{installArgs} -i {dotnetFolder}";
     }
-    var installArgs = IsRunningOnWindows() ? $"{buildPlan.DotNetChannel} -version {buildPlan.DotNetVersion}" :
-                            $"-c {buildPlan.DotNetChannel} -v {buildPlan.DotNetVersion}";
-    if (!buildPlan.UseSystemDotNetPath)
-    {
-        installArgs = IsRunningOnWindows() ? $"{installArgs} -InstallDir {dotnetFolder}" :
-                            $"{installArgs} -i {dotnetFolder}";
-    }
+
     StartProcess(shell,
         new ProcessSettings
         {
@@ -299,7 +333,7 @@ Task("BuildEnvironment")
 ///  Restore required NuGet packages.
 /// </summary>
 Task("Restore")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .Does(() =>
 {
     var exitCode = StartProcess(dotnetcli,
@@ -317,7 +351,7 @@ Task("Restore")
 ///  Build Test projects.
 /// </summary>
 Task("BuildTest")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .IsDependentOn("Restore")
     .Does(() =>
 {
@@ -328,7 +362,7 @@ Task("BuildTest")
             var project = pair.Key;
             var process = StartAndReturnProcess(dotnetcli,
                 new ProcessSettings
-                { 
+                {
                     Arguments = $"build --framework {framework} --configuration {testConfiguration} {testFolder}/{project}",
                     RedirectStandardOutput = true
                 });
@@ -343,7 +377,7 @@ Task("BuildTest")
 ///  Run tests for .NET Core (using .NET CLI).
 /// </summary>
 Task("TestCore")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .IsDependentOn("BuildTest")
     .Does(() =>
 {
@@ -355,7 +389,7 @@ Task("TestCore")
             {
                 continue;
             }
-            
+
             var project = pair.Key;
             var exitCode = StartProcess(dotnetcli,
                 new ProcessSettings
@@ -375,7 +409,7 @@ Task("TestCore")
 ///  Run tests for other frameworks (using XUnit2).
 /// </summary>
 Task("Test")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .IsDependentOn("BuildTest")
     .Does(() =>
 {
@@ -419,7 +453,7 @@ Task("Test")
 ///  No dependencies on other tasks to support quick builds.
 /// </summary>
 Task("OnlyPublish")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
@@ -439,7 +473,7 @@ Task("OnlyPublish")
             {
                 throw new Exception($"Failed to publish {project} / {framework}");
             }
-            
+
             // Remove version number on Windows
             var runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
             // Simplify Ubuntu to Linux
@@ -455,7 +489,7 @@ Task("OnlyPublish")
             {
                 continue;
             }
-            
+
             DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
         }
     }
@@ -491,7 +525,7 @@ Task("AllPublish")
 ///  Uses builds corresponding to local RID.
 /// </summary>
 Task("TestPublished")
-    .IsDependentOn("BuildEnvironment")
+    .IsDependentOn("Setup")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
@@ -506,7 +540,7 @@ Task("TestPublished")
         var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
         var process = StartAndReturnProcess($"{outputFolder}/{project}",
             new ProcessSettings
-            { 
+            {
                 Arguments = $"-s {sourceFolder}/{project} --stdio",
             });
         // Wait 10 seconds to see if project terminates early with error
