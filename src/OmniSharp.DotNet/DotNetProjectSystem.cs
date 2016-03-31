@@ -53,7 +53,7 @@ namespace OmniSharp.DotNet
             _watcher = watcher;
 
             _packageRestore = new PackagesRestoreTool(loggerFactory, _emitter);
-            _projectStates = new ProjectStatesCache(loggerFactory);
+            _projectStates = new ProjectStatesCache(loggerFactory, _emitter);
         }
 
         public IEnumerable<string> Extensions { get; } = new string[] { ".cs" };
@@ -65,8 +65,7 @@ namespace OmniSharp.DotNet
         public Task<object> GetInformationModel(WorkspaceInformationRequest request)
         {
             var workspaceInfo = new DotNetWorkspaceInformation(
-                projectContexts: _projectStates.GetValues().Select(state => state.ProjectContext),
-                configuration: _compilationConfiguration,
+                entries: _projectStates.GetStates,
                 includeSourceFiles: !request.ExcludeSourceFiles);
 
             return Task.FromResult<object>(workspaceInfo);
@@ -83,13 +82,9 @@ namespace OmniSharp.DotNet
 
             var projectPath = document.Project.FilePath;
             _logger.LogDebug($"GetProjectModel {path}=>{projectPath}");
-            //var projectInformation = _projectStates.Get(projectPath).FirstOrDefault()?.Information;
-            //if (projectInformation == null)
-            //{
-            return Task.FromResult<object>(null);
-            //}
-
-            //return Task.FromResult<object>(new DotNetProjectInformation(projectPath, projectInformation));
+            var projectEntry = _projectStates.GetOrAddEntry(projectPath);
+            var projectInformation = new DotNetProjectInformation(projectEntry);
+            return Task.FromResult<object>(projectInformation);
         }
 
         public void Initalize(IConfiguration configuration)
@@ -119,10 +114,13 @@ namespace OmniSharp.DotNet
 
             var projectPaths = _workspaceContext.GetAllProjects();
 
-            _projectStates.RemoveExcept(projectPaths, id =>
+            _projectStates.RemoveExcept(projectPaths, entry =>
             {
-                _omnisharpWorkspace.RemoveProject(id);
-                _logger.LogInformation($"Removing project {id.Id}.");
+                foreach (var state in entry.ProjectStates)
+                {
+                    _omnisharpWorkspace.RemoveProject(state.Id);
+                    _logger.LogInformation($"Removing project {state.Id}.");
+                }
             });
 
             foreach (var projectPath in projectPaths)
@@ -155,25 +153,9 @@ namespace OmniSharp.DotNet
                 return;
             }
 
+            _projectStates.Update(projectDirectory, contexts, AddProject, RemoveProject);
+
             var projectFilePath = contexts.First().ProjectFile.ProjectFilePath;
-
-            _emitter.Emit(
-                EventTypes.ProjectChanged,
-                new ProjectInformationResponse()
-                {
-                    // the key is hard coded in VSCode
-                    {
-                        "DnxProject",
-                        new
-                        {
-                            Path = projectFilePath,
-                            SourceFiles = Enumerable.Empty<string>()
-                        }
-                    }
-                });
-
-            _projectStates.Update(projectDirectory, contexts, AddProject, _omnisharpWorkspace.RemoveProject);
-
             _watcher.Watch(projectFilePath, file =>
             {
                 _logger.LogInformation($"Watcher: {file} updated.");
@@ -181,10 +163,30 @@ namespace OmniSharp.DotNet
             });
 
             _watcher.Watch(Path.ChangeExtension(projectFilePath, "lock.json"), file =>
-           {
-               _logger.LogInformation($"Watcher: {file} updated.");
-               Update(false);
-           });
+            {
+                _logger.LogInformation($"Watcher: {file} updated.");
+                Update(false);
+            });
+        }
+
+        private void AddProject(ProjectId id, ProjectContext context)
+        {
+            var info = ProjectInfo.Create(
+                id: id,
+                version: VersionStamp.Create(),
+                name: $"{context.ProjectFile.Name}+{context.TargetFramework.GetShortFolderName()}",
+                assemblyName: context.ProjectFile.Name,
+                language: LanguageNames.CSharp,
+                filePath: context.ProjectFile.ProjectFilePath);
+
+            _omnisharpWorkspace.AddProject(info);
+
+            _logger.LogInformation($"Add project {context.ProjectFile.ProjectFilePath} => {id.Id}");
+        }
+
+        private void RemoveProject(ProjectId projectId)
+        {
+            _omnisharpWorkspace.RemoveProject(projectId);
         }
 
         private void UpdateFileReferences(ProjectState state, IEnumerable<string> fileReferences)
@@ -393,21 +395,6 @@ namespace OmniSharp.DotNet
             {
                 _logger.LogInformation($"    Added {added} and removed {removed} documents.");
             }
-        }
-
-        private void AddProject(ProjectId id, ProjectContext context)
-        {
-            var info = ProjectInfo.Create(
-                id: id,
-                version: VersionStamp.Create(),
-                name: $"{context.ProjectFile.Name}+{context.TargetFramework.GetShortFolderName()}",
-                assemblyName: context.ProjectFile.Name,
-                language: LanguageNames.CSharp,
-                filePath: context.ProjectFile.ProjectFilePath);
-
-            _omnisharpWorkspace.AddProject(info);
-
-            _logger.LogInformation($"Add project {context.ProjectFile.ProjectFilePath} => {id.Id}");
         }
 
         private static Platform ParsePlatfrom(string value)
