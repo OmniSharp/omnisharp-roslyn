@@ -7,6 +7,7 @@
     "OmniSharp.Bootstrap": "1.0.0-*",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
     "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
+    "System.Reflection.Metadata": "1.2.0",
     "xunit": "2.1.0"
   },
   "frameworks": {

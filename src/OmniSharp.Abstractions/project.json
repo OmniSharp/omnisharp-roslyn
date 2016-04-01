@@ -13,7 +13,8 @@
     "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-20143",
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20143",
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143"
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143",
+    "System.Reflection.Metadata": "1.2.0"
   },
   "frameworks": {
     "net451": {

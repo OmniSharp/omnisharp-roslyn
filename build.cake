@@ -275,7 +275,7 @@ Task("BuildEnvironment")
     {
         StartProcess("chmod",
             new ProcessSettings
-            { 
+            {
                 Arguments = $"+x {scriptPath}"
             });
     }
