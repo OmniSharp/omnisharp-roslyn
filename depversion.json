@@ -1,16 +1,16 @@
 {
-  "NETStandard.Library": "1.5.0-*",
+  "NETStandard.Library": "1.5.0-rc2*",
   
   "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
   "Microsoft.DotNet.InternalAbstractions": "1.0.0-beta-*",
   "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
   
-  "System.Diagnostics.Process": "4.1.0-*",
-  "System.IO.FileSystem.Watcher": "4.0.0-*",
-  "System.Threading.Thread": "4.0.0-*",
-  "System.Dynamic.Runtime": "4.0.11-*",
-  "System.Security.Cryptography.Algorithms": "4.1.0-*",
-  "System.Runtime.Serialization.Primitives": "4.1.0-*",
-  "System.Linq.Parallel": "4.0.1-*",
-  "System.Threading.Tasks.Parallel": "4.0.1-*"
+  "System.Diagnostics.Process": "4.1.0-rc2*",
+  "System.IO.FileSystem.Watcher": "4.0.0-rc2*",
+  "System.Threading.Thread": "4.0.0-rc2*",
+  "System.Dynamic.Runtime": "4.0.11-rc2*",
+  "System.Runtime.Serialization.Primitives": "4.1.0-rc2*",
+  "System.Linq.Parallel": "4.0.1-rc2*",
+  "System.Threading.Tasks.Parallel": "4.0.1-rc2*",
+  "System.Security.Cryptography.Algorithms": "4.1.0-rc2*"
 }

@@ -16,9 +16,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-*",
-        "System.Linq.Parallel": "4.0.1-*",
-        "System.Threading.Tasks.Parallel": "4.0.1-*",
+        "NETStandard.Library": "1.5.0-rc2*",
+        "System.Linq.Parallel": "4.0.1-rc2*",
+        "System.Threading.Tasks.Parallel": "4.0.1-rc2*",
         "dotnet-test-xunit": "1.0.0-dev-91790-12"
       }
     },

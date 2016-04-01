@@ -7,7 +7,6 @@
     "OmniSharp.Bootstrap": "1.0.0-*",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
     "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
-    "System.Reflection.Metadata": "1.2.0",
     "xunit": "2.1.0"
   },
   "frameworks": {
@@ -17,7 +16,7 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-*",
+        "NETStandard.Library": "1.5.0-rc2*",
         "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
         "dotnet-test-xunit": "1.0.0-dev-91790-12"
       }
