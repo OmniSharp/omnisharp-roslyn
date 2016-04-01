@@ -13,10 +13,10 @@
     "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20143",
     "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20143",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001718",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20143",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001718",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20143",
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20143",
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20143",
@@ -24,18 +24,20 @@
     "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20143"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "frameworkAssemblies": {
         "System.ComponentModel.Composition": ""
       },
       "dependencies": {}
     },
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netstandard1.5": {
+      "imports": [
+        "dotnet5.6",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910",
-        "System.Runtime.Loader": "4.0.0-rc2-23911",
-        "System.IO.Compression": "4.1.0-rc2-23911"
+        "NETStandard.Library": "1.5.0-rc2-*"
       }
     }
   }

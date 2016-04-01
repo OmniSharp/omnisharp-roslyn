@@ -130,11 +130,11 @@ namespace OmniSharp
         {
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
-                       
-            var assemblies = DependencyContext.Default
-                                              .RuntimeLibraries
+
+            var dependencyContext = DependencyContext.Default;
+            var assemblies = dependencyContext.RuntimeLibraries
                                               .Where(shouldLoad)
-                                              .SelectMany(lib => lib.Assemblies)
+                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(dependencyContext))
                                               .Select(each => loader.Load(each.Name))
                                               .ToList();
 
@@ -152,6 +152,7 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
+
             foreach (var assembly in assemblies)
             {
                 logger.LogDebug($"Loaded {assembly.FullName}");

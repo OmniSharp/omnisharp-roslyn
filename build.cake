@@ -1,8 +1,9 @@
-#addin "Cake.FileHelpers"
-#addin "Cake.Json"
+#addin "Newtonsoft.Json"
 
 using System.Text.RegularExpressions;
 using System.ComponentModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 // Basic arguments
 var target = Argument("target", "Default");
@@ -38,7 +39,8 @@ public class BuildPlan
     public string MainProject { get; set; }
 }
 
-var buildPlan = DeserializeJsonFromFile<BuildPlan>($"{workingDirectory}/build.json");
+var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
+    System.IO.File.ReadAllText($"{workingDirectory}/build.json"));
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
@@ -64,18 +66,14 @@ string GetLocalRuntimeID(string dotnetcli)
 {
     var process = StartAndReturnProcess(dotnetcli,
         new ProcessSettings
-        {
-            // Soon to be --info
-            // Arguments = "--info",
-            Arguments = "--version",
+        { 
+            Arguments = "--info",
             RedirectStandardOutput = true
         });
     process.WaitForExit();
     foreach (var line in process.GetStandardOutput())
     {
-        // Soon to be RID
-        // if (!line.Contains("RID"))
-        if (!line.Contains("Runtime Id"))
+        if (!line.Contains("RID"))
         {
             continue;
         }
@@ -273,31 +271,23 @@ Task("BuildEnvironment")
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
     DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
-    string installArgs = "";
-
-    if (IsRunningOnWindows())
-    {
-        installArgs = $"{buildPlan.DotNetChannel}";
-        if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
-            installArgs = $"{installArgs} -version {buildPlan.DotNetVersion}";
-        if (!buildPlan.UseSystemDotNetPath)
-            installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
-    }
-    else
+    if (!IsRunningOnWindows())
     {
         StartProcess("chmod",
             new ProcessSettings
             {
                 Arguments = $"+x {scriptPath}"
             });
-
-        installArgs = $"-c {buildPlan.DotNetChannel}";
-        if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
-            installArgs = $"{installArgs} -v {buildPlan.DotNetVersion}";
-        if (!buildPlan.UseSystemDotNetPath)
-            installArgs = $"{installArgs} -i {dotnetFolder}";
     }
-
+    var installArgs = $"-Channel {buildPlan.DotNetChannel}";
+    if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
+    {
+      installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
+    } 
+    if (!buildPlan.UseSystemDotNetPath)
+    {
+        installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
+    }
     StartProcess(shell,
         new ProcessSettings
         {
@@ -308,7 +298,7 @@ Task("BuildEnvironment")
         StartProcess(dotnetcli,
             new ProcessSettings
             {
-                Arguments = "--version"
+                Arguments = "--info"
             });
 
     }
@@ -367,7 +357,7 @@ Task("BuildTest")
                     RedirectStandardOutput = true
                 });
             process.WaitForExit();
-            FileWriteLines($"{logFolder}/{project}-{framework}-build.log", process.GetStandardOutput().ToArray());
+            System.IO.File.WriteAllLines($"{logFolder}/{project}-{framework}-build.log", process.GetStandardOutput().ToArray());
         }
     }
 });
@@ -385,7 +375,7 @@ Task("TestCore")
     {
         foreach (var framework in pair.Value)
         {
-            if (!framework.Equals("dnxcore50"))
+            if (!framework.Contains("netcoreapp"))
             {
                 continue;
             }
@@ -394,7 +384,7 @@ Task("TestCore")
             var exitCode = StartProcess(dotnetcli,
                 new ProcessSettings
                 {
-                    Arguments = $"test -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
+                    Arguments = $"test --framework {framework} -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
                     WorkingDirectory = $"{testFolder}/{project}"
                 });
             if (exitCode != 0)
@@ -418,7 +408,7 @@ Task("Test")
         foreach (var framework in pair.Value)
         {
             // Testing against core happens in TestCore
-            if (framework.Equals("dnxcore50"))
+            if (framework.Contains("netcoreapp"))
             {
                 continue;
             }
@@ -479,13 +469,13 @@ Task("OnlyPublish")
             // Simplify Ubuntu to Linux
             runtimeShort = runtimeShort.Replace("ubuntu", "linux");
             var buildIdentifier = $"{runtimeShort}-{framework}";
-            // Linux + dnx451 is renamed to Mono
-            if (runtimeShort.Contains("linux-") && framework.Equals("dnx451"))
+            // Linux + net451 is renamed to Mono
+            if (runtimeShort.Contains("linux-") && framework.Equals("net451"))
             {
                 buildIdentifier ="linux-mono";
             }
-            // No need to package OSX + dnx451
-            else if (runtimeShort.Contains("osx-") && framework.Equals("dnx451"))
+            // No need to package OSX + net451
+            else if (runtimeShort.Contains("osx-") && framework.Equals("net451"))
             {
                 continue;
             }
@@ -532,7 +522,7 @@ Task("TestPublished")
     foreach (var framework in buildPlan.Frameworks)
     {
         // Skip testing mono executables
-        if (!IsRunningOnWindows() && !framework.Equals("dnxcore50"))
+        if (!IsRunningOnWindows() && !framework.Equals("netcoreapp"))
         {
             continue;
         }
@@ -623,7 +613,36 @@ Task("Local")
 {
 });
 
+/// <summary>
+///  Update the package versions within project.json files.
+///  Uses depversion.json file as input.
+/// </summary>
+Task("SetPackageVersions")
+    .Does(() =>
+{
+    var jDepVersion = JObject.Parse(System.IO.File.ReadAllText($"{workingDirectory}/depversion.json"));
+    var projects = GetFiles($"{workingDirectory}/src/*/project.json");
+    projects.Add(GetFiles($"{workingDirectory}/tests/*/project.json"));
+    foreach (var project in projects)
+    {
+        var jProject = JObject.Parse(System.IO.File.ReadAllText(project.FullPath));
+        var dependencies = jProject.SelectTokens("dependencies")
+                            .Union(jProject.SelectTokens("frameworks.*.dependencies"))
+                            .SelectMany(dependencyToken => dependencyToken.Children<JProperty>());
+        foreach (JProperty dependency in dependencies)
+        {
+            if (jDepVersion[dependency.Name] != null)
+            {
+                dependency.Value = jDepVersion[dependency.Name];
+            }
+        }
+        System.IO.File.WriteAllText(project.FullPath, JsonConvert.SerializeObject(jProject, Formatting.Indented));
+    }
+});
 
+/// <summary>
+///  Default Task aliases to Local.
+/// </summary>
 Task("Default")
     .IsDependentOn("Local")
     .Does(() =>

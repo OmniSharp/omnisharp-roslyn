@@ -12,11 +12,16 @@
     "Newtonsoft.Json": "8.0.2"
   },
   "frameworks": {
-    "dnx451": {},
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "net451": {},
+    "netstandard1.3": {
+      "imports": [
+        "dotnet5.4",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910"
+        "NETStandard.Library": "1.5.0-rc2-*",
+        "System.Runtime.Serialization.Primitives": "4.1.0-rc2-*"
       }
     }
   }

@@ -10,7 +10,7 @@
     "Microsoft.Extensions.Options": "1.0.0-rc2-20143"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "frameworkAssemblies": {
         "Microsoft.Build": "",
         "Microsoft.Build.Engine": "",

@@ -1,5 +1,4 @@
-﻿#if DNX451
-using System;
+﻿using System;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 
@@ -18,4 +17,3 @@ namespace OmniSharp.MSBuild.Analyzers
         }
     }
 }
-#endif

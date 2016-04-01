@@ -1,30 +1,30 @@
 {
     "UseSystemDotNetPath" : "false",
     "DotNetFolder": ".dotnet",
-    "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/78e60bcb8b06c7787a9eb0356cf9ab3f1e76b86e/scripts/obtain",
+    "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
     "DotNetChannel": "beta",
-    "DotNetVersion": "1.0.0.001897",
+    "DotNetVersion": "Latest",
     "BuildToolsFolder": ".tools",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {
         "OmniSharp.Bootstrap.Tests": [
-            "dnxcore50",
-            "dnx451"
+            "netcoreapp1.0",
+            "net451"
         ],
         "OmniSharp.MSBuild.Tests": [
-            "dnx451"
+            "net451"
         ],
         "OmniSharp.Roslyn.CSharp.Tests": [
-            "dnxcore50"
+            "netcoreapp1.0"
         ],
         "OmniSharp.Stdio.Tests": [
-            "dnxcore50",
-            "dnx451"
+            "netcoreapp1.0",
+            "net451"
         ]
     },
     "Frameworks": [
-        "dnx451",
-        "dnxcore50"
+        "net451",
+        "netcoreapp1.0"
     ],
     "Rids": [
         "osx.10.11-x64",

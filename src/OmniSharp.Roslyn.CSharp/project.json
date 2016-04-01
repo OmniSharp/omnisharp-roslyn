@@ -12,7 +12,7 @@
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "dependencies": {
         "ICSharpCode.NRefactory": "6.0.0-alpha3"
       },
@@ -29,11 +29,14 @@
         "System.Xml": ""
       }
     },
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netstandard1.3": {
+      "imports": [
+        "dotnet5.4",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910",
-        "System.Threading.Tasks.Parallel": "4.0.1-rc2-23911"
+        "NETStandard.Library": "1.5.0-rc2-*",
+        "System.Threading.Tasks.Parallel": "4.0.1-rc2-*"
       }
     }
   }
