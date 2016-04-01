@@ -10,21 +10,29 @@
     "xunit": "2.1.0"
   },
   "frameworks": {
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netcoreapp1.0": {
+      "imports": [
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "Microsoft.NETCore.Platforms": "1.0.1-rc2-23911",
-        "System.Linq.Parallel": "4.0.1-rc2-23911",
-        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-23911",
-        "System.Threading.Tasks.Parallel": "4.0.1-rc2-23911",
-        "dotnet-test-xunit": "1.0.0-dev-79755-47"
+        "NETStandard.Library": "1.5.0-*",
+        "System.Linq.Parallel": "4.0.1-*",
+        "System.Threading.Tasks.Parallel": "4.0.1-*",
+        "dotnet-test-xunit": "1.0.0-dev-91790-12"
       }
     },
-    "dnx451": {
+    "net451": {
       "dependencies": {
         "xunit.runner.console": "2.1.0"
       }
     }
+  },
+  "runtimes": {
+    "win7-x64": {},
+    "win7-x86": {},
+    "osx.10.11-x64": {},
+    "ubuntu.14.04-x64": {}
   },
   "testRunner": "xunit"
 }

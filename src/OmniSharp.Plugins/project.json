@@ -14,15 +14,19 @@
     "Microsoft.CodeAnalysis.VisualBasic.Workspaces": "1.1.1"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "frameworkAssemblies": {
         "System.Collections.Concurrent": ""
       }
     },
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netstandard1.3": {
+      "imports": [
+        "dotnet5.4",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910"
+        "NETStandard.Library": "1.5.0-*"
       }
     }
   }

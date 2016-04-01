@@ -9,7 +9,7 @@
     "OmniSharp.Roslyn": "1.0.0-*"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "dependencies": {
         "NuGet.Configuration": "3.4.0-rtm-0733",
         "NuGet.Protocol.Core.v2": "3.3.0",
@@ -30,10 +30,13 @@
         "System.Security": ""
       }
     },
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netstandard1.3": {
+      "imports": [
+        "dotnet5.4",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910"
+        "NETStandard.Library": "1.5.0-*"
       }
     }
   }

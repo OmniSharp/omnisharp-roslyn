@@ -6,34 +6,32 @@
   "dependencies": {
     "OmniSharp.Bootstrap": "1.0.0-*",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "System.Reflection.Metadata": "1.2.0",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
     "xunit": "2.1.0"
   },
   "frameworks": {
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netcoreapp1.0": {
+      "imports": [
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "dotnet-test-xunit": "1.0.0-dev-79755-47",
-        "Microsoft.DotNet.InternalAbstractions": "1.0.0-beta-001718",
-        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001718",
-        "Microsoft.NETCore.Platforms": "1.0.1-rc2-23911",
-        "Microsoft.Extensions.Logging.Abstractions": "1.0.0-rc2-20143",
-        "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20143",
-        "NuGet.Packaging": "3.4.0-rtm-0733",
-        "System.Diagnostics.Process": "4.1.0-rc2-23911",
-        "System.IO.Compression": "4.1.0-rc2-23911",
-        "System.Linq.Expressions": "4.0.11-rc2-23911",
-        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-23911",
-        "System.Runtime.Loader": "4.0.0-rc2-23911",
-        "System.Threading.Thread": "4.0.0-rc2-23911",
-        "System.Threading.ThreadPool": "4.0.10-rc2-23911"
+        "NETStandard.Library": "1.5.0-*",
+        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
+        "dotnet-test-xunit": "1.0.0-dev-91790-12"
       }
     },
-    "dnx451": {
+    "net451": {
       "dependencies": {
         "xunit.runner.console": "2.1.0"
       }
     }
+  },
+  "runtimes": {
+    "win7-x64": {},
+    "win7-x86": {},
+    "osx.10.11-x64": {},
+    "ubuntu.14.04-x64": {}
   },
   "testRunner": "xunit"
 }

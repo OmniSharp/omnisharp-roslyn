@@ -10,7 +10,7 @@
     "Microsoft.CodeAnalysis": "1.1.1"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "dependencies": {
         "ICSharpCode.NRefactory": "6.0.0-alpha3"
       },
@@ -28,12 +28,13 @@
         "System.IO": ""
       }
     },
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netstandard1.3": {
+      "imports": [
+        "dotnet5.4",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910",
-        "System.Reflection.TypeExtensions": "4.1.0-rc2-23911",
-        "System.Xml.XDocument": "4.0.11-rc2-23911"
+        "NETStandard.Library": "1.5.0-*"
       }
     }
   }

@@ -67,7 +67,7 @@ class Foo {
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-#if DNXCORE50
+#if NETCOREAPP1_0
                 AssemblyName = "System.Linq",
 #else
                 AssemblyName = "System.Core",
