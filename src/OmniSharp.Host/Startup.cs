@@ -131,11 +131,11 @@ namespace OmniSharp
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
 
-            var assemblies = DependencyContext.Default
-                                              .RuntimeLibraries
+            var dependencyContext = DependencyContext.Default;
+            var assemblies = dependencyContext.RuntimeLibraries
                                               .Where(shouldLoad)
-                                              .SelectMany(lib => lib.RuntimeAssemblyGroups.GetDefaultGroup().AssetPaths)
-                                              .Select(each => loader.Load(each))
+                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(dependencyContext))
+                                              .Select(each => loader.Load(each.Name))
                                               .ToList();
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
