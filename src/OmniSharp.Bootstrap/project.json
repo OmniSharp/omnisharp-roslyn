@@ -25,9 +25,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2*",
-        "System.Dynamic.Runtime": "4.0.11-rc2*",
-        "System.Security.Cryptography.Algorithms": "4.1.0-rc2*"
+        "NETStandard.Library": "1.5.0-rc2-*",
+        "System.Dynamic.Runtime": "4.0.11-rc2-*",
+        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-*"
       }
     }
   }
