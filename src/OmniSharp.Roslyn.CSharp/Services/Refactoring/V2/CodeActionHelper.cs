@@ -47,7 +47,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var diagnostics = semanticModel.GetDiagnostics();
             var location = GetTextSpan(request, sourceText);
 
+            // Try to find exact match
             var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(location)).ToImmutableArray();
+            // No exact match found, try approximate match instead
+            if (!pointDiagnostics.Any())
+            {
+                var firstMatchingDiagnostic = diagnostics.FirstOrDefault(d => d.Location.SourceSpan.Contains(location));
+                // Try to find other matches with the same location as the first approximate match
+                if (firstMatchingDiagnostic != null)
+                {
+                    pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(firstMatchingDiagnostic.Location.SourceSpan)).ToImmutableArray();
+                }
+            }
             if (pointDiagnostics.Any())
             {
                 return new CodeFixContext(originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
