@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var diagnostics = semanticModel.GetDiagnostics();
             var location = GetTextSpan(request, sourceText);
 
-            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location)).ToImmutableArray();
+            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(location)).ToImmutableArray();
             if (pointDiagnostics.Any())
             {
                 return new CodeFixContext(originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
