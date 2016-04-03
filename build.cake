@@ -166,13 +166,13 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         var content = new string[] {
                 "#!/bin/bash",
                 "",
-                $"{{0}} {outputRoot}/{{1}}/OmniSharp \"$@\""
+                $"{{0}} {outputRoot}/{{1}}/OmniSharp{{2}} \"$@\""
             };
         if (FileExists(desktopScript))
         {
             DeleteFile(desktopScript);
         }
-        content[2] = String.Format(content[2], "mono", "net451");
+        content[2] = String.Format(content[2], "mono", "net451", ".exe");
         System.IO.File.WriteAllLines(desktopScript, content);
         StartProcess("chmod",
             new ProcessSettings
@@ -183,7 +183,7 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         {
             DeleteFile(coreScript);
         }
-        content[2] = String.Format(content[2], "", "netcoreapp1.0");
+        content[2] = String.Format(content[2], "", "netcoreapp1.0", "");
         System.IO.File.WriteAllLines(coreScript, content);
         StartProcess("chmod",
             new ProcessSettings
