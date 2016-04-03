@@ -2,6 +2,6 @@ namespace OmniSharp
 {
     public static class Configuration
     {
-        public static bool ZeroBasedIndicies = false;
+        public static bool ZeroBasedIndices = false;
     }
 }

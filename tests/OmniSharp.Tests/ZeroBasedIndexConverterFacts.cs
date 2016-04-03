@@ -9,7 +9,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void ShouldInteractWithEmacsLikeRequests()
         {
-            Configuration.ZeroBasedIndicies = true;
+            Configuration.ZeroBasedIndices = true;
 
             var request = new Request()
             {
@@ -20,7 +20,7 @@ namespace OmniSharp.Tests
             var output = JsonConvert.SerializeObject(request);
 
             // Pretend the client is really emacs / vim
-            Configuration.ZeroBasedIndicies = false;
+            Configuration.ZeroBasedIndices = false;
 
             var input = JsonConvert.DeserializeObject<Request>(output);
 
@@ -31,7 +31,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void ShouldInteractWithZeroBasedIndexes()
         {
-            Configuration.ZeroBasedIndicies = true;
+            Configuration.ZeroBasedIndices = true;
 
             var request = new Request()
             {
@@ -50,7 +50,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void ShouldInteractWithOneBasedIndexes()
         {
-            Configuration.ZeroBasedIndicies = false;
+            Configuration.ZeroBasedIndices = false;
 
             var request = new Request()
             {
