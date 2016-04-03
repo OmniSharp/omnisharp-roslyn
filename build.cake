@@ -12,6 +12,7 @@ var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path", IsRunningOnWindows() ?
                         $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : "~/.omnisharp/local");
+var requireArchive = HasArgument("archive");
 
 // Working directory
 var workingDirectory = (new CakeEnvironment()).WorkingDirectory;
@@ -462,6 +463,11 @@ Task("OnlyPublish")
             if (exitCode != 0)
             {
                 throw new Exception($"Failed to publish {project} / {framework}");
+            }
+
+            if (!requireArchive)
+            {
+                continue;
             }
 
             // Remove version number on Windows
