@@ -58,6 +58,7 @@ var artifactFolder = $"{workingDirectory}/{buildPlan.ArtifactsFolder}";
 var publishFolder = $"{artifactFolder}/publish";
 var logFolder = $"{artifactFolder}/logs";
 var packageFolder = $"{artifactFolder}/package";
+var scriptFolder = $"{workingDirectory}/scripts";
 
 /// <summary>
 ///  Generate an archive out of the given published folder.
@@ -127,6 +128,68 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
                 throw new Exception($"Compression failed for {inputFolder} {outputFile}");
             }
         }
+    }
+}
+
+/// <summary>
+///  Generate the scripts which target the OmniSharp binaries.
+/// </summary>
+/// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
+void CreateRunScript(string outputRoot, string scriptFolder)
+{
+    if (IsRunningOnWindows())
+    {
+        var desktopScript = $"{scriptFolder}/OmniSharp.cmd";
+        var coreScript = $"{scriptFolder}/OmniSharp.Core.cmd";
+        var content = new string[] {
+                "SETLOCAL",
+                "",
+                $"{outputRoot}/{{0}}/OmniSharp %*"
+            };
+        if (FileExists(desktopScript))
+        {
+            DeleteFile(desktopScript);
+        }
+        content[2] = String.Format(content[2], "net451");
+        System.IO.File.WriteAllLines(desktopScript, content);
+        if (FileExists(coreScript))
+        {
+            DeleteFile(coreScript);
+        }
+        content[2] = String.Format(content[2], "netcoreapp1.0");
+        System.IO.File.WriteAllLines(coreScript, content);
+    }
+    else
+    {
+        var desktopScript = $"{scriptFolder}/OmniSharp";
+        var coreScript = $"{scriptFolder}/OmniSharp.Core";
+        var content = new string[] {
+                "#!/bin/bash",
+                "",
+                $"{{0}} {outputRoot}/{{1}}/OmniSharp \"$@\""
+            };
+        if (FileExists(desktopScript))
+        {
+            DeleteFile(desktopScript);
+        }
+        content[2] = String.Format(content[2], "mono", "net451");
+        System.IO.File.WriteAllLines(desktopScript, content);
+        StartProcess("chmod",
+            new ProcessSettings
+            {
+                Arguments = $"+x {desktopScript}"
+            });
+        if (FileExists(coreScript))
+        {
+            DeleteFile(coreScript);
+        }
+        content[2] = String.Format(content[2], "", "netcoreapp1.0");
+        System.IO.File.WriteAllLines(coreScript, content);
+        StartProcess("chmod",
+            new ProcessSettings
+            {
+                Arguments = $"+x {desktopScript}"
+            });
     }
 }
 
@@ -444,6 +507,7 @@ Task("OnlyPublish")
             DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
         }
     }
+    CreateRunScript($"{publishFolder}/{project}/default", scriptFolder);
 });
 
 /// <summary>
@@ -488,24 +552,34 @@ Task("TestPublished")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
-    foreach (var framework in buildPlan.Frameworks)
+    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+    foreach (var script in scriptsToTest)
     {
-        // Skip testing mono executables
-        if (!IsRunningOnWindows() && !framework.Equals("netcoreapp"))
-        {
-            continue;
-        }
-        var outputFolder = $"{publishFolder}/{project}/default/{framework}";
-        var process = StartAndReturnProcess($"{outputFolder}/{project}",
-            new ProcessSettings
+        // Use System.Diagnostics.Process to access ProcessId
+        var process = System.Diagnostics.Process.Start(
+            new ProcessStartInfo($"{shell}",
+                $"{shellArgument}  {scriptFolder}/{script} -s {sourceFolder}/{project} --stdio")
             {
-                Arguments = $"-s {sourceFolder}/{project} --stdio",
+                UseShellExecute = false
             });
         // Wait 10 seconds to see if project terminates early with error
         bool exitsWithError = process.WaitForExit(10000);
         if (exitsWithError)
         {
-            throw new Exception($"Failed to run {project} / default / {framework}");
+            throw new Exception($"Failed to run {script}");
+        }
+        // Need to kill script recursively on Windows
+        if (IsRunningOnWindows())
+        {
+            StartProcess($"TASKKILL",
+                new ProcessSettings
+                {
+                    Arguments = $"/PID {process.Id} /T /F",
+                });
+        }
+        else
+        {
+            process.Kill();
         }
     }
 });
@@ -551,6 +625,7 @@ Task("Install")
         var outputFolder = $"{publishFolder}/{project}/default/{framework}";
         CopyDirectory(outputFolder, $"{installFolder}/{framework}");
     }
+    CreateRunScript($"{installFolder}", scriptFolder);
 });
 
 /// <summary>
