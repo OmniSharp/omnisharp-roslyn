@@ -59,58 +59,6 @@ var logFolder = $"{artifactFolder}/logs";
 var packageFolder = $"{artifactFolder}/package";
 
 /// <summary>
-///  Retrieve the default local RID from .NET CLI.
-/// </summary>
-/// <param name="dotnetcli">Full path to .NET CLI binary</param>
-/// <returns>Default RID</returns>
-string GetLocalRuntimeID(string dotnetcli)
-{
-    var process = StartAndReturnProcess(dotnetcli,
-        new ProcessSettings
-        { 
-            Arguments = "--info",
-            RedirectStandardOutput = true
-        });
-    process.WaitForExit();
-    foreach (var line in process.GetStandardOutput())
-    {
-        if (!line.Contains("RID"))
-        {
-            continue;
-        }
-        var colonIndex = line.IndexOf(':');
-        return line.Substring(colonIndex + 1).Trim();
-    }
-    throw new Exception("Failed to get default RID for system");
-}
-
-/// <summary>
-///  Match the local RID with the ones specified in build.json.
-///  Return exact match if found.
-///  Return first OS match (without version number) otherwise.
-///  Report error if no OS match found.
-/// </summary>
-/// <param name="dotnetcli">Full path to .NET CLI binary</param>
-/// <param name="buildPlan">BuildPlan from build.json</param>
-/// <returns>Matched RID</returns>
-string MatchLocalRuntimeID(string dotnetcli, BuildPlan buildPlan)
-{
-    var localRuntime = GetLocalRuntimeID(dotnetcli);
-    if (buildPlan.Rids.Contains(localRuntime))
-    {
-        return localRuntime;
-    }
-    else
-    {
-        return buildPlan.Rids.First(runtime => {
-            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*?-", "-");
-            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*?-", "-");
-            return localRuntimeWithoutVersion.Equals(runtimeWithoutVersion);
-        });
-    }
-}
-
-/// <summary>
 ///  Generate an archive out of the given published folder.
 ///  Use ZIP for Windows runtimes.
 ///  Use TAR.GZ for non-Windows runtimes.
@@ -122,7 +70,7 @@ string MatchLocalRuntimeID(string dotnetcli, BuildPlan buildPlan)
 void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
 {
     // On all platforms use ZIP for Windows runtimes
-    if (runtime.Contains("win"))
+    if (runtime.Contains("win") || (runtime.Equals("default") && IsRunningOnWindows()))
     {
         var zipFile = outputFile.AppendExtension("zip");
         Zip(inputFolder, zipFile);
@@ -189,50 +137,8 @@ void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
 /// <param name="path">Build path including RID folders</param>
 string GetRuntimeInPath(string path)
 {
-    var potentialRuntimes = GetDirectories(path);
-    if (potentialRuntimes.Count != 1)
-    {
-        throw new Exception($"Multiple runtimes when only one expected in {path}");
-    }
-    var enumerator = potentialRuntimes.GetEnumerator();
-    enumerator.MoveNext();
-    return enumerator.Current.GetDirectoryName();
+    return GetDirectories(path).First().GetDirectoryName();
 }
-
-/// <summary>
-///  Restrict the RIDs defined in build.json to a RID matching the local one.
-/// </summary>
-Task("RestrictToLocalRuntime")
-    .IsDependentOn("Setup")
-    .Does(() =>
-{
-    buildPlan.Rids = new string[] { MatchLocalRuntimeID(dotnetcli, buildPlan) };
-});
-
-/// <summary>
-///  Restrict the RIDs for the specific environment
-/// </summary>
-Task("RestrictToEnvironmentRuntimes")
-    .IsDependentOn("BuildEnvironment")
-    .Does(() =>
-{
-    // Limit scope if things we build
-    buildPlan.Rids = buildPlan.Rids.Where(runtime => {
-        if (IsRunningOnWindows())
-        {
-            return runtime.StartsWith("win");
-        }
-        else
-        {
-            var localRuntime = GetLocalRuntimeID(dotnetcli);
-            var localRuntimeWithoutVersion = Regex.Replace(localRuntime, "(\\d|\\.)*-", "-");
-            var runtimeWithoutVersion = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
-            return localRuntimeWithoutVersion.Equals(runtimeWithoutVersion);
-        }
-    }).ToArray();
-});
-
-
 
 /// <summary>
 ///  Clean artifacts.
@@ -253,13 +159,31 @@ Task("Cleanup")
 });
 
 /// <summary>
-///  Pre-build setup tasks
+///  Pre-build setup tasks.
 /// </summary>
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
-    .IsDependentOn("RestrictToEnvironmentRuntimes")
+    .IsDependentOn("PopulateRuntimes")
     .Does(() =>
 {
+});
+
+/// <summary>
+///  Populate the RIDs for the specific environment.
+///  Use default RID (+ win7-x86 on Windows) for now.
+/// </summary>
+Task("PopulateRuntimes")
+    .IsDependentOn("BuildEnvironment")
+    .Does(() =>
+{
+    if (IsRunningOnWindows())
+    {
+        buildPlan.Rids = new string[] {"default", "win7-x86"};
+    }
+    else
+    {
+        buildPlan.Rids = new string[] {"default"};
+    }
 });
 
 /// <summary>
@@ -453,12 +377,17 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
+            var publishArguments = "publish";
+            if (!runtime.Equals("default"))
+            {
+                publishArguments = $"{publishArguments} --runtime {runtime}";
+            }
+            publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
+            publishArguments = $"{publishArguments} --output {outputFolder} {sourceFolder}/{project}";
             var exitCode = StartProcess(dotnetcli,
                 new ProcessSettings
                 {
-                    Arguments = $"publish --framework {framework} --runtime {runtime} " +
-                                    $"--configuration {configuration} --output {outputFolder} " +
-                                    $"{sourceFolder}/{project}"
+                    Arguments = publishArguments
                 });
             if (exitCode != 0)
             {
@@ -470,8 +399,16 @@ Task("OnlyPublish")
                 continue;
             }
 
-            // Remove version number on Windows
-            var runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            var runtimeShort = "";
+            if (runtime.Equals("default"))
+            {
+                runtimeShort = EnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
+            }
+            else
+            {
+                // Remove version number
+                runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            }
             // Simplify Ubuntu to Linux
             runtimeShort = runtimeShort.Replace("ubuntu", "linux");
             var buildIdentifier = $"{runtimeShort}-{framework}";
@@ -491,6 +428,26 @@ Task("OnlyPublish")
     }
 });
 
+/// <summary>
+///  Alias for OnlyPublish.
+///  Targets all RIDs as specified in build.json.
+/// </summary>
+Task("AllPublish")
+    .IsDependentOn("Restore")
+    .IsDependentOn("OnlyPublish")
+    .Does(() =>
+{
+});
+
+/// <summary>
+///  Restrict the RIDs for the local default.
+/// </summary>
+Task("RestrictToLocalRuntime")
+    .IsDependentOn("Setup")
+    .Does(() =>
+{
+    buildPlan.Rids = new string[] {"default"};
+});
 
 /// <summary>
 ///  Alias for OnlyPublish.
@@ -503,18 +460,6 @@ Task("LocalPublish")
     .Does(() =>
 {
 });
-
-/// <summary>
-///  Alias for OnlyPublish.
-///  Targets all RIDs as specified in build.json.
-/// </summary>
-Task("AllPublish")
-    .IsDependentOn("Restore")
-    .IsDependentOn("OnlyPublish")
-    .Does(() =>
-{
-});
-
 
 /// <summary>
 ///  Test the published binaries if they start up without errors.
@@ -532,8 +477,7 @@ Task("TestPublished")
         {
             continue;
         }
-        var runtime = MatchLocalRuntimeID(dotnetcli, buildPlan);
-        var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
+        var outputFolder = $"{publishFolder}/{project}/default/{framework}";
         var process = StartAndReturnProcess($"{outputFolder}/{project}",
             new ProcessSettings
             {
@@ -543,7 +487,7 @@ Task("TestPublished")
         bool exitsWithError = process.WaitForExit(10000);
         if (exitsWithError)
         {
-            throw new Exception($"Failed to run {project} / {runtime} / {framework}");
+            throw new Exception($"Failed to run {project} / default / {framework}");
         }
     }
 });
@@ -586,7 +530,7 @@ Task("Install")
     var project = buildPlan.MainProject;
     foreach (var framework in buildPlan.Frameworks)
     {
-        var outputFolder = $"{publishFolder}/{project}/{buildPlan.Rids[0]}/{framework}";
+        var outputFolder = $"{publishFolder}/{project}/default/{framework}";
         CopyDirectory(outputFolder, installFolder);
     }
 });
