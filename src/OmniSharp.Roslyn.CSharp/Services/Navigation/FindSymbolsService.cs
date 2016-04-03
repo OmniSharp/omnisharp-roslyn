@@ -60,10 +60,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 Text = symbol.ToDisplayString(format),
                 Kind = symbol.GetKind(),
                 FileName = path,
-                Line = lineSpan.StartLinePosition.Line + 1,
-                Column = lineSpan.StartLinePosition.Character + 1,
-                EndLine = lineSpan.EndLinePosition.Line + 1,
-                EndColumn = lineSpan.EndLinePosition.Character + 1,
+                Line = lineSpan.StartLinePosition.Line,
+                Column = lineSpan.StartLinePosition.Character,
+                EndLine = lineSpan.EndLinePosition.Line,
+                EndColumn = lineSpan.EndLinePosition.Character,
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
         }

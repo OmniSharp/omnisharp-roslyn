@@ -70,7 +70,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             if (document != null)
             {
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var location = new TextSpan(position, 1);
                 return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
             }

@@ -40,10 +40,10 @@ namespace OmniSharp
             ret.Kind = node.Kind().ToString();
             ret.Location = new QuickFix();
             ret.Location.Text = text;
-            ret.Location.Line = 1 + lineSpan.StartLinePosition.Line;
-            ret.Location.Column = 1 + lineSpan.StartLinePosition.Character;
-            ret.Location.EndLine = 1 + lineSpan.EndLinePosition.Line;
-            ret.Location.EndColumn = 1 + lineSpan.EndLinePosition.Character;
+            ret.Location.Line = lineSpan.StartLinePosition.Line;
+            ret.Location.Column = lineSpan.StartLinePosition.Character;
+            ret.Location.EndLine = lineSpan.EndLinePosition.Line;
+            ret.Location.EndColumn = lineSpan.EndLinePosition.Character;
             return ret;
         }
 

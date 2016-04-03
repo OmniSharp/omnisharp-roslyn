@@ -25,10 +25,10 @@ namespace OmniSharp.Helpers
             {
                 Text = text.Trim(),
                 FileName = path,
-                Line = line + 1,
-                Column = lineSpan.StartLinePosition.Character + 1,
-                EndLine = lineSpan.EndLinePosition.Line + 1,
-                EndColumn = lineSpan.EndLinePosition.Character + 1,
+                Line = line,
+                Column = lineSpan.StartLinePosition.Character,
+                EndLine = lineSpan.EndLinePosition.Line,
+                EndColumn = lineSpan.EndLinePosition.Character,
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
         }

@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
             {
                 var semanticModel = await document.GetSemanticModelAsync();
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 if (symbol != null)
                 {

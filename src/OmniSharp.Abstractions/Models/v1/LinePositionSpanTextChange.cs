@@ -50,10 +50,10 @@ namespace OmniSharp.Models
                     return new LinePositionSpanTextChange()
                     {
                         NewText = prefix + newText + postfix,
-                        StartLine = linePositionSpan.Start.Line + 1,
-                        StartColumn = linePositionSpan.Start.Character + 1,
-                        EndLine = linePositionSpan.End.Line + 1,
-                        EndColumn = linePositionSpan.End.Character + 1
+                        StartLine = linePositionSpan.Start.Line,
+                        StartColumn = linePositionSpan.Start.Character,
+                        EndLine = linePositionSpan.End.Line,
+                        EndColumn = linePositionSpan.End.Character
                     };
                 });
         }

@@ -26,10 +26,10 @@ namespace OmniSharp.Models
 
             return new HighlightSpan
             {
-                StartLine = linePos.Start.Line + 1,
-                EndLine = linePos.End.Line + 1,
-                StartColumn = linePos.Start.Character + 1,
-                EndColumn = linePos.End.Character + 1,
+                StartLine = linePos.Start.Line,
+                EndLine = linePos.End.Line,
+                StartColumn = linePos.Start.Character,
+                EndColumn = linePos.End.Character,
                 Kind = span.ClassificationType,
                 Projects = projects
             };

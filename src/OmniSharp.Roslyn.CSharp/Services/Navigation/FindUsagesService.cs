@@ -32,7 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var locations = new List<Location>();
                 var semanticModel = await document.GetSemanticModelAsync();
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
                 var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
                 var usages = request.OnlyThisFile

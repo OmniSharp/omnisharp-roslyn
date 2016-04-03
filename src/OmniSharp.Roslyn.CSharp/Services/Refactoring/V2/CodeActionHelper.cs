@@ -60,11 +60,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             if (request.Selection != null)
             {
-                var startPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line - 1, request.Selection.Start.Column - 1));
-                var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line - 1, request.Selection.End.Column - 1));
+                var startPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line, request.Selection.Start.Column));
+                var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line, request.Selection.End.Column));
                 return TextSpan.FromBounds(startPosition, endPosition);
             }
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
             return new TextSpan(position, 1);
         }
 

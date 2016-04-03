@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var semanticModel = await document.GetSemanticModelAsync();
                 var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
 
                 if (symbol != null)
@@ -49,8 +49,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                         response = new GotoDefinitionResponse
                         {
                             FileName = lineSpan.Path,
-                            Line = lineSpan.StartLinePosition.Line + 1,
-                            Column = lineSpan.StartLinePosition.Character + 1
+                            Line = lineSpan.StartLinePosition.Line,
+                            Column = lineSpan.StartLinePosition.Character
                         };
                     }
                     else if (location.IsInMetadata && request.WantMetadata)
@@ -65,8 +65,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                             response = new GotoDefinitionResponse
                             {
-                                Line = lineSpan.StartLinePosition.Line + 1,
-                                Column = lineSpan.StartLinePosition.Character + 1,
+                                Line = lineSpan.StartLinePosition.Line,
+                                Column = lineSpan.StartLinePosition.Character,
                                 MetadataSource = new MetadataSource()
                                 {
                                     AssemblyName = symbol.ContainingAssembly.Name,
