@@ -36,7 +36,8 @@ For historical reasons OmniSharp defaults to using one-based indices.   That mea
 
     OmniSharp.exe --zero-based-indices
 
-
+## Plugins
+TODO: Plugins will be supported in the future
 
 
 
