@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.Extensions.ObjectPool;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.Stdio.Features;
@@ -22,6 +22,7 @@ namespace OmniSharp.Stdio
         private readonly CancellationTokenSource _cancellation;
         private readonly IHttpContextFactory _httpContextFactory;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ObjectPoolProvider _objectPoolProvider;
         private readonly object _lock = new object();
 
         public StdioServer(TextReader input, ISharedTextWriter writer)
@@ -31,7 +32,8 @@ namespace OmniSharp.Stdio
             _cancellation = new CancellationTokenSource();
 
             _httpContextAccessor = new HttpContextAccessor();
-            _httpContextFactory = new HttpContextFactory(_httpContextAccessor);
+            _objectPoolProvider = new DefaultObjectPoolProvider();
+            _httpContextFactory = new HttpContextFactory(_objectPoolProvider, _httpContextAccessor);
 
             var features = new FeatureCollection();
             var requestFeature = new RequestFeature();

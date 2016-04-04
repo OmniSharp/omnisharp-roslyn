@@ -7,7 +7,7 @@ namespace OmniSharp.Tests
     {
         public bool IsEnabled(LogLevel level) => true;
 
-        public IDisposable BeginScopeImpl(object owner) => new NoopDisposable();
+        public IDisposable BeginScope<TState>(TState owner) => new NoopDisposable();
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
 

@@ -4,7 +4,7 @@ namespace Microsoft.Extensions.Logging
 {
     public class DummyLogger<T> : ILogger<T>
     {
-        public IDisposable BeginScopeImpl(object state) => new Disposable();
+        public IDisposable BeginScope<TState>(TState state) => new Disposable();
 
         public bool IsEnabled(LogLevel logLevel) => false;
 
