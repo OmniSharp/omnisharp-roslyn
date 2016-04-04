@@ -12,6 +12,7 @@
   "frameworks": {
     "netcoreapp1.0": {
       "imports": [
+        "netstandardapp1.5",
         "dnxcore50",
         "portable-net45+win8"
       ],
@@ -19,7 +20,7 @@
         "NETStandard.Library": "1.5.0-rc2-*",
         "System.Linq.Parallel": "4.0.1-rc2-*",
         "System.Threading.Tasks.Parallel": "4.0.1-rc2-*",
-        "dotnet-test-xunit": "1.0.0-dev-91790-12"
+        "dotnet-test-xunit": "1.0.0-dev-*"
       }
     },
     "net451": {
