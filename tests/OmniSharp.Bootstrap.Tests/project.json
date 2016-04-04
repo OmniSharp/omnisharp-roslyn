@@ -5,8 +5,8 @@
   },
   "dependencies": {
     "OmniSharp.Bootstrap": "1.0.0-*",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.1.1",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-*",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.3.0-beta1-20160321-04",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-002202",
     "xunit": "2.1.0"
   },
   "frameworks": {
@@ -17,9 +17,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-*",
-        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
-        "dotnet-test-xunit": "1.0.0-dev-*"
+        "NETStandard.Library": "1.5.0-rc2-23931",
+        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-002202",
+        "dotnet-test-xunit": "1.0.0-dev-128011-22"
       }
     },
     "net451": {

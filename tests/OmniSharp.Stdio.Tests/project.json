@@ -16,9 +16,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-*",
-        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-*",
-        "dotnet-test-xunit": "1.0.0-dev-*"
+        "NETStandard.Library": "1.5.0-rc2-23931",
+        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-002202",
+        "dotnet-test-xunit": "1.0.0-dev-128011-22"
       }
     },
     "net451": {

@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20447",
     "Newtonsoft.Json": "8.0.2"
   },
   "commands": {
@@ -25,9 +25,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-*",
-        "System.Dynamic.Runtime": "4.0.11-rc2-*",
-        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-*"
+        "NETStandard.Library": "1.5.0-rc2-23931",
+        "System.Dynamic.Runtime": "4.0.11-rc2-23931",
+        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-23931"
       }
     }
   }
