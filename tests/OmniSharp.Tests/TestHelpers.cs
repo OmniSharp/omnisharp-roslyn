@@ -206,7 +206,7 @@ namespace OmniSharp.Tests
             var sourceText = await document.GetTextAsync();
             var position = sourceText.Lines.GetPosition(new LinePosition(result.Line - 1, result.Column - 1));
             var semanticModel = await document.GetSemanticModelAsync();
-            return SymbolFinder.FindSymbolAtPosition(semanticModel, position, workspace);
+            return await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
         }
 
         public static async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixes(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)

@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
-                var symbol = SymbolFinder.FindSymbolAtPosition(semanticModel, position, _workspace);
+                var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
 
                 if (symbol != null)
                 {
