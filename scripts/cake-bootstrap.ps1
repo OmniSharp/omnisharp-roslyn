@@ -78,12 +78,12 @@ if ((Test-Path $PSScriptRoot) -and !(Test-Path $TOOLS_DIR)) {
 }
 
 # Make sure that packages.config exist.
-if (!(Test-Path $PACKAGES_CONFIG)) {
-    Write-Verbose -Message "Downloading packages.config..."
-    try { Invoke-WebRequest -Uri http://cakebuild.net/bootstrapper/packages -OutFile $PACKAGES_CONFIG } catch {
-        Throw "Could not download packages.config."
-    }
-}
+#if (!(Test-Path $PACKAGES_CONFIG)) {
+#    Write-Verbose -Message "Downloading packages.config..."
+#    try { Invoke-WebRequest -Uri http://cakebuild.net/bootstrapper/packages -OutFile $PACKAGES_CONFIG } catch {
+#        Throw "Could not download packages.config."
+#    }
+#}
 
 # Try download NuGet.exe if not exists
 if (!(Test-Path $NUGET_EXE)) {
@@ -106,7 +106,7 @@ if(-Not $SkipToolPackageRestore.IsPresent)
     Set-Location $TOOLS_DIR
 
     Write-Verbose -Message "Restoring tools from NuGet..."
-    $NuGetOutput = Invoke-Expression "&`"$NUGET_EXE`" install -ExcludeVersion -OutputDirectory `"$TOOLS_DIR`""
+    $NuGetOutput = Invoke-Expression "&`"$NUGET_EXE`" install Cake -ExcludeVersion -OutputDirectory `"$TOOLS_DIR`""
     Write-Verbose -Message ($NuGetOutput | out-string)
 
     Pop-Location

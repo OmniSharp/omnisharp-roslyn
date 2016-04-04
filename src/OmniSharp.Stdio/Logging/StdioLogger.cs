@@ -19,7 +19,7 @@ namespace OmniSharp.Stdio.Logging
             _filter = filter;
         }
 
-        public IDisposable BeginScopeImpl(object state)
+        public IDisposable BeginScope<TState>(TState state)
         {
             return new NoopDisposable();
         }
