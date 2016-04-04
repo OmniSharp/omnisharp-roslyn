@@ -45,23 +45,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var sourceText = await originalDocument.GetTextAsync();
             var semanticModel = await originalDocument.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
-            var location = GetTextSpan(request, sourceText);
+            var span = GetTextSpan(request, sourceText);
 
             // Try to find exact match
-            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(location)).ToImmutableArray();
+            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(span)).ToImmutableArray();
             // No exact match found, try approximate match instead
-            if (!pointDiagnostics.Any())
+            if (pointDiagnostics.Length == 0)
             {
-                var firstMatchingDiagnostic = diagnostics.FirstOrDefault(d => d.Location.SourceSpan.Contains(location));
-                // Try to find other matches with the same location as the first approximate match
+                var firstMatchingDiagnostic = diagnostics.FirstOrDefault(d => d.Location.SourceSpan.Contains(span));
+                // Try to find other matches with the same exact span as the first approximate match
                 if (firstMatchingDiagnostic != null)
                 {
                     pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(firstMatchingDiagnostic.Location.SourceSpan)).ToImmutableArray();
                 }
             }
-            if (pointDiagnostics.Any())
+            // At this point all pointDiagnostics guaranteed to have the same span
+            if (pointDiagnostics.Length > 0)
             {
-                return new CodeFixContext(originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
+                return new CodeFixContext(originalDocument, pointDiagnostics[0].Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             }
 
             return null;
