@@ -29,7 +29,7 @@
         "System.Runtime.Loader": "4.0.0-rc2-23931",
         "System.Threading.Thread": "4.0.0-rc2-23931",
         "System.Threading.ThreadPool": "4.0.10-rc2-23931",
-        "dotnet-test-xunit": "1.0.0-dev-91790-12"
+        "dotnet-test-xunit": "1.0.0-dev-128011-22"
       }
     },
     "net451": {

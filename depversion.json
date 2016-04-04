@@ -48,7 +48,7 @@
   "Microsoft.Composition": "1.0.30",
   "Microsoft.Web.Xdt": "2.1.1",
 
-  "dotnet-test-xunit": "1.0.0-dev-91790-12",
+  "dotnet-test-xunit": "1.0.0-dev-128011-22",
   "xunit": "2.1.0",
   "xunit.runner.console": "2.1.0",
 
