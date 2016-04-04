@@ -6,8 +6,8 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0-*",
     "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.CodeAnalysis": "1.1.1",
-    "Microsoft.CodeAnalysis.Common": "1.1.1",
+    "Microsoft.CodeAnalysis": "1.3.0-beta1-20160321-04",
+    "Microsoft.CodeAnalysis.Common": "1.3.0-beta1-20160321-04",
     "Microsoft.DotNet.ProjectModel": "1.0.0-beta-002202",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20447"
   },
