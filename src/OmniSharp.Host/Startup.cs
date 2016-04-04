@@ -17,10 +17,14 @@ using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
+using OmniSharp.Plugins;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+#if NETSTANDARD1_5
+using System.Runtime.Loader;
+#endif
 
 namespace OmniSharp
 {
@@ -76,12 +80,22 @@ namespace OmniSharp
                                                    Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
-            assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
-                .Distinct();
+
+            try
+            {
+                assemblies = assemblies
+                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                    .Distinct()
+                    .ToArray();
+            }
+            catch (System.Reflection.TargetInvocationException e)
+            {
+                Console.WriteLine(e.ToString(), e.InnerException.ToString());
+            }
 
             foreach (var assembly in assemblies)
             {
+                Console.WriteLine($"assembly: {assembly.FullName}");
                 config = config.WithAssembly(assembly);
             }
 
@@ -123,23 +137,37 @@ namespace OmniSharp
             return container;
         }
 
+        public IEnumerable<Assembly> LoadPlugins(PluginAssemblies plugins, IApplicationEnvironment appEnv)
+        {
+            return plugins.GetPlugins(appEnv)
+#if NET451
+                  .Select(AssemblyName.GetAssemblyName)
+                  .Select(Assembly.Load);
+#else
+                  .Where(x => { Console.WriteLine(x); return true; })
+                  .Select(AssemblyLoadContext.GetAssemblyName)
+                  .Select(AssemblyLoadContext.Default.LoadFromAssemblyName)
+                  .ToArray();
+#endif
+        }
+
         public void Configure(IApplicationBuilder app,
+                              IApplicationEnvironment appEnv,
                               IServiceProvider serviceProvider,
                               IOmnisharpEnvironment env,
                               ILoggerFactory loggerFactory,
                               ISharedTextWriter writer,
                               IOmnisharpAssemblyLoader loader,
+                              PluginAssemblies plugins,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
-
-            var dependencyContext = DependencyContext.Default;
-            var assemblies = dependencyContext.RuntimeLibraries
+            var assemblies = DependencyContext.Default.RuntimeLibraries
                                               .Where(shouldLoad)
-                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(dependencyContext))
-                                              .Select(each => loader.Load(each.Name))
-                                              .ToList();
+                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(DependencyContext.Default))
+                                              .Select(loader.Load)
+                                              .Concat(LoadPlugins(plugins, appEnv));
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 

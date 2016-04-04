@@ -42,6 +42,15 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
+    public IEnumerable<string> Projects { get { return new [] { MainProject }.Concat(Plugins ?? new string[] {}); } }
+    public string[] Plugins { get; set; }
+    // TODO: Remove once scriptcs/msbuild are not longer required
+    public IDictionary<string, string[]> PluginsByFramework { get; set; }
+}
+
+public class ProjectJson
+{
+    public IDictionary<string, object> frameworks { get; set; }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
@@ -54,7 +63,6 @@ var toolsFolder = System.IO.Path.Combine(workingDirectory, buildPlan.BuildToolsF
 
 var sourceFolder = System.IO.Path.Combine(workingDirectory, "src");
 var testFolder = System.IO.Path.Combine(workingDirectory, "tests");
-
 var artifactFolder = System.IO.Path.Combine(workingDirectory, buildPlan.ArtifactsFolder);
 var publishFolder = System.IO.Path.Combine(artifactFolder, "publish");
 var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
@@ -300,6 +308,43 @@ Task("OnlyPublish")
     .IsDependentOn("Setup")
     .Does(() =>
 {
+    foreach (var plugin in buildPlan.Plugins)
+    {
+        foreach (var runtime in buildPlan.Rids)
+        {
+            var buildArguments = "build";
+            buildArguments = $"{buildArguments} --configuration {configuration}";
+            buildArguments = $"{buildArguments} {sourceFolder}/{plugin}";
+            var exitCode = StartProcess(dotnetcli,
+                new ProcessSettings
+                {
+                    Arguments = buildArguments
+                });
+            if (exitCode != 0)
+            {
+                throw new Exception($"Failed to build {plugin}");
+            }
+        }
+
+        var projectJson = JsonConvert.DeserializeObject<ProjectJson>(
+            System.IO.File.ReadAllText($"{sourceFolder}/{plugin}/project.json"));
+
+        foreach (var kvp in projectJson.frameworks)
+        {
+            var framework = kvp.Key;
+            if (framework.StartsWith("netstandard"))
+            {
+                var outputFolder = $"{pluginFolder}/coreclr/{plugin}";
+                CopyDirectory($"{sourceFolder}/{plugin}/bin/{configuration}/{framework}", outputFolder);
+            }
+            if (framework.StartsWith("net451"))
+            {
+                var outputFolder = $"{pluginFolder}/desktop/{plugin}";
+                CopyDirectory($"{sourceFolder}/{plugin}/bin/{configuration}/{framework}", outputFolder);
+            }
+        }
+    }
+
     var project = buildPlan.MainProject;
     var projectFolder = System.IO.Path.Combine(sourceFolder, project);
     foreach (var framework in buildPlan.Frameworks)
@@ -307,6 +352,7 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
+            var bareFolder = System.IO.Path.Combine(publishFolder, $"{project}-bare", runtime, framework);
             var publishArguments = "publish";
             if (!runtime.Equals("default"))
             {
@@ -317,10 +363,57 @@ Task("OnlyPublish")
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
+            CopyDirectory(outputFolder, bareFolder);
+            var pluginsFolder = $"{outputFolder}/plugins";
+
+            if (!DirectoryExists(artifactFolder))
+            {
+                CreateDirectory(pluginsFolder);
+            }
+
+            if (framework.StartsWith("netcoreapp"))
+            {
+                var pluginsPath = $"{pluginFolder}/coreclr";
+                CopyDirectory(pluginsPath, pluginsFolder);
+            }
+            if (framework.Equals("net451"))
+            {
+                var pluginsPath = $"{pluginFolder}/desktop";
+                CopyDirectory(pluginsPath, pluginsFolder);
+            }
+
             if (requireArchive)
             {
                 Package(runtime, framework, outputFolder, packageFolder, buildPlan.MainProject.ToLower());
             }
+
+            var runtimeShort = "";
+            if (runtime.Equals("default"))
+            {
+                runtimeShort = EnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
+            }
+            else
+            {
+                // Remove version number
+                runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            }
+            // Simplify Ubuntu to Linux
+            runtimeShort = runtimeShort.Replace("ubuntu", "linux");
+            var buildIdentifier = $"{runtimeShort}-{framework}";
+            // Linux + net451 is renamed to Mono
+            if (runtimeShort.Contains("linux-") && framework.Equals("net451"))
+            {
+                buildIdentifier ="linux-mono";
+            }
+            // No need to package OSX + net451
+            else if (runtimeShort.Contains("osx-") && framework.Equals("net451"))
+            {
+                continue;
+            }
+
+            DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
+            // Archive vare repo
+            DoArchive(runtime, bareFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-bare-{buildIdentifier}");
         }
     }
     CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
