@@ -21,7 +21,6 @@ namespace OmniSharp.Services
             HostPID = hostPid;
             TraceType = traceType;
             TransportType = transportType;
-            ConfigurationPath = System.IO.Path.Combine(Path, "omnisharp.json");
             OtherArgs = otherArgs;
         }
 
@@ -34,8 +33,6 @@ namespace OmniSharp.Services
         public string Path { get; }
 
         public string SolutionFilePath { get; }
-        
-        public string ConfigurationPath { get; }
 
         public TransportType TransportType { get; }
 
