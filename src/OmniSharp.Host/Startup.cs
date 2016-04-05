@@ -42,7 +42,7 @@ namespace OmniSharp
             configBuilder.AddJsonFile(source =>
             {
                 source.Path = "omnisharp.json";
-                source.Optional = false;
+                source.Optional = true;
                 source.FileProvider = new PhysicalFileProvider(Program.Environment.Path);
             });
 
