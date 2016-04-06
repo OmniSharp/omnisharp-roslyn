@@ -11,7 +11,8 @@ var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path", IsRunningOnWindows() ?
-                        $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : "~/.omnisharp/local");
+                        $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : 
+                        $"{EnvironmentVariable("HOME")}/.omnisharp/local");
 var requireArchive = HasArgument("archive");
 
 // Working directory
