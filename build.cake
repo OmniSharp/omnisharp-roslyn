@@ -531,7 +531,7 @@ Task("Install")
     foreach (var framework in buildPlan.Frameworks)
     {
         var outputFolder = $"{publishFolder}/{project}/default/{framework}";
-        CopyDirectory(outputFolder, installFolder);
+        CopyDirectory(outputFolder, $"{installFolder}/{framework}");
     }
 });
 
