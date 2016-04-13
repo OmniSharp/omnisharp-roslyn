@@ -11,7 +11,7 @@ var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path", IsRunningOnWindows() ?
-                        $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : 
+                        $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" :
                         $"{EnvironmentVariable("HOME")}/.omnisharp/local");
 var requireArchive = HasArgument("archive");
 
@@ -209,7 +209,7 @@ Task("BuildEnvironment")
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
     {
       installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
-    } 
+    }
     if (!buildPlan.UseSystemDotNetPath)
     {
         installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
@@ -410,21 +410,27 @@ Task("OnlyPublish")
                 // Remove version number
                 runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
             }
-            // Simplify Ubuntu to Linux
-            runtimeShort = runtimeShort.Replace("ubuntu", "linux");
+
             var buildIdentifier = $"{runtimeShort}-{framework}";
             // Linux + net451 is renamed to Mono
-            if (runtimeShort.Contains("linux-") && framework.Equals("net451"))
+            if (runtimeShort.Contains("ubuntu-") && framework.Equals("net451"))
             {
                 buildIdentifier ="linux-mono";
             }
-            // No need to package OSX + net451
-            else if (runtimeShort.Contains("osx-") && framework.Equals("net451"))
+            // No need to package for <!win7> + net451
+            else if (!runtimeShort.Contains("win7-") && framework.Equals("net451"))
             {
                 continue;
             }
 
             DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
+
+            // Alias linux
+            if (runtimeShort.Contains("ubuntu-") && !framework.Equals("net451"))
+            {
+                buildIdentifier = $"linux-{framework}";
+                DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
+            }
         }
     }
 });

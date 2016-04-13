@@ -7,10 +7,6 @@
     "BuildToolsFolder": ".tools",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {
-        "OmniSharp.Bootstrap.Tests": [
-            "netcoreapp1.0",
-            "net451"
-        ],
         "OmniSharp.MSBuild.Tests": [
             "net451"
         ],
