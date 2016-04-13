@@ -1,7 +1,5 @@
-using System;
 using System.IO;
 using System.Linq;
-using Microsoft.DotNet.ProjectModel;
 using OmniSharp.DotNet.Projects;
 using TestCommon;
 using Xunit;
