@@ -19,6 +19,7 @@ using OmniSharp.DotNet.Tools;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.Services;
+using OmniSharp.DotNet.Projects;
 
 namespace OmniSharp.DotNet
 {
@@ -98,10 +99,12 @@ namespace OmniSharp.DotNet
 
             _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
-            _workspaceContext = WorkspaceContext.CreateFrom(_environment.Path);
-            if (_workspaceContext == null)
+            _workspaceContext = WorkspaceContext.Create();
+            var projects = ProjectSearcher.Search(_environment.Path);
+            _logger.LogInformation($"Originated from {projects.Count()} projects.");
+            foreach (var path in projects)
             {
-                throw new NotImplementedException($"Failed to initialize {typeof(WorkspaceContext)} at {_environment.Path}.");
+                _workspaceContext.AddProject(path);
             }
 
             Update(allowRestore: true);
