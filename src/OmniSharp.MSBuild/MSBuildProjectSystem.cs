@@ -127,9 +127,7 @@ namespace OmniSharp.MSBuild
                 }
 
                 var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
-#if DNX451
                 compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
-#endif
 
                 if (projectFileInfo.AllowUnsafe)
                 {
@@ -317,10 +315,8 @@ namespace OmniSharp.MSBuild
                     {
                         continue;
                     }
-#if DNX451
                     var analyzerReference = new AnalyzerFileReference(analyzerPath, new SimpleAnalyzerAssemblyLoader());
                     project.AddAnalyzerReference(analyzerReference);
-#endif
                 }
             }
 

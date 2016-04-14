@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-#if DNX451
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
-#endif
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
@@ -54,7 +52,6 @@ namespace OmniSharp.MSBuild.ProjectFile
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
 
-#if DNX451
             if (!PlatformHelper.IsMono)
             {
                 var properties = new Dictionary<string, string>
@@ -215,9 +212,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
             }
-#else
-            // TODO: Shell out to msbuild/xbuild here?
-#endif
             return projectFileInfo;
         }
 
@@ -240,7 +234,6 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
     }
 
-    #if DNX451
     static class DictionaryExt
     {
         public static string GetPropertyValue(this Dictionary<string, BuildProperty> dict, string key)
@@ -250,5 +243,4 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : null;
         }
     }
-    #endif
 }
