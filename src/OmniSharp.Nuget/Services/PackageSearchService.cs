@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
-#if DNX451
+#if NET451
 using NuGet.Logging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
@@ -20,7 +20,7 @@ using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
-#if DNX451
+#if NET451
     [OmniSharpHandler(OmnisharpEndpoints.PackageSearch, "NuGet")]
     public class PackageSearchService : RequestHandler<PackageSearchRequest, PackageSearchResponse>
     {
