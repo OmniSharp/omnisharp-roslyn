@@ -252,13 +252,23 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    var exitCode = StartProcess(dotnetcli,
+    Information("Restoring packages....");
+    var p = StartAndReturnProcess(dotnetcli,
         new ProcessSettings
         {
-            Arguments = "restore"
+            Arguments = "restore",
+            RedirectStandardOutput = true
         });
-    if (exitCode != 0)
+    p.WaitForExit();
+    var exitCode = p.GetExitCode();
+
+    if (exitCode == 0)
     {
+        Information("Package restore successful!");
+    }
+    else
+    {
+        Error(string.Join("\n", p.GetStandardOutput()));
         throw new Exception("Failed to restore.");
     }
 });
@@ -288,6 +298,13 @@ Task("BuildTest")
     }
 });
 
+/// <summary>
+///  Run all tests for .NET Desktop and .NET Core
+/// </summary>
+Task("TestAll")
+    .IsDependentOn("Test")
+    .IsDependentOn("TestCore")
+    .Does(() =>{});
 
 /// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
@@ -548,8 +565,7 @@ Task("Install")
 Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
     .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
@@ -562,8 +578,21 @@ Task("All")
 Task("Local")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
+    .IsDependentOn("LocalPublish")
+    .IsDependentOn("TestPublished")
+    .Does(() =>
+{
+});
+
+/// <summary>
+///  Build centered around producing the final artifacts for Travis
+///
+///  The tests are run as a different task "TestAll"
+/// </summary>
+Task("Travis")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Restore")
     .IsDependentOn("LocalPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
