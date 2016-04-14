@@ -149,6 +149,28 @@ int Run(string exec, string args)
     });
 }
 
+void RunRestore(string args, string workingDirectory) {
+    var p = StartAndReturnProcess(dotnetcli,
+        new ProcessSettings
+        {
+            Arguments = $"restore {args}",
+            RedirectStandardOutput = true,
+        WorkingDirectory = workingDirectory
+        });
+    p.WaitForExit();
+    var exitCode = p.GetExitCode();
+
+    if (exitCode == 0)
+    {
+        Information("Package restore successful!");
+    }
+    else
+    {
+        Error(string.Join("\n", p.GetStandardOutput()));
+        throw new Exception("Failed to restore.");
+    }
+}
+
 int Run(string exec, string args, string workingDirectory)
 {
     return StartProcess(exec, new ProcessSettings
@@ -249,7 +271,7 @@ Task("BuildEnvironment")
         });
     try
     {
-        
+
         Run(dotnetcli, "--info");
     }
     catch (Win32Exception)
@@ -276,15 +298,11 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    if (Run(dotnetcli, "restore", sourceFolder) != 0)
-    {
-        throw new Exception("Failed to restore projects under source code folder.");
-    }
-    
-    if (Run(dotnetcli, "restore --infer-runtimes", testFolder) != 0)
-    {
-        throw new Exception("Failed to restore projects under test code folder.");
-    }
+    Information("Restoring source packages....");
+    RunRestore("", sourceFolder);
+    Information("Restoring test packages....");
+    RunRestore("--infer-runtimes", testFolder);
+    Information("Restoring complete....");
 });
 
 /// <summary>
@@ -312,6 +330,13 @@ Task("BuildTest")
     }
 });
 
+/// <summary>
+///  Run all tests for .NET Desktop and .NET Core
+/// </summary>
+Task("TestAll")
+    .IsDependentOn("Test")
+    .IsDependentOn("TestCore")
+    .Does(() =>{});
 
 /// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
@@ -325,7 +350,7 @@ Task("TestCore")
                                 .Where(pair => pair.Value.Any(framework => framework.Contains("netcoreapp")))
                                 .Select(pair => pair.Key)
                                 .ToList();
-                                             
+
     foreach (var testProject in testProjects)
     {
         var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
@@ -358,7 +383,7 @@ Task("Test")
             var project = pair.Key;
             var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
             var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
-            
+
             // Copy xunit executable to test folder to solve path errors
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
@@ -559,8 +584,7 @@ Task("Install")
 Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
     .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
@@ -573,8 +597,21 @@ Task("All")
 Task("Local")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
+    .IsDependentOn("LocalPublish")
+    .IsDependentOn("TestPublished")
+    .Does(() =>
+{
+});
+
+/// <summary>
+///  Build centered around producing the final artifacts for Travis
+///
+///  The tests are run as a different task "TestAll"
+/// </summary>
+Task("Travis")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Restore")
     .IsDependentOn("LocalPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
