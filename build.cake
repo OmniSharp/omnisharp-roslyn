@@ -181,6 +181,17 @@ Task("PopulateRuntimes")
     {
         buildPlan.Rids = new string[] {"default", "win7-x86"};
     }
+    else if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
+    {
+        buildPlan.Rids = new string[]
+            {
+                "default", // To allow testing the published artifact
+                "ubuntu.14.04-x64",
+                "centos.7-x64",
+                "rhel.7.2-x64",
+                "debian.8.2-x64"
+            };
+    }
     else
     {
         buildPlan.Rids = new string[] {"default"};
