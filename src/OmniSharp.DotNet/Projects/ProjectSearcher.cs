@@ -10,6 +10,11 @@ namespace OmniSharp.DotNet.Projects
     {
         public static IEnumerable<string> Search(string solutionRoot)
         {
+            return Search(solutionRoot, maxDepth: 5);
+        }
+
+        public static IEnumerable<string> Search(string solutionRoot, int maxDepth)
+        {
             var dir = new DirectoryInfo(solutionRoot);
             if (!dir.Exists)
             {
@@ -26,39 +31,43 @@ namespace OmniSharp.DotNet.Projects
             }
             else
             {
-                return FindProjects(solutionRoot);
+                return FindProjects(solutionRoot, maxDepth);
             }
         }
 
-        private static IEnumerable<string> FindProjects(string root)
+        private static IEnumerable<string> FindProjects(string root, int maxDepth)
         {
             var result = new List<string>();
-            var stack = new Stack<DirectoryInfo>();
-            stack.Push(new DirectoryInfo(root));
+            var stack = new Stack<Tuple<DirectoryInfo, int>>();
+
+            stack.Push(Tuple.Create(new DirectoryInfo(root), 0));
 
             while (stack.Any())
             {
                 var next = stack.Pop();
-                if (!next.Exists)
+                var currentFolder = next.Item1;
+                var depth = next.Item2;
+
+                if (!currentFolder.Exists)
                 {
                     continue;
                 }
-                else if (next.GetFiles(Project.FileName).Any())
+                else if (currentFolder.GetFiles(Project.FileName).Any())
                 {
-                    result.Add(Path.Combine(next.FullName, Project.FileName));
+                    result.Add(Path.Combine(currentFolder.FullName, Project.FileName));
                 }
-                else
+                else if (depth < maxDepth)
                 {
-                    foreach (var sub in next.GetDirectories())
+                    foreach (var sub in currentFolder.GetDirectories())
                     {
-                        stack.Push(sub);
+                        stack.Push(Tuple.Create(sub, depth + 1));
                     }
                 }
             }
 
             return result;
         }
-        
+
         private static IEnumerable<string> FindProjectsThroughGlobalJson(string root)
         {
             GlobalSettings globalSettings;
@@ -75,7 +84,7 @@ namespace OmniSharp.DotNet.Projects
             }
             else
             {
-                return Enumerable.Empty<string>();                    
+                return Enumerable.Empty<string>();
             }
         }
     }
