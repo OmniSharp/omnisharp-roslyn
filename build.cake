@@ -428,8 +428,8 @@ Task("OnlyPublish")
             {
                 buildIdentifier ="linux-mono";
             }
-            // No need to package for <!win7> + net451
-            else if (!runtimeShort.Contains("win7-") && framework.Equals("net451"))
+            // No need to package for <!win> + net451
+            else if (!runtimeShort.Contains("win-") && framework.Equals("net451"))
             {
                 continue;
             }
