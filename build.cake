@@ -423,13 +423,13 @@ Task("OnlyPublish")
             }
 
             var buildIdentifier = $"{runtimeShort}-{framework}";
-            // Linux + net451 is renamed to Mono
-            if (runtimeShort.Contains("ubuntu-") && framework.Equals("net451"))
+            // Travis/Linux + default + net451 is renamed to Mono
+            if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux") && runtime.Equals("default") && framework.Equals("net451"))
             {
                 buildIdentifier ="linux-mono";
             }
-            // No need to package for <!win> + net451
-            else if (!runtimeShort.Contains("win-") && framework.Equals("net451"))
+            // No need to archive for other Travis + net451 combinations
+            else if (EnvironmentVariable("TRAVIS_OS_NAME") != null && framework.Equals("net451"))
             {
                 continue;
             }
