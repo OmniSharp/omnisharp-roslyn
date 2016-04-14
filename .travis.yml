@@ -10,9 +10,11 @@ os:
   - linux
   - osx
 osx_image: xcode7.3
-before_install:
+# install automaically retries
+install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
+  - "./build.sh -target=Restore"
 script:
   - "./build.sh -target=All -archive"
 addons:
