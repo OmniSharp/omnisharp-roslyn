@@ -149,8 +149,9 @@ int Run(string exec, string args)
     });
 }
 
-void RunRestore(string args, string workingDirectory) {
-    var p = StartAndReturnProcess(dotnetcli,
+void RunRestore(string exec, string args, string workingDirectory)
+{
+    var p = StartAndReturnProcess(exec,
         new ProcessSettings
         {
             Arguments = $"restore {args}",
@@ -271,7 +272,6 @@ Task("BuildEnvironment")
         });
     try
     {
-
         Run(dotnetcli, "--info");
     }
     catch (Win32Exception)
@@ -299,9 +299,9 @@ Task("Restore")
     .Does(() =>
 {
     Information("Restoring source packages....");
-    RunRestore("", sourceFolder);
+    RunRestore(dotnetcli, "", sourceFolder);
     Information("Restoring test packages....");
-    RunRestore("--infer-runtimes", testFolder);
+    RunRestore(dotnetcli, "--infer-runtimes", testFolder);
     Information("Restoring complete....");
 });
 
