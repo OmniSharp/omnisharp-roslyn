@@ -47,6 +47,10 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public OutputKind OutputKind { get; private set; }
 
+        public bool SignAssembly { get; private set; }
+
+        public string AssemblyOriginatorKeyFile { get; private set; }
+
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
@@ -133,6 +137,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
+
+                var signAssembly = projectInstance.GetPropertyValue("SignAssembly");
+                if (!string.IsNullOrWhiteSpace(signAssembly))
+                {
+                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                }
+
+                projectFileInfo.AssemblyOriginatorKeyFile = projectInstance.GetPropertyValue("AssemblyOriginatorKeyFile");
             }
             else
             {
@@ -211,6 +223,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
+
+                var signAssembly = properties["SignAssembly"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(signAssembly))
+                {
+                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                }
+
+                projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
             }
             return projectFileInfo;
         }
