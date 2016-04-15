@@ -10,7 +10,7 @@ namespace OmniSharp.MSBuild
     public class MSBuildContext
     {
         public Dictionary<Guid, ProjectId> ProjectGuidToWorkspaceMapping { get; } = new Dictionary<Guid, ProjectId>();
-        public Dictionary<string, ProjectFileInfo> Projects { get; } = new Dictionary<string, ProjectFileInfo>();
+        public Dictionary<string, ProjectFileInfo> Projects { get; } = new Dictionary<string, ProjectFileInfo>(StringComparer.OrdinalIgnoreCase);
         public string SolutionPath { get; set; }
     }
 }
