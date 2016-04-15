@@ -423,25 +423,24 @@ Task("OnlyPublish")
             }
 
             var buildIdentifier = $"{runtimeShort}-{framework}";
+            // Rename/restrict some archive names on CI
             // Travis/Linux + default + net451 is renamed to Mono
             if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux") && runtime.Equals("default") && framework.Equals("net451"))
             {
-                buildIdentifier ="linux-mono";
+                buildIdentifier ="mono";
             }
-            // No need to archive for other Travis + net451 combinations
+            // No need to archive other Travis + net451 combinations
             else if (EnvironmentVariable("TRAVIS_OS_NAME") != null && framework.Equals("net451"))
+            {
+                continue;
+            }
+            // No need to archive Travis/Linux + default + not(net451) (expect all runtimes to be explicitely named)
+            else if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux") && runtime.Equals("default") && !framework.Equals("net451"))
             {
                 continue;
             }
 
             DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
-
-            // Alias linux
-            if (runtimeShort.Contains("ubuntu-") && !framework.Equals("net451"))
-            {
-                buildIdentifier = $"linux-{framework}";
-                DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
-            }
         }
     }
 });
