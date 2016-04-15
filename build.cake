@@ -1,5 +1,6 @@
 #addin "Newtonsoft.Json"
 
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.ComponentModel;
 using Newtonsoft.Json;
@@ -46,8 +47,7 @@ var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
-var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" :
-                    $"{dotnetFolder}/dotnet";
+var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : $"{dotnetFolder}/dotnet";
 var toolsFolder = $"{workingDirectory}/{buildPlan.BuildToolsFolder}";
 var xunitRunner = "xunit.runner.console";
 
@@ -141,6 +141,23 @@ string GetRuntimeInPath(string path)
     return GetDirectories(path).First().GetDirectoryName();
 }
 
+int Run(string exec, string args)
+{
+    return StartProcess(exec, new ProcessSettings
+    {
+        Arguments = args
+    });
+}
+
+int Run(string exec, string args, string workingDirectory)
+{
+    return StartProcess(exec, new ProcessSettings
+    {
+        Arguments = args,
+        WorkingDirectory = workingDirectory
+    });
+}
+
 /// <summary>
 ///  Clean artifacts.
 /// </summary>
@@ -232,12 +249,8 @@ Task("BuildEnvironment")
         });
     try
     {
-        StartProcess(dotnetcli,
-            new ProcessSettings
-            {
-                Arguments = "--info"
-            });
-
+        
+        Run(dotnetcli, "--info");
     }
     catch (Win32Exception)
     {
@@ -263,14 +276,14 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    var exitCode = StartProcess(dotnetcli,
-        new ProcessSettings
-        {
-            Arguments = "restore"
-        });
-    if (exitCode != 0)
+    if (Run(dotnetcli, "restore", sourceFolder) != 0)
     {
-        throw new Exception("Failed to restore.");
+        throw new Exception("Failed to restore projects under source code folder.");
+    }
+    
+    if (Run(dotnetcli, "restore --infer-runtimes", testFolder) != 0)
+    {
+        throw new Exception("Failed to restore projects under test code folder.");
     }
 });
 
@@ -305,29 +318,21 @@ Task("BuildTest")
 /// </summary>
 Task("TestCore")
     .IsDependentOn("Setup")
-    .IsDependentOn("BuildTest")
+    .IsDependentOn("Restore")
     .Does(() =>
 {
-    foreach (var pair in buildPlan.TestProjects)
+    var testProjects = buildPlan.TestProjects
+                                .Where(pair => pair.Value.Any(framework => framework.Contains("netcoreapp")))
+                                .Select(pair => pair.Key)
+                                .ToList();
+                                             
+    foreach (var testProject in testProjects)
     {
-        foreach (var framework in pair.Value)
+        var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
+        var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
+        if (Run(dotnetcli, $"test -xml {logFile} -notrait category=failing", testWorkingDir) != 0)
         {
-            if (!framework.Contains("netcoreapp"))
-            {
-                continue;
-            }
-
-            var project = pair.Key;
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = $"test --framework {framework} -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
-                    WorkingDirectory = $"{testFolder}/{project}"
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Test failed {project} / {framework}");
-            }
+            throw new Exception($"Test failed {testProject} on core.");
         }
     }
 });
@@ -353,6 +358,7 @@ Task("Test")
             var project = pair.Key;
             var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
             var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
+            
             // Copy xunit executable to test folder to solve path errors
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
@@ -362,7 +368,7 @@ Task("Test")
                 ToolPath = $"{instanceFolder}/xunit.console.exe",
                 ArgumentCustomization = builder =>
                 {
-                    builder.Append("-xml");
+                    builder.Append("-parallel none -xml ");
                     builder.Append(logFile);
                     return builder;
                 }
@@ -396,12 +402,7 @@ Task("OnlyPublish")
             }
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
             publishArguments = $"{publishArguments} --output {outputFolder} {sourceFolder}/{project}";
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = publishArguments
-                });
-            if (exitCode != 0)
+            if (Run(dotnetcli, publishArguments) != 0)
             {
                 throw new Exception($"Failed to publish {project} / {framework}");
             }
