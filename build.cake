@@ -325,6 +325,10 @@ Task("BuildTest")
                     RedirectStandardOutput = true
                 });
             process.WaitForExit();
+            if (!DirectoryExists(artifactFolder))
+                CreateDirectory(artifactFolder);
+            if (!DirectoryExists(logFolder))
+                CreateDirectory(logFolder);
             System.IO.File.WriteAllLines($"{logFolder}/{project}-{framework}-build.log", process.GetStandardOutput().ToArray());
         }
     }
