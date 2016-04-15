@@ -11,8 +11,8 @@
   "frameworks": {
     "netcoreapp1.0": {
       "dependencies": {
-        "dotnet-test-xunit": "1.0.0-dev-128011-22",
-        "NETStandard.Library": "1.5.0-rc2-23931"
+        "dotnet-test-xunit": "1.0.0-rc2-151950-39",
+        "NETStandard.Library": "1.5.0-rc2-24018"
       },
       "imports": [
         "netstandardapp1.5",

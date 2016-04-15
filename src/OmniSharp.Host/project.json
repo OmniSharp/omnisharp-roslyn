@@ -10,18 +10,18 @@
     "OmniSharp.Stdio": "1.0.0-*",
     "OmniSharp.Plugins": "1.0.0-*",
     "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20449",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20449",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20607",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20607",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-002202",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20449",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20449",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-002202",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20449",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20449",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20449",
-    "Microsoft.Extensions.Options": "1.0.0-rc2-20449",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20449"
+    "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002416",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-002416",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.Options": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20607"
   },
   "frameworks": {
     "net451": {
@@ -37,9 +37,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-23931",
-        "System.Runtime.Loader": "4.0.0-rc2-23931",
-        "System.IO.Compression": "4.1.0-rc2-23931"
+        "NETStandard.Library": "1.5.0-rc2-24018",
+        "System.Runtime.Loader": "4.0.0-rc2-24018",
+        "System.IO.Compression": "4.1.0-rc2-24018"
       }
     }
   }
