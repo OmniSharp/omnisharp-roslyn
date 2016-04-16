@@ -1,5 +1,3 @@
-#reference "System.IO.Compression.FileSystem"
-
 #load "runhelpers.cake"
 
 using System.IO.Compression;
@@ -62,7 +60,7 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
     if (runtime.Contains("win") || (runtime.Equals("default") && IsRunningOnWindows()))
     {
         var zipFile = System.IO.Path.ChangeExtension(archiveName, "zip");
-        ZipFile.CreateFromDirectory(contentFolder, zipFile);  
+        Zip(contentFolder, zipFile);
     }
     // On all platforms use TAR.GZ for Unix runtimes
     else

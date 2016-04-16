@@ -155,9 +155,15 @@ Task("BuildEnvironment")
     System.IO.Directory.CreateDirectory(toolsFolder);
 
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
-    if (!IsRunningOnWindows())
-        nugetPath = $"mono {nugetPath}";
-    Run(nugetPath, $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory {toolsFolder}");
+    var arguments = $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory {toolsFolder}";
+    if (IsRunningOnWindows())
+    {
+        Run(nugetPath, arguments);
+    }
+    else
+    {
+        Run("mono", $"\"{nugetPath}\" {arguments}");
+    }
 });
 
 /// <summary>
@@ -252,16 +258,20 @@ Task("Test")
             System.IO.File.Copy(System.IO.Path.Combine(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), System.IO.Path.Combine(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
             var targetPath = System.IO.Path.Combine(instanceFolder, $"{project}.dll");
             var logFile = System.IO.Path.Combine(logFolder, $"{project}-{framework}-result.xml");
-            if (!IsRunningOnWindows())
+            var arguments = $"{targetPath} -parallel none -xml {logFile} -notrait category=failing";
+            if (IsRunningOnWindows())
             {
-                xunitInstancePath = $"mono {xunitInstancePath}";
+                Run(xunitInstancePath, arguments, instanceFolder)
+                    .ExceptionOnError($"Test {project} failed for {framework}");
             }
-            Run(xunitInstancePath, $"{targetPath} -parallel none -xml {logFile} -notrait category=failing", instanceFolder)
-                .ExceptionOnError($"Test {project} failed for {framework}");
+            else
+            {
+                Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+                    .ExceptionOnError($"Test {project} failed for {framework}");
+            }
         }
     }
 });
-
 
 /// <summary>
 ///  Build, publish and package artifacts.
