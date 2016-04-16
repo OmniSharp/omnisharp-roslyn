@@ -18,7 +18,7 @@ string GetBuildIdentifier(string runtime, string framework)
     // Default RID uses package name set in build script
     if (runtime.Equals("default"))
     {
-        runtimeShort = GetEnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
+        runtimeShort = Environment.GetEnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
     }
     else
     {
@@ -27,7 +27,7 @@ string GetBuildIdentifier(string runtime, string framework)
     }
 
     // Rename/restrict some archive names on CI
-    var travisOSName = GetEnvironmentVariable("TRAVIS_OS_NAME");
+    var travisOSName = Environment.GetEnvironmentVariable("TRAVIS_OS_NAME");
     // Travis/Linux + default + net451 is renamed to Mono
     if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && framework.Equals("net451"))
     {
