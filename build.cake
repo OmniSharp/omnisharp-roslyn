@@ -19,7 +19,7 @@ var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment
 var requireArchive = HasArgument("archive");
 
 // Working directory
-var workingDirectory = System.IO.Directory.GetCurrentDirectory();
+var workingDirectory = ".";
 
 // System specific shell configuration
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
@@ -49,7 +49,7 @@ var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
 
 // Folders and tools
 var dotnetFolder = System.IO.Path.Combine(workingDirectory, buildPlan.DotNetFolder);
-var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : System.IO.Path.Combine(dotnetFolder, "dotnet");
+var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : System.IO.Path.Combine(System.IO.Path.GetFullPath(dotnetFolder), "dotnet");
 var toolsFolder = System.IO.Path.Combine(workingDirectory, buildPlan.BuildToolsFolder);
 
 var sourceFolder = System.IO.Path.Combine(workingDirectory, "src");

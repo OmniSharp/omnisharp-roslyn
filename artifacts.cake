@@ -10,11 +10,11 @@ void CreateRunScript(string outputRoot, string scriptFolder)
     {
         var desktopScript =  System.IO.Path.Combine(scriptFolder, "OmniSharp.cmd");
         var coreScript = System.IO.Path.Combine(scriptFolder, "OmniSharp.Core.cmd");
-        var omniSharpPath = System.IO.Path.Combine(outputRoot, "{0}", "OmniSharp");
+        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", "OmniSharp");
         var content = new string[] {
                 "SETLOCAL",
                 "",
-                $"{omniSharpPath} %*"
+                $"\"{omniSharpPath}\" %*"
             };
         if (System.IO.File.Exists(desktopScript))
         {
@@ -33,11 +33,11 @@ void CreateRunScript(string outputRoot, string scriptFolder)
     {
         var desktopScript = System.IO.Path.Combine(scriptFolder, "OmniSharp");
         var coreScript = System.IO.Path.Combine(scriptFolder, "OmniSharp.Core");
-        var omniSharpPath = System.IO.Path.Combine(outputRoot, "{1}", "OmniSharp");
+        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{1}", "OmniSharp");
         var content = new string[] {
                 "#!/bin/bash",
                 "",
-                $"{{0}} {omniSharpPath}{{2}} \"$@\""
+                $"{{0}} \"{omniSharpPath}{{2}}\" \"$@\""
             };
         if (System.IO.File.Exists(desktopScript))
         {
