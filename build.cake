@@ -19,7 +19,7 @@ var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment
 var requireArchive = HasArgument("archive");
 
 // Working directory
-var workingDirectory = ".";
+var workingDirectory = System.IO.Directory.GetCurrentDirectory();
 
 // System specific shell configuration
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
@@ -155,7 +155,7 @@ Task("BuildEnvironment")
     System.IO.Directory.CreateDirectory(toolsFolder);
 
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
-    var arguments = $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory {toolsFolder}";
+    var arguments = $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory \"{toolsFolder}\"";
     if (IsRunningOnWindows())
     {
         Run(nugetPath, arguments);
@@ -194,7 +194,7 @@ Task("BuildTest")
             var project = pair.Key;
             var projectFolder = System.IO.Path.Combine(testFolder, project);
             var runLog = new List<string>();
-            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} {projectFolder}",
+            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} \"{projectFolder}\"",
                     new RunOptions
                     {
                         StandardOutputListing = runLog
@@ -223,7 +223,7 @@ Task("TestCore")
     {
         var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
         var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
-        Run(dotnetcli, $"test -xml {logFile} -notrait category=failing", testWorkingDir)
+        Run(dotnetcli, $"test -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });
@@ -258,7 +258,7 @@ Task("Test")
             System.IO.File.Copy(System.IO.Path.Combine(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), System.IO.Path.Combine(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
             var targetPath = System.IO.Path.Combine(instanceFolder, $"{project}.dll");
             var logFile = System.IO.Path.Combine(logFolder, $"{project}-{framework}-result.xml");
-            var arguments = $"{targetPath} -parallel none -xml {logFile} -notrait category=failing";
+            var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
             if (IsRunningOnWindows())
             {
                 Run(xunitInstancePath, arguments, instanceFolder)
@@ -295,7 +295,7 @@ Task("OnlyPublish")
                 publishArguments = $"{publishArguments} --runtime {runtime}";
             }
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
-            publishArguments = $"{publishArguments} --output {outputFolder} {projectFolder}";
+            publishArguments = $"{publishArguments} --output \"{outputFolder}\" \"{projectFolder}\"";
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
@@ -355,7 +355,7 @@ Task("TestPublished")
     foreach (var script in scriptsToTest)
     {
         var scriptPath = System.IO.Path.Combine(scriptFolder, script);
-        var didNotExitWithError = Run($"{shell}", $"{shellArgument}  {scriptPath} -s {projectFolder} --stdio",
+        var didNotExitWithError = Run($"{shell}", $"{shellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
                                     new RunOptions
                                     {
                                         TimeOut = 10000

@@ -45,13 +45,13 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         }
         content[2] = String.Format(content[2], "mono", "net451", ".exe");
         System.IO.File.WriteAllLines(desktopScript, content);
-        Run("chmod", $"+x {desktopScript}");
+        Run("chmod", $"+x \"{desktopScript}\"");
         if (System.IO.File.Exists(coreScript))
         {
             System.IO.File.Delete(coreScript);
         }
         content[2] = String.Format(content[2], "", "netcoreapp1.0", "");
         System.IO.File.WriteAllLines(coreScript, content);
-        Run("chmod", $"+x {desktopScript}");
+        Run("chmod", $"+x \"{desktopScript}\"");
     }
 }

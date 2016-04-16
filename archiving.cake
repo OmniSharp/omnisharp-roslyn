@@ -72,9 +72,9 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
             var tempFile = System.IO.Path.ChangeExtension(archiveName, "tar");
             try
             {
-                Run("7z", $"a {tempFile}", contentFolder)
+                Run("7z", $"a \"{tempFile}\"", contentFolder)
                     .ExceptionOnError($"Tar-ing failed for {contentFolder} {archiveName}");
-                Run("7z", $"a {tarFile} {tempFile}", contentFolder)
+                Run("7z", $"a \"{tarFile}\" \"{tempFile}\"", contentFolder)
                     .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
                 System.IO.File.Delete(tempFile);
             }
@@ -86,7 +86,7 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
         // Use tar to create TAR.GZ on Unix
         else
         {
-            Run("tar", $"czf {tarFile} .", contentFolder)
+            Run("tar", $"czf \"{tarFile}\" .", contentFolder)
                 .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
         }
     }
