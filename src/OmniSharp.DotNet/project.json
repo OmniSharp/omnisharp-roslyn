@@ -14,7 +14,8 @@
   "frameworks": {
     "net451": {
       "frameworkAssemblies": {
-        "System.IO": ""
+        "System.IO": "",
+        "System.Collections": ""
       }
     },
     "netstandard1.5": {

@@ -134,6 +134,13 @@ namespace OmniSharp.MSBuild
                     compilationOptions = compilationOptions.WithAllowUnsafe(true);
                 }
 
+                if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
+                {
+                    var keyFile = Path.Combine(projectFileInfo.ProjectDirectory, projectFileInfo.AssemblyOriginatorKeyFile);
+                    compilationOptions = compilationOptions.WithStrongNameProvider(new DesktopStrongNameProvider())
+                                                           .WithCryptoKeyFile(keyFile);
+                }
+
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
                                                      VersionStamp.Create(),
                                                      projectFileInfo.Name,
