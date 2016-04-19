@@ -14,7 +14,7 @@ namespace OmniSharp.Tests
             
             MSBuildContext context = new MSBuildContext();
             context.Projects.Add(projectPath, new ProjectFileInfo());
-            
+
             ProjectFileInfo outInfo = null;
             Assert.True(context.Projects.TryGetValue(searchProjectPath, out outInfo ));
             Assert.NotNull(outInfo);
