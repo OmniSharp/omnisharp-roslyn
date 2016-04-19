@@ -11,7 +11,7 @@ namespace OmniSharp.Tests
         {
             var projectPath = @"c:\projects\project1\project.csproj";
             var searchProjectPath =  @"c:\Projects\Project1\Project.csproj";
-            
+
             MSBuildContext context = new MSBuildContext();
             context.Projects.Add(projectPath, new ProjectFileInfo());
 
