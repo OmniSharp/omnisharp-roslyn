@@ -1,8 +1,8 @@
 #addin "Newtonsoft.Json"
 
-#load "runhelpers.cake"
-#load "archiving.cake"
-#load "artifacts.cake"
+#load "scripts/runhelpers.cake"
+#load "scripts/archiving.cake"
+#load "scripts/artifacts.cake"
 
 using System.ComponentModel;
 using System.Net;
