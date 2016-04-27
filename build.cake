@@ -149,6 +149,29 @@ int Run(string exec, string args)
     });
 }
 
+void RunRestore(string exec, string args, string workingDirectory)
+{
+    var p = StartAndReturnProcess(exec,
+        new ProcessSettings
+        {
+            Arguments = $"restore {args}",
+            RedirectStandardOutput = true,
+        WorkingDirectory = workingDirectory
+        });
+    p.WaitForExit();
+    var exitCode = p.GetExitCode();
+
+    if (exitCode == 0)
+    {
+        Information("Package restore successful!");
+    }
+    else
+    {
+        Error(string.Join("\n", p.GetStandardOutput()));
+        throw new Exception("Failed to restore.");
+    }
+}
+
 int Run(string exec, string args, string workingDirectory)
 {
     return StartProcess(exec, new ProcessSettings
@@ -273,7 +296,6 @@ Task("BuildEnvironment")
         });
     try
     {
-
         Run(dotnetcli, "--info");
     }
     catch (Win32Exception)
@@ -331,6 +353,10 @@ Task("BuildTest")
                     RedirectStandardOutput = true
                 });
             process.WaitForExit();
+            if (!DirectoryExists(artifactFolder))
+                CreateDirectory(artifactFolder);
+            if (!DirectoryExists(logFolder))
+                CreateDirectory(logFolder);
             System.IO.File.WriteAllLines($"{logFolder}/{project}-{framework}-build.log", process.GetStandardOutput().ToArray());
         }
     }
