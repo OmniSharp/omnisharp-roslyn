@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-#if DNX451
 using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
-#endif
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
@@ -49,12 +47,15 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public OutputKind OutputKind { get; private set; }
 
+        public bool SignAssembly { get; private set; }
+
+        public string AssemblyOriginatorKeyFile { get; private set; }
+
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
 
-#if DNX451
             if (!PlatformHelper.IsMono)
             {
                 var properties = new Dictionary<string, string>
@@ -136,6 +137,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
+
+                var signAssembly = projectInstance.GetPropertyValue("SignAssembly");
+                if (!string.IsNullOrWhiteSpace(signAssembly))
+                {
+                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                }
+
+                projectFileInfo.AssemblyOriginatorKeyFile = projectInstance.GetPropertyValue("AssemblyOriginatorKeyFile");
             }
             else
             {
@@ -214,10 +223,15 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
+
+                var signAssembly = properties["SignAssembly"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(signAssembly))
+                {
+                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                }
+
+                projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
             }
-#else
-            // TODO: Shell out to msbuild/xbuild here?
-#endif
             return projectFileInfo;
         }
 
@@ -240,7 +254,6 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
     }
 
-    #if DNX451
     static class DictionaryExt
     {
         public static string GetPropertyValue(this Dictionary<string, BuildProperty> dict, string key)
@@ -250,5 +263,4 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : null;
         }
     }
-    #endif
 }

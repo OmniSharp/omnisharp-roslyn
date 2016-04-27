@@ -1,9 +1,9 @@
 {
-    "UseSystemDotNetPath" : "false",
+    "UseSystemDotNetPath": "false",
     "DotNetFolder": ".dotnet",
     "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
     "DotNetChannel": "beta",
-    "DotNetVersion": "1.0.0-beta-002202",
+    "DotNetVersion": "1.0.0-rc2-002416",
     "BuildToolsFolder": ".tools",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {
@@ -16,6 +16,9 @@
         "OmniSharp.Stdio.Tests": [
             "netcoreapp1.0",
             "net451"
+        ],
+        "OmniSharp.DotNet.Tests": [
+            "netcoreapp1.0"
         ]
     },
     "Frameworks": [

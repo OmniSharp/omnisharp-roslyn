@@ -1,5 +1,6 @@
 #addin "Newtonsoft.Json"
 
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.ComponentModel;
 using Newtonsoft.Json;
@@ -46,8 +47,7 @@ var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
 
 // Folders and tools
 var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
-var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" :
-                    $"{dotnetFolder}/dotnet";
+var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : $"{dotnetFolder}/dotnet";
 var toolsFolder = $"{workingDirectory}/{buildPlan.BuildToolsFolder}";
 var xunitRunner = "xunit.runner.console";
 
@@ -141,6 +141,47 @@ string GetRuntimeInPath(string path)
     return GetDirectories(path).First().GetDirectoryName();
 }
 
+int Run(string exec, string args)
+{
+    return StartProcess(exec, new ProcessSettings
+    {
+        Arguments = args
+    });
+}
+
+int Run(string exec, string args, string workingDirectory)
+{
+    return StartProcess(exec, new ProcessSettings
+    {
+        Arguments = args,
+        WorkingDirectory = workingDirectory
+    });
+}
+
+int RunRestore(string exec, string args, string workingDirectory)
+{
+    Information("Restoring packages....");
+    var p = StartAndReturnProcess(dotnetcli,
+        new ProcessSettings
+        {
+            Arguments = args,
+            RedirectStandardOutput = true,
+            WorkingDirectory = workingDirectory
+        });
+    p.WaitForExit();
+    var exitCode = p.GetExitCode();
+
+    if (exitCode == 0)
+    {
+        Information("Package restore successful!");
+    }
+    else
+    {
+        Error(string.Join("\n", p.GetStandardOutput()));
+    }
+    return exitCode;
+}
+
 /// <summary>
 ///  Clean artifacts.
 /// </summary>
@@ -180,6 +221,17 @@ Task("PopulateRuntimes")
     if (IsRunningOnWindows())
     {
         buildPlan.Rids = new string[] {"default", "win7-x86"};
+    }
+    else if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
+    {
+        buildPlan.Rids = new string[]
+            {
+                "default", // To allow testing the published artifact
+                "ubuntu.14.04-x64",
+                "centos.7-x64",
+                "rhel.7.2-x64",
+                "debian.8.2-x64"
+            };
     }
     else
     {
@@ -221,12 +273,8 @@ Task("BuildEnvironment")
         });
     try
     {
-        StartProcess(dotnetcli,
-            new ProcessSettings
-            {
-                Arguments = "--info"
-            });
 
+        Run(dotnetcli, "--info");
     }
     catch (Win32Exception)
     {
@@ -252,24 +300,14 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    Information("Restoring packages....");
-    var p = StartAndReturnProcess(dotnetcli,
-        new ProcessSettings
-        {
-            Arguments = "restore",
-            RedirectStandardOutput = true
-        });
-    p.WaitForExit();
-    var exitCode = p.GetExitCode();
-
-    if (exitCode == 0)
+    if (RunRestore(dotnetcli, "restore", sourceFolder) != 0)
     {
-        Information("Package restore successful!");
+        throw new Exception("Failed to restore projects under source code folder.");
     }
-    else
+
+    if (RunRestore(dotnetcli, "restore --infer-runtimes", testFolder) != 0)
     {
-        Error(string.Join("\n", p.GetStandardOutput()));
-        throw new Exception("Failed to restore.");
+        throw new Exception("Failed to restore projects under test code folder.");
     }
 });
 
@@ -311,29 +349,21 @@ Task("TestAll")
 /// </summary>
 Task("TestCore")
     .IsDependentOn("Setup")
-    .IsDependentOn("BuildTest")
+    .IsDependentOn("Restore")
     .Does(() =>
 {
-    foreach (var pair in buildPlan.TestProjects)
-    {
-        foreach (var framework in pair.Value)
-        {
-            if (!framework.Contains("netcoreapp"))
-            {
-                continue;
-            }
+    var testProjects = buildPlan.TestProjects
+                                .Where(pair => pair.Value.Any(framework => framework.Contains("netcoreapp")))
+                                .Select(pair => pair.Key)
+                                .ToList();
 
-            var project = pair.Key;
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = $"test --framework {framework} -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
-                    WorkingDirectory = $"{testFolder}/{project}"
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Test failed {project} / {framework}");
-            }
+    foreach (var testProject in testProjects)
+    {
+        var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
+        var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
+        if (Run(dotnetcli, $"test -xml {logFile} -notrait category=failing", testWorkingDir) != 0)
+        {
+            throw new Exception($"Test failed {testProject} on core.");
         }
     }
 });
@@ -359,6 +389,7 @@ Task("Test")
             var project = pair.Key;
             var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
             var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
+
             // Copy xunit executable to test folder to solve path errors
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
             CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
@@ -368,7 +399,7 @@ Task("Test")
                 ToolPath = $"{instanceFolder}/xunit.console.exe",
                 ArgumentCustomization = builder =>
                 {
-                    builder.Append("-xml");
+                    builder.Append("-parallel none -xml ");
                     builder.Append(logFile);
                     return builder;
                 }
@@ -402,12 +433,7 @@ Task("OnlyPublish")
             }
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
             publishArguments = $"{publishArguments} --output {outputFolder} {sourceFolder}/{project}";
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = publishArguments
-                });
-            if (exitCode != 0)
+            if (Run(dotnetcli, publishArguments) != 0)
             {
                 throw new Exception($"Failed to publish {project} / {framework}");
             }
@@ -429,25 +455,24 @@ Task("OnlyPublish")
             }
 
             var buildIdentifier = $"{runtimeShort}-{framework}";
-            // Linux + net451 is renamed to Mono
-            if (runtimeShort.Contains("ubuntu-") && framework.Equals("net451"))
+            // Rename/restrict some archive names on CI
+            // Travis/Linux + default + net451 is renamed to Mono
+            if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux") && runtime.Equals("default") && framework.Equals("net451"))
             {
-                buildIdentifier ="linux-mono";
+                buildIdentifier ="mono";
             }
-            // No need to package for <!win7> + net451
-            else if (!runtimeShort.Contains("win7-") && framework.Equals("net451"))
+            // No need to archive other Travis + net451 combinations
+            else if (EnvironmentVariable("TRAVIS_OS_NAME") != null && framework.Equals("net451"))
+            {
+                continue;
+            }
+            // No need to archive Travis/Linux + default + not(net451) (expect all runtimes to be explicitely named)
+            else if (string.Equals(EnvironmentVariable("TRAVIS_OS_NAME"), "linux") && runtime.Equals("default") && !framework.Equals("net451"))
             {
                 continue;
             }
 
             DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
-
-            // Alias linux
-            if (runtimeShort.Contains("ubuntu-") && !framework.Equals("net451"))
-            {
-                buildIdentifier = $"linux-{framework}";
-                DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
-            }
         }
     }
 });

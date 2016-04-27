@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-#if DNX451
+#if NET451
 using NuGet.Protocol.Core.Types;
 using NuGet.Configuration;
 using NuGet.Protocol.Core.v2;
@@ -11,7 +11,7 @@ using NuGet.Protocol.Core.v3;
 
 namespace OmniSharp.NuGet
 {
-#if DNX451
+#if NET451
     public class OmniSharpSourceRepositoryProvider : ISourceRepositoryProvider
     {
         private static PackageSource[] DefaultPrimarySources = {

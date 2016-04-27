@@ -127,13 +127,18 @@ namespace OmniSharp.MSBuild
                 }
 
                 var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
-#if DNX451
                 compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
-#endif
 
                 if (projectFileInfo.AllowUnsafe)
                 {
                     compilationOptions = compilationOptions.WithAllowUnsafe(true);
+                }
+
+                if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
+                {
+                    var keyFile = Path.Combine(projectFileInfo.ProjectDirectory, projectFileInfo.AssemblyOriginatorKeyFile);
+                    compilationOptions = compilationOptions.WithStrongNameProvider(new DesktopStrongNameProvider())
+                                                           .WithCryptoKeyFile(keyFile);
                 }
 
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
@@ -317,10 +322,8 @@ namespace OmniSharp.MSBuild
                     {
                         continue;
                     }
-#if DNX451
                     var analyzerReference = new AnalyzerFileReference(analyzerPath, new SimpleAnalyzerAssemblyLoader());
                     project.AddAnalyzerReference(analyzerReference);
-#endif
                 }
             }
 
