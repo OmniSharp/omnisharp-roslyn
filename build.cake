@@ -1,4 +1,4 @@
-#addin "Newtonsoft.Json"
+#addin nuget:?package=Newtonsoft.Json
 
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
