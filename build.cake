@@ -161,7 +161,7 @@ int Run(string exec, string args, string workingDirectory)
 int RunRestore(string exec, string args, string workingDirectory)
 {
     Information("Restoring packages....");
-    var p = StartAndReturnProcess(dotnetcli,
+    var p = StartAndReturnProcess(exec,
         new ProcessSettings
         {
             Arguments = args,
