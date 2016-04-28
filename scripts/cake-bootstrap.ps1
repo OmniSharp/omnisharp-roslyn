@@ -49,7 +49,7 @@ $TOOLS_DIR = Join-Path $PSScriptRoot "..\.tools"
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"
 $NUGET_URL = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
 $CAKE_EXE = Join-Path $TOOLS_DIR "Cake/Cake.exe"
-$PACKAGES_CONFIG = Join-Path $TOOLS_DIR "packages.config"
+$PACKAGES_CONFIG = Join-Path $PS_SCRIPT_ROOT "packages.config"
 
 # Should we use mono?
 $UseMono = "";
@@ -98,7 +98,7 @@ if(-Not $SkipToolPackageRestore.IsPresent)
     Set-Location $TOOLS_DIR
 
     Write-Verbose -Message "Restoring tools from NuGet..."
-    $NuGetOutput = Invoke-Expression "&`"$NUGET_EXE`" install Cake -ExcludeVersion -OutputDirectory `"$TOOLS_DIR`""
+    $NuGetOutput = Invoke-Expression "&`"$NUGET_EXE`" install $PACKAGES_CONFIG -ExcludeVersion -OutputDirectory `"$TOOLS_DIR`""
     Write-Verbose -Message ($NuGetOutput | out-string)
 
     Pop-Location
