@@ -31,6 +31,7 @@ buildlog
 /.vscode/settings.json
 *.lock.json
 /omnisharp*.tar.gz
+scripts/Omnisharp*
 
 # NuGet
 *.nuget.targets
