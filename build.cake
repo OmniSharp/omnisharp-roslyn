@@ -214,6 +214,14 @@ Task("TestAll")
     .Does(() =>{});
 
 /// <summary>
+///  Run all tests for Travis CI .NET Desktop and .NET Core
+/// </summary>
+Task("TravisTestAll")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("TestAll")
+    .Does(() =>{});
+
+/// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
 /// </summary>
 Task("TestCore")

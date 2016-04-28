@@ -18,7 +18,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
   - ./build.sh -target=Restore
 script:
-  - travis_retry ./build.sh -target=TestAll
+  - travis_retry ./build.sh -target=TravisTestAll
   - ./build.sh -target=Travis -archive
 addons:
   apt:
