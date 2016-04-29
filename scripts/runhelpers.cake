@@ -121,14 +121,14 @@ ExitStatus Run(string exec, string args, RunOptions runOptions)
             });
     if (runOptions.StandardOutputListing != null)
     {
-        process.OutputDataReceived += (s, e) => 
-        { 
-            if (e.Data != null) 
-            { 
-                runOptions.StandardOutputListing.Add(e.Data); 
-            } 
-        }; 
-        process.BeginOutputReadLine(); 
+        process.OutputDataReceived += (s, e) =>
+        {
+            if (e.Data != null)
+            {
+                runOptions.StandardOutputListing.Add(e.Data);
+            }
+        };
+        process.BeginOutputReadLine();
     }
     if (runOptions.TimeOut == 0)
     {
@@ -148,6 +148,37 @@ ExitStatus Run(string exec, string args, RunOptions runOptions)
             return new ExitStatus(0, true);
         }
     }
+}
+
+/// <summary>
+///  Run restore with the given arguments
+/// </summary>
+/// <param name="exec">Executable to run</param>
+/// <param name="args">Arguments</param>
+/// <param name="runOptions">Optional settings</param>
+/// <returns>The exit status for further queries</returns>
+ExitStatus RunRestore(string exec, string args, string workingDirectory)
+{
+    Information("Restoring packages....");
+    var p = StartAndReturnProcess(exec,
+        new ProcessSettings
+        {
+            Arguments = args,
+            RedirectStandardOutput = true,
+            WorkingDirectory = workingDirectory
+        });
+    p.WaitForExit();
+    var exitCode = p.GetExitCode();
+
+    if (exitCode == 0)
+    {
+        Information("Package restore successful!");
+    }
+    else
+    {
+        Error(string.Join("\n", p.GetStandardOutput()));
+    }
+    return new ExitStatus(exitCode);
 }
 
 /// <summary>

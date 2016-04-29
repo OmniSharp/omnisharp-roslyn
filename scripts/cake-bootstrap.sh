@@ -9,6 +9,7 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TOOLS_DIR=$SCRIPT_DIR/../.tools
 export NUGET_EXE=$TOOLS_DIR/nuget.exe
 CAKE_EXE=$TOOLS_DIR/Cake/Cake.exe
+PACKAGES_CONFIG=$SCRIPT_DIR/packages.config
 
 # Define default arguments.
 SCRIPT="build.cake"
@@ -38,7 +39,7 @@ fi
 # Download NuGet if it does not exist.
 if [ ! -f "$NUGET_EXE" ]; then
     echo "Downloading NuGet..."
-    curl -Lsfo "$NUGET_EXE" https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+    curl -Lsfo "$NUGET_EXE" https://dist.nuget.org/win-x86-commandline/v3.3.0/nuget.exe
     if [ $? -ne 0 ]; then
         echo "An error occured while downloading nuget.exe."
         exit 1
@@ -47,7 +48,7 @@ fi
 
 # Restore tools from NuGet.
 pushd "$TOOLS_DIR" >/dev/null
-mono "$NUGET_EXE" install Cake -ExcludeVersion
+mono "$NUGET_EXE" install $PACKAGES_CONFIG -ExcludeVersion -OutputDirectory "$TOOLS_DIR"
 if [ $? -ne 0 ]; then
     echo "Could not restore NuGet packages."
     exit 1
