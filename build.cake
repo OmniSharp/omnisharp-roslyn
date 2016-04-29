@@ -173,9 +173,9 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    Run(dotnetcli, "restore", sourceFolder)
+    RunRestore(dotnetcli, "restore", sourceFolder)
         .ExceptionOnError("Failed to restore projects under source code folder.");
-    Run(dotnetcli, "restore --infer-runtimes", testFolder)
+    RunRestore(dotnetcli, "restore --infer-runtimes", testFolder)
         .ExceptionOnError("Failed to restore projects under test code folder.");
 });
 
@@ -205,6 +205,21 @@ Task("BuildTest")
     }
 });
 
+/// <summary>
+///  Run all tests for .NET Desktop and .NET Core
+/// </summary>
+Task("TestAll")
+    .IsDependentOn("Test")
+    .IsDependentOn("TestCore")
+    .Does(() =>{});
+
+/// <summary>
+///  Run all tests for Travis CI .NET Desktop and .NET Core
+/// </summary>
+Task("TravisTestAll")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("TestAll")
+    .Does(() =>{});
 
 /// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
@@ -218,7 +233,7 @@ Task("TestCore")
                                 .Where(pair => pair.Value.Any(framework => framework.Contains("netcoreapp")))
                                 .Select(pair => pair.Key)
                                 .ToList();
-                                             
+
     foreach (var testProject in testProjects)
     {
         var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
@@ -250,7 +265,7 @@ Task("Test")
             var frameworkFolder = System.IO.Path.Combine(testFolder, project, "bin", testConfiguration, framework);
             var runtime = System.IO.Directory.GetDirectories(frameworkFolder).First();
             var instanceFolder = System.IO.Path.Combine(frameworkFolder, runtime);
-            
+
             // Copy xunit executable to test folder to solve path errors
             var xunitToolsFolder = System.IO.Path.Combine(toolsFolder, "xunit.runner.console", "tools");
             var xunitInstancePath = System.IO.Path.Combine(instanceFolder, "xunit.console.exe");
@@ -421,8 +436,7 @@ Task("Install")
 Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
     .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
@@ -435,8 +449,21 @@ Task("All")
 Task("Local")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
+    .IsDependentOn("LocalPublish")
+    .IsDependentOn("TestPublished")
+    .Does(() =>
+{
+});
+
+/// <summary>
+///  Build centered around producing the final artifacts for Travis
+///
+///  The tests are run as a different task "TestAll"
+/// </summary>
+Task("Travis")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Restore")
     .IsDependentOn("LocalPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
