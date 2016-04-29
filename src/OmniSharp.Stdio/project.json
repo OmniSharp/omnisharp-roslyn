@@ -6,9 +6,9 @@
     "preserveCompilationContext": true
   },
   "dependencies": {
-    "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-20607",
-    "Microsoft.AspNetCore.Http.Features": "1.0.0-rc2-20607",
+    "OmniSharp.Abstractions": "1.0.0",
+    "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-20708",
+    "Microsoft.AspNetCore.Http.Features": "1.0.0-rc2-20708",
     "Newtonsoft.Json": "8.0.3"
   },
   "frameworks": {
