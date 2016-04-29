@@ -13,7 +13,6 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
@@ -26,10 +25,10 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup(IApplicationEnvironment applicationEnvironment)
+        public Startup(IHostingEnvironment hostingEnvironment)
         {
             var configBuilder = new ConfigurationBuilder()
-                .SetBasePath(applicationEnvironment.ApplicationBasePath)
+                .SetBasePath(hostingEnvironment.ContentRootPath)
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
