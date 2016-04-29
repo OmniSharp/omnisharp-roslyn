@@ -4,12 +4,12 @@
     "preserveCompilationContext": true
   },
   "dependencies": {
-    "OmniSharp.Abstractions": "1.0.0-*",
-    "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.CodeAnalysis": "1.3.0-beta1-20160321-04",
-    "Microsoft.CodeAnalysis.Common": "1.3.0-beta1-20160321-04",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002416",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20607"
+    "OmniSharp.Abstractions": "1.0.0",
+    "OmniSharp.Roslyn": "1.0.0",
+    "Microsoft.CodeAnalysis": "1.3.0-beta1-20160410-01",
+    "Microsoft.CodeAnalysis.Common": "1.3.0-beta1-20160410-01",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002439",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20708"
   },
   "frameworks": {
     "net451": {

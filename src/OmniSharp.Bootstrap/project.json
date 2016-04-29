@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20708",
     "Newtonsoft.Json": "8.0.3"
   },
   "commands": {

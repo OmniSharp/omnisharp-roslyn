@@ -5,23 +5,22 @@
     "preserveCompilationContext": true
   },
   "dependencies": {
-    "OmniSharp.Abstractions": "1.0.0-*",
-    "OmniSharp.Nuget": "1.0.0-*",
-    "OmniSharp.Stdio": "1.0.0-*",
-    "OmniSharp.Plugins": "1.0.0-*",
-    "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20607",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20607",
+    "OmniSharp.Abstractions": "1.0.0",
+    "OmniSharp.Nuget": "1.0.0",
+    "OmniSharp.Stdio": "1.0.0",
+    "OmniSharp.Plugins": "1.0.0",
+    "OmniSharp.Roslyn": "1.0.0",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20708",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20708",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002416",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-002416",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Options": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20607"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-002439",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Options": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20708"
   },
   "frameworks": {
     "net451": {

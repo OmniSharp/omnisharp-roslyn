@@ -6,14 +6,14 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "8.0.3",
-    "Microsoft.CodeAnalysis": "1.3.0-beta1-20160321-04",
+    "Microsoft.CodeAnalysis": "1.3.0-beta1-20160410-01",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Configuration": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20607",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20607",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Configuration": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Configuration.Binder": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20708",
     "System.Reflection.Metadata": "1.3.0-rc2-24018"
   },
   "frameworks": {
