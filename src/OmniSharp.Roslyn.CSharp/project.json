@@ -13,9 +13,7 @@
   },
   "frameworks": {
     "net451": {
-      "dependencies": {
-        "ICSharpCode.NRefactory": "6.0.0-alpha3"
-      },
+      "dependencies": {},
       "frameworkAssemblies": {
         "System.Runtime": "",
         "System.Threading": "",

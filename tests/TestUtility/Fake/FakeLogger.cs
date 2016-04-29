@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Extensions.Logging;
 
-namespace OmniSharp.Tests
+namespace TestUtility.Fake
 {
     public class FakeLogger : ILogger
     {
@@ -10,7 +10,6 @@ namespace OmniSharp.Tests
         public IDisposable BeginScope<TState>(TState state) => new NoopDisposable();
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
-
 
         private class NoopDisposable : IDisposable
         {

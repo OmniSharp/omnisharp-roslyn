@@ -8,6 +8,8 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using OmniSharp.Services;
 using OmniSharp.Tests;
+using TestUtility.Annotate;
+using TestUtility.Fake;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -24,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _loggerFactory = new LoggerFactory();
             _loggerFactory.AddConsole();
             _logger = _loggerFactory.CreateLogger<FixUsingsFacts>();
-            _loader = new TestOmnisharpAssemblyLoader(_logger);
+            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]
