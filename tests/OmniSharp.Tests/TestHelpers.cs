@@ -89,14 +89,15 @@ namespace OmniSharp.Tests
 
         public static LineColumn GetLineAndColumnFromIndex(string text, int index)
         {
-            int lineCount = 1, lastLineEnd = -1;
+            int lineCount = 0, lastLineEnd = -1;
             for (int i = 0; i < index; i++)
                 if (text[i] == '\n')
                 {
                     lineCount++;
                     lastLineEnd = i;
                 }
-            return new LineColumn(lineCount, index - lastLineEnd);
+
+            return new LineColumn(lineCount, index - 1 - lastLineEnd);
         }
 
         public static string RemovePercentMarker(string fileContent)
@@ -204,7 +205,7 @@ namespace OmniSharp.Tests
         {
             var document = workspace.GetDocument(result.FileName);
             var sourceText = await document.GetTextAsync();
-            var position = sourceText.Lines.GetPosition(new LinePosition(result.Line - 1, result.Column - 1));
+            var position = sourceText.Lines.GetPosition(new LinePosition(result.Line, result.Column));
             var semanticModel = await document.GetSemanticModelAsync();
             return await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
         }

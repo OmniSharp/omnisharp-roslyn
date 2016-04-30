@@ -63,6 +63,10 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     plugins.Add((string)enumerator.Current);
                 }
+                else if (arg == "--zero-based-indices")
+                {
+                    Configuration.ZeroBasedIndices = true;
+                }
                 else
                 {
                     otherArgs.Add((string)enumerator.Current);

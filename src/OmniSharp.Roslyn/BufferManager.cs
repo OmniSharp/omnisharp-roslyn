@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn
         private readonly IDictionary<string, IEnumerable<DocumentId>> _transientDocuments = new Dictionary<string, IEnumerable<DocumentId>>(StringComparer.OrdinalIgnoreCase);
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
-        
+
         public BufferManager(OmnisharpWorkspace workspace)
         {
             _workspace = workspace;
@@ -58,8 +58,8 @@ namespace OmniSharp.Roslyn
 
                         foreach (var change in request.Changes)
                         {
-                            var startOffset = sourceText.Lines.GetPosition(new LinePosition(change.StartLine - 1, change.StartColumn - 1));
-                            var endOffset = sourceText.Lines.GetPosition(new LinePosition(change.EndLine - 1, change.EndColumn - 1));
+                            var startOffset = sourceText.Lines.GetPosition(new LinePosition(change.StartLine, change.StartColumn));
+                            var endOffset = sourceText.Lines.GetPosition(new LinePosition(change.EndLine, change.EndColumn));
 
                             sourceText = sourceText.WithChanges(new[] {
                                 new TextChange(new TextSpan(startOffset, endOffset - startOffset), change.NewText)
@@ -89,8 +89,8 @@ namespace OmniSharp.Roslyn
                 {
                     var document = _workspace.CurrentSolution.GetDocument(documentId);
                     var sourceText = await document.GetTextAsync();
-                    var startOffset = sourceText.Lines.GetPosition(new LinePosition(request.StartLine - 1, request.StartColumn - 1));
-                    var endOffset = sourceText.Lines.GetPosition(new LinePosition(request.EndLine - 1, request.EndColumn - 1));
+                    var startOffset = sourceText.Lines.GetPosition(new LinePosition(request.StartLine, request.StartColumn));
+                    var endOffset = sourceText.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
 
                     sourceText = sourceText.WithChanges(new[] {
                         new TextChange(new TextSpan(startOffset, endOffset - startOffset), request.NewText)

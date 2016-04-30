@@ -718,8 +718,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var fileContentNoPercentMarker = TestHelpers.RemovePercentMarker(fileContent);
             var workspace = await TestHelpers.CreateSimpleWorkspace(fileContentNoPercentMarker, "test.cs");
-            var response = await SendRequest(workspace, "test.cs", fileContentNoPercentMarker, navigateDirection);
             var finalCursorLineColumn = TestHelpers.GetLineAndColumnFromPercent(TestHelpers.RemoveDollarMarker(fileContent));
+            var response = await SendRequest(workspace, "test.cs", fileContentNoPercentMarker, navigateDirection);
             Assert.Equal(finalCursorLineColumn.Line, response.Line);
             Assert.Equal(finalCursorLineColumn.Column, response.Column);
         }
@@ -727,12 +727,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<NavigateResponse> SendRequest(OmnisharpWorkspace workspace, string fileName, string fileContent, NavigateDirection upOrDown)
         {
             var initialCursorLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContent));
-            var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContent);
-            var naviagteUpService = new NavigateUpService(workspace);
-            var navigateDownService = new NavigateDownService(workspace);
+            var fileContentNoDollarMarker = TestHelpers.RemovePercentMarker(TestHelpers.RemoveDollarMarker(fileContent));
 
             if (upOrDown == NavigateDirection.UP)
             {
+                var naviagteUpService = new NavigateUpService(workspace);
                 var request = new NavigateUpRequest
                 {
                     Line = initialCursorLineColumn.Line,
@@ -744,6 +743,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
             else
             {
+                var navigateDownService = new NavigateDownService(workspace);
                 var request = new NavigateDownRequest
                 {
                     Line = initialCursorLineColumn.Line,

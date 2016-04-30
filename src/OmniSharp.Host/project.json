@@ -14,6 +14,8 @@
     "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20708",
     "Microsoft.Composition": "1.0.30",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0-rc2-20708",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc2-20708",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20708",
     "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-002439",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20708",

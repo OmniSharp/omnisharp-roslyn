@@ -81,8 +81,8 @@ namespace OmniSharp
                         var unresolvedLocation = node.GetLocation().GetLineSpan().StartLinePosition;
                         ambiguous.Add(new QuickFix
                         {
-                            Line = unresolvedLocation.Line + 1,
-                            Column = unresolvedLocation.Character + 1,
+                            Line = unresolvedLocation.Line,
+                            Column = unresolvedLocation.Character,
                             FileName = _document.FilePath,
                             Text = "`" + unresolvedText + "`" + " is ambiguous"
                         });

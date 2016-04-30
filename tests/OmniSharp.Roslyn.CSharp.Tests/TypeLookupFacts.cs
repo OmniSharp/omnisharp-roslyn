@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var workspace = TestHelpers.CreateCsxWorkspace(source1);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 8 });
+            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 0, Column = 7 });
 
             Assert.Equal("Foo", response.Type);
         }
@@ -33,8 +33,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var workspace = await TestHelpers.CreateSimpleWorkspace(source);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var responseInNormalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
-            var responseInGlobalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 4, Column = 20 });
+            var responseInNormalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 1, Column = 19 });
+            var responseInGlobalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 3, Column = 19 });
 
             Assert.Equal("Bar.Foo", responseInNormalNamespace.Type);
             Assert.Equal("Baz", responseInGlobalNamespace.Type);
@@ -50,7 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var workspace = await TestHelpers.CreateSimpleWorkspace(source1);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 20 });
+            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 1, Column = 19 });
 
             Assert.Equal("Bar.Foo", response.Type);
         }

@@ -38,10 +38,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // insert edit
             await controller.Handle(new Models.ChangeBufferRequest()
             {
-                StartLine = 1,
-                StartColumn = 1,
-                EndLine = 1,
-                EndColumn = 1,
+                StartLine = 0,
+                StartColumn = 0,
+                EndLine = 0,
+                EndColumn = 0,
                 NewText = "farboo",
                 FileName = "test.cs"
             });
@@ -51,10 +51,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // remove edit
             await controller.Handle(new Models.ChangeBufferRequest()
             {
-                StartLine = 1,
-                StartColumn = 1,
-                EndLine = 1,
-                EndColumn = 7,
+                StartLine = 0,
+                StartColumn = 0,
+                EndLine = 0,
+                EndColumn = 6,
                 NewText = "",
                 FileName = "test.cs"
             });
@@ -64,10 +64,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // modification edit
             await controller.Handle(new Models.ChangeBufferRequest()
             {
-                StartLine = 1,
-                StartColumn = 1,
-                EndLine = 1,
-                EndColumn = 6,
+                StartLine = 0,
+                StartColumn = 0,
+                EndLine = 0,
+                EndColumn = 5,
                 NewText = "interface",
                 FileName = "test.cs"
             });

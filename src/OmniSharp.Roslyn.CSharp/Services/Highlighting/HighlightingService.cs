@@ -57,7 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
                 {
                     var linesToClassify = request.Lines.Join(
                         text.Lines,
-                        line => line - 1,
+                        line => line,
                         line => line.LineNumber,
                         (requestLine, line) => line.Span);
                     foreach (var lineSpan in linesToClassify)

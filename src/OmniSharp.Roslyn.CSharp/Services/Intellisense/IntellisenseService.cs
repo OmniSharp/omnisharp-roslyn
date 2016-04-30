@@ -38,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             foreach (var document in documents)
             {
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var model = await document.GetSemanticModelAsync();
 
                 AddKeywords(completions, model, position, request.WantKind, wordToComplete);

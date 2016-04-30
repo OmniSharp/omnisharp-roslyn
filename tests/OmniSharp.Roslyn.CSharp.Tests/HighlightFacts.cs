@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             });
 
             var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 4 } });
+            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 3 } });
 
             AssertSyntax(regions.Highlights, code, 3,
                 Token("class", "keyword"),
@@ -139,10 +139,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 lastIndex = end;
 
                 Assert.Equal(tokenSpec.Kind, region.Kind);
-                Assert.Equal(lineNo, region.StartLine - 1);
-                Assert.Equal(lineNo, region.EndLine - 1);
-                Assert.Equal(start, region.StartColumn - 1);
-                Assert.Equal(end, region.EndColumn - 1);
+                Assert.Equal(lineNo, region.StartLine);
+                Assert.Equal(lineNo, region.EndLine);
+                Assert.Equal(start, region.StartColumn);
+                Assert.Equal(end, region.EndColumn);
             }
             Assert.Equal(expected.Length, arr.Length);
         }

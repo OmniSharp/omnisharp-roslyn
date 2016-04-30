@@ -2,14 +2,20 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
+using Newtonsoft.Json;
+using OmniSharp.Json;
 
 namespace OmniSharp.Models
 {
     public class HighlightSpan : IComparable<HighlightSpan>
     {
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartColumn { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndLine { get; set; }
+        [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndColumn { get; set; }
         public string Kind { get; set; }
         public IEnumerable<string> Projects { get; set; }
@@ -20,10 +26,10 @@ namespace OmniSharp.Models
 
             return new HighlightSpan
             {
-                StartLine = linePos.Start.Line + 1,
-                EndLine = linePos.End.Line + 1,
-                StartColumn = linePos.Start.Character + 1,
-                EndColumn = linePos.End.Character + 1,
+                StartLine = linePos.Start.Line,
+                EndLine = linePos.End.Line,
+                StartColumn = linePos.Start.Character,
+                EndColumn = linePos.End.Character,
                 Kind = span.ClassificationType,
                 Projects = projects
             };
