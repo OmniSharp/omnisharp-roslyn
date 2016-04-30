@@ -5,9 +5,9 @@
     "preserveCompilationContext": true
   },
   "dependencies": {
-    "OmniSharp.Abstractions": "1.0.0-*",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143",
-    "Microsoft.CodeAnalysis": "1.1.1"
+    "OmniSharp.Abstractions": "1.0.0",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20708",
+    "Microsoft.CodeAnalysis": "1.3.0-beta1-20160410-01"
   },
   "frameworks": {
     "net451": {
@@ -34,7 +34,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-*"
+        "NETStandard.Library": "1.5.0-rc2-24018",
+        "System.Reflection.TypeExtensions": "4.1.0-rc2-24018",
+        "System.Xml.XDocument": "4.0.11-rc2-24018"
       }
     }
   }

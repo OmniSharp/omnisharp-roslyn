@@ -47,9 +47,9 @@ Write-Host "Preparing to run build script..."
 $PS_SCRIPT_ROOT = split-path -parent $MyInvocation.MyCommand.Definition;
 $TOOLS_DIR = Join-Path $PSScriptRoot "..\.tools"
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"
-$NUGET_URL = "http://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+$NUGET_URL = "https://dist.nuget.org/win-x86-commandline/v3.3.0/nuget.exe"
 $CAKE_EXE = Join-Path $TOOLS_DIR "Cake/Cake.exe"
-$PACKAGES_CONFIG = Join-Path $TOOLS_DIR "packages.config"
+$PACKAGES_CONFIG = Join-Path $PS_SCRIPT_ROOT "packages.config"
 
 # Should we use mono?
 $UseMono = "";
@@ -77,14 +77,6 @@ if ((Test-Path $PSScriptRoot) -and !(Test-Path $TOOLS_DIR)) {
     New-Item -Path $TOOLS_DIR -Type directory | out-null
 }
 
-# Make sure that packages.config exist.
-if (!(Test-Path $PACKAGES_CONFIG)) {
-    Write-Verbose -Message "Downloading packages.config..."
-    try { Invoke-WebRequest -Uri http://cakebuild.net/bootstrapper/packages -OutFile $PACKAGES_CONFIG } catch {
-        Throw "Could not download packages.config."
-    }
-}
-
 # Try download NuGet.exe if not exists
 if (!(Test-Path $NUGET_EXE)) {
     Write-Verbose -Message "Downloading NuGet.exe..."
@@ -106,7 +98,7 @@ if(-Not $SkipToolPackageRestore.IsPresent)
     Set-Location $TOOLS_DIR
 
     Write-Verbose -Message "Restoring tools from NuGet..."
-    $NuGetOutput = Invoke-Expression "&`"$NUGET_EXE`" install -ExcludeVersion -OutputDirectory `"$TOOLS_DIR`""
+    $NuGetOutput = Invoke-Expression "&`"$NUGET_EXE`" install $PACKAGES_CONFIG -ExcludeVersion -OutputDirectory `"$TOOLS_DIR`""
     Write-Verbose -Message ($NuGetOutput | out-string)
 
     Pop-Location

@@ -6,8 +6,8 @@
   },
   "dependencies": {
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20143",
-    "Newtonsoft.Json": "8.0.2"
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-20708",
+    "Newtonsoft.Json": "8.0.3"
   },
   "commands": {
     "omnisharp.bootstrap": "run"
@@ -25,9 +25,11 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-*",
-        "System.Dynamic.Runtime": "4.0.11-rc2-*",
-        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-*"
+        "NETStandard.Library": "1.5.0-rc2-24018",
+        "System.Dynamic.Runtime": "4.0.11-rc2-24018",
+        "System.Linq.Expressions": "4.0.11-rc2-24018",
+        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-24018",
+        "System.Xml.XDocument": "4.0.11-rc2-24018"
       }
     }
   }

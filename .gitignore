@@ -28,8 +28,10 @@ nuget.exe
 debugSettings.json
 buildlog
 /.vs
+/.vscode/settings.json
 *.lock.json
 /omnisharp*.tar.gz
+scripts/Omnisharp*
 
 # NuGet
 *.nuget.targets

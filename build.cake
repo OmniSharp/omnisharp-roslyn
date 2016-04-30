@@ -1,7 +1,11 @@
 #addin "Newtonsoft.Json"
 
-using System.Text.RegularExpressions;
+#load "scripts/runhelpers.cake"
+#load "scripts/archiving.cake"
+#load "scripts/artifacts.cake"
+
 using System.ComponentModel;
+using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,12 +14,12 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
-var installFolder = Argument("install-path", IsRunningOnWindows() ?
-                        $"{EnvironmentVariable("USERPROFILE")}/.omnisharp/local" : "~/.omnisharp/local");
+var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"),
+                                                                        ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 
 // Working directory
-var workingDirectory = (new CakeEnvironment()).WorkingDirectory;
+var workingDirectory = System.IO.Directory.GetCurrentDirectory();
 
 // System specific shell configuration
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
@@ -41,104 +45,21 @@ public class BuildPlan
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
-    System.IO.File.ReadAllText($"{workingDirectory}/build.json"));
+    System.IO.File.ReadAllText(System.IO.Path.Combine(workingDirectory, "build.json")));
 
 // Folders and tools
-var dotnetFolder = $"{workingDirectory}/{buildPlan.DotNetFolder}";
-var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" :
-                    $"{dotnetFolder}/dotnet";
-var toolsFolder = $"{workingDirectory}/{buildPlan.BuildToolsFolder}";
-var xunitRunner = "xunit.runner.console";
+var dotnetFolder = System.IO.Path.Combine(workingDirectory, buildPlan.DotNetFolder);
+var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : System.IO.Path.Combine(System.IO.Path.GetFullPath(dotnetFolder), "dotnet");
+var toolsFolder = System.IO.Path.Combine(workingDirectory, buildPlan.BuildToolsFolder);
 
-var sourceFolder = $"{workingDirectory}/src";
-var testFolder = $"{workingDirectory}/tests";
+var sourceFolder = System.IO.Path.Combine(workingDirectory, "src");
+var testFolder = System.IO.Path.Combine(workingDirectory, "tests");
 
-var artifactFolder = $"{workingDirectory}/{buildPlan.ArtifactsFolder}";
-var publishFolder = $"{artifactFolder}/publish";
-var logFolder = $"{artifactFolder}/logs";
-var packageFolder = $"{artifactFolder}/package";
-
-/// <summary>
-///  Generate an archive out of the given published folder.
-///  Use ZIP for Windows runtimes.
-///  Use TAR.GZ for non-Windows runtimes.
-///  Use 7z to generate TAR.GZ on Windows if available.
-/// </summary>
-/// <param name="runtime">The runtime targeted by the published folder</param>
-/// <param name="inputFolder">The published folder</param>
-/// <param name="outputFile">The target archive name (without extension)</param>
-void DoArchive(string runtime, DirectoryPath inputFolder, FilePath outputFile)
-{
-    // On all platforms use ZIP for Windows runtimes
-    if (runtime.Contains("win") || (runtime.Equals("default") && IsRunningOnWindows()))
-    {
-        var zipFile = outputFile.AppendExtension("zip");
-        Zip(inputFolder, zipFile);
-    }
-    // On all platforms use TAR.GZ for Unix runtimes
-    else
-    {
-        var tarFile = outputFile.AppendExtension("tar.gz");
-        // Use 7z to create TAR.GZ on Windows
-        if (IsRunningOnWindows())
-        {
-            var tempFile = outputFile.AppendExtension("tar");
-            try
-            {
-                var exitCode = StartProcess("7z",
-                    new ProcessSettings
-                    {
-                        Arguments = $"a {tempFile}",
-                        WorkingDirectory = inputFolder
-                    });
-                if (exitCode != 0)
-                {
-                    throw new Exception($"Tar-ing failed for {inputFolder} {outputFile}");
-                }
-                exitCode = StartProcess("7z",
-                    new ProcessSettings
-                    {
-                        Arguments = $"a {tarFile} {tempFile}",
-                        WorkingDirectory = inputFolder
-                    });
-                if (exitCode != 0)
-                {
-                    throw new Exception($"Compression failed for {inputFolder} {outputFile}");
-                }
-                DeleteFile(tempFile);
-            }
-            catch(Win32Exception)
-            {
-                Information("Warning: 7z not available on PATH to pack tar.gz results");
-            }
-        }
-        // Use tar to create TAR.GZ on Unix
-        else
-        {
-            var exitCode =  StartProcess("tar",
-                new ProcessSettings
-                {
-                    Arguments = $"czf {tarFile} .",
-                    WorkingDirectory = inputFolder
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Compression failed for {inputFolder} {outputFile}");
-            }
-        }
-    }
-}
-
-/// <summary>
-///  Extract the RID from a generated build folder.
-///  Used when targeting unknown RID (for example during testing).
-///  Throws exception when multiple RID folders found.
-/// </summary>
-/// <param name="path">Build path including RID folders</param>
-string GetRuntimeInPath(string path)
-{
-    return GetDirectories(path).First().GetDirectoryName();
-}
+var artifactFolder = System.IO.Path.Combine(workingDirectory, buildPlan.ArtifactsFolder);
+var publishFolder = System.IO.Path.Combine(artifactFolder, "publish");
+var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
+var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
+var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 
 /// <summary>
 ///  Clean artifacts.
@@ -146,16 +67,14 @@ string GetRuntimeInPath(string path)
 Task("Cleanup")
     .Does(() =>
 {
-    if (DirectoryExists(artifactFolder))
+    if (System.IO.Directory.Exists(artifactFolder))
     {
-        CleanDirectory(artifactFolder);
+        System.IO.Directory.Delete(artifactFolder, true);
     }
-    else
-    {
-        CreateDirectory(artifactFolder);
-    }
-    CreateDirectory(logFolder);
-    CreateDirectory(packageFolder);
+    System.IO.Directory.CreateDirectory(artifactFolder);
+    System.IO.Directory.CreateDirectory(logFolder);
+    System.IO.Directory.CreateDirectory(packageFolder);
+    System.IO.Directory.CreateDirectory(scriptFolder);
 });
 
 /// <summary>
@@ -180,6 +99,17 @@ Task("PopulateRuntimes")
     {
         buildPlan.Rids = new string[] {"default", "win7-x86"};
     }
+    else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
+    {
+        buildPlan.Rids = new string[]
+            {
+                "default", // To allow testing the published artifact
+                "ubuntu.14.04-x64",
+                "centos.7-x64",
+                "rhel.7.2-x64",
+                "debian.8.2-x64"
+            };
+    }
     else
     {
         buildPlan.Rids = new string[] {"default"};
@@ -193,55 +123,47 @@ Task("BuildEnvironment")
     .Does(() =>
 {
     var installScript = $"install.{shellExtension}";
-    CreateDirectory(dotnetFolder);
-    var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
-    DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
+    System.IO.Directory.CreateDirectory(dotnetFolder);
+    var scriptPath = System.IO.Path.Combine(dotnetFolder, installScript);
+    using (WebClient client = new WebClient())
+    {
+        client.DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
+    }
     if (!IsRunningOnWindows())
     {
-        StartProcess("chmod",
-            new ProcessSettings
-            {
-                Arguments = $"+x {scriptPath}"
-            });
+        Run("chmod", $"+x {scriptPath}");
     }
     var installArgs = $"-Channel {buildPlan.DotNetChannel}";
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
     {
       installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
-    } 
+    }
     if (!buildPlan.UseSystemDotNetPath)
     {
         installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
     }
-    StartProcess(shell,
-        new ProcessSettings
-        {
-            Arguments = $"{shellArgument} {scriptPath} {installArgs}"
-        });
+    Run(shell, $"{shellArgument} {scriptPath} {installArgs}");
     try
     {
-        StartProcess(dotnetcli,
-            new ProcessSettings
-            {
-                Arguments = "--info"
-            });
-
+        Run(dotnetcli, "--info");
     }
     catch (Win32Exception)
     {
         throw new Exception(".NET CLI binary cannot be found.");
     }
 
-    CreateDirectory(toolsFolder);
+    System.IO.Directory.CreateDirectory(toolsFolder);
 
-    NuGetInstall(xunitRunner,
-        new NuGetInstallSettings
-        {
-            ExcludeVersion  = true,
-            OutputDirectory = toolsFolder,
-            NoCache = true,
-            Prerelease = true
-        });
+    var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
+    var arguments = $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory \"{toolsFolder}\"";
+    if (IsRunningOnWindows())
+    {
+        Run(nugetPath, arguments);
+    }
+    else
+    {
+        Run("mono", $"\"{nugetPath}\" {arguments}");
+    }
 });
 
 /// <summary>
@@ -251,15 +173,10 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    var exitCode = StartProcess(dotnetcli,
-        new ProcessSettings
-        {
-            Arguments = "restore"
-        });
-    if (exitCode != 0)
-    {
-        throw new Exception("Failed to restore.");
-    }
+    RunRestore(dotnetcli, "restore", sourceFolder)
+        .ExceptionOnError("Failed to restore projects under source code folder.");
+    RunRestore(dotnetcli, "restore --infer-runtimes", testFolder)
+        .ExceptionOnError("Failed to restore projects under test code folder.");
 });
 
 /// <summary>
@@ -275,48 +192,54 @@ Task("BuildTest")
         foreach (var framework in pair.Value)
         {
             var project = pair.Key;
-            var process = StartAndReturnProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = $"build --framework {framework} --configuration {testConfiguration} {testFolder}/{project}",
-                    RedirectStandardOutput = true
-                });
-            process.WaitForExit();
-            System.IO.File.WriteAllLines($"{logFolder}/{project}-{framework}-build.log", process.GetStandardOutput().ToArray());
+            var projectFolder = System.IO.Path.Combine(testFolder, project);
+            var runLog = new List<string>();
+            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} \"{projectFolder}\"",
+                    new RunOptions
+                    {
+                        StandardOutputListing = runLog
+                    })
+                .ExceptionOnError($"Building test {project} failed for {framework}.");
+            System.IO.File.WriteAllLines(System.IO.Path.Combine(logFolder, $"{project}-{framework}-build.log"), runLog.ToArray());
         }
     }
 });
 
+/// <summary>
+///  Run all tests for .NET Desktop and .NET Core
+/// </summary>
+Task("TestAll")
+    .IsDependentOn("Test")
+    .IsDependentOn("TestCore")
+    .Does(() =>{});
+
+/// <summary>
+///  Run all tests for Travis CI .NET Desktop and .NET Core
+/// </summary>
+Task("TravisTestAll")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("TestAll")
+    .Does(() =>{});
 
 /// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
 /// </summary>
 Task("TestCore")
     .IsDependentOn("Setup")
-    .IsDependentOn("BuildTest")
+    .IsDependentOn("Restore")
     .Does(() =>
 {
-    foreach (var pair in buildPlan.TestProjects)
-    {
-        foreach (var framework in pair.Value)
-        {
-            if (!framework.Contains("netcoreapp"))
-            {
-                continue;
-            }
+    var testProjects = buildPlan.TestProjects
+                                .Where(pair => pair.Value.Any(framework => framework.Contains("netcoreapp")))
+                                .Select(pair => pair.Key)
+                                .ToList();
 
-            var project = pair.Key;
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = $"test --framework {framework} -xml {logFolder}/{project}-{framework}-result.xml -notrait category=failing",
-                    WorkingDirectory = $"{testFolder}/{project}"
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Test failed {project} / {framework}");
-            }
-        }
+    foreach (var testProject in testProjects)
+    {
+        var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
+        var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
+        Run(dotnetcli, $"test -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
+            .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });
 
@@ -339,28 +262,31 @@ Task("Test")
             }
 
             var project = pair.Key;
-            var runtime = GetRuntimeInPath($"{testFolder}/{project}/bin/{testConfiguration}/{framework}/*");
-            var instanceFolder = $"{testFolder}/{project}/bin/{testConfiguration}/{framework}/{runtime}";
+            var frameworkFolder = System.IO.Path.Combine(testFolder, project, "bin", testConfiguration, framework);
+            var runtime = System.IO.Directory.GetDirectories(frameworkFolder).First();
+            var instanceFolder = System.IO.Path.Combine(frameworkFolder, runtime);
+
             // Copy xunit executable to test folder to solve path errors
-            CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.console.exe", instanceFolder);
-            CopyFileToDirectory($"{toolsFolder}/xunit.runner.console/tools/xunit.runner.utility.desktop.dll", instanceFolder);
-            var logFile = $"{logFolder}/{project}-{framework}-result.xml";
-            var xunitSettings = new XUnit2Settings
+            var xunitToolsFolder = System.IO.Path.Combine(toolsFolder, "xunit.runner.console", "tools");
+            var xunitInstancePath = System.IO.Path.Combine(instanceFolder, "xunit.console.exe");
+            System.IO.File.Copy(System.IO.Path.Combine(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
+            System.IO.File.Copy(System.IO.Path.Combine(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), System.IO.Path.Combine(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
+            var targetPath = System.IO.Path.Combine(instanceFolder, $"{project}.dll");
+            var logFile = System.IO.Path.Combine(logFolder, $"{project}-{framework}-result.xml");
+            var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
+            if (IsRunningOnWindows())
             {
-                ToolPath = $"{instanceFolder}/xunit.console.exe",
-                ArgumentCustomization = builder =>
-                {
-                    builder.Append("-xml");
-                    builder.Append(logFile);
-                    return builder;
-                }
-            };
-            xunitSettings.ExcludeTrait("category", new[] { "failing" });
-            XUnit2($"{instanceFolder}/{project}.dll", xunitSettings);
+                Run(xunitInstancePath, arguments, instanceFolder)
+                    .ExceptionOnError($"Test {project} failed for {framework}");
+            }
+            else
+            {
+                Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+                    .ExceptionOnError($"Test {project} failed for {framework}");
+            }
         }
     }
 });
-
 
 /// <summary>
 ///  Build, publish and package artifacts.
@@ -372,60 +298,29 @@ Task("OnlyPublish")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
+    var projectFolder = System.IO.Path.Combine(sourceFolder, project);
     foreach (var framework in buildPlan.Frameworks)
     {
         foreach (var runtime in buildPlan.Rids)
         {
-            var outputFolder = $"{publishFolder}/{project}/{runtime}/{framework}";
+            var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
             var publishArguments = "publish";
             if (!runtime.Equals("default"))
             {
                 publishArguments = $"{publishArguments} --runtime {runtime}";
             }
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
-            publishArguments = $"{publishArguments} --output {outputFolder} {sourceFolder}/{project}";
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = publishArguments
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Failed to publish {project} / {framework}");
-            }
+            publishArguments = $"{publishArguments} --output \"{outputFolder}\" \"{projectFolder}\"";
+            Run(dotnetcli, publishArguments)
+                .ExceptionOnError($"Failed to publish {project} / {framework}");
 
-            if (!requireArchive)
+            if (requireArchive)
             {
-                continue;
+                Package(runtime, framework, outputFolder, packageFolder, buildPlan.MainProject.ToLower());
             }
-
-            var runtimeShort = "";
-            if (runtime.Equals("default"))
-            {
-                runtimeShort = EnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
-            }
-            else
-            {
-                // Remove version number
-                runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
-            }
-            // Simplify Ubuntu to Linux
-            runtimeShort = runtimeShort.Replace("ubuntu", "linux");
-            var buildIdentifier = $"{runtimeShort}-{framework}";
-            // Linux + net451 is renamed to Mono
-            if (runtimeShort.Contains("linux-") && framework.Equals("net451"))
-            {
-                buildIdentifier ="linux-mono";
-            }
-            // No need to package OSX + net451
-            else if (runtimeShort.Contains("osx-") && framework.Equals("net451"))
-            {
-                continue;
-            }
-
-            DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
         }
     }
+    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
 });
 
 /// <summary>
@@ -470,24 +365,20 @@ Task("TestPublished")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
-    foreach (var framework in buildPlan.Frameworks)
+    var projectFolder = System.IO.Path.Combine(sourceFolder, project);
+    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+    foreach (var script in scriptsToTest)
     {
-        // Skip testing mono executables
-        if (!IsRunningOnWindows() && !framework.Equals("netcoreapp"))
+        var scriptPath = System.IO.Path.Combine(scriptFolder, script);
+        var didNotExitWithError = Run($"{shell}", $"{shellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
+                                    new RunOptions
+                                    {
+                                        TimeOut = 10000
+                                    })
+                                .DidTimeOut;
+        if (!didNotExitWithError)
         {
-            continue;
-        }
-        var outputFolder = $"{publishFolder}/{project}/default/{framework}";
-        var process = StartAndReturnProcess($"{outputFolder}/{project}",
-            new ProcessSettings
-            {
-                Arguments = $"-s {sourceFolder}/{project} --stdio",
-            });
-        // Wait 10 seconds to see if project terminates early with error
-        bool exitsWithError = process.WaitForExit(10000);
-        if (exitsWithError)
-        {
-            throw new Exception($"Failed to run {project} / default / {framework}");
+            throw new Exception($"Failed to run {script}");
         }
     }
 });
@@ -498,14 +389,11 @@ Task("TestPublished")
 Task("CleanupInstall")
     .Does(() =>
 {
-    if (DirectoryExists(installFolder))
+    if (System.IO.Directory.Exists(installFolder))
     {
-        CleanDirectory(installFolder);
+        System.IO.Directory.Delete(installFolder, true);
     }
-    else
-    {
-        CreateDirectory(installFolder);
-    }
+    System.IO.Directory.CreateDirectory(installFolder);
 });
 
 /// <summary>
@@ -530,9 +418,16 @@ Task("Install")
     var project = buildPlan.MainProject;
     foreach (var framework in buildPlan.Frameworks)
     {
-        var outputFolder = $"{publishFolder}/{project}/default/{framework}";
-        CopyDirectory(outputFolder, installFolder);
+        var outputFolder = System.IO.Path.GetFullPath(System.IO.Path.Combine(publishFolder, project, "default", framework));
+        var targetFolder = System.IO.Path.GetFullPath(System.IO.Path.Combine(installFolder, framework));
+        // Copy all the folders
+        foreach (var directory in System.IO.Directory.GetDirectories(outputFolder, "*", SearchOption.AllDirectories))
+            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(targetFolder, directory.Substring(outputFolder.Length + 1)));
+        //Copy all the files
+        foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
+            System.IO.File.Copy(file, System.IO.Path.Combine(targetFolder, file.Substring(outputFolder.Length + 1)), true);
     }
+    CreateRunScript(installFolder, scriptFolder);
 });
 
 /// <summary>
@@ -541,8 +436,7 @@ Task("Install")
 Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
     .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
@@ -555,8 +449,21 @@ Task("All")
 Task("Local")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestCore")
-    .IsDependentOn("Test")
+    .IsDependentOn("TestAll")
+    .IsDependentOn("LocalPublish")
+    .IsDependentOn("TestPublished")
+    .Does(() =>
+{
+});
+
+/// <summary>
+///  Build centered around producing the final artifacts for Travis
+///
+///  The tests are run as a different task "TestAll"
+/// </summary>
+Task("Travis")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Restore")
     .IsDependentOn("LocalPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
@@ -570,12 +477,12 @@ Task("Local")
 Task("SetPackageVersions")
     .Does(() =>
 {
-    var jDepVersion = JObject.Parse(System.IO.File.ReadAllText($"{workingDirectory}/depversion.json"));
-    var projects = GetFiles($"{workingDirectory}/src/*/project.json");
-    projects.Add(GetFiles($"{workingDirectory}/tests/*/project.json"));
+    var jDepVersion = JObject.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(workingDirectory, "depversion.json")));
+    var projects = System.IO.Directory.GetFiles(sourceFolder, "project.json", SearchOption.AllDirectories).ToList();
+    projects.AddRange(System.IO.Directory.GetFiles(testFolder, "project.json", SearchOption.AllDirectories));
     foreach (var project in projects)
     {
-        var jProject = JObject.Parse(System.IO.File.ReadAllText(project.FullPath));
+        var jProject = JObject.Parse(System.IO.File.ReadAllText(project));
         var dependencies = jProject.SelectTokens("dependencies")
                             .Union(jProject.SelectTokens("frameworks.*.dependencies"))
                             .SelectMany(dependencyToken => dependencyToken.Children<JProperty>());
@@ -586,7 +493,7 @@ Task("SetPackageVersions")
                 dependency.Value = jDepVersion[dependency.Name];
             }
         }
-        System.IO.File.WriteAllText(project.FullPath, JsonConvert.SerializeObject(jProject, Formatting.Indented));
+        System.IO.File.WriteAllText(project, JsonConvert.SerializeObject(jProject, Formatting.Indented));
     }
 });
 

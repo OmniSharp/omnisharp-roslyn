@@ -43,7 +43,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
                 AddKeywords(completions, model, position, request.WantKind, wordToComplete);
 
-                var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
+                var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(model, position, _workspace);
 
                 foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
                 {

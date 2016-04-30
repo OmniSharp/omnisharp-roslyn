@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyModel;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -26,10 +26,12 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup(IApplicationEnvironment applicationEnvironment)
+        public Startup()
         {
+            var appEnv = PlatformServices.Default.Application;
+            
             var configBuilder = new ConfigurationBuilder()
-                .SetBasePath(applicationEnvironment.ApplicationBasePath)
+                .SetBasePath(appEnv.ApplicationBasePath)
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
@@ -39,10 +41,12 @@ namespace OmniSharp
             }
 
             // Use the local omnisharp config if there's any in the root path
-            if (File.Exists(Program.Environment.ConfigurationPath))
+            configBuilder.AddJsonFile(source =>
             {
-                configBuilder.AddJsonFile(Program.Environment.ConfigurationPath);
-            }
+                source.Path = "omnisharp.json";
+                source.Optional = true;
+                source.FileProvider = new PhysicalFileProvider(Program.Environment.Path);
+            });
 
             Configuration = configBuilder.Build();
         }
@@ -58,11 +62,11 @@ namespace OmniSharp
             // Add the omnisharp workspace to the container
             services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
-            
+
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddOptions();
-            
+
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(Configuration);
         }
@@ -175,7 +179,7 @@ namespace OmniSharp
 
             // ProjectEventForwarder register event to OmnisharpWorkspace during instantiation
             PluginHost.GetExport<ProjectEventForwarder>();
-            
+
             // Initialize all the project systems
             foreach (var projectSystem in PluginHost.GetExports<IProjectSystem>())
             {

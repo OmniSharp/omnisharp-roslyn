@@ -5,16 +5,19 @@ env:
   global:
     secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
 mono:
-  - 4.2.1
+  - 4.2.3
 os:
   - linux
   - osx
 osx_image: xcode7.3
-before_install:
+# install automaically retries
+install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
+  - ./build.sh -target=Restore
 script:
-  - "./build.sh -target=All -archive"
+  - travis_retry ./build.sh -target=TravisTestAll
+  - ./build.sh -target=Travis -archive
 addons:
   apt:
     packages:
@@ -37,7 +40,7 @@ deploy:
   api_key:
     secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
   file_glob: true
-  file: artifacts/package/*${TRAVIS_OS_NAME}*.tar.gz
+  file: artifacts/package/*.tar.gz
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn

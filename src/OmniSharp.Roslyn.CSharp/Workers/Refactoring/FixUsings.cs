@@ -39,7 +39,7 @@ namespace OmniSharp
             _semanticModel = await document.GetSemanticModelAsync();
             await AddMissingUsings(codeActionProviders);
             await RemoveUsings(codeActionProviders);
-#if DNX451
+#if NET451
             await SortUsings();
 #endif
             await TryAddLinqQuerySyntax();
@@ -167,7 +167,7 @@ namespace OmniSharp
             return;
         }
 
-#if DNX451
+#if NET451
         private async Task SortUsings()
         {
             // Sort usings
