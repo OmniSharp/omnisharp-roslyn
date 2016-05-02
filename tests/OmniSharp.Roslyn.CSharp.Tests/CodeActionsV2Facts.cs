@@ -222,8 +222,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             bool wantsChanges = false)
         {
             IEnumerable<OmniSharpCodeAction> refactorings = await FindRefactoringsAsync(source);
-            var names = refactorings.Select(r => r.Name).ToArray();
-            
             Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
 
             var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
