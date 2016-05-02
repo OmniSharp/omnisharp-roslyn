@@ -4,47 +4,76 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
+using OmniSharp.Tests;
 using Xunit;
 
-namespace OmniSharp.Tests
+namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class CodingActionsV2Facts
+    /*
+        Test todo list:
+        
+        * Sort Using was removed with NRefactory
+            var source =
+                  @"using MyNamespace3;
+                    using MyNamespace4;
+                    using MyNamespace2;
+                    using System;
+                    u$sing MyNamespace1;";
+
+            var expected =
+                  @"using System;
+                    using MyNamespace1;
+                    using MyNamespace2;
+                    using MyNamespace3;
+                    using MyNamespace4;";
+     */
+    
+    public class CodingActionsV2Facts : IClassFixture<RoslynTestFixture>
     {
-        private OmnisharpWorkspace _workspace;
-        private CompositionHost _host;
-        private readonly string bufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
-        private readonly LoggerFactory _loggerFactory;
-        private readonly IOmnisharpAssemblyLoader _loader;
-        private readonly ILogger<CodingActionsV2Facts> _logger;
+        private readonly string BufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
-        public CodingActionsV2Facts()
+        private OmnisharpWorkspace _omnisharpWorkspace;
+        private CompositionHost _pluginHost;
+        private readonly RoslynTestFixture _fixture;
+
+        public CodingActionsV2Facts(RoslynTestFixture fixture)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<CodingActionsV2Facts>();
-
-            _loader = new TestOmnisharpAssemblyLoader(_logger);
+            _fixture = fixture;
         }
 
-        [Fact(Skip = "Broken after upgrade to rc2, need to re-enable nrefactory")]
-        public async Task Can_get_code_actions_from_nrefactory()
+        private CompositionHost PluginHost
         {
-            var source =
-                @"public class Class1
-                  {
-                      public void Whatever()
-                      {
-                          int$ i = 1;
-                      }
-                  }";
+            get
+            {
+                if (_pluginHost == null)
+                {
+                    _pluginHost = TestHelpers.CreatePluginHost(
+                        new Assembly[]
+                        {
+                            typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly,
+                            typeof(GetCodeActionsService).GetTypeInfo().Assembly
+                        });
+                }
 
-            var refactorings = await FindRefactoringNamesAsync(source);
-            Assert.Contains("Use 'var' keyword", refactorings);
+                return _pluginHost;
+            }
+        }
+
+        private async Task<OmnisharpWorkspace> GetOmniSharpWorkspace(Models.Request request)
+        {
+            if (_omnisharpWorkspace == null)
+            {
+                _omnisharpWorkspace = await TestHelpers.CreateSimpleWorkspace(
+                    PluginHost,
+                    request.Buffer,
+                    BufferPath);
+            }
+
+            return _omnisharpWorkspace;
         }
 
         [Fact]
@@ -61,27 +90,6 @@ namespace OmniSharp.Tests
 
             var refactorings = await FindRefactoringNamesAsync(source);
             Assert.Contains("using System;", refactorings);
-        }
-
-        [Fact(Skip = "Broken after upgrade to rc2, pending investigation")]
-        public async Task Can_sort_usings()
-        {
-            var source =
-                  @"using MyNamespace3;
-                    using MyNamespace4;
-                    using MyNamespace2;
-                    using System;
-                    u$sing MyNamespace1;";
-
-            var expected =
-                  @"using System;
-                    using MyNamespace1;
-                    using MyNamespace2;
-                    using MyNamespace3;
-                    using MyNamespace4;";
-
-            var response = await RunRefactoring(source, "Sort usings");
-            Assert.Equal(expected, response.Changes.First().Buffer);
         }
 
         [Fact]
@@ -151,20 +159,21 @@ namespace OmniSharp.Tests
             AssertIgnoringIndent(expected, response.Changes.First().Buffer);
         }
 
-        [Fact(Skip = "Broken after upgrade to rc2, pending investigation")]
+        [Fact(Skip = "Test is still broken because the removal of NRefactory.")]
         public async Task Can_create_a_class_with_a_new_method_in_adjacent_file()
         {
             var source =
-                  @"namespace MyNamespace
-                  public class Class1
-                  {
-                      public void Whatever()
-                      {
-                          MyNew$Class.DoSomething();
-                      }
-                  }";
+                @"namespace MyNamespace
+                public class Class1
+                {
+                    public void Whatever()
+                    {
+                        MyNew$Class.DoSomething();
+                    }
+                }";
 
-            var response = await RunRefactoring(source, "Generate class for 'MyNewClass' in 'MyNamespace' (in new file)", true);
+            var response = await RunRefactoring(source, "Generate type", true);
+
             var change = response.Changes.First();
             Assert.Equal($"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}MyNewClass.cs", change.FileName);
             var expected =
@@ -174,7 +183,7 @@ namespace OmniSharp.Tests
                   {
                   }
               }";
-
+            
             AssertIgnoringIndent(expected, change.Changes.First().NewText);
             source =
                 @"namespace MyNamespace
@@ -207,10 +216,14 @@ namespace OmniSharp.Tests
             return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
         }
 
-        private async Task<RunCodeActionResponse> RunRefactoring(string source, string refactoringName, bool wantsChanges = false)
+        private async Task<RunCodeActionResponse> RunRefactoring(
+            string source,
+            string refactoringName,
+            bool wantsChanges = false)
         {
-            var refactorings = await FindRefactoringsAsync(source);
+            IEnumerable<OmniSharpCodeAction> refactorings = await FindRefactoringsAsync(source);
             Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
+
             var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
             return await RunRefactoringsAsync(source, identifier, wantsChanges);
         }
@@ -218,49 +231,48 @@ namespace OmniSharp.Tests
         private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string source)
         {
             var codeActions = await FindRefactoringsAsync(source);
+
             return codeActions.Select(a => a.Name);
         }
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
         {
-            var loggerFactory = new FakeLoggerFactory();
             var request = CreateGetCodeActionsRequest(source);
-            _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
-            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
-            var controller = new GetCodeActionsService(
-                _workspace,
-                CreateCodeActionProviders(),
-                loggerFactory);
+            var workspace = await GetOmniSharpWorkspace(request);
+            var codeActions = CreateCodeActionProviders();
+
+            var controller = new GetCodeActionsService(workspace, codeActions, _fixture.FakeLoggerFactory);
             var response = await controller.Handle(request);
+
             return response.CodeActions;
         }
 
-        private async Task<RunCodeActionResponse> RunRefactoringsAsync(string source, string identifier, bool wantsChanges = false)
+        private async Task<RunCodeActionResponse> RunRefactoringsAsync(
+            string source,
+            string identifier,
+            bool wantsChanges = false)
         {
-            var loggerFactory = new FakeLoggerFactory();
             var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
-            _host = _host ?? TestHelpers.CreatePluginHost(new[] { typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly, typeof(NRefactoryCodeActionProvider).GetTypeInfo().Assembly, typeof(GetCodeActionsService).GetTypeInfo().Assembly });
-            _workspace = _workspace ?? await TestHelpers.CreateSimpleWorkspace(_host, request.Buffer, bufferPath);
-            var controller = new RunCodeActionService(
-                _workspace,
-                CreateCodeActionProviders(),
-                loggerFactory);
+            var workspace = await GetOmniSharpWorkspace(request);
+            var codeActions = CreateCodeActionProviders();
+
+            var controller = new RunCodeActionService(workspace, codeActions, _fixture.FakeLoggerFactory);
             var response = await controller.Handle(request);
+
             return response;
         }
 
         private GetCodeActionsRequest CreateGetCodeActionsRequest(string source)
         {
             var range = TestHelpers.GetRangeFromDollars(source);
-            Range selection = GetSelection(range);
 
             return new GetCodeActionsRequest
             {
                 Line = range.Start.Line,
                 Column = range.Start.Column,
-                FileName = bufferPath,
+                FileName = BufferPath,
                 Buffer = source.Replace("$", ""),
-                Selection = selection
+                Selection = GetSelection(range)
             };
         }
 
@@ -274,7 +286,7 @@ namespace OmniSharp.Tests
                 Line = range.Start.Line,
                 Column = range.Start.Column,
                 Selection = selection,
-                FileName = bufferPath,
+                FileName = BufferPath,
                 Buffer = source.Replace("$", ""),
                 Identifier = identifier,
                 WantsTextChanges = wantChanges
@@ -296,8 +308,9 @@ namespace OmniSharp.Tests
 
         private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
         {
-            yield return new RoslynCodeActionProvider(_loader);
-            yield return new NRefactoryCodeActionProvider(_loader);
+            var loader = _fixture.CreateAssemblyLoader(_fixture.FakeLogger);
+            
+            yield return new RoslynCodeActionProvider(loader);
         }
     }
 }

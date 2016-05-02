@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace OmniSharp.Tests
+namespace TestUtility.Fake
 {
     public class FakeLoggerFactory : ILoggerFactory
     {

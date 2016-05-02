@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -12,6 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
+using TestUtility.Fake;
 
 namespace OmniSharp.Tests
 {
@@ -160,13 +160,20 @@ namespace OmniSharp.Tests
             return workspace;
         }
 
-        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+        public static CompositionHost CreatePluginHost(
+            IEnumerable<Assembly> assemblies,
+            Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             return Startup.ConfigureMef(
                 new TestServiceProvider(new FakeLoggerFactory()),
                 new FakeOmniSharpOptions().Value,
                 assemblies,
                 configure);
+        }
+
+        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies)
+        {
+            return CreatePluginHost(assemblies, configure: null);
         }
 
         public static Task<OmnisharpWorkspace> AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)

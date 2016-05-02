@@ -5,6 +5,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Services;
 using OmniSharp.Tests;
+using TestUtility.Annotate;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -22,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _loggerFactory.AddConsole();
             _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
 
-            _loader = new TestOmnisharpAssemblyLoader(_logger);
+            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]

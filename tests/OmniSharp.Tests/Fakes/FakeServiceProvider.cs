@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
+using TestUtility.Annotate;
 
 namespace OmniSharp.Tests
 {
@@ -18,7 +19,7 @@ namespace OmniSharp.Tests
 
             _services[typeof(ILoggerFactory)] = _loggerFactory;
             _services[typeof(IOmnisharpEnvironment)] = new FakeEnvironment();
-            _services[typeof(IOmnisharpAssemblyLoader)] = new TestOmnisharpAssemblyLoader(_loggerFactory.CreateLogger<TestOmnisharpAssemblyLoader>());
+            _services[typeof(IOmnisharpAssemblyLoader)] = new AnnotateAssemblyLoader(_loggerFactory.CreateLogger<AnnotateAssemblyLoader>());
         }
 
         public object GetService(Type serviceType)

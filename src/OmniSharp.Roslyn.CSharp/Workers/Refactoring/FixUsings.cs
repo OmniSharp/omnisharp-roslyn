@@ -39,9 +39,6 @@ namespace OmniSharp
             _semanticModel = await document.GetSemanticModelAsync();
             await AddMissingUsings(codeActionProviders);
             await RemoveUsings(codeActionProviders);
-#if NET451
-            await SortUsings();
-#endif
             await TryAddLinqQuerySyntax();
             var ambiguous = await GetAmbiguousUsings(codeActionProviders);
             var response = new FixUsingsResponse();
@@ -166,37 +163,6 @@ namespace OmniSharp
 
             return;
         }
-
-#if NET451
-        private async Task SortUsings()
-        {
-            // Sort usings
-        var nRefactoryProvider = new NRefactoryCodeActionProvider(_loader);
-            var sortActions = new List<CodeAction>();
-            var refactoringContext = await GetRefactoringContext(_document, sortActions);
-            if (refactoringContext != null)
-            {
-                nRefactoryProvider.Refactorings
-                                  .FirstOrDefault(r => r is ICSharpCode.NRefactory6.CSharp.Refactoring.SortUsingsAction)
-                                 ?.ComputeRefactoringsAsync(refactoringContext.Value);
-
-                foreach (var action in sortActions)
-                {
-                    var operations = await action.GetOperationsAsync(CancellationToken.None).ConfigureAwait(false);
-                    if (operations != null)
-                    {
-                        foreach (var codeOperation in operations)
-                        {
-                            if (codeOperation != null)
-                            {
-                                codeOperation.Apply(_workspace, CancellationToken.None);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-#endif
 
         private async Task TryAddLinqQuerySyntax()
         {
