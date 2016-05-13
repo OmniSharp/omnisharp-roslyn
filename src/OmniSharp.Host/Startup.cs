@@ -26,10 +26,12 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup(IApplicationEnvironment applicationEnvironment)
+        public Startup()
         {
+            var appEnv = PlatformServices.Default.Application;
+            
             var configBuilder = new ConfigurationBuilder()
-                .SetBasePath(applicationEnvironment.ApplicationBasePath)
+                .SetBasePath(appEnv.ApplicationBasePath)
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 

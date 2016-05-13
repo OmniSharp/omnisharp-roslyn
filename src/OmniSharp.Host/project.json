@@ -16,6 +16,7 @@
     "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002702",
     "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-final",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-final",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc2-final",
     "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-002702",
     "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-final",
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-final",
