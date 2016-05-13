@@ -1,9 +1,9 @@
 {
     "UseSystemDotNetPath" : "false",
     "DotNetFolder": ".dotnet",
-    "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
+    "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/6cde21225e18fc48eeab3f4345ece3e6bb122e53/scripts/obtain/",
     "DotNetChannel": "beta",
-    "DotNetVersion": "1.0.0-beta-002202",
+    "DotNetVersion": "1.0.0-preview1-002702",
     "BuildToolsFolder": ".tools",
     "ArtifactsFolder": "artifacts",
     "TestProjects": {

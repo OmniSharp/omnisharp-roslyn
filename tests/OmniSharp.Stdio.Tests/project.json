@@ -4,7 +4,7 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "OmniSharp.Stdio": "1.0.0-*",
+    "OmniSharp.Stdio": "1.0.0",
     "Newtonsoft.Json": "8.0.3",
     "xunit": "2.1.0"
   },
@@ -16,15 +16,15 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-23931",
-        "Microsoft.DotNet.ProjectModel": "1.0.0-beta-002202",
-        "NuGet.Packaging": "3.5.0-beta-1123",
-        "System.IO.Compression": "4.1.0-rc2-23931",
-        "System.Runtime.Loader": "4.0.0-rc2-23931",
-        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-23931",
-        "System.Threading.ThreadPool": "4.0.10-rc2-23931",
-        "System.Xml.XDocument": "4.0.11-rc2-23931",
-        "dotnet-test-xunit": "1.0.0-dev-128011-22"
+        "NETStandard.Library": "1.5.0-rc2-24027",
+        "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002702",
+        "NuGet.Packaging": "3.5.0-beta-final",
+        "System.IO.Compression": "4.1.0-rc2-24027",
+        "System.Runtime.Loader": "4.0.0-rc2-24027",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24027",
+        "System.Threading.ThreadPool": "4.0.10-rc2-24027",
+        "System.Xml.XDocument": "4.0.11-rc2-24027",
+        "dotnet-test-xunit": "1.0.0-rc2-192208-24"
       }
     },
     "net451": {

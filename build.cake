@@ -204,7 +204,7 @@ Task("PopulateRuntimes")
 Task("BuildEnvironment")
     .Does(() =>
 {
-    var installScript = $"install.{shellExtension}";
+    var installScript = $"dotnet-install.{shellExtension}";
     CreateDirectory(dotnetFolder);
     var scriptPath = new FilePath($"{dotnetFolder}/{installScript}");
     DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
