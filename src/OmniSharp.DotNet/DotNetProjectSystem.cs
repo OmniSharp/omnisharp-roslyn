@@ -34,7 +34,7 @@ namespace OmniSharp.DotNet
         private readonly PackagesRestoreTool _packageRestore;
         private readonly OmnisharpWorkspace _omnisharpWorkspace;
         private readonly ProjectStatesCache _projectStates;
-        private WorkspaceContext _workspaceContext;
+        private DotNetWorkspace _workspaceContext;
         private bool _enableRestorePackages = false;
 
         [ImportingConstructor]
@@ -98,11 +98,7 @@ namespace OmniSharp.DotNet
 
             _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
-            _workspaceContext = WorkspaceContext.CreateFrom(_environment.Path);
-            if (_workspaceContext == null)
-            {
-                throw new NotImplementedException($"Failed to initialize {typeof(WorkspaceContext)} at {_environment.Path}.");
-            }
+            _workspaceContext = new DotNetWorkspace(_environment.Path);
 
             Update(allowRestore: true);
         }
