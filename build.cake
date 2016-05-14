@@ -122,7 +122,7 @@ Task("PopulateRuntimes")
 Task("BuildEnvironment")
     .Does(() =>
 {
-    var installScript = $"install.{shellExtension}";
+    var installScript = $"dotnet-install.{shellExtension}";
     System.IO.Directory.CreateDirectory(dotnetFolder);
     var scriptPath = System.IO.Path.Combine(dotnetFolder, installScript);
     using (WebClient client = new WebClient())
@@ -238,7 +238,7 @@ Task("TestCore")
     {
         var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
         var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
-        Run(dotnetcli, $"test -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
+        Run(dotnetcli, $"test -f netcoreapp1.0 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });

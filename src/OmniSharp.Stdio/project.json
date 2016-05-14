@@ -1,14 +1,13 @@
 {
   "version": "1.0.0-*",
   "description": "ASP.NET 5 web server for stdio",
-  "compilationOptions": {
-    "warningsAsErrors": true,
-    "preserveCompilationContext": true
+  "buildOptions": {
+    "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
-    "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-20708",
-    "Microsoft.AspNetCore.Http.Features": "1.0.0-rc2-20708",
+    "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-final",
+    "Microsoft.AspNetCore.Http.Features": "1.0.0-rc2-final",
     "Newtonsoft.Json": "8.0.3"
   },
   "frameworks": {
@@ -20,8 +19,8 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-24018",
-        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24018"
+        "NETStandard.Library": "1.5.0-rc2-24027",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24027"
       }
     }
   }

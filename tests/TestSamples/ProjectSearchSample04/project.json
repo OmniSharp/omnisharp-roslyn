@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "dependencies": {
-    "Microsoft.NETCore.App": "1.0.0-rc2-3002426"
+    "Microsoft.NETCore.App": "1.0.0-rc2-3002702"
   },
   "frameworks": {
     "netcoreapp1.0": {}
