@@ -1,6 +1,6 @@
 {
   "version": "1.0.0-*",
-  "compilationOptions": {
+  "buildOptions": {
     "warningsAsErrors": true,
     "preserveCompilationContext": true,
     "emitEntryPoint": true
@@ -13,8 +13,8 @@
   "frameworks": {
     "net451": {
       "dependencies": {
-        "OmniSharp.MSBuild": "1.0.0-*",
-        "OmniSharp.ScriptCs": "1.0.0-*"
+        "OmniSharp.MSBuild": "1.0.0",
+        "OmniSharp.ScriptCs": "1.0.0"
       }
     },
     "netcoreapp1.0": {
@@ -23,7 +23,7 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-24018"
+        "NETStandard.Library": "1.5.0-rc2-24027"
       }
     }
   },

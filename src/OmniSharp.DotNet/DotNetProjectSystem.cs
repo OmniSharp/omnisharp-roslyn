@@ -35,7 +35,7 @@ namespace OmniSharp.DotNet
         private readonly PackagesRestoreTool _packageRestore;
         private readonly OmnisharpWorkspace _omnisharpWorkspace;
         private readonly ProjectStatesCache _projectStates;
-        private WorkspaceContext _workspaceContext;
+        private DotNetWorkspace _workspaceContext;
         private bool _enableRestorePackages = false;
 
         [ImportingConstructor]
@@ -99,13 +99,7 @@ namespace OmniSharp.DotNet
 
             _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
-            _workspaceContext = WorkspaceContext.Create();
-            var projects = ProjectSearcher.Search(_environment.Path);
-            _logger.LogInformation($"Originated from {projects.Count()} projects.");
-            foreach (var path in projects)
-            {
-                _workspaceContext.AddProject(path);
-            }
+            _workspaceContext = new DotNetWorkspace(_environment.Path);
 
             Update(allowRestore: true);
         }

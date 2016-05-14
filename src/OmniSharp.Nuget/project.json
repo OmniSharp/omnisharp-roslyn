@@ -1,8 +1,7 @@
 {
   "version": "1.0.0-*",
-  "compilationOptions": {
-    "warningsAsErrors": true,
-    "preserveCompilationContext": true
+  "buildOptions": {
+    "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
@@ -11,11 +10,11 @@
   "frameworks": {
     "net451": {
       "dependencies": {
-        "NuGet.Configuration": "3.5.0-beta-1178",
+        "NuGet.Configuration": "3.5.0-beta-final",
         "NuGet.Protocol.Core.v2": "3.3.0",
         "NuGet.Protocol.Core.v3": "3.3.0",
-        "NuGet.Packaging": "3.5.0-beta-1178",
-        "NuGet.Packaging.Core": "3.5.0-beta-1178",
+        "NuGet.Packaging": "3.5.0-beta-final",
+        "NuGet.Packaging.Core": "3.5.0-beta-final",
         "Microsoft.Web.Xdt": "2.1.1"
       },
       "frameworkAssemblies": {
@@ -36,7 +35,7 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-24018"
+        "NETStandard.Library": "1.5.0-rc2-24027"
       }
     }
   }
