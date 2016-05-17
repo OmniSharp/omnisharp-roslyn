@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Extensions;
+using OmniSharp.Roslyn.CSharp.Services.Testing;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
@@ -29,7 +30,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         public async Task<GetCodeActionsResponse> Handle(GetCodeActionsRequest request)
         {
             var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
-            return new GetCodeActionsResponse { CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title)) };
+
+            var testActions = TestActionsProvider.FindTestActions(_workspace, request);
+
+            var omnisharpCodeAction = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title))
+                                             .Concat(testActions);
+
+            return new GetCodeActionsResponse { CodeActions = omnisharpCodeAction };
         }
     }
 }
