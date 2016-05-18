@@ -1,8 +1,7 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
-    "warningsAsErrors": true,
-    "preserveCompilationContext": true
+    "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",

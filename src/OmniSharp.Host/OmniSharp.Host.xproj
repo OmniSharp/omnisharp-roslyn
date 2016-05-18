@@ -20,7 +20,7 @@
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties config_1json__JSONSchema="http://json.schemastore.org/config" project_1json__JSONSchema="http://www.asp.net/media/4878834/project.json" />
+      <UserProperties project_1json__JSONSchema="http://www.asp.net/media/4878834/project.json" />
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="$(VSToolsPath)\DNX\Microsoft.DNX.Props" />
