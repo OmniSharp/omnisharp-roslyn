@@ -10,13 +10,13 @@ using OmniSharp.Models.V2;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Testing
 {
-    public class TestActionsProvider
+    public class TestMethodsDiscover
     {
         private readonly ILogger _logger;
 
-        public TestActionsProvider(ILoggerFactory loggerFactory)
+        public TestMethodsDiscover(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<TestActionsProvider>();
+            _logger = loggerFactory.CreateLogger<TestMethodsDiscover>();
         }
 
         public async Task<IEnumerable<string>> FindTestActions(

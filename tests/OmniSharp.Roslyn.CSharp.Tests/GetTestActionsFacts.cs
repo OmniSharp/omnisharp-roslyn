@@ -13,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class GetTestActionsFacts
     {
-        private readonly TestActionsProvider _provider;
+        private readonly TestMethodsDiscover _provider;
         private readonly ILoggerFactory _loggerFactory;
 
         public GetTestActionsFacts()
@@ -21,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _loggerFactory = new LoggerFactory();
             _loggerFactory.AddConsole();
 
-            _provider = new TestActionsProvider(_loggerFactory);
+            _provider = new TestMethodsDiscover(_loggerFactory);
         }
 
         [Fact]
