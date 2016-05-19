@@ -18,6 +18,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private readonly ILogger _logger;
+        private readonly TestActionsProvider _provider;
 
         [ImportingConstructor]
         public GetCodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
@@ -25,18 +26,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _workspace = workspace;
             _codeActionProviders = providers;
             _logger = loggerFactory.CreateLogger<GetCodeActionsService>();
+            _provider = new TestActionsProvider(loggerFactory);
         }
 
         public async Task<GetCodeActionsResponse> Handle(GetCodeActionsRequest request)
         {
             var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
 
-            var testActions = TestActionsProvider.FindTestActions(_workspace, request);
+            var testMethods = await _provider.FindTestActions(_workspace, request);
 
             var omnisharpCodeAction = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title))
-                                             .Concat(testActions);
+                                             .ToList();
 
-            return new GetCodeActionsResponse { CodeActions = omnisharpCodeAction };
+            if (testMethods.Any())
+            {
+                omnisharpCodeAction.Add(new OmniSharpCodeAction("test.action", "Run test"));
+            }
+
+            return new GetCodeActionsResponse
+            {
+                CodeActions = omnisharpCodeAction
+            };
         }
     }
 }
