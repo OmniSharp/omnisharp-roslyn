@@ -20,7 +20,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private readonly ILogger _logger;
-        private readonly TestActionProvider _provider;
+        private readonly TestMethodsDiscover _testProvider;
+
 
         [ImportingConstructor]
         public RunCodeActionService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
@@ -28,23 +29,35 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _workspace = workspace;
             _codeActionProviders = providers;
             _logger = loggerFactory.CreateLogger<RunCodeActionService>();
-            _provider = new TestActionProvider();
+            _testProvider = new TestMethodsDiscover(loggerFactory);
         }
 
-        public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
+        public Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
+        {
+            // Eventually this should be split into a seperate service
+            var testRunner = _testProvider.GetTestActionRunner(request);
+            if (testRunner != null)
+            {
+                return HandleTestActions(testRunner);
+            }
+            else
+            {
+                return HandleCodeActions(request);
+            }
+        }
+
+        private async Task<RunCodeActionResponse> HandleTestActions(ITestActionRunner testRunner)
+        {
+            _logger.LogInformation($"run test action: [{testRunner}]");
+            var result = await testRunner.RunAsync();
+            
+            return result.ToRespnse();
+        }
+
+        private async Task<RunCodeActionResponse> HandleCodeActions(RunCodeActionRequest request)
         {
             var response = new RunCodeActionResponse();
-            
-            // Eventually this should be split into a seperate service
-            var testAction = _provider.GetTestAction(request);
-            if (testAction != null)
-            {
-                _logger.LogInformation($"run test action: [{testAction}]");
-                testAction.Run();
-                response.Changes = Enumerable.Empty<OmniSharp.Models.ModifiedFileResponse>();
-                return response;
-            }
-            
+
             var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
             var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
             if (action == null)

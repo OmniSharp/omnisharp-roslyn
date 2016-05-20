@@ -11,15 +11,39 @@ using OmniSharp.Models.V2;
 namespace OmniSharp.Roslyn.CSharp.Services.Testing
 {
     public class TestMethodsDiscover
-    {
+    {       
         private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
 
         public TestMethodsDiscover(ILoggerFactory loggerFactory)
         {
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<TestMethodsDiscover>();
         }
+        
+        /// <summary>
+        /// Returns the OmniSharpCodeAction based on the selected test methods
+        /// </summary>
+        public async Task<IEnumerable<OmniSharpCodeAction>> FindTestActions(
+            Workspace workspace,
+            GetCodeActionsRequest request)
+        {
+            var actions = new List<OmniSharpCodeAction>();
+            
+            var testMethods = await FindTestMethods(workspace, request);
+            if (testMethods.Any())
+            {
+                actions.Add(new OmniSharpCodeAction($"test.run|{testMethods.First()}", "Run test"));
+                actions.Add(new OmniSharpCodeAction($"test.debug|{testMethods.First()}", "Debug test"));
+            }
+            
+            return actions;
+        }
 
-        public async Task<IEnumerable<string>> FindTestActions(
+        /// <summary>
+        /// Returns the selected test methods.
+        /// </summary>
+        public async Task<IEnumerable<string>> FindTestMethods(
             Workspace workspace,
             GetCodeActionsRequest request)
         {
@@ -43,7 +67,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Testing
             return testMethods.ToList();
         }
 
-        private bool IsSelectedTestMethod(
+        public ITestActionRunner GetTestActionRunner(RunCodeActionRequest request)
+        {
+            var identifier = request.Identifier;
+            if (string.IsNullOrEmpty(identifier) || !request.Identifier.StartsWith("test"))
+            {
+                return null;
+            }
+
+            var sep = identifier.IndexOf('|', 4);
+            if (sep == -1)
+            {
+                return null;
+            }
+
+            var action = identifier.Substring(5, sep - 5);
+            var method = identifier.Substring(sep + 1);
+
+            if (action == "run")
+            {
+                return new XunitTestActionRunner(action, method, request.FileName);
+            }
+            else if (action == "debug")
+            {
+                return new XunitTestActionDebugger(action, method, request.FileName, _loggerFactory);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static bool IsSelectedTestMethod(
             MethodDeclarationSyntax node,
             TextSpan selection,
             SemanticModel sematicModel)

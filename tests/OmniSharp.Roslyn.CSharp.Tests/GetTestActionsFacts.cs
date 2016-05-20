@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Selection = new Range { Start = new Point { Line = 7, Column = 22 }, End = new Point { Line = 7, Column = 22 } }
             };
 
-            var testMethods = await _provider.FindTestActions(workspace, request);
+            var testMethods = await _provider.FindTestMethods(workspace, request);
             Assert.Equal("Main.Test.MainTest.Test", testMethods.Single());
         }
 
@@ -54,7 +54,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Selection = new Range { Start = new Point { Line = 15, Column = 26 }, End = new Point { Line = 15, Column = 26 } }
             };
 
-            var testMethods = await _provider.FindTestActions(workspace, request);
+            var testMethods = await _provider.FindTestMethods(workspace, request);
             Assert.Equal("Main.Test.MainTest.DataDrivenTest", testMethods.Single());
         }
 
@@ -71,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Selection = new Range { Start = new Point { Line = 20, Column = 27 }, End = new Point { Line = 20, Column = 27 } }
             };
 
-            var testMethods = await _provider.FindTestActions(workspace, request);
+            var testMethods = await _provider.FindTestMethods(workspace, request);
             Assert.Empty(testMethods);
         }
     }

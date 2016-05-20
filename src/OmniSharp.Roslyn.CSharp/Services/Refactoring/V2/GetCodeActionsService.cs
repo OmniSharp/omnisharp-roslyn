@@ -32,21 +32,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         public async Task<GetCodeActionsResponse> Handle(GetCodeActionsRequest request)
         {
             var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
-
-            var testMethods = await _provider.FindTestActions(_workspace, request);
-
             var omnisharpCodeAction = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title))
                                              .ToList();
 
-            if (testMethods.Any())
-            {
-                omnisharpCodeAction.Add(new OmniSharpCodeAction($"test.run|{testMethods.First()}", "Run test"));
-                omnisharpCodeAction.Add(new OmniSharpCodeAction($"test.debug|{testMethods.First()}", "Debug test"));
-            }
+            var testActions = await _provider.FindTestActions(_workspace, request);
 
             return new GetCodeActionsResponse
             {
-                CodeActions = omnisharpCodeAction
+                CodeActions = omnisharpCodeAction.Concat(testActions)
             };
         }
     }
