@@ -40,8 +40,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             if (testMethods.Any())
             {
-                omnisharpCodeAction.Add(new OmniSharpCodeAction($"run.test|{testMethods.First()}", "Run test"));
-                omnisharpCodeAction.Add(new OmniSharpCodeAction($"debug.test|{testMethods.First()}", "Debug test"));
+                omnisharpCodeAction.Add(new OmniSharpCodeAction($"test.run|{testMethods.First()}", "Run test"));
+                omnisharpCodeAction.Add(new OmniSharpCodeAction($"test.debug|{testMethods.First()}", "Debug test"));
             }
 
             return new GetCodeActionsResponse

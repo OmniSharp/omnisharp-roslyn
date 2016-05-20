@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Extensions;
+using OmniSharp.Roslyn.CSharp.Services.Testing;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
@@ -19,6 +20,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private readonly ILogger _logger;
+        private readonly TestActionProvider _provider;
 
         [ImportingConstructor]
         public RunCodeActionService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
@@ -26,12 +28,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _workspace = workspace;
             _codeActionProviders = providers;
             _logger = loggerFactory.CreateLogger<RunCodeActionService>();
+            _provider = new TestActionProvider();
         }
 
         public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
+            var response = new RunCodeActionResponse();
+            
+            // Eventually this should be split into a seperate service
+            var testAction = _provider.GetTestAction(request);
+            if (testAction != null)
+            {
+                _logger.LogInformation($"run test action: [{testAction}]");
+                testAction.Run();
+                response.Changes = Enumerable.Empty<OmniSharp.Models.ModifiedFileResponse>();
+                return response;
+            }
+            
             var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
-
             var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
             if (action == null)
             {
@@ -47,7 +61,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 o.Apply(_workspace, CancellationToken.None);
             }
 
-            var response = new RunCodeActionResponse();
             var directoryName = Path.GetDirectoryName(request.FileName);
             var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, request.WantsTextChanges);
 

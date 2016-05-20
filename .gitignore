@@ -28,7 +28,6 @@ nuget.exe
 debugSettings.json
 buildlog
 /.vs
-/.vscode/settings.json
 *.lock.json
 /omnisharp*.tar.gz
 scripts/Omnisharp*
@@ -39,3 +38,7 @@ scripts/Omnisharp*
 # Build folder
 .tools/
 .dotnet/
+
+# VS Code
+/.vscode/settings.json
+/.vscode/launch.json
