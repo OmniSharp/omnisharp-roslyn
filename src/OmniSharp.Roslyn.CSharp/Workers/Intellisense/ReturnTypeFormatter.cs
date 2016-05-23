@@ -45,6 +45,12 @@ namespace OmniSharp
                 return fieldSymbol.Type;
             }
 
+            var eventSymbol = symbol as IEventSymbol;
+            if (eventSymbol != null)
+            {
+                return eventSymbol.Type;
+            }
+
             return null;
         }
     }
