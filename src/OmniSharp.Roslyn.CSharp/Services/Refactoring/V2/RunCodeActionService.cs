@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -52,7 +53,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, request.WantsTextChanges);
 
             response.Changes = changes;
-            _workspace.TryApplyChanges(_workspace.CurrentSolution);
+            if (request.WantsTextChanges)
+            {
+                response.Changes = changes;
+            }
+            else
+            {
+                // Attempt to update the workspace
+                if (!_workspace.TryApplyChanges(solution))
+                {
+                    throw new Exception("Could not apply changes to workspace");
+                }
+                // The tests currentl assume this...
+                response.Changes = changes;
+            }
             return response;
         }
     }
