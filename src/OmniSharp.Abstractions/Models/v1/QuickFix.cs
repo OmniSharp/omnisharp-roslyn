@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using OmniSharp.Json;
 
@@ -7,11 +6,6 @@ namespace OmniSharp.Models
 {
     public class QuickFix
     {
-        public QuickFix()
-        {
-            Projects = new List<string>();
-        }
-
         public string FileName { get; set; }
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int Line { get; set; }
@@ -22,7 +16,7 @@ namespace OmniSharp.Models
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int EndColumn { get; set; }
         public string Text { get; set; }
-        public ICollection<string> Projects { get; set; }
+        public ICollection<string> Projects { get; set; } = new List<string>();
 
         public override bool Equals(object obj)
         {
