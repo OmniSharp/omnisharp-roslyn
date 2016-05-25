@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Extensions;
-using OmniSharp.Roslyn.CSharp.Services.Testing;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
@@ -20,8 +19,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private readonly OmnisharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private readonly ILogger _logger;
-        private readonly TestMethodsDiscover _testProvider;
-
 
         [ImportingConstructor]
         public RunCodeActionService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
@@ -29,32 +26,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _workspace = workspace;
             _codeActionProviders = providers;
             _logger = loggerFactory.CreateLogger<RunCodeActionService>();
-            _testProvider = new TestMethodsDiscover(loggerFactory);
         }
 
-        public Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
-        {
-            // Eventually this should be split into a seperate service
-            var testRunner = _testProvider.GetTestActionRunner(request);
-            if (testRunner != null)
-            {
-                return HandleTestActions(testRunner);
-            }
-            else
-            {
-                return HandleCodeActions(request);
-            }
-        }
-
-        private async Task<RunCodeActionResponse> HandleTestActions(ITestActionRunner testRunner)
-        {
-            _logger.LogInformation($"run test action: [{testRunner}]");
-            var result = await testRunner.RunAsync();
-            
-            return result.ToRespnse();
-        }
-
-        private async Task<RunCodeActionResponse> HandleCodeActions(RunCodeActionRequest request)
+        public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
             var response = new RunCodeActionResponse();
 
