@@ -10,6 +10,8 @@ namespace OmniSharp.Models
         public QuickFix Location { get; set; }
 
         public string Kind { get; set; }
+        
+        public ICollection<string> Features { get; } = new List<string>();
 
         public IEnumerable<string> Projects { get; set; }
 

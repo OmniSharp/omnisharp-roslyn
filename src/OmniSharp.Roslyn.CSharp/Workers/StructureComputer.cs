@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,28 +11,38 @@ namespace OmniSharp
 {
     public class StructureComputer : CSharpSyntaxWalker
     {
+        private readonly Stack<FileMemberElement> _roots = new Stack<FileMemberElement>();
+        private string _currentProject;
+        private SemanticModel _semanticModel;
+
         public static async Task<IEnumerable<FileMemberElement>> Compute(IEnumerable<Document> documents)
         {
             var root = new FileMemberElement() { ChildNodes = new List<FileMemberElement>() };
             var visitor = new StructureComputer(root);
+
             foreach (var document in documents)
             {
-                visitor.CurrentProject = document.Project.Name;
-                ((CSharpSyntaxNode)await document.GetSyntaxRootAsync()).Accept(visitor);
+                await visitor.Process(document);
             }
+
             return root.ChildNodes;
         }
-
-        private readonly Stack<FileMemberElement> _roots = new Stack<FileMemberElement>();
-
-        private string CurrentProject { get; set; }
 
         private StructureComputer(FileMemberElement root)
         {
             _roots.Push(root);
         }
 
-        private FileMemberElement AsNode(SyntaxNode node, string text, Location location)
+        private async Task Process(Document document)
+        {
+            _currentProject = document.Project.Name;
+            _semanticModel = await document.GetSemanticModelAsync();
+
+            var syntaxRoot = await document.GetSyntaxRootAsync();
+            (syntaxRoot as CSharpSyntaxNode)?.Accept(this);
+        }
+
+        private FileMemberElement AsNode(SyntaxNode node, string text, Location location, params string[] features)
         {
             var ret = new FileMemberElement();
             var lineSpan = location.GetLineSpan();
@@ -44,25 +55,32 @@ namespace OmniSharp
             ret.Location.Column = lineSpan.StartLinePosition.Character;
             ret.Location.EndLine = lineSpan.EndLinePosition.Line;
             ret.Location.EndColumn = lineSpan.EndLinePosition.Character;
+
+            foreach (var feature in features)
+            {
+                ret.Features.Add(feature);
+            }
+
             return ret;
         }
 
-        private FileMemberElement AsChild(SyntaxNode node, string text, Location location)
+        private FileMemberElement AsChild(SyntaxNode node, string text, Location location, params string[] features)
         {
-            var child = AsNode(node, text, location);
+            var child = AsNode(node, text, location, features);
             var childNodes = ((List<FileMemberElement>)_roots.Peek().ChildNodes);
+
             // Prevent inserting the same node multiple times
             // but make sure to insert them at the right spot
             var idx = childNodes.BinarySearch(child);
             if (idx < 0)
             {
-                ((List<string>)child.Projects).Add(CurrentProject);
+                ((List<string>)child.Projects).Add(_currentProject);
                 childNodes.Insert(~idx, child);
                 return child;
             }
             else
             {
-                ((List<string>)childNodes[idx].Projects).Add(CurrentProject);
+                ((List<string>)childNodes[idx].Projects).Add(_currentProject);
                 return childNodes[idx];
             }
         }
@@ -103,7 +121,17 @@ namespace OmniSharp
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            AsChild(node, node.Identifier.Text, node.Identifier.GetLocation());
+            if (XunitTestMethodHelper.IsTestMethod(node, _semanticModel))
+            {
+                var methodName = _semanticModel.GetDeclaredSymbol(node).ToDisplayString();
+                methodName = methodName.Substring(0, methodName.IndexOf('('));
+                
+                AsChild(node, node.Identifier.Text, node.Identifier.GetLocation(), $"XunitTestMethod:{methodName}");
+            }
+            else
+            {
+                AsChild(node, node.Identifier.Text, node.Identifier.GetLocation());
+            }
         }
 
         public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
@@ -124,6 +152,36 @@ namespace OmniSharp
         public override void VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
         {
             AsChild(node, node.Identifier.Text, node.Identifier.GetLocation());
+        }
+    }
+
+    class XunitTestMethodHelper
+    {
+        public static bool IsTestMethod(
+            MethodDeclarationSyntax node,
+            SemanticModel sematicModel)
+        {
+            return node.DescendantNodes()
+                       .OfType<AttributeSyntax>()
+                       .Select(attr => sematicModel.GetTypeInfo(attr).Type)
+                       .Any(IsDerivedFromFactAttribute);
+        }
+
+        private static bool IsDerivedFromFactAttribute(ITypeSymbol symbol)
+        {
+            string fullName;
+            do
+            {
+                fullName = $"{symbol.ContainingNamespace}.{symbol.Name}";
+                if (fullName == "Xunit.FactAttribute")
+                {
+                    return true;
+                }
+
+                symbol = symbol.BaseType;
+            } while (symbol.Name != "Object");
+
+            return false;
         }
     }
 }
