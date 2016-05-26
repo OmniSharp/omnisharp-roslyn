@@ -2,7 +2,7 @@
 
 namespace OmniSharp.DotNetTest.Helpers
 {
-    public class ProjectPathResolver
+    internal class ProjectPathResolver
     {
         public static string GetProjectPathFromFile(string filepath)
         {

@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Testing.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.DotNetTest.Models.DotNetTest;
 
 namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
 {
@@ -27,7 +31,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             _writer = writer;
 
             // Read the inital response
-            ReadMessage();
+            ReadMessage<JToken>();
         }
 
         public static DotNetTestManager Start(string projectDir, ILoggerFactory loggerFactory)
@@ -46,15 +50,44 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             return new DotNetTestManager(projectDir, loggerFactory.CreateLogger<DotNetTestManager>(), process, reader, writer);
         }
 
+        public RunDotNetTestResponse ExecuteTestMethod(string methodName)
+        {
+            SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
+
+            var startInfo = ReadMessage<TestStartInfo>();
+            var testProcess = StartProcess(
+                startInfo.Payload.FileName,
+                $"{startInfo.Payload.Arguments} -method {methodName}",
+                _projectDir);
+
+            var results = new List<TestResult>();
+            while (true)
+            {
+                var message = ReadMessage<JObject>();
+
+                if (message.MessageType == "TestExecution.TestResult")
+                {
+                    results.Add(message.Payload.ToObject<TestResult>());
+                }
+                else if (message.MessageType == "TestExecution.Completed")
+                {
+                    break;
+                }
+            }
+
+            return new RunDotNetTestResponse
+            {
+                Pass = !results.Any(r => r.Outcome == TestOutcome.Failed)
+            };
+        }
+
         public GetTestStartInfoResponse GetTestStartInfo(string methodName)
         {
             SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
 
-            var message = ReadMessage();
-            var filename = message.Payload["FileName"].Value<string>();
-            var argument = message.Payload["Arguments"].Value<string>();
-            var end = argument.IndexOf("--designtime");
-            argument = argument.Substring(0, end);
+            var message = ReadMessage<TestStartInfo>();
+            var end = message.Payload.Arguments.IndexOf("--designtime");
+            var argument = message.Payload.Arguments.Substring(0, end);
 
             if (!string.IsNullOrEmpty(methodName))
             {
@@ -64,7 +97,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             return new GetTestStartInfoResponse
             {
                 Argument = argument,
-                Executable = filename
+                Executable = message.Payload.FileName
             };
         }
 
@@ -76,12 +109,12 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             }
         }
 
-        private Message ReadMessage()
+        private Message<T> ReadMessage<T>()
         {
             var content = _reader.ReadString();
             _logger.LogInformation($"read: {content}");
 
-            return JsonConvert.DeserializeObject<Message>(content);
+            return JsonConvert.DeserializeObject<Message<T>>(content);
         }
 
         private void SendMessage(object message)
@@ -92,25 +125,21 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             _writer.Write(content);
         }
 
-        private class Message
-        {
-            public string MessageType { get; set; }
-
-            public JToken Payload { get; set; }
-        }
-
         private static Process StartDotnet(string argument, string workingDir)
         {
-            var startInfo = new ProcessStartInfo("dotnet", argument)
+            return StartProcess("dotnet", argument, workingDir);
+        }
+
+        private static Process StartProcess(string executable, string argument, string workingDir)
+        {
+            return Process.Start(new ProcessStartInfo(executable, argument)
             {
                 WorkingDirectory = workingDir,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = false,
                 RedirectStandardError = false
-            };
-
-            return Process.Start(startInfo);
+            });
         }
 
         private static int FindFreePort()
