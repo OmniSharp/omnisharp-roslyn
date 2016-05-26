@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Helpers;
+using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Mef;
 
@@ -21,9 +22,11 @@ namespace OmniSharp.DotNetTest.Services
 
         public Task<GetTestStartInfoResponse> Handle(GetTestStartInfoRequest request)
         {
-            var helper = new XunitTestDebugInfoHelper(request.MethodName, request.FileName, _loggerFactory);
-
-            return Task.FromResult(helper.GetResponse());
+            var projectPath = ProjectPathResolver.GetProjectPathFromFile(request.FileName);
+            using (var dtm = DotNetTestManager.Start(projectPath, _loggerFactory))
+            {
+                return Task.FromResult(dtm.GetTestStartInfo(request.MethodName));
+            }
         }
     }
 }
