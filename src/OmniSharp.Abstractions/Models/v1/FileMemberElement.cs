@@ -11,7 +11,7 @@ namespace OmniSharp.Models
 
         public string Kind { get; set; }
         
-        public ICollection<string> Features { get; } = new List<string>();
+        public ICollection<SyntaxFeature> Features { get; } = new List<SyntaxFeature>();
 
         public IEnumerable<string> Projects { get; set; }
 

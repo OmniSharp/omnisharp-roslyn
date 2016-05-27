@@ -3,6 +3,7 @@ using System.Composition;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using OmniSharp.Models;
 using OmniSharp.Abstractions.Services;
 
 namespace OmniSharp.DotNetTest.Helpers
@@ -10,9 +11,11 @@ namespace OmniSharp.DotNetTest.Helpers
     [Export(typeof(ISyntaxFeaturesDiscover))]
     public class TestFeaturesDiscover : ISyntaxFeaturesDiscover
     {
+        private static readonly string FeatureName = "XunitTestMethod";
+
         public bool NeedSemanticModel { get; } = true;
 
-        public IEnumerable<string> Discover(SyntaxNode node, SemanticModel semanticModel)
+        public IEnumerable<SyntaxFeature> Discover(SyntaxNode node, SemanticModel semanticModel)
         {
             if (node is MethodDeclarationSyntax)
             {
@@ -22,7 +25,11 @@ namespace OmniSharp.DotNetTest.Helpers
                     var methodName = semanticModel.GetDeclaredSymbol(node).ToDisplayString();
                     methodName = methodName.Substring(0, methodName.IndexOf('('));
 
-                    yield return $"XunitTestMethod:{methodName}";
+                    yield return new SyntaxFeature
+                    {
+                        Name = FeatureName,
+                        Data = methodName
+                    };
                 }
             }
         }

@@ -39,9 +39,12 @@ namespace OmniSharp.DotNetTest.Tests
 
             if (found)
             {
+                var feature = features.Single();
+                Assert.Equal("XunitTestMethod", feature.Name);
+                
                 var symbolName = symbol.ToDisplayString();
                 symbolName = symbolName.Substring(0, symbolName.IndexOf('('));
-                Assert.Equal($"XunitTestMethod:{symbolName}", features.Single());
+                Assert.Equal(symbolName, feature.Data);
             }
             else
             {

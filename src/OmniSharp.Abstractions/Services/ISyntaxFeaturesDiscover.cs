@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using OmniSharp.Models;
 
 namespace OmniSharp.Abstractions.Services
 {
     public interface ISyntaxFeaturesDiscover
     {
         bool NeedSemanticModel { get; }
-        
-        IEnumerable<string> Discover(SyntaxNode node, SemanticModel semanticModel);
+
+        IEnumerable<SyntaxFeature> Discover(SyntaxNode node, SemanticModel semanticModel);
     }
 }
