@@ -19,6 +19,9 @@
     ],
     "OmniSharp.DotNet.Tests": [
       "netcoreapp1.0"
+    ],
+    "OmniSharp.DotNetTest.Tests": [
+      "netcoreapp1.0"
     ]
   },
   "Frameworks": [

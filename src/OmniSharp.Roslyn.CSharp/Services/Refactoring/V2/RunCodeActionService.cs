@@ -30,8 +30,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
-            var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
+            var response = new RunCodeActionResponse();
 
+            var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
             var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
             if (action == null)
             {
@@ -47,7 +48,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 o.Apply(_workspace, CancellationToken.None);
             }
 
-            var response = new RunCodeActionResponse();
             var directoryName = Path.GetDirectoryName(request.FileName);
             var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, request.WantsTextChanges);
 

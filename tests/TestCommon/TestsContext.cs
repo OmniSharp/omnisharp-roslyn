@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 
 namespace TestCommon
@@ -9,7 +8,8 @@ namespace TestCommon
 
         private TestsContext()
         {
-            var basedir = AppContext.BaseDirectory;
+            // AppContext is .NET Core only
+            var basedir = Directory.GetCurrentDirectory();
             var current = basedir;
             var solutionFile = "OmniSharp.sln";
             while (!File.Exists(Path.Combine(current, solutionFile)))

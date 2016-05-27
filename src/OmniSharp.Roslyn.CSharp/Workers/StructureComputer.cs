@@ -1,34 +1,57 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using OmniSharp.Abstractions.Services;
 using OmniSharp.Models;
 
 namespace OmniSharp
 {
     public class StructureComputer : CSharpSyntaxWalker
     {
-        public static async Task<IEnumerable<FileMemberElement>> Compute(IEnumerable<Document> documents)
+        private readonly Stack<FileMemberElement> _roots = new Stack<FileMemberElement>();
+        private readonly IEnumerable<ISyntaxFeaturesDiscover> _featureDiscovers;
+        private string _currentProject;
+        private SemanticModel _semanticModel;
+
+        public static async Task<IEnumerable<FileMemberElement>> Compute(
+            IEnumerable<Document> documents,
+            IEnumerable<ISyntaxFeaturesDiscover> featureDiscovers)
         {
             var root = new FileMemberElement() { ChildNodes = new List<FileMemberElement>() };
-            var visitor = new StructureComputer(root);
+            var visitor = new StructureComputer(root, featureDiscovers);
+
             foreach (var document in documents)
             {
-                visitor.CurrentProject = document.Project.Name;
-                ((CSharpSyntaxNode)await document.GetSyntaxRootAsync()).Accept(visitor);
+                await visitor.Process(document);
             }
+
             return root.ChildNodes;
         }
 
-        private readonly Stack<FileMemberElement> _roots = new Stack<FileMemberElement>();
+        public static Task<IEnumerable<FileMemberElement>> Compute(IEnumerable<Document> documents) 
+            => Compute(documents, Enumerable.Empty<ISyntaxFeaturesDiscover>());
 
-        private string CurrentProject { get; set; }
-
-        private StructureComputer(FileMemberElement root)
+        private StructureComputer(FileMemberElement root, IEnumerable<ISyntaxFeaturesDiscover> featureDiscovers)
         {
+            _featureDiscovers = featureDiscovers ?? Enumerable.Empty<ISyntaxFeaturesDiscover>();
             _roots.Push(root);
+        }
+
+        private async Task Process(Document document)
+        {
+            _currentProject = document.Project.Name;
+
+            if (_featureDiscovers.Any(dis => dis.NeedSemanticModel))
+            {
+                _semanticModel = await document.GetSemanticModelAsync();
+            }
+
+            var syntaxRoot = await document.GetSyntaxRootAsync();
+            (syntaxRoot as CSharpSyntaxNode)?.Accept(this);
         }
 
         private FileMemberElement AsNode(SyntaxNode node, string text, Location location)
@@ -44,6 +67,16 @@ namespace OmniSharp
             ret.Location.Column = lineSpan.StartLinePosition.Character;
             ret.Location.EndLine = lineSpan.EndLinePosition.Line;
             ret.Location.EndColumn = lineSpan.EndLinePosition.Character;
+
+            foreach (var featureDiscover in _featureDiscovers)
+            {
+                var features = featureDiscover.Discover(node, _semanticModel);
+                foreach (var feature in features)
+                {
+                    ret.Features.Add(feature);
+                }
+            }
+
             return ret;
         }
 
@@ -51,18 +84,19 @@ namespace OmniSharp
         {
             var child = AsNode(node, text, location);
             var childNodes = ((List<FileMemberElement>)_roots.Peek().ChildNodes);
+
             // Prevent inserting the same node multiple times
             // but make sure to insert them at the right spot
             var idx = childNodes.BinarySearch(child);
             if (idx < 0)
             {
-                ((List<string>)child.Projects).Add(CurrentProject);
+                ((List<string>)child.Projects).Add(_currentProject);
                 childNodes.Insert(~idx, child);
                 return child;
             }
             else
             {
-                ((List<string>)childNodes[idx].Projects).Add(CurrentProject);
+                ((List<string>)childNodes[idx].Projects).Add(_currentProject);
                 return childNodes[idx];
             }
         }
