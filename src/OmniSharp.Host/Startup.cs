@@ -159,7 +159,7 @@ namespace OmniSharp
 
             foreach (var assembly in assemblies)
             {
-                logger.LogInformation($"Loaded {assembly.FullName}");
+                logger.LogDebug($"Loaded {assembly.FullName}");
             }
 
             app.UseRequestLogging();
