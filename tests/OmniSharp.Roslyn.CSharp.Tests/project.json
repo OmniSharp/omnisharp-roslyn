@@ -9,8 +9,6 @@
     "OmniSharp.Tests": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "1.3.0-beta1-20160429-01",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-rc2-002702",
-    "Microsoft.DotNet.ProjectModel.Workspaces": "1.0.0-preview1-002702",
     "xunit": "2.1.0"
   },
   "frameworks": {
