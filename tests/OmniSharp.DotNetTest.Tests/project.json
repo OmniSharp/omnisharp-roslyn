@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.DotNetTest": "1.0.0",
+    "TestCommon": "1.0.0",
+    "xunit": "2.1.0"
+  },
+  "frameworks": {
+    "netcoreapp1.0": {
+      "dependencies": {
+        "dotnet-test-xunit": "1.0.0-rc2-192208-24",
+        "NETStandard.Library": "1.5.0-rc2-24027"
+      },
+      "imports": [
+        "netstandardapp1.5",
+        "dnxcore50",
+        "portable-net45+win8"
+      ]
+    }
+  },
+  "testRunner": "xunit"
+}
