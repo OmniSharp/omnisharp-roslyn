@@ -51,6 +51,8 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public string AssemblyOriginatorKeyFile { get; private set; }
 
+        public bool GenerateXmlDocumentation { get; private set; }
+
         public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
@@ -145,6 +147,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 }
 
                 projectFileInfo.AssemblyOriginatorKeyFile = projectInstance.GetPropertyValue("AssemblyOriginatorKeyFile");
+                
+                var documentationFile = projectInstance.GetPropertyValue("DocumentationFile");
+                if (!string.IsNullOrWhiteSpace(documentationFile))
+                {
+                    projectFileInfo.GenerateXmlDocumentation = true;
+                }
             }
             else
             {
@@ -231,6 +239,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 }
 
                 projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
+                
+                var documentationFile = properties["DocumentationFile"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(documentationFile))
+                {
+                    projectFileInfo.GenerateXmlDocumentation = true;
+                }
             }
             return projectFileInfo;
         }
