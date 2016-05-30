@@ -97,7 +97,7 @@ Task("PopulateRuntimes")
 {
     if (IsRunningOnWindows())
     {
-        buildPlan.Rids = new string[] {"default", "win7-x86"};
+        buildPlan.Rids = new string[] {"default"};
     }
     else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
     {
@@ -464,7 +464,7 @@ Task("Local")
 Task("Travis")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("LocalPublish")
+    .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished")
     .Does(() =>
 {
