@@ -29,6 +29,7 @@ namespace OmniSharp
             var transportType = TransportType.Http;
             var otherArgs = new List<string>();
             var plugins = new List<string>();
+            var serverInterface = "localhost";
 
             var enumerator = args.GetEnumerator();
 
@@ -67,6 +68,11 @@ namespace OmniSharp
                 {
                     Configuration.ZeroBasedIndices = true;
                 }
+                else if (arg == "--interface")
+                {
+                    enumerator.MoveNext();
+                    serverInterface = (string)enumerator.Current;
+                }
                 else
                 {
                     otherArgs.Add((string)enumerator.Current);
@@ -76,7 +82,7 @@ namespace OmniSharp
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
             var config = new ConfigurationBuilder()
-                .AddCommandLine(new[] { "--server.urls", "http://localhost:" + serverPort });
+                .AddCommandLine(new[] { "--server.urls", $"http://{serverInterface}:{serverPort}" });
 
             var writer = new SharedConsoleWriter();
 
