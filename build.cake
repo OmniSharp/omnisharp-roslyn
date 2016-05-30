@@ -14,6 +14,7 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
+var os = Argument("os", "Debug");
 var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"),
                                                                         ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
@@ -99,7 +100,7 @@ Task("PopulateRuntimes")
     {
         buildPlan.Rids = new string[] {"default", "win7-x86"};
     }
-    else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
+    else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux") || string.Equals(os, "linux"))
     {
         buildPlan.Rids = new string[]
             {

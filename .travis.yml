@@ -17,7 +17,7 @@ install:
   - ./build.sh -target=Restore
 script:
   - travis_retry ./build.sh -target=TravisTestAll
-  - ./build.sh -target=Travis -archive
+  - ./build.sh -target=Travis -archive -os=$TRAVIS_OS_NAME
 addons:
   apt:
     packages:
