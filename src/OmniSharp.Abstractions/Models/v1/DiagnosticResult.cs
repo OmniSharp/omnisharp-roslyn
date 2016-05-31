@@ -7,7 +7,7 @@ namespace OmniSharp.Models
 {
     public class DiagnosticResult
     {
-        public string FilePath { get; set; }
-        public IEnumerable<DiagnosticLocation> Diagnostics { get; set; }
+        public string FileName { get; set; }
+        public IEnumerable<DiagnosticLocation> QuickFixes { get; set; }
     }
 }

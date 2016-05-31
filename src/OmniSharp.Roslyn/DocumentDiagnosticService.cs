@@ -116,8 +116,8 @@ namespace OmniSharp.Roslyn
                 .GroupBy(x => x.FileName)
                 .Select(x => new DiagnosticResult()
                 {
-                    FilePath = x.Key,
-                    Diagnostics = x.ToArray()
+                    FileName = x.Key,
+                    QuickFixes = x.ToArray()
                 });
 
             var message = new DiagnosticMessage()
