@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn;
@@ -10,8 +13,8 @@ namespace OmniSharp
     [Export, Shared]
     public class OmnisharpWorkspace : Workspace
     {
+        private HashSet<DocumentId> _activeDocuments = new HashSet<DocumentId>();
         public bool Initialized { get; set; }
-
         public BufferManager BufferManager { get; private set; }
 
         [ImportingConstructor]
@@ -19,6 +22,8 @@ namespace OmniSharp
         {
             BufferManager = new BufferManager(this);
         }
+
+        public override bool CanOpenDocuments { get { return true; } }
 
         public void AddProject(ProjectInfo projectInfo)
         {
