@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace OmniSharp.Models.V2
+namespace OmniSharp.Models
 {
     public class DiagnosticMessage
     {

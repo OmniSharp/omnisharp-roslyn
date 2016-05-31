@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    public class FileCloseRequest : Request    {    }
+    [OmniSharpEndpoint(OmnisharpEndpoints.Close, typeof(FileCloseRequest), typeof(FileCloseResponse))]
+    public class FileCloseRequest : Request { }
 }

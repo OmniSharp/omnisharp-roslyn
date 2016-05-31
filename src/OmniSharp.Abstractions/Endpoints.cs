@@ -54,17 +54,18 @@ namespace OmniSharp
         public const string CheckReadyStatus = "/checkreadystatus";
         public const string StopServer = "/stopserver";
 
+        public const string Open = "/open";
+        public const string Close = "/close";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
+            public const string CodeCheck = "/v2/codecheck";
         }
 
         public const string GetTestStartInfo = "/v2/getteststartinfo";
 
         public const string RunDotNetTest = "/v2/runtest";
-
-        public const string Open = "/open";
-        public const string Close = "/close";
     }
 }
