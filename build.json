@@ -8,7 +8,7 @@
   "ArtifactsFolder": "artifacts",
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
-      "net451"
+      "netcoreapp1.0"
     ],
     "OmniSharp.Roslyn.CSharp.Tests": [
       "netcoreapp1.0"
