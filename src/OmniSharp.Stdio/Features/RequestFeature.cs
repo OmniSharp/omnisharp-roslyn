@@ -1,7 +1,7 @@
+using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Http.Internal;
 
 namespace OmniSharp.Stdio.Features
 {
@@ -45,6 +45,12 @@ namespace OmniSharp.Stdio.Features
         public string Protocol { get; set; }
 
         public string QueryString { get; set; }
+
+        public string RawTarget
+        {
+            get { return string.Empty; }
+            set { throw new NotSupportedException(); }
+        }
 
         public string Scheme { get; set; }
 
