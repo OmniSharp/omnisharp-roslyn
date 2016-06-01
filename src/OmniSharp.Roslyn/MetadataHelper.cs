@@ -80,9 +80,8 @@ namespace OmniSharp.Roslyn
 
         public async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
         {
-            var metadataSemanticModel = await metadataDocument.GetSemanticModelAsync();
             var symbolKeyCreateMethod = _symbolKey.Value.GetMethod("Create", BindingFlags.Static | BindingFlags.NonPublic);
-            var symboldId = symbolKeyCreateMethod.Invoke(null, new object[] { symbol, metadataSemanticModel.Compilation, cancellationToken });
+            var symboldId = symbolKeyCreateMethod.Invoke(null, new object[] { symbol, cancellationToken });
 
             return await (Task<Location>)_getLocationInGeneratedSourceAsync.Value.Invoke(null, new object[] { symboldId, metadataDocument, cancellationToken });
         }

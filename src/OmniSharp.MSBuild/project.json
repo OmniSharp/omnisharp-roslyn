@@ -6,7 +6,7 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
-    "Microsoft.Extensions.Options": "1.0.0-rc2-final"
+    "Microsoft.Extensions.Options": "1.0.0-rc3-*"
   },
   "frameworks": {
     "net451": {
