@@ -5,8 +5,8 @@
   },
   "dependencies": {
     "OmniSharp.DotNetTest": "1.0.0",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.0-rc3-*",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc3-*",
+    "Microsoft.Extensions.Logging.Abstractions": "1.0.0-rc3-21194",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc3-21194",
     "TestCommon": "1.0.0",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
