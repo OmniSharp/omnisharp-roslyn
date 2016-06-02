@@ -17,7 +17,7 @@
       ],
       "dependencies": {
         "Microsoft.NETCore.App": {
-          "version": "1.0.0-rc3-*",
+          "version": "1.0.0-rc3-004338",
           "type": "platform"
         },
         "NuGet.Packaging": "3.5.0-beta-final",

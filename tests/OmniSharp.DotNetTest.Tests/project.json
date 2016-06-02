@@ -16,7 +16,7 @@
       "dependencies": {
         "dotnet-test-xunit": "1.0.0-rc3-*",
         "Microsoft.NETCore.App": {
-          "version": "1.0.0-rc3-*",
+          "version": "1.0.0-rc3-004338",
           "type": "platform"
         }
       },
