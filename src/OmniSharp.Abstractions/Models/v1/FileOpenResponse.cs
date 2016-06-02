@@ -5,5 +5,8 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Models
 {
-    public class FileOpenResponse { }
+    public class FileOpenResponse : IAggregateResponse
+    {
+        public IAggregateResponse Merge(IAggregateResponse response) { return response; }
+    }
 }
