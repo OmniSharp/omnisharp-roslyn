@@ -18,6 +18,7 @@ using ScriptCs.Contracts;
 using LogLevel = ScriptCs.Contracts.LogLevel;
 using ScriptCs.Hosting;
 using OmniSharp.ScriptCs.Extensions;
+using System.Collections.Immutable;
 
 namespace OmniSharp.ScriptCs
 {
@@ -70,7 +71,7 @@ namespace OmniSharp.ScriptCs
             Logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
             // TODO: write and adapter to implement the new ScriptCs ILogProvider interface
-#pragma warning disable 0618
+            #pragma warning disable 0618
             //script name is added here as a fake one (dir path not even a real file); this is OK though -> it forces MEF initialization
             var baseScriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), LogManager.GetCurrentClassLogger())
                     .LogLevel(LogLevel.Debug)
@@ -87,10 +88,9 @@ namespace OmniSharp.ScriptCs
             // Common usings and references
             Context.CommonUsings.UnionWith(ScriptExecutor.DefaultNamespaces);
 
-            Context.CommonReferences.UnionWith(
-                DotNetBaseReferences
-                    .Union(ScriptExecutor.DefaultReferences.ToMetadataReferences(scriptServices))       // ScriptCs defaults
-                    .Union(assemblyPaths.ToMetadataReferences(scriptServices)));                        // nuget references
+            Context.CommonReferences.UnionWith(DotNetBaseReferences);
+            Context.CommonReferences.UnionWith(ScriptExecutor.DefaultReferences.ToMetadataReferences(scriptServices));       // ScriptCs defaults
+            Context.CommonReferences.UnionWith(assemblyPaths.ToMetadataReferences(scriptServices));                        // nuget references
 
             if (scriptPacks != null && scriptPacks.Any())
             {
@@ -106,6 +106,7 @@ namespace OmniSharp.ScriptCs
                 Context.ScriptPacks.UnionWith(scriptPackSession.Contexts.Select(pack => pack.GetType().ToString()));
             }
 
+            // Process each .CSX file
             foreach (var csxPath in allCsxFiles)
             {
                 try
@@ -162,11 +163,10 @@ namespace OmniSharp.ScriptCs
                     .Distinct()
                     .Except(new[] { csxPath })
                     .Select(loadedCsxPath => CreateCsxProject(loadedCsxPath, baseBuilder))
-                    //.Select(referredProject => new ProjectReference(referredProject.Id))
                     .ToList();
 
             // Create the wrapper project and add it to the workspace
-            Logger.LogInformation($"Creating project for script {csxPath}.");
+            Logger.LogDebug($"Creating project for script {csxPath}.");
             var csxFileName = Path.GetFileName(csxPath);
             var project = ProjectInfo.Create(
                 id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
@@ -176,7 +176,7 @@ namespace OmniSharp.ScriptCs
                 language: LanguageNames.CSharp,
                 compilationOptions: compilationOptions,
                 parseOptions: CsxParseOptions,
-                metadataReferences: Context.CommonReferences.Union(Context.CsxReferences[csxPath]).Union(Context.CsxLoadReferences[csxPath].SelectMany(p => p.MetadataReferences)),
+                metadataReferences: Context.CommonReferences.Union(Context.CsxReferences[csxPath]),
                 projectReferences: Context.CsxLoadReferences[csxPath].Select(p => new ProjectReference(p.Id)),
                 isSubmission: true,
                 hostObjectType: typeof(IScriptHost));
@@ -185,9 +185,9 @@ namespace OmniSharp.ScriptCs
 
             //----------LOG ONLY------------
             var metadataReferences = Context.CommonReferences.Union(Context.CsxReferences[csxPath]).Union(Context.CsxLoadReferences[csxPath].SelectMany(p => p.MetadataReferences));
-            Logger.LogInformation($"All references by {csxFileName}: \n{string.Join("\n", metadataReferences.Select(r => r.Display))}");
-            Logger.LogInformation($"All #load projects by {csxFileName}: \n{string.Join("\n", Context.CsxLoadReferences[csxPath].Select(p => p.Name))}");
-            Logger.LogInformation($"All usings in {csxFileName}: \n{string.Join("\n", Context.CommonUsings.Union(Context.CsxUsings[csxPath]))}");
+            Logger.LogDebug($"All references by {csxFileName}: \n{string.Join("\n", project.MetadataReferences.Select(r => r.Display))}");
+            Logger.LogDebug($"All #load projects by {csxFileName}: \n{string.Join("\n", Context.CsxLoadReferences[csxPath].Select(p => p.Name))}");
+            Logger.LogDebug($"All usings in {csxFileName}: \n{string.Join("\n", (project.CompilationOptions as CSharpCompilationOptions)?.Usings ?? new ImmutableArray<string>())}");
             //------------------------------
 
             // Traversal administration
