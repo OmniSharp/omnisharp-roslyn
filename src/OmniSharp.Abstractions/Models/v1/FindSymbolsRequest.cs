@@ -1,6 +1,6 @@
 using OmniSharp.Mef;
 
-﻿namespace OmniSharp.Models
+namespace OmniSharp.Models
 {
     [OmniSharpEndpoint(OmnisharpEndpoints.FindSymbols, typeof(FindSymbolsRequest), typeof(QuickFixResponse))]
     public class FindSymbolsRequest : IRequest

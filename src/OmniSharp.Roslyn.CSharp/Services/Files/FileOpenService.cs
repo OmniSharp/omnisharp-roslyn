@@ -25,7 +25,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Files
             var documents = _workspace.GetDocuments(request.FileName);
             foreach (var document in documents)
             {
-                _workspace.OpenDocument(document.Id);
+                _workspace.OpenDocument(document.Id, false);
             }
             return Task.FromResult(new FileOpenResponse());
         }

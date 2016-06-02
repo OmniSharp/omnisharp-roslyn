@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
@@ -7,25 +6,27 @@ using Microsoft.CodeAnalysis;
 using OmniSharp.Services;
 using OmniSharp.Models;
 using System.Collections.Concurrent;
-using OmniSharp.Models.V2;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Roslyn
 {
     [Export, Shared]
     public class DocumentDiagnosticService
     {
+        private readonly ILogger _logger;
         private readonly OmnisharpWorkspace _workspace;
         private readonly object _lock = new object();
         private readonly DiagnosticEventForwarder _forwarder;
         private bool _queueRunning = false;
-        private readonly ConcurrentQueue<DocumentId> _openDocuments = new ConcurrentQueue<DocumentId>();
-        private readonly ConcurrentQueue<DocumentId> _backlog = new ConcurrentQueue<DocumentId>();
+        private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
 
         [ImportingConstructor]
-        public DocumentDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder)
+        public DocumentDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _forwarder = forwarder;
+            _logger = loggerFactory.CreateLogger<DocumentDiagnosticService>();
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
@@ -34,35 +35,29 @@ namespace OmniSharp.Roslyn
         {
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
             {
-                if (_workspace.IsDocumentOpen(changeEvent.DocumentId))
-                {
-                    this.EmitDiagnostics(_openDocuments, changeEvent.DocumentId);
-                }
-                else
-                {
-                    _backlog.Enqueue(changeEvent.DocumentId);
-                }
+                var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
+                this.EmitDiagnostics(newDocument.FilePath);
             }
         }
 
-        public void QueueDiagnostics(params DocumentId[] documents)
+        public void QueueDiagnostics(params string[] documents)
         {
-            this.EmitDiagnostics(_backlog, documents);
+            this.EmitDiagnostics(documents);
         }
 
-        private void EmitDiagnostics(ConcurrentQueue<DocumentId> queue, params DocumentId[] documents)
+        private void EmitDiagnostics(params string[] documents)
         {
             if (_forwarder.IsEnabled)
             {
                 foreach (var document in documents)
                 {
-                    if (!queue.Contains(document))
+                    if (!_openDocuments.Contains(document))
                     {
-                        queue.Enqueue(document);
+                        _openDocuments.Enqueue(document);
                     }
                 }
 
-                if (!_queueRunning && !queue.IsEmpty)
+                if (!_queueRunning && !_openDocuments.IsEmpty)
                 {
                     this.ProcessQueue();
                 }
@@ -79,10 +74,9 @@ namespace OmniSharp.Roslyn
             Task.Factory.StartNew(async () =>
             {
                 await Task.Delay(100);
-                await Dequeue(_openDocuments);
-                await Dequeue(_backlog);
+                await Dequeue();
 
-                if (_openDocuments.IsEmpty && _backlog.IsEmpty)
+                if (_openDocuments.IsEmpty)
                 {
                     lock (_lock)
                     {
@@ -96,36 +90,31 @@ namespace OmniSharp.Roslyn
             });
         }
 
-        private async Task Dequeue(ConcurrentQueue<DocumentId> queue)
+        private async Task Dequeue()
         {
-            var tasks = new List<Task<IEnumerable<DiagnosticLocation>>>();
+            var tasks = new List<Task<DiagnosticResult>>();
             for (var i = 0; i < 50; i++)
             {
-                if (queue.IsEmpty) break;
-                DocumentId documentId = null;
-                if (queue.TryDequeue(out documentId))
+                if (_openDocuments.IsEmpty) break;
+                string filePath = null;
+                if (_openDocuments.TryDequeue(out filePath))
                 {
-                    tasks.Add(this.ProcessNextItem(documentId));
+                    tasks.Add(this.ProcessNextItem(filePath));
                 }
             }
 
-            var result = await Task.WhenAll(tasks.ToArray());
+            if (!tasks.Any()) return;
 
-            var diagnosticResults = result
-                .SelectMany(x => x)
-                .GroupBy(x => x.FileName)
-                .Select(x => new DiagnosticResult()
-                {
-                    FileName = x.Key,
-                    QuickFixes = x.ToArray()
-                });
-
-            var message = new DiagnosticMessage()
+            var diagnosticResults = await Task.WhenAll(tasks.ToArray());
+            if (diagnosticResults.Any())
             {
-                Results = diagnosticResults
-            };
+                var message = new DiagnosticMessage()
+                {
+                    Results = diagnosticResults
+                };
 
-            this._forwarder.Forward(message);
+                this._forwarder.Forward(message);
+            }
 
             if (_openDocuments.IsEmpty)
             {
@@ -140,39 +129,46 @@ namespace OmniSharp.Roslyn
             }
         }
 
-        private async Task<IEnumerable<DiagnosticLocation>> ProcessNextItem(DocumentId documentId)
+        private async Task<DiagnosticResult> ProcessNextItem(string filePath)
         {
-            var document = _workspace.CurrentSolution.GetDocument(documentId);
+            var documents = _workspace.GetDocuments(filePath);
             var items = new List<DiagnosticLocation>();
 
-            if (document != null)
+            if (documents.Any())
             {
-                var semanticModel = await document.GetSemanticModelAsync();
-                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
-
-                //script files can have custom directives such as #load which will be deemed invalid by Roslyn
-                //we suppress the CS1024 diagnostic for script files for this reason. Roslyn will fix it later too, so this is temporary.
-                if (document.SourceCodeKind != SourceCodeKind.Regular)
+                foreach (var document in documents)
                 {
-                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
-                }
+                    var semanticModel = await document.GetSemanticModelAsync();
+                    IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
 
-                foreach (var quickFix in diagnostics.Select(MakeQuickFix))
-                {
-                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
-                    if (existingQuickFix == null)
+                    //script files can have custom directives such as #load which will be deemed invalid by Roslyn
+                    //we suppress the CS1024 diagnostic for script files for this reason. Roslyn will fix it later too, so this is temporary.
+                    if (document.SourceCodeKind != SourceCodeKind.Regular)
                     {
-                        quickFix.Projects.Add(document.Project.Name);
-                        items.Add(quickFix);
+                        diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
                     }
-                    else
+
+                    foreach (var quickFix in diagnostics.Select(MakeQuickFix))
                     {
-                        existingQuickFix.Projects.Add(document.Project.Name);
+                        var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
+                        if (existingQuickFix == null)
+                        {
+                            quickFix.Projects.Add(document.Project.Name);
+                            items.Add(quickFix);
+                        }
+                        else
+                        {
+                            existingQuickFix.Projects.Add(document.Project.Name);
+                        }
                     }
                 }
             }
 
-            return items;
+            return new DiagnosticResult()
+            {
+                FileName = filePath,
+                QuickFixes = items
+            };
         }
 
         private static DiagnosticLocation MakeQuickFix(Diagnostic diagnostic)

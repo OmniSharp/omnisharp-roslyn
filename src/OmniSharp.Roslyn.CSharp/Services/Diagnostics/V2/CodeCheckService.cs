@@ -30,12 +30,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2
                 _forwarder.IsEnabled = true;
             }
 
-            var documents = (request.FileName != null
-                ? _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName)
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.DocumentIds))
-                .Distinct().ToArray();
+            var documents = request.FileName != null
+                ? new [] { request.FileName }
+                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents.Select(x => x.FilePath));
 
-            _diagnostics.QueueDiagnostics(documents);
+            _diagnostics.QueueDiagnostics(documents.ToArray());
 
             return Task.FromResult(new CodeCheckResponse());
         }
