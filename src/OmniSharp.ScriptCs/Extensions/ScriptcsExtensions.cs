@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.ScriptCs.Extensions
 {
-    internal static class EnumerableExtensions
+    internal static class ScriptcsExtensions
     {
         private static readonly string BaseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
-        internal static IEnumerable<MetadataReference> ToMetadataReferences(this IEnumerable<string> referencesToImport, ScriptServices scriptServices)
+        internal static IEnumerable<MetadataReference> MakeMetadataReferences(this ScriptServices scriptServices, IEnumerable<string> referencesPaths)
         {
             var listOfReferences = new List<MetadataReference>();
-            foreach (var importedReference in referencesToImport.Where(x => !x.ToLowerInvariant().Contains("scriptcs.contracts")))
+            foreach (var importedReference in referencesPaths.Where(x => !x.ToLowerInvariant().Contains("scriptcs.contracts")))
             {
                 if (scriptServices.FileSystem.IsPathRooted(importedReference))
                 {
