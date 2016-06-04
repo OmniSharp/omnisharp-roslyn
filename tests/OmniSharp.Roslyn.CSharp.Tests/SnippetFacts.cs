@@ -313,7 +313,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var completions = await FindCompletionsAsync(source);
             Assert.Equal(1, completions.Count());
-            ContainsSnippet("TickChanged$0", completions);
+            ContainsSnippet("TickChanged$0 : TickHandler", completions);
         }
 
         [Fact]

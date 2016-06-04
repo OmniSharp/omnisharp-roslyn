@@ -59,17 +59,17 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
     // On all platforms use ZIP for Windows runtimes
     if (runtime.Contains("win") || (runtime.Equals("default") && IsRunningOnWindows()))
     {
-        var zipFile = System.IO.Path.ChangeExtension(archiveName, "zip");
+        var zipFile = $"{archiveName}.zip";
         Zip(contentFolder, zipFile);
     }
     // On all platforms use TAR.GZ for Unix runtimes
     else
     {
-        var tarFile = System.IO.Path.ChangeExtension(archiveName, "tar.gz");
+        var tarFile = $"{archiveName}.tar.gz";
         // Use 7z to create TAR.GZ on Windows
         if (IsRunningOnWindows())
         {
-            var tempFile = System.IO.Path.ChangeExtension(archiveName, "tar");
+            var tempFile = $"{archiveName}.tar";
             try
             {
                 Run("7z", $"a \"{tempFile}\"", contentFolder)

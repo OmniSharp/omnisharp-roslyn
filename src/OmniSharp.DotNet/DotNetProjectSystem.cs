@@ -340,6 +340,12 @@ namespace OmniSharp.DotNet
             var parseOptions = new CSharpParseOptions(languageVersion: ParseLanguageVersion(option.LanguageVersion),
                                                       preprocessorSymbols: option.Defines);
 
+            if (option.GenerateXmlDocumentation ?? false)
+            {
+                csharpOptions = csharpOptions.WithXmlReferenceResolver(XmlFileResolver.Default);
+                parseOptions = parseOptions.WithDocumentationMode(DocumentationMode.Diagnose);
+            }
+
             _omnisharpWorkspace.SetCompilationOptions(state.Id, csharpOptions);
             _omnisharpWorkspace.SetParseOptions(state.Id, parseOptions);
         }
