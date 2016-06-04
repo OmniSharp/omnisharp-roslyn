@@ -6,13 +6,12 @@ using Microsoft.CodeAnalysis;
 using OmniSharp.Services;
 using OmniSharp.Models;
 using System.Collections.Concurrent;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 
-namespace OmniSharp.Roslyn
+namespace OmniSharp.Workers.Diagnostics
 {
     [Export, Shared]
-    public class DocumentDiagnosticService
+    public class CSharpDiagnosticService
     {
         private readonly ILogger _logger;
         private readonly OmnisharpWorkspace _workspace;
@@ -22,11 +21,11 @@ namespace OmniSharp.Roslyn
         private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
 
         [ImportingConstructor]
-        public DocumentDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
+        public CSharpDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _forwarder = forwarder;
-            _logger = loggerFactory.CreateLogger<DocumentDiagnosticService>();
+            _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
@@ -36,7 +35,12 @@ namespace OmniSharp.Roslyn
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
+
                 this.EmitDiagnostics(newDocument.FilePath);
+                foreach (var document in _workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x)))
+                {
+                    this.EmitDiagnostics(document.FilePath);
+                }
             }
         }
 

@@ -5,18 +5,19 @@ using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Services;
+using OmniSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2
 {
     [OmniSharpHandler(OmnisharpEndpoints.V2.CodeCheck, LanguageNames.CSharp)]
     public class CodeCheckService : RequestHandler<CodeCheckRequest, CodeCheckResponse>
     {
-        private readonly DocumentDiagnosticService _diagnostics;
+        private readonly CSharpDiagnosticService _diagnostics;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CodeCheckService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, DocumentDiagnosticService diagnostics)
+        public CodeCheckService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
         {
             _forwarder = forwarder;
             _workspace = workspace;
