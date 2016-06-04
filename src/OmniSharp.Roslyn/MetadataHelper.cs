@@ -24,9 +24,12 @@ namespace OmniSharp.Roslyn
         public MetadataHelper(IOmnisharpAssemblyLoader loader)
         {
             _loader = loader;
-            _featureAssembly = _loader.LazyLoad("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-            _csharpFeatureAssembly = _loader.LazyLoad("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-            _workspaceAssembly = _loader.LazyLoad("Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            var codeAnalysisAsmSuffix = $", Version={OmniSharp.Configuration.CodeAnalysisVersion}" +
+                                        ", Culture=neutral" +
+                                        $", PublicKeyToken={OmniSharp.Configuration.CodeAnalysisPublicKeyToken}";
+            _featureAssembly = _loader.LazyLoad($"Microsoft.CodeAnalysis.Features{codeAnalysisAsmSuffix}");
+            _csharpFeatureAssembly = _loader.LazyLoad($"Microsoft.CodeAnalysis.CSharp.Features{codeAnalysisAsmSuffix}");
+            _workspaceAssembly = _loader.LazyLoad($"Microsoft.CodeAnalysis.Workspaces{codeAnalysisAsmSuffix}");
 
             _csharpMetadataAsSourceServices = new Lazy<Type>(() =>
             {
