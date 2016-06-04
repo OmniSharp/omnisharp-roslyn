@@ -141,6 +141,11 @@ namespace OmniSharp.MSBuild
                                                            .WithCryptoKeyFile(keyFile);
                 }
 
+                if (projectFileInfo.GenerateXmlDocumentation)
+                {
+                    compilationOptions = compilationOptions.WithXmlReferenceResolver(XmlFileResolver.Default);
+                }
+
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
                                                      VersionStamp.Create(),
                                                      projectFileInfo.Name,
@@ -271,6 +276,10 @@ namespace OmniSharp.MSBuild
                 if (projectFileInfo.DefineConstants != null && projectFileInfo.DefineConstants.Any())
                 {
                     parseOptions = parseOptions.WithPreprocessorSymbols(projectFileInfo.DefineConstants);
+                }
+                if (projectFileInfo.GenerateXmlDocumentation)
+                {
+                    parseOptions = parseOptions.WithDocumentationMode(DocumentationMode.Diagnose);
                 }
                 _workspace.SetParseOptions(project.Id, parseOptions);
             }
