@@ -3,28 +3,28 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2;
+using OmniSharp.Models;
 using OmniSharp.Services;
 using OmniSharp.Workers.Diagnostics;
 
-namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2
+namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpHandler(OmnisharpEndpoints.V2.CodeCheck, LanguageNames.CSharp)]
-    public class CodeCheckService : RequestHandler<CodeCheckRequest, CodeCheckResponse>
+    [OmniSharpHandler(OmnisharpEndpoints.Diagnostics, LanguageNames.CSharp)]
+    public class DiagnosticsService : RequestHandler<DiagnosticsRequest, DiagnosticsResponse>
     {
         private readonly CSharpDiagnosticService _diagnostics;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CodeCheckService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
+        public DiagnosticsService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
         {
             _forwarder = forwarder;
             _workspace = workspace;
             _diagnostics = diagnostics;
         }
 
-        public Task<CodeCheckResponse> Handle(CodeCheckRequest request)
+        public Task<DiagnosticsResponse> Handle(DiagnosticsRequest request)
         {
             if (!_forwarder.IsEnabled)
             {
@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2
 
             _diagnostics.QueueDiagnostics(documents.ToArray());
 
-            return Task.FromResult(new CodeCheckResponse());
+            return Task.FromResult(new DiagnosticsResponse());
         }
     }
 }

@@ -56,12 +56,12 @@ namespace OmniSharp
 
         public const string Open = "/open";
         public const string Close = "/close";
+        public const string Diagnostics = "/diagnostics";
 
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
-            public const string CodeCheck = "/v2/codecheck";
         }
 
         public const string GetTestStartInfo = "/v2/getteststartinfo";

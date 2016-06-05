@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics.V2;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Tests;
 using OmniSharp.Workers.Diagnostics;
@@ -70,8 +70,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = new CSharpDiagnosticService(workspace, forwarder, fakeLoggerFactory);
 
-            var controller = new CodeCheckService(workspace, forwarder, service);
-            var response = await controller.Handle(new OmniSharp.Models.V2.CodeCheckRequest());
+            var controller = new DiagnosticsService(workspace, forwarder, service);
+            var response = await controller.Handle(new OmniSharp.Models.DiagnosticsRequest());
 
             await emitter.Emitted;
 
@@ -104,8 +104,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = new CSharpDiagnosticService(workspace, forwarder, fakeLoggerFactory);
 
-            var controller = new CodeCheckService(workspace, forwarder, service);
-            var response = await controller.Handle(new OmniSharp.Models.V2.CodeCheckRequest());
+            var controller = new DiagnosticsService(workspace, forwarder, service);
+            var response = await controller.Handle(new OmniSharp.Models.DiagnosticsRequest());
 
             Assert.Equal(true, forwarder.IsEnabled);
         }
