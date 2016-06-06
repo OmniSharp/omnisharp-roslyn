@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
@@ -43,16 +44,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var operations = await action.GetOperationsAsync(CancellationToken.None);
 
             var solution = _workspace.CurrentSolution;
+            IEnumerable<OmniSharp.Models.ModifiedFileResponse> changes = Enumerable.Empty<OmniSharp.Models.ModifiedFileResponse>();
+            var directoryName = Path.GetDirectoryName(request.FileName);
             foreach (var o in operations)
             {
-                o.Apply(_workspace, CancellationToken.None);
+                var applyChangesOperation = o as ApplyChangesOperation;
+                if (applyChangesOperation != null) {
+                    changes = changes.Concat(await FileChanges.GetFileChangesAsync(applyChangesOperation.ChangedSolution, _workspace.CurrentSolution, directoryName, request.WantsTextChanges));
+                }
             }
 
-            var directoryName = Path.GetDirectoryName(request.FileName);
-            var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, request.WantsTextChanges);
-
             response.Changes = changes;
-            _workspace.TryApplyChanges(_workspace.CurrentSolution);
             return response;
         }
     }
