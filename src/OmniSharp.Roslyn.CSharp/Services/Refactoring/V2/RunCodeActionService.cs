@@ -49,8 +49,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             foreach (var o in operations)
             {
                 var applyChangesOperation = o as ApplyChangesOperation;
-                if (applyChangesOperation != null) {
-                    changes = changes.Concat(await FileChanges.GetFileChangesAsync(applyChangesOperation.ChangedSolution, _workspace.CurrentSolution, directoryName, request.WantsTextChanges));
+                if (applyChangesOperation != null)
+                {
+                    changes = changes.Concat(await FileChanges.GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directoryName, request.WantsTextChanges));
+                    solution = applyChangesOperation.ChangedSolution;
                 }
             }
 
