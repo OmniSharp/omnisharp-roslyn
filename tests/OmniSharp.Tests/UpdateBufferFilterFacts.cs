@@ -20,24 +20,24 @@ namespace OmniSharp.Tests
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
 
             // ignore void buffers
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { });
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "test.cs" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { FileName = "test.cs" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { Buffer = "// c", FileName = "some_other_file.cs" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { Buffer = "// c", FileName = "some_other_file.cs" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
             // valid updates
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "test.cs", Buffer = "interface I {}" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { FileName = "test.cs", Buffer = "interface I {}" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("interface I {}", sourceText.ToString());
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "test.cs", Buffer = "" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { FileName = "test.cs", Buffer = "" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("", sourceText.ToString());
         }
@@ -50,7 +50,7 @@ namespace OmniSharp.Tests
                 { "test.cs", "class C {}" }
             });
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "test2.cs", Buffer = "interface I {}" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { FileName = "test2.cs", Buffer = "interface I {}" });
 
             Assert.Equal(2, workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs").Length);
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs").FirstOrDefault();
@@ -72,7 +72,7 @@ namespace OmniSharp.Tests
                 { "test.cs", "class C {}" }
             });
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "transient.cs", Buffer = "interface I {}" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { FileName = "transient.cs", Buffer = "interface I {}" });
 
             var docIds = workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
             Assert.Equal(2, docIds.Length);
@@ -87,7 +87,7 @@ namespace OmniSharp.Tests
             docIds = workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
             Assert.Equal(2, docIds.Length);
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "transient.cs", Buffer = "enum E {}" });
+            await workspace.BufferManager.UpdateBuffer(new OmniSharp.Models.Request() { FileName = "transient.cs", Buffer = "enum E {}" });
             var sourceText = await workspace.CurrentSolution.GetDocument(docIds.First()).GetTextAsync();
             Assert.Equal("enum E {}", sourceText.ToString());
             sourceText = await workspace.CurrentSolution.GetDocument(docIds.Last()).GetTextAsync();

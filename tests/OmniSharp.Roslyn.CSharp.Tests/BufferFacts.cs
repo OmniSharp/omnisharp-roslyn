@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", "class C {}");
 
             // insert edit
-            await controller.Handle(new Models.ChangeBufferRequest()
+            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -49,7 +49,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("farbooclass C {}", sourceText.ToString());
 
             // remove edit
-            await controller.Handle(new Models.ChangeBufferRequest()
+            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -62,7 +62,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("class C {}", sourceText.ToString());
 
             // modification edit
-            await controller.Handle(new Models.ChangeBufferRequest()
+            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
