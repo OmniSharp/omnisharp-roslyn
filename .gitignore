@@ -38,8 +38,6 @@ scripts/Omnisharp*
 # Build folder
 .tools/
 .dotnet/
-.packages/
-.publish/
 
 # VS Code
 /.vscode/settings.json

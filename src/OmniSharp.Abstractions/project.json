@@ -38,12 +38,11 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0-rc3-*",
-        "Microsoft.NETCore.Platforms": "1.0.1-rc3-*",
-        "System.Diagnostics.Process": "4.1.0-rc3-*",
-        "System.Dynamic.Runtime": "4.0.11-rc3-*",
-        "System.IO.FileSystem.Watcher": "4.0.0-rc3-*",
-        "System.Threading.Thread": "4.0.0-rc3-*"
+        "NETStandard.Library": "1.6.0-rc3-24201-00",
+        "System.Diagnostics.Process": "4.1.0-rc3-24201-00",
+        "System.Dynamic.Runtime": "4.0.11-rc3-24201-00",
+        "System.IO.FileSystem.Watcher": "4.0.0-rc3-24201-00",
+        "System.Threading.Thread": "4.0.0-rc3-24201-00"
       }
     }
   }
