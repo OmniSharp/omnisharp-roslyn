@@ -29,7 +29,7 @@ namespace OmniSharp
         public Startup()
         {
             var appEnv = PlatformServices.Default.Application;
-            
+
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(appEnv.ApplicationBasePath)
                 .AddJsonFile("config.json", optional: true)
@@ -41,12 +41,11 @@ namespace OmniSharp
             }
 
             // Use the local omnisharp config if there's any in the root path
-            configBuilder.AddJsonFile(source =>
-            {
-                source.Path = "omnisharp.json";
-                source.Optional = true;
-                source.FileProvider = new PhysicalFileProvider(Program.Environment.Path);
-            });
+            configBuilder.AddJsonFile(
+                new PhysicalFileProvider(Program.Environment.Path),
+                "omnisharp.json",
+                optional: true,
+                reloadOnChange: false);
 
             Configuration = configBuilder.Build();
         }
