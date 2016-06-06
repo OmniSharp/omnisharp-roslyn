@@ -30,8 +30,8 @@ namespace OmniSharp.ScriptCs
         IEnumerable<MetadataReference> DotNetBaseReferences { get; } = new[]
             {
                 MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),        // mscorlib
-                MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location),    // systemCore 
-                MetadataReference.CreateFromFile(typeof(IScriptHost).Assembly.Location)                  // scriptcsContracts 
+                MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location),    // systemCore
+                MetadataReference.CreateFromFile(typeof(IScriptHost).Assembly.Location)                  // scriptcsContracts
             };
 
         OmnisharpWorkspace Workspace { get; }
@@ -217,7 +217,7 @@ namespace OmniSharp.ScriptCs
 
         Task<object> IProjectSystem.GetInformationModel(WorkspaceInformationRequest request)
         {
-            return Task.FromResult<object>(Context);
+            return Task.FromResult<object>(new ScriptCsContextModel(Context));
         }
     }
 }
