@@ -173,9 +173,9 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    RunRestore(dotnetcli, "restore", sourceFolder)
+    RunRestore(dotnetcli, "restore --packages .packages", sourceFolder)
         .ExceptionOnError("Failed to restore projects under source code folder.");
-    RunRestore(dotnetcli, "restore --infer-runtimes", testFolder)
+    RunRestore(dotnetcli, "restore --infer-runtimes .packages", testFolder)
         .ExceptionOnError("Failed to restore projects under test code folder.");
 });
 

@@ -9,19 +9,19 @@
     "OmniSharp.Stdio": "1.0.0",
     "OmniSharp.Plugins": "1.0.0",
     "OmniSharp.Roslyn": "1.0.0",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc3-21193",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc3-21193",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc3-21214",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc3-21214",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc3-21193",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc3-21193",
-    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc3-21193",
-    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0-rc3-21193",
+    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0-rc3-21214",
     "Microsoft.Extensions.DependencyModel": "1.0.0-rc3-002913",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc3-21193",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc3-21194",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc3-21194",
-    "Microsoft.Extensions.Options": "1.0.0-rc3-21194",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc3-21194"
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.Logging.Console": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.Options": "1.0.0-rc3-21214",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc3-21214"
   },
   "frameworks": {
     "net451": {
@@ -38,6 +38,7 @@
       ],
       "dependencies": {
         "NETStandard.Library": "1.6.0-rc3-*",
+        "Microsoft.NETCore.Platforms": "1.0.1-rc3-*",
         "System.Runtime.Loader": "4.0.0-rc3-*",
         "System.IO.Compression": "4.1.0-rc3-*"
       }
