@@ -5,7 +5,6 @@
   },
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0",
-    "Newtonsoft.Json": "8.0.3",
     "xunit": "2.1.0"
   },
   "frameworks": {
@@ -26,7 +25,7 @@
         "System.Runtime.Serialization.Primitives": "4.1.1-rc3-24201-00",
         "System.Threading.ThreadPool": "4.0.10-rc3-24201-00",
         "System.Xml.XDocument": "4.0.11-rc3-24201-00",
-        "dotnet-test-xunit": "1.0.0-rc3-*"
+        "dotnet-test-xunit": "1.0.0-rc3-000000-02"
       }
     },
     "net451": {

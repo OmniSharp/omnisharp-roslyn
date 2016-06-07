@@ -14,7 +14,7 @@
     "netcoreapp1.0": {
       "dependencies": {
         "OmniSharp.MSBuild": "1.0.0",
-        "dotnet-test-xunit": "1.0.0-rc3-*",
+        "dotnet-test-xunit": "1.0.0-rc3-000000-02",
         "Microsoft.NETCore.App": {
           "version": "1.0.0-rc3-004338",
           "type": "platform"
