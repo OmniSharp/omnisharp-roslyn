@@ -68,6 +68,15 @@ namespace OmniSharp.MSBuild
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
+            if (_options.WaitForDebugger)
+            {
+                Console.WriteLine($"Attach to process {System.Diagnostics.Process.GetCurrentProcess().Id}");
+                while (!System.Diagnostics.Debugger.IsAttached)
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+            }
+
             var solutionFilePath = _env.SolutionFilePath;
 
             if (string.IsNullOrEmpty(solutionFilePath))

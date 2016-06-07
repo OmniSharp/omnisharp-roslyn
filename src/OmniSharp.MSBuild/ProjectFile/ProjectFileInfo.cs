@@ -56,10 +56,10 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool GenerateXmlDocumentation { get; private set; }
 
         public static ProjectFileInfo Create(
-            MSBuildOptions options, 
-            ILogger logger, 
-            string solutionDirectory, 
-            string projectFilePath, 
+            MSBuildOptions options,
+            ILogger logger,
+            string solutionDirectory,
+            string projectFilePath,
             ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
@@ -123,34 +123,40 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             if (PlatformServices.Default.Runtime.OperatingSystemPlatform != Microsoft.Extensions.PlatformAbstractions.Platform.Windows)
             {
-                // CoreCLR MSBuild won't be able to resolve framework assemblies from mono now.
-                var references = projectInstance
-                    .GetItems("ReferencePath")
-                    .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
-                    .Select(p => Path.GetFileNameWithoutExtension(p.GetMetadataValue("FullPath")));
-
                 var framework = new NuGetFramework(projectFileInfo.TargetFramework.Identifier,
                                                    projectFileInfo.TargetFramework.Version,
                                                    projectFileInfo.TargetFramework.Profile);
 
-                var referencesList = new List<string>();
-                foreach (var reference in references)
-                {
-                    string path;
-                    Version version;
-
-                    if (FrameworkReferenceResolver.Default.TryGetAssembly(reference, framework, out path, out version))
+                // CoreCLR MSBuild won't be able to resolve framework assemblies from mono now.
+                projectFileInfo.References = projectInstance
+                    .GetItems("ReferencePath")
+                    .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
+                    .Select(p =>
                     {
-                        logger.LogInformation($"Refernce path: {reference} => {version} at {path}");
-                        referencesList.Add(path);
-                    }
-                    else
-                    {
-                        logger.LogError($"Fail to resolve reference path for {reference}");
-                    }
-                }
+                        var fullpath = p.GetMetadataValue("FullPath");
+                        if (!File.Exists(fullpath))
+                        {
+                            string referenceName = Path.GetFileNameWithoutExtension(fullpath);
+                            string path;
+                            Version version;
+                            if (FrameworkReferenceResolver.Default.TryGetAssembly(referenceName, framework, out path, out version))
+                            {
+                                logger.LogInformation($"Resolved refernce path: {referenceName} => {version} at {path}");
+                            }
+                            else
+                            {
+                                logger.LogError($"Fail to resolve reference path for {referenceName}");
+                            }
 
-                projectFileInfo.References = referencesList;
+                            return path;
+                        }
+                        else
+                        {
+                            logger.LogInformation($"Resolved reference path {fullpath} by MSBuild.");
+                            return fullpath;
+                        }
+
+                    }).ToList();
             }
             else
             {
@@ -196,7 +202,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 projectFileInfo.GenerateXmlDocumentation = true;
             }
-            
+
             return projectFileInfo;
         }
 
