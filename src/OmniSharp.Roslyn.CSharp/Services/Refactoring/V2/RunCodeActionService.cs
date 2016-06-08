@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var operations = await action.GetOperationsAsync(CancellationToken.None);
 
             var solution = _workspace.CurrentSolution;
-            IEnumerable<OmniSharp.Models.ModifiedFileResponse> changes = Enumerable.Empty<OmniSharp.Models.ModifiedFileResponse>();
+            var changes = Enumerable.Empty<OmniSharp.Models.ModifiedFileResponse>();
             var directoryName = Path.GetDirectoryName(request.FileName);
             foreach (var o in operations)
             {
