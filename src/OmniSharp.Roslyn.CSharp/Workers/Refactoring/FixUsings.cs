@@ -18,13 +18,17 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
+    public class FixUsingsWorkerResponse
+    {
+        public IEnumerable<QuickFix> AmbiguousResults { get; set; }
+        public Solution Solution { get; set; }
+    }
+
     public class FixUsingsWorker
     {
-        private OmnisharpWorkspace _workspace;
-        private Document _document;
-        private SemanticModel _semanticModel;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmnisharpAssemblyLoader _loader;
+        private string _path;
 
         public FixUsingsWorker(ILoggerFactory loggerFactory, IOmnisharpAssemblyLoader loader)
         {
@@ -32,34 +36,37 @@ namespace OmniSharp
             _loader = loader;
         }
 
-        public async Task<FixUsingsResponse> FixUsings(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, Document document)
+        public async Task<FixUsingsWorkerResponse> FixUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders, string path)
         {
-            _workspace = workspace;
-            _document = document;
-            _semanticModel = await document.GetSemanticModelAsync();
-            await AddMissingUsings(codeActionProviders);
-            await RemoveUsings(codeActionProviders);
-            await TryAddLinqQuerySyntax();
-            var ambiguous = await GetAmbiguousUsings(codeActionProviders);
-            var response = new FixUsingsResponse();
+            _path = path;
+            solution = await AddMissingUsings(solution, codeActionProviders);
+            solution = await RemoveUsings(solution, codeActionProviders);
+            solution = await TryAddLinqQuerySyntax(solution);
+            var ambiguous = await GetAmbiguousUsings(solution, codeActionProviders);
+            var response = new FixUsingsWorkerResponse();
             response.AmbiguousResults = ambiguous;
+            response.Solution = solution;
 
             return response;
         }
 
-        private async Task<List<QuickFix>> GetAmbiguousUsings(IEnumerable<ICodeActionProvider> codeActionProviders)
+        private async Task<List<QuickFix>> GetAmbiguousUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             var ambiguousNodes = new List<SimpleNameSyntax>();
             var ambiguous = new List<QuickFix>();
 
-            var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
+            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
+            var document = solution.GetDocument(id);
+            var semanticModel = await document.GetSemanticModelAsync();
+
+            var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
             var nodes = syntaxNode.DescendantNodes()
                 .OfType<SimpleNameSyntax>()
-                .Where(x => _semanticModel.GetSymbolInfo(x).Symbol == null && !ambiguousNodes.Contains(x)).ToList();
+                .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null && !ambiguousNodes.Contains(x)).ToList();
 
             foreach (var node in nodes)
             {
-                var pointDiagnostics = await GetPointDiagnostics(node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
+                var pointDiagnostics = await GetPointDiagnostics(document, node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
                 if (pointDiagnostics.Any())
                 {
                     var pointdiagfirst = pointDiagnostics.First().Location.SourceSpan;
@@ -68,7 +75,7 @@ namespace OmniSharp
                     {
                         continue;
                     }
-                    var usingOperations = await GetUsingActions(codeActionProviders, pointDiagnostics, "using");
+                    var usingOperations = await GetUsingActions(document, codeActionProviders, pointDiagnostics, "using");
 
                     if (usingOperations.Count() > 1)
                     {
@@ -80,7 +87,7 @@ namespace OmniSharp
                         {
                             Line = unresolvedLocation.Line,
                             Column = unresolvedLocation.Character,
-                            FileName = _document.FilePath,
+                            FileName = document.FilePath,
                             Text = "`" + unresolvedText + "`" + " is ambiguous"
                         });
                     }
@@ -90,21 +97,25 @@ namespace OmniSharp
             return ambiguous;
         }
 
-        private async Task AddMissingUsings(IEnumerable<ICodeActionProvider> codeActionProviders)
+        private async Task<Solution> AddMissingUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
         {
+            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
             bool processMore = true;
 
             while (processMore)
             {
+                var document = solution.GetDocument(id);
+                var semanticModel = await document.GetSemanticModelAsync();
+
                 bool updated = false;
-                var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
+                var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
                 var nodes = syntaxNode.DescendantNodes()
                     .OfType<SimpleNameSyntax>()
-                    .Where(x => _semanticModel.GetSymbolInfo(x).Symbol == null).ToList();
+                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null).ToList();
 
                 foreach (var node in nodes)
                 {
-                    var pointDiagnostics = await GetPointDiagnostics(node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
+                    var pointDiagnostics = await GetPointDiagnostics(document, node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
 
                     if (pointDiagnostics.Any())
                     {
@@ -113,13 +124,15 @@ namespace OmniSharp
                         {
                             continue;
                         }
-                        var usingOperations = await GetUsingActions(codeActionProviders, pointDiagnostics, "using");
 
+                        var usingOperations = (await GetUsingActions(document, codeActionProviders, pointDiagnostics, "using")).OfType<ApplyChangesOperation>();
                         if (usingOperations.Count() == 1)
                         {
                             //Only one operation - apply it
-                            usingOperations.Single().Apply(_workspace, CancellationToken.None);
+                            solution = usingOperations.First().ChangedSolution;
                             updated = true;
+                            document = solution.GetDocument(id);
+                            semanticModel = await document.GetSemanticModelAsync();
                         }
                     }
                 }
@@ -127,20 +140,22 @@ namespace OmniSharp
                 processMore = updated;
             }
 
-            return;
+            return solution;
         }
 
-        private async Task RemoveUsings(IEnumerable<ICodeActionProvider> codeActionProviders)
+        private async Task<Solution> RemoveUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
         {
+            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
+            var document = solution.GetDocument(id);
             //Remove unneccessary usings
-            var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
+            var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
             var nodes = syntaxNode.DescendantNodes().Where(x => x is UsingDirectiveSyntax);
 
             foreach (var node in nodes)
             {
-                var sourceText = (await _document.GetTextAsync());
+                var sourceText = (await document.GetTextAsync());
                 var actions = new List<CodeAction>();
-                var pointDiagnostics = await GetPointDiagnostics(node.Span, new List<string>() { "CS0105", "CS8019" });
+                var pointDiagnostics = await GetPointDiagnostics(document, node.Span, new List<string>() { "CS0105", "CS8019" });
 
                 if (pointDiagnostics.Any())
                 {
@@ -149,40 +164,49 @@ namespace OmniSharp
                     {
                         continue;
                     }
-                    var usingActions = await GetUsingActions(codeActionProviders, pointDiagnostics, "Remove Unnecessary Usings");
 
-                    foreach (var codeOperation in usingActions)
+                    var usingActions = await GetUsingActions(document, codeActionProviders, pointDiagnostics, "Remove Unnecessary Usings");
+
+                    foreach (var codeOperation in usingActions.OfType<ApplyChangesOperation>())
                     {
                         if (codeOperation != null)
                         {
-                            codeOperation.Apply(_workspace, CancellationToken.None);
+                            solution = codeOperation.ChangedSolution;
+                            document = solution.GetDocument(id);
                         }
                     }
                 }
             }
 
-            return;
+
+            return solution;
         }
 
-        private async Task TryAddLinqQuerySyntax()
+        private async Task<Solution> TryAddLinqQuerySyntax(Solution solution)
         {
-            var fileName = _document.FilePath;
-            var syntaxNode = (await _document.GetSyntaxTreeAsync()).GetRoot();
+            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
+            var document = solution.GetDocument(id);
+            var semanticModel = await document.GetSemanticModelAsync();
+            var fileName = document.FilePath;
+            var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
             var compilationUnitSyntax = (CompilationUnitSyntax)syntaxNode;
             var usings = GetUsings(syntaxNode);
-            if (HasLinqQuerySyntax(_semanticModel, syntaxNode) && !usings.Contains("using System.Linq;"))
+            if (HasLinqQuerySyntax(semanticModel, syntaxNode) && !usings.Contains("using System.Linq;"))
             {
                 var linqName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName("System"),
                         SyntaxFactory.IdentifierName("Linq"));
                 var linq = SyntaxFactory.UsingDirective(linqName).NormalizeWhitespace()
                             .WithTrailingTrivia(SyntaxFactory.Whitespace(Environment.NewLine));
-                var oldSolution = _workspace.CurrentSolution;
-                _document = _document.WithSyntaxRoot(compilationUnitSyntax.AddUsings(linq));
-                var newDocText = await _document.GetTextAsync();
-                var newSolution = oldSolution.WithDocumentText(_document.Id, newDocText);
-                _workspace.TryApplyChanges(newSolution);
-                _semanticModel = await _document.GetSemanticModelAsync();
+                var oldSolution = solution;
+                document = document.WithSyntaxRoot(compilationUnitSyntax.AddUsings(linq));
+                var newDocText = await document.GetTextAsync();
+                var newSolution = oldSolution.WithDocumentText(document.Id, newDocText);
+                solution = newSolution;
+                semanticModel = await document.GetSemanticModelAsync();
+                document = solution.GetDocument(id);
             }
+
+            return solution;
         }
 
         private static async Task<CodeRefactoringContext?> GetRefactoringContext(Document document, List<CodeAction> actionsDestination)
@@ -197,11 +221,11 @@ namespace OmniSharp
             return new CodeRefactoringContext(document, location, (a) => actionsDestination.Add(a), CancellationToken.None);
         }
 
-        private async Task<IEnumerable<CodeActionOperation>> GetUsingActions(IEnumerable<ICodeActionProvider> codeActionProviders,
+        private async Task<IEnumerable<CodeActionOperation>> GetUsingActions(Document document, IEnumerable<ICodeActionProvider> codeActionProviders,
                 ImmutableArray<Diagnostic> pointDiagnostics, string actionPrefix)
         {
             var actions = new List<CodeAction>();
-            var context = new CodeFixContext(_document, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actions.Add(a), CancellationToken.None);
+            var context = new CodeFixContext(document, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actions.Add(a), CancellationToken.None);
             var providers = codeActionProviders.SelectMany(x => x.CodeFixes);
 
             //Disable await warning since we dont need the result of the call. Else we need to use a throwaway variable.
@@ -225,11 +249,10 @@ namespace OmniSharp
             return new HashSet<string>(usings);
         }
 
-        private async Task<ImmutableArray<Diagnostic>> GetPointDiagnostics(TextSpan location, List<string> diagnosticIds)
+        private async Task<ImmutableArray<Diagnostic>> GetPointDiagnostics(Document document, TextSpan location, List<string> diagnosticIds)
         {
-            _document = _workspace.GetDocument(_document.FilePath);
-            _semanticModel = await _document.GetSemanticModelAsync();
-            var diagnostics = _semanticModel.GetDiagnostics();
+            var semanticModel = await document.GetSemanticModelAsync();
+            var diagnostics = semanticModel.GetDiagnostics();
 
             //Restrict diagnostics only to missing usings
             return diagnostics.Where(d => d.Location.SourceSpan.Contains(location) &&
