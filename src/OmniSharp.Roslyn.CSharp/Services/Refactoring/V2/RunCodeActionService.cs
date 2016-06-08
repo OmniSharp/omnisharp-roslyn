@@ -56,6 +56,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 }
             }
 
+            if (request.ApplyTextChanges)
+            {
+                _workspace.TryApplyChanges(solution);
+            }
+
             response.Changes = changes;
             return response;
         }
