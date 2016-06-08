@@ -99,7 +99,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Guid", definitionResponse.MetadataSource.TypeName);
             // We probably shouldn't hard code metadata locations (they could change randomly)
             Assert.NotEqual(0, definitionResponse.Line);
@@ -122,7 +122,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -144,7 +144,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -166,7 +166,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.Dictionary`2", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -188,7 +188,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.String", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);

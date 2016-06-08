@@ -11,14 +11,14 @@
         "System.Collections": ""
       }
     },
-    "netstandard1.5": {
+    "netstandard1.6": {
       "imports": [
         "dotnet5.6",
         "dnxcore50",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-24027"
+        "NETStandard.Library": "1.6.0-rc3-24201-00"
       }
     }
   }

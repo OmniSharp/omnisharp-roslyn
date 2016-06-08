@@ -28,7 +28,7 @@ namespace OmniSharp.DotNet
 
         public void AddProject(string path)
         {
-            var projectPath = NormalizeProjectPath(path);
+            var projectPath = ProjectPathHelper.NormalizeProjectDirectoryPath(path);
 
             if (projectPath != null)
             {

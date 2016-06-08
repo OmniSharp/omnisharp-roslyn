@@ -1,14 +1,14 @@
 {
   "UseSystemDotNetPath": "false",
   "DotNetFolder": ".dotnet",
-  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/6cde21225e18fc48eeab3f4345ece3e6bb122e53/scripts/obtain/",
-  "DotNetChannel": "beta",
-  "DotNetVersion": "1.0.0-preview1-002702",
+  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain",
+  "DotNetChannel": "preview",
+  "DotNetVersion": "1.0.0-preview2-002992",
   "BuildToolsFolder": ".tools",
   "ArtifactsFolder": "artifacts",
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
-      "net451"
+      "netcoreapp1.0"
     ],
     "OmniSharp.Roslyn.CSharp.Tests": [
       "netcoreapp1.0"

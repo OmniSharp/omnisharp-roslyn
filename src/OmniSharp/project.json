@@ -6,7 +6,10 @@
     "emitEntryPoint": true
   },
   "publishOptions": {
-    "includeFiles": [ "config.json" ]
+    "includeFiles": [
+      "config.json",
+      "Microsoft.CSharp.Core.targets"
+    ]
   },
   "dependencies": {
     "OmniSharp.Host": "1.0.0",
@@ -17,7 +20,6 @@
   "frameworks": {
     "net451": {
       "dependencies": {
-        "OmniSharp.MSBuild": "1.0.0",
         "OmniSharp.ScriptCs": "1.0.0"
       }
     },
@@ -27,17 +29,18 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-24027"
+        "Microsoft.NETCore.App": "1.0.0-rc3-004391",
+        "OmniSharp.MSBuild": "1.0.0"
       }
     }
   },
   "runtimes": {
-    "win7-x64": { },
-    "win7-x86": { },
-    "osx.10.11-x64": { },
-    "ubuntu.14.04-x64": { },
-    "centos.7-x64": { },
-    "rhel.7.2-x64": { },
-    "debian.8.2-x64": { }
+    "win7-x64": {},
+    "win7-x86": {},
+    "osx.10.11-x64": {},
+    "ubuntu.14.04-x64": {},
+    "centos.7-x64": {},
+    "rhel.7.2-x64": {},
+    "debian.8-x64": {}
   }
 }
