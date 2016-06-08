@@ -52,44 +52,58 @@ namespace OmniSharp
 
         private async Task<List<QuickFix>> GetAmbiguousUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
         {
-            var ambiguousNodes = new List<SimpleNameSyntax>();
             var ambiguous = new List<QuickFix>();
 
-            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
-            var document = solution.GetDocument(id);
-            var semanticModel = await document.GetSemanticModelAsync();
-
-            var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
-            var nodes = syntaxNode.DescendantNodes()
-                .OfType<SimpleNameSyntax>()
-                .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null && !ambiguousNodes.Contains(x)).ToList();
-
-            foreach (var node in nodes)
+            var documents = solution.GetDocumentIdsWithFilePath(_path);
+            foreach (var id in documents)
             {
-                var pointDiagnostics = await GetPointDiagnostics(document, node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
-                if (pointDiagnostics.Any())
+                var ambiguousNodes = new List<SimpleNameSyntax>();
+                var document = solution.GetDocument(id);
+                var semanticModel = await document.GetSemanticModelAsync();
+
+                var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
+                var nodes = syntaxNode.DescendantNodes()
+                    .OfType<SimpleNameSyntax>()
+                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null && !ambiguousNodes.Contains(x)).ToList();
+
+                foreach (var node in nodes)
                 {
-                    var pointdiagfirst = pointDiagnostics.First().Location.SourceSpan;
-
-                    if (pointDiagnostics.Any(d => d.Location.SourceSpan != pointdiagfirst))
+                    var pointDiagnostics = await GetPointDiagnostics(document, node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
+                    if (pointDiagnostics.Any())
                     {
-                        continue;
-                    }
-                    var usingOperations = await GetUsingActions(document, codeActionProviders, pointDiagnostics, "using");
+                        var pointdiagfirst = pointDiagnostics.First().Location.SourceSpan;
 
-                    if (usingOperations.Count() > 1)
-                    {
-                        //More than one operation - ambiguous
-                        ambiguousNodes.Add(node);
-                        var unresolvedText = node.Identifier.ValueText;
-                        var unresolvedLocation = node.GetLocation().GetLineSpan().StartLinePosition;
-                        ambiguous.Add(new QuickFix
+                        if (pointDiagnostics.Any(d => d.Location.SourceSpan != pointdiagfirst))
                         {
-                            Line = unresolvedLocation.Line,
-                            Column = unresolvedLocation.Character,
-                            FileName = document.FilePath,
-                            Text = "`" + unresolvedText + "`" + " is ambiguous"
-                        });
+                            continue;
+                        }
+                        var usingOperations = await GetUsingActions(document, codeActionProviders, pointDiagnostics, "using");
+
+                        if (usingOperations.Count() > 1)
+                        {
+                            //More than one operation - ambiguous
+                            ambiguousNodes.Add(node);
+                            var unresolvedText = node.Identifier.ValueText;
+                            var unresolvedLocation = node.GetLocation().GetLineSpan().StartLinePosition;
+                            var fix = new QuickFix
+                            {
+                                Line = unresolvedLocation.Line,
+                                Column = unresolvedLocation.Character,
+                                FileName = document.FilePath,
+                                Text = "`" + unresolvedText + "`" + " is ambiguous"
+                            };
+                            fix.Projects.Add(document.Project.Name);
+
+                            var existingFix = ambiguous.FirstOrDefault(x => x.Equals(fix));
+                            if (existingFix == null)
+                            {
+                                ambiguous.Add(existingFix);
+                            }
+                            else
+                            {
+                                existingFix.Projects.Add(document.Project.Name);
+                            }
+                        }
                     }
                 }
             }
@@ -99,23 +113,68 @@ namespace OmniSharp
 
         private async Task<Solution> AddMissingUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
         {
-            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
-            bool processMore = true;
+            var documents = solution.GetDocumentIdsWithFilePath(_path);
+            foreach (var id in documents)
+            {
+                bool processMore = true;
 
-            while (processMore)
+                while (processMore)
+                {
+                    var document = solution.GetDocument(id);
+                    var semanticModel = await document.GetSemanticModelAsync();
+
+                    bool updated = false;
+                    var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
+                    var nodes = syntaxNode.DescendantNodes()
+                        .OfType<SimpleNameSyntax>()
+                        .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null).ToList();
+
+                    foreach (var node in nodes)
+                    {
+                        var pointDiagnostics = await GetPointDiagnostics(document, node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
+
+                        if (pointDiagnostics.Any())
+                        {
+                            var pointdiagfirst = pointDiagnostics.First().Location.SourceSpan;
+                            if (pointDiagnostics.Any(d => d.Location.SourceSpan != pointdiagfirst))
+                            {
+                                continue;
+                            }
+
+                            var usingOperations = (await GetUsingActions(document, codeActionProviders, pointDiagnostics, "using")).OfType<ApplyChangesOperation>();
+                            if (usingOperations.Count() == 1)
+                            {
+                                //Only one operation - apply it
+                                solution = usingOperations.First().ChangedSolution;
+                                updated = true;
+                                document = solution.GetDocument(id);
+                                semanticModel = await document.GetSemanticModelAsync();
+                            }
+                        }
+                    }
+
+                    processMore = updated;
+                }
+            }
+
+            return solution;
+        }
+
+        private async Task<Solution> RemoveUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
+        {
+            var documents = solution.GetDocumentIdsWithFilePath(_path);
+            foreach (var id in documents)
             {
                 var document = solution.GetDocument(id);
-                var semanticModel = await document.GetSemanticModelAsync();
-
-                bool updated = false;
+                //Remove unneccessary usings
                 var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
-                var nodes = syntaxNode.DescendantNodes()
-                    .OfType<SimpleNameSyntax>()
-                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null).ToList();
+                var nodes = syntaxNode.DescendantNodes().Where(x => x is UsingDirectiveSyntax);
 
                 foreach (var node in nodes)
                 {
-                    var pointDiagnostics = await GetPointDiagnostics(document, node.Identifier.Span, new List<string>() { "CS0246", "CS1061", "CS0103" });
+                    var sourceText = (await document.GetTextAsync());
+                    var actions = new List<CodeAction>();
+                    var pointDiagnostics = await GetPointDiagnostics(document, node.Span, new List<string>() { "CS0105", "CS8019" });
 
                     if (pointDiagnostics.Any())
                     {
@@ -125,87 +184,49 @@ namespace OmniSharp
                             continue;
                         }
 
-                        var usingOperations = (await GetUsingActions(document, codeActionProviders, pointDiagnostics, "using")).OfType<ApplyChangesOperation>();
-                        if (usingOperations.Count() == 1)
+                        var usingActions = await GetUsingActions(document, codeActionProviders, pointDiagnostics, "Remove Unnecessary Usings");
+
+                        foreach (var codeOperation in usingActions.OfType<ApplyChangesOperation>())
                         {
-                            //Only one operation - apply it
-                            solution = usingOperations.First().ChangedSolution;
-                            updated = true;
-                            document = solution.GetDocument(id);
-                            semanticModel = await document.GetSemanticModelAsync();
-                        }
-                    }
-                }
-
-                processMore = updated;
-            }
-
-            return solution;
-        }
-
-        private async Task<Solution> RemoveUsings(Solution solution, IEnumerable<ICodeActionProvider> codeActionProviders)
-        {
-            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
-            var document = solution.GetDocument(id);
-            //Remove unneccessary usings
-            var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
-            var nodes = syntaxNode.DescendantNodes().Where(x => x is UsingDirectiveSyntax);
-
-            foreach (var node in nodes)
-            {
-                var sourceText = (await document.GetTextAsync());
-                var actions = new List<CodeAction>();
-                var pointDiagnostics = await GetPointDiagnostics(document, node.Span, new List<string>() { "CS0105", "CS8019" });
-
-                if (pointDiagnostics.Any())
-                {
-                    var pointdiagfirst = pointDiagnostics.First().Location.SourceSpan;
-                    if (pointDiagnostics.Any(d => d.Location.SourceSpan != pointdiagfirst))
-                    {
-                        continue;
-                    }
-
-                    var usingActions = await GetUsingActions(document, codeActionProviders, pointDiagnostics, "Remove Unnecessary Usings");
-
-                    foreach (var codeOperation in usingActions.OfType<ApplyChangesOperation>())
-                    {
-                        if (codeOperation != null)
-                        {
-                            solution = codeOperation.ChangedSolution;
-                            document = solution.GetDocument(id);
+                            if (codeOperation != null)
+                            {
+                                solution = codeOperation.ChangedSolution;
+                                document = solution.GetDocument(id);
+                            }
                         }
                     }
                 }
             }
-
 
             return solution;
         }
 
         private async Task<Solution> TryAddLinqQuerySyntax(Solution solution)
         {
-            var id = solution.GetDocumentIdsWithFilePath(_path).FirstOrDefault();
-            var document = solution.GetDocument(id);
-            var semanticModel = await document.GetSemanticModelAsync();
-            var fileName = document.FilePath;
-            var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
-            var compilationUnitSyntax = (CompilationUnitSyntax)syntaxNode;
-            var usings = GetUsings(syntaxNode);
-            if (HasLinqQuerySyntax(semanticModel, syntaxNode) && !usings.Contains("using System.Linq;"))
+            var documents = solution.GetDocumentIdsWithFilePath(_path);
+            foreach (var id in documents)
             {
-                var linqName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName("System"),
-                        SyntaxFactory.IdentifierName("Linq"));
-                var linq = SyntaxFactory.UsingDirective(linqName).NormalizeWhitespace()
-                            .WithTrailingTrivia(SyntaxFactory.Whitespace(Environment.NewLine));
-                var oldSolution = solution;
-                document = document.WithSyntaxRoot(compilationUnitSyntax.AddUsings(linq));
-                var newDocText = await document.GetTextAsync();
-                var newSolution = oldSolution.WithDocumentText(document.Id, newDocText);
-                solution = newSolution;
-                semanticModel = await document.GetSemanticModelAsync();
-                document = solution.GetDocument(id);
+                var document = solution.GetDocument(id);
+                var semanticModel = await document.GetSemanticModelAsync();
+                var fileName = document.FilePath;
+                var syntaxNode = (await document.GetSyntaxTreeAsync()).GetRoot();
+                var compilationUnitSyntax = (CompilationUnitSyntax)syntaxNode;
+                var usings = GetUsings(syntaxNode);
+                if (HasLinqQuerySyntax(semanticModel, syntaxNode) && !usings.Contains("using System.Linq;"))
+                {
+                    var linqName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName("System"),
+                            SyntaxFactory.IdentifierName("Linq"));
+                    var linq = SyntaxFactory.UsingDirective(linqName).NormalizeWhitespace()
+                                .WithTrailingTrivia(SyntaxFactory.Whitespace(Environment.NewLine));
+                    var oldSolution = solution;
+                    document = document.WithSyntaxRoot(compilationUnitSyntax.AddUsings(linq));
+                    var newDocText = await document.GetTextAsync();
+                    var newSolution = oldSolution.WithDocumentText(document.Id, newDocText);
+                    solution = newSolution;
+                    semanticModel = await document.GetSemanticModelAsync();
+                    document = solution.GetDocument(id);
+                }
             }
-
             return solution;
         }
 
