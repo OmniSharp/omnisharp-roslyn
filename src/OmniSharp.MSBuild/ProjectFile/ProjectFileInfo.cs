@@ -121,7 +121,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                                .ToList();
 
 
-            if (PlatformServices.Default.Runtime.OperatingSystemPlatform != Microsoft.Extensions.PlatformAbstractions.Platform.Windows)
+            if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
                 var framework = new NuGetFramework(projectFileInfo.TargetFramework.Identifier,
                                                    projectFileInfo.TargetFramework.Version,
