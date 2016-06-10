@@ -1,5 +1,5 @@
 using System.Linq;
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
@@ -12,7 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
         {
-            workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            workspace = new OmnisharpWorkspace(
+                new HostServicesAggregator(
+                    Enumerable.Empty<IHostServicesProvider>()));
+
             controller = new ChangeBufferService(workspace);
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),

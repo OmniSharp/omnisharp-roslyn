@@ -12,9 +12,9 @@ namespace OmniSharp
 {
     class ReflectionNamespaces
     {
-        internal const string CodeAnalysisAsmSuffix =   ", Version=" + OmniSharp.Configuration.CodeAnalysisVersion +
+        internal const string CodeAnalysisAsmSuffix =   ", Version=" + OmniSharp.Configuration.RoslynVersion +
                                                         ", Culture=neutral" +
-                                                        ", PublicKeyToken=" + OmniSharp.Configuration.CodeAnalysisPublicKeyToken;
+                                                        ", PublicKeyToken=" + OmniSharp.Configuration.RoslynPublicKeyToken;
         internal const string WorkspacesAsmName = ", Microsoft.CodeAnalysis.Workspaces" + CodeAnalysisAsmSuffix;
         internal const string CSWorkspacesAsmName = ", Microsoft.CodeAnalysis.CSharp.Workspaces" + CodeAnalysisAsmSuffix;
         internal const string CAAsmName = ", Microsoft.CodeAnalysis" + CodeAnalysisAsmSuffix;

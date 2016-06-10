@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
@@ -309,8 +310,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
         {
             var loader = _fixture.CreateAssemblyLoader(_fixture.FakeLogger);
+            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(loader);
 
-            yield return new RoslynCodeActionProvider(loader);
+            yield return new RoslynCodeActionProvider(hostServicesProvider);
         }
     }
 }
