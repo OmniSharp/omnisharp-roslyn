@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -24,10 +25,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(source);
-            request.WantSnippet = true;
-
+            var request = CreateRequest(source, wantSnippet: true);
             var completions = await FindCompletionsAsync(source, request);
+
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo");
         }
 
@@ -43,10 +43,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(source);
-            request.WantSnippet = true;
-
+            var request = CreateRequest(source, wantSnippet: true);
             var completions = await FindCompletionsAsync(source, request);
+
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "foo");
         }
 
@@ -64,10 +63,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(source);
-            request.WantSnippet = true;
-
+            var request = CreateRequest(source, wantSnippet: true);
             var completions = await FindCompletionsAsync(source, request);
+
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(2), "Foo()", "Foo(int bar = 1)");
         }
 
@@ -85,10 +83,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(source);
-            request.WantSnippet = false;
-
+            var request = CreateRequest(source, wantSnippet: false);
             var completions = await FindCompletionsAsync(source, request);
+
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo(int bar = 1)");
         }
 
@@ -104,6 +101,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
+
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "TryParse");
         }
 
@@ -119,6 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
+
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
         }
 
@@ -133,7 +132,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);            
+            var completions = await FindCompletionsAsync(source);
+
             ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "NewGuid()");
         }
 
@@ -151,6 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
+
             ContainsCompletions(completions.Select(c => c.CompletionText), "myvar", "MyClass1");
         }
 
@@ -168,31 +169,32 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(source);
+
             ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
         }
 
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
-            var same = completions.SequenceEqual(expected);
-            if (!same)
+            if (!completions.SequenceEqual(expected))
             {
-                System.Console.Error.WriteLine("Expected");
-                System.Console.Error.WriteLine("--------");
+                Console.Error.WriteLine("Expected");
+                Console.Error.WriteLine("--------");
 
                 foreach (var completion in expected)
                 {
-                    System.Console.WriteLine(completion);
+                    Console.WriteLine(completion);
                 }
 
-                System.Console.Error.WriteLine();
-                System.Console.Error.WriteLine("Found");
-                System.Console.Error.WriteLine("-----");
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("Found");
+                Console.Error.WriteLine("-----");
 
                 foreach (var completion in completions)
                 {
-                    System.Console.WriteLine(completion);
+                    Console.WriteLine(completion);
                 }
             }
+
             Assert.Equal(expected, completions.ToArray());
         }
 
@@ -208,12 +210,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var response = await controller.Handle(request);
             var completions = response as IEnumerable<AutoCompleteResponse>;
+
             return completions;
         }
 
-        private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs")
+        private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs", bool wantSnippet = false)
         {
             var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
+
             return new AutoCompleteRequest
             {
                 Line = lineColumn.Line,
@@ -221,7 +225,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 FileName = fileName,
                 Buffer = source.Replace("$", ""),
                 WordToComplete = GetPartialWord(source),
-                WantMethodHeader = true
+                WantMethodHeader = true,
+                WantSnippet = wantSnippet
             };
         }
 
