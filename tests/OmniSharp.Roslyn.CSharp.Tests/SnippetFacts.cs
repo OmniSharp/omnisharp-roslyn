@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using OmniSharp.Models;
@@ -12,6 +14,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class SnippetFacts
     {
+        private CompositionHost _plugInHost;
+
+        public SnippetFacts()
+        {
+            _plugInHost = TestHelpers.CreatePluginHost(new[] { typeof(IntellisenseService).GetTypeInfo().Assembly });
+        }
+
         [Fact]
         public async Task Can_template_generic_type_argument()
         {
@@ -352,7 +361,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<string>> FindCompletionsAsync(string source)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(_plugInHost, source);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
             var request = CreateRequest(source);
             var response = await controller.Handle(request);
