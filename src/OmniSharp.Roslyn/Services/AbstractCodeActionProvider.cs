@@ -11,10 +11,10 @@ namespace OmniSharp.Services
     public abstract class AbstractCodeActionProvider : ICodeActionProvider
     {
         public string ProviderName { get; }
-        public IEnumerable<CodeRefactoringProvider> Refactorings { get; }
-        public IEnumerable<CodeFixProvider> CodeFixes { get; }
+        public ImmutableArray<CodeRefactoringProvider> Refactorings { get; }
+        public ImmutableArray<CodeFixProvider> CodeFixes { get; }
 
-        public virtual IEnumerable<Assembly> Assemblies { get; protected set; }
+        public ImmutableArray<Assembly> Assemblies { get; }
 
         protected AbstractCodeActionProvider(string providerName, ImmutableArray<Assembly> assemblies)
         {
@@ -22,22 +22,24 @@ namespace OmniSharp.Services
 
             this.Assemblies = assemblies;
 
-            var features = this.Assemblies
+            var types = this.Assemblies
                 .SelectMany(assembly => assembly.GetTypes()
                 .Where(type => !type.GetTypeInfo().IsInterface &&
                                !type.GetTypeInfo().IsAbstract &&
                                !type.GetTypeInfo().ContainsGenericParameters));
             // TODO: handle providers with generic params
 
-            this.Refactorings = features
+            this.Refactorings = types
                 .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
                 .Select(type => CreateInstance<CodeRefactoringProvider>(type))
-                .Where(instance => instance != null);
+                .Where(instance => instance != null)
+                .ToImmutableArray();
 
-            this.CodeFixes = features
+            this.CodeFixes = types
                 .Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
                 .Select(type => CreateInstance<CodeFixProvider>(type))
-                .Where(instance => instance != null);
+                .Where(instance => instance != null)
+                .ToImmutableArray();
         }
 
         private T CreateInstance<T>(Type type) where T : class
