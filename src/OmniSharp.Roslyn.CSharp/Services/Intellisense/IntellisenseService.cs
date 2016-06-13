@@ -1,10 +1,10 @@
-using System;
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
@@ -29,7 +29,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             _formattingOptions = formattingOptions;
         }
 
-        public async Task<IEnumerable<AutoCompleteResponse>> Handle(AutoCompleteRequest request)
+        public Task<IEnumerable<AutoCompleteResponse>> Handle(AutoCompleteRequest request)
+        {
+            return request.WantSnippet
+                ? GetSnippetedResponses(request)
+                : GetResponses(request);
+        }
+
+        private async Task<IEnumerable<AutoCompleteResponse>> GetSnippetedResponses(AutoCompleteRequest request)
         {
             var documents = _workspace.GetDocuments(request.FileName);
             var wordToComplete = request.WordToComplete;
@@ -47,17 +54,45 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
                 foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
                 {
-                    if (request.WantSnippet)
+                    foreach (var completion in MakeSnippetedResponses(request, symbol))
                     {
-                        foreach (var completion in MakeSnippetedResponses(request, symbol))
-                        {
-                            completions.Add(completion);
-                        }
+                        completions.Add(completion);
                     }
-                    else
-                    {
-                        completions.Add(MakeAutoCompleteResponse(request, symbol));
-                    }
+                }
+            }
+
+            return completions
+                .OrderByDescending(c => c.CompletionText.IsValidCompletionStartsWithExactCase(wordToComplete))
+                .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
+                .ThenByDescending(c => c.CompletionText.IsCamelCaseMatch(wordToComplete))
+                .ThenByDescending(c => c.CompletionText.IsSubsequenceMatch(wordToComplete))
+                .ThenBy(c => c.CompletionText);
+        }
+
+
+        private async Task<IEnumerable<AutoCompleteResponse>> GetResponses(AutoCompleteRequest request)
+        {
+            var documents = _workspace.GetDocuments(request.FileName);
+            var wordToComplete = request.WordToComplete;
+            var completions = new HashSet<AutoCompleteResponse>();
+
+            foreach (var document in documents)
+            {
+                var sourceText = await document.GetTextAsync();
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+
+                var completionService = CompletionService.GetService(document);
+                var completionList = completionService.GetCompletionsAsync(document, position);
+
+                var model = await document.GetSemanticModelAsync();
+
+                AddKeywords(completions, model, position, request.WantKind, wordToComplete);
+
+                var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(model, position, _workspace);
+
+                foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
+                {
+                    completions.Add(MakeAutoCompleteResponse(request, symbol));
                 }
             }
 

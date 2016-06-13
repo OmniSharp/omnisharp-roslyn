@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Composition.Hosting;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using OmniSharp.Models;
@@ -13,6 +15,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class IntellisenseFacts
     {
+        private CompositionHost _plugInHost;
+
+        public IntellisenseFacts()
+        {
+            _plugInHost = TestHelpers.CreatePluginHost(new[] { typeof(IntellisenseService).GetTypeInfo().Assembly });
+        }
+
         [Fact]
         public async Task DisplayText_is_correct_for_property()
         {
@@ -200,7 +209,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var workspace = await TestHelpers.CreateSimpleWorkspace(_plugInHost, source);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
 
             if (request == null)

@@ -151,9 +151,9 @@ namespace OmniSharp.Tests
             return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), sourceFiles);
         }
 
-        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, Dictionary<string, string> sourceFiles)
         {
-            var host = _host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
+            host = host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
 
             var workspace = host.GetExport<OmnisharpWorkspace>();
             await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
