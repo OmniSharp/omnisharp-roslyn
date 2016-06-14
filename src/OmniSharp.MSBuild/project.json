@@ -20,7 +20,7 @@
         "Microsoft.Build.Targets": "0.1.0-preview-00023-160527",
         "Microsoft.Build.Tasks.Core": "0.1.0-preview-00023-160527",
         "Microsoft.Build.Utilities.Core": "0.1.0-preview-00023-160527",
-        "Microsoft.Net.Compilers": "1.3.0-beta1-20160602-01"
+        "Microsoft.Net.Compilers": "1.3.0-beta1-20160606-02"
       }
     }
   }
