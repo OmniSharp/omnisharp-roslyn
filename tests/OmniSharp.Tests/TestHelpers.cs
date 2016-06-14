@@ -116,7 +116,9 @@ namespace OmniSharp.Tests
             var mscorlib = MetadataReference.CreateFromFile(AssemblyFromType(typeof(object)).Location);
             var systemCore = MetadataReference.CreateFromFile(AssemblyFromType(typeof(Enumerable)).Location);
             var references = new[] { mscorlib, systemCore };
-            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            var workspace = new OmnisharpWorkspace(
+                new HostServicesAggregator(
+                    Enumerable.Empty<IHostServicesProvider>()));
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
 
@@ -149,9 +151,9 @@ namespace OmniSharp.Tests
             return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), sourceFiles);
         }
 
-        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, Dictionary<string, string> sourceFiles)
         {
-            var host = _host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
+            host = host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
 
             var workspace = host.GetExport<OmnisharpWorkspace>();
             await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);

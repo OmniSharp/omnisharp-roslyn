@@ -1,10 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn;
@@ -19,7 +16,8 @@ namespace OmniSharp
         public BufferManager BufferManager { get; private set; }
 
         [ImportingConstructor]
-        public OmnisharpWorkspace(HostServicesBuilder builder) : base(builder.GetHostServices(), "Custom")
+        public OmnisharpWorkspace(HostServicesAggregator aggregator)
+            : base(aggregator.CreateHostServices(), "Custom")
         {
             BufferManager = new BufferManager(this);
         }
@@ -120,7 +118,9 @@ namespace OmniSharp
 
         public IEnumerable<Document> GetDocuments(string filePath)
         {
-            return CurrentSolution.GetDocumentIdsWithFilePath(filePath).Select(id => CurrentSolution.GetDocument(id));
+            return CurrentSolution
+                .GetDocumentIdsWithFilePath(filePath)
+                .Select(id => CurrentSolution.GetDocument(id));
         }
 
         public Document GetDocument(string filePath)
@@ -130,6 +130,7 @@ namespace OmniSharp
             {
                 return null;
             }
+
             return CurrentSolution.GetDocument(documentId);
         }
 

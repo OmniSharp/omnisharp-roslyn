@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 using System.Reflection;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
@@ -7,8 +7,8 @@ namespace OmniSharp.Services
 {
     public interface ICodeActionProvider
     {
-        IEnumerable<CodeRefactoringProvider> Refactorings { get; }
-        IEnumerable<CodeFixProvider> CodeFixes { get; }
-        IEnumerable<Assembly> Assemblies { get; }
+        ImmutableArray<CodeRefactoringProvider> Refactorings { get; }
+        ImmutableArray<CodeFixProvider> CodeFixes { get; }
+        ImmutableArray<Assembly> Assemblies { get; }
     }
 }
