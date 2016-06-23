@@ -10,6 +10,13 @@
     "Microsoft.DotNet.ProjectModel": "1.0.0-rc3-002913"
   },
   "frameworks": {
+    "net451": {
+      "frameworkAssemblies": {
+        "Microsoft.Build": "",
+        "Microsoft.Build.Engine": "",
+        "Microsoft.Build.Framework": ""
+      }
+    },
     "netstandard1.6": {
       "imports": [
         "portable-net45+win8"
