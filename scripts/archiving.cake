@@ -20,8 +20,20 @@ string GetBuildIdentifier(string runtime, string framework)
     }
     else
     {
-        // Remove version number
-        runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+        // Remove version number. Note: because there are separate versions for Ubuntu 14 and 16,
+        // we treat Ubuntu as a special case.
+        if (runtime.StartsWith("ubuntu.14"))
+        {
+            runtimeShort = "ubuntu14";
+        }
+        else if (runtime.StartsWith("ubuntu.16"))
+        {
+            runtimeShort = "ubuntu16";
+        }
+        else
+        {
+            runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+        }
     }
 
     // Rename/restrict some archive names on CI
