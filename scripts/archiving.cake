@@ -24,11 +24,11 @@ string GetBuildIdentifier(string runtime, string framework)
         // we treat Ubuntu as a special case.
         if (runtime.StartsWith("ubuntu.14"))
         {
-            runtimeShort = "ubuntu14";
+            runtimeShort = "ubuntu14-x64";
         }
         else if (runtime.StartsWith("ubuntu.16"))
         {
-            runtimeShort = "ubuntu16";
+            runtimeShort = "ubuntu16-x64";
         }
         else
         {
