@@ -3,7 +3,7 @@
   "DotNetFolder": ".dotnet",
   "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain",
   "DotNetChannel": "preview",
-  "DotNetVersion": "1.0.0-preview2-002992",
+  "DotNetVersion": "1.0.0-preview2-003121",
   "BuildToolsFolder": ".tools",
   "ArtifactsFolder": "artifacts",
   "TestProjects": {

@@ -2,7 +2,7 @@
   "version": "1.0.0-*",
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
-    "Microsoft.Extensions.Testing.Abstractions": "1.0.0-preview1-002702"
+    "Microsoft.Extensions.Testing.Abstractions": "1.0.0-preview2-003121"
   },
   "frameworks": {
     "net451": {
@@ -18,7 +18,7 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0-rc3-24201-00"
+        "NETStandard.Library": "1.6.0"
       }
     }
   }

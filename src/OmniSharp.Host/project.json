@@ -9,19 +9,19 @@
     "OmniSharp.Stdio": "1.0.0",
     "OmniSharp.Plugins": "1.0.0",
     "OmniSharp.Roslyn": "1.0.0",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc3-21261",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc3-21261",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-rc3-002913",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.Options": "1.0.0-rc3-21261",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc3-21261"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0",
+    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0",
+    "Microsoft.Extensions.DependencyModel": "1.0.0",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0",
+    "Microsoft.Extensions.Logging.Console": "1.0.0",
+    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0"
   },
   "frameworks": {
     "net451": {
@@ -37,9 +37,9 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0-rc3-24201-00",
-        "System.Runtime.Loader": "4.0.0-rc3-24201-00",
-        "System.IO.Compression": "4.1.0-rc3-24201-00"
+        "NETStandard.Library": "1.6.0",
+        "System.Runtime.Loader": "4.0.0",
+        "System.IO.Compression": "4.1.0"
       }
     }
   }
