@@ -30,6 +30,7 @@ namespace OmniSharp
             var otherArgs = new List<string>();
             var plugins = new List<string>();
             var serverInterface = "localhost";
+            var encoding = System.Text.Encoding.Default;
 
             var enumerator = args.GetEnumerator();
 
@@ -73,6 +74,11 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     serverInterface = (string)enumerator.Current;
                 }
+                else if(arg == "--encoding")
+                {
+                    enumerator.MoveNext();
+                    encoding=System.Text.Encoding.GetEncoding((string)enumerator.Current);
+                }
                 else
                 {
                     otherArgs.Add((string)enumerator.Current);
@@ -100,6 +106,8 @@ namespace OmniSharp
 
             if (transportType == TransportType.Stdio)
             {
+                Console.InputEncoding = encoding;
+                Console.OutputEncoding = encoding;
                 builder.UseServer(new StdioServer(Console.In, writer));
             }
             else
