@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,7 @@ namespace OmniSharp
             var otherArgs = new List<string>();
             var plugins = new List<string>();
             var serverInterface = "localhost";
-            var encoding = System.Text.Encoding.Default;
+            Encoding encoding = null;
 
             var enumerator = args.GetEnumerator();
 
@@ -74,10 +75,10 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     serverInterface = (string)enumerator.Current;
                 }
-                else if(arg == "--encoding")
+                else if (arg == "--encoding")
                 {
                     enumerator.MoveNext();
-                    encoding=System.Text.Encoding.GetEncoding((string)enumerator.Current);
+                    encoding = Encoding.GetEncoding((string)enumerator.Current);
                 }
                 else
                 {
@@ -106,8 +107,11 @@ namespace OmniSharp
 
             if (transportType == TransportType.Stdio)
             {
-                Console.InputEncoding = encoding;
-                Console.OutputEncoding = encoding;
+                if(encoding != null)
+                {
+                    Console.InputEncoding = encoding;
+                    Console.OutputEncoding = encoding;
+                }
                 builder.UseServer(new StdioServer(Console.In, writer));
             }
             else
