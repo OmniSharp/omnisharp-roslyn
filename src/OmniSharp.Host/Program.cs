@@ -107,7 +107,7 @@ namespace OmniSharp
 
             if (transportType == TransportType.Stdio)
             {
-                if(encoding != null)
+                if (encoding != null)
                 {
                     Console.InputEncoding = encoding;
                     Console.OutputEncoding = encoding;
