@@ -23,7 +23,7 @@ var workingDirectory = System.IO.Directory.GetCurrentDirectory();
 
 // System specific shell configuration
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
-var shellArgument = IsRunningOnWindows() ? "/Command" : "-C";
+var shellArgument = IsRunningOnWindows() ? "-NoProfile /Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
 /// <summary>
