@@ -15,7 +15,7 @@ namespace OmniSharp.Plugins
             _paths = paths;
         }
 
-        public IEnumerable<string> GetPlugins(IApplicationEnvironment appEnv)
+        public IEnumerable<string> GetPlugins(ApplicationEnvironment appEnv)
         {
             return Directory.GetDirectories(Path.Combine(appEnv.ApplicationBasePath, "plugins"), "*", SearchOption.TopDirectoryOnly)
                 .Concat(this._paths)

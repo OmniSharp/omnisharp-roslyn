@@ -22,7 +22,7 @@ using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
-#if NETSTANDARD1_5
+#if !NET451
 using System.Runtime.Loader;
 #endif
 
@@ -137,14 +137,14 @@ namespace OmniSharp
             return container;
         }
 
-        public IEnumerable<Assembly> LoadPlugins(PluginAssemblies plugins, IApplicationEnvironment appEnv)
+        public IEnumerable<Assembly> LoadPlugins(PluginAssemblies plugins, ApplicationEnvironment appEnv)
         {
             return plugins.GetPlugins(appEnv)
+                  .Where(x => { Console.WriteLine(x); return true; })
 #if NET451
                   .Select(AssemblyName.GetAssemblyName)
                   .Select(Assembly.Load);
 #else
-                  .Where(x => { Console.WriteLine(x); return true; })
                   .Select(AssemblyLoadContext.GetAssemblyName)
                   .Select(AssemblyLoadContext.Default.LoadFromAssemblyName)
                   .ToArray();
@@ -152,7 +152,6 @@ namespace OmniSharp
         }
 
         public void Configure(IApplicationBuilder app,
-                              IApplicationEnvironment appEnv,
                               IServiceProvider serviceProvider,
                               IOmnisharpEnvironment env,
                               ILoggerFactory loggerFactory,
@@ -167,7 +166,7 @@ namespace OmniSharp
                                               .Where(shouldLoad)
                                               .SelectMany(lib => lib.GetDefaultAssemblyNames(DependencyContext.Default))
                                               .Select(loader.Load)
-                                              .Concat(LoadPlugins(plugins, appEnv));
+                                              .Concat(LoadPlugins(plugins, PlatformServices.Default.Application));
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 

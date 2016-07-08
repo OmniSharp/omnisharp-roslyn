@@ -68,6 +68,7 @@ var publishFolder = System.IO.Path.Combine(artifactFolder, "publish");
 var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
 var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
+var pluginFolder =  System.IO.Path.Combine(artifactFolder, "plugins");
 
 /// <summary>
 ///  Clean artifacts.

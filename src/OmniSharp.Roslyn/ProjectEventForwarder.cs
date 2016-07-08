@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Composition;
-using System.Composition.Hosting;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
