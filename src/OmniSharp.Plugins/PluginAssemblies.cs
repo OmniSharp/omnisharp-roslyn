@@ -17,10 +17,15 @@ namespace OmniSharp.Plugins
 
         public IEnumerable<string> GetPlugins(ApplicationEnvironment appEnv)
         {
-            return Directory.GetDirectories(Path.Combine(appEnv.ApplicationBasePath, "plugins"), "*", SearchOption.TopDirectoryOnly)
-                .Concat(this._paths)
-                .SelectMany(x => Directory.GetFiles(x, "*.dll", SearchOption.TopDirectoryOnly))
-                .ToArray();
+            var pluginPath = Path.Combine(appEnv.ApplicationBasePath, "plugins");
+            if (Directory.Exists(pluginPath))
+            {
+                return Directory.GetDirectories(pluginPath, "*", SearchOption.TopDirectoryOnly)
+                    .Concat(this._paths)
+                    .SelectMany(x => Directory.GetFiles(x, "*.dll", SearchOption.TopDirectoryOnly))
+                    .ToArray();
+            }
+            return Enumerable.Empty<string>();
         }
     }
 }

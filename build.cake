@@ -317,7 +317,6 @@ Task("Test")
 ///  No dependencies on other tasks to support quick builds.
 /// </summary>
 Task("OnlyPublish")
-    .IsDependentOn("Cleanup")
     .IsDependentOn("Setup")
     .Does(() =>
 {
@@ -370,7 +369,7 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
-            var liteFolder = System.IO.Path.Combine(publishFolder, $"{project}-lite", runtime, framework);
+            var liteFolder = System.IO.Path.Combine(publishFolder, $"{project}.lite", runtime, framework);
             var publishArguments = "publish";
             if (!runtime.Equals("default"))
             {
@@ -445,10 +444,11 @@ Task("OnlyPublish")
 
             DoArchive(runtime, outputFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}-{buildIdentifier}"));
             // Archive vare repo
-            DoArchive(runtime, liteFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}-lite-{buildIdentifier}"));
+            DoArchive(runtime, liteFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}.lite-{buildIdentifier}"));
         }
     }
-    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
+    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder, "OmniSharp");
+    CreateRunScript(System.IO.Path.Combine(publishFolder, $"{project}.lite", "default"), scriptFolder, "OmniSharp.Lite");
 });
 
 /// <summary>
@@ -494,7 +494,7 @@ Task("TestPublished")
 {
     var project = buildPlan.MainProject;
     var projectFolder = System.IO.Path.Combine(sourceFolder, project);
-    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core", "OmniSharp.Lite", "OmniSharp.Lite.Core"};
     foreach (var script in scriptsToTest)
     {
         var scriptPath = System.IO.Path.Combine(scriptFolder, script);
@@ -555,7 +555,7 @@ Task("Install")
         foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
             System.IO.File.Copy(file, System.IO.Path.Combine(targetFolder, file.Substring(outputFolder.Length + 1)), true);
     }
-    CreateRunScript(installFolder, scriptFolder);
+    CreateRunScript(installFolder, scriptFolder, "OmniSharp");
 });
 
 /// <summary>
