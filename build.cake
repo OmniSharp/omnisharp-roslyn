@@ -18,6 +18,21 @@ var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment
                                                                         ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 
+var tag = "";
+var appveyorTag = EnvironmentVariable("APPVEYOR_REPO_TAG_NAME");
+if (!string.IsNullOrWhiteSpace(appveyorTag))
+{
+    tag = appveyorTag;
+}
+
+var travisTag = EnvironmentVariable("TRAVIS_TAG");
+if (!string.IsNullOrWhiteSpace(travisTag))
+{
+    tag = travisTag;
+}
+
+tag = tag.TrimStart('v');
+
 // Working directory
 var workingDirectory = System.IO.Directory.GetCurrentDirectory();
 
@@ -46,11 +61,6 @@ public class BuildPlan
     public string[] Plugins { get; set; }
     // TODO: Remove once scriptcs/msbuild are not longer required
     public IDictionary<string, string[]> PluginsByFramework { get; set; }
-}
-
-public class ProjectJson
-{
-    public IDictionary<string, object> frameworks { get; set; }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
@@ -84,6 +94,7 @@ Task("Cleanup")
     System.IO.Directory.CreateDirectory(logFolder);
     System.IO.Directory.CreateDirectory(packageFolder);
     System.IO.Directory.CreateDirectory(scriptFolder);
+    System.IO.Directory.CreateDirectory(pluginFolder);
 });
 
 /// <summary>
@@ -306,42 +317,51 @@ Task("Test")
 ///  No dependencies on other tasks to support quick builds.
 /// </summary>
 Task("OnlyPublish")
+    .IsDependentOn("Cleanup")
     .IsDependentOn("Setup")
     .Does(() =>
 {
+    var coreclrPlugins = new List<string>();
+    var desktopPlugins = new List<string>();
+
     foreach (var plugin in buildPlan.Plugins)
     {
-        foreach (var runtime in buildPlan.Rids)
+        var pluginProject = System.IO.Path.Combine(sourceFolder, plugin, "project.json");
+        var projectJson = JObject.Parse(
+            System.IO.File.ReadAllText(System.IO.Path.Combine(sourceFolder, plugin, "project.json")));
+        var version = projectJson["version"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(tag))
         {
-            var buildArguments = "build";
-            buildArguments = $"{buildArguments} --configuration {configuration}";
-            buildArguments = $"{buildArguments} {sourceFolder}/{plugin}";
-            var exitCode = StartProcess(dotnetcli,
-                new ProcessSettings
-                {
-                    Arguments = buildArguments
-                });
-            if (exitCode != 0)
-            {
-                throw new Exception($"Failed to build {plugin}");
-            }
+            projectJson["version"] = tag;
+            System.IO.File.WriteAllText(pluginProject, projectJson.ToString());
+
+            /*RunRestore(dotnetcli, "restore", System.IO.Path.Combine(sourceFolder, plugin))
+                .ExceptionOnError($"Failed to restore {plugin}.");*/
         }
 
-        var projectJson = JsonConvert.DeserializeObject<ProjectJson>(
-            System.IO.File.ReadAllText($"{sourceFolder}/{plugin}/project.json"));
+        var buildArguments = "pack";
+        buildArguments = $"{buildArguments} --configuration {configuration}";
+        buildArguments = $"{buildArguments} --output \"{pluginFolder}\" \"{sourceFolder}/{plugin}\"";
+        Run(dotnetcli, buildArguments)
+            .ExceptionOnError($"Failed to build {plugin}");
 
-        foreach (var kvp in projectJson.frameworks)
+        if (!string.IsNullOrWhiteSpace(tag))
         {
-            var framework = kvp.Key;
+            projectJson["version"] = version;
+            System.IO.File.WriteAllText(pluginProject, projectJson.ToString());
+        }
+
+        foreach (JProperty kvp in projectJson["frameworks"])
+        {
+            var framework = kvp.Name;
             if (framework.StartsWith("netstandard"))
             {
-                var outputFolder = $"{pluginFolder}/coreclr/{plugin}";
-                CopyDirectory($"{sourceFolder}/{plugin}/bin/{configuration}/{framework}", outputFolder);
+                coreclrPlugins.Add(System.IO.Path.Combine(sourceFolder, plugin, "bin", configuration, framework));
             }
             if (framework.StartsWith("net451"))
             {
-                var outputFolder = $"{pluginFolder}/desktop/{plugin}";
-                CopyDirectory($"{sourceFolder}/{plugin}/bin/{configuration}/{framework}", outputFolder);
+                desktopPlugins.Add(System.IO.Path.Combine(sourceFolder, plugin, "bin", configuration, framework));
             }
         }
     }
@@ -353,7 +373,7 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
-            var bareFolder = System.IO.Path.Combine(publishFolder, $"{project}-bare", runtime, framework);
+            var liteFolder = System.IO.Path.Combine(publishFolder, $"{project}-lite", runtime, framework);
             var publishArguments = "publish";
             if (!runtime.Equals("default"))
             {
@@ -364,23 +384,37 @@ Task("OnlyPublish")
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
-            CopyDirectory(outputFolder, bareFolder);
-            var pluginsFolder = $"{outputFolder}/plugins";
+            var pluginsFolder = System.IO.Path.Combine(outputFolder, "plugins", "base");
+            if (DirectoryExists(pluginsFolder))
+            {
+                System.IO.Directory.CreateDirectory(pluginsFolder);
+            }
 
-            if (!DirectoryExists(artifactFolder))
+            CopyDirectory(outputFolder, liteFolder);
+
+            if (!DirectoryExists(System.IO.Path.Combine(outputFolder, "plugins")))
+            {
+                CreateDirectory(System.IO.Path.Combine(outputFolder, "plugins"));
+            }
+
+            if (!DirectoryExists(pluginsFolder))
             {
                 CreateDirectory(pluginsFolder);
             }
 
             if (framework.StartsWith("netcoreapp"))
             {
-                var pluginsPath = $"{pluginFolder}/coreclr";
-                CopyDirectory(pluginsPath, pluginsFolder);
+                foreach (var pluginPath in coreclrPlugins)
+                {
+                    CopyDirectory(pluginPath, pluginsFolder);
+                }
             }
             if (framework.Equals("net451"))
             {
-                var pluginsPath = $"{pluginFolder}/desktop";
-                CopyDirectory(pluginsPath, pluginsFolder);
+                foreach (var pluginPath in desktopPlugins)
+                {
+                    CopyDirectory(pluginPath, pluginsFolder);
+                }
             }
 
             if (requireArchive)
@@ -412,9 +446,9 @@ Task("OnlyPublish")
                 continue;
             }
 
-            DoArchive(runtime, outputFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-{buildIdentifier}");
+            DoArchive(runtime, outputFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}-{buildIdentifier}"));
             // Archive vare repo
-            DoArchive(runtime, bareFolder, $"{packageFolder}/{buildPlan.MainProject.ToLower()}-bare-{buildIdentifier}");
+            DoArchive(runtime, liteFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}-lite-{buildIdentifier}"));
         }
     }
     CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
