@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -36,18 +37,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             if (document != null)
             {
-                response = await new FixUsingsWorker(_loggerFactory, _loader).FixUsings(_workspace, _codeActionProviders, document);
+                var fixUsingsResponse = await new FixUsingsWorker(_loggerFactory, _loader).FixUsings(_workspace.CurrentSolution, _codeActionProviders, request.FileName);
+                response.AmbiguousResults = fixUsingsResponse.AmbiguousResults;
+
+                if (request.ApplyTextChanges)
+                {
+                    _workspace.TryApplyChanges(fixUsingsResponse.Solution);
+                }
 
                 if (!request.WantsTextChanges)
                 {
                     // return the new document
-                    var docText = await _workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
+                    var docText = await fixUsingsResponse.Solution.GetDocument(document.Id).GetTextAsync();
                     response.Buffer = docText.ToString();
                 }
                 else
                 {
                     // return the text changes
-                    var changes = await _workspace.CurrentSolution.GetDocument(document.Id).GetTextChangesAsync(document);
+                    var changes = await fixUsingsResponse.Solution.GetDocument(document.Id).GetTextChangesAsync(document);
                     response.Changes = await LinePositionSpanTextChange.Convert(document, changes);
                 }
             }

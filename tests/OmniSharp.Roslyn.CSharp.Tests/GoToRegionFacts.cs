@@ -30,13 +30,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.Equal(4, regions.QuickFixes.Count());
             Assert.Equal("#region A", regions.QuickFixes.ElementAt(0).Text);
-            Assert.Equal(4, regions.QuickFixes.ElementAt(0).Line);
+            Assert.Equal(3, regions.QuickFixes.ElementAt(0).Line);
             Assert.Equal("#endregion", regions.QuickFixes.ElementAt(1).Text);
-            Assert.Equal(6, regions.QuickFixes.ElementAt(1).Line);
+            Assert.Equal(5, regions.QuickFixes.ElementAt(1).Line);
             Assert.Equal("#region B", regions.QuickFixes.ElementAt(2).Text);
-            Assert.Equal(8, regions.QuickFixes.ElementAt(2).Line);
+            Assert.Equal(7, regions.QuickFixes.ElementAt(2).Line);
             Assert.Equal("#endregion", regions.QuickFixes.ElementAt(3).Text);
-            Assert.Equal(10, regions.QuickFixes.ElementAt(3).Line);
+            Assert.Equal(9, regions.QuickFixes.ElementAt(3).Line);
         }
 
         [Fact]

@@ -1,41 +1,45 @@
 {
   "version": "1.0.0-*",
-  "compilationOptions": {
-    "warningsAsErrors": true,
-    "preserveCompilationContext": true
+  "buildOptions": {
+    "warningsAsErrors": true
   },
   "dependencies": {
-    "OmniSharp.Abstractions": "1.0.0-*",
-    "OmniSharp.Nuget": "1.0.0-*",
-    "OmniSharp.Stdio": "1.0.0-*",
-    "OmniSharp.Plugins": "1.0.0-*",
-    "OmniSharp.Roslyn": "1.0.0-*",
-    "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-20143",
-    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-20143",
+    "OmniSharp.Abstractions": "1.0.0",
+    "OmniSharp.Nuget": "1.0.0",
+    "OmniSharp.Stdio": "1.0.0",
+    "OmniSharp.Plugins": "1.0.0",
+    "OmniSharp.Roslyn": "1.0.0",
+    "Microsoft.AspNetCore.Diagnostics": "1.0.0",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.0",
     "Microsoft.Composition": "1.0.30",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-beta-001718",
-    "Microsoft.Extensions.Caching.Memory": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.DependencyModel": "1.0.0-beta-001718",
-    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.Options": "1.0.0-rc2-20143",
-    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-20143"
+    "Microsoft.Extensions.Caching.Memory": "1.0.0",
+    "Microsoft.Extensions.Configuration.Json": "1.0.0",
+    "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0",
+    "Microsoft.Extensions.Configuration.CommandLine": "1.0.0",
+    "Microsoft.Extensions.DependencyModel": "1.0.0",
+    "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0",
+    "Microsoft.Extensions.FileSystemGlobbing": "1.0.0",
+    "Microsoft.Extensions.Logging.Console": "1.0.0",
+    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0"
   },
   "frameworks": {
-    "dnx451": {
+    "net451": {
       "frameworkAssemblies": {
         "System.ComponentModel.Composition": ""
       },
       "dependencies": {}
     },
-    "dnxcore50": {
-      "imports": "portable-net45+win8",
+    "netstandard1.6": {
+      "imports": [
+        "dotnet5.6",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "NETStandard.Library": "1.0.0-rc2-23910",
-        "System.Runtime.Loader": "4.0.0-rc2-23911",
-        "System.IO.Compression": "4.1.0-rc2-23911"
+        "NETStandard.Library": "1.6.0",
+        "System.Runtime.Loader": "4.0.0",
+        "System.IO.Compression": "4.1.0"
       }
     }
   }

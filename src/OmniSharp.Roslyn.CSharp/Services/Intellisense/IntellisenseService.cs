@@ -1,14 +1,12 @@
-using System;
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
-using OmniSharp.Intellisense;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -38,12 +36,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             foreach (var document in documents)
             {
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+
+                var service = CompletionService.GetService(document);
+                var completionList = await service.GetCompletionsAsync(document, position);
+
+                // Add keywords from the completion list. We'll use the recommender service to get symbols
+                // to create snippets from.
+
+                foreach (var item in completionList.Items)
+                {
+                    if (item.Tags.Contains(CompletionTags.Keyword))
+                    {
+                        // Note: For keywords, we'll just assume that the completion text is the same
+                        // as the display text.
+                        var keyword = item.DisplayText;
+                        if (keyword.IsValidCompletionFor(wordToComplete))
+                        {
+                            var response = new AutoCompleteResponse()
+                            {
+                                CompletionText = item.DisplayText,
+                                DisplayText = item.DisplayText,
+                                Snippet = item.DisplayText,
+                                Kind = request.WantKind ? "Keyword" : null
+                            };
+
+                            completions.Add(response);
+                        }
+                    }
+                }
+
                 var model = await document.GetSemanticModelAsync();
-
-                AddKeywords(completions, model, position, request.WantKind, wordToComplete);
-
-                var symbols = Recommender.GetRecommendedSymbolsAtPosition(model, position, _workspace);
+                var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(model, position, _workspace);
 
                 foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
                 {
@@ -69,27 +93,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenBy(c => c.CompletionText);
         }
 
-        private void AddKeywords(HashSet<AutoCompleteResponse> completions, SemanticModel model, int position, bool wantKind, string wordToComplete)
-        {
-            var context = CSharpSyntaxContext.CreateContext(_workspace, model, position, CancellationToken.None);
-            var keywordHandler = new KeywordContextHandler();
-            var keywords = keywordHandler.Get(context, model, position);
-
-            foreach (var keyword in keywords.Where(k => k.IsValidCompletionFor(wordToComplete)))
-            {
-                completions.Add(new AutoCompleteResponse
-                {
-                    CompletionText = keyword,
-                    DisplayText = keyword,
-                    Snippet = keyword,
-                    Kind = wantKind ? "Keyword" : null
-                });
-            }
-        }
-
         private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol)
         {
             var completions = new List<AutoCompleteResponse>();
+
             var methodSymbol = symbol as IMethodSymbol;
             if (methodSymbol != null)
             {
@@ -97,9 +104,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 {
                     completions.Add(MakeAutoCompleteResponse(request, symbol, false));
                 }
+
                 completions.Add(MakeAutoCompleteResponse(request, symbol));
+
                 return completions;
             }
+
             var typeSymbol = symbol as INamedTypeSymbol;
             if (typeSymbol != null)
             {
@@ -112,8 +122,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                         completions.Add(MakeAutoCompleteResponse(request, ctor));
                     }
                 }
+
                 return completions;
             }
+
             return new[] { MakeAutoCompleteResponse(request, symbol) };
         }
 

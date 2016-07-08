@@ -64,10 +64,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return new DiagnosticLocation
             {
                 FileName = span.Path,
-                Line = span.StartLinePosition.Line + 1,
-                Column = span.StartLinePosition.Character + 1,
-                EndLine = span.EndLinePosition.Line + 1,
-                EndColumn = span.EndLinePosition.Character + 1,
+                Line = span.StartLinePosition.Line,
+                Column = span.StartLinePosition.Character,
+                EndLine = span.EndLinePosition.Line,
+                EndColumn = span.EndLinePosition.Character,
                 Text = diagnostic.GetMessage(),
                 LogLevel = diagnostic.Severity.ToString()
             };

@@ -1,5 +1,5 @@
 using System.Linq;
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
@@ -12,7 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
         {
-            workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            workspace = new OmnisharpWorkspace(
+                new HostServicesAggregator(
+                    Enumerable.Empty<IHostServicesProvider>()));
+
             controller = new ChangeBufferService(workspace);
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
@@ -36,12 +39,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", "class C {}");
 
             // insert edit
-            await controller.Handle(new Models.ChangeBufferRequest()
+            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
             {
-                StartLine = 1,
-                StartColumn = 1,
-                EndLine = 1,
-                EndColumn = 1,
+                StartLine = 0,
+                StartColumn = 0,
+                EndLine = 0,
+                EndColumn = 0,
                 NewText = "farboo",
                 FileName = "test.cs"
             });
@@ -49,12 +52,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("farbooclass C {}", sourceText.ToString());
 
             // remove edit
-            await controller.Handle(new Models.ChangeBufferRequest()
+            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
             {
-                StartLine = 1,
-                StartColumn = 1,
-                EndLine = 1,
-                EndColumn = 7,
+                StartLine = 0,
+                StartColumn = 0,
+                EndLine = 0,
+                EndColumn = 6,
                 NewText = "",
                 FileName = "test.cs"
             });
@@ -62,12 +65,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("class C {}", sourceText.ToString());
 
             // modification edit
-            await controller.Handle(new Models.ChangeBufferRequest()
+            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
             {
-                StartLine = 1,
-                StartColumn = 1,
-                EndLine = 1,
-                EndColumn = 6,
+                StartLine = 0,
+                StartColumn = 0,
+                EndLine = 0,
+                EndColumn = 5,
                 NewText = "interface",
                 FileName = "test.cs"
             });

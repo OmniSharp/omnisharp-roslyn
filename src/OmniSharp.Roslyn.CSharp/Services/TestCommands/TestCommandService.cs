@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
                 var semanticModel = await document.GetSemanticModelAsync();
                 var syntaxTree = semanticModel.SyntaxTree;
                 var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var node = syntaxTree.GetRoot().FindToken(position).Parent;
 
                 SyntaxNode method = node.FirstAncestorOrSelf<MethodDeclarationSyntax>();

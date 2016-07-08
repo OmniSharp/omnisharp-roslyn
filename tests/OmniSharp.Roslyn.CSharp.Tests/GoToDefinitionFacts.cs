@@ -5,6 +5,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Services;
 using OmniSharp.Tests;
+using TestUtility.Annotate;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -21,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _loggerFactory.AddConsole();
             _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
 
-            _loader = new TestOmnisharpAssemblyLoader(_logger);
+            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]
@@ -43,14 +44,14 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 2,
-                Column = 14,
+                Line = 1,
+                Column = 13,
                 Timeout = 60000
             });
 
             Assert.Equal("foo.cs", definitionResponse.FileName);
-            Assert.Equal(3, definitionResponse.Line);
-            Assert.Equal(7, definitionResponse.Column);
+            Assert.Equal(2, definitionResponse.Line);
+            Assert.Equal(6, definitionResponse.Column);
         }
 
         [Fact]
@@ -72,8 +73,8 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 2,
-                Column = 14,
+                Line = 1,
+                Column = 13,
                 Timeout = 60000
             });
 
@@ -90,15 +91,15 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 13,
-                Column = 18,
+                Line = 12,
+                Column = 17,
                 Timeout = 60000,
                 WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Guid", definitionResponse.MetadataSource.TypeName);
             // We probably shouldn't hard code metadata locations (they could change randomly)
             Assert.NotEqual(0, definitionResponse.Line);
@@ -113,15 +114,15 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 11,
-                Column = 17,
+                Line = 10,
+                Column = 16,
                 Timeout = 60000,
                 WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -135,15 +136,15 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 9,
-                Column = 25,
+                Line = 8,
+                Column = 24,
                 Timeout = 60000,
                 WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -157,15 +158,15 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 12,
-                Column = 26,
+                Line = 11,
+                Column = 25,
                 Timeout = 60000,
                 WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.Dictionary`2", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -179,15 +180,15 @@ class Foo {
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
             {
                 FileName = "bar.cs",
-                Line = 10,
-                Column = 23,
+                Line = 9,
+                Column = 22,
                 Timeout = 60000,
                 WantMetadata = true
             });
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("mscorlib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.String", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
@@ -30,8 +31,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
-            var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
+            var response = new RunCodeActionResponse();
 
+            var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
             var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
             if (action == null)
             {
@@ -42,17 +44,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var operations = await action.GetOperationsAsync(CancellationToken.None);
 
             var solution = _workspace.CurrentSolution;
+            var changes = Enumerable.Empty<OmniSharp.Models.ModifiedFileResponse>();
+            var directoryName = Path.GetDirectoryName(request.FileName);
             foreach (var o in operations)
             {
-                o.Apply(_workspace, CancellationToken.None);
+                var applyChangesOperation = o as ApplyChangesOperation;
+                if (applyChangesOperation != null)
+                {
+                    changes = changes.Concat(await FileChanges.GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directoryName, request.WantsTextChanges));
+                    solution = applyChangesOperation.ChangedSolution;
+                }
             }
 
-            var response = new RunCodeActionResponse();
-            var directoryName = Path.GetDirectoryName(request.FileName);
-            var changes = await FileChanges.GetFileChangesAsync(_workspace.CurrentSolution, solution, directoryName, request.WantsTextChanges);
+            if (request.ApplyTextChanges)
+            {
+                _workspace.TryApplyChanges(solution);
+            }
 
             response.Changes = changes;
-            _workspace.TryApplyChanges(_workspace.CurrentSolution);
             return response;
         }
     }

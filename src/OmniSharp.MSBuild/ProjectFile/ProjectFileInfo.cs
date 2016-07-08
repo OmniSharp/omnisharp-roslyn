@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-#if DNX451
+#if NET451
 using Microsoft.Build.BuildEngine;
+using Microsoft.Build.Evaluation;
+#else
 using Microsoft.Build.Evaluation;
 #endif
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.DotNet.ProjectModel.Resolution;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
+using NuGet.Frameworks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 
@@ -49,12 +54,22 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public OutputKind OutputKind { get; private set; }
 
-        public static ProjectFileInfo Create(MSBuildOptions options, ILogger logger, string solutionDirectory, string projectFilePath, ICollection<MSBuildDiagnosticsMessage> diagnostics)
+        public bool SignAssembly { get; private set; }
+
+        public string AssemblyOriginatorKeyFile { get; private set; }
+
+        public bool GenerateXmlDocumentation { get; private set; }
+
+        public static ProjectFileInfo Create(
+            MSBuildOptions options,
+            ILogger logger,
+            string solutionDirectory,
+            string projectFilePath,
+            ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
             var projectFileInfo = new ProjectFileInfo();
             projectFileInfo.ProjectFilePath = projectFilePath;
 
-#if DNX451
             if (!PlatformHelper.IsMono)
             {
                 var properties = new Dictionary<string, string>
@@ -93,14 +108,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
                 var outputType = projectInstance.GetPropertyValue("OutputType");
-                switch(outputType)
+                switch (outputType)
                 {
-                    case "Library": projectFileInfo.OutputKind = OutputKind.DynamicallyLinkedLibrary;
+                    case "Library":
+                        projectFileInfo.OutputKind = OutputKind.DynamicallyLinkedLibrary;
                         break;
-                    case "WinExe": projectFileInfo.OutputKind = OutputKind.WindowsApplication;
+                    case "WinExe":
+                        projectFileInfo.OutputKind = OutputKind.WindowsApplication;
                         break;
                     default:
-                    case "Exe": projectFileInfo.OutputKind = OutputKind.ConsoleApplication;
+                    case "Exe":
+                        projectFileInfo.OutputKind = OutputKind.ConsoleApplication;
                         break;
                 }
 
@@ -109,11 +127,52 @@ namespace OmniSharp.MSBuild.ProjectFile
                                    .Select(p => p.GetMetadataValue("FullPath"))
                                    .ToList();
 
-                projectFileInfo.References =
-                    projectInstance.GetItems("ReferencePath")
-                                   .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
-                                   .Select(p => p.GetMetadataValue("FullPath"))
-                                   .ToList();
+
+                if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+                {
+                    var framework = new NuGetFramework(projectFileInfo.TargetFramework.Identifier,
+                                                       projectFileInfo.TargetFramework.Version,
+                                                       projectFileInfo.TargetFramework.Profile);
+
+                    // CoreCLR MSBuild won't be able to resolve framework assemblies from mono now.
+                    projectFileInfo.References = projectInstance
+                        .GetItems("ReferencePath")
+                        .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
+                        .Select(p =>
+                        {
+                            var fullpath = p.GetMetadataValue("FullPath");
+                            if (!File.Exists(fullpath))
+                            {
+                                string referenceName = Path.GetFileNameWithoutExtension(fullpath);
+                                string path;
+                                Version version;
+                                if (FrameworkReferenceResolver.Default.TryGetAssembly(referenceName, framework, out path, out version))
+                                {
+                                    logger.LogInformation($"Resolved refernce path: {referenceName} => {version} at {path}");
+                                }
+                                else
+                                {
+                                    logger.LogError($"Fail to resolve reference path for {referenceName}");
+                                }
+
+                                return path;
+                            }
+                            else
+                            {
+                                logger.LogInformation($"Resolved reference path {fullpath} by MSBuild.");
+                                return fullpath;
+                            }
+
+                        }).ToList();
+                }
+                else
+                {
+                    projectFileInfo.References =
+                        projectInstance.GetItems("ReferencePath")
+                                       .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
+                                       .Select(p => p.GetMetadataValue("FullPath"))
+                                       .ToList();
+                }
 
                 projectFileInfo.ProjectReferences =
                     projectInstance.GetItems("ProjectReference")
@@ -136,9 +195,24 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
+
+                var signAssembly = projectInstance.GetPropertyValue("SignAssembly");
+                if (!string.IsNullOrWhiteSpace(signAssembly))
+                {
+                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                }
+
+                projectFileInfo.AssemblyOriginatorKeyFile = projectInstance.GetPropertyValue("AssemblyOriginatorKeyFile");
+
+                var documentationFile = projectInstance.GetPropertyValue("DocumentationFile");
+                if (!string.IsNullOrWhiteSpace(documentationFile))
+                {
+                    projectFileInfo.GenerateXmlDocumentation = true;
+                }
             }
             else
             {
+#if NET451
                 // On mono we need to use this API since the ProjectCollection
                 // isn't fully implemented
 #pragma warning disable CS0618
@@ -214,10 +288,23 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
-            }
-#else
-            // TODO: Shell out to msbuild/xbuild here?
+
+                var signAssembly = properties["SignAssembly"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(signAssembly))
+                {
+                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                }
+
+                projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
+
+                var documentationFile = properties["DocumentationFile"].FinalValue;
+                if (!string.IsNullOrWhiteSpace(documentationFile))
+                {
+                    projectFileInfo.GenerateXmlDocumentation = true;
+                }
 #endif
+            }
+
             return projectFileInfo;
         }
 
@@ -240,7 +327,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
     }
 
-    #if DNX451
+#if NET451
     static class DictionaryExt
     {
         public static string GetPropertyValue(this Dictionary<string, BuildProperty> dict, string key)
@@ -250,5 +337,5 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : null;
         }
     }
-    #endif
+#endif
 }

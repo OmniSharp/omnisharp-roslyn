@@ -24,9 +24,9 @@ namespace OmniSharp.Roslyn
         public MetadataHelper(IOmnisharpAssemblyLoader loader)
         {
             _loader = loader;
-            _featureAssembly = _loader.LazyLoad("Microsoft.CodeAnalysis.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-            _csharpFeatureAssembly = _loader.LazyLoad("Microsoft.CodeAnalysis.CSharp.Features, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-            _workspaceAssembly = _loader.LazyLoad("Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            _featureAssembly = _loader.LazyLoad(Configuration.GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Features"));
+            _csharpFeatureAssembly = _loader.LazyLoad(Configuration.GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.CSharp.Features"));
+            _workspaceAssembly = _loader.LazyLoad(Configuration.GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Workspaces"));
 
             _csharpMetadataAsSourceServices = new Lazy<Type>(() =>
             {
@@ -80,9 +80,8 @@ namespace OmniSharp.Roslyn
 
         public async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
         {
-            var metadataSemanticModel = await metadataDocument.GetSemanticModelAsync();
             var symbolKeyCreateMethod = _symbolKey.Value.GetMethod("Create", BindingFlags.Static | BindingFlags.NonPublic);
-            var symboldId = symbolKeyCreateMethod.Invoke(null, new object[] { symbol, metadataSemanticModel.Compilation, cancellationToken });
+            var symboldId = symbolKeyCreateMethod.Invoke(null, new object[] { symbol, cancellationToken });
 
             return await (Task<Location>)_getLocationInGeneratedSourceAsync.Value.Invoke(null, new object[] { symboldId, metadataDocument, cancellationToken });
         }

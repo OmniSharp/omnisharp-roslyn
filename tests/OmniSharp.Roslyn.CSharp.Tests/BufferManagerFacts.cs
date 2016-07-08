@@ -74,7 +74,9 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnNearestPath()
         {
-            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            var workspace = new OmnisharpWorkspace(
+                new HostServicesAggregator(
+                    Enumerable.Empty<IHostServicesProvider>()));
 
             await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "root", "foo.csproj"),
                 new[] { "" },
@@ -110,20 +112,20 @@ namespace OmniSharp.Tests
                 {
                     // class C {} -> interface C {}
                     new LinePositionSpanTextChange() {
-                        StartLine = 1,
-                        StartColumn = 1,
-                        EndLine = 1,
-                        EndColumn = 6,
+                        StartLine = 0,
+                        StartColumn = 0,
+                        EndLine = 0,
+                        EndColumn = 5,
                         NewText = "interface"
                     },
                     // interface C {} -> interface I {}
                     // note: this change is relative to the previous
                     // change having been applied
                     new LinePositionSpanTextChange() {
-                        StartLine = 1,
-                        StartColumn = 11,
-                        EndLine = 1,
-                        EndColumn = 12,
+                        StartLine = 0,
+                        StartColumn = 10,
+                        EndLine = 0,
+                        EndColumn = 11,
                         NewText = "I"
                     }
                 }
@@ -135,7 +137,9 @@ namespace OmniSharp.Tests
 
         private async static Task<OmnisharpWorkspace> GetWorkspaceWithProjects()
         {
-            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            var workspace = new OmnisharpWorkspace(
+                new HostServicesAggregator(
+                    Enumerable.Empty<IHostServicesProvider>()));
 
             await TestHelpers.AddProjectToWorkspace(workspace, Path.Combine("src", "project.json"),
                 new[] { "dnx451", "dnxcore50" },

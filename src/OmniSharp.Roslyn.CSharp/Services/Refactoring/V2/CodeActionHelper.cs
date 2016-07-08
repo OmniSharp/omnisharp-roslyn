@@ -45,12 +45,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var sourceText = await originalDocument.GetTextAsync();
             var semanticModel = await originalDocument.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
-            var location = GetTextSpan(request, sourceText);
+            var span = GetTextSpan(request, sourceText);
 
-            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Contains(location)).ToImmutableArray();
-            if (pointDiagnostics.Any())
+            // Try to find exact match
+            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(span)).ToImmutableArray();
+            // No exact match found, try approximate match instead
+            if (pointDiagnostics.Length == 0)
             {
-                return new CodeFixContext(originalDocument, pointDiagnostics.First().Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
+                var firstMatchingDiagnostic = diagnostics.FirstOrDefault(d => d.Location.SourceSpan.Contains(span));
+                // Try to find other matches with the same exact span as the first approximate match
+                if (firstMatchingDiagnostic != null)
+                {
+                    pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(firstMatchingDiagnostic.Location.SourceSpan)).ToImmutableArray();
+                }
+            }
+            // At this point all pointDiagnostics guaranteed to have the same span
+            if (pointDiagnostics.Length > 0)
+            {
+                return new CodeFixContext(originalDocument, pointDiagnostics[0].Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
             }
 
             return null;
@@ -60,11 +72,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             if (request.Selection != null)
             {
-                var startPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line - 1, request.Selection.Start.Column - 1));
-                var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line - 1, request.Selection.End.Column - 1));
+                var startPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line, request.Selection.Start.Column));
+                var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line, request.Selection.End.Column));
                 return TextSpan.FromBounds(startPosition, endPosition);
             }
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
             return new TextSpan(position, 1);
         }
 

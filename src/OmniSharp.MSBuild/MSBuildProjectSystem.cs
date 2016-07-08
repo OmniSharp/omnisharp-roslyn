@@ -8,14 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
-using OmniSharp.MSBuild.Analyzers;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -39,6 +37,8 @@ namespace OmniSharp.MSBuild
 
         private MSBuildOptions _options;
 
+        private readonly ILoggerFactory _loggerFactory;
+
         [ImportingConstructor]
         public MSBuildProjectSystem(OmnisharpWorkspace workspace,
                                     IOmnisharpEnvironment env,
@@ -52,19 +52,30 @@ namespace OmniSharp.MSBuild
             _metadataReferenceCache = metadataReferenceCache;
             _watcher = watcher;
             _env = env;
-            _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
             _emitter = emitter;
             _context = context;
+
+            _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
+            _loggerFactory = loggerFactory;
         }
 
-        public string Key { get { return "MsBuild"; } }
-        public string Language { get { return LanguageNames.CSharp; } }
+        public string Key { get; } = "MsBuild";
+        public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
         public void Initalize(IConfiguration configuration)
         {
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
+
+            if (_options.WaitForDebugger)
+            {
+                Console.WriteLine($"Attach to process {System.Diagnostics.Process.GetCurrentProcess().Id}");
+                while (!System.Diagnostics.Debugger.IsAttached)
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+            }
 
             var solutionFilePath = _env.SolutionFilePath;
 
@@ -127,13 +138,23 @@ namespace OmniSharp.MSBuild
                 }
 
                 var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
-#if DNX451
                 compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
-#endif
 
                 if (projectFileInfo.AllowUnsafe)
                 {
                     compilationOptions = compilationOptions.WithAllowUnsafe(true);
+                }
+
+                if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
+                {
+                    var keyFile = Path.Combine(projectFileInfo.ProjectDirectory, projectFileInfo.AssemblyOriginatorKeyFile);
+                    compilationOptions = compilationOptions.WithStrongNameProvider(new DesktopStrongNameProvider())
+                                                           .WithCryptoKeyFile(keyFile);
+                }
+
+                if (projectFileInfo.GenerateXmlDocumentation)
+                {
+                    compilationOptions = compilationOptions.WithXmlReferenceResolver(XmlFileResolver.Default);
                 }
 
                 var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(projectFileInfo.Name),
@@ -186,7 +207,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(_options, _logger, _env.Path, projectFilePath, diagnostics);
+                projectFileInfo = ProjectFileInfo.Create(_options, _loggerFactory.CreateLogger("OmniSharp#ProjectFileInfo"), _env.Path, projectFilePath, diagnostics);
 
                 if (projectFileInfo == null)
                 {
@@ -267,6 +288,10 @@ namespace OmniSharp.MSBuild
                 {
                     parseOptions = parseOptions.WithPreprocessorSymbols(projectFileInfo.DefineConstants);
                 }
+                if (projectFileInfo.GenerateXmlDocumentation)
+                {
+                    parseOptions = parseOptions.WithDocumentationMode(DocumentationMode.Diagnose);
+                }
                 _workspace.SetParseOptions(project.Id, parseOptions);
             }
 
@@ -301,32 +326,6 @@ namespace OmniSharp.MSBuild
             foreach (var unused in unusedProjectReferences)
             {
                 _workspace.RemoveProjectReference(project.Id, unused);
-            }
-
-            var unusedAnalyzers = new Dictionary<string, AnalyzerReference>(project.AnalyzerReferences.ToDictionary(a => a.FullPath));
-
-            foreach (var analyzerPath in projectFileInfo.Analyzers)
-            {
-                if (!File.Exists(analyzerPath))
-                {
-                    _logger.LogWarning($"Unable to resolve assembly '{analyzerPath}'");
-                }
-                else
-                {
-                    if (unusedAnalyzers.Remove(analyzerPath))
-                    {
-                        continue;
-                    }
-#if DNX451
-                    var analyzerReference = new AnalyzerFileReference(analyzerPath, new SimpleAnalyzerAssemblyLoader());
-                    project.AddAnalyzerReference(analyzerReference);
-#endif
-                }
-            }
-
-            foreach (var analyzerReference in unusedAnalyzers.Values)
-            {
-                project.RemoveAnalyzerReference(analyzerReference);
             }
 
             var unusedReferences = new HashSet<MetadataReference>(project.MetadataReferences);

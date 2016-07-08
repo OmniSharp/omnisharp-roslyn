@@ -1,5 +1,6 @@
 {
-    "dnx": {
-        "projects": "src/*/project.json;tests/*/project.json"
+    "dotnet": {
+        "projects": "src/*/project.json;tests/*/project.json",
+        "enablePackageRestore": false
     }
 }

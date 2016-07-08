@@ -1,32 +1,32 @@
 {
-    "DotNetFolder": ".dotnet",
-    "BuildToolsFolder": ".build",
-    "ArtifactsFolder": "artifacts",
-    "TestProjects": {
-        "OmniSharp.Bootstrap.Tests": [
-            "dnxcore50",
-            "dnx451"
-        ],
-        "OmniSharp.MSBuild.Tests": [
-            "dnx451"
-        ],
-        "OmniSharp.Roslyn.CSharp.Tests": [
-            "dnxcore50"
-        ],
-        "OmniSharp.Stdio.Tests": [
-            "dnxcore50",
-            "dnx451"
-        ]
-    },
-    "Frameworks": [
-        "dnx451",
-        "dnxcore50"
+  "UseSystemDotNetPath": "false",
+  "DotNetFolder": ".dotnet",
+  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain",
+  "DotNetChannel": "preview",
+  "DotNetVersion": "1.0.0-preview2-003121",
+  "BuildToolsFolder": ".tools",
+  "ArtifactsFolder": "artifacts",
+  "TestProjects": {
+    "OmniSharp.MSBuild.Tests": [
+      "netcoreapp1.0"
     ],
-    "Rids": [
-        "osx.10.11-x64",
-        "win7-x64",
-        "win7-x86",
-        "ubuntu.14.04-x64"
+    "OmniSharp.Roslyn.CSharp.Tests": [
+      "netcoreapp1.0"
     ],
-    "MainProject": "OmniSharp"
+    "OmniSharp.Stdio.Tests": [
+      "netcoreapp1.0",
+      "net451"
+    ],
+    "OmniSharp.DotNet.Tests": [
+      "netcoreapp1.0"
+    ],
+    "OmniSharp.DotNetTest.Tests": [
+      "netcoreapp1.0"
+    ]
+  },
+  "Frameworks": [
+    "net451",
+    "netcoreapp1.0"
+  ],
+  "MainProject": "OmniSharp"
 }

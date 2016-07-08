@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -92,7 +91,7 @@ namespace OmniSharp.Tests
 
         class Logger : ILogger
         {
-            public IDisposable BeginScopeImpl(object state) => new Disposable();
+            public IDisposable BeginScope<TState>(TState state) => new Disposable();
             public bool IsEnabled(LogLevel logLevel) => true;
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
         }

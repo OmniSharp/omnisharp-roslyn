@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -12,6 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
+using TestUtility.Fake;
 
 namespace OmniSharp.Tests
 {
@@ -89,14 +89,15 @@ namespace OmniSharp.Tests
 
         public static LineColumn GetLineAndColumnFromIndex(string text, int index)
         {
-            int lineCount = 1, lastLineEnd = -1;
+            int lineCount = 0, lastLineEnd = -1;
             for (int i = 0; i < index; i++)
                 if (text[i] == '\n')
                 {
                     lineCount++;
                     lastLineEnd = i;
                 }
-            return new LineColumn(lineCount, index - lastLineEnd);
+
+            return new LineColumn(lineCount, index - 1 - lastLineEnd);
         }
 
         public static string RemovePercentMarker(string fileContent)
@@ -115,7 +116,9 @@ namespace OmniSharp.Tests
             var mscorlib = MetadataReference.CreateFromFile(AssemblyFromType(typeof(object)).Location);
             var systemCore = MetadataReference.CreateFromFile(AssemblyFromType(typeof(Enumerable)).Location);
             var references = new[] { mscorlib, systemCore };
-            var workspace = new OmnisharpWorkspace(new HostServicesBuilder(Enumerable.Empty<ICodeActionProvider>()));
+            var workspace = new OmnisharpWorkspace(
+                new HostServicesAggregator(
+                    Enumerable.Empty<IHostServicesProvider>()));
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
 
@@ -148,9 +151,9 @@ namespace OmniSharp.Tests
             return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), sourceFiles);
         }
 
-        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost _host, Dictionary<string, string> sourceFiles)
+        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, Dictionary<string, string> sourceFiles)
         {
-            var host = _host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
+            host = host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
 
             var workspace = host.GetExport<OmnisharpWorkspace>();
             await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
@@ -159,13 +162,20 @@ namespace OmniSharp.Tests
             return workspace;
         }
 
-        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies, Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+        public static CompositionHost CreatePluginHost(
+            IEnumerable<Assembly> assemblies,
+            Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             return Startup.ConfigureMef(
                 new TestServiceProvider(new FakeLoggerFactory()),
                 new FakeOmniSharpOptions().Value,
                 assemblies,
                 configure);
+        }
+
+        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies)
+        {
+            return CreatePluginHost(assemblies, configure: null);
         }
 
         public static Task<OmnisharpWorkspace> AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
@@ -204,9 +214,9 @@ namespace OmniSharp.Tests
         {
             var document = workspace.GetDocument(result.FileName);
             var sourceText = await document.GetTextAsync();
-            var position = sourceText.Lines.GetPosition(new LinePosition(result.Line - 1, result.Column - 1));
+            var position = sourceText.Lines.GetPosition(new LinePosition(result.Line, result.Column));
             var semanticModel = await document.GetSemanticModelAsync();
-            return SymbolFinder.FindSymbolAtPosition(semanticModel, position, workspace);
+            return await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
         }
 
         public static async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixes(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)

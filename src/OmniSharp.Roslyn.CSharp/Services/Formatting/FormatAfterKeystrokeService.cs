@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             }
 
             var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
-            int position = lines.GetPosition(new LinePosition(request.Line - 1, request.Column - 1));
+            int position = lines.GetPosition(new LinePosition(request.Line, request.Column));
             var changes = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattingChangesAfterKeystroke(_workspace, _options, document, position, request.Char);
 
             return new FormatRangeResponse()

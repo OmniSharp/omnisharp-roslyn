@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.v1;
-using V2 = OmniSharp.Models.V2;
 
 namespace OmniSharp
 {
@@ -59,10 +54,18 @@ namespace OmniSharp
         public const string CheckReadyStatus = "/checkreadystatus";
         public const string StopServer = "/stopserver";
 
+        public const string Open = "/open";
+        public const string Close = "/close";
+        public const string Diagnostics = "/diagnostics";
+
         public static class V2
         {
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
         }
+
+        public const string GetTestStartInfo = "/v2/getteststartinfo";
+
+        public const string RunDotNetTest = "/v2/runtest";
     }
 }

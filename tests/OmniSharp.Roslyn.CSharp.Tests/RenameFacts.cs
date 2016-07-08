@@ -149,17 +149,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.Null(result.Changes.ElementAt(0).Buffer);
             Assert.Equal("xxx", result.Changes.ElementAt(0).Changes.First().NewText);
-            Assert.Equal(1, result.Changes.ElementAt(0).Changes.First().StartLine);
-            Assert.Equal(14, result.Changes.ElementAt(0).Changes.First().StartColumn);
-            Assert.Equal(1, result.Changes.ElementAt(0).Changes.First().EndLine);
-            Assert.Equal(17, result.Changes.ElementAt(0).Changes.First().EndColumn);
+            Assert.Equal(0, result.Changes.ElementAt(0).Changes.First().StartLine);
+            Assert.Equal(13, result.Changes.ElementAt(0).Changes.First().StartColumn);
+            Assert.Equal(0, result.Changes.ElementAt(0).Changes.First().EndLine);
+            Assert.Equal(16, result.Changes.ElementAt(0).Changes.First().EndColumn);
 
             Assert.Null(result.Changes.ElementAt(1).Buffer);
             Assert.Equal("xxx", result.Changes.ElementAt(1).Changes.First().NewText);
-            Assert.Equal(2, result.Changes.ElementAt(1).Changes.First().StartLine);
-            Assert.Equal(44, result.Changes.ElementAt(1).Changes.First().StartColumn);
-            Assert.Equal(2, result.Changes.ElementAt(1).Changes.First().EndLine);
-            Assert.Equal(47, result.Changes.ElementAt(1).Changes.First().EndColumn);
+            Assert.Equal(1, result.Changes.ElementAt(1).Changes.First().StartLine);
+            Assert.Equal(43, result.Changes.ElementAt(1).Changes.First().StartColumn);
+            Assert.Equal(1, result.Changes.ElementAt(1).Changes.First().EndLine);
+            Assert.Equal(46, result.Changes.ElementAt(1).Changes.First().EndColumn);
         }
 
         [Fact]

@@ -5,6 +5,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Services;
 using OmniSharp.Tests;
+using TestUtility.Annotate;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -22,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             _loggerFactory.AddConsole();
             _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
 
-            _loader = new TestOmnisharpAssemblyLoader(_logger);
+            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]
@@ -42,7 +43,7 @@ class Foo {
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "mscorlib",
+                AssemblyName = "System.Private.CoreLib",
                 TypeName = "System.String",
                 Timeout = 60000
             });
@@ -67,7 +68,7 @@ class Foo {
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-#if DNXCORE50
+#if NETCOREAPP1_0
                 AssemblyName = "System.Linq",
 #else
                 AssemblyName = "System.Core",
@@ -99,7 +100,7 @@ class Foo {
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "mscorlib",
+                AssemblyName = "System.Private.CoreLib",
                 TypeName = "System.Collections.Generic.List`1",
                 Timeout = 60000
             });
@@ -108,7 +109,7 @@ class Foo {
 
             response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "mscorlib",
+                AssemblyName = "System.Private.CoreLib",
                 TypeName = "System.Collections.Generic.Dictionary`2"
             });
 
