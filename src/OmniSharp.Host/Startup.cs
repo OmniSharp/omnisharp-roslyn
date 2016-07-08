@@ -140,7 +140,7 @@ namespace OmniSharp
         public IEnumerable<Assembly> LoadPlugins(PluginAssemblies plugins, ApplicationEnvironment appEnv)
         {
             return plugins.GetPlugins(appEnv)
-                  .Where(x => { Console.WriteLine(x); return true; })
+                  //.Where(x => { Console.WriteLine(x); return true; })
 #if NET451
                   .Select(AssemblyName.GetAssemblyName)
                   .Select(Assembly.Load);

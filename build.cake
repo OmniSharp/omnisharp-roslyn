@@ -335,9 +335,6 @@ Task("OnlyPublish")
         {
             projectJson["version"] = tag;
             System.IO.File.WriteAllText(pluginProject, projectJson.ToString());
-
-            /*RunRestore(dotnetcli, "restore", System.IO.Path.Combine(sourceFolder, plugin))
-                .ExceptionOnError($"Failed to restore {plugin}.");*/
         }
 
         var buildArguments = "pack";
