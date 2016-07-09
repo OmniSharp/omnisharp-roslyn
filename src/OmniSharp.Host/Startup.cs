@@ -88,9 +88,17 @@ namespace OmniSharp
                     .Distinct()
                     .ToArray();
             }
-            catch (System.Reflection.TargetInvocationException e)
+            catch (TargetInvocationException ex)
             {
-                Console.WriteLine(e.ToString(), e.InnerException.ToString());
+                if (ex.InnerException is ReflectionTypeLoadException)
+                {
+                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                    foreach (var lex in reflectionEx.LoaderExceptions)
+                    {
+                        Console.Error.WriteLine(lex);
+                    }
+                }
+                throw;
             }
 
             foreach (var assembly in assemblies)
