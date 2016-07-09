@@ -59,8 +59,6 @@ public class BuildPlan
     public string MainProject { get; set; }
     public IEnumerable<string> Projects { get { return new [] { MainProject }.Concat(Plugins ?? new string[] {}); } }
     public string[] Plugins { get; set; }
-    // TODO: Remove once scriptcs/msbuild are not longer required
-    public IDictionary<string, string[]> PluginsByFramework { get; set; }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(

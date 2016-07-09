@@ -28,10 +28,6 @@
     "net451",
     "netcoreapp1.0"
   ],
-  "Plugins": ["OmniSharp.Roslyn.CSharp", "OmniSharp.DotNet", "OmniSharp.MSBuild", "OmniSharp.ScriptCs"],
-  "PluginsByFramework": {
-    "clr": ["OmniSharp.Roslyn.CSharp", "OmniSharp.DotNet", "OmniSharp.MSBuild", "OmniSharp.ScriptCs"],
-    "coreclr": ["OmniSharp.Roslyn.CSharp", "OmniSharp.DotNet", "OmniSharp.MSBuild"]
-  },
+  "Plugins": ["OmniSharp.Roslyn.CSharp", "OmniSharp.DotNet", "OmniSharp.DotNetTest", "OmniSharp.MSBuild", "OmniSharp.ScriptCs"],
   "MainProject": "OmniSharp"
 }
