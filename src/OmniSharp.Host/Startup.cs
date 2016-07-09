@@ -132,8 +132,24 @@ namespace OmniSharp
             if (configure != null)
                 config = configure(config);
 
-            var container = config.CreateContainer();
-            return container;
+            try
+            {
+
+                var container = config.CreateContainer();
+                return container;
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException is ReflectionTypeLoadException)
+                {
+                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                    foreach (var lex in reflectionEx.LoaderExceptions)
+                    {
+                        Console.Error.WriteLine(lex);
+                    }
+                }
+                throw;
+            }
         }
 
         public IEnumerable<Assembly> LoadPlugins(PluginAssemblies plugins, ApplicationEnvironment appEnv)
