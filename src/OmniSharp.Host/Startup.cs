@@ -160,20 +160,6 @@ namespace OmniSharp
             }
         }
 
-        public IEnumerable<Assembly> LoadPlugins(PluginAssemblies plugins, ApplicationEnvironment appEnv)
-        {
-            return plugins.GetPlugins(appEnv)
-                  //.Where(x => { Console.WriteLine(x); return true; })
-#if NET451
-                  .Select(AssemblyName.GetAssemblyName)
-                  .Select(Assembly.Load);
-#else
-                  .Select(AssemblyLoadContext.GetAssemblyName)
-                  .Select(AssemblyLoadContext.Default.LoadFromAssemblyName)
-                  .ToArray();
-#endif
-        }
-
         public void Configure(IApplicationBuilder app,
                               IServiceProvider serviceProvider,
                               IOmnisharpEnvironment env,
@@ -189,7 +175,7 @@ namespace OmniSharp
                                               .Where(shouldLoad)
                                               .SelectMany(lib => lib.GetDefaultAssemblyNames(DependencyContext.Default))
                                               .Select(loader.Load)
-                                              .Concat(LoadPlugins(plugins, PlatformServices.Default.Application));
+                                              .Concat(plugins.Assemblies);
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
