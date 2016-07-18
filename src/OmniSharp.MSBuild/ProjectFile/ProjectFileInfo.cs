@@ -289,18 +289,28 @@ namespace OmniSharp.MSBuild.ProjectFile
                     projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
                 }
 
-                var signAssembly = properties["SignAssembly"].FinalValue;
-                if (!string.IsNullOrWhiteSpace(signAssembly))
+                if (properties.ContainsKey("SignAssembly"))
                 {
-                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                    var signAssembly = properties["SignAssembly"].FinalValue;
+
+                    if (!string.IsNullOrWhiteSpace(signAssembly))
+                    {
+                        projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
+                    }
                 }
 
-                projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
-
-                var documentationFile = properties["DocumentationFile"].FinalValue;
-                if (!string.IsNullOrWhiteSpace(documentationFile))
+                if (properties.ContainsKey("AssemblyOriginatorKeyFile"))
                 {
-                    projectFileInfo.GenerateXmlDocumentation = true;
+                    projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
+                }
+
+                if (properties.ContainsKey("DocumentationFile"))
+                {
+                    var documentationFile = properties["DocumentationFile"].FinalValue;
+                    if (!string.IsNullOrWhiteSpace(documentationFile))
+                    {
+                        projectFileInfo.GenerateXmlDocumentation = true;
+                    }
                 }
 #endif
             }
