@@ -92,6 +92,18 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
             return newText;
         }
 
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedDocumentTextChanges(Workspace workspace, OptionSet options, Document document)
+        {
+            var formattedDocument = await Formatter.FormatAsync(document, options);
+            var textChanges = (await formattedDocument.GetTextChangesAsync(document));
+
+            return (await LinePositionSpanTextChange.Convert(document, textChanges)).Select(change =>
+            {
+                change.NewText = EnsureProperNewLine(change.NewText, options);
+                return change;
+            });
+        }
+
         private static string EnsureProperNewLine(string text, OptionSet options)
         {
             // workaround: https://github.com/dotnet/roslyn/issues/202
