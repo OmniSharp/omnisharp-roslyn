@@ -129,39 +129,43 @@ namespace OmniSharp.DotNet.Cache
             }
         }
 
-        internal ProjectEntry GetOrAddEntry(string projectDirectory)
+        internal ProjectEntry GetEntry(string filePath)
         {
             ProjectEntry result;
-            if (_projects.TryGetValue(projectDirectory, out result))
+            if (_projects.TryGetValue(filePath, out result))
             {
                 return result;
             }
-            else
-            {
-                result = new ProjectEntry(projectDirectory);
-                _projects[projectDirectory] = result;
 
-                return result;
-            }
+            return null;
         }
 
-        private ProjectEntry GetOrAddEntry(string projectDirectory, out bool added)
+        internal ProjectEntry GetOrAddEntry(string filePath)
+        {
+            var result = GetEntry(filePath);
+
+            if (result == null)
+            {
+                result = new ProjectEntry(filePath);
+                _projects[filePath] = result;
+            }
+
+            return result;
+        }
+
+        private ProjectEntry GetOrAddEntry(string filePath, out bool added)
         {
             added = false;
-            ProjectEntry result;
-            if (_projects.TryGetValue(projectDirectory, out result))
-            {
+            var result = GetEntry(filePath);
 
-                return result;
-            }
-            else
+            if (result == null)
             {
-                result = new ProjectEntry(projectDirectory);
-                _projects[projectDirectory] = result;
+                result = new ProjectEntry(filePath);
+                _projects[filePath] = result;
                 added = true;
-
-                return result;
             }
+
+            return result;
         }
 
         private void EmitProject(string eventType, DotNetProjectInformation information)

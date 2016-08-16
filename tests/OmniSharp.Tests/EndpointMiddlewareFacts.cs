@@ -66,12 +66,12 @@ namespace OmniSharp.Tests
             public string Language { get { return LanguageNames.CSharp; } }
             public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
-            public Task<object> GetInformationModel(WorkspaceInformationRequest request)
+            public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
             {
                 throw new NotImplementedException();
             }
 
-            public Task<object> GetProjectModel(string path)
+            public Task<object> GetProjectModelAsync(string path)
             {
                 throw new NotImplementedException();
             }
