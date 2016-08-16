@@ -15,7 +15,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install openssl; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew link --force openssl; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew list; fi
   - ./build.sh -target=Restore
 script:
