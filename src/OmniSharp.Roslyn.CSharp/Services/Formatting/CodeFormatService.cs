@@ -32,6 +32,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
                 return null;
             }
 
+            if (request.WantsTextChanges)
+            {
+                var textChanges = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattedDocumentTextChanges(_workspace, _options, document);
+                return new CodeFormatResponse()
+                {
+                    Changes = textChanges
+                };
+            }
+
             var newText = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattedDocument(_workspace, _options, document);
             return new CodeFormatResponse()
             {
