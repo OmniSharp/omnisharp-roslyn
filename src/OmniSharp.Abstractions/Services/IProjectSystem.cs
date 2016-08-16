@@ -11,7 +11,17 @@ namespace OmniSharp.Services
         string Language { get; }
         IEnumerable<string> Extensions { get; }
         void Initalize(IConfiguration configuration);
-        Task<object> GetInformationModel(WorkspaceInformationRequest request);
-        Task<object> GetProjectModel(string path);
+
+        /// <summary>
+        /// Get a model of the entire workspace loaded in this project system.
+        /// </summary>
+        Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request);
+
+        /// <summary>
+        /// Get a model of a specific project in this project system.
+        /// </summary>
+        /// <param name="filePath">The file path to the project to retrieve. Alternatively,
+        /// a file path to a document within a proejct may be specified.</param>
+        Task<object> GetProjectModelAsync(string filePath);
     }
 }

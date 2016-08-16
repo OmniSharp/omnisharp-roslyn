@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
@@ -26,8 +25,8 @@ namespace OmniSharp
 
             foreach (var projectSystem in _projectSystems)
             {
-                var informationModel = await projectSystem.GetInformationModel(request);
-                response.Add(projectSystem.Key, informationModel);
+                var workspaceModel = await projectSystem.GetWorkspaceModelAsync(request);
+                response.Add(projectSystem.Key, workspaceModel);
             }
 
             return response;

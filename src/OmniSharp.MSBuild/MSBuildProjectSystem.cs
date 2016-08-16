@@ -367,22 +367,30 @@ namespace OmniSharp.MSBuild
             return projectFileInfo;
         }
 
-        Task<object> IProjectSystem.GetProjectModel(string path)
+        Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
-            var document = _workspace.GetDocument(path);
-            if (document == null)
-                return Task.FromResult<object>(null);
-
-            var project = GetProject(document.Project.FilePath);
-            if (project == null)
-                return Task.FromResult<object>(null);
-
-            return Task.FromResult<object>(new MSBuildProject(project));
+            return Task.FromResult<object>(
+                new MsBuildWorkspaceInformation(_context,
+                    excludeSourceFiles: request?.ExcludeSourceFiles ?? false));
         }
 
-        Task<object> IProjectSystem.GetInformationModel(WorkspaceInformationRequest request)
+        Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
-            return Task.FromResult<object>(new MsBuildWorkspaceInformation(_context, request?.ExcludeSourceFiles ?? false));
+            var document = _workspace.GetDocument(filePath);
+            
+            var projectFilePath = document != null
+                ? document.Project.FilePath
+                : filePath;
+
+            var project = GetProject(projectFilePath);
+            if (project == null)
+            {
+                _logger.LogDebug($"Could not locate project for '{projectFilePath}'");
+                return Task.FromResult<object>(null);
+            }
+
+            return Task.FromResult<object>(
+                new MSBuildProject(project));
         }
     }
 }

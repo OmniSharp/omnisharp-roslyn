@@ -210,12 +210,12 @@ namespace OmniSharp.ScriptCs
             }
         }
 
-        Task<object> IProjectSystem.GetProjectModel(string path)
+        Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
             return Task.FromResult<object>(null);
         }
 
-        Task<object> IProjectSystem.GetInformationModel(WorkspaceInformationRequest request)
+        Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(new ScriptCsContextModel(Context));
         }

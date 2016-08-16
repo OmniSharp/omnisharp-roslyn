@@ -113,16 +113,16 @@ namespace OmniSharp.Plugins
             Task.Run(() => Run());
         }
 
-        public Task<object> GetInformationModel(WorkspaceInformationRequest request)
+        public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             // TODO: Call out to process
-            return null;
+            return Task.FromResult<object>(null);
         }
 
-        public Task<object> GetProjectModel(string path)
+        public Task<object> GetProjectModelAsync(string filePath)
         {
             // TODO: Call out to process
-            return null;
+            return Task.FromResult<object>(null);
         }
     }
 }
