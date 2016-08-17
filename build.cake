@@ -134,7 +134,7 @@ Task("BuildEnvironment")
     }
     if (!IsRunningOnWindows())
     {
-        Run("chmod", $"+x {scriptPath}");
+        Run("chmod", $"+x '{scriptPath}'");
     }
     var installArgs = $"-Channel {buildPlan.DotNetChannel}";
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
