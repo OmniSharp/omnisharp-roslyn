@@ -48,7 +48,7 @@ fi
 
 # Restore tools from NuGet.
 pushd "$TOOLS_DIR" >/dev/null
-mono "$NUGET_EXE" install $PACKAGES_CONFIG -ExcludeVersion -OutputDirectory "$TOOLS_DIR"
+mono "$NUGET_EXE" install "$PACKAGES_CONFIG" -ExcludeVersion -OutputDirectory "$TOOLS_DIR"
 if [ $? -ne 0 ]; then
     echo "Could not restore NuGet packages."
     exit 1
