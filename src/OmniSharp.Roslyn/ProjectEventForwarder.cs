@@ -58,7 +58,7 @@ namespace OmniSharp.Roslyn
                             object payload = null;
                             if (e.EventType != EventTypes.ProjectRemoved)
                             {
-                                payload = await GetProjectInformation(e.FileName);
+                                payload = await GetProjectInformationAsync(e.FileName);
                             }
 
                             lock (_lock)
@@ -72,13 +72,13 @@ namespace OmniSharp.Roslyn
             }
         }
 
-        private async Task<ProjectInformationResponse> GetProjectInformation(string fileName)
+        private async Task<ProjectInformationResponse> GetProjectInformationAsync(string fileName)
         {
             var response = new ProjectInformationResponse();
 
             foreach (var projectSystem in _projectSystems)
             {
-                var project = await projectSystem.GetProjectModel(fileName);
+                var project = await projectSystem.GetProjectModelAsync(fileName);
                 if (project != null)
                 {
                     response.Add($"{projectSystem.Key}Project", project);
