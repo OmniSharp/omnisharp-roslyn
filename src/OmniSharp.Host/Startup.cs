@@ -107,6 +107,7 @@ namespace OmniSharp
             }
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
+            var pluginAssemblies = serviceProvider.GetService<PluginAssemblies>();
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var env = serviceProvider.GetService<IOmnisharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
@@ -115,6 +116,7 @@ namespace OmniSharp
 
             config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
+                .WithProvider(MefValueProvider.From(pluginAssemblies))
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(new ManualFileSystemWatcher()))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
@@ -148,6 +150,7 @@ namespace OmniSharp
             }
             catch (TargetInvocationException ex)
             {
+                Console.Error.WriteLine("hello");
                 if (ex.InnerException is ReflectionTypeLoadException)
                 {
                     var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
@@ -191,6 +194,9 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
+
+            foreach (var arg in Program.Environment.OtherArgs)
+                logger.LogInformation($"other args: {arg}");
 
             foreach (var assembly in assemblies)
             {

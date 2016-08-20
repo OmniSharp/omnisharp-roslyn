@@ -1,5 +1,8 @@
 {
   "version": "1.0.0-*",
+  "buildOptions": {
+      "preserveCompilationContext": true
+  },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "OmniSharp.Roslyn": "1.0.0",

@@ -1,5 +1,8 @@
 {
   "version": "1.0.0-*",
+  "buildOptions": {
+      "preserveCompilationContext": true
+  },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "Microsoft.Extensions.Testing.Abstractions": "1.0.0-preview2-003121"

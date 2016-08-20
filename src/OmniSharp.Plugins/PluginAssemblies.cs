@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -53,8 +54,22 @@ namespace OmniSharp.Plugins
                             .Select(AssemblyName.GetAssemblyName)
                             .Select(Assembly.Load)
 #else
-                            .Select(AssemblyLoadContext.GetAssemblyName)
-                            .Select(AssemblyLoadContext.Default.LoadFromAssemblyName)
+                            .Select(file => {
+                                // return AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                                // var name = AssemblyLoadContext.GetAssemblyName(file);
+                                try {
+                                    return AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                                }catch (FileNotFoundException e){
+                                    System.Console.WriteLine($"Failed to load assembly {file} {e.FileName}");
+                                    throw;
+                                }catch (TargetInvocationException e) {
+                                    System.Console.WriteLine($"Failed to load assembly {file} {e.InnerException.ToString()}");
+                                    throw;
+                                }catch (Exception e) {
+                                    System.Console.WriteLine($"Failed to load assembly {file} {e.ToString()}");
+                                    throw;
+                                }
+                                })
                             .ToArray()
 #endif
                     );

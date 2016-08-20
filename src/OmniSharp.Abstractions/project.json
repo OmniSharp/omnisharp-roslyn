@@ -1,7 +1,8 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "preserveCompilationContext": true
   },
   "dependencies": {
     "Newtonsoft.Json": "8.0.3",
