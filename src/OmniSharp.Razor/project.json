@@ -1,11 +1,12 @@
 ﻿{
     "version": "1.0.0-*",
     "buildOptions": {
-        "warningsAsErrors": true,
+        "warningsAsErrors": false,
         "preserveCompilationContext": true
     },
     "dependencies": {
         "OmniSharp.Abstractions": "1.0.0",
+        "OmniSharp.Roslyn": "1.0.0",
         "Microsoft.AspNetCore.Razor": "1.0.0",
         "Microsoft.AspNetCore.Mvc.Razor.Host": "1.0.0"
     },

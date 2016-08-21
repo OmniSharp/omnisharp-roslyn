@@ -1,17 +1,18 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Services;
-using OmniSharp.Models;
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Models;
+using OmniSharp.Razor.Services;
+using OmniSharp.Services;
 
-namespace OmniSharp.Workers.Diagnostics
+namespace OmniSharp.Razor.Workers.Diagnostics
 {
     [Export, Shared]
-    public class CSharpDiagnosticService
+    public class RazorDiagnosticService
     {
         private readonly ILogger _logger;
         private readonly OmnisharpWorkspace _workspace;
@@ -21,11 +22,11 @@ namespace OmniSharp.Workers.Diagnostics
         private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
 
         [ImportingConstructor]
-        public CSharpDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
+        public RazorDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _forwarder = forwarder;
-            _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
+            _logger = loggerFactory.CreateLogger<RazorDiagnosticService>();
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
@@ -35,7 +36,7 @@ namespace OmniSharp.Workers.Diagnostics
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
-                if (newDocument.Project.Language == LanguageNames.CSharp)
+                if (newDocument.Project.Language == RazorLanguage.Razor)
                 {
                     this.EmitDiagnostics(newDocument.FilePath);
                     foreach (var document in _workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x)))
@@ -137,8 +138,9 @@ namespace OmniSharp.Workers.Diagnostics
 
         private async Task<DiagnosticResult> ProcessNextItem(string filePath)
         {
-            var documents = _workspace.GetDocuments(filePath).Where(x => x.Project.Language == LanguageNames.CSharp);
+            var documents = _workspace.GetDocuments(filePath).Where(x => x.Project.Language == RazorLanguage.Razor);
             var items = new List<DiagnosticLocation>();
+
             foreach (var document in documents)
             {
                 var semanticModel = await document.GetSemanticModelAsync();

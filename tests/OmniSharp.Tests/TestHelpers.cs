@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using TestUtility.Fake;

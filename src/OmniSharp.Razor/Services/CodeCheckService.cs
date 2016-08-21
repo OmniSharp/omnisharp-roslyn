@@ -11,9 +11,12 @@ namespace OmniSharp.Razor.Services
     [OmniSharpHandler(OmnisharpEndpoints.CodeCheck, RazorLanguage.Razor)]
     public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
     {
+        private readonly OmnisharpWorkspace _workspace;
+
         [ImportingConstructor]
-        public CodeCheckService()
+        public CodeCheckService(OmnisharpWorkspace workspace)
         {
+            _workspace = workspace;
         }
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)

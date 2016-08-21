@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using Xunit;
 

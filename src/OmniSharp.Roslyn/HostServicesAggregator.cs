@@ -6,9 +6,9 @@ using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Host.Mef;
 using OmniSharp.Services;
 
-namespace OmniSharp
+namespace OmniSharp.Roslyn
 {
-    [Export]
+    [Export, Shared]
     public class HostServicesAggregator
     {
         private readonly ImmutableArray<Assembly> _assemblies;
@@ -43,7 +43,7 @@ namespace OmniSharp
 
         public HostServices CreateHostServices()
         {
-            return MefHostServices.Create(_assemblies);
+                return MefHostServices.Create(_assemblies);
         }
     }
 }

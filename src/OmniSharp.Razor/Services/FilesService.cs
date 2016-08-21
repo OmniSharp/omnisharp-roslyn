@@ -10,33 +10,31 @@ namespace OmniSharp.Razor.Services
     [OmniSharpHandler(OmnisharpEndpoints.Close, RazorLanguage.Razor)]
     public class FilesService : RequestHandler<FileOpenRequest, FileOpenResponse>, RequestHandler<FileCloseRequest, FileCloseResponse>
     {
-        private readonly RazorPageActivator _razorPageActivator;
+        private readonly OmnisharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FilesService(RazorPageActivator razorPageActivator)
+        public FilesService(OmnisharpWorkspace workspace)
         {
-            _razorPageActivator = razorPageActivator;
+            _workspace = workspace;
         }
-
-//        public Task<FileOpenResponse> Handle(FileOpenRequest request)
-//        {
-//            var documents = _workspace.GetDocuments(request.FileName);
-//            foreach (var document in documents)
-//            {
-//                _workspace.OpenDocument(document.Id, false);
-//            }
-//            return Task.FromResult(new FileOpenResponse());
-//        }
 
         Task<FileOpenResponse> RequestHandler<FileOpenRequest, FileOpenResponse>.Handle(FileOpenRequest request)
         {
-            _razorPageActivator.OpenPage(request.FileName);
+            var documents = _workspace.GetDocuments(request.FileName);
+            foreach (var document in documents)
+            {
+                _workspace.OpenDocument(document.Id, false);
+            }
             return Task.FromResult(new FileOpenResponse());
         }
 
         Task<FileCloseResponse> RequestHandler<FileCloseRequest, FileCloseResponse>.Handle(FileCloseRequest request)
         {
-            _razorPageActivator.ClosePage(request.FileName);
+            var documents = _workspace.GetDocuments(request.FileName);
+            foreach (var document in documents)
+            {
+                _workspace.CloseDocument(document.Id);
+            }
             return Task.FromResult(new FileCloseResponse());
         }
     }
