@@ -33,7 +33,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var documents = request.FileName != null
                 ? new [] { request.FileName }
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents.Select(x => x.FilePath));
+                : _workspace.CurrentSolution.Projects
+                    .Where(x => x.Language == LanguageNames.CSharp)
+                    .SelectMany(project => project.Documents.Select(x => x.FilePath));
 
             _diagnostics.QueueDiagnostics(documents.ToArray());
 

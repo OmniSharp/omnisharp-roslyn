@@ -1,9 +1,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Razor.Compilation;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Razor.Services;
@@ -16,15 +19,17 @@ namespace OmniSharp.Razor.Workers.Diagnostics
     {
         private readonly ILogger _logger;
         private readonly OmnisharpWorkspace _workspace;
+        private readonly RazorWorkspace _razorWorkspace;
         private readonly object _lock = new object();
         private readonly DiagnosticEventForwarder _forwarder;
         private bool _queueRunning = false;
         private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
 
         [ImportingConstructor]
-        public RazorDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
+        public RazorDiagnosticService(OmnisharpWorkspace workspace, RazorWorkspace razorWorkspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
+            _razorWorkspace = razorWorkspace;
             _forwarder = forwarder;
             _logger = loggerFactory.CreateLogger<RazorDiagnosticService>();
 
@@ -143,27 +148,31 @@ namespace OmniSharp.Razor.Workers.Diagnostics
 
             foreach (var document in documents)
             {
-                var semanticModel = await document.GetSemanticModelAsync();
-                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
+                var context = _razorWorkspace.OpenPageSet(document.Id);
 
-                //script files can have custom directives such as #load which will be deemed invalid by Roslyn
-                //we suppress the CS1024 diagnostic for script files for this reason. Roslyn will fix it later too, so this is temporary.
-                if (document.SourceCodeKind != SourceCodeKind.Regular)
+                foreach (var page in context.Pages)
                 {
-                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
-                }
+                    var relativePath = filePath.Replace(_razorWorkspace.Path, "").TrimStart('/', '\\');
+                    var fileInfo = _razorWorkspace.FileProvider.GetFileInfo(relativePath);
 
-                foreach (var quickFix in diagnostics.Select(MakeQuickFix))
-                {
-                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
-                    if (existingQuickFix == null)
+                    var result = page.RazorCompilationService.Compile(new RelativeFileInfo(fileInfo, relativePath));
+
+                    foreach (var failure in result.CompilationFailures)
                     {
-                        quickFix.Projects.Add(document.Project.Name);
-                        items.Add(quickFix);
-                    }
-                    else
-                    {
-                        existingQuickFix.Projects.Add(document.Project.Name);
+                        foreach (var message in failure.Messages)
+                        {
+                            var quickFix = MakeQuickFix(message);
+                            var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
+                            if (existingQuickFix == null)
+                            {
+                                quickFix.Projects.Add(document.Project.Name);
+                                items.Add(quickFix);
+                            }
+                            else
+                            {
+                                existingQuickFix.Projects.Add(document.Project.Name);
+                            }
+                        }
                     }
                 }
             }
@@ -175,18 +184,17 @@ namespace OmniSharp.Razor.Workers.Diagnostics
             };
         }
 
-        private static DiagnosticLocation MakeQuickFix(Diagnostic diagnostic)
+        private static DiagnosticLocation MakeQuickFix(Microsoft.AspNetCore.Diagnostics.DiagnosticMessage diagnostic)
         {
-            var span = diagnostic.Location.GetMappedLineSpan();
             return new DiagnosticLocation
             {
-                FileName = span.Path,
-                Line = span.StartLinePosition.Line,
-                Column = span.StartLinePosition.Character,
-                EndLine = span.EndLinePosition.Line,
-                EndColumn = span.EndLinePosition.Character,
-                Text = diagnostic.GetMessage(),
-                LogLevel = diagnostic.Severity.ToString()
+                FileName = diagnostic.SourceFilePath,
+                Line = diagnostic.StartLine,
+                Column = diagnostic.StartColumn,
+                EndLine = diagnostic.EndLine,
+                EndColumn = diagnostic.EndColumn,
+                Text = diagnostic.FormattedMessage,
+                LogLevel = "Error"
             };
         }
     }

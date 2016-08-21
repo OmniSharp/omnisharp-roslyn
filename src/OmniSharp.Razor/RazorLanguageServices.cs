@@ -24,7 +24,7 @@ namespace OmniSharp.Razor
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public RazorHostServicesProvider(IOmnisharpAssemblyLoader loader)
+        public RazorHostServicesProvider()
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 

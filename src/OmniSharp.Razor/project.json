@@ -8,7 +8,8 @@
         "OmniSharp.Abstractions": "1.0.0",
         "OmniSharp.Roslyn": "1.0.0",
         "Microsoft.AspNetCore.Razor": "1.0.0",
-        "Microsoft.AspNetCore.Mvc.Razor.Host": "1.0.0"
+        "Microsoft.AspNetCore.Mvc.Razor.Host": "1.0.0",
+        "Microsoft.AspNetCore.Mvc.Razor": "1.0.0"
     },
     "frameworks": {
         "net451": {

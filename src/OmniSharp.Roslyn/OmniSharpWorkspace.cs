@@ -41,7 +41,6 @@ namespace OmniSharp
             var doc = this.CurrentSolution.GetDocument(documentId);
             if (doc != null)
             {
-
                 var textTask = doc.GetTextAsync(CancellationToken.None);
                 textTask.Wait(CancellationToken.None);
                 var text = textTask.Result;

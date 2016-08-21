@@ -10,6 +10,9 @@
     "OmniSharp.MSBuild.Tests": [
       "netcoreapp1.0"
     ],
+    "OmniSharp.Razor.Tests": [
+      "netcoreapp1.0"
+    ],
     "OmniSharp.Roslyn.CSharp.Tests": [
       "netcoreapp1.0"
     ],

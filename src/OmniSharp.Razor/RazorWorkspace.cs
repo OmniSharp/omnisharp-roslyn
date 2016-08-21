@@ -5,39 +5,44 @@ using System.Composition;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Razor.Compilation;
 using Microsoft.AspNetCore.Mvc.Razor.Directives;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.Razor.Services;
 using OmniSharp.Razor.Workers;
 using OmniSharp.Services;
 
 namespace OmniSharp.Razor
 {
-
     [Export, Shared]
     public class RazorWorkspace
     {
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IOmnisharpEnvironment _environment;
         private readonly OmnisharpWorkspace _workspace;
         private readonly ConcurrentDictionary<DocumentId, RazorPageContext> _razorPages;
 
         [ImportingConstructor]
-        public RazorWorkspace(IOmnisharpEnvironment environment, OmnisharpWorkspace workspace)
-            : this(environment, workspace, new PhysicalFileProvider(System.IO.Directory.GetCurrentDirectory()))
+        public RazorWorkspace(IOmnisharpEnvironment environment, OmnisharpWorkspace workspace, ILoggerFactory loggerFactory)
+            : this(environment, workspace, new PhysicalFileProvider(environment.Path), loggerFactory)
         {
         }
 
-        internal RazorWorkspace(IOmnisharpEnvironment environment, OmnisharpWorkspace workspace, IFileProvider fileProvider)
+        internal RazorWorkspace(IOmnisharpEnvironment environment, OmnisharpWorkspace workspace, IFileProvider fileProvider, ILoggerFactory loggerFactory)
         {
             _environment = environment;
             _workspace = workspace;
             FileProvider = fileProvider;
             Path = _environment.Path;
+            _loggerFactory = loggerFactory;
             _razorPages = new ConcurrentDictionary<DocumentId, RazorPageContext>();
 
             _workspace.DocumentOpened += WorkspaceOnDocumentOpened;
@@ -48,8 +53,21 @@ namespace OmniSharp.Razor
         {
             if (documentEventArgs.Document.Project.Language == RazorLanguage.Razor)
             {
+                var options = new OptionsWrapper<RazorViewEngineOptions>(new RazorViewEngineOptions()
+                {
+                    FileProviders = { FileProvider },
+                    CompilationCallback = ctx =>
+                    {
+                        // TODO: Come and change this...
+                        ctx.Compilation =
+                        ctx.Compilation.AddReferences(
+                            _workspace.CurrentSolution.Projects.First().MetadataReferences.First());
+                    }
+                });
                 var host = this.CreateHost();
-                var context = new RazorPageContext(documentEventArgs.Document.Id, host);
+                var compilationService = CreateCompilationService(options);
+                var razorCompilationService = CreateRazorCompilationService(compilationService, host);
+                var context = new RazorPageContext(documentEventArgs.Document.Id, host, compilationService, razorCompilationService);
                 this._razorPages.TryAdd(documentEventArgs.Document.Id, context);
             }
         }
@@ -88,6 +106,24 @@ namespace OmniSharp.Razor
             return host;
         }
 
+        private ICompilationService CreateCompilationService(IOptions<RazorViewEngineOptions> options)
+        {
+            return new DefaultRoslynCompilationService(
+                new ApplicationPartManager(),
+                options,
+                new DefaultRazorViewEngineFileProviderAccessor(options),
+                _loggerFactory);
+        }
+
+        private IRazorCompilationService CreateRazorCompilationService(ICompilationService compilationService, MvcRazorHost host)
+        {
+            return new RazorCompilationService(
+                compilationService,
+                host,
+                new OmnisharpRazorViewEngineFileProviderAccessor(FileProvider),
+                _loggerFactory);
+        }
+
         public RazorPageSet OpenPageSet(params DocumentId[] documents)
         {
             var pages = new List<RazorPageContext>();
@@ -99,8 +135,21 @@ namespace OmniSharp.Razor
                 }
                 else
                 {
-                    var host = CreateHost();
-                    pages.Add(new TemporaryRazorPageContext(filePath, host, () => { }));
+                    var options = new OptionsWrapper<RazorViewEngineOptions>(new RazorViewEngineOptions()
+                    {
+                        FileProviders = { FileProvider },
+                        CompilationCallback = context =>
+                        {
+                            // TODO: Come and change this...
+                            context.Compilation =
+                                context.Compilation.AddReferences(
+                                    _workspace.CurrentSolution.Projects.First().MetadataReferences.First());
+                        }
+                    });
+                    var host = this.CreateHost();
+                    var compilationService = CreateCompilationService(options);
+                    var razorCompilationService = CreateRazorCompilationService(compilationService, host);
+                    pages.Add(new TemporaryRazorPageContext(filePath, host, compilationService, razorCompilationService, () => { }));
                 }
             }
             return new RazorPageSet(pages);

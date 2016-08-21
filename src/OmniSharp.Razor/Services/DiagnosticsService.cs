@@ -32,8 +32,10 @@ namespace OmniSharp.Razor.Services
             }
 
             var documents = request.FileName != null
-                ? new [] { request.FileName }
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents.Select(x => x.FilePath));
+                ? new[] { request.FileName }
+                : _workspace.CurrentSolution.Projects
+                    .Where(x => x.Language == RazorLanguage.Razor)
+                    .SelectMany(project => project.Documents.Select(x => x.FilePath));
 
             _diagnostics.QueueDiagnostics(documents.ToArray());
 

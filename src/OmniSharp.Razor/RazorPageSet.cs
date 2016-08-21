@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using OmniSharp.Razor.Services;
 
-namespace OmniSharp.Razor.Services
+namespace OmniSharp.Razor
 {
     public class RazorPageSet : IDisposable
     {

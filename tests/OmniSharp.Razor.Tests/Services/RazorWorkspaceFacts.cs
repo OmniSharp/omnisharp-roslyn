@@ -19,8 +19,6 @@ namespace OmniSharp.Razor.Tests.Services
                 result.OmnisharpWorkspace.GetDocumentId(Path.Combine(result.Path, "Test.cshtml"))
             );
 
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-
             Assert.Equal(1, result.RazorWorkspace.OpenDocumentIds.Count());
         }
 
@@ -31,17 +29,11 @@ namespace OmniSharp.Razor.Tests.Services
             result.OmnisharpWorkspace.OpenDocument(
                 result.OmnisharpWorkspace.GetDocumentId(Path.Combine(result.Path, "Test.cshtml"))
             );
-
             Assert.Equal(1, result.RazorWorkspace.OpenDocumentIds.Count());
-
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
 
             result.OmnisharpWorkspace.CloseDocument(
                 result.OmnisharpWorkspace.GetDocumentId(Path.Combine(result.Path, "Test.cshtml"))
             );
-
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-
             Assert.Equal(0, result.RazorWorkspace.OpenDocumentIds.Count());
         }
     }
