@@ -1,0 +1,39 @@
+﻿{
+    "version": "1.0.0-*",
+    "buildOptions": {
+        "warningsAsErrors": true,
+        "preserveCompilationContext": true
+    },
+    "dependencies": {
+        "OmniSharp.Abstractions": "1.0.0",
+        "Microsoft.AspNetCore.Razor": "1.0.0",
+        "Microsoft.AspNetCore.Mvc.Razor.Host": "1.0.0"
+    },
+    "frameworks": {
+        "net451": {
+            "dependencies": {},
+            "frameworkAssemblies": {
+                "System.Runtime": "",
+                "System.Threading": "",
+                "System.Threading.Tasks": "",
+                "System.Collections": "",
+                "System.Globalization": "",
+                "System.Linq": "",
+                "System.Text.Encoding": "",
+                "System.Reflection": "",
+                "System.Security": "",
+                "System.Xml": ""
+            }
+        },
+        "netstandard1.6": {
+            "imports": [
+                "dotnet5.4",
+                "portable-net45+win8"
+            ],
+            "dependencies": {
+                "NETStandard.Library": "1.6.0",
+                "System.Threading.Tasks.Parallel": "4.0.1"
+            }
+        }
+    }
+}
