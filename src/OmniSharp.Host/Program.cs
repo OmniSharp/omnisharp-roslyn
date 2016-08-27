@@ -91,6 +91,15 @@ namespace OmniSharp
             var config = new ConfigurationBuilder()
                 .AddCommandLine(new[] { "--server.urls", $"http://{serverInterface}:{serverPort}" });
 
+            // If the --encoding switch was specified, we need to set the InputEncoding and OutputEncoding before
+            // constructing the SharedConsoleWriter. Otherwise, it might be created with the wrong encoding since
+            // it wraps around Console.Out, which gets recreated when OutputEncoding is set.
+            if (transportType == TransportType.Stdio && encoding != null)
+            {
+                Console.InputEncoding = encoding;
+                Console.OutputEncoding = encoding;
+            }
+
             var writer = new SharedConsoleWriter();
 
             var builder = new WebHostBuilder()
@@ -107,11 +116,6 @@ namespace OmniSharp
 
             if (transportType == TransportType.Stdio)
             {
-                if (encoding != null)
-                {
-                    Console.InputEncoding = encoding;
-                    Console.OutputEncoding = encoding;
-                }
                 builder.UseServer(new StdioServer(Console.In, writer));
             }
             else
