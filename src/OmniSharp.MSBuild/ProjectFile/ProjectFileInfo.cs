@@ -94,15 +94,15 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var globalProperties = new Dictionary<string, string>
             {
-                { WellKnownPropertyNames.DesignTimeBuild, "true" },
-                { WellKnownPropertyNames.BuildProjectReferences, "false" },
-                { WellKnownPropertyNames._ResolveReferenceDependencies, "true" },
-                { WellKnownPropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
+                { PropertyNames.DesignTimeBuild, "true" },
+                { PropertyNames.BuildProjectReferences, "false" },
+                { PropertyNames._ResolveReferenceDependencies, "true" },
+                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
             };
 
             if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
             {
-                globalProperties.Add(WellKnownPropertyNames.VisualStudioVersion, options.VisualStudioVersion);
+                globalProperties.Add(PropertyNames.VisualStudioVersion, options.VisualStudioVersion);
             }
 
             var collection = new ProjectCollection(globalProperties);
@@ -114,7 +114,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : collection.LoadProject(projectFilePath, options.ToolsVersion);
 
             var projectInstance = project.CreateProjectInstance();
-            var buildResult = projectInstance.Build(WellKnownTargetNames.ResolveReferences,
+            var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
                 new[] { new MSBuildLogForwarder(logger, diagnostics) });
 
             if (!buildResult)
@@ -122,37 +122,37 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return null;
             }
 
-            var assemblyName = projectInstance.GetPropertyValue(WellKnownPropertyNames.AssemblyName);
-            var name = projectInstance.GetPropertyValue(WellKnownPropertyNames.ProjectName);
-            var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(WellKnownPropertyNames.TargetFrameworkMoniker));
-            var specifiedLanguageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(WellKnownPropertyNames.LangVersion));
-            var projectGuid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(WellKnownPropertyNames.ProjectGuid));
-            var targetPath = projectInstance.GetPropertyValue(WellKnownPropertyNames.TargetPath);
-            var allowUnsafe = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(WellKnownPropertyNames.AllowUnsafeBlocks));
-            var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(WellKnownPropertyNames.OutputType));
-            var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(WellKnownPropertyNames.SignAssembly));
-            var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(WellKnownPropertyNames.AssemblyOriginatorKeyFile);
-            var documentationFile = projectInstance.GetPropertyValue(WellKnownPropertyNames.DocumentationFile);
-            var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(WellKnownPropertyNames.DefineConstants));
+            var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
+            var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
+            var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
+            var specifiedLanguageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
+            var projectGuid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
+            var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
+            var allowUnsafe = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks));
+            var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
+            var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly));
+            var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
+            var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
+            var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
 
             var sourceFiles = projectInstance
-                .GetItems(WellKnownItemNames.Compile)
+                .GetItems(ItemNames.Compile)
                 .Select(GetFullPath)
                 .ToList();
 
             var references =  projectInstance
-                .GetItems(WellKnownItemNames.ReferencePath)
+                .GetItems(ItemNames.ReferencePath)
                 .Where(ReferenceSourceTargetIsProjectReference)
                 .Select(GetFullPath)
                 .ToList();
 
             var projectReferences = projectInstance
-                .GetItems(WellKnownItemNames.ProjectReference)
+                .GetItems(ItemNames.ProjectReference)
                 .Select(GetFullPath)
                 .ToList();
 
             var analyzers = projectInstance
-                .GetItems(WellKnownItemNames.Analyzer)
+                .GetItems(ItemNames.Analyzer)
                 .Select(GetFullPath)
                 .ToList();
 
@@ -178,12 +178,12 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         private static bool ReferenceSourceTargetIsProjectReference(ProjectItemInstance projectItem)
         {
-            return !string.Equals(projectItem.GetMetadataValue(WellKnownMetadataNames.ReferenceSourceTarget), WellKnownItemNames.ProjectReference, StringComparison.OrdinalIgnoreCase);
+            return !string.Equals(projectItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget), ItemNames.ProjectReference, StringComparison.OrdinalIgnoreCase);
         }
 
         private static string GetFullPath(ProjectItemInstance projectItem)
         {
-            return projectItem.GetMetadataValue(WellKnownMetadataNames.FullPath);
+            return projectItem.GetMetadataValue(MetadataNames.FullPath);
         }
     }
 }

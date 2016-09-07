@@ -32,11 +32,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             engine.RegisterLogger(new MSBuildLogForwarder(logger, diagnostics));
 
             var globalProperties = new BuildPropertyGroup();
-            globalProperties.SetProperty(WellKnownPropertyNames.DesignTimeBuild, value: true);
-            globalProperties.SetProperty(WellKnownPropertyNames.BuildProjectReferences, value: false);
+            globalProperties.SetProperty(PropertyNames.DesignTimeBuild, value: true);
+            globalProperties.SetProperty(PropertyNames.BuildProjectReferences, value: false);
             // Dump entire assembly reference closure
-            globalProperties.SetProperty(WellKnownPropertyNames._ResolveReferenceDependencies, value: true);
-            globalProperties.SetProperty(WellKnownPropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar);
+            globalProperties.SetProperty(PropertyNames._ResolveReferenceDependencies, value: true);
+            globalProperties.SetProperty(PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar);
 
             // propertyGroup.SetProperty("MSBUILDENABLEALLPROPERTYFUNCTIONS", "1");
 
@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var buildResult = engine.BuildProjectFile(
                 projectFilePath,
-                targetNames: new[] { WellKnownTargetNames.ResolveReferences },
+                targetNames: new[] { TargetNames.ResolveReferences },
                 globalProperties: globalProperties,
                 targetOutputs: null,
                 buildFlags: BuildSettings.None,
@@ -64,41 +64,41 @@ namespace OmniSharp.MSBuild.ProjectFile
             var properties = project.EvaluatedProperties.OfType<BuildProperty>()
                                                         .ToDictionary(p => p.Name);
 
-            var assemblyName = properties.GetFinalValue(WellKnownPropertyNames.AssemblyName);
+            var assemblyName = properties.GetFinalValue(PropertyNames.AssemblyName);
             var name = Path.GetFileNameWithoutExtension(projectFilePath);
 
-            var targetFrameworkMoniker = properties.GetFinalValue(WellKnownPropertyNames.TargetFrameworkMoniker);
+            var targetFrameworkMoniker = properties.GetFinalValue(PropertyNames.TargetFrameworkMoniker);
             var targetFramework = targetFrameworkMoniker != null
                 ? new FrameworkName(targetFrameworkMoniker)
                 : null;
 
-            var langVersion = PropertyConverter.ToLanguageVersion(properties.GetFinalValue(WellKnownPropertyNames.LangVersion));
-            var projectGuid = PropertyConverter.ToGuid(properties.GetFinalValue(WellKnownPropertyNames.ProjectGuid));
-            var targetPath = properties.GetFinalValue(WellKnownPropertyNames.TargetPath);
-            var allowUnsafe = PropertyConverter.ToBoolean(properties.GetFinalValue(WellKnownPropertyNames.AllowUnsafeBlocks));
-            var signAssembly = PropertyConverter.ToBoolean(properties.GetFinalValue(WellKnownPropertyNames.SignAssembly));
-            var assemblyOriginatorKeyFile = properties.GetFinalValue(WellKnownPropertyNames.AssemblyOriginatorKeyFile);
-            var documentationFile = properties.GetFinalValue(WellKnownPropertyNames.DocumentationFile);
-            var defineConstants = PropertyConverter.ToDefineConstants(properties.GetFinalValue(WellKnownPropertyNames.DefineConstants));
+            var langVersion = PropertyConverter.ToLanguageVersion(properties.GetFinalValue(PropertyNames.LangVersion));
+            var projectGuid = PropertyConverter.ToGuid(properties.GetFinalValue(PropertyNames.ProjectGuid));
+            var targetPath = properties.GetFinalValue(PropertyNames.TargetPath);
+            var allowUnsafe = PropertyConverter.ToBoolean(properties.GetFinalValue(PropertyNames.AllowUnsafeBlocks));
+            var signAssembly = PropertyConverter.ToBoolean(properties.GetFinalValue(PropertyNames.SignAssembly));
+            var assemblyOriginatorKeyFile = properties.GetFinalValue(PropertyNames.AssemblyOriginatorKeyFile);
+            var documentationFile = properties.GetFinalValue(PropertyNames.DocumentationFile);
+            var defineConstants = PropertyConverter.ToDefineConstants(properties.GetFinalValue(PropertyNames.DefineConstants));
 
             var projectDirectory = Path.GetDirectoryName(projectFilePath);
 
             // REVIEW: FullPath metadata value returns the wrong physical path. We need to figure out why.
             // Are we setting up something incorrectly?
-            var sourceFiles = items[WellKnownItemNames.Compile]
+            var sourceFiles = items[ItemNames.Compile]
                 .Select(item => GetFullPath(item, projectDirectory))
                 .ToList();
 
-            var references = items[WellKnownItemNames.ReferencePath]
-                .Where(item => !item.HasMetadata(WellKnownMetadataNames.Project))
+            var references = items[ItemNames.ReferencePath]
+                .Where(item => !item.HasMetadata(MetadataNames.Project))
                 .Select(item => GetFullPath(item, projectDirectory))
                 .ToList();
 
-            var projectReferences = items[WellKnownItemNames.ProjectReference]
+            var projectReferences = items[ItemNames.ProjectReference]
                 .Select(item => GetFullPath(item, projectDirectory))
                 .ToList();
 
-            var analyzers = items[WellKnownItemNames.Analyzer]
+            var analyzers = items[ItemNames.Analyzer]
                 .Select(item => GetFullPath(item, projectDirectory))
                 .ToList();
 
