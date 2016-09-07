@@ -10,6 +10,11 @@ namespace OmniSharp.Services
         string Key { get; }
         string Language { get; }
         IEnumerable<string> Extensions { get; }
+
+        /// <summary>
+        /// Initialize the project system.
+        /// </summary>
+        /// <param name="configuration">The configuration to use.</param>
         void Initalize(IConfiguration configuration);
 
         /// <summary>

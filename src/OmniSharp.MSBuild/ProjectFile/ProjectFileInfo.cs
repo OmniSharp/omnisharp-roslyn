@@ -13,7 +13,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.ProjectModel.Resolution;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
 using NuGet.Frameworks;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -22,43 +21,30 @@ namespace OmniSharp.MSBuild.ProjectFile
 {
     public class ProjectFileInfo
     {
-        public ProjectId WorkspaceId { get; set; }
-
-        public Guid ProjectId { get; private set; }
-
+        public ProjectId ProjectId { get; set; }
+        public Guid ProjectGuid { get; private set; }
         public string Name { get; private set; }
-
-        public string ProjectFilePath { get; private set; }
-
+        public string ProjectFilePath { get; }
         public FrameworkName TargetFramework { get; private set; }
-
         public LanguageVersion? SpecifiedLanguageVersion { get; private set; }
-
         public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
-
         public string AssemblyName { get; private set; }
-
         public string TargetPath { get; private set; }
-
         public IList<string> SourceFiles { get; private set; }
-
         public IList<string> References { get; private set; }
-
         public IList<string> ProjectReferences { get; private set; }
-
         public IList<string> Analyzers { get; private set; }
-
         public IList<string> DefineConstants { get; private set; }
-
         public bool AllowUnsafe { get; private set; }
-
         public OutputKind OutputKind { get; private set; }
-
         public bool SignAssembly { get; private set; }
-
         public string AssemblyOriginatorKeyFile { get; private set; }
-
         public bool GenerateXmlDocumentation { get; private set; }
+
+        public ProjectFileInfo(string projectFilePath)
+        {
+            this.ProjectFilePath = projectFilePath;
+        }
 
         public static ProjectFileInfo Create(
             MSBuildOptions options,
@@ -67,8 +53,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string projectFilePath,
             ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
-            var projectFileInfo = new ProjectFileInfo();
-            projectFileInfo.ProjectFilePath = projectFilePath;
+            var projectFileInfo = new ProjectFileInfo(projectFilePath);
 
             if (!PlatformHelper.IsMono)
             {
@@ -105,7 +90,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectFileInfo.Name = projectInstance.GetPropertyValue("ProjectName");
                 projectFileInfo.TargetFramework = new FrameworkName(projectInstance.GetPropertyValue("TargetFrameworkMoniker"));
                 projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(projectInstance.GetPropertyValue("LangVersion"));
-                projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
+                projectFileInfo.ProjectGuid = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
                 var outputType = projectInstance.GetPropertyValue("OutputType");
                 switch (outputType)
@@ -255,7 +240,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 {
                     projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(properties["LangVersion"].FinalValue);
                 }
-                projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
+                projectFileInfo.ProjectGuid = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
                 projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
 
                 // REVIEW: FullPath here returns the wrong physical path, we need to figure out
@@ -333,6 +318,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     case "6": return LanguageVersion.CSharp6;
                 }
             }
+
             return null;
         }
     }
