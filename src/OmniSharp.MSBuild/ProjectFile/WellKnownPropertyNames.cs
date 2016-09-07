@@ -1,4 +1,4 @@
-﻿namespace OmniSharp.MSBuild
+﻿namespace OmniSharp.MSBuild.ProjectFile
 {
     internal static class WellKnownPropertyNames
     {

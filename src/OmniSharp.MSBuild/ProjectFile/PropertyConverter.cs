@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace OmniSharp.MSBuild
+namespace OmniSharp.MSBuild.ProjectFile
 {
     internal static class PropertyConverter
     {
