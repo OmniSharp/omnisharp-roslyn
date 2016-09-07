@@ -102,6 +102,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
+                // Have we seen this project GUID? If so, move on.
                 if (_context.ProjectGuidToProjectIdMap.ContainsKey(projectBlock.ProjectGuid))
                 {
                     continue;
@@ -132,7 +133,7 @@ namespace OmniSharp.MSBuild
 
                 _workspace.AddProject(projectInfo);
 
-                projectFileInfo.ProjectId = projectInfo.Id;
+                projectFileInfo.SetProjectId(projectInfo.Id);
 
                 _context.Projects[projectFileInfo.ProjectFilePath] = projectFileInfo;
                 _context.ProjectGuidToProjectIdMap[projectBlock.ProjectGuid] = projectInfo.Id;
@@ -241,7 +242,7 @@ namespace OmniSharp.MSBuild
                     if (_context.Projects.TryGetValue(projectFilePath, out oldProjectFileInfo))
                     {
                         _context.Projects[projectFilePath] = newProjectInfo;
-                        newProjectInfo.ProjectId = oldProjectFileInfo.ProjectId;
+                        newProjectInfo.SetProjectId(oldProjectFileInfo.ProjectId);
                         UpdateProject(newProjectInfo);
                     }
                 }
@@ -251,59 +252,90 @@ namespace OmniSharp.MSBuild
         private void UpdateProject(ProjectFileInfo projectFileInfo)
         {
             var project = _workspace.CurrentSolution.GetProject(projectFileInfo.ProjectId);
-
-            var unusedDocuments = project.Documents.ToDictionary(d => d.FilePath, d => d.Id);
-
-            foreach (var file in projectFileInfo.SourceFiles)
+            if (project == null)
             {
-                if (unusedDocuments.Remove(file))
+                _logger.LogError($"Could not locate project in workspace: {projectFileInfo.ProjectFilePath}");
+                return;
+            }
+
+            UpdateSourceFiles(project, projectFileInfo.SourceFiles);
+            UpdateParseOptions(project, projectFileInfo.SpecifiedLanguageVersion, projectFileInfo.PreprocessorSymbolNames, projectFileInfo.GenerateXmlDocumentation);
+            UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
+            UpdateReferences(project, projectFileInfo.References);
+        }
+
+        private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
+        {
+            var currentDocuments = project.Documents.ToDictionary(d => d.FilePath, d => d.Id);
+
+            // Add source files to the project.
+            foreach (var sourceFile in sourceFiles)
+            {
+                // If a document for this source file already exists in the project, carry on.
+                if (currentDocuments.Remove(sourceFile))
                 {
                     continue;
                 }
 
-                using (var stream = File.OpenRead(file))
+                // If not, add a new document.
+                using (var stream = File.OpenRead(sourceFile))
                 {
                     var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
-                    var id = DocumentId.CreateNewId(projectFileInfo.ProjectId);
+                    var documentId = DocumentId.CreateNewId(project.Id);
                     var version = VersionStamp.Create();
-
                     var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
+                    var documentInfo = DocumentInfo.Create(documentId, sourceFile, filePath: sourceFile, loader: loader);
 
-                    _workspace.AddDocument(DocumentInfo.Create(id, file, filePath: file, loader: loader));
+                    _workspace.AddDocument(documentInfo);
                 }
             }
 
-            if (projectFileInfo.SpecifiedLanguageVersion.HasValue || projectFileInfo.DefineConstants != null)
+            // Removing any remaining documents from the project.
+            foreach (var currentDocument in currentDocuments)
             {
-                var parseOptions = projectFileInfo.SpecifiedLanguageVersion.HasValue
-                    ? new CSharpParseOptions(projectFileInfo.SpecifiedLanguageVersion.Value)
-                    : new CSharpParseOptions();
-                if (projectFileInfo.DefineConstants != null && projectFileInfo.DefineConstants.Any())
-                {
-                    parseOptions = parseOptions.WithPreprocessorSymbols(projectFileInfo.DefineConstants);
-                }
-                if (projectFileInfo.GenerateXmlDocumentation)
-                {
-                    parseOptions = parseOptions.WithDocumentationMode(DocumentationMode.Diagnose);
-                }
-                _workspace.SetParseOptions(project.Id, parseOptions);
+                _workspace.RemoveDocument(currentDocument.Value);
             }
+        }
 
-            foreach (var unused in unusedDocuments)
+        private void UpdateParseOptions(Project project, LanguageVersion languageVersion, IEnumerable<string> preprocessorSymbolNames, bool generateXmlDocumentation)
+        {
+            var existingParseOptions = (CSharpParseOptions)project.ParseOptions;
+
+            if (existingParseOptions.LanguageVersion == languageVersion &&
+                Enumerable.SequenceEqual(existingParseOptions.PreprocessorSymbolNames, preprocessorSymbolNames) &&
+                (existingParseOptions.DocumentationMode == DocumentationMode.Diagnose) == generateXmlDocumentation)
             {
-                _workspace.RemoveDocument(unused.Value);
+                // No changes to make. Moving on.
+                return;
             }
 
-            var unusedProjectReferences = new HashSet<ProjectReference>(project.ProjectReferences);
+            var parseOptions = new CSharpParseOptions(languageVersion);
 
-            foreach (var projectReferencePath in projectFileInfo.ProjectReferences)
+            if (preprocessorSymbolNames.Any())
+            {
+                parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbolNames);
+            }
+
+            if (generateXmlDocumentation)
+            {
+                parseOptions = parseOptions.WithDocumentationMode(DocumentationMode.Diagnose);
+            }
+
+            _workspace.SetParseOptions(project.Id, parseOptions);
+        }
+
+        private void UpdateProjectReferences(Project project, IList<string> projectReferences)
+        {
+            var existingProjectReferences = new HashSet<ProjectReference>(project.ProjectReferences);
+
+            foreach (var projectReference in projectReferences)
             {
                 ProjectFileInfo projectReferenceInfo;
-                if (_context.Projects.TryGetValue(projectReferencePath, out projectReferenceInfo))
+                if (_context.Projects.TryGetValue(projectReference, out projectReferenceInfo))
                 {
                     var reference = new ProjectReference(projectReferenceInfo.ProjectId);
 
-                    if (unusedProjectReferences.Remove(reference))
+                    if (existingProjectReferences.Remove(reference))
                     {
                         // This reference already exists
                         continue;
@@ -313,18 +345,21 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    _logger.LogWarning($"Unable to resolve project reference '{projectReferencePath}' for '{projectFileInfo}'.");
+                    _logger.LogWarning($"Unable to resolve project reference '{projectReference}' for '{project.Name}'.");
                 }
             }
 
-            foreach (var unused in unusedProjectReferences)
+            foreach (var existingProjectReference in existingProjectReferences)
             {
-                _workspace.RemoveProjectReference(project.Id, unused);
+                _workspace.RemoveProjectReference(project.Id, existingProjectReference);
             }
+        }
 
-            var unusedReferences = new HashSet<MetadataReference>(project.MetadataReferences);
+        private void UpdateReferences(Project project, IList<string> references)
+        {
+            var existingReferences = new HashSet<MetadataReference>(project.MetadataReferences);
 
-            foreach (var referencePath in projectFileInfo.References)
+            foreach (var referencePath in references)
             {
                 if (!File.Exists(referencePath))
                 {
@@ -334,19 +369,19 @@ namespace OmniSharp.MSBuild
                 {
                     var metadataReference = _metadataReferenceCache.GetMetadataReference(referencePath);
 
-                    if (unusedReferences.Remove(metadataReference))
+                    if (existingReferences.Remove(metadataReference))
                     {
                         continue;
                     }
 
-                    _logger.LogDebug($"Adding reference '{referencePath}' to '{projectFileInfo.ProjectFilePath}'.");
+                    _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
                     _workspace.AddMetadataReference(project.Id, metadataReference);
                 }
             }
 
-            foreach (var reference in unusedReferences)
+            foreach (var existingReference in existingReferences)
             {
-                _workspace.RemoveMetadataReference(project.Id, reference);
+                _workspace.RemoveMetadataReference(project.Id, existingReference);
             }
         }
 

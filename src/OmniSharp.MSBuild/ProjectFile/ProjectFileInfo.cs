@@ -15,12 +15,12 @@ namespace OmniSharp.MSBuild.ProjectFile
 {
     public partial class ProjectFileInfo
     {
-        public ProjectId ProjectId { get; set; }
+        public ProjectId ProjectId { get; private set; }
         public Guid ProjectGuid { get; }
         public string Name { get; }
         public string ProjectFilePath { get; }
         public FrameworkName TargetFramework { get; }
-        public LanguageVersion? SpecifiedLanguageVersion { get; }
+        public LanguageVersion SpecifiedLanguageVersion { get; }
         public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
         public string AssemblyName { get; }
         public string TargetPath { get; }
@@ -29,7 +29,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool SignAssembly { get; }
         public string AssemblyOriginatorKeyFile { get; }
         public bool GenerateXmlDocumentation { get; }
-        public IList<string> DefineConstants { get; }
+        public IList<string> PreprocessorSymbolNames { get; }
 
         public IList<string> SourceFiles { get; }
         public IList<string> References { get; }
@@ -45,7 +45,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyName,
             string name,
             FrameworkName targetFramework,
-            LanguageVersion? specifiedLanguageVersion,
+            LanguageVersion specifiedLanguageVersion,
             Guid projectGuid,
             string targetPath,
             bool allowUnsafe,
@@ -71,11 +71,21 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.SignAssembly = signAssembly;
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
-            this.DefineConstants = defineConstants;
+            this.PreprocessorSymbolNames = defineConstants;
             this.SourceFiles = sourceFiles;
             this.References = references;
             this.ProjectReferences = projectReferences;
             this.Analyzers = analyzers;
+        }
+
+        public void SetProjectId(ProjectId projectId)
+        {
+            if (this.ProjectId != null)
+            {
+                throw new ArgumentException("ProjectId is already set!", nameof(projectId));
+            }
+
+            this.ProjectId = projectId;
         }
 
         public static ProjectFileInfo Create(
@@ -107,7 +117,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var collection = new ProjectCollection(globalProperties);
 
-            logger.LogInformation("Using toolset {0} for '{1}'", options.ToolsVersion ?? collection.DefaultToolsVersion, projectFilePath);
+            logger.LogInformation($"Using toolset {options.ToolsVersion ?? collection.DefaultToolsVersion} for '{projectFilePath}'");
 
             var project = string.IsNullOrEmpty(options.ToolsVersion)
                 ? collection.LoadProject(projectFilePath)
@@ -128,9 +138,9 @@ namespace OmniSharp.MSBuild.ProjectFile
             var specifiedLanguageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
             var projectGuid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
             var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
-            var allowUnsafe = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks));
+            var allowUnsafe = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
             var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
-            var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly));
+            var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
             var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
             var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
             var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
@@ -157,23 +167,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 .ToList();
 
             return new ProjectFileInfo(
-                projectFilePath,
-                assemblyName,
-                name,
-                targetFramework,
-                specifiedLanguageVersion,
-                projectGuid,
-                targetPath,
-                allowUnsafe ?? false,
-                outputKind,
-                signAssembly ?? false,
-                assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile),
-                defineConstants,
-                sourceFiles,
-                references,
-                projectReferences,
-                analyzers);
+                projectFilePath, assemblyName, name, targetFramework, specifiedLanguageVersion,
+                projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
+                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, sourceFiles, references,
+                projectReferences, analyzers);
         }
 
         private static bool ReferenceSourceTargetIsProjectReference(ProjectItemInstance projectItem)
