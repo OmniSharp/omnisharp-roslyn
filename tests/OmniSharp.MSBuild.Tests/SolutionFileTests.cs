@@ -69,7 +69,7 @@ EndGlobal
         [Fact]
         public void Can_get_unity_project_type_guid()
         {
-            var guid = MSBuildProjectSystem.UnityTypeGuid("asteroids");
+            var guid = UnityHelper.GetProjectTypeGuid("asteroids");
             Assert.Equal(Guid.Parse("D02EBBA0-86EB-60B6-155B-94E12649FF84"), guid);
         }
     }

@@ -13,14 +13,14 @@ namespace OmniSharp.Models
         public string TargetFramework { get; set; }
         public IList<string> SourceFiles { get; set; }
 
-        public MSBuildProject(ProjectFileInfo p)
+        public MSBuildProject(ProjectFileInfo projectFileInfo)
         {
-            AssemblyName = p.AssemblyName;
-            Path = p.ProjectFilePath;
-            TargetPath = p.TargetPath;
-            ProjectGuid = p.ProjectId;
-            TargetFramework = p.TargetFramework.ToString();
-            SourceFiles = p.SourceFiles;
+            AssemblyName = projectFileInfo.AssemblyName;
+            Path = projectFileInfo.ProjectFilePath;
+            TargetPath = projectFileInfo.TargetPath;
+            ProjectGuid = projectFileInfo.ProjectGuid;
+            TargetFramework = projectFileInfo.TargetFramework.ToString();
+            SourceFiles = projectFileInfo.SourceFiles;
         }
     }
 }
