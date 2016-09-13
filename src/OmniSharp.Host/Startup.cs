@@ -17,10 +17,14 @@ using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
+using OmniSharp.Plugins;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+#if !NET451
+using System.Runtime.Loader;
+#endif
 
 namespace OmniSharp
 {
@@ -76,9 +80,26 @@ namespace OmniSharp
                                                    Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
-            assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
-                .Distinct();
+
+            try
+            {
+                assemblies = assemblies
+                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                    .Distinct()
+                    .ToArray();
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException is ReflectionTypeLoadException)
+                {
+                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                    foreach (var lex in reflectionEx.LoaderExceptions)
+                    {
+                        Console.Error.WriteLine(lex);
+                    }
+                }
+                throw;
+            }
 
             foreach (var assembly in assemblies)
             {
@@ -119,8 +140,24 @@ namespace OmniSharp
             if (configure != null)
                 config = configure(config);
 
-            var container = config.CreateContainer();
-            return container;
+            try
+            {
+
+                var container = config.CreateContainer();
+                return container;
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException is ReflectionTypeLoadException)
+                {
+                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                    foreach (var lex in reflectionEx.LoaderExceptions)
+                    {
+                        Console.Error.WriteLine(lex);
+                    }
+                }
+                throw;
+            }
         }
 
         public void Configure(IApplicationBuilder app,
@@ -129,17 +166,16 @@ namespace OmniSharp
                               ILoggerFactory loggerFactory,
                               ISharedTextWriter writer,
                               IOmnisharpAssemblyLoader loader,
+                              PluginAssemblies plugins,
                               IOptions<OmniSharpOptions> optionsAccessor)
         {
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
-
-            var dependencyContext = DependencyContext.Default;
-            var assemblies = dependencyContext.RuntimeLibraries
+            var assemblies = DependencyContext.Default.RuntimeLibraries
                                               .Where(shouldLoad)
-                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(dependencyContext))
-                                              .Select(each => loader.Load(each.Name))
-                                              .ToList();
+                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(DependencyContext.Default))
+                                              .Select(loader.Load)
+                                              .Concat(plugins.Assemblies);
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 

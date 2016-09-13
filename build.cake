@@ -18,6 +18,21 @@ var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment
                                                                         ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 
+var tag = "";
+var appveyorTag = EnvironmentVariable("APPVEYOR_REPO_TAG_NAME");
+if (!string.IsNullOrWhiteSpace(appveyorTag))
+{
+    tag = appveyorTag;
+}
+
+var travisTag = EnvironmentVariable("TRAVIS_TAG");
+if (!string.IsNullOrWhiteSpace(travisTag))
+{
+    tag = travisTag;
+}
+
+tag = tag.TrimStart('v');
+
 // Working directory
 var workingDirectory = System.IO.Directory.GetCurrentDirectory();
 
@@ -42,6 +57,8 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
+    public IEnumerable<string> Projects { get { return new [] { MainProject }.Concat(Plugins ?? new string[] {}); } }
+    public string[] Plugins { get; set; }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
@@ -54,12 +71,12 @@ var toolsFolder = System.IO.Path.Combine(workingDirectory, buildPlan.BuildToolsF
 
 var sourceFolder = System.IO.Path.Combine(workingDirectory, "src");
 var testFolder = System.IO.Path.Combine(workingDirectory, "tests");
-
 var artifactFolder = System.IO.Path.Combine(workingDirectory, buildPlan.ArtifactsFolder);
 var publishFolder = System.IO.Path.Combine(artifactFolder, "publish");
 var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
 var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
+var pluginFolder =  System.IO.Path.Combine(artifactFolder, "plugins");
 
 /// <summary>
 ///  Clean artifacts.
@@ -75,6 +92,7 @@ Task("Cleanup")
     System.IO.Directory.CreateDirectory(logFolder);
     System.IO.Directory.CreateDirectory(packageFolder);
     System.IO.Directory.CreateDirectory(scriptFolder);
+    System.IO.Directory.CreateDirectory(pluginFolder);
 });
 
 /// <summary>
@@ -300,6 +318,48 @@ Task("OnlyPublish")
     .IsDependentOn("Setup")
     .Does(() =>
 {
+    var coreclrPlugins = new List<string>();
+    var desktopPlugins = new List<string>();
+
+    foreach (var plugin in buildPlan.Plugins)
+    {
+        var pluginProject = System.IO.Path.Combine(sourceFolder, plugin, "project.json");
+        var projectJson = JObject.Parse(
+            System.IO.File.ReadAllText(System.IO.Path.Combine(sourceFolder, plugin, "project.json")));
+        var version = projectJson["version"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            projectJson["version"] = tag;
+            System.IO.File.WriteAllText(pluginProject, projectJson.ToString());
+        }
+
+        var buildArguments = "pack";
+        buildArguments = $"{buildArguments} --configuration {configuration}";
+        buildArguments = $"{buildArguments} --output \"{pluginFolder}\" \"{sourceFolder}/{plugin}\"";
+        Run(dotnetcli, buildArguments)
+            .ExceptionOnError($"Failed to build {plugin}");
+
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            projectJson["version"] = version;
+            System.IO.File.WriteAllText(pluginProject, projectJson.ToString());
+        }
+
+        foreach (JProperty kvp in projectJson["frameworks"])
+        {
+            var framework = kvp.Name;
+            if (framework.StartsWith("netstandard"))
+            {
+                coreclrPlugins.Add(System.IO.Path.Combine(sourceFolder, plugin, "bin", configuration, framework));
+            }
+            if (framework.StartsWith("net451"))
+            {
+                desktopPlugins.Add(System.IO.Path.Combine(sourceFolder, plugin, "bin", configuration, framework));
+            }
+        }
+    }
+
     var project = buildPlan.MainProject;
     var projectFolder = System.IO.Path.Combine(sourceFolder, project);
     foreach (var framework in buildPlan.Frameworks)
@@ -307,6 +367,7 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
+            var liteFolder = System.IO.Path.Combine(publishFolder, $"{project}.lite", runtime, framework);
             var publishArguments = "publish";
             if (!runtime.Equals("default"))
             {
@@ -317,13 +378,75 @@ Task("OnlyPublish")
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
+            var pluginsFolder = System.IO.Path.Combine(outputFolder, "plugins", "base");
+            if (DirectoryExists(pluginsFolder))
+            {
+                System.IO.Directory.CreateDirectory(pluginsFolder);
+            }
+
+            CopyDirectory(outputFolder, liteFolder);
+
+            if (!DirectoryExists(System.IO.Path.Combine(outputFolder, "plugins")))
+            {
+                CreateDirectory(System.IO.Path.Combine(outputFolder, "plugins"));
+            }
+
+            if (!DirectoryExists(pluginsFolder))
+            {
+                CreateDirectory(pluginsFolder);
+            }
+
+            if (framework.StartsWith("netcoreapp"))
+            {
+                foreach (var pluginPath in coreclrPlugins)
+                {
+                    CopyDirectory(pluginPath, pluginsFolder);
+                }
+            }
+            if (framework.Equals("net451"))
+            {
+                foreach (var pluginPath in desktopPlugins)
+                {
+                    CopyDirectory(pluginPath, pluginsFolder);
+                }
+            }
+
             if (requireArchive)
             {
                 Package(runtime, framework, outputFolder, packageFolder, buildPlan.MainProject.ToLower());
             }
+
+            var runtimeShort = "";
+            if (runtime.Equals("default"))
+            {
+                runtimeShort = EnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
+            }
+            else
+            {
+                // Remove version number
+                runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            }
+            // Simplify Ubuntu to Linux
+            runtimeShort = runtimeShort.Replace("ubuntu", "linux");
+            var buildIdentifier = $"{runtimeShort}-{framework}";
+            // Linux + net451 is renamed to Mono
+            if (runtimeShort.Contains("linux-") && framework.Equals("net451"))
+            {
+                buildIdentifier ="linux-mono";
+            }
+            // No need to package OSX + net451
+            else if (runtimeShort.Contains("osx-") && framework.Equals("net451"))
+            {
+                continue;
+            }
+
+            DoArchive(runtime, outputFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}-{buildIdentifier}"));
+            // Archive vare repo
+            DoArchive(runtime, liteFolder, System.IO.Path.Combine(packageFolder, $"{buildPlan.MainProject.ToLower()}.lite-{buildIdentifier}"));
         }
     }
-    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
+    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder, "OmniSharp");
+    CreateRunScript(System.IO.Path.Combine(publishFolder, $"{project}.lite", "default"), scriptFolder, "OmniSharp.Lite");
 });
 
 /// <summary>
@@ -369,7 +492,7 @@ Task("TestPublished")
 {
     var project = buildPlan.MainProject;
     var projectFolder = System.IO.Path.Combine(sourceFolder, project);
-    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core", "OmniSharp.Lite", "OmniSharp.Lite.Core"};
     foreach (var script in scriptsToTest)
     {
         var scriptPath = System.IO.Path.Combine(scriptFolder, script);
@@ -430,7 +553,7 @@ Task("Install")
         foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
             System.IO.File.Copy(file, System.IO.Path.Combine(targetFolder, file.Substring(outputFolder.Length + 1)), true);
     }
-    CreateRunScript(installFolder, scriptFolder);
+    CreateRunScript(installFolder, scriptFolder, "OmniSharp");
 });
 
 /// <summary>

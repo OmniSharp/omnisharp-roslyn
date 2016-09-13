@@ -10,6 +10,7 @@ using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 using OmniSharp.Tests;
+using TestUtility.Fake;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -312,7 +313,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var loader = _fixture.CreateAssemblyLoader(_fixture.FakeLogger);
             var hostServicesProvider = new RoslynFeaturesHostServicesProvider(loader);
 
-            yield return new RoslynCodeActionProvider(hostServicesProvider);
+            yield return new RoslynCodeActionProvider(new FakeLoggerFactory(), hostServicesProvider);
         }
     }
 }
