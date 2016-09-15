@@ -28,10 +28,13 @@ namespace OmniSharp.MSBuild
         private readonly IEventEmitter _eventEmitter;
         private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IFileSystemWatcher _fileSystemWatcher;
-        private readonly MSBuildContext _context;
         private readonly ILogger _logger;
 
         private MSBuildOptions _options;
+        private string _solutionFilePath;
+
+        private readonly object _gate = new object();
+        public Dictionary<string, ProjectFileInfo> Projects { get; } = new Dictionary<string, ProjectFileInfo>(StringComparer.OrdinalIgnoreCase);
 
         private static readonly Guid[] _supportsProjectTypes = new[] {
             new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
@@ -41,6 +44,8 @@ namespace OmniSharp.MSBuild
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
 
+        public MSBuildProjectSystem() { }
+
         [ImportingConstructor]
         public MSBuildProjectSystem(
             OmnisharpWorkspace workspace,
@@ -48,8 +53,7 @@ namespace OmniSharp.MSBuild
             ILoggerFactory loggerFactory,
             IEventEmitter eventEmitter,
             IMetadataFileReferenceCache metadataReferenceCache,
-            IFileSystemWatcher fileSystemWatcher,
-            MSBuildContext context)
+            IFileSystemWatcher fileSystemWatcher)
         {
             _workspace = workspace;
             _environment = environment;
@@ -57,7 +61,6 @@ namespace OmniSharp.MSBuild
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
             _metadataReferenceCache = metadataReferenceCache;
-            _context = context;
 
             _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
         }
@@ -87,11 +90,13 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            _context.SolutionPath = solutionFilePath;
+            _solutionFilePath = solutionFilePath;
 
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
             var solutionFile = ReadSolutionFile(solutionFilePath);
+
+            var projectGuidSet = new HashSet<Guid>();
 
             foreach (var projectBlock in solutionFile.ProjectBlocks)
             {
@@ -103,7 +108,7 @@ namespace OmniSharp.MSBuild
                 }
 
                 // Have we seen this project GUID? If so, move on.
-                if (_context.ProjectGuidToProjectIdMap.ContainsKey(projectBlock.ProjectGuid))
+                if (projectGuidSet.Contains(projectBlock.ProjectGuid))
                 {
                     continue;
                 }
@@ -135,13 +140,13 @@ namespace OmniSharp.MSBuild
 
                 projectFileInfo.SetProjectId(projectInfo.Id);
 
-                _context.Projects[projectFileInfo.ProjectFilePath] = projectFileInfo;
-                _context.ProjectGuidToProjectIdMap[projectBlock.ProjectGuid] = projectInfo.Id;
+                Projects[projectFileInfo.ProjectFilePath] = projectFileInfo;
+                projectGuidSet.Add(projectBlock.ProjectGuid);
 
                 _fileSystemWatcher.Watch(projectFilePath, OnProjectChanged);
             }
 
-            foreach (var projectFileInfo in _context.Projects.Values)
+            foreach (var projectFileInfo in Projects.Values)
             {
                 UpdateProject(projectFileInfo);
             }
@@ -236,12 +241,12 @@ namespace OmniSharp.MSBuild
             // Should we remove the entry if the project is malformed?
             if (newProjectInfo != null)
             {
-                lock (_context)
+                lock (_gate)
                 {
                     ProjectFileInfo oldProjectFileInfo;
-                    if (_context.Projects.TryGetValue(projectFilePath, out oldProjectFileInfo))
+                    if (Projects.TryGetValue(projectFilePath, out oldProjectFileInfo))
                     {
-                        _context.Projects[projectFilePath] = newProjectInfo;
+                        Projects[projectFilePath] = newProjectInfo;
                         newProjectInfo.SetProjectId(oldProjectFileInfo.ProjectId);
                         UpdateProject(newProjectInfo);
                     }
@@ -331,7 +336,7 @@ namespace OmniSharp.MSBuild
             foreach (var projectReference in projectReferences)
             {
                 ProjectFileInfo projectReferenceInfo;
-                if (_context.Projects.TryGetValue(projectReference, out projectReferenceInfo))
+                if (Projects.TryGetValue(projectReference, out projectReferenceInfo))
                 {
                     var reference = new ProjectReference(projectReferenceInfo.ProjectId);
 
@@ -388,7 +393,7 @@ namespace OmniSharp.MSBuild
         private ProjectFileInfo GetProjectFileInfo(string path)
         {
             ProjectFileInfo projectFileInfo;
-            if (!_context.Projects.TryGetValue(path, out projectFileInfo))
+            if (!Projects.TryGetValue(path, out projectFileInfo))
             {
                 return null;
             }
@@ -399,7 +404,7 @@ namespace OmniSharp.MSBuild
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(
-                new MsBuildWorkspaceInformation(_context,
+                new MsBuildWorkspaceInformation(_solutionFilePath, Projects,
                     excludeSourceFiles: request?.ExcludeSourceFiles ?? false));
         }
 

@@ -12,11 +12,11 @@ namespace OmniSharp.Tests
             var projectPath = @"c:\projects\project1\project.csproj";
             var searchProjectPath =  @"c:\Projects\Project1\Project.csproj";
 
-            MSBuildContext context = new MSBuildContext();
-            context.Projects.Add(projectPath, new ProjectFileInfo());
+            var projectSystem = new MSBuildProjectSystem();
+            projectSystem.Projects.Add(projectPath, new ProjectFileInfo());
 
             ProjectFileInfo outInfo = null;
-            Assert.True(context.Projects.TryGetValue(searchProjectPath, out outInfo ));
+            Assert.True(projectSystem.Projects.TryGetValue(searchProjectPath, out outInfo ));
             Assert.NotNull(outInfo);
         }
     }
