@@ -36,8 +36,9 @@ namespace OmniSharp.MSBuild.ProjectFile
         public IList<string> ProjectReferences { get; }
         public IList<string> Analyzers { get; }
 
-        public ProjectFileInfo()
+        public ProjectFileInfo(string projectFilePath)
         {
+            this.ProjectFilePath = projectFilePath;
         }
 
         private ProjectFileInfo(
@@ -95,6 +96,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             MSBuildOptions options,
             ICollection<MSBuildDiagnosticsMessage> diagnostics)
         {
+            if (!File.Exists(projectFilePath))
+            {
+                return null;
+            }
+
 #if NET451
             if (PlatformHelper.IsMono)
             {

@@ -1,4 +1,3 @@
-using OmniSharp.MSBuild;
 using OmniSharp.MSBuild.ProjectFile;
 using Xunit;
 
@@ -12,11 +11,12 @@ namespace OmniSharp.Tests
             var projectPath = @"c:\projects\project1\project.csproj";
             var searchProjectPath =  @"c:\Projects\Project1\Project.csproj";
 
-            var projectSystem = new MSBuildProjectSystem();
-            projectSystem.Projects.Add(projectPath, new ProjectFileInfo());
+            var collection = new ProjectFileInfoCollection();
 
-            ProjectFileInfo outInfo = null;
-            Assert.True(projectSystem.Projects.TryGetValue(searchProjectPath, out outInfo ));
+            collection.Add(new ProjectFileInfo(projectPath));
+
+            ProjectFileInfo outInfo;
+            Assert.True(collection.TryGetValue(searchProjectPath, out outInfo));
             Assert.NotNull(outInfo);
         }
     }
