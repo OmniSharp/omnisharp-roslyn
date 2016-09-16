@@ -35,9 +35,9 @@ namespace OmniSharp.MSBuild
         private readonly ProjectFileInfoCollection _projects;
 
         private MSBuildOptions _options;
-        private string _solutionFilePath;
+        private string _solutionFileOrRootPath;
 
-        private static readonly Guid[] _supportsProjectTypes = new[]
+        private static readonly Guid[] _supportedProjectTypes = new[]
         {
             new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
         };
@@ -80,21 +80,7 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            var solutionFilePath = _environment.SolutionFilePath;
-            if (string.IsNullOrEmpty(solutionFilePath))
-            {
-                solutionFilePath = FindSolutionFilePath(_environment.Path, _logger);
-
-                if (string.IsNullOrEmpty(solutionFilePath))
-                {
-                    return;
-                }
-            }
-
-            _solutionFilePath = solutionFilePath;
-
-            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
-            AddProjectsFromSolution(solutionFilePath);
+            AddProjects();
 
             foreach (var projectFileInfo in _projects)
             {
@@ -106,14 +92,42 @@ namespace OmniSharp.MSBuild
             }
         }
 
+        private void AddProjects()
+        {
+            if (!string.IsNullOrEmpty(_environment.SolutionFilePath))
+            {
+                // If a solution file path was provided, process that solution
+                _solutionFileOrRootPath = _environment.SolutionFilePath;
+                AddProjectsFromSolution(_environment.SolutionFilePath);
+                return;
+            }
+
+            // Otherwise, assume that the path provided is a directory and
+            // look for a solution there.
+            var solutionFilePath = FindSolutionFilePath(_environment.Path, _logger);
+            if (!string.IsNullOrEmpty(solutionFilePath))
+            {
+                _solutionFileOrRootPath = solutionFilePath;
+                AddProjectsFromSolution(solutionFilePath);
+                return;
+            }
+
+            // Finally, if there isn't a single solution immediately available,
+            // Just process all of the projects beneath the root path.
+            _solutionFileOrRootPath = _environment.Path;
+            AddProjectsFromRootPath(_environment.Path);
+        }
+
         private void AddProjectsFromSolution(string solutionFilePath)
         {
+            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
+
             var solutionFile = ReadSolutionFile(solutionFilePath);
             var processedProjects = new HashSet<Guid>();
 
             foreach (var projectBlock in solutionFile.ProjectBlocks)
             {
-                if (!_supportsProjectTypes.Contains(projectBlock.ProjectTypeGuid) &&
+                if (!_supportedProjectTypes.Contains(projectBlock.ProjectTypeGuid) &&
                     !UnityHelper.IsUnityProject(projectBlock.ProjectName, projectBlock.ProjectTypeGuid))
                 {
                     _logger.LogWarning("Skipped unsupported project type '{0}'", projectBlock.ProjectPath);
@@ -126,6 +140,8 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
+                // Solution files are assumed to contain relative paths to project files
+                // with Windows-style slashes.
                 var projectFilePath = projectBlock.ProjectPath.Replace('\\', Path.DirectorySeparatorChar);
                 projectFilePath = Path.Combine(_environment.Path, projectFilePath);
                 projectFilePath = Path.GetFullPath(projectFilePath);
@@ -139,6 +155,14 @@ namespace OmniSharp.MSBuild
                 }
 
                 processedProjects.Add(projectBlock.ProjectGuid);
+            }
+        }
+
+        private void AddProjectsFromRootPath(string rootPath)
+        {
+            foreach (var projectFilePath in Directory.GetFiles(rootPath, "*.csproj", SearchOption.AllDirectories))
+            {
+                AddProject(projectFilePath);
             }
         }
 
@@ -221,7 +245,7 @@ namespace OmniSharp.MSBuild
                 logger.LogInformation(result.Message);
             }
 
-            return result.Solution;
+            return result.FilePath;
         }
 
         private ProjectFileInfo CreateProjectFileInfo(string projectFilePath)
@@ -260,19 +284,19 @@ namespace OmniSharp.MSBuild
 
         private void OnProjectChanged(string projectFilePath)
         {
-            var newProjectInfo = CreateProjectFileInfo(projectFilePath);
+            var newProjectFileInfo = CreateProjectFileInfo(projectFilePath);
 
-            // Should we remove the entry if the project is malformed?
-            if (newProjectInfo != null)
+            // TODO: Should we remove the entry if the project is malformed?
+            if (newProjectFileInfo != null)
             {
                 lock (_gate)
                 {
                     ProjectFileInfo oldProjectFileInfo;
                     if (_projects.TryGetValue(projectFilePath, out oldProjectFileInfo))
                     {
-                        _projects[projectFilePath] = newProjectInfo;
-                        newProjectInfo.SetProjectId(oldProjectFileInfo.ProjectId);
-                        UpdateProject(newProjectInfo);
+                        _projects[projectFilePath] = newProjectFileInfo;
+                        newProjectFileInfo.SetProjectId(oldProjectFileInfo.ProjectId);
+                        UpdateProject(newProjectFileInfo);
                     }
                 }
             }
@@ -428,7 +452,7 @@ namespace OmniSharp.MSBuild
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(
-                new MsBuildWorkspaceInformation(_solutionFilePath, _projects,
+                new MsBuildWorkspaceInformation(_solutionFileOrRootPath, _projects,
                     excludeSourceFiles: request?.ExcludeSourceFiles ?? false));
         }
 
