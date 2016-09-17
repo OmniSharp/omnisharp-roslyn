@@ -8,27 +8,26 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 
-namespace OmniSharp.Roslyn.CSharp.Workers.Format
+namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 {
-    public static class Formatting
+    public static class FormattingWorker
     {
-        public static OptionSet GetOptions(OmnisharpWorkspace workspace, OmniSharp.Options.FormattingOptions formattingOptions)
+        public static OptionSet GetOptions(OmnisharpWorkspace workspace, Options.FormattingOptions formattingOptions)
         {
             return workspace.Options
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.UseTabs, LanguageNames.CSharp, formattingOptions.UseTabs)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.TabSize, LanguageNames.CSharp, formattingOptions.TabSize)
-                .WithChangedOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.IndentationSize, LanguageNames.CSharp, formattingOptions.IndentationSize);
+                .WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)
+                .WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, formattingOptions.UseTabs)
+                .WithChangedOption(FormattingOptions.TabSize, LanguageNames.CSharp, formattingOptions.TabSize)
+                .WithChangedOption(FormattingOptions.IndentationSize, LanguageNames.CSharp, formattingOptions.IndentationSize);
         }
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, OptionSet options, Document document, int position, char character)
         {
-            var tree = await document.GetSyntaxTreeAsync();
-
             if (character == '\n')
             {
                 // format previous line on new line
-                var lines = (await document.GetTextAsync()).Lines;
+                var text = await document.GetTextAsync();
+                var lines = text.Lines;
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
                 if (!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
                 {
@@ -38,7 +37,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
             else if (character == '}' || character == ';')
             {
                 // format after ; and }
-                var node = FindFormatTarget(tree, position);
+                var root = await document.GetSyntaxRootAsync();
+                var node = FindFormatTarget(root, position);
                 if (node != null)
                 {
                     return await GetFormattingChangesForRange(workspace, options, document, node.FullSpan.Start, node.FullSpan.End);
@@ -48,13 +48,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
             return Enumerable.Empty<LinePositionSpanTextChange>();
         }
 
-        public static SyntaxNode FindFormatTarget(SyntaxTree tree, int position)
+        public static SyntaxNode FindFormatTarget(SyntaxNode root, int position)
         {
             // todo@jo - refine this
-            var token = tree.GetRoot().FindToken(position);
-            var kind = token.Kind();
+            var token = root.FindToken(position);
 
-            switch (kind)
+            switch (token.Kind())
             {
                 // ; -> use the statement
                 case SyntaxKind.SemicolonToken:
@@ -77,38 +76,23 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Format
             var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), options);
             var textChanges = await changedDocument.GetTextChangesAsync(document);
 
-            return (await LinePositionSpanTextChange.Convert(document, textChanges)).Select(change =>
-            {
-                change.NewText = EnsureProperNewLine(change.NewText, options);
-                return change;
-            });
+            return await LinePositionSpanTextChange.Convert(document, textChanges);
         }
 
         public static async Task<string> GetFormattedDocument(Workspace workspace, OptionSet options, Document document)
         {
             var formattedDocument = await Formatter.FormatAsync(document, options);
-            var newText = (await formattedDocument.GetTextAsync()).ToString();
-            newText = EnsureProperNewLine(newText, options);
-            return newText;
+            var text = await formattedDocument.GetTextAsync();
+
+            return text.ToString();
         }
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedDocumentTextChanges(Workspace workspace, OptionSet options, Document document)
         {
             var formattedDocument = await Formatter.FormatAsync(document, options);
-            var textChanges = (await formattedDocument.GetTextChangesAsync(document));
+            var textChanges = await formattedDocument.GetTextChangesAsync(document);
 
-            return (await LinePositionSpanTextChange.Convert(document, textChanges)).Select(change =>
-            {
-                change.NewText = EnsureProperNewLine(change.NewText, options);
-                return change;
-            });
-        }
-
-        private static string EnsureProperNewLine(string text, OptionSet options)
-        {
-            // workaround: https://github.com/dotnet/roslyn/issues/202
-            var option = options.GetOption(Microsoft.CodeAnalysis.Formatting.FormattingOptions.NewLine, LanguageNames.CSharp);
-            return text.Replace("\r\n", option);
+            return await LinePositionSpanTextChange.Convert(document, textChanges);
         }
     }
 }

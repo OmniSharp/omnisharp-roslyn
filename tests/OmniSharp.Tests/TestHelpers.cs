@@ -181,22 +181,41 @@ namespace OmniSharp.Tests
         public static Task<OmnisharpWorkspace> AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
         {
             var versionStamp = VersionStamp.Create();
-            var mscorlib = MetadataReference.CreateFromFile(AssemblyFromType(typeof(object)).Location);
-            var systemCore = MetadataReference.CreateFromFile(AssemblyFromType(typeof(Enumerable)).Location);
-            var references = new[] { mscorlib, systemCore };
+
+            // This is a bit messy. Essentially, we need to add all assemblies that type forwarders might point to.
+
+            var assemblies = new[]
+            {
+                AssemblyFromType(typeof(object)),
+                AssemblyFromType(typeof(Enumerable)),
+                AssemblyFromType(typeof(Stack<>)),
+                AssemblyFromType(typeof(Lazy<,>)),
+                Assembly.Load(new AssemblyName("System.Runtime")),
+                Assembly.Load(new AssemblyName("mscorlib"))
+            };
+
+            var references = assemblies
+                .Where(a => a != null)
+                .Select(a => a.Location)
+                .Distinct()
+                .Select(l => MetadataReference.CreateFromFile(l));
 
             foreach (var framework in frameworks)
             {
-                var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), versionStamp,
-                                                     "OmniSharp+" + framework, "AssemblyName",
-                                                     LanguageNames.CSharp, filePath, metadataReferences: references);
+                var projectInfo = ProjectInfo.Create(
+                    ProjectId.CreateNewId(),
+                    versionStamp,
+                    "OmniSharp+" + framework, "AssemblyName",
+                    LanguageNames.CSharp, filePath, metadataReferences: references);
 
                 workspace.AddProject(projectInfo);
+
                 foreach (var file in sourceFiles)
                 {
-                    var document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), file.Key,
-                                                       null, SourceCodeKind.Regular,
-                                                       TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
+                    var document = DocumentInfo.Create(
+                        DocumentId.CreateNewId(projectInfo.Id), file.Key,
+                        null, SourceCodeKind.Regular,
+                        TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
 
                     workspace.AddDocument(document);
                 }

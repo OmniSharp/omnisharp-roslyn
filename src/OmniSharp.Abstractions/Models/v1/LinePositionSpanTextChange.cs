@@ -59,6 +59,7 @@ namespace OmniSharp.Models
         }
 
         public string NewText { get; set; }
+
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int StartLine { get; set; }
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
@@ -91,6 +92,14 @@ namespace OmniSharp.Models
                 * (31 + EndLine)
                 * (37 + EndColumn);
         }
-    }
 
+        public override string ToString()
+        {
+            var displayText = NewText != null
+                ? NewText.Replace("\r", @"\r").Replace("\n", @"\n").Replace("\t", @"\t")
+                : string.Empty;
+
+            return $"StartLine={StartLine}, StartColumn={StartColumn}, EndLine={EndLine}, EndColumn={EndColumn}, NewText='{displayText}'";
+        }
+    }
 }
