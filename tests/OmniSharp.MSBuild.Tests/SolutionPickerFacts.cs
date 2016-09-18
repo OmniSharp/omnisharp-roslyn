@@ -11,7 +11,7 @@ namespace OmniSharp.Tests
             var solutions = new[] { "unity.sln", "unity-csharp.sln" };
             var solution = SolutionSelector.Pick(solutions, path: null);
 
-            Assert.Equal("unity-csharp.sln", solution.Solution);
+            Assert.Equal("unity-csharp.sln", solution.FilePath);
         }
 
         [Fact]
@@ -20,7 +20,7 @@ namespace OmniSharp.Tests
             var solutions = new[] { "unity.sln" };
             var solution = SolutionSelector.Pick(solutions, path: null);
 
-            Assert.Equal("unity.sln", solution.Solution);
+            Assert.Equal("unity.sln", solution.FilePath);
         }
 
         [Fact]
@@ -29,7 +29,7 @@ namespace OmniSharp.Tests
             var solutions = new string[0];
             var solution = SolutionSelector.Pick(solutions, path: "/path");
 
-            Assert.Null(solution.Solution);
+            Assert.Null(solution.FilePath);
             Assert.Equal("No solution files found in '/path'", solution.Message);
         }
         
@@ -39,7 +39,7 @@ namespace OmniSharp.Tests
             var solutions = new[] { "unity.sln", "unity-csharp.sln", "another.sln" };
             var solution = SolutionSelector.Pick(solutions, path: null);
 
-            Assert.Null(solution.Solution);
+            Assert.Null(solution.FilePath);
             Assert.Equal("Could not determine solution file", solution.Message);
         }
     }

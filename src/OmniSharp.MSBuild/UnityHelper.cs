@@ -25,9 +25,9 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        public static bool IsUnityProject(ProjectBlock projectBlock)
+        public static bool IsUnityProject(string projectName, Guid projectTypeGuid)
         {
-            return GetProjectTypeGuid(projectBlock.ProjectName) == projectBlock.ProjectTypeGuid;
+            return GetProjectTypeGuid(projectName) == projectTypeGuid;
         }
     }
 }
