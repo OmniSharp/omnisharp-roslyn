@@ -59,7 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsSnippet("Get<${1:SomeType}>()$0 : string", completions);
         }
 
-        [Fact(Skip = "Disabled, determine how to best load 'System.Collections' on the coreclr")]
+        [Fact]
         public async Task Does_not_include_tsource_argument_type()
         {
             var source =
@@ -78,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsSnippet("FirstOrDefault(${1:Func<string, bool> predicate})$0 : string", completions);
         }
 
-        [Fact(Skip = "Disabled, determine how to best load 'System.Collections' on the coreclr")]
+        [Fact]
         public async Task Does_not_include_tresult_argument_type()
         {
             var source =
@@ -361,9 +361,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<string>> FindCompletionsAsync(string source)
         {
+            var request = CreateRequest(source);
+            source = source.Replace("$", "");
+
             var workspace = await TestHelpers.CreateSimpleWorkspace(_plugInHost, source);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
-            var request = CreateRequest(source);
             var response = await controller.Handle(request);
             var completions = response as IEnumerable<AutoCompleteResponse>;
             return completions.Select(completion => BuildCompletion(completion));

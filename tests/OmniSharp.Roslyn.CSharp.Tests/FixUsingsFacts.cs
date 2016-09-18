@@ -310,7 +310,7 @@ namespace OmniSharp {
         }
 
 
-        [Fact(Skip = "Need to find a way to load System.Linq in to test host.")]
+        [Fact]
         public async Task FixUsings_AddsUsingLinqMethodSyntax()
         {
             const string fileContents = @"namespace OmniSharp
@@ -407,6 +407,7 @@ namespace OmniSharp
         }
     }
 }";
+
             await AssertBufferContents(fileContents, expectedFileContents);
         }
 

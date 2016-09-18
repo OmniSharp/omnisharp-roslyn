@@ -1,13 +1,12 @@
-using System;
 using System.Composition;
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Workers.Format;
+using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
@@ -21,7 +20,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
         public FormatRangeService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
-            _options = OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetOptions(_workspace, formattingOptions);
+            _options = FormattingWorker.GetOptions(_workspace, formattingOptions);
         }
 
         public async Task<FormatRangeResponse> Handle(FormatRangeRequest request)
@@ -32,10 +31,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
                 return null;
             }
 
-            var lines = (await document.GetSyntaxTreeAsync()).GetText().Lines;
-            var start = lines.GetPosition(new LinePosition(request.Line, request.Column));
-            var end = lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
-            var changes = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattingChangesForRange(_workspace, _options, document, start, end);
+            var text = await document.GetTextAsync();
+            var start = text.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+            var end = text.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
+            var changes = await FormattingWorker.GetFormattingChangesForRange(_workspace, _options, document, start, end);
 
             return new FormatRangeResponse()
             {

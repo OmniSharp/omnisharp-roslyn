@@ -1,13 +1,11 @@
-using System;
 using System.Composition;
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Workers.Format;
+using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
@@ -21,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
         public CodeFormatService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
-            _options = OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetOptions(_workspace, formattingOptions);
+            _options = FormattingWorker.GetOptions(_workspace, formattingOptions);
         }
 
         public async Task<CodeFormatResponse> Handle(CodeFormatRequest request)
@@ -34,14 +32,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 
             if (request.WantsTextChanges)
             {
-                var textChanges = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattedDocumentTextChanges(_workspace, _options, document);
+                var textChanges = await FormattingWorker.GetFormattedDocumentTextChanges(_workspace, _options, document);
                 return new CodeFormatResponse()
                 {
                     Changes = textChanges
                 };
             }
 
-            var newText = await OmniSharp.Roslyn.CSharp.Workers.Format.Formatting.GetFormattedDocument(_workspace, _options, document);
+            var newText = await FormattingWorker.GetFormattedDocument(_workspace, _options, document);
             return new CodeFormatResponse()
             {
                 Buffer = newText

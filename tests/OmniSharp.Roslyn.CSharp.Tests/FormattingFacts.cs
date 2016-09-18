@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
-using OmniSharp.Roslyn.CSharp.Workers.Format;
+using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 using OmniSharp.Tests;
 using Xunit;
 
@@ -95,8 +95,8 @@ class C {
 
         private void AssertFormatTargetKind(SyntaxKind kind, string source)
         {
-            var tuple = GetTreeAndOffset(source);
-            var target = Formatting.FindFormatTarget(tuple.Item1, tuple.Item2);
+            var tuple = GetRootAndOffset(source);
+            var target = FormattingWorker.FindFormatTarget(tuple.Item1, tuple.Item2);
             if (target == null)
             {
                 Assert.Null(kind);
@@ -107,7 +107,7 @@ class C {
             }
         }
 
-        private Tuple<SyntaxTree, int> GetTreeAndOffset(string value)
+        private Tuple<SyntaxNode, int> GetRootAndOffset(string value)
         {
             var idx = value.IndexOf('$');
             if (idx <= 0)
@@ -116,14 +116,15 @@ class C {
             }
             value = value.Remove(idx, 1);
             idx = idx - 1;
-            return Tuple.Create(CSharpSyntaxTree.ParseText(value), idx);
+            return Tuple.Create(CSharpSyntaxTree.ParseText(value).GetRoot(), idx);
         }
 
 
-        [Fact(Skip = "Broke during update to rc2, pending investigation")]
+        [Fact]
         public async Task TextChangesAreSortedLastFirst_SingleLine()
         {
-            var source = new[]{
+            var source = new[]
+            {
                 "class Program",
                 "{",
                 "    public static void Main(){",
@@ -132,15 +133,16 @@ class C {
                 "}",
             };
 
-            await AssertTextChanges(string.Join(Environment.NewLine, source),
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " });
+            await AssertTextChanges(string.Join("\r\n", source),
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 20, EndLine = 3, EndColumn = 21, NewText = "" },
+                new LinePositionSpanTextChange { StartLine = 2, StartColumn = 30, EndLine = 3, EndColumn = 0, NewText = "\n " });
         }
 
-        [Fact(Skip = "Broke during update to rc2, pending investigation")]
+        [Fact]
         public async Task TextChangesAreSortedLastFirst_MultipleLines()
         {
-            var source = new[]{
+            var source = new[]
+            {
                 "class Program",
                 "{",
                 "    public static void Main()>{",
@@ -149,10 +151,9 @@ class C {
                 "}",
             };
 
-            await AssertTextChanges(string.Join(Environment.NewLine, source),
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 21, EndLine = 4, EndColumn = 22, NewText = "" },
-                new LinePositionSpanTextChange() { StartLine = 4, StartColumn = 8, EndLine = 4, EndColumn = 8, NewText = " " },
-                new LinePositionSpanTextChange() { StartLine = 3, StartColumn = 30, EndLine = 3, EndColumn = 30, NewText = "\r\n" });
+            await AssertTextChanges(string.Join("\r\n", source),
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 20, EndLine = 3, EndColumn = 21, NewText = "" },
+                new LinePositionSpanTextChange { StartLine = 2, StartColumn = 30, EndLine = 3, EndColumn = 0, NewText = "\n " });
         }
 
         private static FormatRangeRequest NewRequest(string source)
@@ -177,24 +178,26 @@ class C {
         {
             var request = NewRequest(source);
             var actual = await FormattingChangesForRange(request);
-            var enumer = actual.GetEnumerator();
 
-            for (var i = 0; enumer.MoveNext(); i++)
+            Assert.Equal(expected.Length, actual.Length);
+
+            for (var i = 0; i < expected.Length; i++)
             {
-                Assert.Equal(expected[i].NewText, enumer.Current.NewText);
-                Assert.Equal(expected[i].StartLine, enumer.Current.StartLine);
-                Assert.Equal(expected[i].StartColumn, enumer.Current.StartColumn);
-                Assert.Equal(expected[i].EndLine, enumer.Current.EndLine);
-                Assert.Equal(expected[i].EndColumn, enumer.Current.EndColumn);
+                Assert.Equal(expected[i].NewText, actual[i].NewText);
+                Assert.Equal(expected[i].StartLine, actual[i].StartLine);
+                Assert.Equal(expected[i].StartColumn, actual[i].StartColumn);
+                Assert.Equal(expected[i].EndLine, actual[i].EndLine);
+                Assert.Equal(expected[i].EndColumn, actual[i].EndColumn);
             }
         }
 
-        private static async Task<IEnumerable<LinePositionSpanTextChange>> FormattingChangesForRange(FormatRangeRequest req)
+        private static async Task<LinePositionSpanTextChange[]> FormattingChangesForRange(FormatRangeRequest request)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(req.Buffer, req.FileName);
-            RequestHandler<FormatRangeRequest, FormatRangeResponse> controller = new FormatRangeService(workspace, new FormattingOptions());
+            var workspace = await TestHelpers.CreateSimpleWorkspace(request.Buffer, request.FileName);
+            var controller = new FormatRangeService(workspace, new FormattingOptions());
 
-            return (await controller.Handle(req)).Changes;
+            var response = await controller.Handle(request);
+            return response.Changes.ToArray();
         }
 
         [Fact]
