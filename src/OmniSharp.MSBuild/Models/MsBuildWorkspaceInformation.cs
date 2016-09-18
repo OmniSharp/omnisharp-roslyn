@@ -1,18 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using OmniSharp.MSBuild;
+using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.Models
 {
     public class MsBuildWorkspaceInformation
     {
-        public MsBuildWorkspaceInformation(MSBuildContext context, bool excludeSourceFiles)
+        public MsBuildWorkspaceInformation(string solutionFilePath, IEnumerable<ProjectFileInfo> projects, bool excludeSourceFiles)
         {
-            SolutionPath = context.SolutionPath;
+            SolutionPath = solutionFilePath;
 
-            Projects = context
-                .Projects
-                .Values
+            Projects = projects
                 .OrderBy(x => x.AssemblyName)
                 .Select(p => {
                     var project = new MSBuildProject(p);
