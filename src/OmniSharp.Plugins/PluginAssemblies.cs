@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.PlatformAbstractions;
 #if !NET451
 using System.Runtime.Loader;
@@ -54,24 +54,12 @@ namespace OmniSharp.Plugins
                             .Select(AssemblyName.GetAssemblyName)
                             .Select(Assembly.Load)
 #else
-                            .Select(file => {
-                                // return AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
-                                // var name = AssemblyLoadContext.GetAssemblyName(file);
-                                try {
-                                    return AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
-                                }catch (FileNotFoundException e){
-                                    System.Console.WriteLine($"Failed to load assembly {file} {e.FileName}");
-                                    throw;
-                                }catch (TargetInvocationException e) {
-                                    System.Console.WriteLine($"Failed to load assembly {file} {e.InnerException.ToString()}");
-                                    throw;
-                                }catch (Exception e) {
-                                    System.Console.WriteLine($"Failed to load assembly {file} {e.ToString()}");
-                                    throw;
-                                }
-                                })
-                            .ToArray()
+                            .Select(path => {
+                                var loader = new AssemblyLoader(Path.GetDirectoryName(path));
+                                return loader.LoadFromAssemblyPath(path);
+                            })
 #endif
+                            .ToArray()
                     );
                 }
 
@@ -79,4 +67,36 @@ namespace OmniSharp.Plugins
             }
         }
     }
+
+#if NETSTANDARD1_6
+    public class AssemblyLoader : AssemblyLoadContext
+    {
+        private string folderPath;
+
+        public AssemblyLoader(string folderPath)
+        {
+            this.folderPath = folderPath;
+        }
+
+        protected override Assembly Load(AssemblyName assemblyName)
+        {
+            var deps = DependencyContext.Default;
+            var res = deps.CompileLibraries.Where(d => d.Name.Contains(assemblyName.Name)).ToList();
+            if (res.Count > 0)
+            {
+                return Assembly.Load(new AssemblyName(res.First().Name));
+            }
+            else
+            {
+                var apiApplicationFileInfo = new FileInfo($"{folderPath}{Path.DirectorySeparatorChar}{assemblyName.Name}.dll");
+                if (File.Exists(apiApplicationFileInfo.FullName))
+                {
+                    var asl = new AssemblyLoader(apiApplicationFileInfo.DirectoryName);
+                    return asl.LoadFromAssemblyPath(apiApplicationFileInfo.FullName);
+                }
+            }
+            return Assembly.Load(assemblyName);
+        }
+    }
+#endif
 }

@@ -12,8 +12,7 @@
     "net451": {
       "dependencies": {
         "ScriptCs.Hosting": "0.16.1",
-        "Microsoft.Web.Xdt": "2.1.1",
-        "NuGet.Core": "2.10.1"
+        "Microsoft.Web.Xdt": "2.1.1"
       }
     }
   }
