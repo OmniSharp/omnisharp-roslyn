@@ -76,6 +76,8 @@ namespace OmniSharp
                                                    IEnumerable<Assembly> assemblies,
                                                    Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger<Startup>();
             var config = new ContainerConfiguration();
             try
             {
@@ -97,14 +99,17 @@ namespace OmniSharp
                 throw;
             }
 
-            foreach (var assembly in assemblies)
+            using (logger.BeginScope("Assembly Loading"))
             {
-                config = config.WithAssembly(assembly);
+                foreach (var assembly in assemblies)
+                {
+                    logger.LogInformation("Loading assembly {0}", assembly.GetName().FullName);
+                    config = config.WithAssembly(assembly);
+                }
             }
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
             var pluginAssemblies = serviceProvider.GetService<PluginAssemblies>();
-            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var env = serviceProvider.GetService<IOmnisharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
@@ -160,6 +165,7 @@ namespace OmniSharp
 
         public void Configure(IApplicationBuilder app,
                               IServiceProvider serviceProvider,
+                              PluginAssemblies pluginAssemblies,
                               IOmnisharpEnvironment env,
                               ILoggerFactory loggerFactory,
                               ISharedTextWriter writer,
@@ -174,6 +180,7 @@ namespace OmniSharp
                                               .Where(shouldLoad)
                                               .SelectMany(lib => lib.GetDefaultAssemblyNames(dependencyContext))
                                               .Select(each => loader.Load(each.Name))
+                                              .Concat(pluginAssemblies.Assemblies)
                                               .ToList();
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
@@ -193,7 +200,7 @@ namespace OmniSharp
 
             foreach (var assembly in assemblies)
             {
-                logger.LogDebug($"Loaded {assembly.FullName}");
+                logger.LogInformation($"Loaded {assembly.FullName}");
             }
 
             app.UseRequestLogging();

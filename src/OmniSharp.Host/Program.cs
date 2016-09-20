@@ -86,6 +86,10 @@ namespace OmniSharp
                 }
             }
 
+            foreach (var item in plugins) {
+                Console.WriteLine(item);
+            }
+
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray(), plugins.ToArray());
 
             var config = new ConfigurationBuilder()

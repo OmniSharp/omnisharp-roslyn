@@ -16,6 +16,23 @@ namespace OmniSharp.Plugins.CodeActions
         public PluginCodeActionProvider(ILoggerFactory loggerFactory, PluginAssemblies plugins)
             : base(loggerFactory, nameof(PluginCodeActionProvider), plugins.Assemblies, false)
         {
+            var logger = loggerFactory.CreateLogger<PluginCodeActionProvider>();
+
+            using (logger.BeginScope("Plugin Refactorings"))
+            {
+                foreach (var refactoring in this.Refactorings)
+                {
+                    logger.LogInformation("Loaded Refactoring {0}", refactoring.GetType().FullName);
+                }
+            }
+
+            using (logger.BeginScope("Plugin CodeFixes"))
+            {
+                foreach (var codefix in this.Refactorings)
+                {
+                    logger.LogInformation("Loaded CodeFix {0}", codefix.GetType().FullName);
+                }
+            }
         }
     }
 }
