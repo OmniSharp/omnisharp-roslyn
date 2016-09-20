@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
+using OmniSharp.Plugins;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
@@ -76,9 +77,25 @@ namespace OmniSharp
                                                    Func<ContainerConfiguration, ContainerConfiguration> configure = null)
         {
             var config = new ContainerConfiguration();
-            assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
-                .Distinct();
+            try
+            {
+                assemblies = assemblies
+                    .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                    .Distinct()
+                    .ToArray();
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (ex.InnerException is ReflectionTypeLoadException)
+                {
+                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                    foreach (var lex in reflectionEx.LoaderExceptions)
+                    {
+                        Console.Error.WriteLine(lex);
+                    }
+                }
+                throw;
+            }
 
             foreach (var assembly in assemblies)
             {
@@ -86,6 +103,7 @@ namespace OmniSharp
             }
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
+            var pluginAssemblies = serviceProvider.GetService<PluginAssemblies>();
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var env = serviceProvider.GetService<IOmnisharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
@@ -94,6 +112,7 @@ namespace OmniSharp
 
             config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
+                .WithProvider(MefValueProvider.From(pluginAssemblies))
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(new ManualFileSystemWatcher()))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
@@ -119,8 +138,24 @@ namespace OmniSharp
             if (configure != null)
                 config = configure(config);
 
-            var container = config.CreateContainer();
-            return container;
+            try
+            {
+                var container = config.CreateContainer();
+                return container;
+            }
+            catch (TargetInvocationException ex)
+            {
+                Console.Error.WriteLine("hello");
+                if (ex.InnerException is ReflectionTypeLoadException)
+                {
+                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                    foreach (var lex in reflectionEx.LoaderExceptions)
+                    {
+                        Console.Error.WriteLine(lex);
+                    }
+                }
+                throw;
+            }
         }
 
         public void Configure(IApplicationBuilder app,

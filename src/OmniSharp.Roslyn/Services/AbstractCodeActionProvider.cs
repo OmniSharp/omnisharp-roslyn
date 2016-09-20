@@ -5,19 +5,39 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Services
 {
     public abstract class AbstractCodeActionProvider : ICodeActionProvider
     {
+        private readonly bool _throwOnException = true;
+        private readonly ILogger _logger;
         public string ProviderName { get; }
         public ImmutableArray<CodeRefactoringProvider> Refactorings { get; }
         public ImmutableArray<CodeFixProvider> CodeFixes { get; }
 
         public ImmutableArray<Assembly> Assemblies { get; }
 
-        protected AbstractCodeActionProvider(string providerName, ImmutableArray<Assembly> assemblies)
+        protected AbstractCodeActionProvider(
+            ILoggerFactory loggerFactory,
+            string providerName,
+            ImmutableArray<Assembly> assemblies,
+            bool throwOnException) : this(loggerFactory, providerName, assemblies)
         {
+            _throwOnException = throwOnException;
+        }
+
+        protected AbstractCodeActionProvider(
+            ILoggerFactory loggerFactory,
+            string providerName,
+            ImmutableArray<Assembly> assemblies)
+        {
+            if (providerName.EndsWith("CodeActionProvider"))
+            {
+                providerName = providerName.Replace("CodeActionProvider", "");
+            }
+            _logger = loggerFactory.CreateLogger(providerName);
             ProviderName = providerName;
 
             this.Assemblies = assemblies;
@@ -54,9 +74,16 @@ namespace OmniSharp.Services
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
+                if (this._throwOnException)
+                {
+                    throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
+                }
+                else
+                {
+                    _logger.LogWarning($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.\n{ex.ToString()}");
+                    return null;
+                }
             }
         }
     }
 }
-

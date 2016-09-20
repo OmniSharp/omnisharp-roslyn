@@ -5,7 +5,7 @@ namespace OmniSharp.Services
 {
     public class OmnisharpEnvironment : IOmnisharpEnvironment
     {
-        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType, string[] otherArgs)
+        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType, string[] otherArgs, string[] plugins)
         {
             if (System.IO.Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {
@@ -22,6 +22,7 @@ namespace OmniSharp.Services
             TraceType = traceType;
             TransportType = transportType;
             OtherArgs = otherArgs;
+            Plugins = plugins;
         }
 
         public LogLevel TraceType { get; }
@@ -37,5 +38,6 @@ namespace OmniSharp.Services
         public TransportType TransportType { get; }
 
         public string[] OtherArgs { get; }
+        public string[] Plugins { get; }
     }
 }

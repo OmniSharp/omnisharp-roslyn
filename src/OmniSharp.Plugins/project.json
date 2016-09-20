@@ -1,11 +1,14 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
+    "preserveCompilationContext": true,
     "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
-    "Newtonsoft.Json": "8.0.3"
+    "OmniSharp.Roslyn": "1.0.0",
+    "Newtonsoft.Json": "8.0.3",
+    "Microsoft.Extensions.DependencyModel": "1.0.0"
   },
   "frameworks": {
     "net451": {
@@ -20,7 +23,8 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0"
+        "NETStandard.Library": "1.6.0",
+        "System.Runtime.Loader": "4.0.0"
       }
     }
   }
