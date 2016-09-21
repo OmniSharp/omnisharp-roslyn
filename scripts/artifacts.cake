@@ -45,7 +45,7 @@ void WriteWindowsScript(string outputRoot, string scriptFolder, string name)
 void WriteUnixScript(string outputRoot, string scriptFolder, string name)
 {
     var desktopScript = System.IO.Path.Combine(scriptFolder, name);
-    var coreScript = System.IO.Path.Combine(scriptFolder, name);
+    var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core");
     var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", "OmniSharp");
     var content = new string[] {
             "#!/bin/bash",
