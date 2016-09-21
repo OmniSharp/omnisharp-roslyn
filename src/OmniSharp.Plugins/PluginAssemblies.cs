@@ -20,27 +20,13 @@ namespace OmniSharp.Plugins
         public PluginAssemblies(IEnumerable<string> paths)
         {
             _paths = paths;
-            var pluginPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "plugins");
-            if (Directory.Exists(pluginPath))
-            {
-                _plugins = Directory.GetDirectories(pluginPath, "*", SearchOption.TopDirectoryOnly)
-                    .Concat(this._paths)
-                    .SelectMany(x => Directory.GetFiles(x, "*.dll", SearchOption.TopDirectoryOnly))
-                    .ToArray();
-            }
-            else
-            {
-                _plugins = Enumerable.Empty<string>();
-            }
+            _plugins = _paths
+                .SelectMany(x => Directory.GetFiles(x, "*.dll", SearchOption.TopDirectoryOnly))
+                .Where(x => !x.Contains(".Native."))
+                .ToArray();
         }
 
-        public IEnumerable<string> Plugins
-        {
-            get
-            {
-                return this._plugins;
-            }
-        }
+        public IEnumerable<string> Plugins => this._plugins;
 
         public ImmutableArray<Assembly> Assemblies
         {
@@ -54,7 +40,8 @@ namespace OmniSharp.Plugins
                             .Select(AssemblyName.GetAssemblyName)
                             .Select(Assembly.Load)
 #else
-                            .Select(path => {
+                            .Select(path =>
+                            {
                                 var loader = new AssemblyLoader(Path.GetDirectoryName(path));
                                 return loader.LoadFromAssemblyPath(path);
                             })
@@ -81,10 +68,10 @@ namespace OmniSharp.Plugins
         protected override Assembly Load(AssemblyName assemblyName)
         {
             var deps = DependencyContext.Default;
-            var res = deps.CompileLibraries.Where(d => d.Name.Contains(assemblyName.Name)).ToList();
-            if (res.Count > 0)
+            var res = deps.CompileLibraries.FirstOrDefault(d => d.Name == assemblyName.Name);
+            if (res != null)
             {
-                return Assembly.Load(new AssemblyName(res.First().Name));
+                return Assembly.Load(new AssemblyName(res.Name));
             }
             else
             {

@@ -146,6 +146,8 @@ namespace OmniSharp
             try
             {
                 var container = config.CreateContainer();
+                // TODO: Temp
+                var providers = container.GetExports<ICodeActionProvider>().ToArray();
                 return container;
             }
             catch (TargetInvocationException ex)

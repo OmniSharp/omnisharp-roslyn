@@ -28,7 +28,7 @@ namespace OmniSharp.Plugins.CodeActions
 
             using (logger.BeginScope("Plugin CodeFixes"))
             {
-                foreach (var codefix in this.Refactorings)
+                foreach (var codefix in this.CodeFixes)
                 {
                     logger.LogInformation("Loaded CodeFix {0}", codefix.GetType().FullName);
                 }
