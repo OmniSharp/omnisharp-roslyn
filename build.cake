@@ -115,7 +115,7 @@ Task("PopulateRuntimes")
     }
     else
     {
-        buildPlan.Rids = new string[] {"default"};
+        buildPlan.Rids = new string[] {"osx.10.11-x64"};
     }
 });
 
