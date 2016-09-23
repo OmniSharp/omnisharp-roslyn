@@ -178,7 +178,7 @@ Task("Restore")
 {
     RunRestore(dotnetcli, "restore", sourceFolder)
         .ExceptionOnError("Failed to restore projects under source code folder.");
-    RunRestore(dotnetcli, "restore --infer-runtimes", testFolder)
+    RunRestore(dotnetcli, "restore", testFolder)
         .ExceptionOnError("Failed to restore projects under test code folder.");
 });
 
