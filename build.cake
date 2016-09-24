@@ -42,6 +42,7 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
+    public string CurrentRid { get; set; }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
@@ -60,6 +61,13 @@ var publishFolder = System.IO.Path.Combine(artifactFolder, "publish");
 var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
 var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
+
+const string MacElCapitanRid = "osx.10.11-x64";
+
+bool IsMacSierra(string rid)
+{
+    return rid == "osx.10.12-x64";
+}
 
 /// <summary>
 ///  Clean artifacts.
@@ -115,7 +123,7 @@ Task("PopulateRuntimes")
     }
     else
     {
-        buildPlan.Rids = new string[] {"osx.10.11-x64"};
+        buildPlan.Rids = new string[] {"default"};
     }
 });
 
@@ -139,7 +147,7 @@ Task("BuildEnvironment")
     var installArgs = $"-Channel {buildPlan.DotNetChannel}";
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
     {
-      installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
+        installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
     }
     if (!buildPlan.UseSystemDotNetPath)
     {
@@ -153,6 +161,19 @@ Task("BuildEnvironment")
     catch (Win32Exception)
     {
         throw new Exception(".NET CLI binary cannot be found.");
+    }
+
+    // Capture 'dotnet --info' output and parse out RID.
+    var infoOutput = new List<string>();
+    Run(dotnetcli, "--info", new RunOptions { StandardOutputListing = infoOutput });
+    foreach (var line in infoOutput)
+    {
+        var index = line.IndexOf("RID:");
+        if (index >= 0)
+        {
+            buildPlan.CurrentRid = line.Substring(index + "RID:".Length).Trim();
+            break;
+        }
     }
 
     System.IO.Directory.CreateDirectory(toolsFolder);
@@ -197,7 +218,14 @@ Task("BuildTest")
             var project = pair.Key;
             var projectFolder = System.IO.Path.Combine(testFolder, project);
             var runLog = new List<string>();
-            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} \"{projectFolder}\"",
+
+            // This is a hack to address building tests on macOS Sierra until the
+            // osx.10.12-x64 runtime packages are published.
+            var runtime = IsMacSierra(buildPlan.CurrentRid)
+                ? MacElCapitanRid
+                : buildPlan.CurrentRid;
+
+            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} --runtime {runtime} \"{projectFolder}\"",
                     new RunOptions
                     {
                         StandardOutputListing = runLog
@@ -312,6 +340,14 @@ Task("OnlyPublish")
             {
                 publishArguments = $"{publishArguments} --runtime {runtime}";
             }
+            else if (IsMacSierra(buildPlan.CurrentRid))
+            {
+                // This is a temporary hack to handle the macOS Sierra. At this point,
+                // runtime == "default" but the current RID is macOS Sierra (10.12).
+                // Fall back to 10.11.
+                publishArguments = $"{publishArguments} --runtime {MacElCapitanRid}";
+            }
+
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
             publishArguments = $"{publishArguments} --output \"{outputFolder}\" \"{projectFolder}\"";
             Run(dotnetcli, publishArguments)
