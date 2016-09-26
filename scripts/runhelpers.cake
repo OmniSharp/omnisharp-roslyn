@@ -159,7 +159,8 @@ ExitStatus Run(string exec, string args, RunOptions runOptions)
 /// <returns>The exit status for further queries</returns>
 ExitStatus RunRestore(string exec, string args, string workingDirectory)
 {
-    Information("Restoring packages....");
+    Information("Restoring packages in {0}....", workingDirectory);
+
     var p = StartAndReturnProcess(exec,
         new ProcessSettings
         {

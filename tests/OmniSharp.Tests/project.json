@@ -19,7 +19,10 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0",
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0",
+          "type": "platform"
+        },
         "System.Runtime.Serialization.Primitives": "4.1.1",
         "System.IO.Compression": "4.1.0",
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
