@@ -62,13 +62,6 @@ var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
 var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 
-const string MacElCapitanRid = "osx.10.11-x64";
-
-bool IsMacSierra(string rid)
-{
-    return rid == "osx.10.12-x64";
-}
-
 /// <summary>
 ///  Clean artifacts.
 /// </summary>
@@ -197,10 +190,9 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    RunRestore(dotnetcli, "restore", sourceFolder)
-        .ExceptionOnError("Failed to restore projects under source code folder.");
-    RunRestore(dotnetcli, "restore", testFolder)
-        .ExceptionOnError("Failed to restore projects under test code folder.");
+    // Restore the folders listed in the global.json
+    RunRestore(dotnetcli, "restore", workingDirectory)
+        .ExceptionOnError("Failed to restore projects under working directory.");
 });
 
 /// <summary>
@@ -219,13 +211,9 @@ Task("BuildTest")
             var projectFolder = System.IO.Path.Combine(testFolder, project);
             var runLog = new List<string>();
 
-            // This is a hack to address building tests on macOS Sierra until the
-            // osx.10.12-x64 runtime packages are published.
-            var runtime = IsMacSierra(buildPlan.CurrentRid)
-                ? MacElCapitanRid
-                : buildPlan.CurrentRid;
+            Information($"Building {project} on {framework}...");
 
-            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} --runtime {runtime} \"{projectFolder}\"",
+            Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} \"{projectFolder}\"",
                     new RunOptions
                     {
                         StandardOutputListing = runLog
@@ -340,12 +328,12 @@ Task("OnlyPublish")
             {
                 publishArguments = $"{publishArguments} --runtime {runtime}";
             }
-            else if (IsMacSierra(buildPlan.CurrentRid))
+            else if (buildPlan.CurrentRid == "osx.10.12-x64")
             {
                 // This is a temporary hack to handle the macOS Sierra. At this point,
                 // runtime == "default" but the current RID is macOS Sierra (10.12).
-                // Fall back to 10.11.
-                publishArguments = $"{publishArguments} --runtime {MacElCapitanRid}";
+                // In that case, fall back to El Capitan (10.11).
+                publishArguments = $"{publishArguments} --runtime osx.10.11-x64";
             }
 
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
