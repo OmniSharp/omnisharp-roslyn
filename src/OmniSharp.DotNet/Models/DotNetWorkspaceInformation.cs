@@ -1,5 +1,4 @@
-﻿using Microsoft.DotNet.ProjectModel;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using OmniSharp.DotNet.Cache;
 
 namespace OmniSharp.DotNet.Models

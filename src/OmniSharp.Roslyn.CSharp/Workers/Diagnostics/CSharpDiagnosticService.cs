@@ -1,12 +1,12 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Services;
-using OmniSharp.Models;
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Models;
+using OmniSharp.Services;
 
 namespace OmniSharp.Workers.Diagnostics
 {

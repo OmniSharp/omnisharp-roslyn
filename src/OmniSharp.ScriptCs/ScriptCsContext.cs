@@ -1,6 +1,6 @@
-using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Composition;
+using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.ScriptCs
 {
