@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests

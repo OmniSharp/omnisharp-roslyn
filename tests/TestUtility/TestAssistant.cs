@@ -7,9 +7,11 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using TestUtility.Fake;
 
-namespace OmniSharp.Tests
+namespace TestUtility
 {
     public class TestAssistant
     {

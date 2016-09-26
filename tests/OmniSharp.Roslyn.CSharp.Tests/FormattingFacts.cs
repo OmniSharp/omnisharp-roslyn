@@ -7,7 +7,7 @@ using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests

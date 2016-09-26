@@ -9,7 +9,7 @@ using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests

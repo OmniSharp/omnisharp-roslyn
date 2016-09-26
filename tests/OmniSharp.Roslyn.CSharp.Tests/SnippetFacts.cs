@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests

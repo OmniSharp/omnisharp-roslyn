@@ -15,6 +15,7 @@ using OmniSharp.Middleware;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.Services;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests
