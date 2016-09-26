@@ -4,7 +4,6 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "OmniSharp.Tests": "1.0.0",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-beta3",
     "xunit": "2.1.0",
     "TestCommon": "1.0.0",
