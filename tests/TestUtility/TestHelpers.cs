@@ -8,12 +8,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using TestUtility.Fake;
 
-namespace OmniSharp.Tests
+namespace TestUtility
 {
     public static class TestHelpers
     {

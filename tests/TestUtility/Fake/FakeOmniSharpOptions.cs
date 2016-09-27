@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using OmniSharp.Options;
 
-namespace OmniSharp.Tests
+namespace TestUtility.Fake
 {
     public class FakeOmniSharpOptions : IOptions<OmniSharpOptions>
     {

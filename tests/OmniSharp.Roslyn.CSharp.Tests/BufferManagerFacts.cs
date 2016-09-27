@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Services;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests

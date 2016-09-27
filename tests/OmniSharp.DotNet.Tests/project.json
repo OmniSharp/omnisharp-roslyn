@@ -10,18 +10,17 @@
   },
   "frameworks": {
     "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.4",
+        "portable-net45+win8"
+      ],
       "dependencies": {
-        "dotnet-test-xunit": "2.2.0-preview2-build1029",
         "Microsoft.NETCore.App": {
           "version": "1.0.0",
           "type": "platform"
-        }
-      },
-      "imports": [
-        "netstandardapp1.5",
-        "dnxcore50",
-        "portable-net45+win8"
-      ]
+        },
+        "dotnet-test-xunit": "2.2.0-preview2-build1029"
+      }
     }
   },
   "testRunner": "xunit"

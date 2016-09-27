@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using TestUtility.Annotate;
 
-namespace OmniSharp.Tests
+namespace TestUtility.Fake
 {
     internal class TestServiceProvider : IServiceProvider
     {

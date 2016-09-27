@@ -1,6 +1,4 @@
-using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using System.Composition;
 using System.Linq;
 using OmniSharp.Roslyn.Models;
 

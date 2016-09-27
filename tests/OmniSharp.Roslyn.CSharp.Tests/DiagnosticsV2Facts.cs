@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
-using OmniSharp.Tests;
 using OmniSharp.Workers.Diagnostics;
+using TestUtility;
 using TestUtility.Fake;
 using Xunit;
 

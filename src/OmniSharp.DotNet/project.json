@@ -18,7 +18,6 @@
     "netstandard1.6": {
       "imports": [
         "dotnet5.6",
-        "dnxcore50",
         "portable-net45+win8"
       ],
       "dependencies": {

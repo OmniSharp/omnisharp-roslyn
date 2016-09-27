@@ -7,7 +7,7 @@ using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using OmniSharp.Services;
-using OmniSharp.Tests;
+using TestUtility;
 using TestUtility.Annotate;
 using TestUtility.Fake;
 using Xunit;
