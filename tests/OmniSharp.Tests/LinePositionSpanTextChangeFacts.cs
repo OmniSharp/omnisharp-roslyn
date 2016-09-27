@@ -9,38 +9,38 @@ namespace OmniSharp.Tests
 {
     public class LinePositionSpanTextChangeFacts
     {
-        [Fact(Skip="Need to fix")]
+        [Fact]
         public async Task ExtendsTextChangeAtStart()
         {
             var workspace = await TestHelpers.CreateSimpleWorkspace("class {\r\n }");
             var document = workspace.GetDocument("dummy.cs");
 
-            var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {
-                new TextChange(TextSpan.FromBounds(8, 11), "\n}")
-            });
+            var textChange = new TextChange(TextSpan.FromBounds(8, 11), "\n}");
+            var adjustedTextChanges = await LinePositionSpanTextChange.Convert(document, new[] { textChange });
 
-            Assert.Equal("\r\n}", lineChanges.ElementAt(0).NewText);
-            Assert.Equal(1, lineChanges.ElementAt(0).StartLine);
-            Assert.Equal(8, lineChanges.ElementAt(0).StartColumn);
-            Assert.Equal(2, lineChanges.ElementAt(0).EndLine);
-            Assert.Equal(3, lineChanges.ElementAt(0).EndColumn);
+            var adjustedTextChange = adjustedTextChanges.First();
+            Assert.Equal("\r\n}", adjustedTextChange.NewText);
+            Assert.Equal(0, adjustedTextChange.StartLine);
+            Assert.Equal(7, adjustedTextChange.StartColumn);
+            Assert.Equal(1, adjustedTextChange.EndLine);
+            Assert.Equal(2, adjustedTextChange.EndColumn);
         }
 
-        [Fact(Skip="Need to fix")]
+        [Fact]
         public async Task ExtendsTextChangeAtEnd()
         {
             var workspace = await TestHelpers.CreateSimpleWorkspace("class {\n}");
             var document = workspace.GetDocument("dummy.cs");
 
-            var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {
-                new TextChange(TextSpan.FromBounds(5, 7), "\r\n {\r")
-            });
+            var textChange = new TextChange(TextSpan.FromBounds(5, 7), "\r\n {\r");
+            var adjustedTextChanges = await LinePositionSpanTextChange.Convert(document, new[] { textChange });
 
-            Assert.Equal("\r\n {\r\n", lineChanges.ElementAt(0).NewText);
-            Assert.Equal(1, lineChanges.ElementAt(0).StartLine);
-            Assert.Equal(6, lineChanges.ElementAt(0).StartColumn);
-            Assert.Equal(2, lineChanges.ElementAt(0).EndLine);
-            Assert.Equal(1, lineChanges.ElementAt(0).EndColumn);
+            var adjustedTextChange = adjustedTextChanges.First();
+            Assert.Equal("\r\n {\r\n", adjustedTextChange.NewText);
+            Assert.Equal(0, adjustedTextChange.StartLine);
+            Assert.Equal(5, adjustedTextChange.StartColumn);
+            Assert.Equal(1, adjustedTextChange.EndLine);
+            Assert.Equal(0, adjustedTextChange.EndColumn);
         }
     }
 }
