@@ -3,8 +3,8 @@ using System.Composition;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using OmniSharp.Models;
 using OmniSharp.Abstractions.Services;
+using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Helpers
 {

@@ -4,27 +4,24 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "OmniSharp.Tests": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-beta3",
-    "xunit": "2.1.0",
+    "OmniSharp.MSBuild": "1.0.0",
     "TestCommon": "1.0.0",
-    "TestUtility": "1.0.0"
+    "TestUtility": "1.0.0",
+    "xunit": "2.1.0"
   },
   "frameworks": {
     "netcoreapp1.0": {
-      "dependencies": {
-        "OmniSharp.MSBuild": "1.0.0",
-        "dotnet-test-xunit": "2.2.0-preview2-build1029",
-        "Microsoft.NETCore.App": {
-          "version": "1.0.0",
-          "type": "platform"
-        }
-      },
       "imports": [
-        "netstandardapp1.5",
-        "dnxcore50",
+        "dotnet5.4",
         "portable-net45+win8"
-      ]
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        },
+        "dotnet-test-xunit": "2.2.0-preview2-build1029",
+      }
     }
   },
   "testRunner": "xunit"

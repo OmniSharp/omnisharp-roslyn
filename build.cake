@@ -42,6 +42,7 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
+    public string CurrentRid { get; set; }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
@@ -139,7 +140,7 @@ Task("BuildEnvironment")
     var installArgs = $"-Channel {buildPlan.DotNetChannel}";
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
     {
-      installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
+        installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
     }
     if (!buildPlan.UseSystemDotNetPath)
     {
@@ -153,6 +154,19 @@ Task("BuildEnvironment")
     catch (Win32Exception)
     {
         throw new Exception(".NET CLI binary cannot be found.");
+    }
+
+    // Capture 'dotnet --info' output and parse out RID.
+    var infoOutput = new List<string>();
+    Run(dotnetcli, "--info", new RunOptions { StandardOutputListing = infoOutput });
+    foreach (var line in infoOutput)
+    {
+        var index = line.IndexOf("RID:");
+        if (index >= 0)
+        {
+            buildPlan.CurrentRid = line.Substring(index + "RID:".Length).Trim();
+            break;
+        }
     }
 
     System.IO.Directory.CreateDirectory(toolsFolder);
@@ -176,10 +190,9 @@ Task("Restore")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    RunRestore(dotnetcli, "restore", sourceFolder)
-        .ExceptionOnError("Failed to restore projects under source code folder.");
-    RunRestore(dotnetcli, "restore --infer-runtimes", testFolder)
-        .ExceptionOnError("Failed to restore projects under test code folder.");
+    // Restore the folders listed in the global.json
+    RunRestore(dotnetcli, "restore", workingDirectory)
+        .ExceptionOnError("Failed to restore projects under working directory.");
 });
 
 /// <summary>
@@ -197,6 +210,9 @@ Task("BuildTest")
             var project = pair.Key;
             var projectFolder = System.IO.Path.Combine(testFolder, project);
             var runLog = new List<string>();
+
+            Information($"Building {project} on {framework}...");
+
             Run(dotnetcli, $"build --framework {framework} --configuration {testConfiguration} \"{projectFolder}\"",
                     new RunOptions
                     {
@@ -312,6 +328,14 @@ Task("OnlyPublish")
             {
                 publishArguments = $"{publishArguments} --runtime {runtime}";
             }
+            else if (buildPlan.CurrentRid == "osx.10.12-x64")
+            {
+                // This is a temporary hack to handle the macOS Sierra. At this point,
+                // runtime == "default" but the current RID is macOS Sierra (10.12).
+                // In that case, fall back to El Capitan (10.11).
+                publishArguments = $"{publishArguments} --runtime osx.10.11-x64";
+            }
+
             publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
             publishArguments = $"{publishArguments} --output \"{outputFolder}\" \"{projectFolder}\"";
             Run(dotnetcli, publishArguments)

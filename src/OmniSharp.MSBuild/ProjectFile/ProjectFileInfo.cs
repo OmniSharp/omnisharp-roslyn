@@ -116,6 +116,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                 { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
             };
 
+            if (!string.IsNullOrWhiteSpace(options.MSBuildExtensionsPath))
+            {
+                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
+            }
+
             if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
             {
                 globalProperties.Add(PropertyNames.VisualStudioVersion, options.VisualStudioVersion);

@@ -4,25 +4,23 @@
     "warningsAsErrors": true
   },
   "dependencies": {
-    "TestCommon": "1.0.0",
-    "TestUtility": "1.0.0",
     "OmniSharp.Host": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-beta3",
-    "Microsoft.DotNet.InternalAbstractions": "1.0.0",
+    "TestCommon": "1.0.0",
+    "TestUtility": "1.0.0",
     "xunit": "2.1.0"
   },
   "frameworks": {
     "netcoreapp1.0": {
       "imports": [
-        "netstandardapp1.5",
-        "dnxcore50",
+        "dotnet5.4",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0",
-        "System.Runtime.Serialization.Primitives": "4.1.1",
-        "System.IO.Compression": "4.1.0",
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        },
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
       }
     },

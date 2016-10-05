@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Services;
-using OmniSharp.Tests;
+using TestUtility;
 using TestUtility.Annotate;
 using Xunit;
 

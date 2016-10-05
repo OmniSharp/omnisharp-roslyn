@@ -16,6 +16,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     public static class CodeActionHelper
     {
+        private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.CodeFixes.RemoveUnusedUsings.RemoveUnnecessaryUsingsCodeFixProvider";
+
         public static async Task<IEnumerable<CodeAction>> GetActions(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, ICodeActionRequest request)
         {
             var actions = new List<CodeAction>();
@@ -26,10 +28,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
 
             var refactoringContext = await GetRefactoringContext(originalDocument, request, actions);
+            if (refactoringContext != null)
+            {
+                await CollectRefactoringActions(codeActionProviders, logger, refactoringContext.Value);
+            }
+
             var codeFixContext = await GetCodeFixContext(originalDocument, request, actions);
-            await CollectRefactoringActions(codeActionProviders, logger, refactoringContext);
-            await CollectCodeFixActions(codeActionProviders, logger, codeFixContext);
+            if (codeFixContext != null)
+            {
+                await CollectCodeFixActions(codeActionProviders, logger, codeFixContext.Value);
+            }
+
             actions.Reverse();
+
             return actions;
         }
 
@@ -88,10 +99,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             "Microsoft.CodeAnalysis.CSharp.CodeRefactorings.ChangeSignature.ChangeSignatureCodeRefactoringProvider"
         };
 
-        private static async Task CollectCodeFixActions(IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, CodeFixContext? fixContext)
+        private static async Task CollectCodeFixActions(IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, CodeFixContext context)
         {
-            if (!fixContext.HasValue)
-                return;
+            var diagnosticIds = context.Diagnostics.Select(d => d.Id).ToArray();
 
             foreach (var provider in codeActionProviders)
             {
@@ -102,9 +112,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         continue;
                     }
 
+                    // TODO: This is a horrible hack! However, remove unnecessary usings only
+                    // responds for diagnostics that are produced by its diagnostic analyzer.
+                    // We need to provide a *real* diagnostic engine to address this.
+                    if (codeFix.ToString() != RemoveUnnecessaryUsingsProviderName)
+                    {
+                        if (!diagnosticIds.Any(id => codeFix.FixableDiagnosticIds.Contains(id)))
+                        {
+                            continue;
+                        }
+                    }
+
                     try
                     {
-                        await codeFix.RegisterCodeFixesAsync(fixContext.Value);
+                        await codeFix.RegisterCodeFixesAsync(context);
                     }
                     catch
                     {
@@ -114,11 +135,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private static async Task CollectRefactoringActions(IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, CodeRefactoringContext? refactoringContext)
+        private static async Task CollectRefactoringActions(IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, CodeRefactoringContext context)
         {
-            if (!refactoringContext.HasValue)
-                return;
-
             foreach (var provider in codeActionProviders)
             {
                 foreach (var refactoring in provider.Refactorings)
@@ -130,7 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                     try
                     {
-                        await refactoring.ComputeRefactoringsAsync(refactoringContext.Value);
+                        await refactoring.ComputeRefactoringsAsync(context);
                     }
                     catch
                     {

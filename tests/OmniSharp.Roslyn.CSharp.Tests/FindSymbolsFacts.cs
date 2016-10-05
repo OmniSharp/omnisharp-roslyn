@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests

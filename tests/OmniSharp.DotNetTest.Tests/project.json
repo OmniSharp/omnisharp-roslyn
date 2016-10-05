@@ -5,26 +5,23 @@
   },
   "dependencies": {
     "OmniSharp.DotNetTest": "1.0.0",
-    "Microsoft.Extensions.Logging.Abstractions": "1.0.0",
-    "Microsoft.Extensions.Logging.Console": "1.0.0",
     "TestCommon": "1.0.0",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
   },
   "frameworks": {
     "netcoreapp1.0": {
-      "dependencies": {
-        "dotnet-test-xunit": "2.2.0-preview2-build1029",
-        "Microsoft.NETCore.App": {
-          "version": "1.0.0",
-          "type": "platform"
-        }
-      },
       "imports": [
-        "netstandardapp1.5",
-        "dnxcore50",
+        "dotnet5.4",
         "portable-net45+win8"
-      ]
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.1",
+          "type": "platform"
+        },
+        "dotnet-test-xunit": "2.2.0-preview2-build1029"
+      }
     }
   },
   "testRunner": "xunit"

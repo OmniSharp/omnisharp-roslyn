@@ -19,11 +19,8 @@ namespace OmniSharp.Tests
             {
                 var source = File.ReadAllText(sourcePath);
                 var syntaxTree = CSharpSyntaxTree.ParseText(source);
-                var usings = ((CompilationUnitSyntax)syntaxTree.GetRoot()).Usings
-                    .Select(u => u.Name.ToString());
-
-                var sorted = usings.OrderByDescending(u => u.StartsWith("System"))
-                                   .ThenBy(u => u);
+                var usings = ((CompilationUnitSyntax)syntaxTree.GetRoot()).Usings;
+                var sorted = usings.OrderBy(u => u, UsingComparer.Instance);
 
                 if (!usings.SequenceEqual(sorted))
                 {

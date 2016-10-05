@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 
-namespace OmniSharp.Tests
+namespace TestUtility.Fake
 {
     public class FakeEnvironment : IOmnisharpEnvironment
     {

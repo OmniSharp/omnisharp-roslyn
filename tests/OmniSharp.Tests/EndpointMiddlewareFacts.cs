@@ -15,6 +15,7 @@ using OmniSharp.Middleware;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.Services;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.Tests
@@ -121,8 +122,6 @@ namespace OmniSharp.Tests
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
 
-            var memoryStream = new MemoryStream();
-
             context.Request.Body = new MemoryStream(
                 Encoding.UTF8.GetBytes(
                     JsonConvert.SerializeObject(new GotoDefinitionRequest
@@ -150,8 +149,6 @@ namespace OmniSharp.Tests
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
-
-            var memoryStream = new MemoryStream();
 
             context.Request.Body = new MemoryStream(
                 Encoding.UTF8.GetBytes(
@@ -181,8 +178,6 @@ namespace OmniSharp.Tests
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
 
-            var memoryStream = new MemoryStream();
-
             context.Request.Body = new MemoryStream(
                 Encoding.UTF8.GetBytes(
                     JsonConvert.SerializeObject(new FindSymbolsRequest
@@ -207,8 +202,6 @@ namespace OmniSharp.Tests
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
-
-            var memoryStream = new MemoryStream();
 
             context.Request.Body = new MemoryStream(
                 Encoding.UTF8.GetBytes(
@@ -243,8 +236,6 @@ namespace OmniSharp.Tests
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");
-
-            var memoryStream = new MemoryStream();
 
             context.Request.Body = new MemoryStream(
                 Encoding.UTF8.GetBytes(
