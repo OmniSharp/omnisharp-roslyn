@@ -4,23 +4,26 @@
 ///  Generate the scripts which target the OmniSharp binaries.
 /// </summary>
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
-void CreateRunScript(string outputRoot, string scriptFolder, string name)
+void CreateRunScript(string outputRoot, string scriptFolder)
  {
     if (IsRunningOnWindows())
     {
-        WriteWindowsScript(outputRoot, scriptFolder, name);
+        WriteWindowsScript(outputRoot, scriptFolder);
     }
     else
     {
-        WriteUnixScript(outputRoot, scriptFolder, name);
+        WriteUnixScript(outputRoot, scriptFolder);
     }
 }
 
-void WriteWindowsScript(string outputRoot, string scriptFolder, string name)
+void WriteWindowsScript(string outputRoot, string scriptFolder)
 {
-    var desktopScript =  System.IO.Path.Combine(scriptFolder, $"{name}.cmd");
-    var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core.cmd");
-    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", "OmniSharp");
+    var desktopScript = System.IO.Path.Combine(scriptFolder, $"OmniSharp.cmd");
+    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "net451", "OmniSharp");
+
+    var coreScript = System.IO.Path.Combine(scriptFolder, $"OmniSharp.Core.cmd");
+    var omniSharpCorePath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "netcoreapp1.0", "OmniSharp");
+
     var content = new string[] {
             "SETLOCAL",
             "",
@@ -31,22 +34,25 @@ void WriteWindowsScript(string outputRoot, string scriptFolder, string name)
     {
         System.IO.File.Delete(desktopScript);
     }
-    content[2] = String.Format($"\"{omniSharpPath}\" %*", "net451");
+    content[2] = $"\"{omniSharpPath}\" %*";
     System.IO.File.WriteAllLines(desktopScript, content);
 
     if (System.IO.File.Exists(coreScript))
     {
         System.IO.File.Delete(coreScript);
     }
-    content[2] = String.Format($"\"{omniSharpPath}\" %*", "netcoreapp1.0");
+    content[2] = $"\"{omniSharpCorePath}\" %*";
     System.IO.File.WriteAllLines(coreScript, content);
 }
 
-void WriteUnixScript(string outputRoot, string scriptFolder, string name)
+void WriteUnixScript(string outputRoot, string scriptFolder)
 {
-    var desktopScript = System.IO.Path.Combine(scriptFolder, name);
-    var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core");
-    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", "OmniSharp");
+    var desktopScript = System.IO.Path.Combine(scriptFolder, "OmniSharp");
+    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "net451", "OmniSharp");
+
+    var coreScript = System.IO.Path.Combine(scriptFolder, $"OmniSharp.Core");
+    var omniSharpCorePath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "netcoreapp1.0", "OmniSharp");
+
     var content = new string[] {
             "#!/bin/bash",
             "",
@@ -57,7 +63,7 @@ void WriteUnixScript(string outputRoot, string scriptFolder, string name)
     {
         System.IO.File.Delete(desktopScript);
     }
-    content[2] = String.Format($"{{1}} \"{omniSharpPath}{{2}}\" \"$@\"", "net451", "mono", ".exe");
+    content[2] = $"mono \"{omniSharpPath}.exe\" \"$@\"";
     System.IO.File.WriteAllLines(desktopScript, content);
     Run("chmod", $"+x \"{desktopScript}\"");
 
@@ -65,7 +71,7 @@ void WriteUnixScript(string outputRoot, string scriptFolder, string name)
     {
         System.IO.File.Delete(coreScript);
     }
-    content[2] = String.Format($"\"{omniSharpPath}\" \"$@\"", "netcoreapp1.0");
+    content[2] = $"\"{omniSharpCorePath}\" \"$@\"";
     System.IO.File.WriteAllLines(coreScript, content);
     Run("chmod", $"+x \"{coreScript}\"");
 }

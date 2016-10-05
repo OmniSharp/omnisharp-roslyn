@@ -145,14 +145,10 @@ namespace OmniSharp
 
             try
             {
-                var container = config.CreateContainer();
-                // TODO: Temp
-                var providers = container.GetExports<ICodeActionProvider>().ToArray();
-                return container;
+                return config.CreateContainer();
             }
             catch (TargetInvocationException ex)
             {
-                Console.Error.WriteLine("hello");
                 if (ex.InnerException is ReflectionTypeLoadException)
                 {
                     var reflectionEx = ex.InnerException as ReflectionTypeLoadException;

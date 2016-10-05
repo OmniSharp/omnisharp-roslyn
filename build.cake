@@ -323,7 +323,7 @@ Task("OnlyPublish")
             }
         }
     }
-    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder, "OmniSharp");
+    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
 });
 
 /// <summary>
@@ -430,7 +430,7 @@ Task("Install")
         foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
             System.IO.File.Copy(file, System.IO.Path.Combine(targetFolder, file.Substring(outputFolder.Length + 1)), true);
     }
-    CreateRunScript(installFolder, scriptFolder, "OmniSharp");
+    CreateRunScript(installFolder, scriptFolder);
 });
 
 /// <summary>

@@ -67,19 +67,19 @@ namespace OmniSharp.Plugins
 
         protected override Assembly Load(AssemblyName assemblyName)
         {
-            var deps = DependencyContext.Default;
-            var res = deps.CompileLibraries.FirstOrDefault(d => d.Name == assemblyName.Name);
-            if (res != null)
+            var dependencies = DependencyContext.Default;
+            var result = dependencies.CompileLibraries.FirstOrDefault(d => d.Name == assemblyName.Name);
+            if (result != null)
             {
-                return Assembly.Load(new AssemblyName(res.Name));
+                return Assembly.Load(new AssemblyName(result.Name));
             }
             else
             {
                 var apiApplicationFileInfo = new FileInfo($"{folderPath}{Path.DirectorySeparatorChar}{assemblyName.Name}.dll");
                 if (File.Exists(apiApplicationFileInfo.FullName))
                 {
-                    var asl = new AssemblyLoader(apiApplicationFileInfo.DirectoryName);
-                    return asl.LoadFromAssemblyPath(apiApplicationFileInfo.FullName);
+                    var assemblyLoader = new AssemblyLoader(apiApplicationFileInfo.DirectoryName);
+                    return assemblyLoader.LoadFromAssemblyPath(apiApplicationFileInfo.FullName);
                 }
             }
             return Assembly.Load(assemblyName);

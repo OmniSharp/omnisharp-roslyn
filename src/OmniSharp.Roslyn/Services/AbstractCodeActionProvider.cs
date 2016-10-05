@@ -11,7 +11,7 @@ namespace OmniSharp.Services
 {
     public abstract class AbstractCodeActionProvider : ICodeActionProvider
     {
-        private readonly bool _throwOnException = true;
+        private readonly bool _throwOnException;
         private readonly ILogger _logger;
         public string ProviderName { get; }
         public ImmutableArray<CodeRefactoringProvider> Refactorings { get; }
@@ -76,11 +76,11 @@ namespace OmniSharp.Services
             {
                 if (this._throwOnException)
                 {
-                    throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
+                    throw new InvalidOperationException($"Failed to create instance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
                 }
                 else
                 {
-                    _logger.LogWarning($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.\n{ex.ToString()}");
+                    _logger.LogError($"Failed to create instance of {type.FullName} in {type.AssemblyQualifiedName}.\n{ex.ToString()}");
                     return null;
                 }
             }

@@ -14,7 +14,7 @@ namespace OmniSharp.Plugins.CodeActions
     {
         [ImportingConstructor]
         public PluginCodeActionProvider(ILoggerFactory loggerFactory, PluginAssemblies plugins)
-            : base(loggerFactory, nameof(PluginCodeActionProvider), plugins.Assemblies, false)
+            : base(loggerFactory, nameof(PluginCodeActionProvider), plugins.Assemblies, throwOnException: false)
         {
             var logger = loggerFactory.CreateLogger<PluginCodeActionProvider>();
 
