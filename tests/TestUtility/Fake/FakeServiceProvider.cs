@@ -6,7 +6,7 @@ using TestUtility.Annotate;
 
 namespace TestUtility.Fake
 {
-    internal class TestServiceProvider : IServiceProvider
+    public class TestServiceProvider : IServiceProvider
     {
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly ILoggerFactory _loggerFactory;

@@ -10,6 +10,7 @@ using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 using OmniSharp.Tests;
+using TestUtility;
 using TestUtility.Fake;
 using Xunit;
 

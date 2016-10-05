@@ -3,11 +3,11 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyModel;
-using Microsoft.Extensions.PlatformAbstractions;
 #if !NET451
 using System.Runtime.Loader;
 #endif
+using Microsoft.Extensions.DependencyModel;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace OmniSharp.Plugins
 {
