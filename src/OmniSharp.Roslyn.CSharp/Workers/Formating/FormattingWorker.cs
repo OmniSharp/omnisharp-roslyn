@@ -144,10 +144,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         private static LabelPositionOptions LabelPositionOptionForStringValue(string value)
         {
-            switch (value) {
-                case "leftMost":
+            switch (value.ToUpper()) {
+                case "LEFTMOST":
                     return LabelPositionOptions.LeftMost;
-                case "noIndent":
+                case "NOINDENT":
                     return LabelPositionOptions.NoIndent;
                 default:
                     return LabelPositionOptions.OneLess;
@@ -156,10 +156,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         private static BinaryOperatorSpacingOptions BinaryOperatorSpacingOptionForStringValue(string value)
         {
-            switch (value) {
-                case "ignore":
+            switch (value.ToUpper()) {
+                case "IGNORE":
                     return BinaryOperatorSpacingOptions.Ignore;
-                case "remove":
+                case "REMOVE":
                     return BinaryOperatorSpacingOptions.Remove;
                 default:
                     return BinaryOperatorSpacingOptions.Single;
