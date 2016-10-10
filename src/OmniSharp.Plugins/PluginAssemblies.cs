@@ -46,7 +46,6 @@ namespace OmniSharp.Plugins
                                 return loader.LoadFromAssemblyPath(path);
                             })
 #endif
-                            .ToArray()
                     );
                 }
 

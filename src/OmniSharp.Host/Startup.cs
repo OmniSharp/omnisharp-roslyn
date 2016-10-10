@@ -88,9 +88,9 @@ namespace OmniSharp
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException is ReflectionTypeLoadException)
+                var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                if (reflectionEx != null)
                 {
-                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
                     foreach (var lex in reflectionEx.LoaderExceptions)
                     {
                         Console.Error.WriteLine(lex);
@@ -149,9 +149,9 @@ namespace OmniSharp
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException is ReflectionTypeLoadException)
+                var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
+                if (reflectionEx != null)
                 {
-                    var reflectionEx = ex.InnerException as ReflectionTypeLoadException;
                     foreach (var lex in reflectionEx.LoaderExceptions)
                     {
                         Console.Error.WriteLine(lex);

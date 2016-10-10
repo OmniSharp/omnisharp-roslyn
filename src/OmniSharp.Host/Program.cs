@@ -22,14 +22,14 @@ namespace OmniSharp
         public static void Main(string[] args)
         {
             Console.WriteLine($"OmniSharp: {string.Join(" ", args)}");
-
-            var applicationRoot = Directory.GetCurrentDirectory();
-            var serverPort = 2000;
-            var logLevel = LogLevel.Information;
             var hostPID = -1;
+            var plugins = new List<string>();
+
+            var logLevel = LogLevel.Information;
             var transportType = TransportType.Http;
             var otherArgs = new List<string>();
-            var plugins = new List<string>();
+            var serverPort = 2000;
+            var applicationRoot = Directory.GetCurrentDirectory();
             var serverInterface = "localhost";
             Encoding encoding = null;
 

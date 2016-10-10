@@ -2,7 +2,6 @@
   "version": "1.0.0-*",
   "description": "ASP.NET 5 web server for stdio",
   "buildOptions": {
-    "preserveCompilationContext": true,
     "warningsAsErrors": true
   },
   "dependencies": {
