@@ -11,7 +11,7 @@
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-beta3"
   },
   "frameworks": {
-    "net451": {
+    "net46": {
       "dependencies": {},
       "frameworkAssemblies": {
         "System.Runtime": "",

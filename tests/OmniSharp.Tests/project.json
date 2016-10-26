@@ -24,7 +24,7 @@
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
       }
     },
-    "net451": {
+    "net46": {
       "dependencies": {
         "xunit.runner.console": "2.1.0"
       }

@@ -9,7 +9,7 @@
     "Microsoft.CodeAnalysis": "2.0.0-beta3"
   },
   "frameworks": {
-    "net451": {
+    "net46": {
       "frameworkAssemblies": {
         "System.Runtime": "",
         "System.Threading": "",

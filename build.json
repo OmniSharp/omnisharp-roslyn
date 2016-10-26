@@ -15,7 +15,7 @@
     ],
     "OmniSharp.Stdio.Tests": [
       "netcoreapp1.0",
-      "net451"
+      "net46"
     ],
     "OmniSharp.DotNet.Tests": [
       "netcoreapp1.0"
@@ -28,7 +28,7 @@
     ]
   },
   "Frameworks": [
-    "net451",
+    "net46",
     "netcoreapp1.0"
   ],
   "MainProject": "OmniSharp"
