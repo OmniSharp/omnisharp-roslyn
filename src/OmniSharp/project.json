@@ -1,6 +1,7 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
+    "platform": "anycpu",
     "warningsAsErrors": true,
     "preserveCompilationContext": true,
     "emitEntryPoint": true

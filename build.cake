@@ -96,9 +96,14 @@ Task("PopulateRuntimes")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    if (IsRunningOnWindows())
+    if (IsRunningOnWindows() && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
     {
-        buildPlan.Rids = new string[] {"default"};
+        buildPlan.Rids = new string[]
+            {
+                "default", // To allow testing the published artifact
+                "win7-x86",
+                "win7-x64"
+            };
     }
     else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
     {
@@ -116,6 +121,7 @@ Task("PopulateRuntimes")
     }
     else
     {
+        // In this case, the build is not happening in CI, so just use the default RID.
         buildPlan.Rids = new string[] {"default"};
     }
 });
