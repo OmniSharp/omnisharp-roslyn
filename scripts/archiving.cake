@@ -38,18 +38,18 @@ string GetBuildIdentifier(string runtime, string framework)
 
     // Rename/restrict some archive names on CI
     var travisOSName = Environment.GetEnvironmentVariable("TRAVIS_OS_NAME");
-    // Travis/Linux + default + net451 is renamed to Mono
-    if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && framework.Equals("net451"))
+    // Travis/Linux + default + net46 is renamed to Mono
+    if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && framework.Equals("net46"))
     {
         return "mono";
     }
-    // No need to archive other Travis + net451 combinations
-    else if (travisOSName != null && framework.Equals("net451"))
+    // No need to archive other Travis + net46 combinations
+    else if (travisOSName != null && framework.Equals("net46"))
     {
         return null;
     }
-    // No need to archive Travis/Linux + default + not(net451) (expect all runtimes to be explicitely named)
-    else if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && !framework.Equals("net451"))
+    // No need to archive Travis/Linux + default + not(net46) (expect all runtimes to be explicitely named)
+    else if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && !framework.Equals("net46"))
     {
         return null;
     }

@@ -19,7 +19,7 @@
     "OmniSharp.MSBuild": "1.0.0"
   },
   "frameworks": {
-    "net451": {
+    "net46": {
       "dependencies": {
         "OmniSharp.ScriptCs": "1.0.0"
       }

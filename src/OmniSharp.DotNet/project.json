@@ -9,7 +9,7 @@
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0"
   },
   "frameworks": {
-    "net451": {
+    "net46": {
       "frameworkAssemblies": {
         "System.IO": "",
         "System.Collections": ""

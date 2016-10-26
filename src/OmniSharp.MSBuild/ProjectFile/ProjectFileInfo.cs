@@ -101,7 +101,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return null;
             }
 
-#if NET451
+#if NET46
             if (PlatformHelper.IsMono)
             {
                 return CreateForMono(projectFilePath, solutionDirectory, options, logger, diagnostics);
