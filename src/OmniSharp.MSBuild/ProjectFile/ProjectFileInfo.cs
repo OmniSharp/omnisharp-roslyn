@@ -101,13 +101,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return null;
             }
 
-#if NET46
-            if (PlatformHelper.IsMono)
-            {
-                return CreateForMono(projectFilePath, solutionDirectory, options, logger, diagnostics);
-            }
-#endif
-
             var globalProperties = new Dictionary<string, string>
             {
                 { PropertyNames.DesignTimeBuild, "true" },
