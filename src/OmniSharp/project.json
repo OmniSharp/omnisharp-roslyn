@@ -8,8 +8,7 @@
   },
   "publishOptions": {
     "includeFiles": [
-      "config.json",
-      "Microsoft.CSharp.Core.targets"
+      "config.json"
     ]
   },
   "dependencies": {
