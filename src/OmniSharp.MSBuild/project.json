@@ -9,10 +9,8 @@
     "Microsoft.Extensions.Options": "1.0.0",
     "Microsoft.Build": "15.1.262-preview5",
     "Microsoft.Build.Framework": "15.1.262-preview5",
-    "Microsoft.Build.Runtime": "15.1.262-preview5",
     "Microsoft.Build.Tasks.Core": "15.1.262-preview5",
-    "Microsoft.Build.Utilities.Core": "15.1.262-preview5",
-    "Microsoft.Net.Compilers": "2.0.0-rc"
+    "Microsoft.Build.Utilities.Core": "15.1.262-preview5"
   },
   "frameworks": {
     "net46": {},
