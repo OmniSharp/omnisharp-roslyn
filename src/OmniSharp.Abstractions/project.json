@@ -5,15 +5,15 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "9.0.1",
-    "Microsoft.CodeAnalysis": "2.0.0-beta3",
+    "Microsoft.CodeAnalysis.Common": "2.0.0-beta5",
+    "Microsoft.CodeAnalysis.Workspaces.Common": "2.0.0-beta5",
     "Microsoft.Composition": "1.0.30",
     "Microsoft.Extensions.Caching.Memory": "1.0.0",
     "Microsoft.Extensions.Configuration": "1.0.0",
     "Microsoft.Extensions.Configuration.Binder": "1.0.0",
     "Microsoft.Extensions.FileSystemGlobbing": "1.0.0",
     "Microsoft.Extensions.Logging.Console": "1.0.0",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
-    "System.Reflection.Metadata": "1.3.0"
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0"
   },
   "frameworks": {
     "net46": {
