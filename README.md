@@ -30,7 +30,7 @@ $ git checkout dev
 $ ./build.sh
 ```
 
-You can find the output under `artifacts/publish/<runtime id>/<target framework>/`.
+You can find the output under `artifacts/publish/OmniSharp/<runtime id>/<target framework>/`.
 
 The executable is either `OmniSharp.exe` or `OmniSharp`.
 
