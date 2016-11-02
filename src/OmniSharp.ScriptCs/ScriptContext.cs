@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Composition;
 using Microsoft.CodeAnalysis;
 
-namespace OmniSharp.ScriptCs
+namespace OmniSharp.Script
 {
     [Export, Shared]
-    public class ScriptCsContext
+    public class ScriptContext
     {
         public HashSet<string> CsxFilesBeingProcessed { get; } = new HashSet<string>();
 

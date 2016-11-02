@@ -22,7 +22,7 @@
   "frameworks": {
     "net46": {
       "dependencies": {
-        "OmniSharp.ScriptCs": "1.0.0"
+        "OmniSharp.Script": "1.0.0"
       }
     },
     "netcoreapp1.0": {

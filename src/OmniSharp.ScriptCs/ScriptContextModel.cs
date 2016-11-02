@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using OmniSharp.Roslyn.Models;
 
-namespace OmniSharp.ScriptCs
+namespace OmniSharp.Script
 {
-    public class ScriptCsContextModel
+    public class ScriptContextModel
     {
-        public ScriptCsContextModel(ScriptCsContext context)
+        public ScriptContextModel(ScriptContext context)
         {
             RootPath = context.RootPath;
             CsxFilesBeingProcessed = context.CsxFilesBeingProcessed;
