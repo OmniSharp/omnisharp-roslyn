@@ -11,12 +11,27 @@
   },
   "frameworks": {
     "net46": {
+      "frameworkAssemblies": {
+        "System.Runtime": "",
+        "System.Threading": "",
+        "System.Threading.Tasks": "",
+        "System.Collections": "",
+        "System.Globalization": "",
+        "System.Linq": "",
+        "System.Text.Encoding": "",
+        "System.Reflection": "",
+        "System.Security": "",
+        "System.Xml": ""
+      }
     },
     "netstandard1.6": {
       "imports": [
         "dotnet5.4",
         "portable-net45+win8"
-      ]
+      ],
+      "dependencies": {
+        "NETStandard.Library": "1.6.0"
+      }
     }
   }
 }

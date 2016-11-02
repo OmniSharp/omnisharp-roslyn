@@ -38,7 +38,7 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Roslyn", "src\Omn
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.MSBuild", "src\OmniSharp.MSBuild\OmniSharp.MSBuild.xproj", "{9AF025CA-3706-401F-8D50-59FAD5AFE725}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Script", "src\OmniSharp.ScriptCs\OmniSharp.Script.xproj", "{F52F6F60-AB29-414D-A24B-DE8EFFBA34C0}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Script", "src\OmniSharp.Script\OmniSharp.Script.xproj", "{F52F6F60-AB29-414D-A24B-DE8EFFBA34C0}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.MSBuild.Tests", "tests\OmniSharp.MSBuild.Tests\OmniSharp.MSBuild.Tests.xproj", "{194A88AE-1429-416B-86C1-BF6F7FF47404}"
 EndProject
