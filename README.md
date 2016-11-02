@@ -8,7 +8,7 @@ omnisharp-roslyn
 
 OmniSharp-Roslyn is a .NET development platform based on [Roslyn](https://github.com/dotnet/roslyn) workspaces. It provides project dependencies and language syntax to various IDE and plugins.
 
-OmniSharp-Roslyn is built with the [.NET Core SDK](https://dot.net/). It targets both __netcoreapp1.0__ and __net45__ targets. The __netcoreapp1.0__ build is self contained, while __net46__ build requires __mono__ (>=4.6.0) if it is run on a platform other than Windows.
+OmniSharp-Roslyn is built with the [.NET Core SDK](https://dot.net/). It targets both __netcoreapp1.0__ and __net46__ targets. The __netcoreapp1.0__ build is self contained, while __net46__ build requires __mono__ (>=4.6.0) if it is run on a platform other than Windows.
 
 In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed.
 
