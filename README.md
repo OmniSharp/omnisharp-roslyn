@@ -16,15 +16,18 @@ In addition, if you need the HTTP interface and you want to run on Linux, you'll
 
 ### Building
 
+**On Windows**:
+
 ```
-On Windows:
 > git checkout dev
 > ./build.ps1
+```
 
-On Linux / Unix:
+**On Linux / Unix**:
+
+```
 $ git checkout dev
 $ ./build.sh
-
 ```
 
 You can find the output under `artifacts/publish/<runtime id>/<target framework>/`.
