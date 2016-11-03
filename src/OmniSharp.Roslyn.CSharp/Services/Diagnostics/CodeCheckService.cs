@@ -37,7 +37,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 //we suppress the CS1024 diagnostic for script files for this reason. Roslyn will fix it later too, so this is temporary.
                 if (document.SourceCodeKind != SourceCodeKind.Regular)
                 {
-                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
+                    // additionally, we need to suppress CS1701: https://github.com/dotnet/roslyn/issues/5501
+                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024" && diagnostic.Id != "CS1701");
                 }
 
                 foreach (var quickFix in diagnostics.Select(MakeQuickFix))

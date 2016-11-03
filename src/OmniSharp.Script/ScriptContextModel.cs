@@ -14,7 +14,6 @@ namespace OmniSharp.Script
             CsxReferences = context.CsxReferences.ToDictionary(x => x.Key, x => x.Value.Select(z => new ReferenceModel(z)));
             CsxLoadReferences = context.CsxLoadReferences.ToDictionary(x => x.Key, x => x.Value.Select(z => new ProjectInfoModel(z)));
             CsxUsings = context.CsxUsings.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());
-            ScriptPacks = context.ScriptPacks;
             CommonReferences = context.CommonReferences.Select(z => new ReferenceModel(z));
             CommonUsings = context.CommonUsings;
         }
@@ -27,8 +26,6 @@ namespace OmniSharp.Script
         public Dictionary<string, IEnumerable<ReferenceModel>> CsxReferences { get; }
         public Dictionary<string, IEnumerable<ProjectInfoModel>> CsxLoadReferences { get; }
         public Dictionary<string, IEnumerable<string>> CsxUsings { get; }
-
-        public HashSet<string> ScriptPacks { get; }
 
         // Nuget and ScriptPack stuff
         public IEnumerable<ReferenceModel> CommonReferences { get; }
