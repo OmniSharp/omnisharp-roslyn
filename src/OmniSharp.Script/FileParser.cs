@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace OmniSharp.Script
 {
+    // adapted from https://github.com/scriptcs/scriptcs/blob/dev/src/ScriptCs.Core/FilePreProcessor.cs
     public class FileParser
     {
         private readonly string _workingDirectory;
