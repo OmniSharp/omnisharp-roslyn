@@ -8,8 +8,6 @@ public class Program
     public static void Main(string[] args)
     {
         var argsList = new List<string>(args);
-        argsList.Add("-s");
-        argsList.Add("c:\\script-test2");
         if (argsList.Contains("--debug"))
         {
             argsList.Remove("--debug");

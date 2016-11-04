@@ -23,7 +23,6 @@ namespace OmniSharp.Script
             MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location)
         };
         public HashSet<string> CommonUsings { get; } = new HashSet<string> { "System" };
-
         public string RootPath { get; set; }
     }
 }

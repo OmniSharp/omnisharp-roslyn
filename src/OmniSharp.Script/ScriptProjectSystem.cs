@@ -23,16 +23,11 @@ namespace OmniSharp.Script
     [Export(typeof(IProjectSystem))]
     public class ScriptProjectSystem : IProjectSystem
     {
-        CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
-        IEnumerable<MetadataReference> DotNetBaseReferences { get; } = new[]
-             {
-                 MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),        // mscorlib
-             };
-
-        OmnisharpWorkspace Workspace { get; }
-        IOmnisharpEnvironment Env { get; }
-        ScriptContext Context { get; }
-        ILogger Logger { get; }
+        private CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
+        private OmnisharpWorkspace Workspace { get; }
+        private IOmnisharpEnvironment Env { get; }
+        private ScriptContext Context { get; }
+        private ILogger Logger { get; }
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptContext scriptContext)
@@ -43,8 +38,8 @@ namespace OmniSharp.Script
             Logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
         }
 
-        public string Key { get { return "Script"; } }
-        public string Language { get { return LanguageNames.CSharp; } }
+        public string Key => "Script";
+        public string Language => LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".csx" };
 
         public void Initalize(IConfiguration configuration)
@@ -59,7 +54,6 @@ namespace OmniSharp.Script
                 return;
             }
 
-
             Context.RootPath = Env.Path;
             Logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
@@ -67,67 +61,24 @@ namespace OmniSharp.Script
             Logger.LogInformation($"Found script runtime context for '{runtimeContext.ProjectFile.ProjectFilePath}'");
 
             var projectExporter = runtimeContext.CreateExporter("Release");
-            var runtimeDependencies = new HashSet<string>();
-            var compilationDependencies = new HashSet<string>();
             var projectDependencies = projectExporter.GetDependencies();
 
-            foreach (var projectDependency in projectDependencies)
+            foreach (var compilationAssembly in projectDependencies.SelectMany(x => x.CompilationAssemblies))
             {
-                foreach (var compilationAssembly in projectDependency.CompilationAssemblies)
-                {
-                    Logger.LogInformation("Discovered script compilation assembly: " + compilationAssembly.ResolvedPath);
-                    compilationDependencies.Add(compilationAssembly.ResolvedPath);
-                }
-
-                //var runtimeAssemblies = projectDependency.RuntimeAssemblyGroups;
-
-                //foreach (var runtimeAssembly in runtimeAssemblies.GetDefaultAssets())
-                //{
-                //    var runtimeAssemblyPath = runtimeAssembly.ResolvedPath;
-                //    Logger.LogDebug($"Discovered script runtime dependency for '{runtimeAssemblyPath}'");
-                //    runtimeDependencies.Add(runtimeAssemblyPath);
-                //}
+                Logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationAssembly.ResolvedPath));
             }
 
-            //foreach (var runtimeDep in runtimeDependencies)
-            //{
-            //    Logger.LogDebug("Adding reference to a runtime dependency => " + runtimeDep);
-            //    Context.CommonReferences.Add(MetadataReference.CreateFromFile(runtimeDep));
-            //}
+            var needsSystemRuntimeReference = Context.CommonReferences.Any(x => !x.Display.ToLowerInvariant().EndsWith("system.runtime.dll"));
+            var inheritedCompileLibraries = needsSystemRuntimeReference ? 
+                DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis") || x.Name.ToLowerInvariant().StartsWith("system.runtime")) : 
+                DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis"));
 
-            foreach (var compilationDep in compilationDependencies)
+            foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
-                Logger.LogDebug("Adding reference to a compilation dependency => " + compilationDep);
-                Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationDep));
+                Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(inheritedCompileLib));
             }
-
-            foreach (var x in DependencyContext.Default.CompileLibraries.
-                Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).
-                SelectMany(x => x.ResolveReferencePaths()))
-            {
-                Logger.LogInformation("Compile Lib: " + x);
-                Context.CommonReferences.Add(MetadataReference.CreateFromFile(x));
-            }
-
-            var inheritedAssemblyNames = DependencyContext.Default.GetRuntimeAssemblyNames(runtimeContext.RuntimeIdentifier ?? RuntimeEnvironment.GetRuntimeIdentifier()).Where(x =>
-                x.FullName.ToLowerInvariant().StartsWith("mscorlib") ||
-                x.FullName.ToLowerInvariant().StartsWith("system.") ||
-                x.FullName.ToLowerInvariant().StartsWith("microsoft.codeanalysis"));
-
-            foreach (var inheritedAssemblyName in inheritedAssemblyNames)
-            {
-                Logger.LogInformation("Adding reference to an inherited dependency => " + inheritedAssemblyName.FullName);
-                var assembly = Assembly.Load(inheritedAssemblyName);
-                if (assembly.Location != null)
-                {
-                    Context.CommonReferences.Add(MetadataReference.CreateFromStream(File.OpenRead(assembly.Location)));
-                }
-            }
-
-            //foreach (var baseRef in DotNetBaseReferences)
-            //{
-            //    Context.CommonReferences.Add(baseRef);
-            //}
 
             // Process each .CSX file
             foreach (var csxPath in allCsxFiles)
@@ -170,7 +121,7 @@ namespace OmniSharp.Script
             var processResult = fileParser.ProcessFile(csxPath);
 
             // CSX file usings
-            Context.CsxUsings[csxPath] = processResult.Namespaces.ToList();
+            Context.CsxUsings[csxPath] = processResult.Namespaces.Union(Context.CommonUsings).ToList();
 
             var compilationOptions = new CSharpCompilationOptions(
                 outputKind: OutputKind.DynamicallyLinkedLibrary,
@@ -206,9 +157,9 @@ namespace OmniSharp.Script
             AddFile(csxPath, project.Id);
 
             //----------LOG ONLY------------
-            Logger.LogInformation($"All references by {csxFileName}: \n{string.Join("\n", project.MetadataReferences.Select(r => r.Display))}");
-            Logger.LogInformation($"All #load projects by {csxFileName}: \n{string.Join("\n", Context.CsxLoadReferences[csxPath].Select(p => p.Name))}");
-            Logger.LogInformation($"All usings in {csxFileName}: \n{string.Join("\n", (project.CompilationOptions as CSharpCompilationOptions)?.Usings ?? new ImmutableArray<string>())}");
+            Logger.LogDebug($"All references by {csxFileName}: \n{string.Join("\n", project.MetadataReferences.Select(r => r.Display))}");
+            Logger.LogDebug($"All #load projects by {csxFileName}: \n{string.Join("\n", Context.CsxLoadReferences[csxPath].Select(p => p.Name))}");
+            Logger.LogDebug($"All usings in {csxFileName}: \n{string.Join("\n", (project.CompilationOptions as CSharpCompilationOptions)?.Usings ?? new ImmutableArray<string>())}");
             //------------------------------
 
             // Traversal administration
@@ -217,7 +168,6 @@ namespace OmniSharp.Script
 
             return project;
         }
-
 
         private void AddFile(string filePath, ProjectId projectId)
         {

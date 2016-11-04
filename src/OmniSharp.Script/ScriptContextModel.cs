@@ -26,11 +26,8 @@ namespace OmniSharp.Script
         public Dictionary<string, IEnumerable<ReferenceModel>> CsxReferences { get; }
         public Dictionary<string, IEnumerable<ProjectInfoModel>> CsxLoadReferences { get; }
         public Dictionary<string, IEnumerable<string>> CsxUsings { get; }
-
-        // Nuget and ScriptPack stuff
         public IEnumerable<ReferenceModel> CommonReferences { get; }
         public IEnumerable<string> CommonUsings { get; }
-
         public string RootPath { get; set; }
     }
 }
