@@ -166,11 +166,8 @@ namespace OmniSharp.Script
             Logger.LogInformation($"Processing script {csxPath}...");
             Context.CsxFilesBeingProcessed.Add(csxPath);
 
-            var filePreProcessor = new FilePreProcessor(Context.RootPath, new ILineProcessor[]
-            {
-                new LoadLineProcessor(), new ReferenceLineProcessor(), new UsingLineProcessor()
-            });
-            var processResult = filePreProcessor.ProcessFile(csxPath);
+            var fileParser = new FileParser(Context.RootPath);
+            var processResult = fileParser.ProcessFile(csxPath);
 
             // CSX file usings
             Context.CsxUsings[csxPath] = processResult.Namespaces.ToList();
@@ -204,7 +201,7 @@ namespace OmniSharp.Script
                 metadataReferences: Context.CommonReferences.Union(Context.CsxReferences[csxPath]),
                 projectReferences: Context.CsxLoadReferences[csxPath].Select(p => new ProjectReference(p.Id)),
                 isSubmission: true,
-                hostObjectType: null);
+                hostObjectType: typeof(InteractiveScriptGlobals));
             Workspace.AddProject(project);
             AddFile(csxPath, project.Id);
 
