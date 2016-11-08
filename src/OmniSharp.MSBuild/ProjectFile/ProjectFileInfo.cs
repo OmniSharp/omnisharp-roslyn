@@ -118,6 +118,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                 globalProperties.Add(PropertyNames.MSBuildExtensionsPath, AppContext.BaseDirectory);
             }
 
+            if (PlatformHelper.IsMono)
+            {
+                globalProperties.Add(PropertyNames.TargetFrameworkRootPath, "/Library/Frameworks/Mono.framework/Libraries/mono/xbuild-frameworks");
+            }
+
             if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
             {
                 globalProperties.Add(PropertyNames.VisualStudioVersion, options.VisualStudioVersion);
@@ -125,11 +130,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var collection = new ProjectCollection(globalProperties);
 
-            logger.LogInformation($"Using toolset {options.ToolsVersion ?? collection.DefaultToolsVersion} for '{projectFilePath}'");
-
             var project = string.IsNullOrEmpty(options.ToolsVersion)
                 ? collection.LoadProject(projectFilePath)
                 : collection.LoadProject(projectFilePath, options.ToolsVersion);
+
+            logger.LogInformation($"Using tools version: {project.ToolsVersion}");
 
             var projectInstance = project.CreateProjectInstance();
             var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
