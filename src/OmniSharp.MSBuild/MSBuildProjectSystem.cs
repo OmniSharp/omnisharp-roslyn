@@ -180,6 +180,8 @@ namespace OmniSharp.MSBuild
                 return null;
             }
 
+            _logger.LogInformation($"Add project: {fileInfo.ProjectFilePath}");
+
             _projects.Add(fileInfo);
 
             var compilationOptions = CreateCompilationOptions(fileInfo);
@@ -330,7 +332,13 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                // If not, add a new document.
+                // If the source file doesn't exist on disk, don't try to add it.
+                if (!File.Exists(sourceFile))
+                {
+                    continue;
+                }
+
+                // If all is OK, add a new document.
                 using (var stream = File.OpenRead(sourceFile))
                 {
                     var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
