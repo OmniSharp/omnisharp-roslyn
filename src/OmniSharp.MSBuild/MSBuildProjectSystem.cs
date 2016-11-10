@@ -387,7 +387,10 @@ namespace OmniSharp.MSBuild
 
         private void UpdateProjectReferences(Project project, IList<string> projectReferences)
         {
+            _logger.LogInformation($"Update project: {project.Name}");
+
             var existingProjectReferences = new HashSet<ProjectReference>(project.ProjectReferences);
+            var addedProjectReferences = new HashSet<ProjectReference>();
 
             foreach (var projectReference in projectReferences)
             {
@@ -402,7 +405,11 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _workspace.AddProjectReference(project.Id, reference);
+                    if (!addedProjectReferences.Contains(reference))
+                    {
+                        _workspace.AddProjectReference(project.Id, reference);
+                        addedProjectReferences.Add(reference);
+                    }
                 }
                 else
                 {
@@ -419,6 +426,7 @@ namespace OmniSharp.MSBuild
         private void UpdateReferences(Project project, IList<string> references)
         {
             var existingReferences = new HashSet<MetadataReference>(project.MetadataReferences);
+            var addedReferences = new HashSet<MetadataReference>();
 
             foreach (var referencePath in references)
             {
@@ -435,8 +443,12 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
-                    _workspace.AddMetadataReference(project.Id, metadataReference);
+                    if (!addedReferences.Contains(metadataReference))
+                    {
+                        _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
+                        _workspace.AddMetadataReference(project.Id, metadataReference);
+                        addedReferences.Add(metadataReference);
+                    }
                 }
             }
 
