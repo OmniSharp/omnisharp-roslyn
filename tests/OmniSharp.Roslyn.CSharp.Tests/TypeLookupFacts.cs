@@ -54,5 +54,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.Equal("Bar.Foo", response.Type);
         }
+
+        [Fact]
+        public async Task IncludesContainingTypeFoNestedTypes()
+        {
+            var source1 = @"namespace Bar {
+            class Foo {
+                    class Xyz {}
+                }   
+            }";
+
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source1);
+
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
+            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 27 });
+
+            Assert.Equal("Bar.Foo.Xyz", response.Type);
+        }
     }
 }
