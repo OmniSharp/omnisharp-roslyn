@@ -56,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task IncludesContainingTypeFoNestedTypes()
+        public async Task IncludesContainingTypeFoNestedTypesForRegularCSharpSyntax()
         {
             var source1 = @"namespace Bar {
             class Foo {
@@ -70,6 +70,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 27 });
 
             Assert.Equal("Bar.Foo.Xyz", response.Type);
+        }
+
+        [Fact]
+        public async Task IncludesContainingTypeFoNestedTypesForNonRegularCSharpSyntax()
+        {
+            var source1 = @"class Foo {
+                class Bar {}
+            }";
+
+            var workspace = TestHelpers.CreateCsxWorkspace(source1);
+
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
+            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 23 });
+
+            Assert.Equal("Foo.Bar", response.Type);
         }
     }
 }
