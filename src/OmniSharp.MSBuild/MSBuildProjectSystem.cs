@@ -213,16 +213,23 @@ namespace OmniSharp.MSBuild
                 result = result.WithAllowUnsafe(true);
             }
 
+            var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count);
+
+            // Always suppress 1701 (Assuming assembly reference 'x' used by 'y' matches identity 'z'. you may need to supply runtime policy)
+            specificDiagnosticOptions.Add("1701", ReportDiagnostic.Suppress);
+
             if (projectFileInfo.SuppressedDiagnosticIds.Any())
             {
-                var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count);
                 foreach (var id in projectFileInfo.SuppressedDiagnosticIds)
                 {
-                    specificDiagnosticOptions.Add(id, ReportDiagnostic.Suppress);
+                    if (!specificDiagnosticOptions.ContainsKey(id))
+                    {
+                        specificDiagnosticOptions.Add(id, ReportDiagnostic.Suppress);
+                    }
                 }
-
-                result = result.WithSpecificDiagnosticOptions(specificDiagnosticOptions);
             }
+
+            result = result.WithSpecificDiagnosticOptions(specificDiagnosticOptions);
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
