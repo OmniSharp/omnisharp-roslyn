@@ -15,6 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
     {
         private readonly FormattingOptions _formattingOptions;
         private readonly OmnisharpWorkspace _workspace;
+        private static readonly SymbolDisplayFormat Format = SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
 
         [ImportingConstructor]
         public TypeLookupService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
@@ -38,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
                     //non regular C# code semantics (interactive, script) don't allow namespaces
                     if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType && !symbol.ContainingNamespace.IsGlobalNamespace)
                     {
-                        response.Type = $"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}";
+                        response.Type = symbol.ToDisplayString(Format);
                     }
                     else
                     {
