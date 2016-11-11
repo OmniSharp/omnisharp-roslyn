@@ -213,6 +213,17 @@ namespace OmniSharp.MSBuild
                 result = result.WithAllowUnsafe(true);
             }
 
+            if (projectFileInfo.SuppressedDiagnosticIds.Any())
+            {
+                var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count);
+                foreach (var id in projectFileInfo.SuppressedDiagnosticIds)
+                {
+                    specificDiagnosticOptions.Add(id, ReportDiagnostic.Suppress);
+                }
+
+                result = result.WithSpecificDiagnosticOptions(specificDiagnosticOptions);
+            }
+
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
                 var keyFile = Path.Combine(projectFileInfo.ProjectDirectory, projectFileInfo.AssemblyOriginatorKeyFile);

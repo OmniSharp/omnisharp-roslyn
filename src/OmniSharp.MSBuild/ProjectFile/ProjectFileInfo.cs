@@ -30,6 +30,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string AssemblyOriginatorKeyFile { get; }
         public bool GenerateXmlDocumentation { get; }
         public IList<string> PreprocessorSymbolNames { get; }
+        public IList<string> SuppressedDiagnosticIds { get; }
 
         public IList<string> SourceFiles { get; }
         public IList<string> References { get; }
@@ -55,6 +56,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyOriginatorKeyFile,
             bool generateXmlDocumentation,
             IList<string> defineConstants,
+            IList<string> suppressedDiagnosticIds,
             IList<string> sourceFiles,
             IList<string> references,
             IList<string> projectReferences,
@@ -73,6 +75,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
             this.PreprocessorSymbolNames = defineConstants;
+            this.SuppressedDiagnosticIds = suppressedDiagnosticIds;
             this.SourceFiles = sourceFiles;
             this.References = references;
             this.ProjectReferences = projectReferences;
@@ -157,6 +160,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
             var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
             var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
+            var noWarn = PropertyConverter.ToSuppressDiagnostics(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
 
             var sourceFiles = projectInstance
                 .GetItems(ItemNames.Compile)
@@ -182,8 +186,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, targetFramework, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, sourceFiles, references,
-                projectReferences, analyzers);
+                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, noWarn,
+                sourceFiles, references, projectReferences, analyzers);
         }
 
         private static bool ReferenceSourceTargetIsProjectReference(ProjectItemInstance projectItem)

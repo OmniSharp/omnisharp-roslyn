@@ -14,6 +14,7 @@
             public const string LangVersion = nameof(LangVersion);
             public const string OutputType = nameof(OutputType);
             public const string MSBuildExtensionsPath = nameof(MSBuildExtensionsPath);
+            public const string NoWarn = nameof(NoWarn);
             public const string ProjectGuid = nameof(ProjectGuid);
             public const string ProjectName = nameof(ProjectName);
             public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
