@@ -24,13 +24,19 @@ namespace OmniSharp
 
         private static string FindMonoXBuildFrameworksDirPath()
         {
+            const string defaultXBuildFrameworksDirPath = "/usr/lib/mono/xbuild-frameworks";
+            if (Directory.Exists(defaultXBuildFrameworksDirPath))
+            {
+                return defaultXBuildFrameworksDirPath;
+            }
+
+            // The normal Unix path doesn't exist, so we'll fallback to finding Mono using the
+            // runtime location. This is the likely situation on macOS.
             var monoFilePath = MonoFilePath;
             if (monoFilePath == null)
             {
                 return null;
             }
-
-            Console.WriteLine($"Mono file path: {monoFilePath}");
 
             // mono should be located in the '/Versions/Current/Commands' directory.
             var monoCommandsDirPath = Path.GetDirectoryName(monoFilePath);
