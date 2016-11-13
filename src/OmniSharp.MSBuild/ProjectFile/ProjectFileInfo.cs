@@ -129,7 +129,16 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             if (PlatformHelper.IsMono)
             {
-                globalProperties.Add(PropertyNames.TargetFrameworkRootPath, "/Library/Frameworks/Mono.framework/Libraries/mono/xbuild-frameworks");
+                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
+                if (monoXBuildFrameworksDirPath != null)
+                {
+                    logger.LogInformation($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
+                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
+                }
+                else
+                {
+                    logger.LogWarning("Couldn't locate Mono, TargetFrameworkRootPath not specified");
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
