@@ -1,4 +1,5 @@
-﻿using System.Composition;
+﻿using System;
+using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
@@ -16,13 +17,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
         private readonly FormattingOptions _formattingOptions;
         private readonly OmnisharpWorkspace _workspace;
         private static readonly SymbolDisplayFormat DefaultFormat = SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
-        private static readonly SymbolDisplayFormat SimpleFormat = new SymbolDisplayFormat(
-                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-                miscellaneousOptions:
-                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
-                    SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
         [ImportingConstructor]
         public TypeLookupService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
@@ -44,21 +38,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
                 if (symbol != null)
                 {
                     //non regular C# code semantics (interactive, script) don't allow namespaces
-                    if(document.SourceCodeKind == SourceCodeKind.Regular && symbol.Kind == SymbolKind.NamedType && !symbol.ContainingNamespace.IsGlobalNamespace)
+                    if (symbol.Kind == SymbolKind.NamedType)
                     {
-                        response.Type = symbol.ToDisplayString(DefaultFormat);
+                        if (document.SourceCodeKind == SourceCodeKind.Regular && !symbol.ContainingNamespace.IsGlobalNamespace)
+                        {
+                            response.Type = symbol.ToDisplayString(DefaultFormat);
+                        }
+                        else
+                        {
+                            response.Type = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                        }
                     }
                     else
                     {
-                        response.Type = symbol.ToDisplayString(SimpleFormat);
-                    }
-
-                    if (request.IncludeDocumentation)
-                    {
-                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
+                        response.Type = symbol.ToMinimalDisplayString(semanticModel, position);
                     }
                 }
+
+                if (request.IncludeDocumentation)
+                {
+                    response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
+                }
             }
+
             return response;
         }
     }
