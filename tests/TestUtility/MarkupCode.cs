@@ -1,0 +1,191 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Text;
+using Microsoft.CodeAnalysis.Text;
+
+namespace TestUtility
+{
+    /// <summary>
+    /// MarkupCode allows encoding additional pieces of information along with a piece of source code
+    /// that are useful for testing. The following information can be encoded:
+    /// 
+    /// $$ - The position in the code. There can be no more than one of these.
+    /// 
+    /// [| ... |] - A span in the code. There can be many of these and they can be nested.
+    /// 
+    /// {|Name: ... |} - A span of code that is annotated with a name. There can be many of these and
+    /// they can be nested.
+    /// 
+    /// This is similar the MarkupTestFile used in Roslyn:
+    ///     https://github.com/dotnet/roslyn/blob/master/src/Test/Utilities/Shared/MarkedSource/MarkupTestFile.cs
+    /// </summary>
+    public class MarkupCode
+    {
+        private int? position;
+        private ImmutableDictionary<string, ImmutableList<TextSpan>> spans;
+
+        public string Code { get; }
+
+        public int Position => this.position.Value;
+        public bool HasPosition => this.position.HasValue;
+
+        private MarkupCode(string code, int? position, ImmutableDictionary<string, ImmutableList<TextSpan>> spans)
+        {
+            this.Code = code;
+            this.position = position;
+            this.spans = spans;
+        }
+
+        public ImmutableList<TextSpan> GetSpans(string name = null)
+        {
+            ImmutableList<TextSpan> result;
+            if (this.spans.TryGetValue(name ?? string.Empty, out result))
+            {
+                return result;
+            }
+
+            return ImmutableList<TextSpan>.Empty;
+        }
+
+        public static MarkupCode Parse(string markupCode)
+        {
+            var markupLength = markupCode.Length;
+            var codeBuilder = new StringBuilder(markupLength);
+
+            int? position = null;
+            var spanStartStack = new Stack<int>();
+            var namedSpanStartStack = new Stack<Tuple<int, string>>();
+            var spans = new Dictionary<string, List<TextSpan>>();
+
+            var codeIndex = 0;
+            var markupIndex = 0;
+
+            while (markupIndex < markupLength)
+            {
+                var ch = markupCode[markupIndex];
+
+                switch (ch)
+                {
+                    case '$':
+                        if (position == null &&
+                            markupIndex + 1 < markupLength &&
+                            markupCode[markupIndex + 1] == '$')
+                        {
+                            position = codeIndex;
+                            markupIndex += 2;
+                            continue;
+                        }
+
+                        break;
+
+                    case '[':
+                        if (markupIndex + 1 < markupLength &&
+                            markupCode[markupIndex + 1] == '|')
+                        {
+                            spanStartStack.Push(codeIndex);
+                            markupIndex += 2;
+                            continue;
+                        }
+
+                        break;
+
+                    case '{':
+                        if (markupIndex + 1 < markupLength &&
+                            markupCode[markupIndex + 1] == '|')
+                        {
+                            var nameIndex = markupIndex + 2;
+                            var nameStartIndex = nameIndex;
+                            var nameLength = 0;
+                            var found = false;
+
+                            // Parse out name
+                            while (nameIndex < markupLength)
+                            {
+                                if (markupCode[nameIndex] == ':')
+                                {
+                                    found = true;
+                                    break;
+                                }
+
+                                nameLength++;
+                                nameIndex++;
+                            }
+
+                            if (found)
+                            {
+                                var name = markupCode.Substring(nameStartIndex, nameLength);
+                                namedSpanStartStack.Push(Tuple.Create(codeIndex, name));
+                                markupIndex = nameIndex + 1; // Move after ':'
+                                continue;
+                            }
+
+                            // We didn't find a ':'. In this case, we just carry on...
+                        }
+
+                        break;
+
+                    case '|':
+                        if (markupIndex + 1 < markupLength)
+                        {
+                            if (markupCode[markupIndex + 1] == ']')
+                            {
+                                if (spanStartStack.Count == 0)
+                                {
+                                    throw new ArgumentException("Saw |] without matching [|");
+                                }
+
+                                var spanStart = spanStartStack.Pop();
+
+                                AddSpan(spans, string.Empty, spanStart, codeIndex);
+                                markupIndex += 2;
+
+                                continue;
+                            }
+
+                            if (markupCode[markupIndex + 1] == '}')
+                            {
+                                if (namedSpanStartStack.Count == 0)
+                                {
+                                    throw new ArgumentException("Saw |} without matching {|");
+                                }
+
+                                var tuple = namedSpanStartStack.Pop();
+                                var spanStart = tuple.Item1;
+                                var spanName = tuple.Item2;
+
+                                AddSpan(spans, spanName, spanStart, codeIndex);
+                                markupIndex += 2;
+
+                                continue;
+                            }
+                        }
+
+                        break;
+                }
+
+                codeBuilder.Append(ch);
+                codeIndex++;
+                markupIndex++;
+            }
+
+            var finalSpans = spans.ToImmutableDictionary(
+                keySelector: kvp => kvp.Key,
+                elementSelector: kvp => kvp.Value.ToImmutableList().Sort());
+
+            return new MarkupCode(codeBuilder.ToString(), position, finalSpans);
+        }
+
+        private static void AddSpan(Dictionary<string, List<TextSpan>> spans, string spanName, int spanStart, int spanEnd)
+        {
+            List<TextSpan> spanList;
+            if (!spans.TryGetValue(spanName, out spanList))
+            {
+                spanList = new List<TextSpan>();
+                spans.Add(spanName, spanList);
+            }
+
+            spanList.Add(TextSpan.FromBounds(spanStart, spanEnd));
+        }
+    }
+}
