@@ -86,5 +86,133 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.Equal("Foo.Bar", response.Type);
         }
+
+        private static string testFile = @"using System;
+            using Bar2;
+            using System.Collections.Generic;
+            namespace Bar {
+                class Foo {
+                    public Foo() {
+                        Console.WriteLine(""abc"");
+                    }
+
+                    public void MyMethod(string name, Foo foo, Foo2 foo2) { };
+
+                    private Foo2 _someField = new Foo2();
+
+                    public Foo2 SomeProperty { get; }
+
+                    public IDictionary<string, IEnumerable<int>> SomeDict { get; }
+
+                    public void Compute(int index = 2) { }
+                }
+            }
+
+            namespace Bar2 {
+                class Foo2 {
+                }
+            }
+            ";
+
+        private static async Task<TypeLookupResponse> GetTypeLookUpResponse(int line, int column)
+        {
+            var workspace = await TestHelpers.CreateSimpleWorkspace(testFile);
+
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
+            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = line, Column = column });
+
+            return response;
+        }
+
+        [Fact]
+        public async Task DisplayFormatForMethodSymbol_Invocation()
+        {
+            var response = await GetTypeLookUpResponse(line: 6, column: 35);
+            Assert.Equal("void Console.WriteLine(string s)", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatForMethodSymbol_Declaration()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 35);
+            Assert.Equal("void Foo.MyMethod(string name, Foo foo, Foo2 foo2)", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_TypeSymbol_Primitive()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 46);
+            Assert.Equal("System.String", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_TypeSymbol_ComplexType_SameNamespace()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 56);
+            Assert.Equal("Bar.Foo", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_TypeSymbol_ComplexType_DifferentNamespace()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 67);
+            Assert.Equal("Bar2.Foo2", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_TypeSymbol_WithGenerics()
+        {
+            var response = await GetTypeLookUpResponse(line: 15, column: 36);
+            Assert.Equal("System.Collections.Generic.IDictionary<System.String, System.Collections.Generic.IEnumerable<System.Int32>>", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatForParameterSymbol_Name_Primitive()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 51);
+            Assert.Equal("string name", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_ParameterSymbol_ComplexType_SameNamespace()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 60);
+            Assert.Equal("Foo foo", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_ParameterSymbol_Name_ComplexType_DifferentNamespace()
+        {
+            var response = await GetTypeLookUpResponse(line: 9, column: 71);
+            Assert.Equal("Foo2 foo2", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_ParameterSymbol_Name_WithDefaultValue()
+        {
+            var response = await GetTypeLookUpResponse(line: 17, column: 48);
+            Assert.Equal("int index = 2", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_FieldSymbol()
+        {
+            var response = await GetTypeLookUpResponse(line: 11, column: 38);
+            Assert.Equal("Foo2 Foo._someField", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_PropertySymbol()
+        {
+            var response = await GetTypeLookUpResponse(line: 13, column: 38);
+            Assert.Equal("Foo2 Foo.SomeProperty", response.Type);
+        }
+
+        [Fact]
+        public async Task DisplayFormatFor_PropertySymbol_WithGenerics()
+        {
+            var response = await GetTypeLookUpResponse(line: 15, column: 70);
+            Assert.Equal("IDictionary<string, IEnumerable<int>> Foo.SomeDict", response.Type);
+        }
     }
 }
