@@ -430,7 +430,7 @@ namespace OmniSharp.DotNet
             LanguageVersion languageVersion;
             if (!Enum.TryParse<LanguageVersion>(value, ignoreCase: true, result: out languageVersion))
             {
-                languageVersion = LanguageVersion.CSharp6;
+                languageVersion = LanguageVersion.Default;
             }
 
             return languageVersion;

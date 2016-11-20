@@ -47,10 +47,10 @@ namespace OmniSharp.MSBuild.ProjectFile
             if (string.IsNullOrWhiteSpace(propertyValue) ||
                 propertyValue.Equals("Default", StringComparison.OrdinalIgnoreCase))
             {
-                return LanguageVersion.CSharp6;
+                return LanguageVersion.Default;
             }
 
-            // ISO-1, ISO-2, 3, 4, 5, 6 or Default
+            // ISO-1, ISO-2, 3, 4, 5, 6, 7 or Default
             switch (propertyValue.ToLower())
             {
                 case "iso-1": return LanguageVersion.CSharp1;
@@ -59,7 +59,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "4": return LanguageVersion.CSharp4;
                 case "5": return LanguageVersion.CSharp5;
                 case "6": return LanguageVersion.CSharp6;
-                default: return LanguageVersion.CSharp6;
+                case "7": return LanguageVersion.CSharp7;
+                default: return LanguageVersion.Default;
             }
         }
 
