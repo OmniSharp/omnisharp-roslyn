@@ -8,20 +8,18 @@ namespace TestCommon
 
         private TestsContext()
         {
-            // AppContext is .NET Core only
-            var basedir = Directory.GetCurrentDirectory();
-            var current = basedir;
+            var currentDirectory = Directory.GetCurrentDirectory();
             var solutionFile = "OmniSharp.sln";
-            while (!File.Exists(Path.Combine(current, solutionFile)))
+            while (!File.Exists(Path.Combine(currentDirectory, solutionFile)))
             {
-                current = Path.GetDirectoryName(current);
-                if (Path.GetPathRoot(current) == current)
+                currentDirectory = Path.GetDirectoryName(currentDirectory);
+                if (Path.GetPathRoot(currentDirectory) == currentDirectory)
                 {
                     break;
                 }
             }
 
-            SolutionRoot = current;
+            SolutionRoot = currentDirectory;
             TestRoot = Path.Combine(SolutionRoot, "tests");
             TestSamples = Path.Combine(TestRoot, "TestSamples");
         }
