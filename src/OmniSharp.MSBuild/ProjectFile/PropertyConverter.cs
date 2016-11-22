@@ -94,7 +94,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ushort number;
                 if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
                 {
-                    result.Add(id);
+                    result.Add("CS" + number.ToString("0000"));
                 }
             }
 
