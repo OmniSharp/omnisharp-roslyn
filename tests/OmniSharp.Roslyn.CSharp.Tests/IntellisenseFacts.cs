@@ -182,6 +182,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
         }
 
+        [Fact]
+        public async Task Returns_empty_sequence_in_invalid_context()
+        {
+            var source =
+                @"public class MyClass1 {
+
+                    public MyClass1()
+                        {
+                            var x$
+                        }
+                    }";
+
+            var completions = await FindCompletionsAsync(source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), Array.Empty<string>());
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))
@@ -217,10 +233,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 request = CreateRequest(source);
             }
 
-            var response = await controller.Handle(request);
-            var completions = response as IEnumerable<AutoCompleteResponse>;
-
-            return completions;
+            return await controller.Handle(request);
         }
 
         private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs", bool wantSnippet = false)
