@@ -17,11 +17,7 @@ namespace OmniSharp.Script
         public Dictionary<string, List<PortableExecutableReference>> CsxReferences { get; } = new Dictionary<string, List<PortableExecutableReference>>();
         public Dictionary<string, List<ProjectInfo>> CsxLoadReferences { get; } = new Dictionary<string, List<ProjectInfo>>();
         public Dictionary<string, List<string>> CsxUsings { get; } = new Dictionary<string, List<string>>();
-
-        public HashSet<MetadataReference> CommonReferences { get; } = new HashSet<MetadataReference>
-        {
-            MetadataReference.CreateFromFile(Assembly.Load(new AssemblyName("mscorlib")).Location)
-        };
+        public HashSet<MetadataReference> CommonReferences { get; } = new HashSet<MetadataReference>();
         public HashSet<string> CommonUsings { get; } = new HashSet<string> { "System" };
         public string RootPath { get; set; }
     }

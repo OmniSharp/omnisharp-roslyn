@@ -10,8 +10,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.DotNet.ProjectModel;
+using Microsoft.DotNet.ProjectModel.Compilation;
+using Microsoft.DotNet.ProjectModel.Graph;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
@@ -57,23 +58,47 @@ namespace OmniSharp.Script
             Context.RootPath = Env.Path;
             Logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
-            var runtimeContext = ProjectContext.CreateContextForEachTarget(Env.Path).First();
-            Logger.LogInformation($"Found script runtime context for '{runtimeContext.ProjectFile.ProjectFilePath}'");
+            var runtimeContexts = ProjectContext.CreateContextForEachTarget(Env.Path);
+            var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x => 
+                   x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis") || 
+                   x.Name.ToLowerInvariant().StartsWith("system.runtime"));
 
-            var projectExporter = runtimeContext.CreateExporter("Release");
-            var projectDependencies = projectExporter.GetDependencies();
-
-            foreach (var compilationAssembly in projectDependencies.SelectMany(x => x.CompilationAssemblies))
+            // if we have no context, then we also have no dependencies
+            // we can assume desktop framework
+            // and add mscorlib
+            if (runtimeContexts == null || !runtimeContexts.Any())
             {
-                Logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
-                Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationAssembly.ResolvedPath));
+                Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
+            }
+            // otherwise we will grab dependencies for the script from the runtime context
+            else
+            {
+                // assume the first one
+                var runtimeContext = runtimeContexts.First();
+                Logger.LogInformation($"Found script runtime context '{runtimeContext?.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
+
+                var projectExporter = runtimeContext.CreateExporter("Release");
+                var projectDependencies = projectExporter.GetDependencies();
+
+                // let's inject all compilation assemblies needed
+                var compilationAssemblies = projectDependencies.SelectMany(x => x.CompilationAssemblies);
+                foreach (var compilationAssembly in compilationAssemblies)
+                {
+                    Logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
+                    Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationAssembly.ResolvedPath));
+                }
+
+                // if we are on .NET Core, we may need to avoid injecting System.Runtime
+#if !NET46
+                var needsSystemRuntimeReference = Context.CommonReferences.Any(x => !x.Display.ToLowerInvariant().EndsWith("system.runtime.dll"));
+                inheritedCompileLibraries = needsSystemRuntimeReference ?
+                    DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis") || x.Name.ToLowerInvariant().StartsWith("system.runtime")) :
+                    DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis"));
+#endif
             }
 
-            var needsSystemRuntimeReference = Context.CommonReferences.Any(x => !x.Display.ToLowerInvariant().EndsWith("system.runtime.dll"));
-            var inheritedCompileLibraries = needsSystemRuntimeReference ? 
-                DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis") || x.Name.ToLowerInvariant().StartsWith("system.runtime")) : 
-                DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis"));
-
+            // inject all inherited assemblies
             foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
                 Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);

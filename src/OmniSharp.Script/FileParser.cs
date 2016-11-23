@@ -1,15 +1,13 @@
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace OmniSharp.Script
 {
-    // adapted from https://github.com/scriptcs/scriptcs/blob/dev/src/ScriptCs.Core/FilePreProcessor.cs
     public class FileParser
     {
         private readonly string _workingDirectory;
-        private const string UsingString = "using ";
-        private const string LoadDirective = "#load";
-        private const string ReferenceDirective = "#r";
         private readonly FileParserResult _result;
 
         public FileParser(string workingDirectory)
@@ -23,6 +21,7 @@ namespace OmniSharp.Script
             ParseFile(path);
             return _result;
         }
+
         private void ParseFile(string path)
         {
             var fullPath = Path.GetFullPath(path);
@@ -33,62 +32,35 @@ namespace OmniSharp.Script
 
             _result.LoadedScripts.Add(fullPath);
 
-            var scriptLines = File.ReadAllLines(fullPath).ToList();
-            foreach (var line in scriptLines)
-            {
-                ProcessLine(line);
-            }
-        }
+            var scriptCode = File.ReadAllText(fullPath);
 
-        public void ProcessLine(string line)
-        {
-            if (IsNamespaceLine(line))
+            var syntaxTree = CSharpSyntaxTree.ParseText(scriptCode, CSharpParseOptions.Default.
+                WithPreprocessorSymbols("load", "r").
+                WithKind(SourceCodeKind.Script).
+                WithLanguageVersion(LanguageVersion.Default));
+
+            var namespaces = syntaxTree.GetCompilationUnitRoot().Usings.Select(x => x.Name.ToString());
+            foreach (var ns in namespaces)
             {
-                _result.Namespaces.Add(line.Trim(' ')
-                    .Replace(UsingString, string.Empty)
-                    .Replace("\"", string.Empty)
-                    .Replace(";", string.Empty));
-                return;
+                _result.Namespaces.Add(ns.Trim());
             }
 
-            if (IsDirectiveLine(line, LoadDirective))
+            var refs = syntaxTree.GetCompilationUnitRoot().GetReferenceDirectives().Select(x => x.File.ToString());
+            foreach (var reference in refs)
             {
-                var filePath = GetDirectiveArgument(line, LoadDirective);
-                var fullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(_workingDirectory, filePath);
-                if (!string.IsNullOrWhiteSpace(fullPath))
+                _result.References.Add(reference.Replace("\"", string.Empty));
+            }
+
+            var loads = syntaxTree.GetCompilationUnitRoot().GetLoadDirectives().Select(x => x.File.ToString());
+            foreach (var load in loads)
+            {
+                var filePath = load.Replace("\"", string.Empty);
+                var loadFullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(_workingDirectory, filePath);
+                if (!string.IsNullOrWhiteSpace(loadFullPath))
                 {
-                    ParseFile(fullPath);
+                    ParseFile(loadFullPath);
                 }
-                return;
             }
-
-            if (IsDirectiveLine(line, ReferenceDirective))
-            {
-                var argument = GetDirectiveArgument(line, ReferenceDirective);
-                if (!string.IsNullOrWhiteSpace(argument))
-                {
-                    _result.References.Add(argument);
-                }
-
-            }
-        }
-
-        private static bool IsNamespaceLine(string line)
-        {
-            return line.Trim(' ').StartsWith(UsingString) && !line.Contains("{") && line.Contains(";") && !line.Contains("=");
-        }
-
-        private static bool IsDirectiveLine(string line, string directiveName)
-        {
-            return line.Trim(' ').StartsWith(directiveName);
-        }
-
-        private static string GetDirectiveArgument(string line, string directiveName)
-        {
-            return line.Replace(directiveName, string.Empty)
-                .Trim()
-                .Replace("\"", string.Empty)
-                .Replace(";", string.Empty);
         }
     }
 }
