@@ -50,7 +50,7 @@ namespace OmniSharp.Services
             var documentationFile = Path.ChangeExtension(path, ".xml");
             if (File.Exists(documentationFile))
             {
-                return metadata.GetReference(new XmlDocumentationProvider(documentationFile));
+                return metadata.GetReference(XmlDocumentationProvider.CreateFromFile(documentationFile));
             }
 
             return metadata.GetReference();
