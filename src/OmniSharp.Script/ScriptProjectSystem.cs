@@ -11,12 +11,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.ProjectModel;
-using Microsoft.DotNet.ProjectModel.Compilation;
-using Microsoft.DotNet.ProjectModel.Graph;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.v1;
+using OmniSharp.Roslyn.Models;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
@@ -58,10 +57,11 @@ namespace OmniSharp.Script
             Context.RootPath = Env.Path;
             Logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
-            var runtimeContexts = ProjectContext.CreateContextForEachTarget(Env.Path);
-            var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x => 
-                   x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis") || 
-                   x.Name.ToLowerInvariant().StartsWith("system.runtime"));
+            // explicitly inherit scripting library references to all global script object (InteractiveScriptGlobals) to be recognized
+            var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
+                    x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
+
+            var runtimeContexts = File.Exists(Path.Combine(Env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(Env.Path) : null;
 
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
@@ -70,6 +70,9 @@ namespace OmniSharp.Script
             {
                 Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
                 Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location));
+                inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
+                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));
             }
             // otherwise we will grab dependencies for the script from the runtime context
             else
@@ -89,21 +92,24 @@ namespace OmniSharp.Script
                     Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationAssembly.ResolvedPath));
                 }
 
-                // if we are on .NET Core, we may need to avoid injecting System.Runtime
-#if !NET46
-                var needsSystemRuntimeReference = Context.CommonReferences.Any(x => !x.Display.ToLowerInvariant().EndsWith("system.runtime.dll"));
-                inheritedCompileLibraries = needsSystemRuntimeReference ?
-                    DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis") || x.Name.ToLowerInvariant().StartsWith("system.runtime")) :
-                    DependencyContext.Default.CompileLibraries.Where(x => x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis"));
-#endif
+                // for non .NET Core, include System.Runtime
+                if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
+                {
+                    inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
+                            x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+                }
+
             }
 
             // inject all inherited assemblies
+//#if NET46
             foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
                 Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
                 Context.CommonReferences.Add(MetadataReference.CreateFromFile(inheritedCompileLib));
             }
+//#endif
+
 
             // Process each .CSX file
             foreach (var csxPath in allCsxFiles)
@@ -142,8 +148,7 @@ namespace OmniSharp.Script
             Logger.LogInformation($"Processing script {csxPath}...");
             Context.CsxFilesBeingProcessed.Add(csxPath);
 
-            var fileParser = new FileParser(Context.RootPath);
-            var processResult = fileParser.ProcessFile(csxPath);
+            var processResult = FileParser.ProcessFile(csxPath);
 
             // CSX file usings
             Context.CsxUsings[csxPath] = processResult.Namespaces.Union(Context.CommonUsings).ToList();

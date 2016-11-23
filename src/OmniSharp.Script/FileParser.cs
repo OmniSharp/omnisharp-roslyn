@@ -7,30 +7,22 @@ namespace OmniSharp.Script
 {
     public class FileParser
     {
-        private readonly string _workingDirectory;
-        private readonly FileParserResult _result;
-
-        public FileParser(string workingDirectory)
+        public static FileParserResult ProcessFile(string path)
         {
-            _workingDirectory = workingDirectory;
-            _result = new FileParserResult();
+            var result = new FileParserResult();
+            ParseFile(path, result);
+            return result;
         }
 
-        public FileParserResult ProcessFile(string path)
-        {
-            ParseFile(path);
-            return _result;
-        }
-
-        private void ParseFile(string path)
+        private static void ParseFile(string path, FileParserResult result)
         {
             var fullPath = Path.GetFullPath(path);
-            if (_result.LoadedScripts.Contains(fullPath))
+            if (result.LoadedScripts.Contains(fullPath))
             {
                 return;
             }
 
-            _result.LoadedScripts.Add(fullPath);
+            result.LoadedScripts.Add(fullPath);
 
             var scriptCode = File.ReadAllText(fullPath);
 
@@ -42,23 +34,25 @@ namespace OmniSharp.Script
             var namespaces = syntaxTree.GetCompilationUnitRoot().Usings.Select(x => x.Name.ToString());
             foreach (var ns in namespaces)
             {
-                _result.Namespaces.Add(ns.Trim());
+                result.Namespaces.Add(ns.Trim());
             }
 
             var refs = syntaxTree.GetCompilationUnitRoot().GetReferenceDirectives().Select(x => x.File.ToString());
             foreach (var reference in refs)
             {
-                _result.References.Add(reference.Replace("\"", string.Empty));
+                result.References.Add(reference.Replace("\"", string.Empty));
             }
 
             var loads = syntaxTree.GetCompilationUnitRoot().GetLoadDirectives().Select(x => x.File.ToString());
             foreach (var load in loads)
             {
                 var filePath = load.Replace("\"", string.Empty);
-                var loadFullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(_workingDirectory, filePath);
+                var currentWorkingDirectory = Path.GetDirectoryName(fullPath);
+
+                var loadFullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(currentWorkingDirectory, filePath);
                 if (!string.IsNullOrWhiteSpace(loadFullPath))
                 {
-                    ParseFile(loadFullPath);
+                    ParseFile(loadFullPath, result);
                 }
             }
         }
