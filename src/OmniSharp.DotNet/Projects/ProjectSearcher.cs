@@ -1,66 +1,86 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.DotNet.ProjectModel;
 
 namespace OmniSharp.DotNet.Projects
 {
     public class ProjectSearcher
     {
-        public static IEnumerable<string> Search(string solutionRoot)
+        public static IEnumerable<string> Search(string directory)
         {
-            return Search(solutionRoot, maxDepth: 5);
+            return Search(directory, maxDepth: 5);
         }
 
-        public static IEnumerable<string> Search(string solutionRoot, int maxDepth)
+        public static IEnumerable<string> Search(string directory, int maxDepth)
         {
-            var dir = new DirectoryInfo(solutionRoot);
-            if (!dir.Exists)
+            if (!Directory.Exists(directory))
             {
-                return Enumerable.Empty<string>();
+                return Array.Empty<string>();
             }
 
-            if (File.Exists(Path.Combine(solutionRoot, Project.FileName)))
+            // Is there a project.json file in this directory? If so, return it.
+            var projectFilePath = Path.Combine(directory, Project.FileName);
+            if (File.Exists(projectFilePath))
             {
-                return new string[] { solutionRoot };
+                return new string[] { projectFilePath };
             }
-            else if (File.Exists(Path.Combine(solutionRoot, GlobalSettings.FileName)))
+
+            // Is there a global.json file in this directory? If so, use that to search.
+            if (File.Exists(Path.Combine(directory, GlobalSettings.FileName)))
             {
-                return FindProjectsThroughGlobalJson(solutionRoot);
+                return FindProjectsThroughGlobalJson(directory);
             }
-            else
-            {
-                return FindProjects(solutionRoot, maxDepth);
-            }
+
+            // Otherwise, perform a general search through the file system.
+            return FindProjects(directory, maxDepth);
         }
 
-        private static IEnumerable<string> FindProjects(string root, int maxDepth)
+        // TODO: Replace with proper tuple when we move to C# 7
+        private struct DirectoryAndDepth
         {
-            var result = new List<string>();
-            var stack = new Stack<Tuple<DirectoryInfo, int>>();
+            public readonly string Directory;
+            public readonly int Depth;
 
-            stack.Push(Tuple.Create(new DirectoryInfo(root), 0));
-
-            while (stack.Any())
+            private DirectoryAndDepth(string directory, int depth)
             {
-                var next = stack.Pop();
-                var currentFolder = next.Item1;
-                var depth = next.Item2;
+                this.Directory = directory;
+                this.Depth = depth;
+            }
 
-                if (!currentFolder.Exists)
+            public static DirectoryAndDepth Create(string directory, int depth)
+                => new DirectoryAndDepth(directory, depth);
+        }
+
+        private static IEnumerable<string> FindProjects(string rootDirectory, int maxDepth)
+        {
+            var result = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            var stack = new Stack<DirectoryAndDepth>();
+
+            stack.Push(DirectoryAndDepth.Create(rootDirectory, 0));
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+
+                if (!Directory.Exists(current.Directory))
                 {
                     continue;
                 }
-                else if (currentFolder.GetFiles(Project.FileName).Any())
+
+                // Did we find a project.json?
+                var projectFilePath = Path.Combine(current.Directory, Project.FileName);
+                if (File.Exists(projectFilePath))
                 {
-                    result.Add(Path.Combine(currentFolder.FullName, Project.FileName));
+                    result.Add(projectFilePath);
                 }
-                else if (depth < maxDepth)
+
+                // If we're not already at maximum depth, go ahead and search child directories.
+                if (current.Depth < maxDepth)
                 {
-                    foreach (var sub in currentFolder.GetDirectories())
+                    foreach (var childDirectory in Directory.GetDirectories(current.Directory))
                     {
-                        stack.Push(Tuple.Create(sub, depth + 1));
+                        stack.Push(DirectoryAndDepth.Create(childDirectory, current.Depth + 1));
                     }
                 }
             }
@@ -73,19 +93,38 @@ namespace OmniSharp.DotNet.Projects
             GlobalSettings globalSettings;
             if (GlobalSettings.TryGetGlobalSettings(root, out globalSettings))
             {
-                return globalSettings.ProjectSearchPaths
-                                     .Select(searchPath => Path.Combine(globalSettings.DirectoryPath, searchPath))
-                                     .Where(actualPath => Directory.Exists(actualPath))
-                                     .SelectMany(actualPath => Directory.GetDirectories(actualPath))
-                                     .Where(actualPath => File.Exists(Path.Combine(actualPath, Project.FileName)))
-                                     .Select(path => Path.GetFullPath(path))
-                                     .Distinct(StringComparer.OrdinalIgnoreCase)
-                                     .ToList();
+                var projectPaths = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+                var searchDirectories = new Queue<string>();
+
+                // Look in global.json 'projects' search paths and their immediate children
+                foreach (var searchPath in globalSettings.ProjectSearchPaths)
+                {
+                    var searchDirectory = Path.Combine(globalSettings.DirectoryPath, searchPath);
+                    if (Directory.Exists(searchDirectory))
+                    {
+                        searchDirectories.Enqueue(searchDirectory);
+
+                        foreach (var childDirectory in Directory.GetDirectories(searchDirectory))
+                        {
+                            searchDirectories.Enqueue(childDirectory);
+                        }
+                    }
+                }
+
+                while (searchDirectories.Count > 0)
+                {
+                    var searchDirectory = searchDirectories.Dequeue();
+                    var projectFilePath = Path.Combine(searchDirectory, Project.FileName);
+                    if (File.Exists(projectFilePath))
+                    {
+                        projectPaths.Add(Path.GetFullPath(projectFilePath));
+                    }
+                }
+
+                return projectPaths;
             }
-            else
-            {
-                return Enumerable.Empty<string>();
-            }
+
+            return Array.Empty<string>();
         }
     }
 }
