@@ -6,9 +6,9 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "OmniSharp.Roslyn": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp": "2.0.0-beta5",
-    "Microsoft.CodeAnalysis.CSharp.Features": "2.0.0-beta5",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-beta5"
+    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc",
+    "Microsoft.CodeAnalysis.CSharp.Features": "2.0.0-rc",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-rc"
   },
   "frameworks": {
     "net46": {
