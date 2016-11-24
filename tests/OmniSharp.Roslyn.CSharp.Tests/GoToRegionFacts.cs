@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -13,11 +14,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindRegionsInFileWithRegions()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
                       #region A
-                      public string A$Property {get; set;}
+                      public string A$$Property {get; set;}
                       #endregion
 
                       #region B
@@ -41,29 +42,31 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task DoesNotFindRegionsInFileWithoutRegions()
         {
-            var source = @"public class Fo$o{}";
+            const string source = @"public class Fo$$o{}";
             var regions = await FindRegions(source);
             Assert.Equal(0, regions.QuickFixes.Count());
         }
 
-        private async Task<QuickFixResponse> FindRegions(string source)
+        private async Task<QuickFixResponse> FindRegions(string input)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new GotoRegionService(workspace);
-            var request = CreateRequest(source);
-            await workspace.BufferManager.UpdateBuffer(request);
-            return await controller.Handle(request);
-        }
+            var markup = MarkupCode.Parse(input);
 
-        private GotoRegionRequest CreateRequest(string source, string fileName = "dummy.cs")
-        {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new GotoRegionRequest {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", "")
+            var text = SourceText.From(markup.Code);
+            var line = text.Lines.GetLineFromPosition(markup.Position);
+            var column = markup.Position - line.Start;
+
+            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code);
+            var controller = new GotoRegionService(workspace);
+
+            var request = new GotoRegionRequest
+            {
+                Line = line.LineNumber,
+                Column = column,
+                FileName = "dummy.cs",
+                Buffer = markup.Code
             };
+
+            return await controller.Handle(request);
         }
     }
 }
