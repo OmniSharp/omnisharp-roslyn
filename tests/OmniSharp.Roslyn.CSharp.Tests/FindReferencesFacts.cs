@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -13,12 +14,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfLocalVariable()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
                     public Foo(string s)
                     {
-                        var pr$op = s + 'abc';
+                        var pr$$op = s + 'abc';
 
                         prop += 'woo';
                     }
@@ -31,10 +32,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfMethodParameter()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
-                    public Foo(string $s)
+                    public Foo(string $$s)
                     {
                         var prop = s + 'abc';
                     }
@@ -47,10 +48,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfField()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
-                    public string p$rop;
+                    public string p$$rop;
                 }
 
                 public class FooConsumer
@@ -69,10 +70,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfConstructor()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
-                    public F$oo() {}
+                    public F$$oo() {}
                 }
 
                 public class FooConsumer
@@ -90,10 +91,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfMethod()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
-                    public void b$ar() { }
+                    public void b$$ar() { }
                 }
 
                 public class FooConsumer
@@ -111,10 +112,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task ExcludesMethodDefinition()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
-                    public void b$ar() { }
+                    public void b$$ar() { }
                 }
 
                 public class FooConsumer
@@ -132,10 +133,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfPublicAutoProperty()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
-                    public string p$rop {get;set;}
+                    public string p$$rop {get;set;}
                 }
 
                 public class FooConsumer
@@ -154,8 +155,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindReferencesOfClass()
         {
-            var source = @"
-                public class F$oo
+            const string source = @"
+                public class F$$oo
                 {
                     public string prop {get;set;}
                 }
@@ -176,14 +177,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task LimitReferenceSearchToThisFile()
         {
-            var sourceA = @"
-                public class F$oo {
+            const string sourceA = @"
+                public class F$$oo {
                 public Foo Clone() {
                     return null;
                 }
             }";
 
-            var sourceB = @"public class Bar : Foo {}";
+            const string sourceB = @"public class Bar : Foo {}";
 
             var usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", false);
             Assert.Equal(3, usages.QuickFixes.Count());
@@ -200,8 +201,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task DontFindDefinitionInAnotherFile()
         {
-            var sourceA = @"public class Bar : F$oo {}";
-            var sourceB = @"public class Foo {
+            const string sourceA = @"public class Bar : F$$oo {}";
+            const string sourceB = @"public class Foo {
                 public Foo Clone() {
                     return null;
                 }
@@ -212,32 +213,34 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
         }
 
-        private FindUsagesRequest CreateRequest(string source, string fileName = "dummy.cs", bool excludeDefinition = false)
+        private static Task<QuickFixResponse> FindUsages(string source, bool excludeDefinition = false)
         {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new FindUsagesRequest
-            {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", ""),
-                OnlyThisFile = false,
-                ExcludeDefinition = excludeDefinition
-            };
+            return FindUsages(new Dictionary<string, string> { { "dummy.cs", source } }, "dummy.cs", false, excludeDefinition);
         }
 
-        private async Task<QuickFixResponse> FindUsages(string source, bool excludeDefinition = false)
+        private static async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
         {
-            return await FindUsages(new Dictionary<string, string> { { "dummy.cs", source } }, "dummy.cs", false, excludeDefinition);
-        }
+            var markup = MarkupCode.Parse(sources[currentFile]);
 
-        private async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
-        {
+            var text = SourceText.From(markup.Code);
+            var line = text.Lines.GetLineFromPosition(markup.Position);
+            var column = markup.Position - line.Start;
+
             var workspace = await TestHelpers.CreateSimpleWorkspace(sources);
             var controller = new FindUsagesService(workspace);
-            var request = CreateRequest(sources[currentFile], currentFile, excludeDefinition);
-            request.OnlyThisFile = onlyThisFile;
+
+            var request = new FindUsagesRequest
+            {
+                Line = line.LineNumber,
+                Column = column,
+                FileName = currentFile,
+                Buffer = markup.Code,
+                OnlyThisFile = onlyThisFile,
+                ExcludeDefinition = excludeDefinition
+            };
+
             await workspace.BufferManager.UpdateBuffer(request);
+
             return await controller.Handle(request);
         }
     }
