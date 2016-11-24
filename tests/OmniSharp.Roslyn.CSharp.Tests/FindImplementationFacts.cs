@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -15,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindInterfaceTypeImplementation()
         {
             var source = @"
-                public interface Som$eInterface {}
+                public interface Som$$eInterface {}
                 public class SomeClass : SomeInterface {}";
 
             var implementations = await FindImplementations(source);
@@ -28,7 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindInterfaceMethodImplementation()
         {
             var source = @"
-                public interface SomeInterface { void Some$Method(); }
+                public interface SomeInterface { void Some$$Method(); }
                 public class SomeClass : SomeInterface {
                     public void SomeMethod() {}
                 }";
@@ -43,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindOverride()
         {
             var source = @"
-                public class BaseClass { public abstract Some$Method() {} }
+                public class BaseClass { public abstract Some$$Method() {} }
                 public class SomeClass : BaseClass
                 {
                     public override SomeMethod() {}
@@ -61,7 +62,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var source = @"
                 public class BaseClass {}
-                public class SomeClass : Base$Class {}";
+                public class SomeClass : Base$$Class {}";
 
             var implementations = await FindImplementations(source);
             var implementation = implementations.First();
@@ -69,28 +70,27 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
+        private static async Task<IEnumerable<ISymbol>> FindImplementations(string input)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new FindImplementationsService(workspace);
-            var request = CreateRequest(source);
+            var markup = MarkupCode.Parse(input);
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            var text = SourceText.From(markup.Code);
+            var line = text.Lines.GetLineFromPosition(markup.Position);
+            var column = markup.Position - line.Start;
+
+            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code);
+            var controller = new FindImplementationsService(workspace);
+
+            var request = new FindImplementationsRequest
+            {
+                Line = line.LineNumber,
+                Column = column,
+                FileName = "dummy.cs",
+                Buffer = markup.Code
+            };
 
             var implementations = await controller.Handle(request);
             return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
         }
-
-        private FindImplementationsRequest CreateRequest(string source, string fileName = "dummy.cs")
-        {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new FindImplementationsRequest {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", "")
-            };
-        }
-
     }
 }
