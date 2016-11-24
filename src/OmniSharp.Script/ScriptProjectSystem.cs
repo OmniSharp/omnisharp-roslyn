@@ -6,50 +6,40 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Common.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.v1;
-using OmniSharp.ScriptCs.Extensions;
+using OmniSharp.Roslyn.Models;
 using OmniSharp.Services;
-using ScriptCs;
-using ScriptCs.Contracts;
-using ScriptCs.Hosting;
-using LogLevel = ScriptCs.Contracts.LogLevel;
 
-namespace OmniSharp.ScriptCs
+namespace OmniSharp.Script
 {
-    [Export(typeof(IProjectSystem))]
-    public class ScriptCsProjectSystem : IProjectSystem
+    [Export(typeof(IProjectSystem)), Shared]
+    public class ScriptProjectSystem : IProjectSystem
     {
-        private static readonly string BaseAssemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
-        CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
-        IEnumerable<MetadataReference> DotNetBaseReferences { get; } = new[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),        // mscorlib
-                MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location),    // systemCore
-                MetadataReference.CreateFromFile(typeof(IScriptHost).Assembly.Location)                  // scriptcsContracts
-            };
-
-        OmnisharpWorkspace Workspace { get; }
-        IOmnisharpEnvironment Env { get; }
-        ScriptCsContext Context { get; }
-        ILogger Logger { get; }
+        private CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
+        private OmnisharpWorkspace Workspace { get; }
+        private IOmnisharpEnvironment Env { get; }
+        private ScriptContext Context { get; }
+        private ILogger Logger { get; }
 
         [ImportingConstructor]
-        public ScriptCsProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptCsContext scriptCsContext)
+        public ScriptProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptContext scriptContext)
         {
             Workspace = workspace;
             Env = env;
-            Context = scriptCsContext;
-            Logger = loggerFactory.CreateLogger<ScriptCsProjectSystem>();
+            Context = scriptContext;
+            Logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
         }
 
-        public string Key { get { return "ScriptCs"; } }
-        public string Language { get { return LanguageNames.CSharp; } }
+        public string Key => "Script";
+        public string Language => LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".csx" };
 
         public void Initalize(IConfiguration configuration)
@@ -67,40 +57,55 @@ namespace OmniSharp.ScriptCs
             Context.RootPath = Env.Path;
             Logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
-            // TODO: write and adapter to implement the new ScriptCs ILogProvider interface
-            #pragma warning disable 0618
-            //script name is added here as a fake one (dir path not even a real file); this is OK though -> it forces MEF initialization
-            var baseScriptServicesBuilder = new ScriptServicesBuilder(new ScriptConsole(), LogManager.GetCurrentClassLogger())
-                    .LogLevel(LogLevel.Debug)
-                    .Cache(false)
-                    .Repl(false)
-                    .ScriptName(Env.Path)
-                    .ScriptEngine<NullScriptEngine>();
+            // explicitly inherit scripting library references to all global script object (InteractiveScriptGlobals) to be recognized
+            var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
+                    x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
 
-            var scriptServices = baseScriptServicesBuilder.Build();
+            var runtimeContexts = File.Exists(Path.Combine(Env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(Env.Path) : null;
 
-            var scriptPacks = scriptServices.ScriptPackResolver.GetPacks().ToList();
-            var assemblyPaths = scriptServices.AssemblyResolver.GetAssemblyPaths(Env.Path);
-
-            // Common usings and references
-            Context.CommonUsings.UnionWith(ScriptExecutor.DefaultNamespaces);
-
-            Context.CommonReferences.UnionWith(DotNetBaseReferences);
-            Context.CommonReferences.UnionWith(scriptServices.MakeMetadataReferences(ScriptExecutor.DefaultReferences));       // ScriptCs defaults
-            Context.CommonReferences.UnionWith(scriptServices.MakeMetadataReferences(assemblyPaths));                        // nuget references
-
-            if (scriptPacks != null && scriptPacks.Any())
+            // if we have no context, then we also have no dependencies
+            // we can assume desktop framework
+            // and add mscorlib
+            if (runtimeContexts?.Any() == false)
             {
-                var scriptPackSession = new ScriptPackSession(scriptPacks, new string[0]);
-                scriptPackSession.InitializePacks();
+                Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location));
+                inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
+                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+            }
+            // otherwise we will grab dependencies for the script from the runtime context
+            else
+            {
+                // assume the first one
+                var runtimeContext = runtimeContexts.First();
+                Logger.LogInformation($"Found script runtime context '{runtimeContext?.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
 
-                //script pack references
-                Context.CommonReferences.UnionWith(scriptServices.MakeMetadataReferences(scriptPackSession.References));
+                var projectExporter = runtimeContext.CreateExporter("Release");
+                var projectDependencies = projectExporter.GetDependencies();
 
-                //script pack usings
-                Context.CommonUsings.UnionWith(scriptPackSession.Namespaces);
+                // let's inject all compilation assemblies needed
+                var compilationAssemblies = projectDependencies.SelectMany(x => x.CompilationAssemblies);
+                foreach (var compilationAssembly in compilationAssemblies)
+                {
+                    Logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
+                    Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationAssembly.ResolvedPath));
+                }
 
-                Context.ScriptPacks.UnionWith(scriptPackSession.Contexts.Select(pack => pack.GetType().ToString()));
+                // for non .NET Core, include System.Runtime
+                if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
+                {
+                    inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
+                            x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+                }
+
+            }
+
+            // inject all inherited assemblies
+            foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
+            {
+                Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
+                Context.CommonReferences.Add(MetadataReference.CreateFromFile(inheritedCompileLib));
             }
 
             // Process each .CSX file
@@ -108,7 +113,7 @@ namespace OmniSharp.ScriptCs
             {
                 try
                 {
-                    CreateCsxProject(csxPath, baseScriptServicesBuilder);
+                    CreateCsxProject(csxPath);
                 }
                 catch (Exception ex)
                 {
@@ -123,7 +128,7 @@ namespace OmniSharp.ScriptCs
         /// Each .csx file is to be wrapped in its own project.
         /// This recursive function does a depth first traversal of the .csx files, following #load references
         /// </summary>
-        private ProjectInfo CreateCsxProject(string csxPath, IScriptServicesBuilder baseBuilder)
+        private ProjectInfo CreateCsxProject(string csxPath)
         {
             // Circular #load chains are not allowed
             if (Context.CsxFilesBeingProcessed.Contains(csxPath))
@@ -137,29 +142,27 @@ namespace OmniSharp.ScriptCs
                 return Context.CsxFileProjects[csxPath];
             }
 
-            // Process the file with ScriptCS first
             Logger.LogInformation($"Processing script {csxPath}...");
             Context.CsxFilesBeingProcessed.Add(csxPath);
-            var localScriptServices = baseBuilder.ScriptName(csxPath).Build();
-            var processResult = localScriptServices.FilePreProcessor.ProcessFile(csxPath);
+
+            var processResult = FileParser.ProcessFile(csxPath, CsxParseOptions);
 
             // CSX file usings
-            Context.CsxUsings[csxPath] = processResult.Namespaces.ToList();
+            Context.CsxUsings[csxPath] = processResult.Namespaces.Union(Context.CommonUsings).ToList();
 
             var compilationOptions = new CSharpCompilationOptions(
                 outputKind: OutputKind.DynamicallyLinkedLibrary,
-                usings: Context.CommonUsings.Union(Context.CsxUsings[csxPath]));
+                usings: Context.CsxUsings[csxPath]);
 
             // #r refernces
-            Context.CsxReferences[csxPath] = localScriptServices.MakeMetadataReferences(processResult.References).ToList();
+            Context.CsxReferences[csxPath] = processResult.References.Select(x => MetadataReference.CreateFromFile(x)).ToList();
 
-            //#load references recursively
             Context.CsxLoadReferences[csxPath] =
                 processResult
                     .LoadedScripts
                     .Distinct()
-                    .Except(new[] { csxPath })
-                    .Select(loadedCsxPath => CreateCsxProject(loadedCsxPath, baseBuilder))
+                    .Except(new[] {csxPath})
+                    .Select(loadedCsxPath => CreateCsxProject(loadedCsxPath))
                     .ToList();
 
             // Create the wrapper project and add it to the workspace
@@ -176,7 +179,7 @@ namespace OmniSharp.ScriptCs
                 metadataReferences: Context.CommonReferences.Union(Context.CsxReferences[csxPath]),
                 projectReferences: Context.CsxLoadReferences[csxPath].Select(p => new ProjectReference(p.Id)),
                 isSubmission: true,
-                hostObjectType: typeof(IScriptHost));
+                hostObjectType: typeof(InteractiveScriptGlobals));
             Workspace.AddProject(project);
             AddFile(csxPath, project.Id);
 
@@ -192,7 +195,6 @@ namespace OmniSharp.ScriptCs
 
             return project;
         }
-
 
         private void AddFile(string filePath, ProjectId projectId)
         {
@@ -217,7 +219,7 @@ namespace OmniSharp.ScriptCs
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
-            return Task.FromResult<object>(new ScriptCsContextModel(Context));
+            return Task.FromResult<object>(new ScriptContextModel(Context));
         }
     }
 }
