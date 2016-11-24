@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
@@ -85,7 +86,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     {
                         public void Whatever()
                         {
-                            Gu$id.NewGuid();
+                            Gu[||]id.NewGuid();
                         }
                     }";
 
@@ -101,7 +102,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 using MyNamespace4;
                 using MyNamespace2;
                 using System;
-                u$sing MyNamespace1;
+                u[||]sing MyNamespace1;
 
                 public class c {public c() {Guid.NewGuid();}}";
 
@@ -122,7 +123,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
               {
                   public void Whatever()
                   {
-                      $Console.Write(""should be using System;"");$
+                      [|Console.Write(""should be using System;"");|]
                   }
               }";
 
@@ -138,7 +139,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                   {
                       public void Whatever()
                       {
-                          $Console.Write(""should be using System;"");$
+                          [|Console.Write(""should be using System;"");|]
                       }
                   }";
 
@@ -169,7 +170,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public void Whatever()
                     {
-                        MyNew$Class.DoSomething();
+                        MyNew[||]Class.DoSomething();
                     }
                 }";
 
@@ -236,9 +237,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return codeActions.Select(a => a.Name);
         }
 
-        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
+        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string input)
         {
-            var request = CreateGetCodeActionsRequest(source);
+            var markup = MarkupCode.Parse(input);
+            var span = markup.GetSpans().Single();
+            var text = SourceText.From(markup.Code);
+            var range = GetRange(text, span);
+
+            var request = new GetCodeActionsRequest
+            {
+                Line = range.Start.Line,
+                Column = range.Start.Column,
+                FileName = BufferPath,
+                Buffer = markup.Code,
+                Selection = range.Start.Equals(range.End) ? null : range
+            };
+
             var workspace = await GetOmniSharpWorkspace(request);
             var codeActions = CreateCodeActionProviders();
 
@@ -263,48 +277,38 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return response;
         }
 
-        private GetCodeActionsRequest CreateGetCodeActionsRequest(string source)
+        private RunCodeActionRequest CreateRunCodeActionRequest(string input, string identifier, bool wantChanges)
         {
-            var range = TestHelpers.GetRangeFromDollars(source);
-
-            return new GetCodeActionsRequest
-            {
-                Line = range.Start.Line,
-                Column = range.Start.Column,
-                FileName = BufferPath,
-                Buffer = source.Replace("$", ""),
-                Selection = GetSelection(range)
-            };
-        }
-
-        private RunCodeActionRequest CreateRunCodeActionRequest(string source, string identifier, bool wantChanges)
-        {
-            var range = TestHelpers.GetRangeFromDollars(source);
-            var selection = GetSelection(range);
+            var markup = MarkupCode.Parse(input);
+            var span = markup.GetSpans().Single();
+            var text = SourceText.From(markup.Code);
+            var range = GetRange(text, span);
 
             return new RunCodeActionRequest
             {
                 Line = range.Start.Line,
                 Column = range.Start.Column,
-                Selection = selection,
+                Selection = range.Start.Equals(range.End) ? null : range,
                 FileName = BufferPath,
-                Buffer = source.Replace("$", ""),
+                Buffer = markup.Code,
                 Identifier = identifier,
                 WantsTextChanges = wantChanges
             };
         }
 
-        private static Range GetSelection(TestHelpers.Range range)
+        private static Range GetRange(SourceText text, TextSpan span)
         {
-            Range selection = null;
-            if (!range.IsEmpty)
-            {
-                var start = new Point { Line = range.Start.Line, Column = range.Start.Column };
-                var end = new Point { Line = range.End.Line, Column = range.End.Column };
-                selection = new Range { Start = start, End = end };
-            }
+            var startLine = text.Lines.GetLineFromPosition(span.Start);
+            var startColumn = span.Start - startLine.Start;
 
-            return selection;
+            var endLine = text.Lines.GetLineFromPosition(span.End);
+            var endColumn = span.End - endLine.Start;
+
+            return new Range
+            {
+                Start = new Point { Line = startLine.LineNumber, Column = startColumn },
+                End = new Point { Line = endLine.LineNumber, Column = endColumn }
+            };
         }
 
         private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
