@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -230,21 +231,28 @@ namespace OmniSharp
     {
         public method1()
         {
-            var c1 = new $classX();
+            var c1 = new $$classX();
         }
     }
 }";
-            var classLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContents));
-            var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContents);
-            var expectedUnresolved = new List<QuickFix>();
-            expectedUnresolved.Add(new QuickFix()
+
+            var markup = MarkupCode.Parse(fileContents);
+            var text = SourceText.From(markup.Code);
+            var line = text.Lines.GetLineFromPosition(markup.Position);
+            var column = markup.Position - line.Start;
+
+            var expectedUnresolved = new List<QuickFix>()
             {
-                Line = classLineColumn.Line,
-                Column = classLineColumn.Column,
-                FileName = fileName,
-                Text = "`classX` is ambiguous"
-            });
-            await AssertUnresolvedReferences(fileContentNoDollarMarker, expectedUnresolved);
+                new QuickFix()
+                {
+                    Line = line.LineNumber,
+                    Column = column,
+                    FileName = fileName,
+                    Text = "`classX` is ambiguous"
+                }
+            };
+
+            await AssertUnresolvedReferences(markup.Code, expectedUnresolved);
         }
 
         [Fact]
