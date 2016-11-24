@@ -392,20 +392,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("n", actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.ElementAt(0).Name);
         }
 
-        private async Task<SignatureHelp> GetSignatureHelp(string input)
+        private async Task<SignatureHelp> GetSignatureHelp(string source)
         {
-            var markup = MarkupCode.Parse(input);
-            var point = markup.Text.GetPointFromPosition(markup.Position);
+            var testFile = new TestFile("dummy.cs", source);
+            var point = testFile.Content.Text.GetPointFromPosition(testFile.Content.Position);
 
             var request = new SignatureHelpRequest()
             {
-                FileName = "dummy.cs",
+                FileName = testFile.FileName,
                 Line = point.Line,
                 Column = point.Offset,
-                Buffer = markup.Code
+                Buffer = testFile.Content.Code
             };
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
             var controller = new SignatureHelpService(workspace);
 
             return await controller.Handle(request);

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
@@ -185,13 +184,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             const string sourceB = @"public class Bar : Foo {}";
 
-            var usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", false);
+            var testFiles = new[]
+            {
+                new TestFile("a.cs", sourceA),
+                new TestFile("b.cs", sourceB)
+            };
+
+            var usages = await FindUsages(testFiles, onlyThisFile: false);
             Assert.Equal(3, usages.QuickFixes.Count());
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(1).FileName);
             Assert.Equal("b.cs", usages.QuickFixes.ElementAt(2).FileName);
 
-            usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", true);
+            usages = await FindUsages(testFiles, onlyThisFile: true);
             Assert.Equal(2, usages.QuickFixes.Count());
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(1).FileName);
@@ -207,35 +212,39 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             }";
 
-            var usages = await FindUsages(new Dictionary<string, string> { { "a.cs", sourceA }, { "b.cs", sourceB } }, "a.cs", true);
+            var testFiles = new[]
+            {
+                new TestFile("a.cs", sourceA),
+                new TestFile("b.cs", sourceB)
+            };
+
+            var usages = await FindUsages(testFiles, onlyThisFile: true);
             Assert.Equal(1, usages.QuickFixes.Count());
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
         }
 
         private static Task<QuickFixResponse> FindUsages(string source, bool excludeDefinition = false)
         {
-            return FindUsages(new Dictionary<string, string> { { "dummy.cs", source } }, "dummy.cs", false, excludeDefinition);
+            return FindUsages(new[] { new TestFile("dummy.cs", source) }, false, excludeDefinition);
         }
 
-        private static async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
+        private static async Task<QuickFixResponse> FindUsages(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false)
         {
-            var markup = MarkupCode.Parse(sources[currentFile]);
-            var point = markup.Text.GetPointFromPosition(markup.Position);
+            var file = testFiles.Single(tf => tf.Content.HasPosition);
+            var point = file.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(sources);
+            var workspace = await TestHelpers.CreateWorkspace(testFiles);
             var controller = new FindUsagesService(workspace);
 
             var request = new FindUsagesRequest
             {
                 Line = point.Line,
                 Column = point.Offset,
-                FileName = currentFile,
-                Buffer = markup.Code,
+                FileName = file.FileName,
+                Buffer = file.Content.Code,
                 OnlyThisFile = onlyThisFile,
                 ExcludeDefinition = excludeDefinition
             };
-
-            await workspace.BufferManager.UpdateBuffer(request);
 
             return await controller.Handle(request);
         }

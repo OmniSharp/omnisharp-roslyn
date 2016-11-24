@@ -12,12 +12,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task OmitsNamespaceForNonRegularCSharpSyntax()
         {
-            var source1 = @"class Foo {}";
+            var source = @"class Foo {}";
 
-            var workspace = TestHelpers.CreateCsxWorkspace(source1);
+            var testFile = new TestFile("dummy.csx", source);
+            var workspace = TestHelpers.CreateCsxWorkspace(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 0, Column = 7 });
+            var response = await controller.Handle(new TypeLookupRequest { FileName = testFile.FileName, Line = 0, Column = 7 });
 
             Assert.Equal("Foo", response.Type);
         }
@@ -25,16 +26,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task OmitsNamespaceForTypesInGlobalNamespace()
         {
-            var source = @"namespace Bar {
+            const string source = @"namespace Bar {
             class Foo {}
             }
             class Baz {}";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var testFile = new TestFile("dummy.cs", source);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var responseInNormalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 1, Column = 19 });
-            var responseInGlobalNamespace = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 3, Column = 19 });
+            var requestInNormalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
+            var responseInNormalNamespace = await controller.Handle(requestInNormalNamespace);
+            var requestInGlobalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 3, Column = 19 };
+            var responseInGlobalNamespace = await controller.Handle(requestInGlobalNamespace);
 
             Assert.Equal("Bar.Foo", responseInNormalNamespace.Type);
             Assert.Equal("Baz", responseInGlobalNamespace.Type);
@@ -43,14 +47,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task IncludesNamespaceForRegularCSharpSyntax()
         {
-            var source1 = @"namespace Bar {
+            const string source = @"namespace Bar {
             class Foo {}
             }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source1);
+            var testFile = new TestFile("dummy.cs", source);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 1, Column = 19 });
+            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
+            var response = await controller.Handle(request);
 
             Assert.Equal("Bar.Foo", response.Type);
         }
@@ -58,16 +64,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task IncludesContainingTypeFoNestedTypesForRegularCSharpSyntax()
         {
-            var source1 = @"namespace Bar {
+            var source = @"namespace Bar {
             class Foo {
                     class Xyz {}
                 }   
             }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source1);
+            var testFile = new TestFile("dummy.cs", source);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = 2, Column = 27 });
+            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 2, Column = 27 };
+            var response = await controller.Handle(request);
 
             Assert.Equal("Bar.Foo.Xyz", response.Type);
         }
@@ -75,19 +83,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task IncludesContainingTypeFoNestedTypesForNonRegularCSharpSyntax()
         {
-            var source1 = @"class Foo {
+            var source = @"class Foo {
                 class Bar {}
             }";
 
-            var workspace = TestHelpers.CreateCsxWorkspace(source1);
+            var testFile = new TestFile("dummy.csx", source);
+            var workspace = TestHelpers.CreateCsxWorkspace(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.csx", Line = 1, Column = 23 });
+            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 23 };
+            var response = await controller.Handle(request);
 
             Assert.Equal("Foo.Bar", response.Type);
         }
 
-        private static string testFile = @"using System;
+        private static TestFile testFile = new TestFile("dummy.cs",
+            @"using System;
             using Bar2;
             using System.Collections.Generic;
             namespace Bar {
@@ -112,16 +123,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 class Foo2 {
                 }
             }
-            ";
+            ");
 
         private static async Task<TypeLookupResponse> GetTypeLookUpResponse(int line, int column)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(testFile);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var response = await controller.Handle(new TypeLookupRequest { FileName = "dummy.cs", Line = line, Column = column });
+            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = line, Column = column };
 
-            return response;
+            return await controller.Handle(request);
         }
 
         [Fact]

@@ -235,8 +235,8 @@ namespace OmniSharp
     }
 }";
 
-            var markup = MarkupCode.Parse(fileContents);
-            var point = markup.Text.GetPointFromPosition(markup.Position);
+            var markup = TestContent.Parse(fileContents);
+            var point = markup.GetPointFromPosition();
 
             var expectedUnresolved = new List<QuickFix>()
             {
@@ -477,8 +477,8 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
         {
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
+            var host = TestHelpers.CreatePlugInHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateWorkspace(host, new TestFile(fileName, fileContents));
 
             var fakeOptions = new FakeOmniSharpOptions();
             fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });

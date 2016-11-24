@@ -715,25 +715,30 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             await AssertEndPosition(fileContent, Direction.Down);
         }
 
-        private async Task AssertEndPosition(string input, Direction direction)
+        private async Task AssertEndPosition(string source, Direction direction)
         {
-            var markup = MarkupCode.Parse(input);
+            var testFile = new TestFile("test.cs", source);
 
-            var start = markup.GetSpans("start").Single().Start;
-            var end = markup.GetSpans("end").Single().Start;
+            var start = testFile.Content.GetSpans("start").Single().Start;
+            var end = testFile.Content.GetSpans("end").Single().Start;
 
-            var startPoint = markup.Text.GetPointFromPosition(start);
-            var endPoint = markup.Text.GetPointFromPosition(end);
+            var startPoint = testFile.Content.Text.GetPointFromPosition(start);
+            var endPoint = testFile.Content.Text.GetPointFromPosition(end);
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, "test.cs");
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
 
-            var response = await SendRequest(workspace, "test.cs", markup.Code, startPoint.Line, startPoint.Offset, direction);
+            var response = await SendRequest(workspace, testFile, startPoint.Line, startPoint.Offset, direction);
 
             Assert.Equal(endPoint.Line, response.Line);
             Assert.Equal(endPoint.Offset, response.Column);
         }
 
-        private static async Task<NavigateResponse> SendRequest(OmnisharpWorkspace workspace, string fileName, string fileContent, int startLine, int startColumn, Direction direction)
+        private static async Task<NavigateResponse> SendRequest(
+            OmnisharpWorkspace workspace,
+            TestFile testFile,
+            int startLine,
+            int startColumn,
+            Direction direction)
         {
             switch (direction)
             {
@@ -744,8 +749,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         {
                             Line = startLine,
                             Column = startColumn,
-                            FileName = fileName,
-                            Buffer = fileContent
+                            FileName = testFile.FileName,
+                            Buffer = testFile.Content.Code
                         };
 
                         return await service.Handle(request);
@@ -758,8 +763,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         {
                             Line = startLine,
                             Column = startColumn,
-                            FileName = fileName,
-                            Buffer = fileContent
+                            FileName = testFile.FileName,
+                            Buffer = testFile.Content.Code
                         };
 
                         return await service.Handle(request);

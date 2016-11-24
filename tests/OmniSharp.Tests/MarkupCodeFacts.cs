@@ -11,7 +11,7 @@ namespace OmniSharp.Tests
         public void NoMarkupHasNoPositionAndNoSpans()
         {
             const string code = "class C { }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
             Assert.Equal(false, markupCode.HasPosition);
@@ -25,7 +25,7 @@ namespace OmniSharp.Tests
         public void PositionAtStartShouldBeZero()
         {
             const string code = "$$class C { }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
             Assert.Equal(true, markupCode.HasPosition);
@@ -36,7 +36,7 @@ namespace OmniSharp.Tests
         public void PositionAtEndShouldBeSameAsCodeLength()
         {
             const string code = "class C { }$$";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
             Assert.Equal(true, markupCode.HasPosition);
@@ -47,7 +47,7 @@ namespace OmniSharp.Tests
         public void PositionWithInterpolatedString()
         {
             const string code = @"class C { string s = $$$""Hello""; }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal(@"class C { string s = $""Hello""; }", markupCode.Code);
             Assert.Equal(true, markupCode.HasPosition);
@@ -58,7 +58,7 @@ namespace OmniSharp.Tests
         public void EmptySpanAtStart()
         {
             const string code = "[||]class C { }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -71,7 +71,7 @@ namespace OmniSharp.Tests
         public void EmptySpanAtEnd()
         {
             const string code = "class C { }[||]";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -84,7 +84,7 @@ namespace OmniSharp.Tests
         public void SpanAroundAllCode()
         {
             const string code = "[|class C { }|]";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -100,7 +100,7 @@ namespace OmniSharp.Tests
         public void SpanAroundInnerCode()
         {
             const string code = "clas[|s C {|] }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -116,7 +116,7 @@ namespace OmniSharp.Tests
         public void EmptyNamedSpanAtStart()
         {
             const string code = "{|test:|}class C { }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -129,7 +129,7 @@ namespace OmniSharp.Tests
         public void EmptyNamedSpanAtEnd()
         {
             const string code = "class C { }{|test:|}";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -142,7 +142,7 @@ namespace OmniSharp.Tests
         public void NamedSpanAroundAllCode()
         {
             const string code = "{|test:class C { }|}";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -158,7 +158,7 @@ namespace OmniSharp.Tests
         public void NamedSpanAroundInnerCode()
         {
             const string code = "clas{|test:s C {|} }";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -174,7 +174,7 @@ namespace OmniSharp.Tests
         public void NestedSpans()
         {
             const string code = "[|clas[|s C {|] }|]";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -194,7 +194,7 @@ namespace OmniSharp.Tests
         public void NestedNamedSpans()
         {
             const string code = "{|test:clas{|test:s C {|} }|}";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 
@@ -214,7 +214,7 @@ namespace OmniSharp.Tests
         public void NestedNamedSpansWithDifferentNames()
         {
             const string code = "{|test1:clas{|test2:s C {|} }|}";
-            var markupCode = MarkupCode.Parse(code);
+            var markupCode = TestContent.Parse(code);
 
             Assert.Equal("class C { }", markupCode.Code);
 

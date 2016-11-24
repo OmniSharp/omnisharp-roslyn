@@ -18,7 +18,7 @@ namespace TestUtility
 {
     public static class TestHelpers
     {
-        public static OmnisharpWorkspace CreateCsxWorkspace(string source, string fileName = "dummy.csx")
+        public static OmnisharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromFile(AssemblyFromType(typeof(object)).Location);
@@ -28,70 +28,60 @@ namespace TestUtility
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
-            var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
+            var parseOptions = new CSharpParseOptions(
+                LanguageVersion.Default,
+                DocumentationMode.Parse,
+                SourceCodeKind.Script);
 
-            var projectId = ProjectId.CreateNewId(Guid.NewGuid().ToString());
-            var project = ProjectInfo.Create(projectId, VersionStamp.Create(), fileName, $"{fileName}.dll", LanguageNames.CSharp, fileName,
-                       compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary), metadataReferences: references, parseOptions: parseOptions,
-                       isSubmission: true);
+            var project = ProjectInfo.Create(
+                id: ProjectId.CreateNewId(),
+                version: VersionStamp.Create(),
+                name: testFile.FileName,
+                assemblyName: $"{testFile.FileName}.dll",
+                language: LanguageNames.CSharp,
+                filePath: testFile.FileName,
+                compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary),
+                metadataReferences: references,
+                parseOptions: parseOptions,
+                isSubmission: true);
 
             workspace.AddProject(project);
-            var document = DocumentInfo.Create(DocumentId.CreateNewId(project.Id), fileName, null, SourceCodeKind.Script, null, fileName)
-                .WithSourceCodeKind(SourceCodeKind.Script)
-                .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(source), VersionStamp.Create())));
+            var documentInfo = DocumentInfo.Create(
+                id: DocumentId.CreateNewId(project.Id),
+                name: testFile.FileName,
+                sourceCodeKind: SourceCodeKind.Script,
+                loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, VersionStamp.Create())),
+                filePath: testFile.FileName);
 
-            workspace.AddDocument(document);
+            workspace.AddDocument(documentInfo);
             return workspace;
         }
 
-        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace()
+        public static Task<OmnisharpWorkspace> CreateWorkspace(params TestFile[] testFiles)
         {
-            return CreateSimpleWorkspace(CreatePluginHost(Array.Empty<Assembly>()), new Dictionary<string, string>());
+            return CreateWorkspace(null, testFiles);
         }
 
-        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
+        public async static Task<OmnisharpWorkspace> CreateWorkspace(CompositionHost plugInHost, params TestFile[] testFiles)
         {
-            return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), new Dictionary<string, string> { { fileName, source } });
-        }
+            plugInHost = plugInHost ?? CreatePlugInHost(new[]
+            {
+                typeof(CodeCheckService).GetTypeInfo().Assembly
+            });
 
-        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, string source, string fileName = "dummy.cs")
-        {
-            return CreateSimpleWorkspace(host, new Dictionary<string, string> { { fileName, source } });
-        }
+            var workspace = plugInHost.GetExport<OmnisharpWorkspace>();
 
-        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(Dictionary<string, string> sourceFiles)
-        {
-            return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), sourceFiles);
-        }
-
-        public async static Task<OmnisharpWorkspace> CreateSimpleWorkspace(CompositionHost host, Dictionary<string, string> sourceFiles)
-        {
-            host = host ?? CreatePluginHost(new[] { typeof(CodeCheckService).GetTypeInfo().Assembly });
-
-            var workspace = host.GetExport<OmnisharpWorkspace>();
-            await AddProjectToWorkspace(workspace, "project.json", new[] { "dnx451", "dnxcore50" }, sourceFiles);
+            await AddProjectToWorkspace(
+                workspace,
+                "project.json",
+                new[] { "dnx451", "dnxcore50" },
+                testFiles);
 
             await Task.Delay(50);
             return workspace;
         }
 
-        public static CompositionHost CreatePluginHost(
-            IEnumerable<Assembly> assemblies,
-            Func<ContainerConfiguration, ContainerConfiguration> configure = null)
-        {
-            return Startup.ConfigureMef(
-                new TestServiceProvider(new FakeLoggerFactory()),
-                new FakeOmniSharpOptions().Value,
-                assemblies,
-                configure);
-        }
-
-        public static CompositionHost CreatePluginHost(IEnumerable<Assembly> assemblies)
-        {
-            return CreatePluginHost(assemblies, configure: null);
-        }
-
-        public static Task<OmnisharpWorkspace> AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, Dictionary<string, string> sourceFiles)
+        public static Task AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
         {
             var versionStamp = VersionStamp.Create();
 
@@ -113,28 +103,46 @@ namespace TestUtility
                 .Distinct()
                 .Select(l => MetadataReference.CreateFromFile(l));
 
+            frameworks = frameworks ?? new[] { string.Empty };
+
             foreach (var framework in frameworks)
             {
                 var projectInfo = ProjectInfo.Create(
-                    ProjectId.CreateNewId(),
-                    versionStamp,
-                    "OmniSharp+" + framework, "AssemblyName",
-                    LanguageNames.CSharp, filePath, metadataReferences: references);
+                    id: ProjectId.CreateNewId(),
+                    version: versionStamp,
+                    name: "OmniSharp+" + framework,
+                    assemblyName: "AssemblyName",
+                    language: LanguageNames.CSharp,
+                    filePath: filePath,
+                    metadataReferences: references);
 
                 workspace.AddProject(projectInfo);
 
-                foreach (var file in sourceFiles)
+                foreach (var testFile in testFiles)
                 {
-                    var document = DocumentInfo.Create(
-                        DocumentId.CreateNewId(projectInfo.Id), file.Key,
-                        null, SourceCodeKind.Regular,
-                        TextLoader.From(TextAndVersion.Create(SourceText.From(file.Value), versionStamp)), file.Key);
+                    var documentInfo = DocumentInfo.Create(
+                        id: DocumentId.CreateNewId(projectInfo.Id),
+                        name: testFile.FileName,
+                        sourceCodeKind: SourceCodeKind.Regular,
+                        loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)),
+                        filePath: testFile.FileName);
 
-                    workspace.AddDocument(document);
+                    workspace.AddDocument(documentInfo);
                 }
             }
 
             return Task.FromResult(workspace);
+        }
+
+        public static CompositionHost CreatePlugInHost(
+            IEnumerable<Assembly> assemblies,
+            Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+        {
+            return Startup.ConfigureMef(
+                new TestServiceProvider(new FakeLoggerFactory()),
+                new FakeOmniSharpOptions().Value,
+                assemblies ?? Array.Empty<Assembly>(),
+                configure);
         }
 
         private static Assembly AssemblyFromType(Type type)

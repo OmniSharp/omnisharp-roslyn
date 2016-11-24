@@ -20,7 +20,7 @@ namespace TestUtility
     /// This is similar the MarkupTestFile used in Roslyn:
     ///     https://github.com/dotnet/roslyn/blob/master/src/Test/Utilities/Shared/MarkedSource/MarkupTestFile.cs
     /// </summary>
-    public class MarkupCode
+    public class TestContent
     {
         private int? position;
         private ImmutableDictionary<string, ImmutableList<TextSpan>> spans;
@@ -32,7 +32,17 @@ namespace TestUtility
         public int Position => this.position.Value;
         public bool HasPosition => this.position.HasValue;
 
-        private MarkupCode(string code, int? position, ImmutableDictionary<string, ImmutableList<TextSpan>> spans)
+        public TextPoint GetPointFromPosition()
+        {
+            return this.Text.GetPointFromPosition(this.Position);
+        }
+
+        public TextRange GetRangeFromSpan(TextSpan span)
+        {
+            return this.Text.GetRangeFromSpan(span);
+        }
+
+        private TestContent(string code, int? position, ImmutableDictionary<string, ImmutableList<TextSpan>> spans)
         {
             this.Code = code;
             this.position = position;
@@ -60,7 +70,7 @@ namespace TestUtility
             return ImmutableList<TextSpan>.Empty;
         }
 
-        public static MarkupCode Parse(string input)
+        public static TestContent Parse(string input)
         {
             var markupLength = input.Length;
             var codeBuilder = new StringBuilder(markupLength);
@@ -185,7 +195,7 @@ namespace TestUtility
                 keySelector: kvp => kvp.Key,
                 elementSelector: kvp => kvp.Value.ToImmutableList().Sort());
 
-            return new MarkupCode(codeBuilder.ToString(), position, finalSpans);
+            return new TestContent(codeBuilder.ToString(), position, finalSpans);
         }
 
         private static void AddSpan(Dictionary<string, List<TextSpan>> spans, string spanName, int spanStart, int spanEnd)

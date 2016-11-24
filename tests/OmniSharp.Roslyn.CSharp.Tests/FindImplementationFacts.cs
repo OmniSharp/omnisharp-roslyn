@@ -14,7 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindInterfaceTypeImplementation()
         {
-            var source = @"
+            const string source = @"
                 public interface Som$$eInterface {}
                 public class SomeClass : SomeInterface {}";
 
@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindInterfaceMethodImplementation()
         {
-            var source = @"
+            const string source = @"
                 public interface SomeInterface { void Some$$Method(); }
                 public class SomeClass : SomeInterface {
                     public void SomeMethod() {}
@@ -42,7 +42,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindOverride()
         {
-            var source = @"
+            const string source = @"
                 public class BaseClass { public abstract Some$$Method() {} }
                 public class SomeClass : BaseClass
                 {
@@ -59,7 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindSubclass()
         {
-            var source = @"
+            const string source = @"
                 public class BaseClass {}
                 public class SomeClass : Base$$Class {}";
 
@@ -71,18 +71,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private static async Task<IEnumerable<ISymbol>> FindImplementations(string input)
         {
-            var markup = MarkupCode.Parse(input);
-            var point = markup.Text.GetPointFromPosition(markup.Position);
+            var testFile = new TestFile("dummy.cs", input);
+            var point = testFile.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
             var controller = new FindImplementationsService(workspace);
 
             var request = new FindImplementationsRequest
             {
                 Line = point.Line,
                 Column = point.Offset,
-                FileName = "dummy.cs",
-                Buffer = markup.Code
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code
             };
 
             var implementations = await controller.Handle(request);

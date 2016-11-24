@@ -122,9 +122,10 @@ class C {
         [Fact]
         public async Task FormatRespectsIndentationSize()
         {
-            var source = "namespace Bar\n{\n    class Foo {}\n}";
+            const string source = "namespace Bar\n{\n    class Foo {}\n}";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var testFile = new TestFile("dummy.cs", source);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
             var controller = new CodeFormatService(workspace,
                 new FormattingOptions
                 {
@@ -135,7 +136,7 @@ class C {
             var result = await controller.Handle(
                 new CodeFormatRequest
                 {
-                    FileName = "dummy.cs"
+                    FileName = testFile.FileName
                 });
 
             Assert.Equal("namespace Bar\n{\n class Foo { }\n}", result.Buffer);
@@ -143,20 +144,32 @@ class C {
 
         private static void AssertFormatTargetKind(SyntaxKind kind, string input)
         {
-            var markup = MarkupCode.Parse(input);
-            var tree = SyntaxFactory.ParseSyntaxTree(markup.Code);
+            var content = TestContent.Parse(input);
+            var tree = SyntaxFactory.ParseSyntaxTree(content.Code);
             var root = tree.GetRoot();
 
-            var target = FormattingWorker.FindFormatTarget(root, markup.Position);
+            var target = FormattingWorker.FindFormatTarget(root, content.Position);
 
             Assert.Equal(kind, target.Kind());
         }
 
         private static async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
         {
-            var request = CreateRequest(source);
+            var testFile = new TestFile("dummy.cs", source);
+            var span = testFile.Content.GetSpans().Single();
+            var range = testFile.Content.GetRangeFromSpan(span);
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(request.Buffer, request.FileName);
+            var request = new FormatRangeRequest()
+            {
+                Buffer = testFile.Content.Code,
+                FileName = testFile.FileName,
+                Line = range.Start.Line,
+                Column = range.Start.Offset,
+                EndLine = range.End.Line,
+                EndColumn = range.End.Offset
+            };
+
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
             var controller = new FormatRangeService(workspace, new FormattingOptions());
 
             var response = await controller.Handle(request);
@@ -172,23 +185,6 @@ class C {
                 Assert.Equal(expected[i].EndLine, actual[i].EndLine);
                 Assert.Equal(expected[i].EndColumn, actual[i].EndColumn);
             }
-        }
-
-        private static FormatRangeRequest CreateRequest(string input)
-        {
-            var markup = MarkupCode.Parse(input);
-            var span = markup.GetSpans().Single();
-            var range = markup.Text.GetRangeFromSpan(span);
-
-            return new FormatRangeRequest()
-            {
-                Buffer = markup.Code,
-                FileName = "a.cs",
-                Line = range.Start.Line,
-                Column = range.Start.Offset,
-                EndLine = range.End.Line,
-                EndColumn = range.End.Offset
-            };
         }
     }
 }

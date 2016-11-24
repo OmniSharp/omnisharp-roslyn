@@ -46,20 +46,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(0, regions.QuickFixes.Count());
         }
 
-        private async Task<QuickFixResponse> FindRegions(string input)
+        private async Task<QuickFixResponse> FindRegions(string source)
         {
-            var markup = MarkupCode.Parse(input);
-            var point = markup.Text.GetPointFromPosition(markup.Position);
+            var testFile = new TestFile("dummy.cs", source);
+            var point = testFile.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
             var controller = new GotoRegionService(workspace);
 
             var request = new GotoRegionRequest
             {
                 Line = point.Line,
                 Column = point.Offset,
-                FileName = "dummy.cs",
-                Buffer = markup.Code
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code
             };
 
             return await controller.Handle(request);

@@ -15,56 +15,57 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected AbstractAutoCompleteTests()
         {
-            _plugInHost = TestHelpers.CreatePluginHost(new[]
+            _plugInHost = TestHelpers.CreatePlugInHost(new[]
             {
                 typeof(IntellisenseService).GetTypeInfo().Assembly
             });
         }
 
-        protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string input, AutoCompleteRequest request = null, bool wantSnippet = false)
+        protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null, bool wantSnippet = false)
         {
-            var markup = MarkupCode.Parse(input);
+            var testFile = new TestFile("dummy.cs", source);
+            var markup = TestContent.Parse(source);
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(_plugInHost, markup.Code);
+            var workspace = await TestHelpers.CreateWorkspace(_plugInHost, testFile);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
 
             if (request == null)
             {
-                request = CreateRequest(input, wantSnippet: wantSnippet);
+                request = CreateRequest(source, wantSnippet: wantSnippet);
             }
 
             return await controller.Handle(request);
         }
 
-        protected AutoCompleteRequest CreateRequest(string input, string fileName = "dummy.cs", bool wantSnippet = false)
+        protected AutoCompleteRequest CreateRequest(string source, bool wantSnippet = false)
         {
-            var markup = MarkupCode.Parse(input);
-            var point = markup.Text.GetPointFromPosition(markup.Position);
+            var testFile = new TestFile("dummy.cs", source);
+            var point = testFile.Content.GetPointFromPosition();
 
             return new AutoCompleteRequest
             {
                 Line = point.Line,
                 Column = point.Offset,
-                FileName = fileName,
-                Buffer = markup.Code,
-                WordToComplete = GetPartialWord(markup),
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code,
+                WordToComplete = GetPartialWord(testFile.Content),
                 WantMethodHeader = true,
                 WantSnippet = wantSnippet,
                 WantReturnType = true
             };
         }
 
-        private static string GetPartialWord(MarkupCode markup)
+        private static string GetPartialWord(TestContent testConnect)
         {
-            if (!markup.HasPosition || markup.Position == 0)
+            if (!testConnect.HasPosition || testConnect.Position == 0)
             {
                 return string.Empty;
             }
 
-            var index = markup.Position;
+            var index = testConnect.Position;
             while (index >= 1)
             {
-                var ch = markup.Code[index - 1];
+                var ch = testConnect.Code[index - 1];
                 if (ch != '_' && !char.IsLetterOrDigit(ch))
                 {
                     break;
@@ -73,7 +74,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 index--;
             }
 
-            return markup.Code.Substring(index, markup.Position - index);
+            return testConnect.Code.Substring(index, testConnect.Position - index);
         }
     }
 }

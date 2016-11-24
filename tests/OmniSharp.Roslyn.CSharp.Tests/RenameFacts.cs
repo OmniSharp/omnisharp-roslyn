@@ -23,20 +23,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
                         }";
 
-            const string fileName = "test.cs";
 
-            var markup = MarkupCode.Parse(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, fileName);
-            var result = await PerformRename(workspace, "foo", fileName, markup, applyTextChanges: true);
+            var testFile = new TestFile("test.cs", fileContent);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var result = await PerformRename(workspace, "foo", testFile, applyTextChanges: true);
 
-            var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(fileName).First();
+            var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFile.FileName).First();
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
 
             //compare workspace change with response
             Assert.Equal(result.Changes.First().Buffer, sourceText.ToString());
 
             //check that response refers to correct modified file
-            Assert.Equal(result.Changes.First().FileName, fileName);
+            Assert.Equal(result.Changes.First().FileName, testFile.FileName);
 
             //check response for change
             Assert.Equal(@"using System;
@@ -63,53 +62,55 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
                         }";
 
-            const string fileName = "test.cs";
+            var testFile = new TestFile("test.cs", fileContent);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var result = await PerformRename(workspace, "foo", testFile, applyTextChanges: false);
 
-            var markup = MarkupCode.Parse(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, fileName);
-            var result = await PerformRename(workspace, "foo", fileName, markup, applyTextChanges: false);
-
-            var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test.cs").First();
+            var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFile.FileName).First();
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
 
             // check that the workspace has not been updated
-            Assert.Equal(markup.Code, sourceText.ToString());
+            Assert.Equal(testFile.Content.Code, sourceText.ToString());
         }
 
         [Fact]
         public async Task Rename_UpdatesMultipleDocumentsIfNecessary()
         {
             const string file1 = "public class F$$oo {}";
-            const string fileName1 = "test1.cs";
 
             const string file2 = @"public class Bar {
                                     public Foo Property {get; set;}
                                 }";
-            const string fileName2 = "test2.cs";
 
-            var file1Markup = MarkupCode.Parse(file1);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { fileName1, file1 }, { fileName2, file2 } });
-            var result = await PerformRename(workspace, "xxx", fileName1, file1Markup);
+            var testFiles = new[]
+            {
+                new TestFile("test1.cs", file1),
+                new TestFile("test2.cs", file2)
+            };
 
-            var doc1Id = workspace.CurrentSolution.GetDocumentIdsWithFilePath(fileName1).First();
-            var doc2Id = workspace.CurrentSolution.GetDocumentIdsWithFilePath(fileName2).First();
+            var workspace = await TestHelpers.CreateWorkspace(testFiles);
+
+            var result = await PerformRename(workspace, "xxx", testFiles[0]);
+
+            var doc1Id = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFiles[0].FileName).First();
+            var doc2Id = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFiles[1].FileName).First();
             var source1Text = await workspace.CurrentSolution.GetDocument(doc1Id).GetTextAsync();
             var source2Text = await workspace.CurrentSolution.GetDocument(doc2Id).GetTextAsync();
 
             //compare workspace change with response for file 1
-            Assert.Equal(result.Changes.ElementAt(0).Buffer, source1Text.ToString());
+            Assert.Equal(source1Text.ToString(), result.Changes.ElementAt(0).Buffer);
 
             //check that response refers to modified file 1
-            Assert.Equal(result.Changes.ElementAt(0).FileName, "test1.cs");
+            Assert.Equal(testFiles[0].FileName, result.Changes.ElementAt(0).FileName);
 
             //check response for change in file 1
             Assert.Equal(@"public class xxx {}", result.Changes.ElementAt(0).Buffer);
 
             //compare workspace change with response for file 2
-            Assert.Equal(result.Changes.ElementAt(1).Buffer, source2Text.ToString());
+            Assert.Equal(source2Text.ToString(), result.Changes.ElementAt(1).Buffer);
 
             //check that response refers to modified file 2
-            Assert.Equal(result.Changes.ElementAt(1).FileName, "test2.cs");
+            Assert.Equal(testFiles[1].FileName, result.Changes.ElementAt(1).FileName);
 
             //check response for change in file 2
             Assert.Equal(@"public class Bar {
@@ -121,16 +122,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Rename_UpdatesMultipleDocumentsIfNecessaryAndProducesTextChangesIfAsked()
         {
             const string file1 = "public class F$$oo {}";
-            const string fileName1 = "test1.cs";
-
             const string file2 = @"public class Bar {
                                     public Foo Property {get; set;}
                                 }";
-            const string fileName2 = "test2.cs";
 
-            var file1Markup = MarkupCode.Parse(file1);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> { { fileName1, file1 }, { fileName2, file2 } });
-            var result = await PerformRename(workspace, "xxx", fileName1, file1Markup, wantsTextChanges: true);
+            var testFiles = new[]
+            {
+                new TestFile("test1.cs", file1),
+                new TestFile("test2.cs", file2)
+            };
+
+            var workspace = await TestHelpers.CreateWorkspace(testFiles);
+            var result = await PerformRename(workspace, "xxx", testFiles[0], wantsTextChanges: true);
 
             Assert.Equal(2, result.Changes.Count());
             Assert.Equal(1, result.Changes.ElementAt(0).Changes.Count());
@@ -154,14 +157,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Rename_DoesTheRightThingWhenDocumentIsNotFound()
         {
             const string fileContent = "class f$$oo{}";
-            const string fileName = "test.cs";
 
-            var markup = MarkupCode.Parse(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace();
-            var result = await PerformRename(workspace, "xxx", fileName, markup);
+            var testFile = new TestFile("test.cs", fileContent);
+            var workspace = await TestHelpers.CreateWorkspace();
+            var result = await PerformRename(workspace, "xxx", testFile, updateBuffer: true);
 
             Assert.Equal(1, result.Changes.Count());
-            Assert.Equal(fileName, result.Changes.ElementAt(0).FileName);
+            Assert.Equal(testFile.FileName, result.Changes.ElementAt(0).FileName);
         }
 
         [Fact]
@@ -176,18 +178,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Guid.New$$Guid();
                     }
                 }";
-            const string fileName = "test.cs";
 
-            var markup = MarkupCode.Parse(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, fileName);
-            var result = await PerformRename(workspace, "foo", fileName, markup);
+            var testFile = new TestFile("test.cs", fileContent);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var result = await PerformRename(workspace, "foo", testFile);
 
             Assert.Equal(0, result.Changes.Count());
             Assert.NotNull(result.ErrorMessage);
         }
 
         [Fact]
-        public async Task Rename_DoesNotDuplicateRenamesWithMultipleFrameowrks()
+        public async Task Rename_DoesNotDuplicateRenamesWithMultipleFrameworks()
         {
             const string fileContent = @"
                 using System;
@@ -198,41 +199,43 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Console.Write(aBoolean);
                     }
                 }";
-            const string fileName = "test.cs";
 
-            var markup = MarkupCode.Parse(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, fileName);
-            var result = await PerformRename(workspace, "foo", fileName, markup, wantsTextChanges: true);
+            var testFile = new TestFile("test.cs", fileContent);
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var result = await PerformRename(workspace, "foo", testFile, wantsTextChanges: true);
 
             Assert.Equal(1, result.Changes.Count());
-            Assert.Equal("test.cs", result.Changes.ElementAt(0).FileName);
+            Assert.Equal(testFile.FileName, result.Changes.ElementAt(0).FileName);
             Assert.Equal(2, result.Changes.ElementAt(0).Changes.Count());
         }
 
         private static async Task<RenameResponse> PerformRename(
             OmnisharpWorkspace workspace,
             string renameTo,
-            string fileName,
-            MarkupCode fileContent,
+            TestFile activeFile,
             bool wantsTextChanges = false,
-            bool applyTextChanges = true)
+            bool applyTextChanges = true,
+            bool updateBuffer = false)
         {
-            var point = fileContent.Text.GetPointFromPosition(fileContent.Position);
+            var point = activeFile.Content.GetPointFromPosition();
 
             var request = new RenameRequest
             {
                 Line = point.Line,
                 Column = point.Offset,
                 RenameTo = renameTo,
-                FileName = fileName,
-                Buffer = fileContent.Code,
+                FileName = activeFile.FileName,
+                Buffer = activeFile.Content.Code,
                 WantsTextChanges = wantsTextChanges,
                 ApplyTextChanges = applyTextChanges
             };
 
             var controller = new RenameService(workspace);
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            if (updateBuffer)
+            {
+                await workspace.BufferManager.UpdateBuffer(request);
+            }
 
             return await controller.Handle(request);
         }
