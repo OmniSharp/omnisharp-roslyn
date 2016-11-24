@@ -50,34 +50,6 @@ namespace TestUtility
             public bool IsEmpty { get { return Start.Equals(End); } }
         }
 
-        public static Range GetRangeFromDollars(string text)
-        {
-            var start = GetLineAndColumnFromFirstOccurence(text, "$");
-            var end = GetLineAndColumnFromLastOccurence(text, "$");
-
-            return new Range(start, end);
-        }
-
-        private static LineColumn GetLineAndColumnFromFirstOccurence(string text, string marker)
-        {
-            var indexOfChar = text.IndexOf(marker);
-            CheckIndex(indexOfChar, marker);
-            return GetLineAndColumnFromIndex(text, indexOfChar);
-        }
-
-        private static LineColumn GetLineAndColumnFromLastOccurence(string text, string marker)
-        {
-            var indexOfChar = text.LastIndexOf(marker);
-            CheckIndex(indexOfChar, marker);
-            return GetLineAndColumnFromIndex(text, indexOfChar);
-        }
-
-        private static void CheckIndex(int index, string marker)
-        {
-            if (index == -1)
-                throw new ArgumentException(string.Format("Expected a {0} in test input", marker));
-        }
-
         public static LineColumn GetLineAndColumnFromIndex(string text, int index)
         {
             int lineCount = 0, lastLineEnd = -1;
