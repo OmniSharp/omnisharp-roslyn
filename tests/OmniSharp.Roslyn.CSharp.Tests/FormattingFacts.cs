@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
@@ -12,21 +13,20 @@ using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-
     public class FormattingFacts
     {
         [Fact]
         public void FindFormatTargetAtCurly()
         {
-            AssertFormatTargetKind(SyntaxKind.ClassDeclaration, @"class C {}$");
-            AssertFormatTargetKind(SyntaxKind.InterfaceDeclaration, @"interface I {}$");
-            AssertFormatTargetKind(SyntaxKind.EnumDeclaration, @"enum E {}$");
-            AssertFormatTargetKind(SyntaxKind.StructDeclaration, @"struct S {}$");
-            AssertFormatTargetKind(SyntaxKind.NamespaceDeclaration, @"namespace N {}$");
+            AssertFormatTargetKind(SyntaxKind.ClassDeclaration, @"class C {}$$");
+            AssertFormatTargetKind(SyntaxKind.InterfaceDeclaration, @"interface I {}$$");
+            AssertFormatTargetKind(SyntaxKind.EnumDeclaration, @"enum E {}$$");
+            AssertFormatTargetKind(SyntaxKind.StructDeclaration, @"struct S {}$$");
+            AssertFormatTargetKind(SyntaxKind.NamespaceDeclaration, @"namespace N {}$$");
 
             AssertFormatTargetKind(SyntaxKind.MethodDeclaration, @"
 class C {
-    public void M(){}$
+    public void M(){}$$
 }");
             AssertFormatTargetKind(SyntaxKind.ObjectInitializerExpression, @"
 class C {
@@ -35,14 +35,14 @@ class C {
         new T() {
             A = 6,
             B = 7
-        }$
+        }$$
     }
 }");
             AssertFormatTargetKind(SyntaxKind.ForStatement, @"
 class C {
     public void M ()
     {
-        for(;;){}$
+        for(;;){}$$
     }
 }");
         }
@@ -53,20 +53,20 @@ class C {
 
             AssertFormatTargetKind(SyntaxKind.FieldDeclaration, @"
 class C {
-    private int F;$
+    private int F;$$
 }");
             AssertFormatTargetKind(SyntaxKind.LocalDeclarationStatement, @"
 class C {
     public void M()
     {
-        var a = 1234;$
+        var a = 1234;$$
     }
 }");
             AssertFormatTargetKind(SyntaxKind.ReturnStatement, @"
 class C {
     public int M()
     {
-        return 1234;$
+        return 1234;$$
     }
 }");
 
@@ -74,51 +74,17 @@ class C {
 class C {
     public void M ()
     {
-        for(var i = 0;$)
+        for(var i = 0;$$) {}
     }
 }");
             AssertFormatTargetKind(SyntaxKind.ForStatement, @"
 class C {
     public void M ()
     {
-        for(var i = 0;$) {}
-    }
-}");
-            AssertFormatTargetKind(SyntaxKind.ForStatement, @"
-class C {
-    public void M ()
-    {
-        for(var i = 0; i < 8;$)
+        for(var i = 0; i < 8;$$)
     }
 }");
         }
-
-        private void AssertFormatTargetKind(SyntaxKind kind, string source)
-        {
-            var tuple = GetRootAndOffset(source);
-            var target = FormattingWorker.FindFormatTarget(tuple.Item1, tuple.Item2);
-            if (target == null)
-            {
-                Assert.Null(kind);
-            }
-            else
-            {
-                Assert.Equal(kind, target.Kind());
-            }
-        }
-
-        private Tuple<SyntaxNode, int> GetRootAndOffset(string value)
-        {
-            var idx = value.IndexOf('$');
-            if (idx <= 0)
-            {
-                Assert.True(false);
-            }
-            value = value.Remove(idx, 1);
-            idx = idx - 1;
-            return Tuple.Create(CSharpSyntaxTree.ParseText(value).GetRoot(), idx);
-        }
-
 
         [Fact]
         public async Task TextChangesAreSortedLastFirst_SingleLine()
@@ -128,7 +94,7 @@ class C {
                 "class Program",
                 "{",
                 "    public static void Main(){",
-                ">       Thread.Sleep( 25000);<",
+                "[|       Thread.Sleep( 25000);|]",
                 "    }",
                 "}",
             };
@@ -145,8 +111,8 @@ class C {
             {
                 "class Program",
                 "{",
-                "    public static void Main()>{",
-                "       Thread.Sleep( 25000);<",
+                "    public static void Main()[|{",
+                "       Thread.Sleep( 25000);|]",
                 "    }",
                 "}",
             };
@@ -156,28 +122,48 @@ class C {
                 new LinePositionSpanTextChange { StartLine = 2, StartColumn = 30, EndLine = 3, EndColumn = 0, NewText = "\n " });
         }
 
-        private static FormatRangeRequest NewRequest(string source)
+        [Fact]
+        public async Task FormatRespectsIndentationSize()
         {
-            var startLoc = TestHelpers.GetLineAndColumnFromIndex(source, source.IndexOf(">"));
-            source = source.Replace(">", string.Empty);
-            var endLoc = TestHelpers.GetLineAndColumnFromIndex(source, source.IndexOf("<"));
-            source = source.Replace("<", string.Empty);
+            var source = "namespace Bar\n{\n    class Foo {}\n}";
 
-            return new FormatRangeRequest()
-            {
-                Buffer = source,
-                FileName = "a.cs",
-                Line = startLoc.Line,
-                Column = startLoc.Column,
-                EndLine = endLoc.Line,
-                EndColumn = endLoc.Column
-            };
+            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var controller = new CodeFormatService(workspace,
+                new FormattingOptions
+                {
+                    NewLine = "\n",
+                    IndentationSize = 1
+                });
+
+            var result = await controller.Handle(
+                new CodeFormatRequest
+                {
+                    FileName = "dummy.cs"
+                });
+
+            Assert.Equal("namespace Bar\n{\n class Foo { }\n}", result.Buffer);
+        }
+
+        private static void AssertFormatTargetKind(SyntaxKind kind, string input)
+        {
+            var markup = MarkupCode.Parse(input);
+            var tree = SyntaxFactory.ParseSyntaxTree(markup.Code);
+            var root = tree.GetRoot();
+
+            var target = FormattingWorker.FindFormatTarget(root, markup.Position);
+
+            Assert.Equal(kind, target.Kind());
         }
 
         private static async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
         {
-            var request = NewRequest(source);
-            var actual = await FormattingChangesForRange(request);
+            var request = CreateRequest(source);
+
+            var workspace = await TestHelpers.CreateSimpleWorkspace(request.Buffer, request.FileName);
+            var controller = new FormatRangeService(workspace, new FormattingOptions());
+
+            var response = await controller.Handle(request);
+            var actual = response.Changes.ToArray();
 
             Assert.Equal(expected.Length, actual.Length);
 
@@ -191,33 +177,27 @@ class C {
             }
         }
 
-        private static async Task<LinePositionSpanTextChange[]> FormattingChangesForRange(FormatRangeRequest request)
+        private static FormatRangeRequest CreateRequest(string input)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(request.Buffer, request.FileName);
-            var controller = new FormatRangeService(workspace, new FormattingOptions());
+            var markup = MarkupCode.Parse(input);
+            var span = markup.GetSpans().Single();
+            var text = SourceText.From(markup.Code);
 
-            var response = await controller.Handle(request);
-            return response.Changes.ToArray();
-        }
+            var startLine = text.Lines.GetLineFromPosition(span.Start);
+            var startColumn = span.Start - startLine.Start;
 
-        [Fact]
-        public async Task FormatRespectsIndentationSize()
-        {
-            var source = "namespace Bar\n{\n    class Foo {}\n}";
+            var endLine = text.Lines.GetLineFromPosition(span.End);
+            var endColumn = span.End - endLine.Start;
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new CodeFormatService(workspace, new FormattingOptions
+            return new FormatRangeRequest()
             {
-                NewLine = "\n",
-                IndentationSize = 1
-            });
-
-            var result = await controller.Handle(new CodeFormatRequest
-            {
-                FileName = "dummy.cs"
-            });
-
-            Assert.Equal("namespace Bar\n{\n class Foo { }\n}", result.Buffer);
+                Buffer = markup.Code,
+                FileName = "a.cs",
+                Line = startLine.LineNumber,
+                Column = startColumn,
+                EndLine = endLine.LineNumber,
+                EndColumn = endColumn
+            };
         }
     }
 }

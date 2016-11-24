@@ -100,6 +100,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             // todo@jo - refine this
             var token = root.FindToken(position);
 
+            if (token.IsKind(SyntaxKind.EndOfFileToken))
+            {
+                token = token.GetPreviousToken();
+            }
+
             switch (token.Kind())
             {
                 // ; -> use the statement
@@ -113,6 +118,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                     return parent.IsKind(SyntaxKind.Block)
                         ? parent.Parent
                         : parent;
+
+                case SyntaxKind.CloseParenToken:
+                    if (token.GetPreviousToken().IsKind(SyntaxKind.SemicolonToken) &&
+                        token.Parent.IsKind(SyntaxKind.ForStatement))
+                    {
+                        return token.Parent;
+                    }
+
+                    break;
             }
 
             return null;
