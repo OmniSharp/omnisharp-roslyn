@@ -18,51 +18,6 @@ namespace TestUtility
 {
     public static class TestHelpers
     {
-        public class LineColumn
-        {
-            public int Line { get; private set; }
-            public int Column { get; private set; }
-
-            public LineColumn(int line, int column)
-            {
-                Line = line;
-                Column = column;
-            }
-
-            public bool Equals(LineColumn other)
-            {
-                return this.Line.Equals(other.Line) &&
-                       this.Column.Equals(other.Column);
-            }
-        }
-
-        public class Range
-        {
-            public LineColumn Start { get; private set; }
-            public LineColumn End { get; private set; }
-
-            public Range(LineColumn start, LineColumn end)
-            {
-                Start = start;
-                End = end;
-            }
-
-            public bool IsEmpty { get { return Start.Equals(End); } }
-        }
-
-        public static LineColumn GetLineAndColumnFromIndex(string text, int index)
-        {
-            int lineCount = 0, lastLineEnd = -1;
-            for (int i = 0; i < index; i++)
-                if (text[i] == '\n')
-                {
-                    lineCount++;
-                    lastLineEnd = i;
-                }
-
-            return new LineColumn(lineCount, index - 1 - lastLineEnd);
-        }
-
         public static OmnisharpWorkspace CreateCsxWorkspace(string source, string fileName = "dummy.csx")
         {
             var versionStamp = VersionStamp.Create();
