@@ -50,22 +50,12 @@ namespace TestUtility
             public bool IsEmpty { get { return Start.Equals(End); } }
         }
 
-        public static LineColumn GetLineAndColumnFromDollar(string text)
-        {
-            return GetLineAndColumnFromFirstOccurence(text, "$");
-        }
-
         public static Range GetRangeFromDollars(string text)
         {
             var start = GetLineAndColumnFromFirstOccurence(text, "$");
             var end = GetLineAndColumnFromLastOccurence(text, "$");
 
             return new Range(start, end);
-        }
-
-        public static LineColumn GetLineAndColumnFromPercent(string text)
-        {
-            return GetLineAndColumnFromFirstOccurence(text, "%");
         }
 
         private static LineColumn GetLineAndColumnFromFirstOccurence(string text, string marker)
@@ -99,16 +89,6 @@ namespace TestUtility
                 }
 
             return new LineColumn(lineCount, index - 1 - lastLineEnd);
-        }
-
-        public static string RemovePercentMarker(string fileContent)
-        {
-            return fileContent.Replace("%", "");
-        }
-
-        public static string RemoveDollarMarker(string fileContent)
-        {
-            return fileContent.Replace("$", "");
         }
 
         public static OmnisharpWorkspace CreateCsxWorkspace(string source, string fileName = "dummy.csx")
