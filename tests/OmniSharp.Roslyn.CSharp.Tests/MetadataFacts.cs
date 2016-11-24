@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
@@ -12,7 +11,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class MetadataFacts
     {
-        private readonly TestAssistant _assistant = new TestAssistant();
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmnisharpAssemblyLoader _loader;
@@ -97,10 +95,10 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = _assistant.CreateWorkspace(
-                new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
                 {
-                    { "foo.cs", source1 }, { "bar.cs", source2 }
+                    new TestFile("foo.cs", source1),
+                    new TestFile("bar.cs", source2)
                 });
 
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
