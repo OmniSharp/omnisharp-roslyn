@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.DotNet.ProjectModel.Graph;
+using OmniSharp.DotNet.Projects;
 
 namespace OmniSharp.DotNet
 {
-
     public class DotNetWorkspace : Workspace
     {
         private readonly HashSet<string> _projects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -16,13 +15,9 @@ namespace OmniSharp.DotNet
 
         public DotNetWorkspace(string initialPath) : base(ProjectReaderSettings.ReadFromEnvironment(), true)
         {
-            var paths = ResolveProjectPath(initialPath);
-            if (paths != null && paths.Any())
+            foreach (var path in ProjectSearcher.Search(initialPath))
             {
-                foreach (var path in paths)
-                {
-                    AddProject(path);
-                }
+                AddProject(path);
             }
         }
 
@@ -50,7 +45,7 @@ namespace OmniSharp.DotNet
         public IReadOnlyList<ProjectContext> GetProjectContexts(string projectPath)
         {
             return (IReadOnlyList<ProjectContext>)GetProjectContextCollection(projectPath)?.ProjectContexts.AsReadOnly() ??
-                   Enumerable.Empty<ProjectContext>().ToList().AsReadOnly();
+                   Array.Empty<ProjectContext>();
         }
 
         /// <summary>
@@ -103,45 +98,6 @@ namespace OmniSharp.DotNet
             }
         }
 
-        private static List<string> ResolveProjectPath(string projectPath)
-        {
-            if (File.Exists(projectPath))
-            {
-                var filename = Path.GetFileName(projectPath);
-                if (!Project.FileName.Equals(filename, StringComparison.OrdinalIgnoreCase) &&
-                    !GlobalSettings.FileName.Equals(filename, StringComparison.OrdinalIgnoreCase))
-                {
-                    return null;
-                }
-
-                projectPath = Path.GetDirectoryName(projectPath);
-            }
-
-            if (File.Exists(Path.Combine(projectPath, Project.FileName)))
-            {
-                return new List<string> { projectPath };
-            }
-
-            if (File.Exists(Path.Combine(projectPath, GlobalSettings.FileName)))
-            {
-                var root = ProjectRootResolver.ResolveRootDirectory(projectPath);
-                GlobalSettings globalSettings;
-                if (GlobalSettings.TryGetGlobalSettings(projectPath, out globalSettings))
-                {
-                    return globalSettings.ProjectSearchPaths
-                                         .Select(searchPath => Path.Combine(globalSettings.DirectoryPath, searchPath))
-                                         .Where(actualPath => Directory.Exists(actualPath))
-                                         .SelectMany(actualPath => Directory.GetDirectories(actualPath))
-                                         .Where(actualPath => File.Exists(Path.Combine(actualPath, Project.FileName)))
-                                         .Select(path => Path.GetFullPath(path))
-                                         .Distinct(StringComparer.OrdinalIgnoreCase)
-                                         .ToList();
-                }
-            }
-
-            return null;
-        }
-
         private static IEnumerable<ProjectDescription> GetProjectReferences(ProjectContext context)
         {
             var projectDescriptions = context.LibraryManager
@@ -156,7 +112,7 @@ namespace OmniSharp.DotNet
                     continue;
                 }
 
-                // if this is an assembly reference then don't threat it as project reference
+                // if this is an assembly reference then don't treat it as project reference
                 if (!string.IsNullOrEmpty(description.TargetFrameworkInfo?.AssemblyPath))
                 {
                     continue;

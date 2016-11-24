@@ -6,8 +6,8 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
-    "Microsoft.CodeAnalysis.Common": "2.0.0-beta5",
-    "Microsoft.CodeAnalysis.Workspaces.Common": "2.0.0-beta5"
+    "Microsoft.CodeAnalysis.Common": "2.0.0-rc",
+    "Microsoft.CodeAnalysis.Workspaces.Common": "2.0.0-rc"
   },
   "frameworks": {
     "net46": {

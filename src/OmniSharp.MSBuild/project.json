@@ -27,7 +27,7 @@
         "Microsoft.Build.Targets": "0.1.0-preview-00038-160914",
         "Microsoft.Build.Tasks.Core": "0.1.0-preview-00038-160914",
         "Microsoft.Build.Utilities.Core": "0.1.0-preview-00038-160914",
-        "Microsoft.Net.Compilers": "2.0.0-beta5"
+        "Microsoft.Net.Compilers": "2.0.0-rc"
       }
     }
   }

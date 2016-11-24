@@ -19,7 +19,7 @@
           "version": "1.0.1",
           "type": "platform"
         },
-        "Microsoft.CodeAnalysis.CSharp": "2.0.0-beta5",
+        "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc",
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
       }
     }
