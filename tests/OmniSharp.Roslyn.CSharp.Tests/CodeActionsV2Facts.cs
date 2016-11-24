@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
@@ -241,15 +240,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var markup = MarkupCode.Parse(input);
             var span = markup.GetSpans().Single();
-            var range = GetRange(markup.Text, span);
+            var range = markup.Text.GetRangeFromSpan(span);
 
             var request = new GetCodeActionsRequest
             {
                 Line = range.Start.Line,
-                Column = range.Start.Column,
+                Column = range.Start.Offset,
                 FileName = BufferPath,
                 Buffer = markup.Code,
-                Selection = range.Start.Equals(range.End) ? null : range
+                Selection = GetSelection(range)
             };
 
             var workspace = await GetOmniSharpWorkspace(request);
@@ -280,13 +279,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var markup = MarkupCode.Parse(input);
             var span = markup.GetSpans().Single();
-            var range = GetRange(markup.Text, span);
+            var range = markup.Text.GetRangeFromSpan(span);
 
             return new RunCodeActionRequest
             {
                 Line = range.Start.Line,
-                Column = range.Start.Column,
-                Selection = range.Start.Equals(range.End) ? null : range,
+                Column = range.Start.Offset,
+                Selection = GetSelection(range),
                 FileName = BufferPath,
                 Buffer = markup.Code,
                 Identifier = identifier,
@@ -294,18 +293,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             };
         }
 
-        private static Range GetRange(SourceText text, TextSpan span)
+        private static Range GetSelection(TextRange range)
         {
-            var startLine = text.Lines.GetLineFromPosition(span.Start);
-            var startColumn = span.Start - startLine.Start;
-
-            var endLine = text.Lines.GetLineFromPosition(span.End);
-            var endColumn = span.End - endLine.Start;
+            if (range.IsEmpty)
+            {
+                return null;
+            }
 
             return new Range
             {
-                Start = new Point { Line = startLine.LineNumber, Column = startColumn },
-                End = new Point { Line = endLine.LineNumber, Column = endColumn }
+                Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
+                End = new Point { Line = range.End.Line, Column = range.End.Offset }
             };
         }
 

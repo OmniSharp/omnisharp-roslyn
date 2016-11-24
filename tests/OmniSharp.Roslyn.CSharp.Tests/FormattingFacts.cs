@@ -1,9 +1,6 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
@@ -181,21 +178,16 @@ class C {
         {
             var markup = MarkupCode.Parse(input);
             var span = markup.GetSpans().Single();
-
-            var startLine = markup.Text.Lines.GetLineFromPosition(span.Start);
-            var startColumn = span.Start - startLine.Start;
-
-            var endLine = markup.Text.Lines.GetLineFromPosition(span.End);
-            var endColumn = span.End - endLine.Start;
+            var range = markup.Text.GetRangeFromSpan(span);
 
             return new FormatRangeRequest()
             {
                 Buffer = markup.Code,
                 FileName = "a.cs",
-                Line = startLine.LineNumber,
-                Column = startColumn,
-                EndLine = endLine.LineNumber,
-                EndColumn = endColumn
+                Line = range.Start.Line,
+                Column = range.Start.Offset,
+                EndLine = range.End.Line,
+                EndColumn = range.End.Offset
             };
         }
     }

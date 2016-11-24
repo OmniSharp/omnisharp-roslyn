@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -237,15 +236,14 @@ namespace OmniSharp
 }";
 
             var markup = MarkupCode.Parse(fileContents);
-            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
-            var column = markup.Position - line.Start;
+            var point = markup.Text.GetPointFromPosition(markup.Position);
 
             var expectedUnresolved = new List<QuickFix>()
             {
                 new QuickFix()
                 {
-                    Line = line.LineNumber,
-                    Column = column,
+                    Line = point.Line,
+                    Column = point.Offset,
                     FileName = fileName,
                     Text = "`classX` is ambiguous"
                 }

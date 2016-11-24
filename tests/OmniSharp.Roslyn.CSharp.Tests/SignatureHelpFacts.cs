@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Signatures;
 using TestUtility;
@@ -396,15 +395,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<SignatureHelp> GetSignatureHelp(string input)
         {
             var markup = MarkupCode.Parse(input);
-
-            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
-            var column = markup.Position - line.Start;
+            var point = markup.Text.GetPointFromPosition(markup.Position);
 
             var request = new SignatureHelpRequest()
             {
                 FileName = "dummy.cs",
-                Line = line.LineNumber,
-                Column = column,
+                Line = point.Line,
+                Column = point.Offset,
                 Buffer = markup.Code
             };
 

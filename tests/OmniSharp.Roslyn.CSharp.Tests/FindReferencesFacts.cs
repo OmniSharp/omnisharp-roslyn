@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -221,17 +220,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private static async Task<QuickFixResponse> FindUsages(Dictionary<string, string> sources, string currentFile, bool onlyThisFile, bool excludeDefinition = false)
         {
             var markup = MarkupCode.Parse(sources[currentFile]);
-
-            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
-            var column = markup.Position - line.Start;
+            var point = markup.Text.GetPointFromPosition(markup.Position);
 
             var workspace = await TestHelpers.CreateSimpleWorkspace(sources);
             var controller = new FindUsagesService(workspace);
 
             var request = new FindUsagesRequest
             {
-                Line = line.LineNumber,
-                Column = column,
+                Line = point.Line,
+                Column = point.Offset,
                 FileName = currentFile,
                 Buffer = markup.Code,
                 OnlyThisFile = onlyThisFile,

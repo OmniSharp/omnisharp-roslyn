@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -50,17 +49,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFixResponse> FindRegions(string input)
         {
             var markup = MarkupCode.Parse(input);
-
-            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
-            var column = markup.Position - line.Start;
+            var point = markup.Text.GetPointFromPosition(markup.Position);
 
             var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code);
             var controller = new GotoRegionService(workspace);
 
             var request = new GotoRegionRequest
             {
-                Line = line.LineNumber,
-                Column = column,
+                Line = point.Line,
+                Column = point.Offset,
                 FileName = "dummy.cs",
                 Buffer = markup.Code
             };

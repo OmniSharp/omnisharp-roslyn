@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
@@ -218,13 +217,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             bool wantsTextChanges = false,
             bool applyTextChanges = true)
         {
-            var line = fileContent.Text.Lines.GetLineFromPosition(fileContent.Position);
-            var column = fileContent.Position - line.Start;
+            var point = fileContent.Text.GetPointFromPosition(fileContent.Position);
 
             var request = new RenameRequest
             {
-                Line = line.LineNumber,
-                Column = column,
+                Line = point.Line,
+                Column = point.Offset,
                 RenameTo = renameTo,
                 FileName = fileName,
                 Buffer = fileContent.Code,

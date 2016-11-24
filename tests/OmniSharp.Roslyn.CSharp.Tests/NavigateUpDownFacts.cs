@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -723,18 +722,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var start = markup.GetSpans("start").Single().Start;
             var end = markup.GetSpans("end").Single().Start;
 
-            var startLine = markup.Text.Lines.GetLineFromPosition(start);
-            var startColumn = start - startLine.Start;
-
-            var endLine = markup.Text.Lines.GetLineFromPosition(end);
-            var endColumn = end - endLine.Start;
+            var startPoint = markup.Text.GetPointFromPosition(start);
+            var endPoint = markup.Text.GetPointFromPosition(end);
 
             var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, "test.cs");
 
-            var response = await SendRequest(workspace, "test.cs", markup.Code, startLine.LineNumber, startColumn, direction);
+            var response = await SendRequest(workspace, "test.cs", markup.Code, startPoint.Line, startPoint.Offset, direction);
 
-            Assert.Equal(endLine.LineNumber, response.Line);
-            Assert.Equal(endColumn, response.Column);
+            Assert.Equal(endPoint.Line, response.Line);
+            Assert.Equal(endPoint.Offset, response.Column);
         }
 
         private static async Task<NavigateResponse> SendRequest(OmnisharpWorkspace workspace, string fileName, string fileContent, int startLine, int startColumn, Direction direction)

@@ -2,7 +2,6 @@
 using System.Composition.Hosting;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
@@ -40,14 +39,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected AutoCompleteRequest CreateRequest(string input, string fileName = "dummy.cs", bool wantSnippet = false)
         {
             var markup = MarkupCode.Parse(input);
-
-            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
-            var column = markup.Position - line.Start;
+            var point = markup.Text.GetPointFromPosition(markup.Position);
 
             return new AutoCompleteRequest
             {
-                Line = line.LineNumber,
-                Column = column,
+                Line = point.Line,
+                Column = point.Offset,
                 FileName = fileName,
                 Buffer = markup.Code,
                 WordToComplete = GetPartialWord(markup),
