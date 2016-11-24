@@ -49,7 +49,7 @@ namespace OmniSharp.Script
                 var loadFullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(currentWorkingDirectory, filePath);
                 if (!string.IsNullOrWhiteSpace(loadFullPath))
                 {
-                    ParseFile(loadFullPath, result);
+                    ParseFile(loadFullPath, result, parseOptions);
                 }
             }
         }
