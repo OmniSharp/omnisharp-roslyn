@@ -720,15 +720,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var markup = MarkupCode.Parse(input);
 
-            var text = SourceText.From(markup.Code);
-
             var start = markup.GetSpans("start").Single().Start;
             var end = markup.GetSpans("end").Single().Start;
 
-            var startLine = text.Lines.GetLineFromPosition(start);
+            var startLine = markup.Text.Lines.GetLineFromPosition(start);
             var startColumn = start - startLine.Start;
 
-            var endLine = text.Lines.GetLineFromPosition(end);
+            var endLine = markup.Text.Lines.GetLineFromPosition(end);
             var endColumn = end - endLine.Start;
 
             var workspace = await TestHelpers.CreateSimpleWorkspace(markup.Code, "test.cs");

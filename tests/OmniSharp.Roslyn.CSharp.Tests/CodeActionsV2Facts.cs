@@ -241,8 +241,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var markup = MarkupCode.Parse(input);
             var span = markup.GetSpans().Single();
-            var text = SourceText.From(markup.Code);
-            var range = GetRange(text, span);
+            var range = GetRange(markup.Text, span);
 
             var request = new GetCodeActionsRequest
             {
@@ -281,8 +280,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var markup = MarkupCode.Parse(input);
             var span = markup.GetSpans().Single();
-            var text = SourceText.From(markup.Code);
-            var range = GetRange(text, span);
+            var range = GetRange(markup.Text, span);
 
             return new RunCodeActionRequest
             {

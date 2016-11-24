@@ -181,12 +181,11 @@ class C {
         {
             var markup = MarkupCode.Parse(input);
             var span = markup.GetSpans().Single();
-            var text = SourceText.From(markup.Code);
 
-            var startLine = text.Lines.GetLineFromPosition(span.Start);
+            var startLine = markup.Text.Lines.GetLineFromPosition(span.Start);
             var startColumn = span.Start - startLine.Start;
 
-            var endLine = text.Lines.GetLineFromPosition(span.End);
+            var endLine = markup.Text.Lines.GetLineFromPosition(span.End);
             var endColumn = span.End - endLine.Start;
 
             return new FormatRangeRequest()

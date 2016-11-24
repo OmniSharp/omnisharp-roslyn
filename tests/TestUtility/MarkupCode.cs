@@ -24,8 +24,10 @@ namespace TestUtility
     {
         private int? position;
         private ImmutableDictionary<string, ImmutableList<TextSpan>> spans;
+        private SourceText text;
 
         public string Code { get; }
+        public SourceText Text => GetOrCreateText();
 
         public int Position => this.position.Value;
         public bool HasPosition => this.position.HasValue;
@@ -35,6 +37,16 @@ namespace TestUtility
             this.Code = code;
             this.position = position;
             this.spans = spans;
+        }
+
+        private SourceText GetOrCreateText()
+        {
+            if (this.text == null)
+            {
+                this.text = SourceText.From(this.Code);
+            }
+
+            return this.text;
         }
 
         public ImmutableList<TextSpan> GetSpans(string name = null)
@@ -48,9 +60,9 @@ namespace TestUtility
             return ImmutableList<TextSpan>.Empty;
         }
 
-        public static MarkupCode Parse(string markupCode)
+        public static MarkupCode Parse(string input)
         {
-            var markupLength = markupCode.Length;
+            var markupLength = input.Length;
             var codeBuilder = new StringBuilder(markupLength);
 
             int? position = null;
@@ -63,14 +75,14 @@ namespace TestUtility
 
             while (markupIndex < markupLength)
             {
-                var ch = markupCode[markupIndex];
+                var ch = input[markupIndex];
 
                 switch (ch)
                 {
                     case '$':
                         if (position == null &&
                             markupIndex + 1 < markupLength &&
-                            markupCode[markupIndex + 1] == '$')
+                            input[markupIndex + 1] == '$')
                         {
                             position = codeIndex;
                             markupIndex += 2;
@@ -81,7 +93,7 @@ namespace TestUtility
 
                     case '[':
                         if (markupIndex + 1 < markupLength &&
-                            markupCode[markupIndex + 1] == '|')
+                            input[markupIndex + 1] == '|')
                         {
                             spanStartStack.Push(codeIndex);
                             markupIndex += 2;
@@ -92,7 +104,7 @@ namespace TestUtility
 
                     case '{':
                         if (markupIndex + 1 < markupLength &&
-                            markupCode[markupIndex + 1] == '|')
+                            input[markupIndex + 1] == '|')
                         {
                             var nameIndex = markupIndex + 2;
                             var nameStartIndex = nameIndex;
@@ -102,7 +114,7 @@ namespace TestUtility
                             // Parse out name
                             while (nameIndex < markupLength)
                             {
-                                if (markupCode[nameIndex] == ':')
+                                if (input[nameIndex] == ':')
                                 {
                                     found = true;
                                     break;
@@ -114,7 +126,7 @@ namespace TestUtility
 
                             if (found)
                             {
-                                var name = markupCode.Substring(nameStartIndex, nameLength);
+                                var name = input.Substring(nameStartIndex, nameLength);
                                 namedSpanStartStack.Push(Tuple.Create(codeIndex, name));
                                 markupIndex = nameIndex + 1; // Move after ':'
                                 continue;
@@ -128,7 +140,7 @@ namespace TestUtility
                     case '|':
                         if (markupIndex + 1 < markupLength)
                         {
-                            if (markupCode[markupIndex + 1] == ']')
+                            if (input[markupIndex + 1] == ']')
                             {
                                 if (spanStartStack.Count == 0)
                                 {
@@ -143,7 +155,7 @@ namespace TestUtility
                                 continue;
                             }
 
-                            if (markupCode[markupIndex + 1] == '}')
+                            if (input[markupIndex + 1] == '}')
                             {
                                 if (namedSpanStartStack.Count == 0)
                                 {

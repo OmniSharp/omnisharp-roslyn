@@ -222,8 +222,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var markup = MarkupCode.Parse(sources[currentFile]);
 
-            var text = SourceText.From(markup.Code);
-            var line = text.Lines.GetLineFromPosition(markup.Position);
+            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
             var column = markup.Position - line.Start;
 
             var workspace = await TestHelpers.CreateSimpleWorkspace(sources);

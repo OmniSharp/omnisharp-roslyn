@@ -237,8 +237,7 @@ namespace OmniSharp
 }";
 
             var markup = MarkupCode.Parse(fileContents);
-            var text = SourceText.From(markup.Code);
-            var line = text.Lines.GetLineFromPosition(markup.Position);
+            var line = markup.Text.Lines.GetLineFromPosition(markup.Position);
             var column = markup.Position - line.Start;
 
             var expectedUnresolved = new List<QuickFix>()

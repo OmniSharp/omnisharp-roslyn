@@ -218,8 +218,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             bool wantsTextChanges = false,
             bool applyTextChanges = true)
         {
-            var text = SourceText.From(fileContent.Code);
-            var line = text.Lines.GetLineFromPosition(fileContent.Position);
+            var line = fileContent.Text.Lines.GetLineFromPosition(fileContent.Position);
             var column = fileContent.Position - line.Start;
 
             var request = new RenameRequest
