@@ -137,6 +137,11 @@ namespace TestUtility
             return workspace;
         }
 
+        public static Task<OmnisharpWorkspace> CreateSimpleWorkspace()
+        {
+            return CreateSimpleWorkspace(CreatePluginHost(Array.Empty<Assembly>()), new Dictionary<string, string>());
+        }
+
         public static Task<OmnisharpWorkspace> CreateSimpleWorkspace(string source, string fileName = "dummy.cs")
         {
             return CreateSimpleWorkspace(CreatePluginHost(Enumerable.Empty<Assembly>()), new Dictionary<string, string> { { fileName, source } });
