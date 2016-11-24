@@ -43,11 +43,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var text = SourceText.From(markup.Code);
             var line = text.Lines.GetLineFromPosition(markup.Position);
+            var column = markup.Position - line.Start;
 
             return new AutoCompleteRequest
             {
                 Line = line.LineNumber,
-                Column = markup.Position - line.Start,
+                Column = column,
                 FileName = fileName,
                 Buffer = markup.Code,
                 WordToComplete = GetPartialWord(markup),
