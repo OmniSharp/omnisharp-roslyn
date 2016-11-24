@@ -7,14 +7,14 @@ namespace OmniSharp.Script
 {
     public class FileParser
     {
-        public static FileParserResult ProcessFile(string path)
+        public static FileParserResult ProcessFile(string path, CSharpParseOptions parseOptions)
         {
             var result = new FileParserResult();
-            ParseFile(path, result);
+            ParseFile(path, result, parseOptions);
             return result;
         }
 
-        private static void ParseFile(string path, FileParserResult result)
+        private static void ParseFile(string path, FileParserResult result, CSharpParseOptions parseOptions)
         {
             var fullPath = Path.GetFullPath(path);
             if (result.LoadedScripts.Contains(fullPath))
@@ -26,10 +26,7 @@ namespace OmniSharp.Script
 
             var scriptCode = File.ReadAllText(fullPath);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(scriptCode, CSharpParseOptions.Default.
-                WithPreprocessorSymbols("load", "r").
-                WithKind(SourceCodeKind.Script).
-                WithLanguageVersion(LanguageVersion.Default));
+            var syntaxTree = CSharpSyntaxTree.ParseText(scriptCode, parseOptions);
 
             var namespaces = syntaxTree.GetCompilationUnitRoot().Usings.Select(x => x.Name.ToString());
             foreach (var ns in namespaces)

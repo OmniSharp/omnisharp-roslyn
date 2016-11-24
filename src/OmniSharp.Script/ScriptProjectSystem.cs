@@ -20,10 +20,10 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Script
 {
-    [Export(typeof(IProjectSystem))]
+    [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
-        private CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.CSharp6, DocumentationMode.Parse, SourceCodeKind.Script);
+        private CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
         private OmnisharpWorkspace Workspace { get; }
         private IOmnisharpEnvironment Env { get; }
         private ScriptContext Context { get; }
@@ -66,7 +66,7 @@ namespace OmniSharp.Script
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
             // and add mscorlib
-            if (runtimeContexts == null || !runtimeContexts.Any())
+            if (runtimeContexts?.Any() == false)
             {
                 Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
                 Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
@@ -102,14 +102,11 @@ namespace OmniSharp.Script
             }
 
             // inject all inherited assemblies
-//#if NET46
             foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
                 Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
                 Context.CommonReferences.Add(MetadataReference.CreateFromFile(inheritedCompileLib));
             }
-//#endif
-
 
             // Process each .CSX file
             foreach (var csxPath in allCsxFiles)
@@ -148,7 +145,7 @@ namespace OmniSharp.Script
             Logger.LogInformation($"Processing script {csxPath}...");
             Context.CsxFilesBeingProcessed.Add(csxPath);
 
-            var processResult = FileParser.ProcessFile(csxPath);
+            var processResult = FileParser.ProcessFile(csxPath, CsxParseOptions);
 
             // CSX file usings
             Context.CsxUsings[csxPath] = processResult.Namespaces.Union(Context.CommonUsings).ToList();
