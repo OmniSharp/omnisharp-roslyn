@@ -6,29 +6,19 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
-    "Microsoft.Extensions.Options": "1.0.0"
+    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.Build": "15.1.319-preview5",
+    "Microsoft.Build.Framework": "15.1.319-preview5",
+    "Microsoft.Build.Tasks.Core": "15.1.319-preview5",
+    "Microsoft.Build.Utilities.Core": "15.1.319-preview5",
+    "System.Threading.Tasks.Dataflow": "4.6.0"
   },
   "frameworks": {
-    "net46": {
-      "frameworkAssemblies": {
-        "Microsoft.Build": "",
-        "Microsoft.Build.Engine": "",
-        "Microsoft.Build.Framework": ""
-      }
-    },
+    "net46": {},
     "netstandard1.6": {
       "imports": [
         "portable-net45+win8"
-      ],
-      "dependencies": {
-        "MSBuild": "0.1.0-preview-00038-160914",
-        "Microsoft.Build": "0.1.0-preview-00038-160914",
-        "Microsoft.Build.Framework": "0.1.0-preview-00038-160914",
-        "Microsoft.Build.Targets": "0.1.0-preview-00038-160914",
-        "Microsoft.Build.Tasks.Core": "0.1.0-preview-00038-160914",
-        "Microsoft.Build.Utilities.Core": "0.1.0-preview-00038-160914",
-        "Microsoft.Net.Compilers": "2.0.0-rc"
-      }
+      ]
     }
   }
 }

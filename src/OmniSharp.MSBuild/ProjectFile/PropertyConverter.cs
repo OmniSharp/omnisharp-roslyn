@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -71,9 +72,33 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return new string[0];
             }
 
-            var values = propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var values = propertyValue.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
             return new SortedSet<string>(values).ToArray();
+        }
+
+        public static IList<string> ToSuppressDiagnostics(string propertyValue)
+        {
+            if (string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return new string[0];
+            }
+
+            // Remove quotes
+            propertyValue = propertyValue.Trim('"');
+            var values = propertyValue.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var result = new SortedSet<string>();
+
+            foreach (var id in values)
+            {
+                ushort number;
+                if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
+                {
+                    result.Add("CS" + number.ToString("0000"));
+                }
+            }
+
+            return result.ToArray();
         }
 
         public static Guid ToGuid(string propertyValue)

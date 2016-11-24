@@ -30,6 +30,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string AssemblyOriginatorKeyFile { get; }
         public bool GenerateXmlDocumentation { get; }
         public IList<string> PreprocessorSymbolNames { get; }
+        public IList<string> SuppressedDiagnosticIds { get; }
 
         public IList<string> SourceFiles { get; }
         public IList<string> References { get; }
@@ -55,6 +56,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyOriginatorKeyFile,
             bool generateXmlDocumentation,
             IList<string> defineConstants,
+            IList<string> suppressedDiagnosticIds,
             IList<string> sourceFiles,
             IList<string> references,
             IList<string> projectReferences,
@@ -73,6 +75,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
             this.PreprocessorSymbolNames = defineConstants;
+            this.SuppressedDiagnosticIds = suppressedDiagnosticIds;
             this.SourceFiles = sourceFiles;
             this.References = references;
             this.ProjectReferences = projectReferences;
@@ -101,13 +104,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return null;
             }
 
-#if NET46
-            if (PlatformHelper.IsMono)
-            {
-                return CreateForMono(projectFilePath, solutionDirectory, options, logger, diagnostics);
-            }
-#endif
-
             var globalProperties = new Dictionary<string, string>
             {
                 { PropertyNames.DesignTimeBuild, "true" },
@@ -120,6 +116,15 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
             }
+            else
+            {
+                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, AppContext.BaseDirectory);
+            }
+
+            if (PlatformHelper.IsMono)
+            {
+                globalProperties.Add(PropertyNames.TargetFrameworkRootPath, "/Library/Frameworks/Mono.framework/Libraries/mono/xbuild-frameworks");
+            }
 
             if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
             {
@@ -128,11 +133,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var collection = new ProjectCollection(globalProperties);
 
-            logger.LogInformation($"Using toolset {options.ToolsVersion ?? collection.DefaultToolsVersion} for '{projectFilePath}'");
-
             var project = string.IsNullOrEmpty(options.ToolsVersion)
                 ? collection.LoadProject(projectFilePath)
                 : collection.LoadProject(projectFilePath, options.ToolsVersion);
+
+            logger.LogInformation($"Using tools version: {project.ToolsVersion}");
 
             var projectInstance = project.CreateProjectInstance();
             var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
@@ -155,6 +160,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
             var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
             var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
+            var noWarn = PropertyConverter.ToSuppressDiagnostics(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
 
             var sourceFiles = projectInstance
                 .GetItems(ItemNames.Compile)
@@ -180,8 +186,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, targetFramework, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, sourceFiles, references,
-                projectReferences, analyzers);
+                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, noWarn,
+                sourceFiles, references, projectReferences, analyzers);
         }
 
         private static bool ReferenceSourceTargetIsProjectReference(ProjectItemInstance projectItem)

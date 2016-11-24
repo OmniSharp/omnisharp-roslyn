@@ -20,6 +20,7 @@
           "version": "1.0.1",
           "type": "platform"
         },
+        "System.Runtime": "4.1.0",
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
       }
     }
