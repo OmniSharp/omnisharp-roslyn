@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "warningsAsErrors": true
+  },
+  "dependencies": {
+    "OmniSharp.Abstractions": "1.0.0",
+    "OmniSharp.Roslyn.CSharp": "1.0.0",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-rc3-003121",
+    "Microsoft.CodeAnalysis.CSharp.Scripting": "2.0.0-rc"
+  },
+  "frameworks": {
+    "net46": {
+      "frameworkAssemblies": {
+        "System.Runtime": "",
+        "System.Threading": "",
+        "System.Threading.Tasks": "",
+        "System.Collections": "",
+        "System.Globalization": "",
+        "System.Linq": "",
+        "System.Text.Encoding": "",
+        "System.Reflection": "",
+        "System.Security": "",
+        "System.Xml": ""
+      }
+    },
+    "netstandard1.6": {
+      "imports": [
+        "dotnet5.4",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "NETStandard.Library": "1.6.0"
+      }
+    }
+  }
+}
