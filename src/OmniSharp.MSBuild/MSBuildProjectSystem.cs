@@ -20,7 +20,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
-    [Export(typeof(IProjectSystem))]
+    [Export(typeof(IProjectSystem)), Shared]
     public class MSBuildProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;

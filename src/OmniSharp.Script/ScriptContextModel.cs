@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using OmniSharp.Roslyn.Models;
 
-namespace OmniSharp.ScriptCs
+namespace OmniSharp.Script
 {
-    public class ScriptCsContextModel
+    public class ScriptContextModel
     {
-        public ScriptCsContextModel(ScriptCsContext context)
+        public ScriptContextModel(ScriptContext context)
         {
             RootPath = context.RootPath;
             CsxFilesBeingProcessed = context.CsxFilesBeingProcessed;
@@ -14,7 +14,6 @@ namespace OmniSharp.ScriptCs
             CsxReferences = context.CsxReferences.ToDictionary(x => x.Key, x => x.Value.Select(z => new ReferenceModel(z)));
             CsxLoadReferences = context.CsxLoadReferences.ToDictionary(x => x.Key, x => x.Value.Select(z => new ProjectInfoModel(z)));
             CsxUsings = context.CsxUsings.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());
-            ScriptPacks = context.ScriptPacks;
             CommonReferences = context.CommonReferences.Select(z => new ReferenceModel(z));
             CommonUsings = context.CommonUsings;
         }
@@ -27,13 +26,8 @@ namespace OmniSharp.ScriptCs
         public Dictionary<string, IEnumerable<ReferenceModel>> CsxReferences { get; }
         public Dictionary<string, IEnumerable<ProjectInfoModel>> CsxLoadReferences { get; }
         public Dictionary<string, IEnumerable<string>> CsxUsings { get; }
-
-        public HashSet<string> ScriptPacks { get; }
-
-        // Nuget and ScriptPack stuff
         public IEnumerable<ReferenceModel> CommonReferences { get; }
         public IEnumerable<string> CommonUsings { get; }
-
         public string RootPath { get; set; }
     }
 }
