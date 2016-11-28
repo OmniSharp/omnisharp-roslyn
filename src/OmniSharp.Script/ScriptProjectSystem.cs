@@ -66,7 +66,7 @@ namespace OmniSharp.Script
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
             // and add mscorlib
-            if (runtimeContexts?.Any() == false)
+            if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
                 Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
                 Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
