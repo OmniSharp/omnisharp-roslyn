@@ -21,9 +21,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -51,9 +51,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -85,9 +85,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -157,9 +157,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -178,9 +178,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -199,9 +199,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -220,9 +220,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -241,9 +241,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", code }
+                new TestFile("a.cs", code)
             });
 
             var controller = new HighlightingService(workspace);
@@ -256,6 +256,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             return new TokenSpec(kind, text);
         }
+
         private class TokenSpec
         {
             public string Text { get; }
