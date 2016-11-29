@@ -230,21 +230,26 @@ namespace OmniSharp
     {
         public method1()
         {
-            var c1 = new $classX();
+            var c1 = new $$classX();
         }
     }
 }";
-            var classLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContents));
-            var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContents);
-            var expectedUnresolved = new List<QuickFix>();
-            expectedUnresolved.Add(new QuickFix()
+
+            var markup = TestContent.Parse(fileContents);
+            var point = markup.GetPointFromPosition();
+
+            var expectedUnresolved = new List<QuickFix>()
             {
-                Line = classLineColumn.Line,
-                Column = classLineColumn.Column,
-                FileName = fileName,
-                Text = "`classX` is ambiguous"
-            });
-            await AssertUnresolvedReferences(fileContentNoDollarMarker, expectedUnresolved);
+                new QuickFix()
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = fileName,
+                    Text = "`classX` is ambiguous"
+                }
+            };
+
+            await AssertUnresolvedReferences(markup.Code, expectedUnresolved);
         }
 
         [Fact]
@@ -472,8 +477,8 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
         {
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
+            var host = TestHelpers.CreatePlugInHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
+            var workspace = await TestHelpers.CreateWorkspace(host, new TestFile(fileName, fileContents));
 
             var fakeOptions = new FakeOmniSharpOptions();
             fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
@@ -28,17 +27,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task ReturnsLocationSourceDefinition()
         {
-            var source1 = @"using System;
+            const string source1 = @"using System;
 
 class Foo {
 }";
-            var source2 = @"class Bar {
+            const string source2 = @"class Bar {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
+            var workspace = await TestHelpers.CreateWorkspace(new []
+            {
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2)
             });
+
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
@@ -57,17 +59,20 @@ class Foo {
         [Fact]
         public async Task ReturnsEmptyResultWhenDefinitionIsNotFound()
         {
-            var source1 = @"using System;
+            const string source1 = @"using System;
 
 class Foo {
 }";
-            var source2 = @"class Bar {
+            const string source2 = @"class Bar {
     private Baz foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
+            var workspace = await TestHelpers.CreateWorkspace(new []
+            {
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2)
             });
+
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
@@ -201,11 +206,11 @@ class Foo {
 
         private async Task<OmnisharpWorkspace> CreateTestWorkspace()
         {
-            var source1 = @"using System;
+            const string source1 = @"using System;
 
 class Foo {
 }";
-            var source2 = @"using System;
+            const string source2 = @"using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -221,8 +226,10 @@ class Bar {
     }
 }";
 
-            return await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
+            return await TestHelpers.CreateWorkspace(new []
+            {
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2)
             });
         }
     }

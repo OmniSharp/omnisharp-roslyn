@@ -13,11 +13,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindRegionsInFileWithRegions()
         {
-            var source = @"
+            const string source = @"
                 public class Foo
                 {
                       #region A
-                      public string A$Property {get; set;}
+                      public string A$$Property {get; set;}
                       #endregion
 
                       #region B
@@ -41,29 +41,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task DoesNotFindRegionsInFileWithoutRegions()
         {
-            var source = @"public class Fo$o{}";
+            const string source = @"public class Fo$$o{}";
             var regions = await FindRegions(source);
             Assert.Equal(0, regions.QuickFixes.Count());
         }
 
         private async Task<QuickFixResponse> FindRegions(string source)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new GotoRegionService(workspace);
-            var request = CreateRequest(source);
-            await workspace.BufferManager.UpdateBuffer(request);
-            return await controller.Handle(request);
-        }
+            var testFile = new TestFile("dummy.cs", source);
+            var point = testFile.Content.GetPointFromPosition();
 
-        private GotoRegionRequest CreateRequest(string source, string fileName = "dummy.cs")
-        {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new GotoRegionRequest {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", "")
+            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var controller = new GotoRegionService(workspace);
+
+            var request = new GotoRegionRequest
+            {
+                Line = point.Line,
+                Column = point.Offset,
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code
             };
+
+            return await controller.Handle(request);
         }
     }
 }
