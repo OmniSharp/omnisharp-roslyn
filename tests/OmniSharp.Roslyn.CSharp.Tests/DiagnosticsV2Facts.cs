@@ -32,9 +32,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", "class C { int n = true; }" }
+                new TestFile("a.cs", "class C { int n = true; }")
             });
             var fakeLoggerFactory = new FakeLoggerFactory();
             var messages = new List<OmniSharp.Models.DiagnosticMessage>();
@@ -57,10 +57,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CheckAllFiles()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", "class C1 { int n = true; }" },
-                { "b.cs", "class C2 { int n = true; }" },
+                new TestFile("a.cs", "class C1 { int n = true; }"),
+                new TestFile("b.cs", "class C2 { int n = true; }")
             });
 
             var fakeLoggerFactory = new FakeLoggerFactory();
@@ -91,10 +91,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task EnablesWhenEndPointIsHit()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
+            var workspace = await TestHelpers.CreateWorkspace(new []
             {
-                { "a.cs", "class C1 { int n = true; }" },
-                { "b.cs", "class C2 { int n = true; }" },
+                new TestFile("a.cs", "class C1 { int n = true; }"),
+                new TestFile("b.cs", "class C2 { int n = true; }")
             });
 
             var fakeLoggerFactory = new FakeLoggerFactory();
