@@ -69,7 +69,7 @@ namespace OmniSharp.Roslyn
                     }
                 }
             }
-            else if(buffer != null)
+            else if (buffer != null)
             {
                 TryAddTransientDocument(request.FileName, buffer);
             }
@@ -114,39 +114,43 @@ namespace OmniSharp.Roslyn
             }
 
             var projects = FindProjectsByFileName(fileName);
-            if (projects.Count() == 0)
+            if (!projects.Any())
             {
                 return false;
             }
 
             var sourceText = SourceText.From(fileContent);
-            var documents = new List<DocumentInfo>();
+            var documentInfos = new List<DocumentInfo>();
             foreach (var project in projects)
             {
                 var id = DocumentId.CreateNewId(project.Id);
                 var version = VersionStamp.Create();
-                var document = DocumentInfo.Create(id, fileName, filePath: fileName, loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
+                var documentInfo = DocumentInfo.Create(
+                    id, fileName, filePath: fileName,
+                    loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
 
-                documents.Add(document);
+                documentInfos.Add(documentInfo);
             }
 
             lock (_lock)
             {
-                var documentIds = documents.Select(document => document.Id);
+                var documentIds = documentInfos.Select(document => document.Id);
                 _transientDocuments.Add(fileName, documentIds);
                 _transientDocumentIds.UnionWith(documentIds);
             }
 
-            foreach (var document in documents)
+            foreach (var document in documentInfos)
             {
                 _workspace.AddDocument(document);
             }
+
             return true;
         }
 
         private IEnumerable<Project> FindProjectsByFileName(string fileName)
         {
-            var dirInfo = new FileInfo(fileName).Directory;
+            var fileInfo = new FileInfo(fileName);
+            var dirInfo = fileInfo.Directory;
             var candidates = _workspace.CurrentSolution.Projects
                 .GroupBy(project => new FileInfo(project.FilePath).Directory.FullName)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
@@ -162,7 +166,7 @@ namespace OmniSharp.Roslyn
                 dirInfo = dirInfo.Parent;
             }
 
-            return Enumerable.Empty<Project>();
+            return Array.Empty<Project>();
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)
