@@ -8,7 +8,7 @@ namespace TestUtility
     public class WorkspaceHelper
     {
         /// <summary>
-        /// Create Roslyn worksapces from a given project path
+        /// Create Roslyn workspaces from a given project path
         /// </summary>
         public static IEnumerable<Microsoft.CodeAnalysis.Workspace> Create(string projectPath)
         {
