@@ -39,7 +39,8 @@ namespace OmniSharp.MSBuild
 
         private static readonly Guid[] _supportedProjectTypes = new[]
         {
-            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
+            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"), // CSharp
+            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556")  // CSharp (New .NET Core csproj)
         };
 
         public string Key { get; } = "MsBuild";
