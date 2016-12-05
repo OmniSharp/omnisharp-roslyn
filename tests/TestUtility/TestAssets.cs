@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace TestCommon
+namespace TestUtility
 {
     public class TestAssets
     {

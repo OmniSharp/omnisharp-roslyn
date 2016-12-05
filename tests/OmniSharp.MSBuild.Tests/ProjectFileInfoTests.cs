@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.ProjectFile;
-using TestCommon;
+using TestUtility;
 using TestUtility.Fake;
 using Xunit;
 

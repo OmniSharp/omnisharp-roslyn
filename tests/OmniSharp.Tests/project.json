@@ -6,7 +6,6 @@
   "dependencies": {
     "OmniSharp.Host": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
-    "TestCommon": "1.0.0",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
   },
