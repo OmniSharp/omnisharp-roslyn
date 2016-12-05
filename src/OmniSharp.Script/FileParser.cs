@@ -17,6 +17,8 @@ namespace OmniSharp.Script
         private static void ParseFile(string path, FileParserResult result, CSharpParseOptions parseOptions)
         {
             var fullPath = Path.GetFullPath(path);
+            var currentWorkingDirectory = Path.GetDirectoryName(fullPath);
+
             if (result.LoadedScripts.Contains(fullPath))
             {
                 return;
@@ -37,15 +39,21 @@ namespace OmniSharp.Script
             var refs = syntaxTree.GetCompilationUnitRoot().GetReferenceDirectives().Select(x => x.File.ToString());
             foreach (var reference in refs)
             {
-                result.References.Add(reference.Replace("\"", string.Empty));
+                var escapedReference = reference.Replace("\"", string.Empty);
+
+                // if #r is an absolute path, use it direcly
+                // otherwise, make sure it's treated relatively to the current working directory
+                var referenceFullPath = Path.IsPathRooted(escapedReference) ? escapedReference : Path.Combine(currentWorkingDirectory, escapedReference);
+                result.References.Add(referenceFullPath);
             }
 
             var loads = syntaxTree.GetCompilationUnitRoot().GetLoadDirectives().Select(x => x.File.ToString());
             foreach (var load in loads)
             {
                 var filePath = load.Replace("\"", string.Empty);
-                var currentWorkingDirectory = Path.GetDirectoryName(fullPath);
 
+                // if #load is an absolute path, use it direcly
+                // otherwise, make sure it's treated relatively to the current working directory
                 var loadFullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(currentWorkingDirectory, filePath);
                 if (!string.IsNullOrWhiteSpace(loadFullPath))
                 {
