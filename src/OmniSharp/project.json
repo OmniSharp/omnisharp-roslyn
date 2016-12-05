@@ -19,7 +19,7 @@
     "OmniSharp.DotNetTest": "1.0.0",
     "OmniSharp.MSBuild": "1.0.0",
     "OmniSharp.Script": "1.0.0",
-    "Microsoft.Build.Runtime": "15.1.319-preview5"
+    "Microsoft.Build.Runtime": "15.1.0-preview-000454-01"
   },
   "frameworks": {
     "net46": {},
