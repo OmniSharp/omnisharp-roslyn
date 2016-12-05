@@ -1,10 +1,14 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "copyToOutput": [
+      "../../Microsoft.CSharp.Core.targets"
+    ]
   },
   "dependencies": {
     "OmniSharp.MSBuild": "1.0.0",
+    "Microsoft.Build.Runtime": "15.1.0-preview-000454-01",
     "TestCommon": "1.0.0",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
@@ -22,6 +26,11 @@
         },
         "System.Runtime": "4.1.0",
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
+      }
+    },
+    "net46": {
+      "dependencies": {
+        "xunit.runner.console": "2.1.0"
       }
     }
   },

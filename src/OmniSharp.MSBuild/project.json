@@ -11,6 +11,7 @@
     "Microsoft.Build.Framework": "15.1.0-preview-000454-01",
     "Microsoft.Build.Tasks.Core": "15.1.0-preview-000454-01",
     "Microsoft.Build.Utilities.Core": "15.1.0-preview-000454-01",
+    "NuGet.Frameworks": "4.0.0-rc-2048",
     "System.Threading.Tasks.Dataflow": "4.6.0"
   },
   "frameworks": {

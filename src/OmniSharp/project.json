@@ -4,12 +4,10 @@
     "platform": "anycpu",
     "warningsAsErrors": true,
     "preserveCompilationContext": true,
-    "emitEntryPoint": true
-  },
-  "publishOptions": {
-    "includeFiles": [
+    "emitEntryPoint": true,
+    "copyToOutput": [
       "config.json",
-      "Microsoft.CSharp.Core.targets"
+      "../../Microsoft.CSharp.Core.targets"
     ]
   },
   "dependencies": {

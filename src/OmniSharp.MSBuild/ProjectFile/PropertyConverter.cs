@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using NuGet.Frameworks;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -63,6 +64,30 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "7": return LanguageVersion.CSharp7;
                 default: return LanguageVersion.Default;
             }
+        }
+
+        public static IList<NuGetFramework> ToTargetFrameworks(string propertyValue)
+        {
+            if (string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return new NuGetFramework[0];
+            }
+
+            var result = new SortedSet<NuGetFramework>();
+            foreach (var value in propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                try
+                {
+                    var framework = NuGetFramework.Parse(value.TrimEnd());
+                    result.Add(framework);
+                }
+                catch
+                {
+                    // If the value can't be parsed, ignore it.
+                }
+            }
+
+            return result.ToArray();
         }
 
         public static IList<string> ToDefineConstants(string propertyValue)

@@ -6,6 +6,10 @@ namespace TestCommon
     {
         public static TestsContext Default { get; } = new TestsContext();
 
+        public string SolutionRoot { get; }
+        public string TestRoot { get; }
+        public string TestSamples { get; }
+
         private TestsContext()
         {
             var currentDirectory = Directory.GetCurrentDirectory();
@@ -23,12 +27,6 @@ namespace TestCommon
             TestRoot = Path.Combine(SolutionRoot, "tests");
             TestSamples = Path.Combine(TestRoot, "TestSamples");
         }
-
-        public string SolutionRoot { get; }
-
-        public string TestRoot { get; }
-
-        public string TestSamples { get; }
 
         public string GetTestSample(string name) => Path.Combine(TestSamples, name);
     }

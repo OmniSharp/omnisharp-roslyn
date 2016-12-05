@@ -12,6 +12,7 @@ namespace OmniSharp.Models
         public string TargetPath { get; set; }
         public string TargetFramework { get; set; }
         public IList<string> SourceFiles { get; set; }
+        public IList<TargetFramework> TargetFrameworks { get; set; }
 
         public MSBuildProject(ProjectFileInfo projectFileInfo)
         {
