@@ -44,11 +44,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
                     response.Type = symbol.Kind == SymbolKind.NamedType ? 
                         symbol.ToDisplayString(DefaultFormat) : 
                         symbol.ToMinimalDisplayString(semanticModel, position);
-                }
 
-                if (request.IncludeDocumentation)
-                {
-                    response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
+                    if (request.IncludeDocumentation)
+                    {
+                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
+                    }
                 }
             }
 

@@ -23,6 +23,7 @@ namespace OmniSharp.Script
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
+        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
         private OmnisharpWorkspace Workspace { get; }
         private IOmnisharpEnvironment Env { get; }
@@ -30,8 +31,9 @@ namespace OmniSharp.Script
         private ILogger Logger { get; }
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptContext scriptContext)
+        public ScriptProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptContext scriptContext, IMetadataFileReferenceCache metadataFileReferenceCache)
         {
+            _metadataFileReferenceCache = metadataFileReferenceCache;
             Workspace = workspace;
             Env = env;
             Context = scriptContext;
@@ -69,8 +71,10 @@ namespace OmniSharp.Script
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
                 Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
-                Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
-                Context.CommonReferences.Add(MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location));
+
+                AddMetadataReference(Context.CommonReferences, typeof(object).GetTypeInfo().Assembly.Location);
+                AddMetadataReference(Context.CommonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
+
                 inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                         x.Name.ToLowerInvariant().StartsWith("system.runtime")));
             }
@@ -89,7 +93,7 @@ namespace OmniSharp.Script
                 foreach (var compilationAssembly in compilationAssemblies)
                 {
                     Logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
-                    Context.CommonReferences.Add(MetadataReference.CreateFromFile(compilationAssembly.ResolvedPath));
+                    AddMetadataReference(Context.CommonReferences, compilationAssembly.ResolvedPath);
                 }
 
                 // for non .NET Core, include System.Runtime
@@ -105,7 +109,7 @@ namespace OmniSharp.Script
             foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
                 Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
-                Context.CommonReferences.Add(MetadataReference.CreateFromFile(inheritedCompileLib));
+                AddMetadataReference(Context.CommonReferences, inheritedCompileLib);
             }
 
             // Process each .CSX file
@@ -122,6 +126,25 @@ namespace OmniSharp.Script
                     Logger.LogError(ex.InnerException?.ToString() ?? "No inner exception.");
                 }
             }
+        }
+
+        private void AddMetadataReference(ISet<MetadataReference> referenceCollection, string fileReference)
+        {
+            if (!File.Exists(fileReference))
+            {
+                Logger.LogWarning($"Couldn't add reference to '{fileReference}' because the file was not found.");
+                return;
+            }
+
+            var metadataReference = _metadataFileReferenceCache.GetMetadataReference(fileReference);
+            if (metadataReference == null)
+            {
+                Logger.LogWarning($"Couldn't add reference to '{fileReference}' because the loaded metadata reference was null.");
+                return;
+            }
+
+            referenceCollection.Add(metadataReference);
+            Logger.LogDebug($"Added reference to '{fileReference}'");
         }
 
         /// <summary>
@@ -154,9 +177,14 @@ namespace OmniSharp.Script
                 outputKind: OutputKind.DynamicallyLinkedLibrary,
                 usings: Context.CsxUsings[csxPath]);
 
-            // #r refernces
-            Context.CsxReferences[csxPath] = processResult.References.Select(x => MetadataReference.CreateFromFile(x)).ToList();
+            // #r references
+            var metadataReferencesDeclaredInCsx = new HashSet<MetadataReference>();
+            foreach (var assemblyReference in processResult.References)
+            {
+                AddMetadataReference(metadataReferencesDeclaredInCsx, assemblyReference);
+            }
 
+            Context.CsxReferences[csxPath] = metadataReferencesDeclaredInCsx;
             Context.CsxLoadReferences[csxPath] =
                 processResult
                     .LoadedScripts
@@ -180,6 +208,7 @@ namespace OmniSharp.Script
                 projectReferences: Context.CsxLoadReferences[csxPath].Select(p => new ProjectReference(p.Id)),
                 isSubmission: true,
                 hostObjectType: typeof(InteractiveScriptGlobals));
+
             Workspace.AddProject(project);
             AddFile(csxPath, project.Id);
 
