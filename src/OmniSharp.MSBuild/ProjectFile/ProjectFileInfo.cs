@@ -8,6 +8,7 @@ using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
+using NuGet.Frameworks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 
@@ -20,6 +21,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string Name { get; }
         public string ProjectFilePath { get; }
         public FrameworkName TargetFramework { get; }
+        public IList<NuGetFramework> TargetFrameworks { get; }
         public LanguageVersion SpecifiedLanguageVersion { get; }
         public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
         public string AssemblyName { get; }
@@ -47,6 +49,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyName,
             string name,
             FrameworkName targetFramework,
+            IList<NuGetFramework> targetFrameworks,
             LanguageVersion specifiedLanguageVersion,
             Guid projectGuid,
             string targetPath,
@@ -66,6 +69,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.AssemblyName = assemblyName;
             this.Name = name;
             this.TargetFramework = targetFramework;
+            this.TargetFrameworks = targetFrameworks;
             this.SpecifiedLanguageVersion = specifiedLanguageVersion;
             this.ProjectGuid = projectGuid;
             this.TargetPath = targetPath;
@@ -96,13 +100,15 @@ namespace OmniSharp.MSBuild.ProjectFile
             string projectFilePath,
             string solutionDirectory,
             ILogger logger,
-            MSBuildOptions options,
-            ICollection<MSBuildDiagnosticsMessage> diagnostics)
+            MSBuildOptions options = null,
+            ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(projectFilePath))
             {
                 return null;
             }
+
+            options = options ?? new MSBuildOptions();
 
             var globalProperties = new Dictionary<string, string>
             {
@@ -150,7 +156,17 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
             var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
-            var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
+
+            var targetFrameworkMoniker = projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker);
+
+            var targetFramework = projectInstance.GetPropertyValue(PropertyNames.TargetFramework);
+            var targetFrameworks = PropertyConverter.ToTargetFrameworks(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworks));
+
+            if (!targetFrameworks.Any() && !string.IsNullOrWhiteSpace(targetFramework))
+            {
+                targetFrameworks = new[] { NuGetFramework.Parse(targetFramework) };
+            }
+
             var specifiedLanguageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
             var projectGuid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
             var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
@@ -184,7 +200,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 .ToList();
 
             return new ProjectFileInfo(
-                projectFilePath, assemblyName, name, targetFramework, specifiedLanguageVersion,
+                projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
                 !string.IsNullOrWhiteSpace(documentationFile), defineConstants, noWarn,
                 sourceFiles, references, projectReferences, analyzers);

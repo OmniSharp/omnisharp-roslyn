@@ -7,19 +7,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class RoslynTestFixture
     {
-        private readonly ILoggerFactory _loggerFactory;
-        
-        public RoslynTestFixture()
-        {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-        }
-        
-        public ILogger CreateLogger<T>()
-        {
-            return _loggerFactory.CreateLogger<T>();
-        }
-        
         public IOmnisharpAssemblyLoader CreateAssemblyLoader(ILogger logger)
         {
             return new AnnotateAssemblyLoader(logger);

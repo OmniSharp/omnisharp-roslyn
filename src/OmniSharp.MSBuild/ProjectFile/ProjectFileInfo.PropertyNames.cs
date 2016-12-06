@@ -20,8 +20,10 @@
             public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
             public const string SignAssembly = nameof(SignAssembly);
             public const string SolutionDir = nameof(SolutionDir);
+            public const string TargetFramework = nameof(TargetFramework);
             public const string TargetFrameworkMoniker = nameof(TargetFrameworkMoniker);
             public const string TargetFrameworkRootPath = nameof(TargetFrameworkRootPath);
+            public const string TargetFrameworks = nameof(TargetFrameworks);
             public const string TargetPath = nameof(TargetPath);
             public const string VisualStudioVersion = nameof(VisualStudioVersion);
         }

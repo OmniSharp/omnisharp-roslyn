@@ -2,18 +2,18 @@ using System;
 using System.IO;
 using System.Linq;
 using OmniSharp.DotNet.Projects;
-using TestCommon;
+using TestUtility;
 using Xunit;
 
 namespace OmniSharp.DotNet.Tests
 {
     public class ProjectSearcherTests
     {
-        private readonly TestsContext _context;
+        private readonly TestAssets _testAssets;
 
         public ProjectSearcherTests()
         {
-            _context = TestsContext.Default;
+            _testAssets = TestAssets.Instance;
         }
 
         private string GetLocation(string filePath)
@@ -22,9 +22,9 @@ namespace OmniSharp.DotNet.Tests
                 ? Path.GetDirectoryName(filePath)
                 : filePath;
 
-            if (directoryPath.StartsWith(_context.TestSamples, StringComparison.OrdinalIgnoreCase))
+            if (directoryPath.StartsWith(_testAssets.TestProjectsFolder, StringComparison.OrdinalIgnoreCase))
             {
-                directoryPath = directoryPath.Substring(_context.TestSamples.Length);
+                directoryPath = directoryPath.Substring(_testAssets.TestProjectsFolder.Length);
             }
 
             directoryPath = directoryPath.Replace(Path.DirectorySeparatorChar, '/');
@@ -43,7 +43,7 @@ namespace OmniSharp.DotNet.Tests
         [InlineData("ProjectSearchSample04", "ProjectSearchSample04")]
         public void SingleResultExpect(string testSampleName, string projectName)
         {
-            var directory = _context.GetTestSample(testSampleName);
+            var directory = _testAssets.GetTestProjectFolder(testSampleName);
             var projectFilePath = ProjectSearcher.Search(directory).Single();
 
             Assert.Equal(projectName, GetLocation(projectFilePath));
@@ -52,7 +52,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public void NoneProjectJson()
         {
-            var directory = _context.GetTestSample("ProjectSearchSample02");
+            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample02");
             var projectFilePaths = ProjectSearcher.Search(directory);
 
             Assert.Empty(projectFilePaths);
@@ -61,7 +61,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public void RecursivelySearch()
         {
-            var directory = _context.GetTestSample("ProjectSearchSample05");
+            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample05");
             var projectFilePaths = ProjectSearcher.Search(directory);
             var locations = projectFilePaths.Select(GetLocation);
 
@@ -79,7 +79,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public void GlobalJsonExpand()
         {
-            var directory = _context.GetTestSample("ProjectSearchSample06");
+            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample06");
             var projectFilePaths = ProjectSearcher.Search(directory);
             var locations = projectFilePaths.Select(GetLocation);
 
@@ -95,7 +95,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public void GlobalJsonFindNothing()
         {
-            var directory = _context.GetTestSample("ProjectSearchSample07");
+            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample07");
             var projectFilePaths = ProjectSearcher.Search(directory);
 
             Assert.Empty(projectFilePaths);
@@ -104,7 +104,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public void GlobalJsonTopLevelFolders()
         {
-            var directory = _context.GetTestSample("ProjectSearchSample08");
+            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample08");
             var projectFilePaths = ProjectSearcher.Search(directory);
             var locations = projectFilePaths.Select(GetLocation);
 
