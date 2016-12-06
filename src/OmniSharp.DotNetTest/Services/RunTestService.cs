@@ -24,15 +24,15 @@ namespace OmniSharp.DotNetTest.Services
 
         public Task<RunDotNetTestResponse> Handle(RunDotNetTestRequest request)
         {
-            return Task.FromResult(GetResponse(request.FileName, request.MethodName));
+            return Task.FromResult(GetResponse(request.FileName, request.MethodName, request.TestFrameworkName));
         }
 
-        private RunDotNetTestResponse GetResponse(string filepath, string methodName)
+        private RunDotNetTestResponse GetResponse(string filepath, string methodName, string testFrameworkName)
         {
             var projectFolder = ProjectPathResolver.GetProjectPathFromFile(filepath);
             using (var dtm = DotNetTestManager.Start(projectFolder, _loggerFactory))
             {
-                return dtm.ExecuteTestMethod(methodName);
+                return dtm.ExecuteTestMethod(methodName, testFrameworkName);
             }
         }
     }
