@@ -25,7 +25,7 @@ namespace OmniSharp.DotNetTest.Services
             var projectPath = ProjectPathResolver.GetProjectPathFromFile(request.FileName);
             using (var dtm = DotNetTestManager.Start(projectPath, _loggerFactory))
             {
-                return Task.FromResult(dtm.GetTestStartInfo(request.MethodName));
+                return Task.FromResult(dtm.GetTestStartInfo(request.MethodName, request.TestFrameworkName));
             }
         }
     }

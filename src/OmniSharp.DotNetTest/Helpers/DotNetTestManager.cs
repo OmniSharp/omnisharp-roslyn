@@ -50,14 +50,15 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             return new DotNetTestManager(projectDir, loggerFactory.CreateLogger<DotNetTestManager>(), process, reader, writer);
         }
 
-        public RunDotNetTestResponse ExecuteTestMethod(string methodName)
+        public RunDotNetTestResponse ExecuteTestMethod(string methodName, string testFrameworkName)
         {
             SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
+            string testMethodArgument = testFrameworkName == "nunit" ? "--test" : "-method";
 
             var startInfo = ReadMessage<TestStartInfo>();
             var testProcess = StartProcess(
                 startInfo.Payload.FileName,
-                $"{startInfo.Payload.Arguments} -method {methodName}",
+                $"{startInfo.Payload.Arguments} {testMethodArgument} {methodName}",
                 _projectDir);
 
             var results = new List<TestResult>();
@@ -81,7 +82,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             };
         }
 
-        public GetTestStartInfoResponse GetTestStartInfo(string methodName)
+        public GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
             SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
 
@@ -91,7 +92,8 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
 
             if (!string.IsNullOrEmpty(methodName))
             {
-                argument = $"{argument} -method {methodName}";
+                string testMethodArgument = testFrameworkName == "nunit" ? "--test" : "-method";
+                argument = $"{argument} {testMethodArgument} {methodName}";
             }
 
             return new GetTestStartInfoResponse

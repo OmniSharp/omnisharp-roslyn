@@ -7,5 +7,7 @@ namespace OmniSharp.DotNetTest.Models
     public class RunDotNetTestRequest : Request
     {
         public string MethodName { get; set; }
+
+        public string TestFrameworkName { get; set; }
     }
 }
