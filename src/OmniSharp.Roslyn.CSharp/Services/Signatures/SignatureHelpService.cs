@@ -172,20 +172,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             return score;
         }
 
-        private SignatureHelpItem BuildSignature(IMethodSymbol symbol)
+        private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)
         {
             var signature = new SignatureHelpItem();
             signature.Documentation = symbol.GetDocumentationCommentXml();
-            if (symbol.MethodKind == MethodKind.Constructor)
-            {
-                signature.Name = symbol.ContainingType.Name;
-                signature.Label = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-            }
-            else
-            {
-                signature.Name = symbol.Name;
-                signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-            }
+            signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
+            signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
             signature.Parameters = GetParameters(symbol).Select(parameter =>
             {
@@ -196,6 +188,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                     Documentation = parameter.GetDocumentationCommentXml()
                 };
             });
+
             return signature;
         }
 
