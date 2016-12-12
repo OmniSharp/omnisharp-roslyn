@@ -70,7 +70,9 @@ namespace OmniSharp.MSBuild
         public void Initalize(IConfiguration configuration)
         {
             // Set MSBUILD_EXE_PATH to the path of the MSBuild toolset
-            Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", Path.Combine(AppContext.BaseDirectory, "msbuild"));
+            var msbuildExePath = Path.Combine(AppContext.BaseDirectory, "msbuild");
+            Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
+            _logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
 
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);

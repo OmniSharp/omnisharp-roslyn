@@ -7,25 +7,6 @@
   "BuildToolsFolder": ".tools",
   "ArtifactsFolder": "artifacts",
   "PackagesFolder": "packages",
-  "Packages": [
-    {
-      "Name": "Microsoft.Build.Runtime",
-      "Version": "15.1.0-preview-000454-01",
-      "FeedURL": "https://dotnet.myget.org/F/msbuild/api/v2/package",
-      "ContentPath": "contentFiles/any/net46",
-      "TargetFolder": "msbuild"
-    }
-  ],
-  "CopyToOutput": [
-    {
-      "From": "msbuild",
-      "To": "msbuild"
-    },
-    {
-      "From": "Microsoft.CSharp.Core.targets",
-      "To": "msbuild/Microsoft.CSharp.Core.targets"
-    }
-  ],
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
       "netcoreapp1.0"

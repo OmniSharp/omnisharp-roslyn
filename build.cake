@@ -15,8 +15,8 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
-var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"),
-                                                                        ".omnisharp", "local"));
+var installFolder = Argument("install-path",
+    System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 
 // Working directory
@@ -27,21 +27,6 @@ var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "-NoProfile /Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
-public class NuGetPackage
-{
-    public string Name { get; set; }
-    public string Version { get; set; }
-    public string FeedURL { get; set; }
-    public string ContentPath { get; set; }
-    public string TargetFolder { get; set; }
-}
-
-public class CopyToOutput
-{
-    public string From { get; set; }
-    public string To { get; set; }
-}
-
 /// <summary>
 ///  Class representing build.json
 /// </summary>
@@ -51,8 +36,6 @@ public class BuildPlan
     public string BuildToolsFolder { get; set; }
     public string ArtifactsFolder { get; set; }
     public string PackagesFolder { get; set; }
-    public NuGetPackage[] Packages { get; set; }
-    public CopyToOutput[] CopyToOutput { get; set; }
     public bool UseSystemDotNetPath { get; set; }
     public string DotNetFolder { get; set; }
     public string DotNetInstallScriptURL { get; set; }
@@ -82,6 +65,9 @@ var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 
 var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
+var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
+var msbuildNet46Folder = msbuildBaseFolder + "-net46";
+var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.0";
 
 /// <summary>
 ///  Clean artifacts.
@@ -98,7 +84,6 @@ Task("Cleanup")
     CreateDirectory(logFolder);
     CreateDirectory(packageFolder);
     CreateDirectory(scriptFolder);
-    CreateDirectory(packagesFolder);
 });
 
 /// <summary>
@@ -119,30 +104,67 @@ Task("AcquirePackages")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    foreach (var package in buildPlan.Packages)
+    var configFilePath = System.IO.Path.Combine(packagesFolder, "packages.config");
+
+    InstallNuGetPackages(
+        configFilePath: configFilePath,
+        excludeVersion: true,
+        noCache: true,
+        outputDirectory: $"\"{packagesFolder}\"");
+
+    if (DirectoryExists(msbuildNet46Folder))
     {
-        Information($"Downloading {package.Name}...");
-
-        DownloadNuGetPackage(
-            packageID: package.Name,
-            version: package.Version,
-            outputDirectory: packagesFolder,
-            feedUrl: package.FeedURL);
-
-        var contentFolder = System.IO.Path.Combine(packagesFolder, package.Name);
-        foreach (var part in package.ContentPath.Split('/'))
-        {
-            contentFolder = System.IO.Path.Combine(contentFolder, part);
-        }
-
-        if (DirectoryExists(contentFolder))
-        {
-            var targetFolder = System.IO.Path.Combine(workingDirectory, package.TargetFolder);
-
-            Information($"Copying content to {targetFolder}...");
-            CopyDirectory(contentFolder, targetFolder);
-        }
+        DeleteDirectory(msbuildNet46Folder, recursive: true);
     }
+
+    if (DirectoryExists(msbuildNetCoreAppFolder))
+    {
+        DeleteDirectory(msbuildNetCoreAppFolder, recursive: true);
+    }
+
+    CreateDirectory(msbuildNet46Folder);
+    CreateDirectory(msbuildNetCoreAppFolder);
+
+    // Copy MSBuild and SDKs to appropriate locations
+    var msbuildInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime", "contentFiles", "any");
+    var msbuildNet46InstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "net46");
+    var msbuildNetCoreAppInstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "netcoreapp1.0");
+
+    CopyDirectory(msbuildNet46InstallFolder, msbuildNet46Folder);
+    CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
+
+    var sdks = new []
+    {
+        "Microsoft.NET.Sdk",
+        "Microsoft.NET.Sdk.Publish",
+        "Microsoft.NET.Sdk.Web",
+        "Microsoft.NET.Sdk.Web.ProjectSystem",
+        "NuGet.Build.Tasks.Pack"
+    };
+
+    var net46SdkFolder = System.IO.Path.Combine(msbuildNet46Folder, "Sdks");
+    var netCoreAppSdkFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Sdks");
+
+    foreach (var sdk in sdks)
+    {
+        var sdkInstallFolder = System.IO.Path.Combine(packagesFolder, sdk);
+        var net46SdkTargetFolder = System.IO.Path.Combine(net46SdkFolder, sdk);
+        var netCoreAppSdkTargetFolder = System.IO.Path.Combine(netCoreAppSdkFolder, sdk);
+
+        CopyDirectory(sdkInstallFolder, net46SdkTargetFolder);
+        CopyDirectory(sdkInstallFolder, netCoreAppSdkTargetFolder);
+
+        // Ensure that we don't leave the .nupkg unnecessarily hanging around.
+        DeleteFiles(System.IO.Path.Combine(net46SdkTargetFolder, "*.nupkg"));
+        DeleteFiles(System.IO.Path.Combine(netCoreAppSdkTargetFolder, "*.nupkg"));
+    }
+
+    // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
+    var targetsName = "Microsoft.CSharp.Core.targets";
+    var csharpTargetsPath = System.IO.Path.Combine(packagesFolder, "Microsoft.Net.Compilers", "tools", targetsName);
+
+    CopyFile(csharpTargetsPath, System.IO.Path.Combine(msbuildNet46Folder, targetsName));
+    CopyFile(csharpTargetsPath, System.IO.Path.Combine(msbuildNetCoreAppFolder, targetsName));
 });
 
 /// <summary>
@@ -419,21 +441,8 @@ Task("OnlyPublish")
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
-            // Copy other output from build.json to output folder.
-            foreach (var copyToOuput in buildPlan.CopyToOutput)
-            {
-                var path = System.IO.Path.Combine(workingDirectory, copyToOuput.From);
-                var targetPath = System.IO.Path.Combine(outputFolder, copyToOuput.To);
-
-                if (DirectoryExists(path))
-                {
-                    CopyDirectory(path, targetPath);
-                }
-                else if (FileExists(path))
-                {
-                    CopyFile(path, targetPath);
-                }
-            }
+            // Copy MSBuild and SDKs to output
+            CopyDirectory($"{msbuildBaseFolder}-{framework}", System.IO.Path.Combine(outputFolder, "msbuild"));
 
             if (requireArchive)
             {

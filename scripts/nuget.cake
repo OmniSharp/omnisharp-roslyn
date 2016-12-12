@@ -25,11 +25,11 @@ void DownloadNuGetPackage(string packageID, string version, string outputDirecto
     Unzip(outputFileName, outputFolder);
 }
 
-ExitStatus InstallNuGetPackage(string packageID, string version = null, bool excludeVersion = false, bool noCache = false, bool prerelease = false, string outputDirectory = null)
+private ExitStatus RunNuGetInstall(string packageIdOConfigFilePath, string version, bool excludeVersion, bool noCache, bool prerelease, string outputDirectory)
 {
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
 
-    var argList = new List<string> { "install", packageID };
+    var argList = new List<string> { "install", packageIdOConfigFilePath };
 
     if (!string.IsNullOrWhiteSpace(version))
     {
@@ -63,4 +63,14 @@ ExitStatus InstallNuGetPackage(string packageID, string version = null, bool exc
     return IsRunningOnWindows()
         ? Run(nugetPath, arguments)
         : Run("mono", $"\"{nugetPath}\" {arguments}");
+}
+
+ExitStatus InstallNuGetPackage(string packageID, string version = null, bool excludeVersion = false, bool noCache = false, bool prerelease = false, string outputDirectory = null)
+{
+    return RunNuGetInstall(packageID, version, excludeVersion, noCache, prerelease, outputDirectory);
+}
+
+ExitStatus InstallNuGetPackages(string configFilePath, bool excludeVersion = false, bool noCache = false, string outputDirectory = null)
+{
+    return RunNuGetInstall(configFilePath, null, excludeVersion, noCache, false, outputDirectory);
 }
