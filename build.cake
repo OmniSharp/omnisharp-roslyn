@@ -188,20 +188,25 @@ Task("BuildEnvironment")
     {
         client.DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
     }
+
     if (!IsRunningOnWindows())
     {
         Run("chmod", $"+x '{scriptPath}'");
     }
+
     var installArgs = $"-Channel {buildPlan.DotNetChannel}";
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
     {
         installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
     }
+
     if (!buildPlan.UseSystemDotNetPath)
     {
         installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
     }
+
     Run(shell, $"{shellArgument} {scriptPath} {installArgs}");
+
     try
     {
         Run(dotnetcli, "--info");
@@ -374,21 +379,36 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
-            var publishArguments = "publish";
+            var argList = new List<string> { "publish" };
+
             if (!runtime.Equals("default"))
             {
-                publishArguments = $"{publishArguments} --runtime {runtime}";
+                argList.Add("--runtime");
+                argList.Add(runtime);
             }
             else if (buildPlan.CurrentRid == "osx.10.12-x64")
             {
                 // This is a temporary hack to handle the macOS Sierra. At this point,
                 // runtime == "default" but the current RID is macOS Sierra (10.12).
                 // In that case, fall back to El Capitan (10.11).
-                publishArguments = $"{publishArguments} --runtime osx.10.11-x64";
+                argList.Add("--runtime");
+                argList.Add("osx.10.11-x64");
             }
 
-            publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
-            publishArguments = $"{publishArguments} --output \"{outputFolder}\" \"{projectFolder}\"";
+            argList.Add("--framework");
+            argList.Add(framework);
+
+            argList.Add("--configuration");
+            argList.Add(configuration);
+
+            argList.Add("--output");
+            argList.Add($"\"{outputFolder}\"");
+
+            argList.Add($"\"{projectFolder}\"");
+
+            var publishArguments = string.Join(" ", argList);
+            Information($"publishArguments: {publishArguments}");
+
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
@@ -398,6 +418,7 @@ Task("OnlyPublish")
             }
         }
     }
+
     CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
 });
 
@@ -471,6 +492,7 @@ Task("CleanupInstall")
     {
         System.IO.Directory.Delete(installFolder, true);
     }
+
     System.IO.Directory.CreateDirectory(installFolder);
 });
 
