@@ -6,8 +6,7 @@
     "preserveCompilationContext": true,
     "emitEntryPoint": true,
     "copyToOutput": [
-      "config.json",
-      "../../Microsoft.CSharp.Core.targets"
+      "config.json"
     ]
   },
   "dependencies": {
