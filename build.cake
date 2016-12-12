@@ -89,15 +89,16 @@ var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.Packages
 Task("Cleanup")
     .Does(() =>
 {
-    if (System.IO.Directory.Exists(artifactFolder))
+    if (DirectoryExists(artifactFolder))
     {
-        System.IO.Directory.Delete(artifactFolder, true);
+        DeleteDirectory(artifactFolder, recursive: true);
     }
-    System.IO.Directory.CreateDirectory(artifactFolder);
-    System.IO.Directory.CreateDirectory(logFolder);
-    System.IO.Directory.CreateDirectory(packageFolder);
-    System.IO.Directory.CreateDirectory(scriptFolder);
-    System.IO.Directory.CreateDirectory(packagesFolder);
+
+    CreateDirectory(artifactFolder);
+    CreateDirectory(logFolder);
+    CreateDirectory(packageFolder);
+    CreateDirectory(scriptFolder);
+    CreateDirectory(packagesFolder);
 });
 
 /// <summary>
