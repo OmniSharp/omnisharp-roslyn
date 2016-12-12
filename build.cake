@@ -36,6 +36,12 @@ public class NuGetPackage
     public string TargetFolder { get; set; }
 }
 
+public class CopyToOutput
+{
+    public string From { get; set; }
+    public string To { get; set; }
+}
+
 /// <summary>
 ///  Class representing build.json
 /// </summary>
@@ -46,6 +52,7 @@ public class BuildPlan
     public string ArtifactsFolder { get; set; }
     public string PackagesFolder { get; set; }
     public NuGetPackage[] Packages { get; set; }
+    public CopyToOutput[] CopyToOutput { get; set; }
     public bool UseSystemDotNetPath { get; set; }
     public string DotNetFolder { get; set; }
     public string DotNetInstallScriptURL { get; set; }
@@ -127,7 +134,7 @@ Task("AcquirePackages")
             contentFolder = System.IO.Path.Combine(contentFolder, part);
         }
 
-        if (System.IO.Directory.Exists(contentFolder))
+        if (DirectoryExists(contentFolder))
         {
             var targetFolder = System.IO.Path.Combine(workingDirectory, package.TargetFolder);
 
@@ -407,10 +414,25 @@ Task("OnlyPublish")
             argList.Add($"\"{projectFolder}\"");
 
             var publishArguments = string.Join(" ", argList);
-            Information($"publishArguments: {publishArguments}");
 
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
+
+            // Copy other output from build.json to output folder.
+            foreach (var copyToOuput in buildPlan.CopyToOutput)
+            {
+                var path = System.IO.Path.Combine(workingDirectory, copyToOuput.From);
+                var targetPath = System.IO.Path.Combine(outputFolder, copyToOuput.To);
+
+                if (DirectoryExists(path))
+                {
+                    CopyDirectory(path, targetPath);
+                }
+                else if (FileExists(path))
+                {
+                    CopyFile(path, targetPath);
+                }
+            }
 
             if (requireArchive)
             {

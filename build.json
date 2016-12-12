@@ -16,6 +16,16 @@
       "TargetFolder": "msbuild"
     }
   ],
+  "CopyToOutput": [
+    {
+      "From": "msbuild",
+      "To": "msbuild"
+    },
+    {
+      "From": "Microsoft.CSharp.Core.targets",
+      "To": "msbuild/Microsoft.CSharp.Core.targets"
+    }
+  ],
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
       "netcoreapp1.0"
