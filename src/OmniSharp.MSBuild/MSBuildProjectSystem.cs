@@ -69,13 +69,38 @@ namespace OmniSharp.MSBuild
 
         public void Initalize(IConfiguration configuration)
         {
-            // Set MSBUILD_EXE_PATH to the path of the MSBuild toolset
-            var msbuildExePath = Path.Combine(AppContext.BaseDirectory, "msbuild");
-            Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
-            _logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
-
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
+
+            // Set the MSBUILD_EXE_PATH and MSBuildSDKsPath environment variables
+            var msbuildFolder = Path.Combine(AppContext.BaseDirectory, "msbuild");
+
+            var msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.exe");
+            if (!File.Exists(msbuildExePath))
+            {
+                msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.dll");
+            }
+
+            if (File.Exists(msbuildExePath))
+            {
+                Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
+                _logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
+            }
+            else
+            {
+                _logger.LogError("Could not locate MSBuild to set MSBUILD_EXE_PATH");;
+            }
+
+            var msbuildSdksFolder = Path.Combine(msbuildFolder, "Sdks");
+            if (Directory.Exists(msbuildSdksFolder))
+            {
+                Environment.SetEnvironmentVariable("MSBuildSDKsPath", msbuildSdksFolder);
+                _logger.LogInformation($"MSBuildSDKsPath environment variable set to {msbuildSdksFolder}");
+            }
+            else
+            {
+                _logger.LogError("Could not locate MSBuild Sdks path to set MSBuildSDKsPath");
+            }
 
             if (_options.WaitForDebugger)
             {
