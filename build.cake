@@ -3,6 +3,7 @@
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
+#load "scripts/nuget.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -26,6 +27,15 @@ var shell = IsRunningOnWindows() ? "powershell" : "bash";
 var shellArgument = IsRunningOnWindows() ? "-NoProfile /Command" : "-C";
 var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 
+public class NuGetPackage
+{
+    public string Name { get; set; }
+    public string Version { get; set; }
+    public string FeedURL { get; set; }
+    public string ContentPath { get; set; }
+    public string TargetFolder { get; set; }
+}
+
 /// <summary>
 ///  Class representing build.json
 /// </summary>
@@ -34,6 +44,8 @@ public class BuildPlan
     public IDictionary<string, string[]> TestProjects { get; set; }
     public string BuildToolsFolder { get; set; }
     public string ArtifactsFolder { get; set; }
+    public string PackagesFolder { get; set; }
+    public NuGetPackage[] Packages { get; set; }
     public bool UseSystemDotNetPath { get; set; }
     public string DotNetFolder { get; set; }
     public string DotNetInstallScriptURL { get; set; }
@@ -62,6 +74,8 @@ var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
 var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 
+var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
+
 /// <summary>
 ///  Clean artifacts.
 /// </summary>
@@ -76,6 +90,7 @@ Task("Cleanup")
     System.IO.Directory.CreateDirectory(logFolder);
     System.IO.Directory.CreateDirectory(packageFolder);
     System.IO.Directory.CreateDirectory(scriptFolder);
+    System.IO.Directory.CreateDirectory(packagesFolder);
 });
 
 /// <summary>
@@ -84,8 +99,42 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
+    .IsDependentOn("AcquirePackages")
     .Does(() =>
 {
+});
+
+/// <summary>
+/// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
+/// </summary>
+Task("AcquirePackages")
+    .IsDependentOn("BuildEnvironment")
+    .Does(() =>
+{
+    foreach (var package in buildPlan.Packages)
+    {
+        Information($"Downloading {package.Name}...");
+
+        DownloadNuGetPackage(
+            packageID: package.Name,
+            version: package.Version,
+            outputDirectory: packagesFolder,
+            feedUrl: package.FeedURL);
+
+        var contentFolder = System.IO.Path.Combine(packagesFolder, package.Name);
+        foreach (var part in package.ContentPath.Split('/'))
+        {
+            contentFolder = System.IO.Path.Combine(contentFolder, part);
+        }
+
+        if (System.IO.Directory.Exists(contentFolder))
+        {
+            var targetFolder = System.IO.Path.Combine(workingDirectory, package.TargetFolder);
+
+            Information($"Copying content to {targetFolder}...");
+            CopyDirectory(contentFolder, targetFolder);
+        }
+    }
 });
 
 /// <summary>
@@ -177,16 +226,12 @@ Task("BuildEnvironment")
 
     System.IO.Directory.CreateDirectory(toolsFolder);
 
-    var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
-    var arguments = $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory \"{toolsFolder}\"";
-    if (IsRunningOnWindows())
-    {
-        Run(nugetPath, arguments);
-    }
-    else
-    {
-        Run("mono", $"\"{nugetPath}\" {arguments}");
-    }
+    InstallNuGetPackage(
+        packageID: "xunit.runner.console",
+        excludeVersion: true,
+        noCache: true,
+        prerelease: true,
+        outputDirectory: $"\"{toolsFolder}\"");
 });
 
 /// <summary>
