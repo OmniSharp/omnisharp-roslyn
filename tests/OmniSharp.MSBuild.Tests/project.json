@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "OmniSharp.MSBuild": "1.0.0",
-    "Microsoft.Build.Runtime": "15.1.0-preview-000454-01",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
   },

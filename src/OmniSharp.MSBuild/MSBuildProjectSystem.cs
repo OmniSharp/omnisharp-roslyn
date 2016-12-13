@@ -69,6 +69,10 @@ namespace OmniSharp.MSBuild
 
         public static void SetUpMSBuildEnvironment(string msbuildFolder, ILogger logger)
         {
+            // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
+            Environment.SetEnvironmentVariable("MSBuildExtensionsPath", msbuildFolder);
+            logger.LogInformation($"MSBuildExtensionsPath environment variable set to {msbuildFolder}");
+
             // Set the MSBUILD_EXE_PATH environment variable to the location of MSBuild.exe or MSBuild.dll.
             var msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.exe");
             if (!File.Exists(msbuildExePath))

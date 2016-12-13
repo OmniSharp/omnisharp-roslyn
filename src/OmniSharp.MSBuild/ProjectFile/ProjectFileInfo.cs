@@ -122,10 +122,6 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
             }
-            else
-            {
-                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, Path.Combine(AppContext.BaseDirectory, "msbuild"));
-            }
 
             if (PlatformHelper.IsMono)
             {
