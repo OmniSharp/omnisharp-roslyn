@@ -42,7 +42,8 @@ public class BuildPlan
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string DownloadURL { get; set; }
-    public string MSBuildForMono { get; set; }
+    public string MSBuildRuntimeForMono { get; set; }
+    public string MSBuildLibForMono { get; set; }
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
@@ -70,6 +71,8 @@ var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.Packages
 var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.0";
+var msbuildRuntimeForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime.Mono");
+var msbuildLibForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Lib.Mono");
 
 /// <summary>
 ///  Clean artifacts.
@@ -114,25 +117,35 @@ Task("AcquirePackages")
         noCache: true,
         outputDirectory: $"\"{packagesFolder}\"");
 
-    var msbuildMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime.Mono");
     if (!IsRunningOnWindows())
     {
-        if (DirectoryExists(msbuildMonoInstallFolder))
+        if (DirectoryExists(msbuildRuntimeForMonoInstallFolder))
         {
-            DeleteDirectory(msbuildMonoInstallFolder, recursive: true);
+            DeleteDirectory(msbuildRuntimeForMonoInstallFolder, recursive: true);
         }
 
-        CreateDirectory(msbuildMonoInstallFolder);
+        if (DirectoryExists(msbuildLibForMonoInstallFolder))
+        {
+            DeleteDirectory(msbuildLibForMonoInstallFolder, recursive: true);
+        }
 
-        var msbuildMonoZip = System.IO.Path.Combine(msbuildMonoInstallFolder, buildPlan.MSBuildForMono);
+        CreateDirectory(msbuildRuntimeForMonoInstallFolder);
+        CreateDirectory(msbuildLibForMonoInstallFolder);
+
+        var msbuildMonoRuntimeZip = System.IO.Path.Combine(msbuildRuntimeForMonoInstallFolder, buildPlan.MSBuildRuntimeForMono);
+        var msbuildMonoLibZip = System.IO.Path.Combine(msbuildLibForMonoInstallFolder, buildPlan.MSBuildLibForMono);
 
         using (var client = new WebClient())
         {
-            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildForMono}", msbuildMonoZip);
+            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildRuntimeForMono}", msbuildMonoRuntimeZip);
+            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildLibForMono}", msbuildMonoLibZip);
         }
 
-        Unzip(msbuildMonoZip, msbuildMonoInstallFolder);
-        DeleteFile(msbuildMonoZip);
+        Unzip(msbuildMonoRuntimeZip, msbuildRuntimeForMonoInstallFolder);
+        Unzip(msbuildMonoLibZip, msbuildLibForMonoInstallFolder);
+
+        DeleteFile(msbuildMonoRuntimeZip);
+        DeleteFile(msbuildMonoLibZip);
     }
 
     if (DirectoryExists(msbuildNet46Folder))
@@ -159,7 +172,7 @@ Task("AcquirePackages")
     }
     else
     {
-        CopyDirectory(msbuildMonoInstallFolder, msbuildNet46Folder);
+        CopyDirectory(msbuildRuntimeForMonoInstallFolder, msbuildNet46Folder);
     }
 
     CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
@@ -474,6 +487,12 @@ Task("OnlyPublish")
 
             // Copy MSBuild and SDKs to output
             CopyDirectory($"{msbuildBaseFolder}-{framework}", System.IO.Path.Combine(outputFolder, "msbuild"));
+
+            // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
+            if (!IsRunningOnWindows() && framework == "net46")
+            {
+                CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+            }
 
             if (requireArchive)
             {
