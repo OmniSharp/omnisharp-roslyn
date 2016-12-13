@@ -1,30 +1,5 @@
 #load "runhelpers.cake"
 
-using System.Net;
-
-/// <summary>
-/// Downloads and unzips a NuGet package directly without any dependencies.
-/// </summary>
-void DownloadNuGetPackage(string packageID, string version, string outputDirectory, string feedUrl)
-{
-    var outputFolder = System.IO.Path.Combine(outputDirectory, packageID);
-    var outputFileName = System.IO.Path.ChangeExtension(outputFolder, "nupkg");
-
-    if (DirectoryExists(outputFolder))
-    {
-        DeleteDirectory(outputFolder, recursive: true);
-    }
-
-    using (var client = new WebClient())
-    {
-        client.DownloadFile(
-            address: $"{feedUrl}/{packageID}/{version}",
-            fileName: outputFileName);
-    }
-
-    Unzip(outputFileName, outputFolder);
-}
-
 private ExitStatus RunNuGetInstall(string packageIdOConfigFilePath, string version, bool excludeVersion, bool noCache, bool prerelease, string outputDirectory)
 {
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
