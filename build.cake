@@ -492,6 +492,20 @@ Task("OnlyPublish")
             if (!IsRunningOnWindows() && framework == "net46")
             {
                 CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+
+                // Delete a handful of binaries that aren't necessary (and in some cases harmful) when running on Mono.
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.AppContext.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Numerics.Vectors.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.ComponentModel.Primitives.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.ComponentModel.TypeConverter.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Console.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.IO.FileSystem.Primitives.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.IO.FileSystem.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.Encoding.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.Primitives.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.X509Certificates.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Threading.Thread.dll"));
             }
 
             if (requireArchive)
