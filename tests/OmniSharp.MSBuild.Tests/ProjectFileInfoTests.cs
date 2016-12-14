@@ -1,9 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.ProjectFile;
 using TestUtility;
-using TestUtility.Fake;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,7 +20,7 @@ namespace OmniSharp.MSBuild.Tests
             MSBuildProjectSystem.SetUpMSBuildEnvironment(this._logger);
         }
 
-        [Fact(Skip = "Won't work until we restore .NET Core .csproj projects")]
+        [Fact]
         public void Hello_world_has_correct_property_values()
         {
             var projectFolder = _testAssets.GetTestProjectFolder("HelloWorld");
