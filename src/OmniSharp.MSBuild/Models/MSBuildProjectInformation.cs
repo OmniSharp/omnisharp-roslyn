@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.Models
@@ -22,6 +23,10 @@ namespace OmniSharp.Models
             ProjectGuid = projectFileInfo.ProjectGuid;
             TargetFramework = projectFileInfo.TargetFramework.ToString();
             SourceFiles = projectFileInfo.SourceFiles;
+
+            TargetFrameworks = projectFileInfo.TargetFrameworks
+                .Select(f => new TargetFramework(f))
+                .ToArray();
         }
     }
 }
