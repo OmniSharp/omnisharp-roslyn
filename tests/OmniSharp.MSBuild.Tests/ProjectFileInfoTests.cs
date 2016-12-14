@@ -5,43 +5,24 @@ using OmniSharp.MSBuild.ProjectFile;
 using TestUtility;
 using TestUtility.Fake;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {
-    public class ProjectFileInfoTests : IDisposable
+    public class ProjectFileInfoTests
     {
         private readonly TestAssets _testAssets;
         private readonly ILogger _logger;
 
-        private const string MSBUILD_EXE_PATH = "MSBUILD_EXE_PATH";
-        private readonly bool _isMSBuildExePathSet;
-        private readonly string _previousMSBuildExePath;
-
-        public ProjectFileInfoTests()
+        public ProjectFileInfoTests(ITestOutputHelper output)
         {
             this._testAssets = TestAssets.Instance;
+            this._logger = new TestLogger(output);
 
-            var loggerFactory = new FakeLoggerFactory();
-            this._logger = loggerFactory.CreateLogger("test");
-
-            var msbuildExePath = Path.Combine(Directory.GetCurrentDirectory(), "msbuild.exe");
-            if (File.Exists(msbuildExePath))
-            {
-                this._previousMSBuildExePath = Environment.GetEnvironmentVariable(MSBUILD_EXE_PATH);
-                Environment.SetEnvironmentVariable(MSBUILD_EXE_PATH, msbuildExePath);
-                this._isMSBuildExePathSet = true;
-            }
+            MSBuildProjectSystem.SetUpMSBuildEnvironment(this._logger);
         }
 
-        public void Dispose()
-        {
-            if (this._isMSBuildExePathSet)
-            {
-                Environment.SetEnvironmentVariable(MSBUILD_EXE_PATH, this._previousMSBuildExePath);
-            }
-        }
-
-        [Fact(Skip = "Doesn't run on OSX/Linux yet")]
+        [Fact(Skip = "Won't work until we restore .NET Core .csproj projects")]
         public void Hello_world_has_correct_property_values()
         {
             var projectFolder = _testAssets.GetTestProjectFolder("HelloWorld");
@@ -49,6 +30,7 @@ namespace OmniSharp.MSBuild.Tests
 
             var projectFileInfo = ProjectFileInfo.Create(projectFilePath, projectFolder, this._logger);
 
+            Assert.NotNull(projectFileInfo);
             Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
             Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
             Assert.Equal(".NETCoreApp,Version=v1.0", projectFileInfo.TargetFrameworks[0].DotNetFrameworkName);

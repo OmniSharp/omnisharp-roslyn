@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -67,15 +68,100 @@ namespace OmniSharp.MSBuild
             _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
         }
 
+        private static string FindMSBuildFolder()
+        {
+            // Try to locate the appropriate build-time msbuild folder by searching for
+            // the OmniSharp solution relative to the current folder.
+
+            var current = Directory.GetCurrentDirectory();
+            while (!File.Exists(Path.Combine(current, "OmniSharp.sln")))
+            {
+                current = Path.GetDirectoryName(current);
+                if (Path.GetPathRoot(current) == current)
+                {
+                    break;
+                }
+            }
+
+#if NET46
+            var folderName = ".msbuild-net46";
+#else
+            var folderName = ".msbuild-netcoreapp1.0";
+#endif
+
+            var result = Path.Combine(current, folderName);
+
+            return Directory.Exists(result)
+                ? result
+                : null;
+        }
+
+        public static void SetUpMSBuildEnvironment(ILogger logger)
+        {
+            var msbuildFolder = Path.Combine(AppContext.BaseDirectory, "msbuild");
+
+            if (!Directory.Exists(msbuildFolder))
+            {
+                msbuildFolder = FindMSBuildFolder();
+            }
+
+            if (msbuildFolder == null || !Directory.Exists(msbuildFolder))
+            {
+                logger.LogError("Could not locate MSBuild path. MSBuildProjectSystem will not function properly.");
+                return;
+            }
+
+            // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
+            Environment.SetEnvironmentVariable("MSBuildExtensionsPath", msbuildFolder);
+            logger.LogInformation($"MSBuildExtensionsPath environment variable set to {msbuildFolder}");
+
+            // Set the MSBUILD_EXE_PATH environment variable to the location of MSBuild.exe or MSBuild.dll.
+            var msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.exe");
+            if (!File.Exists(msbuildExePath))
+            {
+                msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.dll");
+            }
+
+            if (!File.Exists(msbuildExePath))
+            {
+                logger.LogError("Could not locate MSBuild to set MSBUILD_EXE_PATH");
+                return;
+            }
+
+            if (File.Exists(msbuildExePath))
+            {
+                Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
+                logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
+            }
+            else
+            {
+                logger.LogError("Could not locate MSBuild to set MSBUILD_EXE_PATH"); ;
+            }
+
+            // Set the MSBuildSDKsPath environment variable to the location of the SDKs.
+            var msbuildSdksFolder = Path.Combine(msbuildFolder, "Sdks");
+            if (Directory.Exists(msbuildSdksFolder))
+            {
+                Environment.SetEnvironmentVariable("MSBuildSDKsPath", msbuildSdksFolder);
+                logger.LogInformation($"MSBuildSDKsPath environment variable set to {msbuildSdksFolder}");
+            }
+            else
+            {
+                logger.LogError("Could not locate MSBuild Sdks path to set MSBuildSDKsPath");
+            }
+        }
+
         public void Initalize(IConfiguration configuration)
         {
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
+            SetUpMSBuildEnvironment(_logger);
+
             if (_options.WaitForDebugger)
             {
-                Console.WriteLine($"Attach to process {System.Diagnostics.Process.GetCurrentProcess().Id}");
-                while (!System.Diagnostics.Debugger.IsAttached)
+                Console.WriteLine($"Attach to process {Process.GetCurrentProcess().Id}");
+                while (!Debugger.IsAttached)
                 {
                     System.Threading.Thread.Sleep(100);
                 }

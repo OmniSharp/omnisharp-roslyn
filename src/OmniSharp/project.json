@@ -6,8 +6,7 @@
     "preserveCompilationContext": true,
     "emitEntryPoint": true,
     "copyToOutput": [
-      "config.json",
-      "../../Microsoft.CSharp.Core.targets"
+      "config.json"
     ]
   },
   "dependencies": {
@@ -16,8 +15,7 @@
     "OmniSharp.DotNet": "1.0.0",
     "OmniSharp.DotNetTest": "1.0.0",
     "OmniSharp.MSBuild": "1.0.0",
-    "OmniSharp.Script": "1.0.0",
-    "Microsoft.Build.Runtime": "15.1.0-preview-000454-01"
+    "OmniSharp.Script": "1.0.0"
   },
   "frameworks": {
     "net46": {},
