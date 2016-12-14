@@ -167,7 +167,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var targetFramework = projectInstance.GetPropertyValue(PropertyNames.TargetFramework);
             var targetFrameworks = PropertyConverter.ToTargetFrameworks(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworks));
 
-            if (!targetFrameworks.Any() && !string.IsNullOrWhiteSpace(targetFramework))
+            if (targetFrameworks.Count == 0 && !string.IsNullOrWhiteSpace(targetFramework))
             {
                 targetFrameworks = new[] { NuGetFramework.Parse(targetFramework) };
             }
