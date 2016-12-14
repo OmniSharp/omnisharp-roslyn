@@ -8,7 +8,8 @@
     "OmniSharp.Roslyn.CSharp": "1.0.0",
     "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-rc",
     "Microsoft.DotNet.ProjectModel": "1.0.0-rc3-003121",
-    "Microsoft.DotNet.ProjectModel.Workspaces": "1.0.0-preview2-003121"
+    "Microsoft.DotNet.ProjectModel.Workspaces": "1.0.0-preview2-003121",
+    "xunit": "2.1.0"
   },
   "frameworks": {
     "netstandard1.6": {
