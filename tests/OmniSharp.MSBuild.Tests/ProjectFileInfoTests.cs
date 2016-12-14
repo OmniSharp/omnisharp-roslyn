@@ -21,10 +21,24 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public void Hello_world_has_correct_property_values()
+        public void HelloWorld_has_correct_property_values()
         {
             var projectFolder = _testAssets.GetTestProjectFolder("HelloWorld");
             var projectFilePath = Path.Combine(projectFolder, "HelloWorld.csproj");
+
+            var projectFileInfo = ProjectFileInfo.Create(projectFilePath, projectFolder, this._logger);
+
+            Assert.NotNull(projectFileInfo);
+            Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
+            Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
+            Assert.Equal(".NETCoreApp,Version=v1.0", projectFileInfo.TargetFrameworks[0].DotNetFrameworkName);
+        }
+
+        [Fact]
+        public void NetStandardAndNetCoreApp_has_correct_property_values()
+        {
+            var projectFolder = _testAssets.GetTestProjectFolder("NetStandardAndNetCoreApp");
+            var projectFilePath = Path.Combine(projectFolder, "NetStandardAndNetCoreApp.csproj");
 
             var projectFileInfo = ProjectFileInfo.Create(projectFilePath, projectFolder, this._logger);
 
