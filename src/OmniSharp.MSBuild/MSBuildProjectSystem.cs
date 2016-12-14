@@ -514,7 +514,7 @@ namespace OmniSharp.MSBuild
             }
 
             return Task.FromResult<object>(
-                new MSBuildProject(projectFileInfo));
+                new MSBuildProjectInformation(projectFileInfo));
         }
     }
 }

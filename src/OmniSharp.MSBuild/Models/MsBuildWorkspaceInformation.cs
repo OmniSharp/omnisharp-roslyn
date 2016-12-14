@@ -13,7 +13,7 @@ namespace OmniSharp.Models
             Projects = projects
                 .OrderBy(x => x.AssemblyName)
                 .Select(p => {
-                    var project = new MSBuildProject(p);
+                    var project = new MSBuildProjectInformation(p);
                     if (excludeSourceFiles)
                     {
                         project.SourceFiles = null;
@@ -24,6 +24,6 @@ namespace OmniSharp.Models
         }
 
         public string SolutionPath { get; }
-        public IEnumerable<MSBuildProject> Projects { get; }
+        public IEnumerable<MSBuildProjectInformation> Projects { get; }
     }
 }

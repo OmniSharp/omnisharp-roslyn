@@ -4,7 +4,7 @@ using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.Models
 {
-    public class MSBuildProject
+    public class MSBuildProjectInformation
     {
         public Guid ProjectGuid { get; set; }
         public string Path { get; set; }
@@ -14,7 +14,7 @@ namespace OmniSharp.Models
         public IList<string> SourceFiles { get; set; }
         public IList<TargetFramework> TargetFrameworks { get; set; }
 
-        public MSBuildProject(ProjectFileInfo projectFileInfo)
+        public MSBuildProjectInformation(ProjectFileInfo projectFileInfo)
         {
             AssemblyName = projectFileInfo.AssemblyName;
             Path = projectFileInfo.ProjectFilePath;
