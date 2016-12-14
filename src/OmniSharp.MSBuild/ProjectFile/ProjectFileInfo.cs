@@ -148,8 +148,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ? collection.LoadProject(projectFilePath)
                 : collection.LoadProject(projectFilePath, options.ToolsVersion);
 
-            logger.LogInformation($"Using tools version: {project.ToolsVersion}");
-
             var projectInstance = project.CreateProjectInstance();
             var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
                 new[] { new MSBuildLogForwarder(logger, diagnostics) });
