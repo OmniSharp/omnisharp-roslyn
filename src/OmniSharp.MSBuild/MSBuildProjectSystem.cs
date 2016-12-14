@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -67,8 +68,49 @@ namespace OmniSharp.MSBuild
             _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
         }
 
-        public static void SetUpMSBuildEnvironment(string msbuildFolder, ILogger logger)
+        private static string FindMSBuildFolder()
         {
+            // Try to locate the appropriate build-time msbuild folder by searching for
+            // the OmniSharp solution relative to the current folder.
+
+            var current = Directory.GetCurrentDirectory();
+            while (!File.Exists(Path.Combine(current, "OmniSharp.sln")))
+            {
+                current = Path.GetDirectoryName(current);
+                if (Path.GetPathRoot(current) == current)
+                {
+                    break;
+                }
+            }
+
+#if NET46
+            var folderName = ".msbuild-net46";
+#else
+            var folderName = ".msbuild-netcoreapp1.0";
+#endif
+
+            var result = Path.Combine(current, folderName);
+
+            return Directory.Exists(result)
+                ? result
+                : null;
+        }
+
+        public static void SetUpMSBuildEnvironment(ILogger logger)
+        {
+            var msbuildFolder = Path.Combine(AppContext.BaseDirectory, "msbuild");
+
+            if (!Directory.Exists(msbuildFolder))
+            {
+                msbuildFolder = FindMSBuildFolder();
+            }
+
+            if (msbuildFolder == null || !Directory.Exists(msbuildFolder))
+            {
+                logger.LogError("Could not locate MSBuild path. MSBuildProjectSystem will not function properly.");
+                return;
+            }
+
             // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
             Environment.SetEnvironmentVariable("MSBuildExtensionsPath", msbuildFolder);
             logger.LogInformation($"MSBuildExtensionsPath environment variable set to {msbuildFolder}");
@@ -114,13 +156,12 @@ namespace OmniSharp.MSBuild
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
-            var msbuildFolder = Path.Combine(AppContext.BaseDirectory, "msbuild");
-            SetUpMSBuildEnvironment(msbuildFolder, _logger);
+            SetUpMSBuildEnvironment(_logger);
 
             if (_options.WaitForDebugger)
             {
-                Console.WriteLine($"Attach to process {System.Diagnostics.Process.GetCurrentProcess().Id}");
-                while (!System.Diagnostics.Debugger.IsAttached)
+                Console.WriteLine($"Attach to process {Process.GetCurrentProcess().Id}");
+                while (!Debugger.IsAttached)
                 {
                     System.Threading.Thread.Sleep(100);
                 }

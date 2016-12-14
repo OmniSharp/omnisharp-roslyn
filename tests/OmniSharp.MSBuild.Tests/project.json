@@ -1,10 +1,7 @@
 {
   "version": "1.0.0-*",
   "buildOptions": {
-    "warningsAsErrors": true,
-    "copyToOutput": [
-      "../../Microsoft.CSharp.Core.targets"
-    ]
+    "warningsAsErrors": true
   },
   "dependencies": {
     "OmniSharp.MSBuild": "1.0.0",
