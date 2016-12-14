@@ -17,7 +17,7 @@ namespace OmniSharp.MSBuild.Tests
             this._testAssets = TestAssets.Instance;
             this._logger = new TestLogger(output);
 
-            MSBuildProjectSystem.SetUpMSBuildEnvironment(this._logger);
+            MSBuildEnvironment.Initialize(this._logger);
         }
 
         [Fact]
