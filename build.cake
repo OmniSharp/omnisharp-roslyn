@@ -161,7 +161,7 @@ Task("AcquirePackages")
     CreateDirectory(msbuildNet46Folder);
     CreateDirectory(msbuildNetCoreAppFolder);
 
-    // Copy MSBuild and SDKs to appropriate locations
+    // Copy MSBuild runtime to appropriate locations
     var msbuildInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime", "contentFiles", "any");
     var msbuildNet46InstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "net46");
     var msbuildNetCoreAppInstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "netcoreapp1.0");
@@ -203,12 +203,25 @@ Task("AcquirePackages")
         DeleteFiles(System.IO.Path.Combine(netCoreAppSdkTargetFolder, "*.nupkg"));
     }
 
-    // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
-    var targetsName = "Microsoft.CSharp.Core.targets";
-    var csharpTargetsPath = System.IO.Path.Combine(packagesFolder, "Microsoft.Net.Compilers", "tools", targetsName);
+    // Copy NuGet.targets from NuGet.Build.Tasks
+    var nugetTargetsName = "NuGet.targets";
+    var nugetTargetsPath = System.IO.Path.Combine(packagesFolder, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
 
-    CopyFile(csharpTargetsPath, System.IO.Path.Combine(msbuildNet46Folder, targetsName));
-    CopyFile(csharpTargetsPath, System.IO.Path.Combine(msbuildNetCoreAppFolder, targetsName));
+    CopyFile(nugetTargetsPath, System.IO.Path.Combine(msbuildNet46Folder, nugetTargetsName));
+    CopyFile(nugetTargetsPath, System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetTargetsName));
+
+    // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
+    var csharpTargetsName = "Microsoft.CSharp.Core.targets";
+    var csharpTargetsPath = System.IO.Path.Combine(packagesFolder, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
+
+    var csharpTargetsNet46Folder = System.IO.Path.Combine(msbuildNet46Folder, "Roslyn");
+    var csharpTargetsNetCoreAppFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Roslyn");
+
+    CreateDirectory(csharpTargetsNet46Folder);
+    CreateDirectory(csharpTargetsNetCoreAppFolder);
+
+    CopyFile(csharpTargetsPath, System.IO.Path.Combine(csharpTargetsNet46Folder, csharpTargetsName));
+    CopyFile(csharpTargetsPath, System.IO.Path.Combine(csharpTargetsNetCoreAppFolder,csharpTargetsName));
 });
 
 /// <summary>
@@ -487,6 +500,9 @@ Task("OnlyPublish")
 
             // Copy MSBuild and SDKs to output
             CopyDirectory($"{msbuildBaseFolder}-{framework}", System.IO.Path.Combine(outputFolder, "msbuild"));
+
+            // Delete NuGet.targets from output
+            DeleteFile(System.IO.Path.Combine(outputFolder, "NuGet.targets"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
             if (!IsRunningOnWindows() && framework == "net46")
