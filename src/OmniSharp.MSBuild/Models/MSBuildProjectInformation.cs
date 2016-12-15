@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using NuGet.Frameworks;
 using OmniSharp.MSBuild.ProjectFile;
 
 namespace OmniSharp.Models
@@ -14,6 +14,7 @@ namespace OmniSharp.Models
         public string TargetFramework { get; set; }
         public IList<string> SourceFiles { get; set; }
         public IList<TargetFramework> TargetFrameworks { get; set; }
+        public string OutputPath { get; set; }
 
         public MSBuildProjectInformation(ProjectFileInfo projectFileInfo)
         {
@@ -24,9 +25,23 @@ namespace OmniSharp.Models
             TargetFramework = projectFileInfo.TargetFramework.ToString();
             SourceFiles = projectFileInfo.SourceFiles;
 
-            TargetFrameworks = projectFileInfo.TargetFrameworks
-                .Select(f => new TargetFramework(f))
-                .ToArray();
+            var targetFrameworks = new List<TargetFramework>();
+            foreach (var targetFramework in projectFileInfo.TargetFrameworks)
+            {
+                try
+                {
+                    var framework = NuGetFramework.Parse(targetFramework);
+                    targetFrameworks.Add(new TargetFramework(framework));
+                }
+                catch
+                {
+                    // If the value can't be parsed, ignore it.
+                }
+            }
+
+            TargetFrameworks = targetFrameworks;
+
+            OutputPath = projectFileInfo.OutputPath;
         }
     }
 }

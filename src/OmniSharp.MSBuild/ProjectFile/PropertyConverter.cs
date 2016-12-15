@@ -66,6 +66,22 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
+        public static IList<string> ToList(string propertyValue, char separator, bool trimValues = true)
+        {
+            if (string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return new string[0];
+            }
+
+            var result = new List<string>();
+            foreach (var value in propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                result.Add(value.Trim());
+            }
+
+            return result;
+        }
+
         public static IList<NuGetFramework> ToTargetFrameworks(string propertyValue)
         {
             if (string.IsNullOrWhiteSpace(propertyValue))

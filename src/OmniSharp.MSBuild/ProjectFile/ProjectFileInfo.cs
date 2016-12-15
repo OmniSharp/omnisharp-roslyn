@@ -8,7 +8,6 @@ using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
-using NuGet.Frameworks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 
@@ -21,7 +20,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string Name { get; }
         public string ProjectFilePath { get; }
         public FrameworkName TargetFramework { get; }
-        public IList<NuGetFramework> TargetFrameworks { get; }
+        public IList<string> TargetFrameworks { get; }
         public LanguageVersion SpecifiedLanguageVersion { get; }
         public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
         public string AssemblyName { get; }
@@ -31,6 +30,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool SignAssembly { get; }
         public string AssemblyOriginatorKeyFile { get; }
         public bool GenerateXmlDocumentation { get; }
+        public string OutputPath { get; }
         public IList<string> PreprocessorSymbolNames { get; }
         public IList<string> SuppressedDiagnosticIds { get; }
 
@@ -49,7 +49,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyName,
             string name,
             FrameworkName targetFramework,
-            IList<NuGetFramework> targetFrameworks,
+            IList<string> targetFrameworks,
             LanguageVersion specifiedLanguageVersion,
             Guid projectGuid,
             string targetPath,
@@ -58,6 +58,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             bool signAssembly,
             string assemblyOriginatorKeyFile,
             bool generateXmlDocumentation,
+            string outputPath,
             IList<string> defineConstants,
             IList<string> suppressedDiagnosticIds,
             IList<string> sourceFiles,
@@ -78,6 +79,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.SignAssembly = signAssembly;
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
+            this.OutputPath = outputPath;
             this.PreprocessorSymbolNames = defineConstants;
             this.SuppressedDiagnosticIds = suppressedDiagnosticIds;
             this.SourceFiles = sourceFiles;
@@ -144,9 +146,28 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var collection = new ProjectCollection(globalProperties);
 
+            // Evaluate the MSBuild project
             var project = string.IsNullOrEmpty(options.ToolsVersion)
                 ? collection.LoadProject(projectFilePath)
                 : collection.LoadProject(projectFilePath, options.ToolsVersion);
+
+            var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
+            var targetFrameworks = PropertyConverter.ToList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+
+            // If the project supports multiple target frameworks and specific framework isn't
+            // selected, we must pick one before execution. Otherwise, the ResolveReferences
+            // target might not be available to us.
+            if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Count > 0)
+            {
+                // For now, we'll just pick the first target framework. Eventually, we'll need to
+                // do better and potentially allow OmniSharp hosts to select a target framework.
+                targetFramework = targetFrameworks[0];
+                project.SetProperty(PropertyNames.TargetFramework, targetFramework);
+            }
+            else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Count == 0)
+            {
+                targetFrameworks = new[] { targetFramework };
+            }
 
             var projectInstance = project.CreateProjectInstance();
             var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
@@ -162,14 +183,6 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var targetFrameworkMoniker = projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker);
 
-            var targetFramework = projectInstance.GetPropertyValue(PropertyNames.TargetFramework);
-            var targetFrameworks = PropertyConverter.ToTargetFrameworks(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworks));
-
-            if (targetFrameworks.Count == 0 && !string.IsNullOrWhiteSpace(targetFramework))
-            {
-                targetFrameworks = new[] { NuGetFramework.Parse(targetFramework) };
-            }
-
             var specifiedLanguageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
             var projectGuid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
             var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
@@ -180,6 +193,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
             var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
             var noWarn = PropertyConverter.ToSuppressDiagnostics(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
+            var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
 
             var sourceFiles = projectInstance
                 .GetItems(ItemNames.Compile)
@@ -205,7 +219,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, noWarn,
+                !string.IsNullOrWhiteSpace(documentationFile), outputPath, defineConstants, noWarn,
                 sourceFiles, references, projectReferences, analyzers);
         }
 

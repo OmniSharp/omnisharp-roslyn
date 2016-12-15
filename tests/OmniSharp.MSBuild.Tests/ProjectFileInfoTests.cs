@@ -31,7 +31,8 @@ namespace OmniSharp.MSBuild.Tests
             Assert.NotNull(projectFileInfo);
             Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
             Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
-            Assert.Equal(".NETCoreApp,Version=v1.0", projectFileInfo.TargetFrameworks[0].DotNetFrameworkName);
+            Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
+            Assert.Equal(@"bin\Debug\netcoreapp1.0\", projectFileInfo.OutputPath);
         }
 
         [Fact]
@@ -44,8 +45,10 @@ namespace OmniSharp.MSBuild.Tests
 
             Assert.NotNull(projectFileInfo);
             Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
-            Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
-            Assert.Equal(".NETCoreApp,Version=v1.0", projectFileInfo.TargetFrameworks[0].DotNetFrameworkName);
+            Assert.Equal(2, projectFileInfo.TargetFrameworks.Count);
+            Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
+            Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
+            Assert.Equal(@"bin\Debug\netcoreapp1.0\", projectFileInfo.OutputPath);
         }
     }
 }
