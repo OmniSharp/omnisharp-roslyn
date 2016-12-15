@@ -20,7 +20,7 @@ namespace OmniSharp.MSBuild.Tests
             MSBuildEnvironment.Initialize(this._logger);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(NotOnAppVeyor))]
         public void HelloWorld_has_correct_property_values()
         {
             var projectFolder = _testAssets.GetTestProjectFolder("HelloWorld");
@@ -35,7 +35,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
         }
 
-        [Fact]
+        [ConditionalFact(typeof(NotOnAppVeyor))]
         public void NetStandardAndNetCoreApp_has_correct_property_values()
         {
             var projectFolder = _testAssets.GetTestProjectFolder("NetStandardAndNetCoreApp");
