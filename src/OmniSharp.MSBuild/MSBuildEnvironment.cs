@@ -6,8 +6,27 @@ namespace OmniSharp.MSBuild
 {
     public static class MSBuildEnvironment
     {
+        private static bool s_isInitialized;
+        private static string s_msbuildFolder;
+
+        public static bool IsInitialized => s_isInitialized;
+
+        public static string MSBuildFolder
+        {
+            get
+            {
+                EnsureInitialized();
+                return s_msbuildFolder;
+            }
+        }
+
         public static void Initialize(ILogger logger)
         {
+            if (s_isInitialized)
+            {
+                throw new InvalidOperationException("MSBuildEnvironment is already initialized");
+            }
+
             // If OmniSharp is running normally, MSBuild is located in an 'msbuild' folder beneath OmniSharp.exe.
             var msbuildFolder = Path.Combine(AppContext.BaseDirectory, "msbuild");
 
@@ -62,6 +81,17 @@ namespace OmniSharp.MSBuild
             else
             {
                 logger.LogError("Could not locate MSBuild Sdks path to set MSBuildSDKsPath");
+            }
+
+            s_msbuildFolder = msbuildFolder;
+            s_isInitialized = true;
+        }
+
+        private static void EnsureInitialized()
+        {
+            if (!s_isInitialized)
+            {
+                throw new InvalidOperationException("MSBuildEnvironment is not initialized");
             }
         }
 
