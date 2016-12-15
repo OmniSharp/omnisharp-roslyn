@@ -12,7 +12,8 @@
   "PackagesFolder": "packages",
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.0",
+      "net46"
     ],
     "OmniSharp.Roslyn.CSharp.Tests": [
       "netcoreapp1.0"
