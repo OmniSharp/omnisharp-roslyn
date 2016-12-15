@@ -214,7 +214,14 @@ Task("AcquirePackages")
     var csharpTargetsName = "Microsoft.CSharp.Core.targets";
     var csharpTargetsPath = System.IO.Path.Combine(packagesFolder, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
 
-    var csharpTargetsNet46Folder = System.IO.Path.Combine(msbuildNet46Folder, "Roslyn");
+    // There was a recent change to move the C# compiler targets to a "Roslyn" subdirectory under msbuild.
+    // However, it seems that the latest net46 MSBuild bits don't have that change yet, though the netcoreapp1.0
+    // bits do. Also, the Mono build has this change.
+    // TODO: Remove this once that change makes it into the net46 MSBuild on Windows.
+    var csharpTargetsNet46Folder = IsRunningOnWindows()
+        ? msbuildNet46Folder
+        : System.IO.Path.Combine(msbuildNet46Folder, "Roslyn");
+
     var csharpTargetsNetCoreAppFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Roslyn");
 
     CreateDirectory(csharpTargetsNet46Folder);
