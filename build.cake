@@ -450,6 +450,9 @@ Task("Test")
             }
             else
             {
+                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                CopyDirectory($"{msbuildLibForMonoInstallFolder}", instanceFolder);
+
                 Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                     .ExceptionOnError($"Test {project} failed for {framework}");
             }
