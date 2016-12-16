@@ -199,26 +199,10 @@ namespace OmniSharp.MSBuild.ProjectFile
             var noWarn = PropertyConverter.ToSuppressDiagnostics(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
             var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
 
-            var sourceFiles = projectInstance
-                .GetItems(ItemNames.Compile)
-                .Select(GetFullPath)
-                .ToList();
-
-            var references =  projectInstance
-                .GetItems(ItemNames.ReferencePath)
-                .Where(ReferenceSourceTargetIsProjectReference)
-                .Select(GetFullPath)
-                .ToList();
-
-            var projectReferences = projectInstance
-                .GetItems(ItemNames.ProjectReference)
-                .Select(GetFullPath)
-                .ToList();
-
-            var analyzers = projectInstance
-                .GetItems(ItemNames.Analyzer)
-                .Select(GetFullPath)
-                .ToList();
+            var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
+            var references =  GetFullPaths(projectInstance.GetItems(ItemNames.ReferencePath));
+            var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
+            var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
 
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
@@ -232,9 +216,16 @@ namespace OmniSharp.MSBuild.ProjectFile
             return !string.Equals(projectItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget), ItemNames.ProjectReference, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string GetFullPath(ProjectItemInstance projectItem)
+        private static IList<string> GetFullPaths(ICollection<ProjectItemInstance> items)
         {
-            return projectItem.GetMetadataValue(MetadataNames.FullPath);
+            var sortedSet = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in items)
+            {
+                sortedSet.Add(item.GetMetadataValue(MetadataNames.FullPath));
+            }
+
+            return sortedSet.ToList();
         }
     }
 }
