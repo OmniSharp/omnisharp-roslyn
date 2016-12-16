@@ -17,6 +17,7 @@ namespace OmniSharp.Models
         public IList<TargetFramework> TargetFrameworks { get; set; }
         public string OutputPath { get; set; }
         public bool IsExe { get; set; }
+        public bool IsUnityProject { get; set; }
 
         public MSBuildProjectInformation(ProjectFileInfo projectFileInfo)
         {
@@ -46,6 +47,7 @@ namespace OmniSharp.Models
             OutputPath = projectFileInfo.OutputPath;
             IsExe = projectFileInfo.OutputKind == OutputKind.ConsoleApplication ||
                 projectFileInfo.OutputKind == OutputKind.WindowsApplication;
+            IsUnityProject = projectFileInfo.IsUnityProject;
         }
     }
 }
