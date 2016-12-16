@@ -38,15 +38,11 @@ namespace OmniSharp.MSBuild
                 msbuildFolder = FindMSBuildFolderFromSolution();
             }
 
-            if (msbuildFolder == null || !Directory.Exists(msbuildFolder))
+            if (msbuildFolder == null)
             {
                 logger.LogError("Could not locate MSBuild path. MSBuildProjectSystem will not function properly.");
                 return;
             }
-
-            // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
-            Environment.SetEnvironmentVariable("MSBuildExtensionsPath", msbuildFolder);
-            logger.LogInformation($"MSBuildExtensionsPath environment variable set to {msbuildFolder}");
 
             // Set the MSBUILD_EXE_PATH environment variable to the location of MSBuild.exe or MSBuild.dll.
             var msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.exe");
@@ -61,15 +57,12 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
-            if (File.Exists(msbuildExePath))
-            {
-                Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
-                logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
-            }
-            else
-            {
-                logger.LogError("Could not locate MSBuild to set MSBUILD_EXE_PATH"); ;
-            }
+            Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
+            logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
+
+            // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
+            Environment.SetEnvironmentVariable("MSBuildExtensionsPath", msbuildFolder);
+            logger.LogInformation($"MSBuildExtensionsPath environment variable set to {msbuildFolder}");
 
             // Set the MSBuildSDKsPath environment variable to the location of the SDKs.
             var msbuildSdksFolder = Path.Combine(msbuildFolder, "Sdks");

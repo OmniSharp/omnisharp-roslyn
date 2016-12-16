@@ -219,8 +219,10 @@ namespace OmniSharp.MSBuild
 
             var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count);
 
-            // Always suppress CS1701 (Assuming assembly reference 'x' used by 'y' matches identity 'z'. you may need to supply runtime policy)
+            // Ensure that specific warnings about assembly references are always suppressed.
             specificDiagnosticOptions.Add("CS1701", ReportDiagnostic.Suppress);
+            specificDiagnosticOptions.Add("CS1702", ReportDiagnostic.Suppress);
+            specificDiagnosticOptions.Add("CS1705", ReportDiagnostic.Suppress);
 
             if (projectFileInfo.SuppressedDiagnosticIds.Any())
             {
