@@ -20,6 +20,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string Name { get; }
         public string ProjectFilePath { get; }
         public FrameworkName TargetFramework { get; }
+        public IList<string> TargetFrameworks { get; }
         public LanguageVersion SpecifiedLanguageVersion { get; }
         public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
         public string AssemblyName { get; }
@@ -29,7 +30,9 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool SignAssembly { get; }
         public string AssemblyOriginatorKeyFile { get; }
         public bool GenerateXmlDocumentation { get; }
+        public string OutputPath { get; }
         public IList<string> PreprocessorSymbolNames { get; }
+        public IList<string> SuppressedDiagnosticIds { get; }
 
         public IList<string> SourceFiles { get; }
         public IList<string> References { get; }
@@ -46,6 +49,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyName,
             string name,
             FrameworkName targetFramework,
+            IList<string> targetFrameworks,
             LanguageVersion specifiedLanguageVersion,
             Guid projectGuid,
             string targetPath,
@@ -54,7 +58,9 @@ namespace OmniSharp.MSBuild.ProjectFile
             bool signAssembly,
             string assemblyOriginatorKeyFile,
             bool generateXmlDocumentation,
+            string outputPath,
             IList<string> defineConstants,
+            IList<string> suppressedDiagnosticIds,
             IList<string> sourceFiles,
             IList<string> references,
             IList<string> projectReferences,
@@ -64,6 +70,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.AssemblyName = assemblyName;
             this.Name = name;
             this.TargetFramework = targetFramework;
+            this.TargetFrameworks = targetFrameworks;
             this.SpecifiedLanguageVersion = specifiedLanguageVersion;
             this.ProjectGuid = projectGuid;
             this.TargetPath = targetPath;
@@ -72,7 +79,9 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.SignAssembly = signAssembly;
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
+            this.OutputPath = outputPath;
             this.PreprocessorSymbolNames = defineConstants;
+            this.SuppressedDiagnosticIds = suppressedDiagnosticIds;
             this.SourceFiles = sourceFiles;
             this.References = references;
             this.ProjectReferences = projectReferences;
@@ -93,20 +102,15 @@ namespace OmniSharp.MSBuild.ProjectFile
             string projectFilePath,
             string solutionDirectory,
             ILogger logger,
-            MSBuildOptions options,
-            ICollection<MSBuildDiagnosticsMessage> diagnostics)
+            MSBuildOptions options = null,
+            ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(projectFilePath))
             {
                 return null;
             }
 
-#if NET46
-            if (PlatformHelper.IsMono)
-            {
-                return CreateForMono(projectFilePath, solutionDirectory, options, logger, diagnostics);
-            }
-#endif
+            options = options ?? new MSBuildOptions();
 
             var globalProperties = new Dictionary<string, string>
             {
@@ -120,6 +124,24 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
             }
+            else
+            {
+                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, MSBuildEnvironment.MSBuildFolder);
+            }
+
+            if (PlatformHelper.IsMono)
+            {
+                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
+                if (monoXBuildFrameworksDirPath != null)
+                {
+                    logger.LogInformation($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
+                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
+                }
+                else
+                {
+                    logger.LogWarning("Couldn't locate Mono, TargetFrameworkRootPath not specified");
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
             {
@@ -128,11 +150,28 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var collection = new ProjectCollection(globalProperties);
 
-            logger.LogInformation($"Using toolset {options.ToolsVersion ?? collection.DefaultToolsVersion} for '{projectFilePath}'");
-
+            // Evaluate the MSBuild project
             var project = string.IsNullOrEmpty(options.ToolsVersion)
                 ? collection.LoadProject(projectFilePath)
                 : collection.LoadProject(projectFilePath, options.ToolsVersion);
+
+            var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
+            var targetFrameworks = PropertyConverter.ToList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+
+            // If the project supports multiple target frameworks and specific framework isn't
+            // selected, we must pick one before execution. Otherwise, the ResolveReferences
+            // target might not be available to us.
+            if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Count > 0)
+            {
+                // For now, we'll just pick the first target framework. Eventually, we'll need to
+                // do better and potentially allow OmniSharp hosts to select a target framework.
+                targetFramework = targetFrameworks[0];
+                project.SetProperty(PropertyNames.TargetFramework, targetFramework);
+            }
+            else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Count == 0)
+            {
+                targetFrameworks = new[] { targetFramework };
+            }
 
             var projectInstance = project.CreateProjectInstance();
             var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
@@ -145,7 +184,9 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
             var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
-            var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
+
+            var targetFrameworkMoniker = projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker);
+
             var specifiedLanguageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
             var projectGuid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
             var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
@@ -155,6 +196,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
             var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
             var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
+            var noWarn = PropertyConverter.ToSuppressDiagnostics(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
+            var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
 
             var sourceFiles = projectInstance
                 .GetItems(ItemNames.Compile)
@@ -178,10 +221,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 .ToList();
 
             return new ProjectFileInfo(
-                projectFilePath, assemblyName, name, targetFramework, specifiedLanguageVersion,
+                projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile), defineConstants, sourceFiles, references,
-                projectReferences, analyzers);
+                !string.IsNullOrWhiteSpace(documentationFile), outputPath, defineConstants, noWarn,
+                sourceFiles, references, projectReferences, analyzers);
         }
 
         private static bool ReferenceSourceTargetIsProjectReference(ProjectItemInstance projectItem)

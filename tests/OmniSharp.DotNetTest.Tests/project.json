@@ -5,7 +5,6 @@
   },
   "dependencies": {
     "OmniSharp.DotNetTest": "1.0.0",
-    "TestCommon": "1.0.0",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
   },

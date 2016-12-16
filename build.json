@@ -4,11 +4,16 @@
   "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain",
   "DotNetChannel": "preview",
   "DotNetVersion": "1.0.0-preview2-003131",
+  "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
+  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha1.zip",
+  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha1.zip",
   "BuildToolsFolder": ".tools",
   "ArtifactsFolder": "artifacts",
+  "PackagesFolder": "packages",
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.0",
+      "net46"
     ],
     "OmniSharp.Roslyn.CSharp.Tests": [
       "netcoreapp1.0"

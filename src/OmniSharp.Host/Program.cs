@@ -86,6 +86,23 @@ namespace OmniSharp
                 }
             }
 
+#if NET46
+            if (PlatformHelper.IsMono)
+            {
+                // Mono uses ThreadPool threads for its async/await implementation.
+                // Ensure we have an acceptable lower limit on the threadpool size to avoid deadlocks and ThreadPool starvation.
+                const int MIN_WORKER_THREADS = 8;
+
+                int currentWorkerThreads, currentCompletionPortThreads;
+                System.Threading.ThreadPool.GetMinThreads(out currentWorkerThreads, out currentCompletionPortThreads);
+
+                if (currentWorkerThreads < MIN_WORKER_THREADS)
+                {
+                    System.Threading.ThreadPool.SetMinThreads(MIN_WORKER_THREADS, currentCompletionPortThreads);
+                }
+            }
+#endif
+
             Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
             var config = new ConfigurationBuilder()

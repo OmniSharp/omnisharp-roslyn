@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.DotNetTest.Helpers;
-using TestCommon;
 using TestUtility;
 using Xunit;
 
@@ -23,7 +22,7 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData("BasicTestProjectSample02", "TestProgram.cs", 25, 35, false, "")]
         public async Task FoundFactsBasedTest(string projectName, string filename, int line, int column, bool found, string expectedFeatureName)
         {
-            var sampleProject = TestsContext.Default.GetTestSample(projectName);
+            var sampleProject = TestAssets.Instance.GetTestProjectFolder(projectName);
             var workspace = WorkspaceHelper.Create(sampleProject).FirstOrDefault();
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(Path.Combine(sampleProject, filename)).First();

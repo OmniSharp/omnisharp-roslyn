@@ -5,7 +5,6 @@
   },
   "dependencies": {
     "OmniSharp.MSBuild": "1.0.0",
-    "TestCommon": "1.0.0",
     "TestUtility": "1.0.0",
     "xunit": "2.1.0"
   },
@@ -20,7 +19,13 @@
           "version": "1.0.1",
           "type": "platform"
         },
+        "System.Runtime": "4.1.0",
         "dotnet-test-xunit": "2.2.0-preview2-build1029"
+      }
+    },
+    "net46": {
+      "dependencies": {
+        "xunit.runner.console": "2.1.0"
       }
     }
   },

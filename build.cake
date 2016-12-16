@@ -3,6 +3,7 @@
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
+#load "scripts/nuget.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -14,8 +15,8 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
-var installFolder = Argument("install-path",  System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"),
-                                                                        ".omnisharp", "local"));
+var installFolder = Argument("install-path",
+    System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 
 // Working directory
@@ -34,11 +35,15 @@ public class BuildPlan
     public IDictionary<string, string[]> TestProjects { get; set; }
     public string BuildToolsFolder { get; set; }
     public string ArtifactsFolder { get; set; }
+    public string PackagesFolder { get; set; }
     public bool UseSystemDotNetPath { get; set; }
     public string DotNetFolder { get; set; }
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
+    public string DownloadURL { get; set; }
+    public string MSBuildRuntimeForMono { get; set; }
+    public string MSBuildLibForMono { get; set; }
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
@@ -62,20 +67,28 @@ var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
 var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 
+var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
+var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
+var msbuildNet46Folder = msbuildBaseFolder + "-net46";
+var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.0";
+var msbuildRuntimeForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime.Mono");
+var msbuildLibForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Lib.Mono");
+
 /// <summary>
 ///  Clean artifacts.
 /// </summary>
 Task("Cleanup")
     .Does(() =>
 {
-    if (System.IO.Directory.Exists(artifactFolder))
+    if (DirectoryExists(artifactFolder))
     {
-        System.IO.Directory.Delete(artifactFolder, true);
+        DeleteDirectory(artifactFolder, recursive: true);
     }
-    System.IO.Directory.CreateDirectory(artifactFolder);
-    System.IO.Directory.CreateDirectory(logFolder);
-    System.IO.Directory.CreateDirectory(packageFolder);
-    System.IO.Directory.CreateDirectory(scriptFolder);
+
+    CreateDirectory(artifactFolder);
+    CreateDirectory(logFolder);
+    CreateDirectory(packageFolder);
+    CreateDirectory(scriptFolder);
 });
 
 /// <summary>
@@ -84,8 +97,131 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
+    .IsDependentOn("AcquirePackages")
     .Does(() =>
 {
+});
+
+/// <summary>
+/// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
+/// </summary>
+Task("AcquirePackages")
+    .IsDependentOn("BuildEnvironment")
+    .Does(() =>
+{
+    var configFilePath = System.IO.Path.Combine(packagesFolder, "packages.config");
+
+    InstallNuGetPackages(
+        configFilePath: configFilePath,
+        excludeVersion: true,
+        noCache: true,
+        outputDirectory: $"\"{packagesFolder}\"");
+
+    if (!IsRunningOnWindows())
+    {
+        if (DirectoryExists(msbuildRuntimeForMonoInstallFolder))
+        {
+            DeleteDirectory(msbuildRuntimeForMonoInstallFolder, recursive: true);
+        }
+
+        if (DirectoryExists(msbuildLibForMonoInstallFolder))
+        {
+            DeleteDirectory(msbuildLibForMonoInstallFolder, recursive: true);
+        }
+
+        CreateDirectory(msbuildRuntimeForMonoInstallFolder);
+        CreateDirectory(msbuildLibForMonoInstallFolder);
+
+        var msbuildMonoRuntimeZip = System.IO.Path.Combine(msbuildRuntimeForMonoInstallFolder, buildPlan.MSBuildRuntimeForMono);
+        var msbuildMonoLibZip = System.IO.Path.Combine(msbuildLibForMonoInstallFolder, buildPlan.MSBuildLibForMono);
+
+        using (var client = new WebClient())
+        {
+            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildRuntimeForMono}", msbuildMonoRuntimeZip);
+            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildLibForMono}", msbuildMonoLibZip);
+        }
+
+        Unzip(msbuildMonoRuntimeZip, msbuildRuntimeForMonoInstallFolder);
+        Unzip(msbuildMonoLibZip, msbuildLibForMonoInstallFolder);
+
+        DeleteFile(msbuildMonoRuntimeZip);
+        DeleteFile(msbuildMonoLibZip);
+    }
+
+    if (DirectoryExists(msbuildNet46Folder))
+    {
+        DeleteDirectory(msbuildNet46Folder, recursive: true);
+    }
+
+    if (DirectoryExists(msbuildNetCoreAppFolder))
+    {
+        DeleteDirectory(msbuildNetCoreAppFolder, recursive: true);
+    }
+
+    CreateDirectory(msbuildNet46Folder);
+    CreateDirectory(msbuildNetCoreAppFolder);
+
+    // Copy MSBuild runtime to appropriate locations
+    var msbuildInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime", "contentFiles", "any");
+    var msbuildNet46InstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "net46");
+    var msbuildNetCoreAppInstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "netcoreapp1.0");
+
+    if (IsRunningOnWindows())
+    {
+        CopyDirectory(msbuildNet46InstallFolder, msbuildNet46Folder);
+    }
+    else
+    {
+        CopyDirectory(msbuildRuntimeForMonoInstallFolder, msbuildNet46Folder);
+    }
+
+    CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
+
+    var sdks = new []
+    {
+        "Microsoft.NET.Sdk",
+        "Microsoft.NET.Sdk.Publish",
+        "Microsoft.NET.Sdk.Web",
+        "Microsoft.NET.Sdk.Web.ProjectSystem",
+        "NuGet.Build.Tasks.Pack"
+    };
+
+    var net46SdkFolder = System.IO.Path.Combine(msbuildNet46Folder, "Sdks");
+    var netCoreAppSdkFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Sdks");
+
+    foreach (var sdk in sdks)
+    {
+        var sdkInstallFolder = System.IO.Path.Combine(packagesFolder, sdk);
+        var net46SdkTargetFolder = System.IO.Path.Combine(net46SdkFolder, sdk);
+        var netCoreAppSdkTargetFolder = System.IO.Path.Combine(netCoreAppSdkFolder, sdk);
+
+        CopyDirectory(sdkInstallFolder, net46SdkTargetFolder);
+        CopyDirectory(sdkInstallFolder, netCoreAppSdkTargetFolder);
+
+        // Ensure that we don't leave the .nupkg unnecessarily hanging around.
+        DeleteFiles(System.IO.Path.Combine(net46SdkTargetFolder, "*.nupkg"));
+        DeleteFiles(System.IO.Path.Combine(netCoreAppSdkTargetFolder, "*.nupkg"));
+    }
+
+    // Copy NuGet.targets from NuGet.Build.Tasks
+    var nugetTargetsName = "NuGet.targets";
+    var nugetTargetsPath = System.IO.Path.Combine(packagesFolder, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
+
+    CopyFile(nugetTargetsPath, System.IO.Path.Combine(msbuildNet46Folder, nugetTargetsName));
+    CopyFile(nugetTargetsPath, System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetTargetsName));
+
+    // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
+    var csharpTargetsName = "Microsoft.CSharp.Core.targets";
+    var csharpTargetsPath = System.IO.Path.Combine(packagesFolder, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
+
+    var csharpTargetsNet46Folder = System.IO.Path.Combine(msbuildNet46Folder, "Roslyn");
+    var csharpTargetsNetCoreAppFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Roslyn");
+
+    CreateDirectory(csharpTargetsNet46Folder);
+    CreateDirectory(csharpTargetsNetCoreAppFolder);
+
+    CopyFile(csharpTargetsPath, System.IO.Path.Combine(csharpTargetsNet46Folder, csharpTargetsName));
+    CopyFile(csharpTargetsPath, System.IO.Path.Combine(csharpTargetsNetCoreAppFolder,csharpTargetsName));
 });
 
 /// <summary>
@@ -139,20 +275,25 @@ Task("BuildEnvironment")
     {
         client.DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
     }
+
     if (!IsRunningOnWindows())
     {
         Run("chmod", $"+x '{scriptPath}'");
     }
+
     var installArgs = $"-Channel {buildPlan.DotNetChannel}";
     if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
     {
         installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
     }
+
     if (!buildPlan.UseSystemDotNetPath)
     {
         installArgs = $"{installArgs} -InstallDir {dotnetFolder}";
     }
+
     Run(shell, $"{shellArgument} {scriptPath} {installArgs}");
+
     try
     {
         Run(dotnetcli, "--info");
@@ -177,16 +318,12 @@ Task("BuildEnvironment")
 
     System.IO.Directory.CreateDirectory(toolsFolder);
 
-    var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
-    var arguments = $"install xunit.runner.console -ExcludeVersion -NoCache -Prerelease -OutputDirectory \"{toolsFolder}\"";
-    if (IsRunningOnWindows())
-    {
-        Run(nugetPath, arguments);
-    }
-    else
-    {
-        Run("mono", $"\"{nugetPath}\" {arguments}");
-    }
+    InstallNuGetPackage(
+        packageID: "xunit.runner.console",
+        excludeVersion: true,
+        noCache: true,
+        prerelease: true,
+        outputDirectory: $"\"{toolsFolder}\"");
 });
 
 /// <summary>
@@ -306,6 +443,9 @@ Task("Test")
             }
             else
             {
+                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                CopyDirectory($"{msbuildLibForMonoInstallFolder}", instanceFolder);
+
                 Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                     .ExceptionOnError($"Test {project} failed for {framework}");
             }
@@ -329,23 +469,63 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
-            var publishArguments = "publish";
+            var argList = new List<string> { "publish" };
+
             if (!runtime.Equals("default"))
             {
-                publishArguments = $"{publishArguments} --runtime {runtime}";
+                argList.Add("--runtime");
+                argList.Add(runtime);
             }
             else if (buildPlan.CurrentRid == "osx.10.12-x64")
             {
                 // This is a temporary hack to handle the macOS Sierra. At this point,
                 // runtime == "default" but the current RID is macOS Sierra (10.12).
                 // In that case, fall back to El Capitan (10.11).
-                publishArguments = $"{publishArguments} --runtime osx.10.11-x64";
+                argList.Add("--runtime");
+                argList.Add("osx.10.11-x64");
             }
 
-            publishArguments = $"{publishArguments} --framework {framework} --configuration {configuration}";
-            publishArguments = $"{publishArguments} --output \"{outputFolder}\" \"{projectFolder}\"";
+            argList.Add("--framework");
+            argList.Add(framework);
+
+            argList.Add("--configuration");
+            argList.Add(configuration);
+
+            argList.Add("--output");
+            argList.Add($"\"{outputFolder}\"");
+
+            argList.Add($"\"{projectFolder}\"");
+
+            var publishArguments = string.Join(" ", argList);
+
             Run(dotnetcli, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
+
+            // Copy MSBuild and SDKs to output
+            CopyDirectory($"{msbuildBaseFolder}-{framework}", System.IO.Path.Combine(outputFolder, "msbuild"));
+
+            // Delete NuGet.targets from output
+            DeleteFile(System.IO.Path.Combine(outputFolder, "NuGet.targets"));
+
+            // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
+            if (!IsRunningOnWindows() && framework == "net46")
+            {
+                CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+
+                // Delete a handful of binaries that aren't necessary (and in some cases harmful) when running on Mono.
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.AppContext.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Numerics.Vectors.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.ComponentModel.Primitives.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.ComponentModel.TypeConverter.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Console.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.IO.FileSystem.Primitives.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.IO.FileSystem.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.Encoding.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.Primitives.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.X509Certificates.dll"));
+                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Threading.Thread.dll"));
+            }
 
             if (requireArchive)
             {
@@ -353,6 +533,7 @@ Task("OnlyPublish")
             }
         }
     }
+
     CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
 });
 
@@ -426,6 +607,7 @@ Task("CleanupInstall")
     {
         System.IO.Directory.Delete(installFolder, true);
     }
+
     System.IO.Directory.CreateDirectory(installFolder);
 });
 

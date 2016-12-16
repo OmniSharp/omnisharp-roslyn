@@ -4,12 +4,9 @@
     "platform": "anycpu",
     "warningsAsErrors": true,
     "preserveCompilationContext": true,
-    "emitEntryPoint": true
-  },
-  "publishOptions": {
-    "includeFiles": [
-      "config.json",
-      "Microsoft.CSharp.Core.targets"
+    "emitEntryPoint": true,
+    "copyToOutput": [
+      "config.json"
     ]
   },
   "dependencies": {
@@ -28,7 +25,8 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "Microsoft.NETCore.App": "1.0.1"
+        "Microsoft.NETCore.App": "1.0.1",
+        "System.Runtime": "4.1.0"
       }
     }
   },
