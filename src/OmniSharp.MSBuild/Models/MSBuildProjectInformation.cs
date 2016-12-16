@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using NuGet.Frameworks;
 using OmniSharp.MSBuild.ProjectFile;
 
@@ -15,6 +16,7 @@ namespace OmniSharp.Models
         public IList<string> SourceFiles { get; set; }
         public IList<TargetFramework> TargetFrameworks { get; set; }
         public string OutputPath { get; set; }
+        public bool IsExe { get; set; }
 
         public MSBuildProjectInformation(ProjectFileInfo projectFileInfo)
         {
@@ -42,6 +44,8 @@ namespace OmniSharp.Models
             TargetFrameworks = targetFrameworks;
 
             OutputPath = projectFileInfo.OutputPath;
+            IsExe = projectFileInfo.OutputKind == OutputKind.ConsoleApplication ||
+                projectFileInfo.OutputKind == OutputKind.WindowsApplication;
         }
     }
 }
