@@ -19,6 +19,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public Guid ProjectGuid { get; }
         public string Name { get; }
         public string ProjectFilePath { get; }
+        public bool IsUnityProject { get; }
         public FrameworkName TargetFramework { get; }
         public IList<string> TargetFrameworks { get; }
         public LanguageVersion SpecifiedLanguageVersion { get; }
@@ -59,6 +60,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyOriginatorKeyFile,
             bool generateXmlDocumentation,
             string outputPath,
+            bool isUnityProject,
             IList<string> defineConstants,
             IList<string> suppressedDiagnosticIds,
             IList<string> sourceFiles,
@@ -80,6 +82,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
             this.OutputPath = outputPath;
+            this.IsUnityProject = isUnityProject;
             this.PreprocessorSymbolNames = defineConstants;
             this.SuppressedDiagnosticIds = suppressedDiagnosticIds;
             this.SourceFiles = sourceFiles;
@@ -103,7 +106,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             string solutionDirectory,
             ILogger logger,
             MSBuildOptions options = null,
-            ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+            ICollection<MSBuildDiagnosticsMessage> diagnostics = null,
+            bool isUnityProject = false)
         {
             if (!File.Exists(projectFilePath))
             {
@@ -207,7 +211,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile), outputPath, defineConstants, noWarn,
+                !string.IsNullOrWhiteSpace(documentationFile), outputPath, isUnityProject, defineConstants, noWarn,
                 sourceFiles, references, projectReferences, analyzers);
         }
 

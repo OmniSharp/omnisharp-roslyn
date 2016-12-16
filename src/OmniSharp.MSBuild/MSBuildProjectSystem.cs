@@ -131,8 +131,8 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectBlock in solutionFile.ProjectBlocks)
             {
-                if (!_supportedProjectTypes.Contains(projectBlock.ProjectTypeGuid) &&
-                    !UnityHelper.IsUnityProject(projectBlock.ProjectName, projectBlock.ProjectTypeGuid))
+                var isUnityProject = UnityHelper.IsUnityProject(projectBlock.ProjectName, projectBlock.ProjectTypeGuid);
+                if (!_supportedProjectTypes.Contains(projectBlock.ProjectTypeGuid) && !isUnityProject)
                 {
                     _logger.LogWarning("Skipped unsupported project type '{0}'", projectBlock.ProjectPath);
                     continue;
@@ -152,7 +152,7 @@ namespace OmniSharp.MSBuild
 
                 _logger.LogInformation($"Loading project from '{projectFilePath}'.");
 
-                var projectFileInfo = AddProject(projectFilePath);
+                var projectFileInfo = AddProject(projectFilePath, isUnityProject);
                 if (projectFileInfo == null)
                 {
                     continue;
@@ -170,7 +170,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private ProjectFileInfo AddProject(string filePath)
+        private ProjectFileInfo AddProject(string filePath, bool isUnityProject = false)
         {
             if (_projects.ContainsKey(filePath))
             {
@@ -178,7 +178,7 @@ namespace OmniSharp.MSBuild
                 return null;
             }
 
-            var fileInfo = CreateProjectFileInfo(filePath);
+            var fileInfo = CreateProjectFileInfo(filePath, isUnityProject);
             if (fileInfo == null)
             {
                 return null;
@@ -274,14 +274,14 @@ namespace OmniSharp.MSBuild
             return result.FilePath;
         }
 
-        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath)
+        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath, bool isUnityProject = false)
         {
             ProjectFileInfo projectFileInfo = null;
             var diagnostics = new List<MSBuildDiagnosticsMessage>();
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger("OmniSharp#ProjectFileInfo"), _options, diagnostics);
+                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger("OmniSharp#ProjectFileInfo"), _options, diagnostics, isUnityProject);
 
                 if (projectFileInfo == null)
                 {
