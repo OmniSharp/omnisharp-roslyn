@@ -48,6 +48,15 @@ namespace OmniSharp
                     enumerator.MoveNext();
                     serverPort = int.Parse((string)enumerator.Current);
                 }
+                else if (arg.ToLowerInvariant() == "-loglevel")
+                {
+                    enumerator.MoveNext();
+                    LogLevel level;
+                    if (Enum.TryParse((string) enumerator.Current, true, out level))
+                    {
+                        logLevel = level;
+                    }
+                }
                 else if (arg == "-v")
                 {
                     logLevel = LogLevel.Debug;
