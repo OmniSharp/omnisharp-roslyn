@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.ProjectModel;
@@ -175,7 +176,8 @@ namespace OmniSharp.Script
 
             var compilationOptions = new CSharpCompilationOptions(
                 outputKind: OutputKind.DynamicallyLinkedLibrary,
-                usings: Context.CsxUsings[csxPath]);
+                usings: Context.CsxUsings[csxPath], 
+                metadataReferenceResolver: ScriptMetadataResolver.Default);
 
             // #r references
             var metadataReferencesDeclaredInCsx = new HashSet<MetadataReference>();
