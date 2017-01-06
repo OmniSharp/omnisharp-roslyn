@@ -62,7 +62,7 @@ namespace TestUtility
             return CreateWorkspace(null, testFiles);
         }
 
-        public async static Task<OmnisharpWorkspace> CreateWorkspace(CompositionHost plugInHost, params TestFile[] testFiles)
+        public static async Task<OmnisharpWorkspace> CreateWorkspace(CompositionHost plugInHost, params TestFile[] testFiles)
         {
             plugInHost = plugInHost ?? CreatePlugInHost(new[]
             {
