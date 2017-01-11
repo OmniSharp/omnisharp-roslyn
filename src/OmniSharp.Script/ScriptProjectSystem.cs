@@ -64,6 +64,10 @@ namespace OmniSharp.Script
             var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
                     x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
 
+            // explicitly include System.ValueTuple
+            inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
+                    x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
+
             var runtimeContexts = File.Exists(Path.Combine(Env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(Env.Path) : null;
 
             // if we have no context, then we also have no dependencies
