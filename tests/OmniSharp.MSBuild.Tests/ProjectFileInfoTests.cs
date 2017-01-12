@@ -36,6 +36,23 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
             Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
             Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
+            Assert.Equal(1, projectFileInfo.SourceFiles.Count);
+        }
+
+        [Fact]
+        public void HelloWorldSlim_has_correct_property_values()
+        {
+            var projectFolder = _testAssets.GetTestProjectFolder("HelloWorldSlim");
+            var projectFilePath = Path.Combine(projectFolder, "HelloWorldSlim.csproj");
+
+            var projectFileInfo = ProjectFileInfo.Create(projectFilePath, projectFolder, this._logger);
+
+            Assert.NotNull(projectFileInfo);
+            Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
+            Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
+            Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
+            Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
+            Assert.Equal(1, projectFileInfo.SourceFiles.Count);
         }
 
         [Fact]
@@ -52,6 +69,7 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
             Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
             Assert.Equal(@"bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
+            Assert.Equal(1, projectFileInfo.SourceFiles.Count);
         }
     }
 }
