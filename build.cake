@@ -70,7 +70,7 @@ var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
 var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
-var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.0";
+var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
 var msbuildRuntimeForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime.Mono");
 var msbuildLibForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Lib.Mono");
 
@@ -400,7 +400,7 @@ Task("TestCore")
     {
         var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
         var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
-        Run(dotnetcli, $"test -f netcoreapp1.0 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
+        Run(dotnetcli, $"test -f netcoreapp1.1 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });

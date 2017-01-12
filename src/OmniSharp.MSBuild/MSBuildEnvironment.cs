@@ -106,7 +106,7 @@ namespace OmniSharp.MSBuild
 #if NET46
             var folderName = ".msbuild-net46";
 #else
-            var folderName = ".msbuild-netcoreapp1.0";
+            var folderName = ".msbuild-netcoreapp1.1";
 #endif
 
             var result = Path.Combine(current, folderName);

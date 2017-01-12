@@ -11,12 +11,12 @@ namespace OmniSharp.Services
 
     public static class IOmniSharpAssemblyLoaderExtensions
     {
-        public static Lazy<Assembly> LazyLoad(this IOmnisharpAssemblyLoader self, string name)
+        public static Lazy<Assembly> LazyLoad(this IOmnisharpAssemblyLoader loader, string assemblyName)
         {
-            return new Lazy<Assembly>(() => self.Load(name));
+            return new Lazy<Assembly>(() => loader.Load(assemblyName));
         }
 
-        public static Assembly Load(this IOmnisharpAssemblyLoader self, string name)
+        public static Assembly Load(this IOmnisharpAssemblyLoader loader, string name)
         {
             var assemblyName = name;
             if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
@@ -24,14 +24,14 @@ namespace OmniSharp.Services
                 assemblyName = name.Substring(0, name.Length - 4);
             }
 
-            return self.Load(new AssemblyName(assemblyName));
+            return loader.Load(new AssemblyName(assemblyName));
         }
 
-        public static IEnumerable<Assembly> Load(this IOmnisharpAssemblyLoader self, params string[] names)
+        public static IEnumerable<Assembly> Load(this IOmnisharpAssemblyLoader loader, params string[] assemblyNames)
         {
-            foreach (var name in names)
+            foreach (var name in assemblyNames)
             {
-                yield return Load(self, name);
+                yield return Load(loader, name);
             }
         }
     }

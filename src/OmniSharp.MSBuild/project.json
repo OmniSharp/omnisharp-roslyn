@@ -6,7 +6,7 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
-    "Microsoft.Extensions.Options": "1.0.0",
+    "Microsoft.Extensions.Options": "1.1.0",
     "Microsoft.Build": "15.1.0-preview-000467-06",
     "Microsoft.Build.Framework": "15.1.0-preview-000467-06",
     "Microsoft.Build.Tasks.Core": "15.1.0-preview-000467-06",

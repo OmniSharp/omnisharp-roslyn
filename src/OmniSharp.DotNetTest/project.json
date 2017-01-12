@@ -2,23 +2,18 @@
   "version": "1.0.0-*",
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc",
-    "Microsoft.Extensions.Testing.Abstractions": "1.0.0-preview2-003121"
+    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc3-61312-01",
+    "Microsoft.Extensions.Testing.Abstractions": "1.0.0-preview2-1-003177"
   },
   "frameworks": {
-    "net46": {
-      "frameworkAssemblies": {
-        "System.IO": "",
-        "System.Collections": ""
-      }
-    },
+    "net46": {},
     "netstandard1.6": {
       "imports": [
         "dotnet5.6",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0"
+        "NETStandard.Library": "1.6.1"
       }
     }
   }

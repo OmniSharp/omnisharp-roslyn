@@ -23,8 +23,8 @@ namespace OmniSharp
 
     public class FixUsingsWorker
     {
-        private const string AddImportProviderName = "Microsoft.CodeAnalysis.CSharp.CodeFixes.AddImport.CSharpAddImportCodeFixProvider";
-        private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.CodeFixes.RemoveUnusedUsings.RemoveUnnecessaryUsingsCodeFixProvider";
+        private const string AddImportProviderName = "Microsoft.CodeAnalysis.CSharp.AddImport.CSharpAddImportCodeFixProvider";
+        private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryImports.CSharpRemoveUnnecessaryImportsCodeFixProvider";
 
         private readonly IEnumerable<ICodeActionProvider> _providers;
         private readonly CodeFixProvider _addImportProvider;
