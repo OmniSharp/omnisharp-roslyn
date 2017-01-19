@@ -70,7 +70,7 @@ var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
 var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
-var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.0";
+var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
 var msbuildRuntimeForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime.Mono");
 var msbuildLibForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Lib.Mono");
 
@@ -400,7 +400,7 @@ Task("TestCore")
     {
         var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
         var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
-        Run(dotnetcli, $"test -f netcoreapp1.0 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
+        Run(dotnetcli, $"test -f netcoreapp1.1 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });
@@ -504,27 +504,10 @@ Task("OnlyPublish")
             // Copy MSBuild and SDKs to output
             CopyDirectory($"{msbuildBaseFolder}-{framework}", System.IO.Path.Combine(outputFolder, "msbuild"));
 
-            // Delete NuGet.targets from output
-            DeleteFile(System.IO.Path.Combine(outputFolder, "NuGet.targets"));
-
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
             if (!IsRunningOnWindows() && framework == "net46")
             {
                 CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
-
-                // Delete a handful of binaries that aren't necessary (and in some cases harmful) when running on Mono.
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.AppContext.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Numerics.Vectors.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.ComponentModel.Primitives.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.ComponentModel.TypeConverter.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Console.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.IO.FileSystem.Primitives.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.IO.FileSystem.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.Encoding.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.Primitives.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Security.Cryptography.X509Certificates.dll"));
-                DeleteFile(System.IO.Path.Combine(outputFolder, "System.Threading.Thread.dll"));
             }
 
             if (requireArchive)

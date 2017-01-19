@@ -6,34 +6,20 @@
   "dependencies": {
     "OmniSharp.Abstractions": "1.0.0",
     "OmniSharp.Roslyn": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc",
-    "Microsoft.CodeAnalysis.CSharp.Features": "2.0.0-rc",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-rc"
+    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc3-61318-04",
+    "Microsoft.CodeAnalysis.CSharp.Features": "2.0.0-rc3-61318-04",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-rc3-61318-04"
   },
   "frameworks": {
-    "net46": {
-      "dependencies": {},
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.Threading": "",
-        "System.Threading.Tasks": "",
-        "System.Collections": "",
-        "System.Globalization": "",
-        "System.Linq": "",
-        "System.Text.Encoding": "",
-        "System.Reflection": "",
-        "System.Security": "",
-        "System.Xml": ""
-      }
-    },
+    "net46": {},
     "netstandard1.6": {
       "imports": [
         "dotnet5.4",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0",
-        "System.Threading.Tasks.Parallel": "4.0.1"
+        "NETStandard.Library": "1.6.1",
+        "System.Threading.Tasks.Parallel": "4.3.0"
       }
     }
   }

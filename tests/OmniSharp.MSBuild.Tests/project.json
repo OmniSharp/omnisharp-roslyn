@@ -9,23 +9,23 @@
     "xunit": "2.1.0"
   },
   "frameworks": {
-    "netcoreapp1.0": {
+    "net46": {
+      "dependencies": {
+        "xunit.runner.console": "2.1.0"
+      }
+    },
+    "netcoreapp1.1": {
       "imports": [
         "dotnet5.4",
         "portable-net45+win8"
       ],
       "dependencies": {
         "Microsoft.NETCore.App": {
-          "version": "1.0.1",
+          "version": "1.1.0",
           "type": "platform"
         },
-        "System.Runtime": "4.1.0",
-        "dotnet-test-xunit": "2.2.0-preview2-build1029"
-      }
-    },
-    "net46": {
-      "dependencies": {
-        "xunit.runner.console": "2.1.0"
+        "dotnet-test-xunit": "2.2.0-preview2-build1029",
+        "Microsoft.DotNet.InternalAbstractions": "1.0.500-preview2-1-003177"
       }
     }
   },

@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     public static class CodeActionHelper
     {
-        private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.CodeFixes.RemoveUnusedUsings.RemoveUnnecessaryUsingsCodeFixProvider";
+        private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryImports.CSharpRemoveUnnecessaryImportsCodeFixProvider";
 
         public static async Task<IEnumerable<CodeAction>> GetActions(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, ICodeActionRequest request)
         {

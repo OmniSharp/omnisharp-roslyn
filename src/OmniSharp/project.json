@@ -19,14 +19,13 @@
   },
   "frameworks": {
     "net46": {},
-    "netcoreapp1.0": {
+    "netcoreapp1.1": {
       "imports": [
         "dotnet5.4",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "Microsoft.NETCore.App": "1.0.1",
-        "System.Runtime": "4.1.0"
+        "Microsoft.NETCore.App": "1.1.0"
       }
     }
   },
