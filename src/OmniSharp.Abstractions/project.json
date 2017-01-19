@@ -5,8 +5,8 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "9.0.1",
-    "Microsoft.CodeAnalysis.Common": "2.0.0-rc3-61312-01",
-    "Microsoft.CodeAnalysis.Workspaces.Common": "2.0.0-rc3-61312-01",
+    "Microsoft.CodeAnalysis.Common": "2.0.0-rc3-61318-04",
+    "Microsoft.CodeAnalysis.Workspaces.Common": "2.0.0-rc3-61318-04",
     "Microsoft.Extensions.Caching.Memory": "1.1.0",
     "Microsoft.Extensions.Configuration": "1.1.0",
     "Microsoft.Extensions.Configuration.Binder": "1.1.0",

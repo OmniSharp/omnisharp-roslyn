@@ -5,7 +5,7 @@
   },
   "dependencies": {
     "OmniSharp.Stdio": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc3-61312-01",
+    "Microsoft.CodeAnalysis.CSharp": "2.0.0-rc3-61318-04",
     "xunit": "2.1.0"
   },
   "frameworks": {
