@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
@@ -21,43 +21,43 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Tests", "tests\OmniSharp.Tests\OmniSharp.Tests.xproj", "{9485FB0D-D105-4E11-8689-97613144D165}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Tests", "tests\OmniSharp.Tests\OmniSharp.Tests.csproj", "{9485FB0D-D105-4E11-8689-97613144D165}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Stdio", "src\OmniSharp.Stdio\OmniSharp.Stdio.xproj", "{A4F5FE6B-D3B4-4B63-A949-44E12AB8D535}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Stdio", "src\OmniSharp.Stdio\OmniSharp.Stdio.csproj", "{A4F5FE6B-D3B4-4B63-A949-44E12AB8D535}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Stdio.Tests", "tests\OmniSharp.Stdio.Tests\OmniSharp.Stdio.Tests.xproj", "{AB5A975C-378B-45DC-AD69-50D808338AC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Stdio.Tests", "tests\OmniSharp.Stdio.Tests\OmniSharp.Stdio.Tests.csproj", "{AB5A975C-378B-45DC-AD69-50D808338AC2}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Abstractions", "src\OmniSharp.Abstractions\OmniSharp.Abstractions.xproj", "{0C54BE83-EF9E-4419-B654-A0760745BF80}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Abstractions", "src\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj", "{0C54BE83-EF9E-4419-B654-A0760745BF80}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Nuget", "src\OmniSharp.Nuget\OmniSharp.Nuget.xproj", "{AF01C2BD-58CD-4E19-869F-5B9B8E9BA981}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Nuget", "src\OmniSharp.Nuget\OmniSharp.Nuget.csproj", "{AF01C2BD-58CD-4E19-869F-5B9B8E9BA981}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Plugins", "src\OmniSharp.Plugins\OmniSharp.Plugins.xproj", "{1C9AE254-6076-4EE6-80FD-B0AE4E16347D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Plugins", "src\OmniSharp.Plugins\OmniSharp.Plugins.csproj", "{1C9AE254-6076-4EE6-80FD-B0AE4E16347D}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Roslyn.CSharp", "src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.xproj", "{ED1A82CB-2741-45F5-A28B-7C36EFDF9746}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Roslyn.CSharp", "src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj", "{ED1A82CB-2741-45F5-A28B-7C36EFDF9746}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Roslyn", "src\OmniSharp.Roslyn\OmniSharp.Roslyn.xproj", "{4F5FC4AF-3977-4ECB-9B58-D16E8024BC97}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Roslyn", "src\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj", "{4F5FC4AF-3977-4ECB-9B58-D16E8024BC97}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.MSBuild", "src\OmniSharp.MSBuild\OmniSharp.MSBuild.xproj", "{9AF025CA-3706-401F-8D50-59FAD5AFE725}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.MSBuild", "src\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj", "{9AF025CA-3706-401F-8D50-59FAD5AFE725}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Script", "src\OmniSharp.Script\OmniSharp.Script.xproj", "{F52F6F60-AB29-414D-A24B-DE8EFFBA34C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Script", "src\OmniSharp.Script\OmniSharp.Script.csproj", "{F52F6F60-AB29-414D-A24B-DE8EFFBA34C0}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.MSBuild.Tests", "tests\OmniSharp.MSBuild.Tests\OmniSharp.MSBuild.Tests.xproj", "{194A88AE-1429-416B-86C1-BF6F7FF47404}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.MSBuild.Tests", "tests\OmniSharp.MSBuild.Tests\OmniSharp.MSBuild.Tests.csproj", "{194A88AE-1429-416B-86C1-BF6F7FF47404}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Roslyn.CSharp.Tests", "tests\OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.xproj", "{2F4B72DA-FC27-4676-8E89-7BAC2EFDF750}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Roslyn.CSharp.Tests", "tests\OmniSharp.Roslyn.CSharp.Tests\OmniSharp.Roslyn.CSharp.Tests.csproj", "{2F4B72DA-FC27-4676-8E89-7BAC2EFDF750}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.Host", "src\OmniSharp.Host\OmniSharp.Host.xproj", "{A1B54CA5-7F82-4487-8150-B4CB3952A2AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Host", "src\OmniSharp.Host\OmniSharp.Host.csproj", "{A1B54CA5-7F82-4487-8150-B4CB3952A2AD}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp", "src\OmniSharp\OmniSharp.xproj", "{CD970E2E-CEC1-454D-AC7E-23D0000DCC94}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp", "src\OmniSharp\OmniSharp.csproj", "{CD970E2E-CEC1-454D-AC7E-23D0000DCC94}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.DotNet", "src\OmniSharp.DotNet\OmniSharp.DotNet.xproj", "{07CDB87A-6906-4B04-9622-164FE04A3F9A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.DotNet", "src\OmniSharp.DotNet\OmniSharp.DotNet.csproj", "{07CDB87A-6906-4B04-9622-164FE04A3F9A}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "TestUtility", "tests\TestUtility\TestUtility.xproj", "{9459D3EB-9D7F-437E-AC7A-245698B4D62F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtility", "tests\TestUtility\TestUtility.csproj", "{9459D3EB-9D7F-437E-AC7A-245698B4D62F}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.DotNetTest", "src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.xproj", "{33A68F57-B234-4481-AEDE-03D51756B35A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.DotNetTest", "src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj", "{33A68F57-B234-4481-AEDE-03D51756B35A}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.DotNetTest.Tests", "tests\OmniSharp.DotNetTest.Tests\OmniSharp.DotNetTest.Tests.xproj", "{F6195E7B-8002-42AE-BF86-E78DBC769A47}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.DotNetTest.Tests", "tests\OmniSharp.DotNetTest.Tests\OmniSharp.DotNetTest.Tests.csproj", "{F6195E7B-8002-42AE-BF86-E78DBC769A47}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "OmniSharp.DotNet.Tests", "tests\OmniSharp.DotNet.Tests\OmniSharp.DotNet.Tests.xproj", "{A645D475-3448-4473-88CA-E3C3B31E33CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.DotNet.Tests", "tests\OmniSharp.DotNet.Tests\OmniSharp.DotNet.Tests.csproj", "{A645D475-3448-4473-88CA-E3C3B31E33CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

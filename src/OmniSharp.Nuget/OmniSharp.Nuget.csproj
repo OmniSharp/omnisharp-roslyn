@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
+    <WarningsAsErrors>true</WarningsAsErrors>
+    <AssemblyName>OmniSharp.Nuget</AssemblyName>
+    <PackageId>OmniSharp.Nuget</PackageId>
+    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+    <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <PackageReference Include="NuGet.Configuration" Version="3.5.0-beta2-1484" />
+    <PackageReference Include="NuGet.Protocol.Core.v2" Version="3.3.0" />
+    <PackageReference Include="NuGet.Protocol.Core.v3" Version="3.3.0" />
+    <PackageReference Include="NuGet.Packaging" Version="3.5.0-beta2-1484" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="3.5.0-beta2-1484" />
+    <PackageReference Include="Microsoft.Web.Xdt" Version="2.1.1" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
+  </ItemGroup>
+
+</Project>
