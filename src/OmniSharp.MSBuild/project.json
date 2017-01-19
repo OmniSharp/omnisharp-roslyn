@@ -35,7 +35,10 @@
     "netstandard1.6": {
       "imports": [
         "portable-net45+win8"
-      ]
+      ],
+      "dependencies": {
+        "NETStandard.Library": "1.6.1"
+      }
     }
   }
 }
