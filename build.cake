@@ -351,6 +351,13 @@ Task("Restore")
 
 string GetCurrentRid()
 {
+    if (buildPlan.CurrentRid.StartsWith("win"))
+    {
+        return buildPlan.CurrentRid.EndsWith("-x86")
+            ? "win7-x86"
+            : "win7-x64";
+    }
+
     // This is a temporary hack to handle the macOS Sierra. At this point,
     // runtime == "default" but the current RID is macOS Sierra (10.12).
     // In that case, fall back to El Capitan (10.11).
@@ -470,9 +477,11 @@ Task("TestCore")
 {
     foreach (var testProject in buildPlan.TestProjects)
     {
-        var logFile = CombinePaths(logFolder, $"{testProject}-core-result.xml");
-        var testWorkingDir = CombinePaths(testFolder, testProject);
-        Run(dotnetcli, $"test -f netcoreapp1.1 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
+        var logFile = $"{testProject}-core-result.xml";
+        var testProjectName = testProject + ".csproj";
+        var testProjectFileName = CombinePaths(testFolder, testProject, testProjectName);
+
+        Run(dotnetcli, $"test {testProjectFileName} --framework netcoreapp1.1 --logger \"trx;LogFileName={logFile}\" --no-build -- RunConfiguration.ResultsDirectory=\"{logFolder}\"")
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });
@@ -535,24 +544,28 @@ Task("OnlyPublish")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
-    var projectFolder = CombinePaths(sourceFolder, project);
+    var projectName = project + ".csproj";
+    var projectFileName = CombinePaths(sourceFolder, project, projectName);
+
     foreach (var framework in buildPlan.Frameworks)
     {
         foreach (var runtime in buildPlan.Rids)
         {
+            var rid = runtime.Equals("default")
+                ? GetCurrentRid()
+                : runtime;
+
+            // Restore the OmniSharp.csproj with this runtime.
+            RunRestore(dotnetcli, $"restore \"{projectFileName}\" --runtime {rid}", workingDirectory)
+                .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
+
             var outputFolder = CombinePaths(publishFolder, project, runtime, framework);
             var argList = new List<string> { "publish" };
 
-            if (!runtime.Equals("default"))
-            {
-                argList.Add("--runtime");
-                argList.Add(runtime);
-            }
-            else
-            {
-                argList.Add("--runtime");
-                argList.Add(GetCurrentRid());
-            }
+            argList.Add($"\"{projectFileName}\"");
+
+            argList.Add("--runtime");
+            argList.Add(rid);
 
             argList.Add("--framework");
             argList.Add(framework);
@@ -562,8 +575,6 @@ Task("OnlyPublish")
 
             argList.Add("--output");
             argList.Add($"\"{outputFolder}\"");
-
-            argList.Add($"\"{projectFolder}\"");
 
             var publishArguments = string.Join(" ", argList);
 
