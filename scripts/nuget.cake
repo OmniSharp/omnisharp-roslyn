@@ -3,7 +3,7 @@
 ExitStatus NuGetRestore(string workingDirectory)
 {
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
-    var arguments = new [] { "restore" };
+    var arguments = "restore";
     var options = new RunOptions { WorkingDirectory = workingDirectory };
 
     return IsRunningOnWindows()
