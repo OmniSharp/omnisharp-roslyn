@@ -1,13 +1,13 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26119.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C348365-A9D8-459E-9276-56FC46AAEE31}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07464F68-2D8E-45E5-B30A-768FCF4CC903}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		tests\app.config = tests\app.config
 		build.cake = build.cake
 		build.cmd = build.cmd
 		build.json = build.json

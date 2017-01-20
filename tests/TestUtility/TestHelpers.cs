@@ -11,6 +11,12 @@ namespace TestUtility
 {
     public static class TestHelpers
     {
+#if NETCOREAPP1_1
+        public const string CorLib = "System.Private.CoreLib";
+#else
+        public const string CorLib = "mscorlib";
+#endif
+
         public static OmnisharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
             var versionStamp = VersionStamp.Create();
