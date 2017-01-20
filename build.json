@@ -18,6 +18,10 @@
     "OmniSharp.DotNetTest.Tests",
     "OmniSharp.Tests"
   ],
+  "TestProjectsToRestoreWithNuGet3": [
+    "BasicTestProjectSample01",
+    "BasicTestProjectSample02"
+  ],
   "Frameworks": [
     "net46",
     "netcoreapp1.1"

@@ -49,6 +49,7 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
+    public string[] TestProjectsToRestoreWithNuGet3 { get; set; }
     public string CurrentRid { get; set; }
 }
 
@@ -62,6 +63,7 @@ var toolsFolder = CombinePaths(workingDirectory, buildPlan.BuildToolsFolder);
 
 var sourceFolder = CombinePaths(workingDirectory, "src");
 var testFolder = CombinePaths(workingDirectory, "tests");
+var testAssetsFolder = CombinePaths(workingDirectory, "test-assets");
 
 var artifactFolder = CombinePaths(workingDirectory, buildPlan.ArtifactsFolder);
 var publishFolder = CombinePaths(artifactFolder, "publish");
@@ -340,7 +342,11 @@ Task("Restore")
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
 
     // Restore test assets
-    
+    foreach (var project in buildPlan.TestProjectsToRestoreWithNuGet3)
+    {
+        var folder = CombinePaths(testAssetsFolder, "test-projects", project);
+        NuGetRestore(folder);
+    }
 });
 
 string GetCurrentRid()

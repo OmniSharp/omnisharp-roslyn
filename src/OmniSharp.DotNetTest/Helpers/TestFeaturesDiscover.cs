@@ -64,14 +64,18 @@ namespace OmniSharp.DotNetTest.Helpers
             string fullName;
             do
             {
-                fullName = $"{symbol.ContainingNamespace}.{symbol.Name}";
-                if (fullName == "Xunit.FactAttribute")
+                if (!symbol.ContainingNamespace.IsGlobalNamespace)
                 {
-                    return true;
+                    fullName = $"{symbol.ContainingNamespace}.{symbol.Name}";
+                    if (fullName == "Xunit.FactAttribute")
+                    {
+                        return true;
+                    }
                 }
 
                 symbol = symbol.BaseType;
-            } while (symbol.Name != "Object");
+            }
+            while (symbol != null && symbol.SpecialType != SpecialType.System_Object);
 
             return false;
         }
@@ -81,16 +85,20 @@ namespace OmniSharp.DotNetTest.Helpers
             string fullName;
             do
             {
-                fullName = $"{symbol.ContainingNamespace}.{symbol.Name}";
-                if (fullName == "NUnit.Framework.TestAttribute"
-                    || fullName == "NUnit.Framework.TestCaseAttribute"
-                    || fullName == "NUnit.Framework.TestCaseSourceAttribute")
+                if (!symbol.ContainingNamespace.IsGlobalNamespace)
                 {
-                    return true;
+                    fullName = $"{symbol.ContainingNamespace}.{symbol.Name}";
+                    if (fullName == "NUnit.Framework.TestAttribute" ||
+                        fullName == "NUnit.Framework.TestCaseAttribute" ||
+                        fullName == "NUnit.Framework.TestCaseSourceAttribute")
+                    {
+                        return true;
+                    }
                 }
 
                 symbol = symbol.BaseType;
-            } while (symbol.Name != "Object");
+            }
+            while (symbol != null && symbol.SpecialType != SpecialType.System_Object);
 
             return false;
         }
