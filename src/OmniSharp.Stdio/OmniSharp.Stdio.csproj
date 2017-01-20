@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>ASP.NET 5 web server for stdio</Description>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
     <WarningsAsErrors>true</WarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
