@@ -111,6 +111,8 @@ ExitStatus Run(string exec, string args, string workingDirectory)
 /// <returns>The exit status for further queries</returns>
 ExitStatus Run(string exec, string args, RunOptions runOptions)
 {
+    Information("Run: {0} {1}", exec, args);
+
     var workingDirectory = runOptions.WorkingDirectory ?? System.IO.Directory.GetCurrentDirectory();
     var process = System.Diagnostics.Process.Start(
             new ProcessStartInfo(exec, args)
@@ -168,6 +170,7 @@ ExitStatus RunRestore(string exec, string args, string workingDirectory)
             RedirectStandardOutput = true,
             WorkingDirectory = workingDirectory
         });
+
     p.WaitForExit();
     var exitCode = p.GetExitCode();
 
@@ -186,7 +189,7 @@ ExitStatus RunRestore(string exec, string args, string workingDirectory)
 ///  Kill the given process and all its child processes.
 /// </summary>
 /// <param name="process">Root process</param>
-public void KillProcessTree(Process process)
+private void KillProcessTree(Process process)
 {
     // Child processes are not killed on Windows by default
     // Use TASKKILL to kill the process hierarchy rooted in the process

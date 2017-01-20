@@ -10,32 +10,14 @@
   "BuildToolsFolder": ".tools",
   "ArtifactsFolder": "artifacts",
   "PackagesFolder": "packages",
-  "TestProjects": {
-    "OmniSharp.MSBuild.Tests": [
-      "netcoreapp1.1",
-      "net46"
-    ],
-    "OmniSharp.Roslyn.CSharp.Tests": [
-      "netcoreapp1.1",
-      "net46"
-    ],
-    "OmniSharp.Stdio.Tests": [
-      "netcoreapp1.1",
-      "net46"
-    ],
-    "OmniSharp.DotNet.Tests": [
-      "netcoreapp1.1",
-      "net46"
-    ],
-    "OmniSharp.DotNetTest.Tests": [
-      "netcoreapp1.1",
-      "net46"
-    ],
-    "OmniSharp.Tests": [
-      "netcoreapp1.1",
-      "net46"
-    ]
-  },
+  "TestProjects": [
+    "OmniSharp.MSBuild.Tests",
+    "OmniSharp.Roslyn.CSharp.Tests",
+    "OmniSharp.Stdio.Tests",
+    "OmniSharp.DotNet.Tests",
+    "OmniSharp.DotNetTest.Tests",
+    "OmniSharp.Tests"
+  ],
   "Frameworks": [
     "net46",
     "netcoreapp1.1"
