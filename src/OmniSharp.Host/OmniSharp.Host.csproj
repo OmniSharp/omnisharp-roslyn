@@ -3,8 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
     <WarningsAsErrors>true</WarningsAsErrors>
-    <AssemblyName>OmniSharp.Host</AssemblyName>
-    <PackageId>OmniSharp.Host</PackageId>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.6;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>
 

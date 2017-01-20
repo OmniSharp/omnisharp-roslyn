@@ -3,8 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <WarningsAsErrors>true</WarningsAsErrors>
-    <AssemblyName>OmniSharp.DotNet.Tests</AssemblyName>
-    <PackageId>OmniSharp.DotNet.Tests</PackageId>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>

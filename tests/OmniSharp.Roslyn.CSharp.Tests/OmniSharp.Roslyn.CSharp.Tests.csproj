@@ -3,8 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net46;netcoreapp1.1</TargetFrameworks>
     <WarningsAsErrors>true</WarningsAsErrors>
-    <AssemblyName>OmniSharp.Roslyn.CSharp.Tests</AssemblyName>
-    <PackageId>OmniSharp.Roslyn.CSharp.Tests</PackageId>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>

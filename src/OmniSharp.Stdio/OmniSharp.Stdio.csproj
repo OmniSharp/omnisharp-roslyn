@@ -4,8 +4,8 @@
     <Description>ASP.NET 5 web server for stdio</Description>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
     <WarningsAsErrors>true</WarningsAsErrors>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <AssemblyName>OmniSharp.Stdio</AssemblyName>
-    <PackageId>OmniSharp.Stdio</PackageId>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>
 
