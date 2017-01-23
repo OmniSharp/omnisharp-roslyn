@@ -365,7 +365,7 @@ namespace OmniSharp.MSBuild
                 // If all is OK, add a new document.
                 using (var stream = File.OpenRead(sourceFile))
                 {
-                    var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
+                    var sourceText = SourceText.From(stream);
                     var documentId = DocumentId.CreateNewId(project.Id);
                     var version = VersionStamp.Create();
                     var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));

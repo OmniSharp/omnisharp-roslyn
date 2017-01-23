@@ -383,13 +383,11 @@ namespace OmniSharp.DotNet
                 // TODO: performance optimize
                 using (var stream = File.OpenRead(file))
                 {
-                    // TODO: other encoding option?
-                    var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
+                    var sourceText = SourceText.From(stream);
                     var docId = DocumentId.CreateNewId(state.Id);
                     var version = VersionStamp.Create();
 
                     var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
-
 
                     var doc = DocumentInfo.Create(docId, file, filePath: file, loader: loader);
                     _omnisharpWorkspace.AddDocument(doc);
