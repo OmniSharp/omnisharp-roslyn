@@ -1,16 +1,27 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Logging;
+using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class CodingGuidelinesFacts
+    public class CodingGuidelinesFacts : AbstractTestFixture
     {
+        private readonly ILogger _logger;
+
+        public CodingGuidelinesFacts(ITestOutputHelper output)
+            : base(output)
+        {
+            this._logger = this.LoggerFactory.CreateLogger<CodingGuidelinesFacts>();
+        }
+
         [Fact]
         public void Usings_are_ordered_system_first_then_alphabetically()
         {
@@ -25,8 +36,11 @@ namespace OmniSharp.Tests
                 if (!usings.SequenceEqual(sorted))
                 {
                     invalidItems = true;
-                    Console.WriteLine("Usings ordered incorrectly in '" + sourcePath + "'");
-                    Console.WriteLine(string.Join(", ", sorted));
+
+                    var builder = new StringBuilder();
+                    builder.AppendLine($"Usings ordered incorrectly in '{sourcePath}'");
+                    builder.AppendLine(string.Join(", ", sorted));
+                    this._logger.LogError(builder.ToString());
                 }
             }
 

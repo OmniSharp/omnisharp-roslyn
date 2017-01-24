@@ -5,22 +5,26 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToFileFacts
+    public class GoToFileFacts : AbstractTestFixture
     {
+        public GoToFileFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task ReturnsAListOfAllWorkspaceFiles()
         {
             var source1 = @"class Foo {}";
             var source2 = @"class Bar {}";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new GotoFileService(workspace);
             var response = await controller.Handle(new GotoFileRequest());
@@ -33,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task ReturnsEmptyResponseForEmptyWorskpace()
         {
-            var workspace = await TestHelpers.CreateWorkspace();
+            var workspace = await CreateWorkspaceAsync();
             var controller = new GotoFileService(workspace);
             var response = await controller.Handle(new GotoFileRequest());
 

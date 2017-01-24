@@ -4,6 +4,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -13,8 +14,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         Down
     }
 
-    public class NavigateUpDownFacts
+    public class NavigateUpDownFacts : AbstractTestFixture
     {
+        public NavigateUpDownFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task NavigateUp_ReturnsCorrectPositionFromMethodBodyToMethodName()
         {
@@ -725,7 +731,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var startPoint = testFile.Content.Text.GetPointFromPosition(start);
             var endPoint = testFile.Content.Text.GetPointFromPosition(end);
 
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var response = await SendRequest(workspace, testFile, startPoint.Line, startPoint.Offset, direction);
 

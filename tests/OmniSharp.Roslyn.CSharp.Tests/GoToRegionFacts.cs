@@ -5,11 +5,17 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToRegionFacts
+    public class GoToRegionFacts : AbstractTestFixture
     {
+        public GoToRegionFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task CanFindRegionsInFileWithRegions()
         {
@@ -51,7 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile = new TestFile("dummy.cs", source);
             var point = testFile.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new GotoRegionService(workspace);
 
             var request = new GotoRegionRequest

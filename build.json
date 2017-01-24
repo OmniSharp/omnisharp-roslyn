@@ -16,20 +16,24 @@
       "net46"
     ],
     "OmniSharp.Roslyn.CSharp.Tests": [
-      "netcoreapp1.1"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.Stdio.Tests": [
       "netcoreapp1.1",
       "net46"
     ],
     "OmniSharp.DotNet.Tests": [
-      "netcoreapp1.1"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.DotNetTest.Tests": [
-      "netcoreapp1.1"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.Tests": [
-      "netcoreapp1.1"
+      "netcoreapp1.1",
+      "net46"
     ]
   },
   "Frameworks": [

@@ -3,11 +3,17 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class StructureFacts
+    public class StructureFacts : AbstractTestFixture
     {
+        public StructureFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task SimpleClass()
         {
@@ -17,7 +23,7 @@ namespace OmniSharp.Tests
                 }";
 
             var testFile = new TestFile("d.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
             Assert.Equal(1, nodes.Count());
@@ -37,7 +43,7 @@ namespace OmniSharp.Tests
                 }";
 
             var testFile = new TestFile("d.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
             Assert.Equal(1, nodes.Count());
@@ -62,7 +68,7 @@ namespace OmniSharp.Tests
                 }";
 
             var testFile = new TestFile("d.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
             Assert.Equal(1, nodes.Count());

@@ -5,43 +5,29 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Workers.Diagnostics;
 using TestUtility;
-using TestUtility.Fake;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    class DiagnosticTestEmitter : IEventEmitter
+    public partial class DiagnosticsV2Facts : AbstractTestFixture
     {
-        private readonly IList<OmniSharp.Models.DiagnosticMessage> _messages;
-        private readonly TaskCompletionSource<object> _tcs;
-        public Task Emitted { get { return _tcs.Task; } }
-        public DiagnosticTestEmitter(IList<OmniSharp.Models.DiagnosticMessage> messages)
+        public DiagnosticsV2Facts(ITestOutputHelper output)
+            : base(output)
         {
-            _messages = messages;
-            _tcs = new TaskCompletionSource<object>();
         }
-        public void Emit(string kind, object args)
-        {
-            _messages.Add((OmniSharp.Models.DiagnosticMessage)args);
-            _tcs.TrySetResult(null);
-        }
-    }
 
-    public class DiagnosticsV2Facts
-    {
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()
         {
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", "class C { int n = true; }")
-            });
-            var fakeLoggerFactory = new FakeLoggerFactory();
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", "class C { int n = true; }"));
+
             var messages = new List<OmniSharp.Models.DiagnosticMessage>();
             var emitter = new DiagnosticTestEmitter(messages);
             var forwarder = new DiagnosticEventForwarder(emitter);
             forwarder.IsEnabled = true;
-            var service = new CSharpDiagnosticService(workspace, forwarder, fakeLoggerFactory);
+            var service = new CSharpDiagnosticService(workspace, forwarder, this.LoggerFactory);
             service.QueueDiagnostics("a.cs");
 
             await emitter.Emitted;
@@ -57,17 +43,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CheckAllFiles()
         {
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("a.cs", "class C1 { int n = true; }"),
-                new TestFile("b.cs", "class C2 { int n = true; }")
-            });
+                new TestFile("b.cs", "class C2 { int n = true; }"));
 
-            var fakeLoggerFactory = new FakeLoggerFactory();
             var messages = new List<OmniSharp.Models.DiagnosticMessage>();
             var emitter = new DiagnosticTestEmitter(messages);
             var forwarder = new DiagnosticEventForwarder(emitter);
-            var service = new CSharpDiagnosticService(workspace, forwarder, fakeLoggerFactory);
+            var service = new CSharpDiagnosticService(workspace, forwarder, this.LoggerFactory);
 
             var controller = new DiagnosticsService(workspace, forwarder, service);
             var response = await controller.Handle(new OmniSharp.Models.DiagnosticsRequest());
@@ -87,21 +70,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("b.cs", b.FileName);
         }
 
-
         [Fact]
         public async Task EnablesWhenEndPointIsHit()
         {
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("a.cs", "class C1 { int n = true; }"),
-                new TestFile("b.cs", "class C2 { int n = true; }")
-            });
+                new TestFile("b.cs", "class C2 { int n = true; }"));
 
-            var fakeLoggerFactory = new FakeLoggerFactory();
             var messages = new List<OmniSharp.Models.DiagnosticMessage>();
             var emitter = new DiagnosticTestEmitter(messages);
             var forwarder = new DiagnosticEventForwarder(emitter);
-            var service = new CSharpDiagnosticService(workspace, forwarder, fakeLoggerFactory);
+            var service = new CSharpDiagnosticService(workspace, forwarder, this.LoggerFactory);
 
             var controller = new DiagnosticsService(workspace, forwarder, service);
             var response = await controller.Handle(new OmniSharp.Models.DiagnosticsRequest());

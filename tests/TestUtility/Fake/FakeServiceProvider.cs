@@ -6,16 +6,16 @@ using TestUtility.Annotate;
 
 namespace TestUtility.Fake
 {
-    internal class TestServiceProvider : IServiceProvider
+    internal class FakeServiceProvider : IServiceProvider
     {
-        private readonly ILogger<TestServiceProvider> _logger;
+        private readonly ILogger<FakeServiceProvider> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
 
-        public TestServiceProvider(ILoggerFactory loggerFactory)
+        public FakeServiceProvider(ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
-            _logger = _loggerFactory.CreateLogger<TestServiceProvider>();
+            _logger = _loggerFactory.CreateLogger<FakeServiceProvider>();
 
             _services[typeof(ILoggerFactory)] = _loggerFactory;
             _services[typeof(IOmnisharpEnvironment)] = new FakeEnvironment();

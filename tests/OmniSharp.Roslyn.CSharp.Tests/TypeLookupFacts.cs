@@ -4,11 +4,17 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class TypeLookupFacts
+    public class TypeLookupFacts : AbstractTestFixture
     {
+        public TypeLookupFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task OmitsNamespaceForNonRegularCSharpSyntax()
         {
@@ -32,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             class Baz {}";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var requestInNormalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
@@ -52,7 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
@@ -71,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 2, Column = 27 };
@@ -125,9 +131,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
             ");
 
-        private static async Task<TypeLookupResponse> GetTypeLookUpResponse(int line, int column)
+        private async Task<TypeLookupResponse> GetTypeLookUpResponse(int line, int column)
         {
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var controller = new TypeLookupService(workspace, new FormattingOptions());
             var request = new TypeLookupRequest { FileName = testFile.FileName, Line = line, Column = column };
@@ -139,7 +145,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task DisplayFormatForMethodSymbol_Invocation()
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
+
+#if NETCOREAPP1_1
             Assert.Equal("void Console.WriteLine(string s)", response.Type);
+#else
+            Assert.Equal("void Console.WriteLine(string value)", response.Type);
+#endif
         }
 
         [Fact]

@@ -1,13 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class IntellisenseFacts : AbstractAutoCompleteTests
     {
+        private readonly ILogger _logger;
+
+        public IntellisenseFacts(ITestOutputHelper output)
+            : base(output)
+        {
+            this._logger = this.LoggerFactory.CreateLogger<IntellisenseFacts>();
+        }
+
         [Fact]
         public async Task DisplayText_is_correct_for_property()
         {
@@ -188,22 +199,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             if (!completions.SequenceEqual(expected))
             {
-                Console.Error.WriteLine("Expected");
-                Console.Error.WriteLine("--------");
+                var builder = new StringBuilder();
+                builder.AppendLine("Expected");
+                builder.AppendLine("--------");
 
                 foreach (var completion in expected)
                 {
-                    Console.WriteLine(completion);
+                    builder.AppendLine(completion);
                 }
 
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("Found");
-                Console.Error.WriteLine("-----");
+                builder.AppendLine();
+                builder.AppendLine("Found");
+                builder.AppendLine("-----");
 
                 foreach (var completion in completions)
                 {
-                    Console.WriteLine(completion);
+                    builder.AppendLine(completion);
                 }
+
+                this._logger.LogError(builder.ToString());
             }
 
             Assert.Equal(expected, completions.ToArray());

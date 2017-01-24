@@ -2,15 +2,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindImplementationFacts
+    public class FindImplementationFacts : AbstractTestFixture
     {
+        public FindImplementationFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task CanFindInterfaceTypeImplementation()
         {
@@ -69,12 +77,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        private static async Task<IEnumerable<ISymbol>> FindImplementations(string input)
+        private async Task<IEnumerable<ISymbol>> FindImplementations(string input)
         {
             var testFile = new TestFile("dummy.cs", input);
             var point = testFile.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new FindImplementationsService(workspace);
 
             var request = new FindImplementationsRequest
@@ -86,7 +94,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             };
 
             var implementations = await controller.Handle(request);
-            return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
+
+            return await SymbolsFromQuickFixesAsync(workspace, implementations.QuickFixes);
+        }
+
+        private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
+        {
+            var symbols = new List<ISymbol>();
+            foreach (var quickfix in quickFixes)
+            {
+                var document = workspace.GetDocument(quickfix.FileName);
+                var sourceText = await document.GetTextAsync();
+                var position = sourceText.Lines.GetPosition(new LinePosition(quickfix.Line, quickfix.Column));
+                var semanticModel = await document.GetSemanticModelAsync();
+                var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
+
+                symbols.Add(symbol);
+            }
+
+            return symbols;
         }
     }
 }

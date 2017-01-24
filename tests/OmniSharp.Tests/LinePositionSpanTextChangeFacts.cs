@@ -4,16 +4,22 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class LinePositionSpanTextChangeFacts
+    public class LinePositionSpanTextChangeFacts : AbstractTestFixture
     {
+        public LinePositionSpanTextChangeFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task ExtendsTextChangeAtStart()
         {
             var testFile = new TestFile("dummy.cs", "class {\r\n }");
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var document = workspace.GetDocument(testFile.FileName);
 
             var textChange = new TextChange(TextSpan.FromBounds(8, 11), "\n}");
@@ -31,7 +37,7 @@ namespace OmniSharp.Tests
         public async Task ExtendsTextChangeAtEnd()
         {
             var testFile = new TestFile("dummy.cs", "class {\n}");
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var document = workspace.GetDocument(testFile.FileName);
 
             var textChange = new TextChange(TextSpan.FromBounds(5, 7), "\r\n {\r");

@@ -9,6 +9,11 @@
     "xunit": "2.1.0"
   },
   "frameworks": {
+    "net46": {
+      "dependencies": {
+        "xunit.runner.console": "2.1.0"
+      }
+    },
     "netcoreapp1.1": {
       "imports": [
         "dotnet5.4",

@@ -6,21 +6,19 @@ using OmniSharp.Services;
 using TestUtility;
 using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToDefinitionFacts
+    public class GoToDefinitionFacts : AbstractTestFixture
     {
-        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IOmnisharpAssemblyLoader _loader;
 
-        public GoToDefinitionFacts()
+        public GoToDefinitionFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
-
+            _logger = this.LoggerFactory.CreateLogger<GoToDefinitionFacts>();
             _loader = new AnnotateAssemblyLoader(_logger);
         }
 
@@ -35,11 +33,9 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
@@ -67,11 +63,9 @@ class Foo {
     private Baz foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
@@ -104,7 +98,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Guid", definitionResponse.MetadataSource.TypeName);
             // We probably shouldn't hard code metadata locations (they could change randomly)
             Assert.NotEqual(0, definitionResponse.Line);
@@ -127,7 +121,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -149,7 +143,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -171,7 +165,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.Dictionary`2", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -193,7 +187,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.String", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -226,11 +220,9 @@ class Bar {
     }
 }";
 
-            return await TestHelpers.CreateWorkspace(new []
-            {
+            return await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
         }
     }
 }

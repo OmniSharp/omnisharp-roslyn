@@ -1,13 +1,24 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class SnippetFacts : AbstractAutoCompleteTests
     {
+        private readonly ILogger _logger;
+
+        public SnippetFacts(ITestOutputHelper output)
+            : base(output)
+        {
+            this._logger = this.LoggerFactory.CreateLogger<SnippetFacts>();
+        }
+
         [Fact]
         public async Task Can_template_generic_type_argument()
         {
@@ -218,12 +229,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ";
 
             var completions = await FindCompletionsAsync(source, wantSnippet: true);
-
-            foreach (var c in completions)
-            {
-                System.Console.WriteLine($"{c}");
-            }
-
             ContainsSnippet("NewGuid()$0 : Guid", completions);
         }
 
@@ -342,17 +347,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     : r.Snippet);
         }
 
-        private static void ContainsSnippet(string expected, IEnumerable<AutoCompleteResponse> responses)
+        private void ContainsSnippet(string expected, IEnumerable<AutoCompleteResponse> responses)
         {
             var snippetTexts = GetSnippetTexts(responses);
 
             if (!snippetTexts.Contains(expected))
             {
-                System.Console.Error.WriteLine("Did not find - " + expected);
+                var builder = new StringBuilder();
+                builder.AppendLine("Did not find - " + expected);
+
                 foreach (var snippetText in snippetTexts)
                 {
-                    System.Console.WriteLine(snippetText);
+                    builder.AppendLine(snippetText);
                 }
+
+                this._logger.LogError(builder.ToString());
             }
 
             Assert.Contains(expected, snippetTexts);

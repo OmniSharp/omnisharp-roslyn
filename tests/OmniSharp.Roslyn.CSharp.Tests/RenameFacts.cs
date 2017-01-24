@@ -4,11 +4,17 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class RenameFacts
+    public class RenameFacts : AbstractTestFixture
     {
+        public RenameFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task Rename_UpdatesWorkspaceAndDocumentText()
         {
@@ -24,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
 
             var testFile = new TestFile("test.cs", fileContent);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var result = await PerformRename(workspace, "foo", testFile, applyTextChanges: true);
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFile.FileName).First();
@@ -62,7 +68,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }";
 
             var testFile = new TestFile("test.cs", fileContent);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var result = await PerformRename(workspace, "foo", testFile, applyTextChanges: false);
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFile.FileName).First();
@@ -87,7 +93,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new TestFile("test2.cs", file2)
             };
 
-            var workspace = await TestHelpers.CreateWorkspace(testFiles);
+            var workspace = await CreateWorkspaceAsync(testFiles);
 
             var result = await PerformRename(workspace, "xxx", testFiles[0]);
 
@@ -131,7 +137,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new TestFile("test2.cs", file2)
             };
 
-            var workspace = await TestHelpers.CreateWorkspace(testFiles);
+            var workspace = await CreateWorkspaceAsync(testFiles);
             var result = await PerformRename(workspace, "xxx", testFiles[0], wantsTextChanges: true);
 
             Assert.Equal(2, result.Changes.Count());
@@ -158,7 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string fileContent = "class f$$oo{}";
 
             var testFile = new TestFile("test.cs", fileContent);
-            var workspace = await TestHelpers.CreateWorkspace();
+            var workspace = await CreateWorkspaceAsync();
             var result = await PerformRename(workspace, "xxx", testFile, updateBuffer: true);
 
             Assert.Equal(1, result.Changes.Count());
@@ -179,7 +185,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var testFile = new TestFile("test.cs", fileContent);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var result = await PerformRename(workspace, "foo", testFile);
 
             Assert.Equal(0, result.Changes.Count());
@@ -200,7 +206,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var testFile = new TestFile("test.cs", fileContent);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var result = await PerformRename(workspace, "foo", testFile, wantsTextChanges: true);
 
             Assert.Equal(1, result.Changes.Count());

@@ -4,11 +4,17 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindReferencesFacts
+    public class FindReferencesFacts : AbstractTestFixture
     {
+        public FindReferencesFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task CanFindReferencesOfLocalVariable()
         {
@@ -223,17 +229,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
         }
 
-        private static Task<QuickFixResponse> FindUsages(string source, bool excludeDefinition = false)
+        private Task<QuickFixResponse> FindUsages(string source, bool excludeDefinition = false)
         {
             return FindUsages(new[] { new TestFile("dummy.cs", source) }, false, excludeDefinition);
         }
 
-        private static async Task<QuickFixResponse> FindUsages(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false)
+        private async Task<QuickFixResponse> FindUsages(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false)
         {
             var file = testFiles.Single(tf => tf.Content.HasPosition);
             var point = file.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateWorkspace(testFiles);
+            var workspace = await CreateWorkspaceAsync(testFiles);
             var controller = new FindUsagesService(workspace);
 
             var request = new FindUsagesRequest

@@ -1,24 +1,24 @@
 ﻿using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using TestUtility;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class AbstractAutoCompleteTests
+    public class AbstractAutoCompleteTests : AbstractTestFixture
     {
-        private CompositionHost _plugInHost;
-
-        protected AbstractAutoCompleteTests()
+        protected AbstractAutoCompleteTests(ITestOutputHelper output)
+            : base(output)
         {
-            _plugInHost = TestHelpers.CreatePlugInHost(new[]
-            {
-                typeof(IntellisenseService).GetTypeInfo().Assembly
-            });
+        }
+
+        protected override IEnumerable<Assembly> GetHostAssemblies()
+        {
+            yield return GetAssembly<IntellisenseService>();
         }
 
         protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null, bool wantSnippet = false)
@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile = new TestFile("dummy.cs", source);
             var markup = TestContent.Parse(source);
 
-            var workspace = await TestHelpers.CreateWorkspace(_plugInHost, testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new IntellisenseService(workspace, new FormattingOptions());
 
             if (request == null)
