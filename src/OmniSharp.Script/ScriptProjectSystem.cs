@@ -234,15 +234,12 @@ namespace OmniSharp.Script
         private void AddFile(string filePath, ProjectId projectId)
         {
             using (var stream = File.OpenRead(filePath))
-            using (var reader = new StreamReader(stream))
             {
                 var fileName = Path.GetFileName(filePath);
-                var csxFile = reader.ReadToEnd();
-
                 var documentId = DocumentId.CreateNewId(projectId, fileName);
                 var documentInfo = DocumentInfo.Create(documentId, fileName, null, SourceCodeKind.Script, null, filePath)
                     .WithSourceCodeKind(SourceCodeKind.Script)
-                    .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(csxFile), VersionStamp.Create())));
+                    .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(stream), VersionStamp.Create())));
                 Workspace.AddDocument(documentInfo);
             }
         }
