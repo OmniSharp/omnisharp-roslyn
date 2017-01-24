@@ -145,7 +145,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task DisplayFormatForMethodSymbol_Invocation()
         {
             var response = await GetTypeLookUpResponse(line: 6, column: 35);
+
+#if NETCOREAPP1_1
             Assert.Equal("void Console.WriteLine(string s)", response.Type);
+#else
+            Assert.Equal("void Console.WriteLine(string value)", response.Type);
+#endif
         }
 
         [Fact]

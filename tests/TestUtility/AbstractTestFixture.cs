@@ -65,7 +65,7 @@ namespace TestUtility
 
             var workspace = plugInHost.GetExport<OmnisharpWorkspace>();
 
-            await TestHelpers.AddProjectToWorkspace(
+            await TestHelpers.AddProjectToWorkspaceAsync(
                 workspace,
                 "project.json",
                 new[] { "dnx451", "dnxcore50" },

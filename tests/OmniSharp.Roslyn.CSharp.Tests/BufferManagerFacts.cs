@@ -93,12 +93,12 @@ namespace OmniSharp.Tests
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
-            await TestHelpers.AddProjectToWorkspace(workspace,
+            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
                 filePath: Path.Combine("src", "root", "foo.csproj"),
                 frameworks: null,
                 testFiles: new[] { new TestFile(Path.Combine("src", "root", "foo.cs"), "class C1 {}") });
 
-            await TestHelpers.AddProjectToWorkspace(workspace,
+            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
                 filePath: Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
                 frameworks: null,
                 testFiles: new [] { new TestFile(Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}") });
@@ -157,12 +157,12 @@ namespace OmniSharp.Tests
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
-            await TestHelpers.AddProjectToWorkspace(workspace,
+            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
                 filePath: Path.Combine("src", "project.json"),
                 frameworks: new[] { "dnx451", "dnxcore50" },
                 testFiles: new [] { new TestFile(Path.Combine("src", "a.cs"), "class C {}") });
 
-            await TestHelpers.AddProjectToWorkspace(workspace,
+            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
                 filePath: Path.Combine("test", "project.json"),
                 frameworks: new[] { "dnx451", "dnxcore50" },
                 testFiles: new [] { new TestFile(Path.Combine("test", "b.cs"), "class C {}") });

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -15,8 +14,8 @@ namespace TestUtility
         public static OmnisharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
             var versionStamp = VersionStamp.Create();
-            var mscorlib = MetadataReference.CreateFromFile(AssemblyFromType(typeof(object)).Location);
-            var systemCore = MetadataReference.CreateFromFile(AssemblyFromType(typeof(Enumerable)).Location);
+            var mscorlib = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(object)).Location);
+            var systemCore = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(Enumerable)).Location);
             var references = new[] { mscorlib, systemCore };
             var workspace = new OmnisharpWorkspace(
                 new HostServicesAggregator(
@@ -51,7 +50,7 @@ namespace TestUtility
             return workspace;
         }
 
-        public static Task AddProjectToWorkspace(OmnisharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
+        public static Task AddProjectToWorkspaceAsync(OmnisharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
         {
             var versionStamp = VersionStamp.Create();
 
@@ -59,12 +58,12 @@ namespace TestUtility
 
             var assemblies = new[]
             {
-                AssemblyFromType(typeof(object)),
-                AssemblyFromType(typeof(Enumerable)),
-                AssemblyFromType(typeof(Stack<>)),
-                AssemblyFromType(typeof(Lazy<,>)),
-                Assembly.Load(new AssemblyName("System.Runtime")),
-                Assembly.Load(new AssemblyName("mscorlib"))
+                AssemblyHelpers.FromType(typeof(object)),
+                AssemblyHelpers.FromType(typeof(Enumerable)),
+                AssemblyHelpers.FromType(typeof(Stack<>)),
+                AssemblyHelpers.FromType(typeof(Lazy<,>)),
+                AssemblyHelpers.FromName("System.Runtime"),
+                AssemblyHelpers.FromName("mscorlib")
             };
 
             var references = assemblies
@@ -102,11 +101,6 @@ namespace TestUtility
             }
 
             return Task.FromResult(workspace);
-        }
-
-        private static Assembly AssemblyFromType(Type type)
-        {
-            return type.GetTypeInfo().Assembly;
         }
     }
 }

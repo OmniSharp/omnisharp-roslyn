@@ -40,7 +40,7 @@ class Foo {
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "System.Private.CoreLib",
+                AssemblyName = AssemblyHelpers.CorLibName,
                 TypeName = "System.String",
                 Timeout = 60000
             });
@@ -96,7 +96,7 @@ class Foo {
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "System.Private.CoreLib",
+                AssemblyName = AssemblyHelpers.CorLibName,
                 TypeName = "System.Collections.Generic.List`1",
                 Timeout = 60000
             });
@@ -105,7 +105,7 @@ class Foo {
 
             response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "System.Private.CoreLib",
+                AssemblyName = AssemblyHelpers.CorLibName,
                 TypeName = "System.Collections.Generic.Dictionary`2"
             });
 
