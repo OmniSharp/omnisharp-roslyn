@@ -6,11 +6,17 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Highlighting;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class HighlightFacts
+    public class HighlightFacts : AbstractTestFixture
     {
+        public HighlightFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task HighlightSingleLine()
         {
@@ -21,10 +27,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 3 } });
@@ -51,10 +55,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
@@ -85,10 +87,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
@@ -157,10 +157,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Keyword } });
@@ -178,10 +176,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Punctuation } });
@@ -199,10 +195,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Operator } });
@@ -220,10 +214,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Identifier } });
@@ -241,10 +233,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
-                new TestFile("a.cs", code)
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("a.cs", code));
 
             var controller = new HighlightingService(workspace);
             var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Name } });

@@ -6,15 +6,21 @@ using OmniSharp.Models;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class BufferManagerFacts
+    public class BufferManagerFacts : AbstractTestFixture
     {
+        public BufferManagerFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task UpdateBufferIgnoresVoidRequests()
         {
-            var workspace = await TestHelpers.CreateWorkspace(new TestFile("test.cs", "class C {}"));
+            var workspace = await CreateWorkspaceAsync(new TestFile("test.cs", "class C {}"));
             Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
             Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
@@ -62,7 +68,7 @@ namespace OmniSharp.Tests
 
             var fileName = Path.GetTempPath() + Guid.NewGuid().ToString() + ".cs";
             var testFile = new TestFile(fileName, string.Empty);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             File.WriteAllText(fileName, newCode);
 
@@ -113,7 +119,6 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateRequestHandleChanges()
         {
-
             var workspace = await GetWorkspaceWithProjects();
 
             await workspace.BufferManager.UpdateBuffer(new Request()

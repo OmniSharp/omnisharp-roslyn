@@ -4,11 +4,17 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Signatures;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class SignatureHelpFacts
+    public class SignatureHelpFacts : AbstractTestFixture
     {
+        public SignatureHelpFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task NoInvocationNoHelp1()
         {
@@ -405,7 +411,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Buffer = testFile.Content.Code
             };
 
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new SignatureHelpService(workspace);
 
             return await controller.Handle(request);

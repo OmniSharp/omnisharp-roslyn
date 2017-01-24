@@ -4,11 +4,17 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindSymbolsFacts
+    public class FindSymbolsFacts : AbstractTestFixture
     {
+        public FindSymbolsFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task Can_find_symbols()
         {
@@ -196,7 +202,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFixResponse> FindSymbols(string source)
         {
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             return await requestHandler.Handle(null);
@@ -205,7 +211,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFixResponse> FindSymbolsWithFilter(string source, string filter)
         {
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             var request = new FindSymbolsRequest { Filter = filter };

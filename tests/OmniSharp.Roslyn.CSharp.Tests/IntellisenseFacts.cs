@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class IntellisenseFacts : AbstractAutoCompleteTests
     {
+        public IntellisenseFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task DisplayText_is_correct_for_property()
         {

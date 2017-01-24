@@ -7,11 +7,17 @@ using OmniSharp.Roslyn.CSharp.Services.Formatting;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FormattingFacts
+    public class FormattingFacts : AbstractTestFixture
     {
+        public FormattingFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public void FindFormatTargetAtCurly()
         {
@@ -125,7 +131,7 @@ class C {
             const string source = "namespace Bar\n{\n    class Foo {}\n}";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new CodeFormatService(workspace,
                 new FormattingOptions
                 {
@@ -153,7 +159,7 @@ class C {
             Assert.Equal(kind, target.Kind());
         }
 
-        private static async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
+        private async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
         {
             var testFile = new TestFile("dummy.cs", source);
             var span = testFile.Content.GetSpans().Single();
@@ -169,7 +175,7 @@ class C {
                 EndColumn = range.End.Offset
             };
 
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new FormatRangeService(workspace, new FormattingOptions());
 
             var response = await controller.Handle(request);

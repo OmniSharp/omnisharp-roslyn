@@ -4,13 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 using TestUtility;
+using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -33,45 +36,26 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     using MyNamespace4;";
      */
 
-    public class CodingActionsV2Facts : IClassFixture<RoslynTestFixture>
+    public class CodingActionsV2Facts : AbstractTestFixture
     {
         private readonly string BufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
-        private OmnisharpWorkspace _omnisharpWorkspace;
-        private CompositionHost _pluginHost;
-        private readonly RoslynTestFixture _fixture;
+        private readonly ILogger _logger;
+        private readonly IOmnisharpAssemblyLoader _loader;
+        private readonly CompositionHost _plugInHost;
 
-        public CodingActionsV2Facts(RoslynTestFixture fixture)
+        public CodingActionsV2Facts(ITestOutputHelper output)
+            : base(output)
         {
-            _fixture = fixture;
+            _logger = this.LoggerFactory.CreateLogger<CodingActionsV2Facts>();
+            _loader = new AnnotateAssemblyLoader(_logger);
+            _plugInHost = CreatePlugInHost();
         }
 
-        private CompositionHost PlugInHost
+        protected override IEnumerable<Assembly> GetHostAssemblies()
         {
-            get
-            {
-                if (_pluginHost == null)
-                {
-                    _pluginHost = TestHelpers.CreatePlugInHost(
-                        new[]
-                        {
-                            typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly,
-                            typeof(GetCodeActionsService).GetTypeInfo().Assembly
-                        });
-                }
-
-                return _pluginHost;
-            }
-        }
-
-        private async Task<OmnisharpWorkspace> GetWorkspace(TestFile testFile)
-        {
-            if (_omnisharpWorkspace == null)
-            {
-                _omnisharpWorkspace = await TestHelpers.CreateWorkspace(PlugInHost, testFile);
-            }
-
-            return _omnisharpWorkspace;
+            yield return GetAssembly<RoslynCodeActionProvider>();
+            yield return GetAssembly<GetCodeActionsService>();
         }
 
         [Fact]
@@ -248,10 +232,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Selection = GetSelection(range)
             };
 
-            var workspace = await GetWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var codeActions = CreateCodeActionProviders();
 
-            var controller = new GetCodeActionsService(workspace, codeActions, _fixture.FakeLoggerFactory);
+            var controller = new GetCodeActionsService(workspace, codeActions, this.LoggerFactory);
             var response = await controller.Handle(request);
 
             return response.CodeActions;
@@ -277,10 +261,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 WantsTextChanges = wantsChanges
             };
 
-            var workspace = await GetWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var codeActions = CreateCodeActionProviders();
 
-            var controller = new RunCodeActionService(workspace, codeActions, _fixture.FakeLoggerFactory);
+            var controller = new RunCodeActionService(workspace, codeActions, this.LoggerFactory);
             var response = await controller.Handle(request);
 
             return response;
@@ -302,8 +286,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
         {
-            var loader = _fixture.CreateAssemblyLoader(_fixture.FakeLogger);
-            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(loader);
+            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(_loader);
 
             yield return new RoslynCodeActionProvider(hostServicesProvider);
         }

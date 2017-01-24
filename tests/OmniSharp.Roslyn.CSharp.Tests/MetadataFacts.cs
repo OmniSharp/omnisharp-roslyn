@@ -6,21 +6,19 @@ using OmniSharp.Services;
 using TestUtility;
 using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class MetadataFacts
+    public class MetadataFacts : AbstractTestFixture
     {
         private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly IOmnisharpAssemblyLoader _loader;
 
-        public MetadataFacts()
+        public MetadataFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
-
+            _logger = this.LoggerFactory.CreateLogger<MetadataFacts>();
             _loader = new AnnotateAssemblyLoader(_logger);
         }
 
@@ -35,11 +33,9 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
@@ -63,11 +59,9 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
@@ -95,11 +89,9 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-                {
-                    new TestFile("foo.cs", source1),
-                    new TestFile("bar.cs", source2)
-                });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
 
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest

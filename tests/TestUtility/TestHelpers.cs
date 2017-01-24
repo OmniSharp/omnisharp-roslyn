@@ -1,18 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp;
-using OmniSharp.Models;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
-using TestUtility.Fake;
 
 namespace TestUtility
 {
@@ -54,30 +48,6 @@ namespace TestUtility
                 filePath: testFile.FileName);
 
             workspace.AddDocument(documentInfo);
-            return workspace;
-        }
-
-        public static Task<OmnisharpWorkspace> CreateWorkspace(params TestFile[] testFiles)
-        {
-            return CreateWorkspace(null, testFiles);
-        }
-
-        public static async Task<OmnisharpWorkspace> CreateWorkspace(CompositionHost plugInHost, params TestFile[] testFiles)
-        {
-            plugInHost = plugInHost ?? CreatePlugInHost(new[]
-            {
-                typeof(CodeCheckService).GetTypeInfo().Assembly
-            });
-
-            var workspace = plugInHost.GetExport<OmnisharpWorkspace>();
-
-            await AddProjectToWorkspace(
-                workspace,
-                "project.json",
-                new[] { "dnx451", "dnxcore50" },
-                testFiles);
-
-            await Task.Delay(50);
             return workspace;
         }
 
@@ -134,39 +104,9 @@ namespace TestUtility
             return Task.FromResult(workspace);
         }
 
-        public static CompositionHost CreatePlugInHost(
-            IEnumerable<Assembly> assemblies,
-            Func<ContainerConfiguration, ContainerConfiguration> configure = null)
-        {
-            return Startup.ConfigureMef(
-                new TestServiceProvider(new FakeLoggerFactory()),
-                new FakeOmniSharpOptions().Value,
-                assemblies ?? Array.Empty<Assembly>(),
-                configure);
-        }
-
         private static Assembly AssemblyFromType(Type type)
         {
             return type.GetTypeInfo().Assembly;
-        }
-
-        public static async Task<ISymbol> SymbolFromQuickFix(OmnisharpWorkspace workspace, QuickFix result)
-        {
-            var document = workspace.GetDocument(result.FileName);
-            var sourceText = await document.GetTextAsync();
-            var position = sourceText.Lines.GetPosition(new LinePosition(result.Line, result.Column));
-            var semanticModel = await document.GetSemanticModelAsync();
-            return await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
-        }
-
-        public static async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixes(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
-        {
-            var symbols = new List<ISymbol>();
-            foreach (var quickfix in quickFixes)
-            {
-                symbols.Add(await TestHelpers.SymbolFromQuickFix(workspace, quickfix));
-            }
-            return symbols;
         }
     }
 }

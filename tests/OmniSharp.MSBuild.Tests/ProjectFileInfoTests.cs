@@ -7,15 +7,16 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {
-    public class ProjectFileInfoTests
+    public class ProjectFileInfoTests : AbstractTestFixture
     {
         private readonly TestAssets _testAssets;
         private readonly ILogger _logger;
 
         public ProjectFileInfoTests(ITestOutputHelper output)
+            : base(output)
         {
             this._testAssets = TestAssets.Instance;
-            this._logger = new TestLogger(output);
+            this._logger = this.LoggerFactory.CreateLogger<ProjectFileInfoTests>();
 
             if (!MSBuildEnvironment.IsInitialized)
             {

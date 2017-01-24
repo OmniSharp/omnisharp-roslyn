@@ -72,8 +72,7 @@ namespace OmniSharp
 
         public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
                                                    OmniSharpOptions options,
-                                                   IEnumerable<Assembly> assemblies,
-                                                   Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+                                                   IEnumerable<Assembly> assemblies)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
@@ -115,9 +114,6 @@ namespace OmniSharp
                 config = config
                     .WithProvider(MefValueProvider.From<IEventEmitter>(new NullEventEmitter()));
             }
-
-            if (configure != null)
-                config = configure(config);
 
             var container = config.CreateContainer();
             return container;

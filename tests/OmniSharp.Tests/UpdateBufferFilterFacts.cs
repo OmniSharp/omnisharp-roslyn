@@ -5,16 +5,22 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class UpdateBufferFilterFacts
+    public class UpdateBufferFilterFacts : AbstractTestFixture
     {
+        public UpdateBufferFilterFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task UpdateBuffer_HandlesVoidRequest()
         {
             var testFile = new TestFile("test.cs", "class C {}");
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFile.FileName).First();
 
@@ -45,7 +51,7 @@ namespace OmniSharp.Tests
         public async Task UpdateBuffer_AddsNewDocumentsIfNeeded()
         {
             var testFile = new TestFile("test.cs", "class C {}");
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = "test2.cs", Buffer = "interface I {}" });
 
@@ -65,7 +71,7 @@ namespace OmniSharp.Tests
         public async Task UpdateBuffer_TransientDocumentsDisappearWhenProjectAddsThem()
         {
             var testFile = new TestFile("test.cs", "class C {}");
-            var workspace = await TestHelpers.CreateWorkspace(testFile);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
             await workspace.BufferManager.UpdateBuffer(new Request() { FileName = "transient.cs", Buffer = "interface I {}" });
 

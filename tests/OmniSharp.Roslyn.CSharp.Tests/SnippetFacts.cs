@@ -3,11 +3,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class SnippetFacts : AbstractAutoCompleteTests
     {
+        public SnippetFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task Can_template_generic_type_argument()
         {

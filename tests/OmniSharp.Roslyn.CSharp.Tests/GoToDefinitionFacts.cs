@@ -6,21 +6,19 @@ using OmniSharp.Services;
 using TestUtility;
 using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToDefinitionFacts
+    public class GoToDefinitionFacts : AbstractTestFixture
     {
-        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IOmnisharpAssemblyLoader _loader;
 
-        public GoToDefinitionFacts()
+        public GoToDefinitionFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
-
+            _logger = this.LoggerFactory.CreateLogger<GoToDefinitionFacts>();
             _loader = new AnnotateAssemblyLoader(_logger);
         }
 
@@ -35,11 +33,9 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
@@ -67,11 +63,9 @@ class Foo {
     private Baz foo;
 }";
 
-            var workspace = await TestHelpers.CreateWorkspace(new []
-            {
+            var workspace = await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
 
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
@@ -226,11 +220,9 @@ class Bar {
     }
 }";
 
-            return await TestHelpers.CreateWorkspace(new []
-            {
+            return await CreateWorkspaceAsync(
                 new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2)
-            });
+                new TestFile("bar.cs", source2));
         }
     }
 }
