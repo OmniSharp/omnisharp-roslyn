@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NuGet.Packaging;
 using OmniSharp.DotNet.Cache;
 using OmniSharp.DotNet.Extensions;
 using OmniSharp.DotNet.Models;
@@ -318,7 +319,6 @@ namespace OmniSharp.DotNet
             var context = state.ProjectContext;
             var project = context.ProjectFile;
             var option = project.GetCompilerOptions(context.TargetFramework, _compilationConfiguration);
-
             var outputKind = option.EmitEntryPoint.GetValueOrDefault() ? OutputKind.ConsoleApplication :
                                                                          OutputKind.DynamicallyLinkedLibrary;
 
@@ -327,16 +327,30 @@ namespace OmniSharp.DotNet
 
             var optimize = (option.Optimize ?? false) ? OptimizationLevel.Release : OptimizationLevel.Debug;
 
+            var suppressedOptions = new Dictionary<string, ReportDiagnostic>
+            {
+                {"CS1701", ReportDiagnostic.Suppress},
+                {"CS1702", ReportDiagnostic.Suppress},
+                {"CS1705", ReportDiagnostic.Suppress},
+            };
+
+            if (option.SuppressWarnings != null && option.SuppressWarnings.Any())
+            {
+                foreach (var nowarn in option.SuppressWarnings)
+                {
+                    if (!suppressedOptions.ContainsKey(nowarn))
+                    {
+                        suppressedOptions.Add(nowarn, ReportDiagnostic.Suppress);
+                    }
+                }
+            }
+
             var csharpOptions = new CSharpCompilationOptions(outputKind)
                 .WithAllowUnsafe(option.AllowUnsafe ?? false)
                 .WithPlatform(ParsePlatfrom(option.Platform))
                 .WithGeneralDiagnosticOption(generalDiagnosticOpt)
                 .WithOptimizationLevel(optimize)
-                .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic> {
-                    { "CS1701", ReportDiagnostic.Suppress },
-                    { "CS1702", ReportDiagnostic.Suppress },
-                    { "CS1705", ReportDiagnostic.Suppress },
-                })
+                .WithSpecificDiagnosticOptions(suppressedOptions)
                 .WithConcurrentBuild(false); // TODO: actually just need to disable on mono
 
             if (!string.IsNullOrEmpty(option.KeyFile))
