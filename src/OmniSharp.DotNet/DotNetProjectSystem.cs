@@ -325,7 +325,7 @@ namespace OmniSharp.DotNet
 
             var optimize = (option.Optimize ?? false) ? OptimizationLevel.Release : OptimizationLevel.Debug;
 
-            var suppressedOptions = new Dictionary<string, ReportDiagnostic>
+            var suppressedDiagnostics = new Dictionary<string, ReportDiagnostic>
             {
                 {"CS1701", ReportDiagnostic.Suppress},
                 {"CS1702", ReportDiagnostic.Suppress},
@@ -336,9 +336,9 @@ namespace OmniSharp.DotNet
             {
                 foreach (var nowarn in option.SuppressWarnings)
                 {
-                    if (!suppressedOptions.ContainsKey(nowarn))
+                    if (!suppressedDiagnostics.ContainsKey(nowarn))
                     {
-                        suppressedOptions.Add(nowarn, ReportDiagnostic.Suppress);
+                        suppressedDiagnostics.Add(nowarn, ReportDiagnostic.Suppress);
                     }
                 }
             }
@@ -348,7 +348,7 @@ namespace OmniSharp.DotNet
                 .WithPlatform(ParsePlatfrom(option.Platform))
                 .WithGeneralDiagnosticOption(generalDiagnosticOpt)
                 .WithOptimizationLevel(optimize)
-                .WithSpecificDiagnosticOptions(suppressedOptions)
+                .WithSpecificDiagnosticOptions(suppressedDiagnostics)
                 .WithConcurrentBuild(false); // TODO: actually just need to disable on mono
 
             if (!string.IsNullOrEmpty(option.KeyFile))
