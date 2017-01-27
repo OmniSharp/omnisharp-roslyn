@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Logging
@@ -8,48 +7,23 @@ namespace OmniSharp.Logging
     {
         protected readonly string CategoryName;
         private readonly Func<string, LogLevel, bool> _filter;
+        private readonly CachedStringBuilder _cachedBuilder;
 
         private static readonly string s_padding = new string(' ', 8);
         private static readonly string s_newLinePlusPadding = Environment.NewLine + s_padding;
-
-        [ThreadStatic]
-        private static StringBuilder g_builder;
 
         protected BaseLogger(string categoryName, Func<string, LogLevel, bool> filter = null)
         {
             this.CategoryName = categoryName;
             this._filter = filter;
+            this._cachedBuilder = new CachedStringBuilder();
         }
 
         protected abstract void WriteMessage(LogLevel logLevel, string message);
 
-        private StringBuilder GetBuilder()
-        {
-            var builder = g_builder;
-            g_builder = null;
-
-            if (builder == null)
-            {
-                builder = new StringBuilder();
-            }
-
-            return builder;
-        }
-
-        private void ReleaseBuilder(StringBuilder builder)
-        {
-            builder.Clear();
-            if (builder.Capacity > 1024)
-            {
-                builder.Capacity = 1024;
-            }
-
-            g_builder = builder;
-        }
-
         private string CreateMessage(LogLevel logLevel, string messageText, Exception exception)
         {
-            var builder = GetBuilder();
+            var builder = _cachedBuilder.Acquire();
             try
             {
                 if (!string.IsNullOrEmpty(messageText))
@@ -78,7 +52,7 @@ namespace OmniSharp.Logging
             }
             finally
             {
-                ReleaseBuilder(builder);
+                _cachedBuilder.Release(builder);
             }
         }
 
