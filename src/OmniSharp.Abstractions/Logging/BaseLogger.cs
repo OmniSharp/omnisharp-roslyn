@@ -6,7 +6,8 @@ namespace OmniSharp.Logging
 {
     public abstract class BaseLogger : ILogger
     {
-        private readonly string _categoryName;
+        protected readonly string CategoryName;
+        private readonly Func<string, LogLevel, bool> _filter;
 
         private static readonly string s_padding = new string(' ', 8);
         private static readonly string s_newLinePlusPadding = Environment.NewLine + s_padding;
@@ -14,12 +15,13 @@ namespace OmniSharp.Logging
         [ThreadStatic]
         private static StringBuilder g_builder;
 
-        protected BaseLogger(string categoryName)
+        protected BaseLogger(string categoryName, Func<string, LogLevel, bool> filter = null)
         {
-            this._categoryName = categoryName;
+            this.CategoryName = categoryName;
+            this._filter = filter;
         }
 
-        protected abstract void WriteMessage(string message);
+        protected abstract void WriteMessage(LogLevel logLevel, string message);
 
         private StringBuilder GetBuilder()
         {
@@ -53,18 +55,23 @@ namespace OmniSharp.Logging
                 if (!string.IsNullOrEmpty(messageText))
                 {
                     builder.Append(GetLogLevelPrefix(logLevel));
-                    builder.Append(_categoryName);
+                    builder.Append(this.CategoryName);
                     builder.AppendLine();
 
                     builder.Append(s_padding);
                     var length = builder.Length;
-                    builder.AppendLine(messageText);
+                    builder.Append(messageText);
                     builder.Replace(Environment.NewLine, s_newLinePlusPadding, length, messageText.Length);
                 }
 
                 if (exception != null)
                 {
-                    builder.AppendLine(exception.ToString());
+                    if (builder.Length > 0)
+                    {
+                        builder.AppendLine();
+                    }
+
+                    builder.Append(exception.ToString());
                 }
 
                 return builder.ToString();
@@ -98,15 +105,23 @@ namespace OmniSharp.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
+            if (!IsEnabled(logLevel))
+            {
+                return;
+            }
+
             var messageText = formatter(state, exception);
             if (!string.IsNullOrEmpty(messageText) || exception != null)
             {
                 var message = CreateMessage(logLevel, messageText, exception);
-                WriteMessage(message);
+                WriteMessage(logLevel, message);
             }
         }
 
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel) =>
+            _filter != null
+                ? _filter(this.CategoryName, logLevel)
+                : true;
 
         public IDisposable BeginScope<TState>(TState state) => new NoopDisposable();
 

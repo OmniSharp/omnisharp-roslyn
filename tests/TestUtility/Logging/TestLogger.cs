@@ -1,4 +1,5 @@
-﻿using OmniSharp.Logging;
+﻿using Microsoft.Extensions.Logging;
+using OmniSharp.Logging;
 using Xunit.Abstractions;
 
 namespace TestUtility.Logging
@@ -13,7 +14,7 @@ namespace TestUtility.Logging
             this._output = output;
         }
 
-        protected override void WriteMessage(string message)
+        protected override void WriteMessage(LogLevel logLevel, string message)
         {
             _output.WriteLine(message);
         }
