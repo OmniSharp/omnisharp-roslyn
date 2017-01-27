@@ -65,7 +65,7 @@ namespace OmniSharp.MSBuild
             _metadataReferenceCache = metadataReferenceCache;
 
             _projects = new ProjectFileInfoCollection();
-            _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
+            _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
         }
 
         public void Initalize(IConfiguration configuration)
@@ -281,7 +281,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger("OmniSharp#ProjectFileInfo"), _options, diagnostics, isUnityProject);
+                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics, isUnityProject);
 
                 if (projectFileInfo == null)
                 {
