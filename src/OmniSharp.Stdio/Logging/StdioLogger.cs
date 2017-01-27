@@ -11,7 +11,7 @@ namespace OmniSharp.Stdio.Logging
         private readonly ISharedTextWriter _writer;
 
         internal StdioLogger(ISharedTextWriter writer, string categoryName, Func<string, LogLevel, bool> filter)
-            : base(categoryName, filter)
+            : base(categoryName, filter, addHeader: false)
         {
             _writer = writer;
         }

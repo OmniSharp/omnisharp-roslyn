@@ -6,16 +6,18 @@ namespace OmniSharp.Logging
     public abstract class BaseLogger : ILogger
     {
         protected readonly string CategoryName;
+        private readonly bool _addHeader;
         private readonly Func<string, LogLevel, bool> _filter;
         private readonly CachedStringBuilder _cachedBuilder;
 
         private static readonly string s_padding = new string(' ', 8);
         private static readonly string s_newLinePlusPadding = Environment.NewLine + s_padding;
 
-        protected BaseLogger(string categoryName, Func<string, LogLevel, bool> filter = null)
+        protected BaseLogger(string categoryName, Func<string, LogLevel, bool> filter = null, bool addHeader = true)
         {
             this.CategoryName = categoryName;
             this._filter = filter;
+            this._addHeader = addHeader;
             this._cachedBuilder = new CachedStringBuilder();
         }
 
@@ -28,14 +30,21 @@ namespace OmniSharp.Logging
             {
                 if (!string.IsNullOrEmpty(messageText))
                 {
-                    builder.Append(GetLogLevelPrefix(logLevel));
-                    builder.Append(this.CategoryName);
-                    builder.AppendLine();
+                    if (_addHeader)
+                    {
+                        builder.Append(GetLogLevelPrefix(logLevel));
+                        builder.Append(this.CategoryName);
+                        builder.AppendLine();
 
-                    builder.Append(s_padding);
-                    var length = builder.Length;
-                    builder.Append(messageText);
-                    builder.Replace(Environment.NewLine, s_newLinePlusPadding, length, messageText.Length);
+                        builder.Append(s_padding);
+                        var length = builder.Length;
+                        builder.Append(messageText);
+                        builder.Replace(Environment.NewLine, s_newLinePlusPadding, length, messageText.Length);
+                    }
+                    else
+                    {
+                        builder.Append(messageText);
+                    }
                 }
 
                 if (exception != null)
