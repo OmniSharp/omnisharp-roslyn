@@ -35,7 +35,7 @@ namespace OmniSharp.MSBuild
                 // If the 'msbuild' folder does not exist beneath OmniSharp.exe, this is likely a development scenario,
                 // such as debugging or running unit tests. In that case, we use one of the .msbuild-* folders at the
                 // solution level.
-                msbuildFolder = FindMSBuildFolderFromSolution();
+                msbuildFolder = FindMSBuildFolderFromSolution(logger);
             }
 
             if (msbuildFolder == null)
@@ -88,12 +88,14 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private static string FindMSBuildFolderFromSolution()
+        private static string FindMSBuildFolderFromSolution(ILogger logger)
         {
             // Try to locate the appropriate build-time msbuild folder by searching for
             // the OmniSharp solution relative to the current folder.
 
-            var current = Directory.GetCurrentDirectory();
+            logger.LogInformation("Searching for solution OmniSharp.sln to locate MSBuild tools...");
+
+            var current = AppContext.BaseDirectory;
             while (!File.Exists(Path.Combine(current, "OmniSharp.sln")))
             {
                 current = Path.GetDirectoryName(current);
