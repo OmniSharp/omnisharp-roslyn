@@ -128,9 +128,18 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(MSBuildEnvironment.MSBuildExtensionsPath))
             {
-                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, MSBuildEnvironment.MSBuildFolder);
+                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, MSBuildEnvironment.MSBuildExtensionsPath);
+            }
+
+            if (!string.IsNullOrWhiteSpace(options.MSBuildSDKsPath))
+            {
+                globalProperties.Add(PropertyNames.MSBuildSDKsPath, options.MSBuildSDKsPath);
+            }
+            else if (!string.IsNullOrWhiteSpace(MSBuildEnvironment.MSBuildSDKsPath))
+            {
+                globalProperties.Add(PropertyNames.MSBuildSDKsPath, MSBuildEnvironment.MSBuildSDKsPath);
             }
 
             if (PlatformHelper.IsMono)
