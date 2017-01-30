@@ -1,5 +1,6 @@
 #addin "Newtonsoft.Json"
 
+#load "scripts/pathhelpers.cake"
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
@@ -16,7 +17,7 @@ var configuration = Argument("configuration", "Release");
 // Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
-    System.IO.Path.Combine(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
+    CombinePaths(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 
 // Working directory
@@ -51,28 +52,29 @@ public class BuildPlan
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
-    System.IO.File.ReadAllText(System.IO.Path.Combine(workingDirectory, "build.json")));
+    System.IO.File.ReadAllText(CombinePaths(workingDirectory, "build.json")));
 
 // Folders and tools
-var dotnetFolder = System.IO.Path.Combine(workingDirectory, buildPlan.DotNetFolder);
-var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : System.IO.Path.Combine(System.IO.Path.GetFullPath(dotnetFolder), "dotnet");
-var toolsFolder = System.IO.Path.Combine(workingDirectory, buildPlan.BuildToolsFolder);
+var dotnetFolder = CombinePaths(workingDirectory, buildPlan.DotNetFolder);
+var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : CombinePaths(System.IO.Path.GetFullPath(dotnetFolder), "dotnet");
+var toolsFolder = CombinePaths(workingDirectory, buildPlan.BuildToolsFolder);
 
-var sourceFolder = System.IO.Path.Combine(workingDirectory, "src");
-var testFolder = System.IO.Path.Combine(workingDirectory, "tests");
+var sourceFolder = CombinePaths(workingDirectory, "src");
+var testFolder = CombinePaths(workingDirectory, "tests");
 
-var artifactFolder = System.IO.Path.Combine(workingDirectory, buildPlan.ArtifactsFolder);
-var publishFolder = System.IO.Path.Combine(artifactFolder, "publish");
-var logFolder = System.IO.Path.Combine(artifactFolder, "logs");
-var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
-var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
+var artifactFolder = CombinePaths(workingDirectory, buildPlan.ArtifactsFolder);
+var publishFolder = CombinePaths(artifactFolder, "publish");
+var logFolder = CombinePaths(artifactFolder, "logs");
+var packageFolder = CombinePaths(artifactFolder, "package");
+var scriptFolder =  CombinePaths(artifactFolder, "scripts");
 
-var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
-var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
+var packagesFolder = CombinePaths(workingDirectory, buildPlan.PackagesFolder);
+var msbuildFolder = CombinePaths(workingDirectory, "msbuild");
+var msbuildBaseFolder = CombinePaths(workingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
-var msbuildRuntimeForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime.Mono");
-var msbuildLibForMonoInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Lib.Mono");
+var msbuildRuntimeForMonoInstallFolder = CombinePaths(packagesFolder, "Microsoft.Build.Runtime.Mono");
+var msbuildLibForMonoInstallFolder = CombinePaths(packagesFolder, "Microsoft.Build.Lib.Mono");
 
 /// <summary>
 ///  Clean artifacts.
@@ -97,7 +99,7 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
-    .IsDependentOn("AcquirePackages")
+    .IsDependentOn("SetupMSBuild")
     .Does(() =>
 {
 });
@@ -105,11 +107,11 @@ Task("Setup")
 /// <summary>
 /// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
 /// </summary>
-Task("AcquirePackages")
+Task("SetupMSBuild")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    var configFilePath = System.IO.Path.Combine(packagesFolder, "packages.config");
+    var configFilePath = CombinePaths(packagesFolder, "packages.config");
 
     InstallNuGetPackages(
         configFilePath: configFilePath,
@@ -132,8 +134,8 @@ Task("AcquirePackages")
         CreateDirectory(msbuildRuntimeForMonoInstallFolder);
         CreateDirectory(msbuildLibForMonoInstallFolder);
 
-        var msbuildMonoRuntimeZip = System.IO.Path.Combine(msbuildRuntimeForMonoInstallFolder, buildPlan.MSBuildRuntimeForMono);
-        var msbuildMonoLibZip = System.IO.Path.Combine(msbuildLibForMonoInstallFolder, buildPlan.MSBuildLibForMono);
+        var msbuildMonoRuntimeZip = CombinePaths(msbuildRuntimeForMonoInstallFolder, buildPlan.MSBuildRuntimeForMono);
+        var msbuildMonoLibZip = CombinePaths(msbuildLibForMonoInstallFolder, buildPlan.MSBuildLibForMono);
 
         using (var client = new WebClient())
         {
@@ -162,9 +164,9 @@ Task("AcquirePackages")
     CreateDirectory(msbuildNetCoreAppFolder);
 
     // Copy MSBuild runtime to appropriate locations
-    var msbuildInstallFolder = System.IO.Path.Combine(packagesFolder, "Microsoft.Build.Runtime", "contentFiles", "any");
-    var msbuildNet46InstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "net46");
-    var msbuildNetCoreAppInstallFolder = System.IO.Path.Combine(msbuildInstallFolder, "netcoreapp1.0");
+    var msbuildInstallFolder = CombinePaths(packagesFolder, "Microsoft.Build.Runtime", "contentFiles", "any");
+    var msbuildNet46InstallFolder = CombinePaths(msbuildInstallFolder, "net46");
+    var msbuildNetCoreAppInstallFolder = CombinePaths(msbuildInstallFolder, "netcoreapp1.0");
 
     if (IsRunningOnWindows())
     {
@@ -186,42 +188,62 @@ Task("AcquirePackages")
         "NuGet.Build.Tasks.Pack"
     };
 
-    var net46SdkFolder = System.IO.Path.Combine(msbuildNet46Folder, "Sdks");
-    var netCoreAppSdkFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Sdks");
+    var net46SdkFolder = CombinePaths(msbuildNet46Folder, "Sdks");
+    var netCoreAppSdkFolder = CombinePaths(msbuildNetCoreAppFolder, "Sdks");
 
     foreach (var sdk in sdks)
     {
-        var sdkInstallFolder = System.IO.Path.Combine(packagesFolder, sdk);
-        var net46SdkTargetFolder = System.IO.Path.Combine(net46SdkFolder, sdk);
-        var netCoreAppSdkTargetFolder = System.IO.Path.Combine(netCoreAppSdkFolder, sdk);
+        var sdkInstallFolder = CombinePaths(packagesFolder, sdk);
+        var net46SdkTargetFolder = CombinePaths(net46SdkFolder, sdk);
+        var netCoreAppSdkTargetFolder = CombinePaths(netCoreAppSdkFolder, sdk);
 
         CopyDirectory(sdkInstallFolder, net46SdkTargetFolder);
         CopyDirectory(sdkInstallFolder, netCoreAppSdkTargetFolder);
 
         // Ensure that we don't leave the .nupkg unnecessarily hanging around.
-        DeleteFiles(System.IO.Path.Combine(net46SdkTargetFolder, "*.nupkg"));
-        DeleteFiles(System.IO.Path.Combine(netCoreAppSdkTargetFolder, "*.nupkg"));
+        DeleteFiles(CombinePaths(net46SdkTargetFolder, "*.nupkg"));
+        DeleteFiles(CombinePaths(netCoreAppSdkTargetFolder, "*.nupkg"));
     }
+
+    // Copy NuGet ImportAfter targets
+    var nugetImportAfterTargetsName = "Microsoft.NuGet.ImportAfter.targets";
+    var nugetImportAfterTargetsFolder = CombinePaths("15.0", "Microsoft.Common.targets", "ImportAfter");
+    var nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
+
+    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
+    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
+
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
+
+    nugetImportAfterTargetsFolder = CombinePaths("15.0", "SolutionFile", "ImportAfter");
+    nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
+
+    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
+    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
+
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
 
     // Copy NuGet.targets from NuGet.Build.Tasks
     var nugetTargetsName = "NuGet.targets";
-    var nugetTargetsPath = System.IO.Path.Combine(packagesFolder, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
+    var nugetTargetsPath = CombinePaths(packagesFolder, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
 
-    CopyFile(nugetTargetsPath, System.IO.Path.Combine(msbuildNet46Folder, nugetTargetsName));
-    CopyFile(nugetTargetsPath, System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetTargetsName));
+    CopyFile(nugetTargetsPath, CombinePaths(msbuildNet46Folder, nugetTargetsName));
+    CopyFile(nugetTargetsPath, CombinePaths(msbuildNetCoreAppFolder, nugetTargetsName));
 
     // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
     var csharpTargetsName = "Microsoft.CSharp.Core.targets";
-    var csharpTargetsPath = System.IO.Path.Combine(packagesFolder, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
+    var csharpTargetsPath = CombinePaths(packagesFolder, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
 
-    var csharpTargetsNet46Folder = System.IO.Path.Combine(msbuildNet46Folder, "Roslyn");
-    var csharpTargetsNetCoreAppFolder = System.IO.Path.Combine(msbuildNetCoreAppFolder, "Roslyn");
+    var csharpTargetsNet46Folder = CombinePaths(msbuildNet46Folder, "Roslyn");
+    var csharpTargetsNetCoreAppFolder = CombinePaths(msbuildNetCoreAppFolder, "Roslyn");
 
     CreateDirectory(csharpTargetsNet46Folder);
     CreateDirectory(csharpTargetsNetCoreAppFolder);
 
-    CopyFile(csharpTargetsPath, System.IO.Path.Combine(csharpTargetsNet46Folder, csharpTargetsName));
-    CopyFile(csharpTargetsPath, System.IO.Path.Combine(csharpTargetsNetCoreAppFolder,csharpTargetsName));
+    CopyFile(csharpTargetsPath, CombinePaths(csharpTargetsNet46Folder, csharpTargetsName));
+    CopyFile(csharpTargetsPath, CombinePaths(csharpTargetsNetCoreAppFolder,csharpTargetsName));
 });
 
 /// <summary>
@@ -270,7 +292,7 @@ Task("BuildEnvironment")
 {
     var installScript = $"dotnet-install.{shellExtension}";
     System.IO.Directory.CreateDirectory(dotnetFolder);
-    var scriptPath = System.IO.Path.Combine(dotnetFolder, installScript);
+    var scriptPath = CombinePaths(dotnetFolder, installScript);
     using (WebClient client = new WebClient())
     {
         client.DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
@@ -351,7 +373,7 @@ Task("BuildTest")
         foreach (var framework in pair.Value)
         {
             var project = pair.Key;
-            var projectFolder = System.IO.Path.Combine(testFolder, project);
+            var projectFolder = CombinePaths(testFolder, project);
             var runLog = new List<string>();
 
             Information($"Building {project} on {framework}...");
@@ -362,7 +384,7 @@ Task("BuildTest")
                         StandardOutputListing = runLog
                     })
                 .ExceptionOnError($"Building test {project} failed for {framework}.");
-            System.IO.File.WriteAllLines(System.IO.Path.Combine(logFolder, $"{project}-{framework}-build.log"), runLog.ToArray());
+            System.IO.File.WriteAllLines(CombinePaths(logFolder, $"{project}-{framework}-build.log"), runLog.ToArray());
         }
     }
 });
@@ -398,8 +420,8 @@ Task("TestCore")
 
     foreach (var testProject in testProjects)
     {
-        var logFile = System.IO.Path.Combine(logFolder, $"{testProject}-core-result.xml");
-        var testWorkingDir = System.IO.Path.Combine(testFolder, testProject);
+        var logFile = CombinePaths(logFolder, $"{testProject}-core-result.xml");
+        var testWorkingDir = CombinePaths(testFolder, testProject);
         Run(dotnetcli, $"test -f netcoreapp1.1 -xml \"{logFile}\" -notrait category=failing", testWorkingDir)
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
@@ -424,17 +446,17 @@ Task("Test")
             }
 
             var project = pair.Key;
-            var frameworkFolder = System.IO.Path.Combine(testFolder, project, "bin", testConfiguration, framework);
+            var frameworkFolder = CombinePaths(testFolder, project, "bin", testConfiguration, framework);
             var runtime = System.IO.Directory.GetDirectories(frameworkFolder).First();
-            var instanceFolder = System.IO.Path.Combine(frameworkFolder, runtime);
+            var instanceFolder = CombinePaths(frameworkFolder, runtime);
 
             // Copy xunit executable to test folder to solve path errors
-            var xunitToolsFolder = System.IO.Path.Combine(toolsFolder, "xunit.runner.console", "tools");
-            var xunitInstancePath = System.IO.Path.Combine(instanceFolder, "xunit.console.exe");
-            System.IO.File.Copy(System.IO.Path.Combine(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
-            System.IO.File.Copy(System.IO.Path.Combine(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), System.IO.Path.Combine(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
-            var targetPath = System.IO.Path.Combine(instanceFolder, $"{project}.dll");
-            var logFile = System.IO.Path.Combine(logFolder, $"{project}-{framework}-result.xml");
+            var xunitToolsFolder = CombinePaths(toolsFolder, "xunit.runner.console", "tools");
+            var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
+            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
+            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
+            var targetPath = CombinePaths(instanceFolder, $"{project}.dll");
+            var logFile = CombinePaths(logFolder, $"{project}-{framework}-result.xml");
             var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
             if (IsRunningOnWindows())
             {
@@ -463,12 +485,12 @@ Task("OnlyPublish")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
-    var projectFolder = System.IO.Path.Combine(sourceFolder, project);
+    var projectFolder = CombinePaths(sourceFolder, project);
     foreach (var framework in buildPlan.Frameworks)
     {
         foreach (var runtime in buildPlan.Rids)
         {
-            var outputFolder = System.IO.Path.Combine(publishFolder, project, runtime, framework);
+            var outputFolder = CombinePaths(publishFolder, project, runtime, framework);
             var argList = new List<string> { "publish" };
 
             if (!runtime.Equals("default"))
@@ -502,7 +524,7 @@ Task("OnlyPublish")
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
             // Copy MSBuild and SDKs to output
-            CopyDirectory($"{msbuildBaseFolder}-{framework}", System.IO.Path.Combine(outputFolder, "msbuild"));
+            CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
             if (!IsRunningOnWindows() && framework == "net46")
@@ -517,7 +539,7 @@ Task("OnlyPublish")
         }
     }
 
-    CreateRunScript(System.IO.Path.Combine(publishFolder, project, "default"), scriptFolder);
+    CreateRunScript(CombinePaths(publishFolder, project, "default"), scriptFolder);
 });
 
 /// <summary>
@@ -562,11 +584,11 @@ Task("TestPublished")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
-    var projectFolder = System.IO.Path.Combine(sourceFolder, project);
+    var projectFolder = CombinePaths(sourceFolder, project);
     var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
     foreach (var script in scriptsToTest)
     {
-        var scriptPath = System.IO.Path.Combine(scriptFolder, script);
+        var scriptPath = CombinePaths(scriptFolder, script);
         var didNotExitWithError = Run($"{shell}", $"{shellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
                                     new RunOptions
                                     {
@@ -616,14 +638,14 @@ Task("Install")
     var project = buildPlan.MainProject;
     foreach (var framework in buildPlan.Frameworks)
     {
-        var outputFolder = System.IO.Path.GetFullPath(System.IO.Path.Combine(publishFolder, project, "default", framework));
-        var targetFolder = System.IO.Path.GetFullPath(System.IO.Path.Combine(installFolder, framework));
+        var outputFolder = System.IO.Path.GetFullPath(CombinePaths(publishFolder, project, "default", framework));
+        var targetFolder = System.IO.Path.GetFullPath(CombinePaths(installFolder, framework));
         // Copy all the folders
         foreach (var directory in System.IO.Directory.GetDirectories(outputFolder, "*", SearchOption.AllDirectories))
-            System.IO.Directory.CreateDirectory(System.IO.Path.Combine(targetFolder, directory.Substring(outputFolder.Length + 1)));
+            System.IO.Directory.CreateDirectory(CombinePaths(targetFolder, directory.Substring(outputFolder.Length + 1)));
         //Copy all the files
         foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
-            System.IO.File.Copy(file, System.IO.Path.Combine(targetFolder, file.Substring(outputFolder.Length + 1)), true);
+            System.IO.File.Copy(file, CombinePaths(targetFolder, file.Substring(outputFolder.Length + 1)), true);
     }
     CreateRunScript(installFolder, scriptFolder);
 });
@@ -675,7 +697,7 @@ Task("Travis")
 Task("SetPackageVersions")
     .Does(() =>
 {
-    var jDepVersion = JObject.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(workingDirectory, "depversion.json")));
+    var jDepVersion = JObject.Parse(System.IO.File.ReadAllText(CombinePaths(workingDirectory, "depversion.json")));
     var projects = System.IO.Directory.GetFiles(sourceFolder, "project.json", SearchOption.AllDirectories).ToList();
     projects.AddRange(System.IO.Directory.GetFiles(testFolder, "project.json", SearchOption.AllDirectories));
     foreach (var project in projects)
