@@ -8,6 +8,8 @@ namespace OmniSharp.MSBuild
     {
         private static bool s_isInitialized;
         private static string s_msbuildFolder;
+        private static string s_msbuildExtensionsPath;
+        private static string s_msbuildSDKsPath;
 
         public static bool IsInitialized => s_isInitialized;
 
@@ -17,6 +19,24 @@ namespace OmniSharp.MSBuild
             {
                 EnsureInitialized();
                 return s_msbuildFolder;
+            }
+        }
+
+        public static string MSBuildExtensionsPath
+        {
+            get
+            {
+                EnsureInitialized();
+                return s_msbuildExtensionsPath;
+            }
+        }
+
+        public static string MSBuildSDKsPath
+        {
+            get
+            {
+                EnsureInitialized();
+                return s_msbuildSDKsPath;
             }
         }
 
@@ -68,6 +88,7 @@ namespace OmniSharp.MSBuild
             var msbuildSdksFolder = Path.Combine(msbuildFolder, "Sdks");
             if (Directory.Exists(msbuildSdksFolder))
             {
+                s_msbuildSDKsPath = msbuildSdksFolder;
                 Environment.SetEnvironmentVariable("MSBuildSDKsPath", msbuildSdksFolder);
                 logger.LogInformation($"MSBuildSDKsPath environment variable set to {msbuildSdksFolder}");
             }
@@ -77,6 +98,7 @@ namespace OmniSharp.MSBuild
             }
 
             s_msbuildFolder = msbuildFolder;
+            s_msbuildExtensionsPath = msbuildFolder;
             s_isInitialized = true;
         }
 
