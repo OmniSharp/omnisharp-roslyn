@@ -68,6 +68,7 @@ var packageFolder = System.IO.Path.Combine(artifactFolder, "package");
 var scriptFolder =  System.IO.Path.Combine(artifactFolder, "scripts");
 
 var packagesFolder = System.IO.Path.Combine(workingDirectory, buildPlan.PackagesFolder);
+var msbuildFolder = System.IO.Path.Combine(workingDirectory, "msbuild");
 var msbuildBaseFolder = System.IO.Path.Combine(workingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
@@ -97,7 +98,7 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
-    .IsDependentOn("AcquirePackages")
+    .IsDependentOn("SetupMSBuild")
     .Does(() =>
 {
 });
@@ -105,7 +106,7 @@ Task("Setup")
 /// <summary>
 /// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
 /// </summary>
-Task("AcquirePackages")
+Task("SetupMSBuild")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
@@ -202,6 +203,26 @@ Task("AcquirePackages")
         DeleteFiles(System.IO.Path.Combine(net46SdkTargetFolder, "*.nupkg"));
         DeleteFiles(System.IO.Path.Combine(netCoreAppSdkTargetFolder, "*.nupkg"));
     }
+
+    // Copy NuGet ImportAfter targets
+    var nugetImportAfterTargetsName = "Microsoft.NuGet.ImportAfter.targets";
+    var nugetImportAfterTargetsFolder = System.IO.Path.Combine("15.0", "Microsoft.Common.targets", "ImportAfter");
+    var nugetImportAfterTargetsPath = System.IO.Path.Combine(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
+
+    CreateDirectory(System.IO.Path.Combine(msbuildNet46Folder, nugetImportAfterTargetsFolder));
+    CreateDirectory(System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
+
+    CopyFile(System.IO.Path.Combine(msbuildFolder, nugetImportAfterTargetsPath), System.IO.Path.Combine(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(System.IO.Path.Combine(msbuildFolder, nugetImportAfterTargetsPath), System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
+
+    nugetImportAfterTargetsFolder = System.IO.Path.Combine("15.0", "SolutionFile", "ImportAfter");
+    nugetImportAfterTargetsPath = System.IO.Path.Combine(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
+
+    CreateDirectory(System.IO.Path.Combine(msbuildNet46Folder, nugetImportAfterTargetsFolder));
+    CreateDirectory(System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
+
+    CopyFile(System.IO.Path.Combine(msbuildFolder, nugetImportAfterTargetsPath), System.IO.Path.Combine(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(System.IO.Path.Combine(msbuildFolder, nugetImportAfterTargetsPath), System.IO.Path.Combine(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
 
     // Copy NuGet.targets from NuGet.Build.Tasks
     var nugetTargetsName = "NuGet.targets";
