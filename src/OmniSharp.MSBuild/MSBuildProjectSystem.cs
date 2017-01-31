@@ -5,7 +5,6 @@ using System.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -40,8 +39,9 @@ namespace OmniSharp.MSBuild
 
         private static readonly Guid[] _supportedProjectTypes = new[]
         {
-            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"), // CSharp
-            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556")  // CSharp (New .NET Core csproj)
+            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"),  // CSharp
+            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556"),  // CSharp (New .NET Core csproj)
+            new Guid("13B669BE-BB05-4DDF-9536-439F39A36129")   // Project GUID used by CLI when manipulation solution files
         };
 
         public string Key { get; } = "MsBuild";
