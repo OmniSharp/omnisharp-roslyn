@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -12,14 +11,14 @@ namespace OmniSharp.DotNet.Tools
     public class PackagesRestoreTool
     {
         private readonly ILogger _logger;
-        private readonly IEventEmitter _emitter;
+        private readonly IEventEmitter _eventEmitter;
         private readonly ConcurrentDictionary<string, object> _projectLocks;
         private readonly SemaphoreSlim _semaphore;
 
         public PackagesRestoreTool(ILoggerFactory logger, IEventEmitter emitter)
         {
             _logger = logger.CreateLogger<PackagesRestoreTool>();
-            _emitter = emitter;
+            _eventEmitter = emitter;
 
             _projectLocks = new ConcurrentDictionary<string, object>();
             _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
@@ -34,14 +33,14 @@ namespace OmniSharp.DotNet.Tools
                 var projectLock = _projectLocks.GetOrAdd(projectPath, new object());
                 lock (projectLock)
                 {
-                    var exitCode = -1;
-                    _emitter.RestoreStarted(projectPath);
+                    var exitStatus = new ProcessExitStatus(-1);
+                    _eventEmitter.RestoreStarted(projectPath);
                     _semaphore.Wait();
                     try
                     {
                         // A successful restore will update the project lock file which is monitored
                         // by the dotnet project system which eventually update the Roslyn model
-                        exitCode = RunRestoreProcess(projectPath);
+                        exitStatus = ProcessHelper.Run("dotnet", "restore", projectPath);
                     }
                     finally
                     {
@@ -50,59 +49,17 @@ namespace OmniSharp.DotNet.Tools
                         object removedLock;
                         _projectLocks.TryRemove(projectPath, out removedLock);
 
-                        _emitter.RestoreFinished(projectPath, exitCode == 0);
+                        _eventEmitter.RestoreFinished(projectPath, exitStatus.Succeeded);
 
-                        if (exitCode != 0)
+                        if (exitStatus.Failed)
                         {
                             onFailure();
                         }
 
-                        _logger.LogInformation($"Finish restoring project {projectPath}. Exit code {exitCode}");
+                        _logger.LogInformation($"Finish restoring project {projectPath}. Exit code {exitStatus}");
                     }
                 }
             });
-        }
-
-        private int RunRestoreProcess(string projectPath)
-        {
-            var startInfo = new ProcessStartInfo("dotnet", "restore")
-            {
-                WorkingDirectory = projectPath,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-
-            var restoreProcess = Process.Start(startInfo);
-            if (restoreProcess.HasExited)
-            {
-                return restoreProcess.ExitCode;
-            }
-
-            var lastSignal = DateTime.UtcNow;
-            var watchDog = Task.Factory.StartNew(async () =>
-            {
-                var delay = TimeSpan.FromSeconds(10);
-                var timeout = TimeSpan.FromSeconds(60);
-                while (!restoreProcess.HasExited)
-                {
-                    if (DateTime.UtcNow - lastSignal > timeout)
-                    {
-                        restoreProcess.KillAll();
-                    }
-                    await Task.Delay(delay);
-                }
-            });
-
-            restoreProcess.OutputDataReceived += (sender, e) => lastSignal = DateTime.UtcNow;
-            restoreProcess.ErrorDataReceived += (sender, e) => lastSignal = DateTime.UtcNow;
-
-            restoreProcess.BeginOutputReadLine();
-            restoreProcess.BeginErrorReadLine();
-            restoreProcess.WaitForExit();
-
-            return restoreProcess.ExitCode;
         }
     }
 }
