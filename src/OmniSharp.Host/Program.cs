@@ -12,6 +12,7 @@ using OmniSharp.Plugins;
 using OmniSharp.Services;
 using OmniSharp.Stdio;
 using OmniSharp.Stdio.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {

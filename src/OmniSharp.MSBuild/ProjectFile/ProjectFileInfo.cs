@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {

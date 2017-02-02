@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
-namespace OmniSharp
+namespace OmniSharp.Utilities
 {
     public static class ProcessExtensions
     {

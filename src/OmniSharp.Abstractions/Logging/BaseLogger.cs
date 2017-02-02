@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Logging
 {
