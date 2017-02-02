@@ -48,5 +48,5 @@ Add the following setting to your [User Settings or Workspace Settings](https://
 
 ## Help wanted!
 
-We have slack room as well. Get yourself invited: [https://goo.gl/Ovnqr1](https://goo.gl/Ovnqr1)
+We have slack room as well. [Get yourself invited](https://omnisharp.herokuapp.com/): [here](https://omnisharp.herokuapp.com/)
 
