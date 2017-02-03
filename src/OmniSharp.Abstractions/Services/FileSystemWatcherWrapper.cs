@@ -9,7 +9,7 @@ namespace OmniSharp.Services
         private readonly FileSystemWatcher _watcher;
         private readonly Dictionary<string, Action<string>> _callbacks = new Dictionary<string, Action<string>>();
 
-        public FileSystemWatcherWrapper(IOmnisharpEnvironment env)
+        public FileSystemWatcherWrapper(IOmniSharpEnvironment env)
         {
             // Environment.SetEnvironmentVariable ("MONO_MANAGED_WATCHER", "1");
             _watcher = new FileSystemWatcher(env.Path);

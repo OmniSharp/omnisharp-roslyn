@@ -18,7 +18,7 @@ namespace TestUtility.Fake
             _logger = _loggerFactory.CreateLogger<FakeServiceProvider>();
 
             _services[typeof(ILoggerFactory)] = _loggerFactory;
-            _services[typeof(IOmnisharpEnvironment)] = new FakeEnvironment();
+            _services[typeof(IOmniSharpEnvironment)] = new FakeEnvironment();
             _services[typeof(IOmnisharpAssemblyLoader)] = new AnnotateAssemblyLoader(_loggerFactory.CreateLogger<AnnotateAssemblyLoader>());
         }
 

@@ -25,7 +25,7 @@ namespace OmniSharp.DotNet
     {
         private const string CompilationConfiguration = "Debug";
 
-        private readonly IOmnisharpEnvironment _environment;
+        private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCliService;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
@@ -39,7 +39,7 @@ namespace OmniSharp.DotNet
 
         [ImportingConstructor]
         public DotNetProjectSystem(
-            IOmnisharpEnvironment environment,
+            IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             DotNetCliService dotNetCliService,
             IMetadataFileReferenceCache metadataFileReferenceCache,

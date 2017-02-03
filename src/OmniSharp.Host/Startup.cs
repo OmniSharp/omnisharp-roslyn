@@ -86,7 +86,7 @@ namespace OmniSharp
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var env = serviceProvider.GetService<IOmnisharpEnvironment>();
+            var env = serviceProvider.GetService<IOmniSharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
             var loader = serviceProvider.GetService<IOmnisharpAssemblyLoader>();
@@ -121,7 +121,7 @@ namespace OmniSharp
 
         public void Configure(IApplicationBuilder app,
                               IServiceProvider serviceProvider,
-                              IOmnisharpEnvironment env,
+                              IOmniSharpEnvironment env,
                               ILoggerFactory loggerFactory,
                               ISharedTextWriter writer,
                               IOmnisharpAssemblyLoader loader,
@@ -196,7 +196,7 @@ namespace OmniSharp
             logger.LogInformation("Configuration finished.");
         }
 
-        private static bool LogFilter(string category, LogLevel level, IOmnisharpEnvironment environment)
+        private static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
         {
             if (environment.TraceType > level)
             {
