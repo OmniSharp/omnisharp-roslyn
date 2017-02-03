@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
+using OmniSharp.Host.Loader;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Services;
 using TestUtility.Fake;
 using TestUtility.Logging;
 using Xunit.Abstractions;
@@ -17,12 +19,14 @@ namespace TestUtility
         private readonly ITestOutputHelper _output;
 
         protected readonly ILoggerFactory LoggerFactory;
+        protected readonly IAssemblyLoader AssemblyLoader;
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
             this._output = output;
             this.LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
+            this.AssemblyLoader = new AssemblyLoader(this.LoggerFactory);
         }
 
         protected Assembly GetAssembly<T>()

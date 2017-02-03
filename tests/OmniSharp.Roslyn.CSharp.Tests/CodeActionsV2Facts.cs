@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 using TestUtility;
-using TestUtility.Annotate;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -40,16 +37,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private readonly string BufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
-        private readonly ILogger _logger;
-        private readonly IOmnisharpAssemblyLoader _loader;
-        private readonly CompositionHost _plugInHost;
-
         public CodingActionsV2Facts(ITestOutputHelper output)
             : base(output)
         {
-            _logger = this.LoggerFactory.CreateLogger<CodingActionsV2Facts>();
-            _loader = new AnnotateAssemblyLoader(_logger);
-            _plugInHost = CreatePlugInHost();
         }
 
         protected override IEnumerable<Assembly> GetHostAssemblies()
@@ -286,7 +276,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
         {
-            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(_loader);
+            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(this.AssemblyLoader);
 
             yield return new RoslynCodeActionProvider(hostServicesProvider);
         }

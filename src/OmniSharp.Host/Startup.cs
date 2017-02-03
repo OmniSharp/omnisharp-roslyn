@@ -70,9 +70,10 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
-                                                   OmniSharpOptions options,
-                                                   IEnumerable<Assembly> assemblies)
+        public static CompositionHost ConfigureMef(
+            IServiceProvider serviceProvider,
+            OmniSharpOptions options,
+            IEnumerable<Assembly> assemblies)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
@@ -89,7 +90,7 @@ namespace OmniSharp
             var env = serviceProvider.GetService<IOmniSharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
-            var loader = serviceProvider.GetService<IOmnisharpAssemblyLoader>();
+            var loader = serviceProvider.GetService<IAssemblyLoader>();
 
             config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
@@ -119,13 +120,14 @@ namespace OmniSharp
             return container;
         }
 
-        public void Configure(IApplicationBuilder app,
-                              IServiceProvider serviceProvider,
-                              IOmniSharpEnvironment env,
-                              ILoggerFactory loggerFactory,
-                              ISharedTextWriter writer,
-                              IOmnisharpAssemblyLoader loader,
-                              IOptions<OmniSharpOptions> optionsAccessor)
+        public void Configure(
+            IApplicationBuilder app,
+            IServiceProvider serviceProvider,
+            IOmniSharpEnvironment env,
+            ILoggerFactory loggerFactory,
+            ISharedTextWriter writer,
+            IAssemblyLoader loader,
+            IOptions<OmniSharpOptions> optionsAccessor)
         {
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
@@ -203,9 +205,7 @@ namespace OmniSharp
                 return false;
             }
 
-            if (string.Equals(category,
-                              typeof(ExceptionHandlerMiddleware).FullName,
-                              StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(category, typeof(ExceptionHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -215,16 +215,12 @@ namespace OmniSharp
                 return false;
             }
 
-            if (string.Equals(category,
-                              typeof(WorkspaceInformationService).FullName,
-                              StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(category, typeof(WorkspaceInformationService).FullName, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            if (string.Equals(category,
-                              typeof(ProjectEventForwarder).FullName,
-                              StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(category, typeof(ProjectEventForwarder).FullName, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

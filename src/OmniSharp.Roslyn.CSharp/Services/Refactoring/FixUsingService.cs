@@ -14,14 +14,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IOmnisharpAssemblyLoader _loader;
+        private readonly IAssemblyLoader _loader;
         private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
         public FixUsingService(
             OmniSharpWorkspace workspace,
             ILoggerFactory loggerFactory,
-            IOmnisharpAssemblyLoader loader,
+            IAssemblyLoader loader,
             [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             _workspace = workspace;

@@ -138,7 +138,7 @@ namespace OmniSharp
                     serviceCollection.AddSingleton<IOmniSharpEnvironment>(Environment);
                     serviceCollection.AddSingleton<ISharedTextWriter>(writer);
                     serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
-                    serviceCollection.AddSingleton<IOmnisharpAssemblyLoader>(new OmnisharpAssemblyLoader());
+                    serviceCollection.AddSingleton<IAssemblyLoader, AssemblyLoader>();
                 });
 
             if (transportType == TransportType.Stdio)
