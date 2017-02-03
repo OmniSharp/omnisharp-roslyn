@@ -1,27 +1,28 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Services;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.DotNet.Tools
+namespace OmniSharp.Services
 {
-    public class PackagesRestoreTool
+    [Export, Shared]
+    public class DotNetCliService
     {
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
-        private readonly ConcurrentDictionary<string, object> _projectLocks;
+        private readonly ConcurrentDictionary<string, object> _locks;
         private readonly SemaphoreSlim _semaphore;
 
-        public PackagesRestoreTool(ILoggerFactory logger, IEventEmitter emitter)
+        [ImportingConstructor]
+        public DotNetCliService(ILoggerFactory loggerFactory, IEventEmitter eventEmitter)
         {
-            _logger = logger.CreateLogger<PackagesRestoreTool>();
-            _eventEmitter = emitter;
-
-            _projectLocks = new ConcurrentDictionary<string, object>();
-            _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
+            this._logger = loggerFactory.CreateLogger<DotNetCliService>();
+            this._eventEmitter = eventEmitter;
+            this._locks = new ConcurrentDictionary<string, object>();
+            this._semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
         }
 
         public void Restore(string projectPath, Action onFailure)
@@ -30,8 +31,8 @@ namespace OmniSharp.DotNet.Tools
             {
                 _logger.LogInformation($"Begin restoring project {projectPath}");
 
-                var projectLock = _projectLocks.GetOrAdd(projectPath, new object());
-                lock (projectLock)
+                var restoreLock = _locks.GetOrAdd(projectPath, new object());
+                lock (restoreLock)
                 {
                     var exitStatus = new ProcessExitStatus(-1);
                     _eventEmitter.RestoreStarted(projectPath);
@@ -47,7 +48,7 @@ namespace OmniSharp.DotNet.Tools
                         _semaphore.Release();
 
                         object removedLock;
-                        _projectLocks.TryRemove(projectPath, out removedLock);
+                        _locks.TryRemove(projectPath, out removedLock);
 
                         _eventEmitter.RestoreFinished(projectPath, exitStatus.Succeeded);
 

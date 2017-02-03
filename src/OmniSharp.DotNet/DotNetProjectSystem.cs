@@ -28,11 +28,11 @@ namespace OmniSharp.DotNet
 
         private readonly IOmnisharpEnvironment _environment;
         private readonly OmnisharpWorkspace _workspace;
+        private readonly DotNetCliService _dotNetCliService;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILogger _logger;
-        private readonly PackagesRestoreTool _packageRestore;
         private readonly ProjectStatesCache _projectStates;
 
         private DotNetWorkspace _workspaceContext;
@@ -42,6 +42,7 @@ namespace OmniSharp.DotNet
         public DotNetProjectSystem(
             IOmnisharpEnvironment environment,
             OmnisharpWorkspace workspace,
+            DotNetCliService dotNetCliService,
             IMetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
@@ -49,12 +50,12 @@ namespace OmniSharp.DotNet
         {
             _environment = environment;
             _workspace = workspace;
+            _dotNetCliService = dotNetCliService;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
             _logger = loggerFactory.CreateLogger<DotNetProjectSystem>();
 
-            _packageRestore = new PackagesRestoreTool(loggerFactory, _eventEmitter);
             _projectStates = new ProjectStatesCache(loggerFactory, _eventEmitter);
         }
 
@@ -295,7 +296,7 @@ namespace OmniSharp.DotNet
             {
                 if (allowRestore && _enableRestorePackages)
                 {
-                    _packageRestore.Restore(state.ProjectContext.ProjectDirectory, onFailure: () =>
+                    _dotNetCliService.Restore(state.ProjectContext.ProjectDirectory, onFailure: () =>
                     {
                         _eventEmitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
                         {
