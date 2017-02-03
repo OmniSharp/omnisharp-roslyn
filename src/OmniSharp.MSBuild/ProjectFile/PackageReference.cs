@@ -1,24 +1,24 @@
-﻿using NuGet.Versioning;
+﻿using NuGet.Packaging.Core;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
     public class PackageReference
     {
-        public string Name { get; }
-        public NuGetVersion Version { get; }
+        public PackageIdentity Identity { get; }
         public bool IsImplicitlyDefined { get; }
 
-        public PackageReference(string name, NuGetVersion version, bool isImplicitlyDefined)
+        public PackageReference(PackageIdentity identity, bool isImplicitlyDefined)
         {
-            this.Name = name;
-            this.Version = version;
+            this.Identity = identity;
             this.IsImplicitlyDefined = isImplicitlyDefined;
         }
 
         public override string ToString()
         {
-            var suffix = IsImplicitlyDefined ? " (implicit)" : string.Empty;
-            return $"{Name}, {Version}{suffix}";
+            var version = Identity.HasVersion ? ", " + Identity.Version.ToNormalizedString() : string.Empty;
+            var implicitSuffix = IsImplicitlyDefined ? " (implicit)" : string.Empty;
+
+            return Identity.Id + version + implicitSuffix;
         }
     }
 }
