@@ -41,6 +41,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public IList<string> References { get; }
         public IList<string> ProjectReferences { get; }
         public IList<string> Analyzers { get; }
+        public IList<PackageReference> PackageReferences { get; }
 
         public ProjectFileInfo(string projectFilePath)
         {
@@ -69,7 +70,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             IList<string> sourceFiles,
             IList<string> references,
             IList<string> projectReferences,
-            IList<string> analyzers)
+            IList<string> analyzers,
+            IList<PackageReference> packageReferences)
         {
             this.ProjectFilePath = projectFilePath;
             this.AssemblyName = assemblyName;
@@ -93,6 +95,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.References = references;
             this.ProjectReferences = projectReferences;
             this.Analyzers = analyzers;
+            this.PackageReferences = packageReferences;
         }
 
         public void SetProjectId(ProjectId projectId)
@@ -151,12 +154,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
                 if (monoXBuildFrameworksDirPath != null)
                 {
-                    logger.LogInformation($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
+                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
                     globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
-                }
-                else
-                {
-                    logger.LogWarning("Couldn't locate Mono, TargetFrameworkRootPath not specified");
                 }
             }
 
@@ -218,20 +217,17 @@ namespace OmniSharp.MSBuild.ProjectFile
             var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
 
             var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
-            var references =  GetFullPaths(projectInstance.GetItems(ItemNames.ReferencePath));
+            var references = GetFullPaths(projectInstance.GetItems(ItemNames.ReferencePath));
             var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
             var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
+
+            var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
 
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
                 !string.IsNullOrWhiteSpace(documentationFile), outputPath, projectAssetsFile, isUnityProject, defineConstants, noWarn,
-                sourceFiles, references, projectReferences, analyzers);
-        }
-
-        private static bool ReferenceSourceTargetIsProjectReference(ProjectItemInstance projectItem)
-        {
-            return !string.Equals(projectItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget), ItemNames.ProjectReference, StringComparison.OrdinalIgnoreCase);
+                sourceFiles, references, projectReferences, analyzers, packageReferences);
         }
 
         private static IList<string> GetFullPaths(ICollection<ProjectItemInstance> items)
@@ -244,6 +240,22 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
 
             return sortedSet.ToList();
+        }
+
+        private static IList<PackageReference> GetPackageReferences(ICollection<ProjectItemInstance> items)
+        {
+            var list = new List<PackageReference>(items.Count);
+
+            foreach (var item in items)
+            {
+                var name = item.EvaluatedInclude;
+                var version = PropertyConverter.ToNuGetVersion(item.GetMetadataValue(MetadataNames.Version));
+                var isImplicitlyDefined = PropertyConverter.ToBoolean(item.GetMetadataValue(MetadataNames.IsImplicitlyDefined), false);
+
+                list.Add(new PackageReference(name, version, isImplicitlyDefined));
+            }
+
+            return list;
         }
     }
 }
