@@ -31,7 +31,7 @@ namespace OmniSharp.Tests
         public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
             [Import]
-            public OmnisharpWorkspace Workspace { get; set; }
+            public OmniSharpWorkspace Workspace { get; set; }
 
             public Task<GotoDefinitionResponse> Handle(GotoDefinitionRequest request)
             {
@@ -43,7 +43,7 @@ namespace OmniSharp.Tests
         public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
         {
             [Import]
-            public OmnisharpWorkspace Workspace { get; set; }
+            public OmniSharpWorkspace Workspace { get; set; }
 
             public Task<QuickFixResponse> Handle(FindSymbolsRequest request)
             {
@@ -55,7 +55,7 @@ namespace OmniSharp.Tests
         public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
         {
             [Import]
-            public OmnisharpWorkspace Workspace { get; set; }
+            public OmniSharpWorkspace Workspace { get; set; }
 
             public Task<object> Handle(UpdateBufferRequest request)
             {

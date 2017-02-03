@@ -16,10 +16,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
         private readonly MetadataHelper _metadataHelper;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoDefinitionService(OmnisharpWorkspace workspace, MetadataHelper metadataHelper)
+        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;

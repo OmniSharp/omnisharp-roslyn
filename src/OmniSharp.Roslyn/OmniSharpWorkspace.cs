@@ -10,14 +10,14 @@ using OmniSharp.Roslyn;
 namespace OmniSharp
 {
     [Export, Shared]
-    public class OmnisharpWorkspace : Workspace
+    public class OmniSharpWorkspace : Workspace
     {
         private HashSet<DocumentId> _activeDocuments = new HashSet<DocumentId>();
         public bool Initialized { get; set; }
         public BufferManager BufferManager { get; private set; }
 
         [ImportingConstructor]
-        public OmnisharpWorkspace(HostServicesAggregator aggregator)
+        public OmniSharpWorkspace(HostServicesAggregator aggregator)
             : base(aggregator.CreateHostServices(), "Custom")
         {
             BufferManager = new BufferManager(this);

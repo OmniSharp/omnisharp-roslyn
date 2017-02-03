@@ -740,7 +740,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         private static async Task<NavigateResponse> SendRequest(
-            OmnisharpWorkspace workspace,
+            OmniSharpWorkspace workspace,
             TestFile testFile,
             int startLine,
             int startColumn,

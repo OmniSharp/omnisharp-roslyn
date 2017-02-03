@@ -35,7 +35,7 @@ namespace OmniSharp
                     var version = VersionStamp.Create();
                     var documentInfo = DocumentInfo.Create(id, document.Name, filePath: newPath, loader: TextLoader.From(TextAndVersion.Create(source, version)));
 
-                    var workspace = newSolution.Workspace as OmnisharpWorkspace;
+                    var workspace = newSolution.Workspace as OmniSharpWorkspace;
                     workspace.RemoveDocument(changedDocumentId);
                     workspace.AddDocument(documentInfo);
                 }

@@ -13,10 +13,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
     [OmniSharpHandler(OmnisharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
     public class SignatureHelpService : RequestHandler<SignatureHelpRequest, SignatureHelp>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public SignatureHelpService(OmnisharpWorkspace workspace)
+        public SignatureHelpService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

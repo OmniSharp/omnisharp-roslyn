@@ -215,7 +215,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         private static async Task<RenameResponse> PerformRename(
-            OmnisharpWorkspace workspace,
+            OmniSharpWorkspace workspace,
             string renameTo,
             TestFile activeFile,
             bool wantsTextChanges = false,

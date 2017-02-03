@@ -16,14 +16,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
     public class TypeLookupService : RequestHandler<TypeLookupRequest, TypeLookupResponse>
     {
         private readonly FormattingOptions _formattingOptions;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private static readonly SymbolDisplayFormat DefaultFormat = SymbolDisplayFormat.FullyQualifiedFormat.
             WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted).
             WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.None).
             WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers);
 
         [ImportingConstructor]
-        public TypeLookupService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        public TypeLookupService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;

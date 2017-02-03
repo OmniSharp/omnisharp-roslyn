@@ -12,10 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly MetadataHelper _metadataHelper;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public MetadataService(OmnisharpWorkspace workspace, MetadataHelper metadataHelper)
+        public MetadataService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;

@@ -9,10 +9,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Buffer
     [OmniSharpHandler(OmnisharpEndpoints.ChangeBuffer, LanguageNames.CSharp)]
     public class ChangeBufferService : RequestHandler<ChangeBufferRequest, object>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public ChangeBufferService(OmnisharpWorkspace workspace)
+        public ChangeBufferService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

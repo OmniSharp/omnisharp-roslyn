@@ -16,11 +16,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     [OmniSharpHandler(OmnisharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
     public class RunCodeActionsService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
         [ImportingConstructor]
-        public RunCodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
+        public RunCodeActionsService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
             _codeActionProviders = providers;

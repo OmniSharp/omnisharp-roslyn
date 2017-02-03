@@ -13,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 {
     public static class FormattingWorker
     {
-        public static OptionSet GetOptions(OmnisharpWorkspace workspace, Options.FormattingOptions formattingOptions)
+        public static OptionSet GetOptions(OmniSharpWorkspace workspace, Options.FormattingOptions formattingOptions)
         {
             return workspace.Options
                 .WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)

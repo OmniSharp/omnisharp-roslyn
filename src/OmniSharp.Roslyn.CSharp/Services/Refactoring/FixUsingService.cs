@@ -12,14 +12,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     [OmniSharpHandler(OmnisharpEndpoints.FixUsings, LanguageNames.CSharp)]
     public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmnisharpAssemblyLoader _loader;
         private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
         public FixUsingService(
-            OmnisharpWorkspace workspace,
+            OmniSharpWorkspace workspace,
             ILoggerFactory loggerFactory,
             IOmnisharpAssemblyLoader loader,
             [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)

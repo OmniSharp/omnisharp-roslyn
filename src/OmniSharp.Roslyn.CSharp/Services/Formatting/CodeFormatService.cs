@@ -12,11 +12,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     [OmniSharpHandler(OmnisharpEndpoints.CodeFormat, LanguageNames.CSharp)]
     public class CodeFormatService : RequestHandler<CodeFormatRequest, CodeFormatResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly OptionSet _options;
 
         [ImportingConstructor]
-        public CodeFormatService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        public CodeFormatService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _options = FormattingWorker.GetOptions(_workspace, formattingOptions);

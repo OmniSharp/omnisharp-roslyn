@@ -26,7 +26,7 @@ namespace OmniSharp.DotNet
         private const string CompilationConfiguration = "Debug";
 
         private readonly IOmnisharpEnvironment _environment;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCliService;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
@@ -40,7 +40,7 @@ namespace OmniSharp.DotNet
         [ImportingConstructor]
         public DotNetProjectSystem(
             IOmnisharpEnvironment environment,
-            OmnisharpWorkspace workspace,
+            OmniSharpWorkspace workspace,
             DotNetCliService dotNetCliService,
             IMetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,

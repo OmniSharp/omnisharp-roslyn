@@ -26,13 +26,13 @@ namespace OmniSharp.Script
     {
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private CSharpParseOptions CsxParseOptions { get; } = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
-        private OmnisharpWorkspace Workspace { get; }
+        private OmniSharpWorkspace Workspace { get; }
         private IOmnisharpEnvironment Env { get; }
         private ScriptContext Context { get; }
         private ILogger Logger { get; }
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmnisharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptContext scriptContext, IMetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmnisharpEnvironment env, ILoggerFactory loggerFactory, ScriptContext scriptContext, IMetadataFileReferenceCache metadataFileReferenceCache)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             Workspace = workspace;

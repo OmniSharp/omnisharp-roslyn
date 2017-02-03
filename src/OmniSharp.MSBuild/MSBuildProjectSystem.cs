@@ -23,7 +23,7 @@ namespace OmniSharp.MSBuild
     public class MSBuildProjectSystem : IProjectSystem
     {
         private readonly IOmnisharpEnvironment _environment;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -50,7 +50,7 @@ namespace OmniSharp.MSBuild
         [ImportingConstructor]
         public MSBuildProjectSystem(
             IOmnisharpEnvironment environment,
-            OmnisharpWorkspace workspace,
+            OmniSharpWorkspace workspace,
             IMetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,

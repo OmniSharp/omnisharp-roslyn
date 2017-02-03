@@ -198,7 +198,7 @@ class Foo {
             return new MetadataHelper(_loader);
         }
 
-        private async Task<OmnisharpWorkspace> CreateTestWorkspace()
+        private async Task<OmniSharpWorkspace> CreateTestWorkspace()
         {
             const string source1 = @"using System;
 

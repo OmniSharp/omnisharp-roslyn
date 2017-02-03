@@ -52,14 +52,14 @@ namespace OmniSharp
 
         public IConfiguration Configuration { get; }
 
-        public OmnisharpWorkspace Workspace { get; set; }
+        public OmniSharpWorkspace Workspace { get; set; }
 
         public CompositionHost PluginHost { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             // Add the omnisharp workspace to the container
-            services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
+            services.AddSingleton(typeof(OmniSharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
 
             // Caching
@@ -76,7 +76,7 @@ namespace OmniSharp
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
                 .Distinct();
 
             foreach (var assembly in assemblies)
@@ -139,7 +139,7 @@ namespace OmniSharp
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
-            Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
+            Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
             if (env.TransportType == TransportType.Stdio)
             {

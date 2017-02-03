@@ -50,20 +50,20 @@ namespace TestUtility
                 assemblies: ComputeHostAssemblies(assemblies));
         }
 
-        protected Task<OmnisharpWorkspace> CreateWorkspaceAsync(params TestFile[] testFiles)
+        protected Task<OmniSharpWorkspace> CreateWorkspaceAsync(params TestFile[] testFiles)
         {
             var plugInHost = CreatePlugInHost();
             return CreateWorkspaceAsync(plugInHost, testFiles);
         }
 
-        protected async Task<OmnisharpWorkspace> CreateWorkspaceAsync(CompositionHost plugInHost, params TestFile[] testFiles)
+        protected async Task<OmniSharpWorkspace> CreateWorkspaceAsync(CompositionHost plugInHost, params TestFile[] testFiles)
         {
             if (plugInHost == null)
             {
                 throw new ArgumentNullException(nameof(plugInHost));
             }
 
-            var workspace = plugInHost.GetExport<OmnisharpWorkspace>();
+            var workspace = plugInHost.GetExport<OmniSharpWorkspace>();
 
             await TestHelpers.AddProjectToWorkspaceAsync(
                 workspace,

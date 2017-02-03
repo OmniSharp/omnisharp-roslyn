@@ -10,9 +10,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class BufferFacts
     {
-        private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
+        private void CreateSimpleWorkspace(out OmniSharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
         {
-            workspace = new OmnisharpWorkspace(
+            workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task ChangeBuffer_InsertRemoveChanges()
         {
-            OmnisharpWorkspace workspace;
+            OmniSharpWorkspace workspace;
             ChangeBufferService controller;
             DocumentInfo document;
             CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", "class C {}");

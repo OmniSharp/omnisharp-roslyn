@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
     public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]
-        public HighlightingService(OmnisharpWorkspace workspace)
+        public HighlightingService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -95,7 +95,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
         }
 
         private HighlightClassification[] AllClassifications = Enum.GetValues(typeof(HighlightClassification)).Cast<HighlightClassification>().ToArray();
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         private IEnumerable<ClassifiedSpan> FilterSpans(HighlightClassification[] classifications, IEnumerable<ClassifiedSpan> spans)
         {

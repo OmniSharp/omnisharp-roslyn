@@ -12,10 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     [OmniSharpHandler(OmnisharpEndpoints.CodeCheck, LanguageNames.CSharp)]
     public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CodeCheckService(OmnisharpWorkspace workspace)
+        public CodeCheckService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
