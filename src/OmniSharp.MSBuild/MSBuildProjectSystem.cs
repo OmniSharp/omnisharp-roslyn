@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
@@ -23,12 +22,12 @@ namespace OmniSharp.MSBuild
     [Export(typeof(IProjectSystem)), Shared]
     public class MSBuildProjectSystem : IProjectSystem
     {
-        private readonly OmnisharpWorkspace _workspace;
         private readonly IOmnisharpEnvironment _environment;
-        private readonly ILoggerFactory _loggerFactory;
+        private readonly OmnisharpWorkspace _workspace;
+        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
-        private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
         private readonly object _gate = new object();
@@ -50,19 +49,19 @@ namespace OmniSharp.MSBuild
 
         [ImportingConstructor]
         public MSBuildProjectSystem(
-            OmnisharpWorkspace workspace,
             IOmnisharpEnvironment environment,
-            ILoggerFactory loggerFactory,
+            OmnisharpWorkspace workspace,
+            IMetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
-            IMetadataFileReferenceCache metadataReferenceCache,
-            IFileSystemWatcher fileSystemWatcher)
+            IFileSystemWatcher fileSystemWatcher,
+            ILoggerFactory loggerFactory)
         {
-            _workspace = workspace;
             _environment = environment;
-            _loggerFactory = loggerFactory;
+            _workspace = workspace;
+            _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
-            _metadataReferenceCache = metadataReferenceCache;
+            _loggerFactory = loggerFactory;
 
             _projects = new ProjectFileInfoCollection();
             _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
@@ -362,17 +361,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                // If all is OK, add a new document.
-                using (var stream = File.OpenRead(sourceFile))
-                {
-                    var sourceText = SourceText.From(stream);
-                    var documentId = DocumentId.CreateNewId(project.Id);
-                    var version = VersionStamp.Create();
-                    var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
-                    var documentInfo = DocumentInfo.Create(documentId, sourceFile, filePath: sourceFile, loader: loader);
-
-                    _workspace.AddDocument(documentInfo);
-                }
+                _workspace.AddDocument(project.Id, sourceFile);
             }
 
             // Removing any remaining documents from the project.
@@ -460,7 +449,7 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    var metadataReference = _metadataReferenceCache.GetMetadataReference(referencePath);
+                    var metadataReference = _metadataFileReferenceCache.GetMetadataReference(referencePath);
 
                     if (existingReferences.Remove(metadataReference))
                     {

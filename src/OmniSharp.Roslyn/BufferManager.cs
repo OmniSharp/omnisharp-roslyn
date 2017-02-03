@@ -139,9 +139,9 @@ namespace OmniSharp.Roslyn
                 _transientDocumentIds.UnionWith(documentIds);
             }
 
-            foreach (var document in documentInfos)
+            foreach (var documentInfo in documentInfos)
             {
-                _workspace.AddDocument(document);
+                _workspace.AddDocument(documentInfo);
             }
 
             return true;

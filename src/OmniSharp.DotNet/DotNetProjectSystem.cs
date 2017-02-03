@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -389,29 +388,18 @@ namespace OmniSharp.DotNet
             var added = 0;
             var removed = 0;
 
-            foreach (var file in sourceFiles)
+            foreach (var sourceFile in sourceFiles)
             {
-                if (existingFiles.Remove(file))
+                if (existingFiles.Remove(sourceFile))
                 {
                     continue;
                 }
 
-                // TODO: performance optimize
-                using (var stream = File.OpenRead(file))
-                {
-                    var sourceText = SourceText.From(stream);
-                    var docId = DocumentId.CreateNewId(state.Id);
-                    var version = VersionStamp.Create();
+                var documentId = _workspace.AddDocument(state.Id, sourceFile);
+                state.DocumentReferences[sourceFile] = documentId;
 
-                    var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
-
-                    var doc = DocumentInfo.Create(docId, file, filePath: file, loader: loader);
-                    _workspace.AddDocument(doc);
-                    state.DocumentReferences[file] = doc.Id;
-
-                    _logger.LogDebug($"    Added document {file}.");
-                    added++;
-                }
+                _logger.LogDebug($"    Added document {sourceFile}.");
+                added++;
             }
 
             foreach (var file in existingFiles)
