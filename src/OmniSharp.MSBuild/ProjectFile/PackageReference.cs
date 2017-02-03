@@ -13,6 +13,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.IsImplicitlyDefined = isImplicitlyDefined;
         }
 
+        public override int GetHashCode()
+        {
+            return this.Identity.GetHashCode();
+        }
+
         public override string ToString()
         {
             var version = Identity.HasVersion ? ", " + Identity.Version.ToNormalizedString() : string.Empty;
