@@ -17,12 +17,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     [OmniSharpHandler(OmnisharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp)]
     public class RunCodeActionService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public RunCodeActionService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
+        public RunCodeActionService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _codeActionProviders = providers;

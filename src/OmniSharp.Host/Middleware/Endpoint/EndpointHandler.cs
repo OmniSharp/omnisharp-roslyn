@@ -52,7 +52,7 @@ namespace OmniSharp.Middleware.Endpoint
         private readonly CompositionHost _host;
         private readonly IPredicateHandler _languagePredicateHandler;
         private readonly Lazy<Task<Dictionary<string, ExportHandler<TRequest, TResponse>>>> _exports;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly bool _hasLanguageProperty;
         private readonly bool _hasFileNameProperty;
         private readonly bool _canBeAggregated;
@@ -67,7 +67,7 @@ namespace OmniSharp.Middleware.Endpoint
             _logger = logger;
             _languagePredicateHandler = languagePredicateHandler;
             _plugins = plugins;
-            _workspace = host.GetExport<OmnisharpWorkspace>();
+            _workspace = host.GetExport<OmniSharpWorkspace>();
 
             _hasLanguageProperty = item.RequestType.GetRuntimeProperty(nameof(LanguageModel.Language)) != null;
             _hasFileNameProperty = item.RequestType.GetRuntimeProperty(nameof(Request.FileName)) != null;

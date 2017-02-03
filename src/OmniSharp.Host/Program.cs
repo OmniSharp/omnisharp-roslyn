@@ -12,12 +12,13 @@ using OmniSharp.Plugins;
 using OmniSharp.Services;
 using OmniSharp.Stdio;
 using OmniSharp.Stdio.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
     public class Program
     {
-        public static OmnisharpEnvironment Environment { get; set; }
+        public static OmniSharpEnvironment Environment { get; set; }
 
         public static void Main(string[] args)
         {
@@ -112,7 +113,7 @@ namespace OmniSharp
             }
 #endif
 
-            Environment = new OmnisharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
+            Environment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPID, logLevel, transportType, otherArgs.ToArray());
 
             var config = new ConfigurationBuilder()
                 .AddCommandLine(new[] { "--server.urls", $"http://{serverInterface}:{serverPort}" });
@@ -134,10 +135,10 @@ namespace OmniSharp
                 .UseStartup(typeof(Startup))
                 .ConfigureServices(serviceCollection =>
                 {
-                    serviceCollection.AddSingleton<IOmnisharpEnvironment>(Environment);
+                    serviceCollection.AddSingleton<IOmniSharpEnvironment>(Environment);
                     serviceCollection.AddSingleton<ISharedTextWriter>(writer);
                     serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
-                    serviceCollection.AddSingleton<IOmnisharpAssemblyLoader>(new OmnisharpAssemblyLoader());
+                    serviceCollection.AddSingleton<IAssemblyLoader, AssemblyLoader>();
                 });
 
             if (transportType == TransportType.Stdio)

@@ -4,19 +4,19 @@ using System.Reflection;
 
 namespace OmniSharp.Services
 {
-    public interface IOmnisharpAssemblyLoader
+    public interface IAssemblyLoader
     {
         Assembly Load(AssemblyName name);
     }
 
-    public static class IOmniSharpAssemblyLoaderExtensions
+    public static class IAssemblyLoaderExtensions
     {
-        public static Lazy<Assembly> LazyLoad(this IOmnisharpAssemblyLoader loader, string assemblyName)
+        public static Lazy<Assembly> LazyLoad(this IAssemblyLoader loader, string assemblyName)
         {
             return new Lazy<Assembly>(() => loader.Load(assemblyName));
         }
 
-        public static Assembly Load(this IOmnisharpAssemblyLoader loader, string name)
+        public static Assembly Load(this IAssemblyLoader loader, string name)
         {
             var assemblyName = name;
             if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
@@ -27,7 +27,7 @@ namespace OmniSharp.Services
             return loader.Load(new AssemblyName(assemblyName));
         }
 
-        public static IEnumerable<Assembly> Load(this IOmnisharpAssemblyLoader loader, params string[] assemblyNames)
+        public static IEnumerable<Assembly> Load(this IAssemblyLoader loader, params string[] assemblyNames)
         {
             foreach (var name in assemblyNames)
             {

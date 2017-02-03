@@ -14,14 +14,14 @@ namespace OmniSharp.Workers.Diagnostics
     public class CSharpDiagnosticService
     {
         private readonly ILogger _logger;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly object _lock = new object();
         private readonly DiagnosticEventForwarder _forwarder;
         private bool _queueRunning = false;
         private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
 
         [ImportingConstructor]
-        public CSharpDiagnosticService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
+        public CSharpDiagnosticService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _forwarder = forwarder;

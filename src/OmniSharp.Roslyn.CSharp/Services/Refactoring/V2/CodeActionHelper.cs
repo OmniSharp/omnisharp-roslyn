@@ -18,7 +18,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     {
         private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryImports.CSharpRemoveUnnecessaryImportsCodeFixProvider";
 
-        public static async Task<IEnumerable<CodeAction>> GetActions(OmnisharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, ICodeActionRequest request)
+        public static async Task<IEnumerable<CodeAction>> GetActions(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> codeActionProviders, ILogger logger, ICodeActionRequest request)
         {
             var actions = new List<CodeAction>();
             var originalDocument = workspace.GetDocument(request.FileName);

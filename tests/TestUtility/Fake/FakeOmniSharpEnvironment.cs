@@ -3,7 +3,7 @@ using OmniSharp.Services;
 
 namespace TestUtility.Fake
 {
-    public class FakeEnvironment : IOmnisharpEnvironment
+    public class FakeEnvironment : IOmniSharpEnvironment
     {
         public LogLevel TraceType { get; }
         public int Port { get; }

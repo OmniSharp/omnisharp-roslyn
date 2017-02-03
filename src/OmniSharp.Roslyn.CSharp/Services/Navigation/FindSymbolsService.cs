@@ -13,10 +13,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.FindSymbols, LanguageNames.CSharp)]
     public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FindSymbolsService(OmnisharpWorkspace workspace)
+        public FindSymbolsService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

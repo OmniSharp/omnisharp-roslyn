@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace OmniSharp
+namespace OmniSharp.Utilities
 {
     public struct CachedStringBuilder
     {

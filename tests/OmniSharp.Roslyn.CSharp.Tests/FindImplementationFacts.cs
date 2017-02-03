@@ -98,7 +98,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return await SymbolsFromQuickFixesAsync(workspace, implementations.QuickFixes);
         }
 
-        private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
+        private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmniSharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
         {
             var symbols = new List<ISymbol>();
             foreach (var quickfix in quickFixes)

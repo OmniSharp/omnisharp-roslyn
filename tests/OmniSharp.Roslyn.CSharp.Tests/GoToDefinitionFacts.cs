@@ -1,10 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Services;
 using TestUtility;
-using TestUtility.Annotate;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -12,14 +9,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class GoToDefinitionFacts : AbstractTestFixture
     {
-        private readonly ILogger _logger;
-        private readonly IOmnisharpAssemblyLoader _loader;
-
         public GoToDefinitionFacts(ITestOutputHelper output)
             : base(output)
         {
-            _logger = this.LoggerFactory.CreateLogger<GoToDefinitionFacts>();
-            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]
@@ -195,10 +187,10 @@ class Foo {
 
         private MetadataHelper CreateMetadataHelper()
         {
-            return new MetadataHelper(_loader);
+            return new MetadataHelper(this.AssemblyLoader);
         }
 
-        private async Task<OmnisharpWorkspace> CreateTestWorkspace()
+        private async Task<OmniSharpWorkspace> CreateTestWorkspace()
         {
             const string source1 = @"using System;
 

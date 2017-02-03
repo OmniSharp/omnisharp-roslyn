@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using OmniSharp.Utilities;
+
 namespace OmniSharp.Extensions
 {
     public static class ISymbolExtensions

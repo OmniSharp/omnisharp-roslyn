@@ -7,7 +7,7 @@ namespace OmniSharp.Helpers
 {
     public static class NavigationHelpers
     {
-        public static async Task<NavigateResponse> Navigate(OmnisharpWorkspace workspace, Request request, Func<FileMemberElement, FileMemberElement, Request, bool> IsCloserNode)
+        public static async Task<NavigateResponse> Navigate(OmniSharpWorkspace workspace, Request request, Func<FileMemberElement, FileMemberElement, Request, bool> IsCloserNode)
         {
             var stack = new List<FileMemberElement>(await StructureComputer.Compute(workspace.GetDocuments(request.FileName)));
             var response = new NavigateResponse();

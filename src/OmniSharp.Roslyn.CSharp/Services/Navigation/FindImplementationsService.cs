@@ -15,10 +15,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.FindImplementations, LanguageNames.CSharp)]
     public class FindImplementationsService : RequestHandler<FindImplementationsRequest, QuickFixResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FindImplementationsService(OmnisharpWorkspace workspace)
+        public FindImplementationsService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

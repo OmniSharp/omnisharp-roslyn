@@ -13,11 +13,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     [OmniSharpHandler(OmnisharpEndpoints.FormatRange, LanguageNames.CSharp)]
     public class FormatRangeService : RequestHandler<FormatRangeRequest, FormatRangeResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly OptionSet _options;
 
         [ImportingConstructor]
-        public FormatRangeService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        public FormatRangeService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _options = FormattingWorker.GetOptions(_workspace, formattingOptions);
