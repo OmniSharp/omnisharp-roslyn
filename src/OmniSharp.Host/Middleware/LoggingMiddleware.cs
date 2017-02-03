@@ -11,11 +11,13 @@ namespace OmniSharp.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
+        private readonly CachedStringBuilder _cachedBuilder;
 
         public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
         {
             _next = next;
             _logger = loggerFactory.CreateLogger<LoggingMiddleware>();
+            _cachedBuilder = new CachedStringBuilder();
         }
 
         public async Task Invoke(HttpContext context)
@@ -33,7 +35,6 @@ namespace OmniSharp.Middleware
                 await requestBody.CopyToAsync(context.Request.Body);
 
                 LogRequest(context);
-
             }
 
             var stopwatch = Stopwatch.StartNew();
@@ -47,43 +48,66 @@ namespace OmniSharp.Middleware
                 await context.Response.Body.CopyToAsync(responseBody);
 
             }
-            _logger.LogInformation(context.Request.Path + ": " + context.Response.StatusCode + " " + stopwatch.ElapsedMilliseconds + "ms");
+
+            _logger.LogInformation($"{context.Request.Path}: {context.Response.StatusCode} {stopwatch.ElapsedMilliseconds}ms");
         }
 
         private void LogRequest(HttpContext context)
         {
-            _logger.LogDebug("************ Request ************");
-            _logger.LogDebug(string.Format("{0} - {1}", context.Request.Method, context.Request.Path));
-            _logger.LogDebug("************ Headers ************");
-
-            foreach (var headerGroup in context.Request.Headers)
+            var builder = _cachedBuilder.Acquire();
+            try
             {
-                foreach (var header in headerGroup.Value)
+                builder.AppendLine("************ Request ************");
+                builder.AppendLine($"{context.Request.Method} - {context.Request.Path}");
+                builder.AppendLine("************ Headers ************");
+
+                foreach (var headerGroup in context.Request.Headers)
                 {
-                    _logger.LogDebug(string.Format("{0} - {1}", headerGroup.Key, header));
+                    foreach (var header in headerGroup.Value)
+                    {
+                        builder.AppendLine($"{headerGroup.Key} - {header}");
+                    }
                 }
+
+                context.Request.Body.Position = 0;
+
+                builder.AppendLine("************  Body ************");
+
+                var reader = new StreamReader(context.Request.Body);
+                var content = reader.ReadToEnd();
+
+                builder.Append(content);
+                _logger.LogDebug(builder.ToString());
+
+                context.Request.Body.Position = 0;
             }
-
-            context.Request.Body.Position = 0;
-
-            _logger.LogDebug("************  Body ************");
-            var reader = new StreamReader(context.Request.Body);
-            var content = reader.ReadToEnd();
-            _logger.LogDebug(content);
-
-            context.Request.Body.Position = 0;
+            finally
+            {
+                _cachedBuilder.Release(builder);
+            }
         }
 
         private void LogResponse(HttpContext context)
         {
-            _logger.LogDebug("************  Response ************ ");
+            var builder = _cachedBuilder.Acquire();
+            try
+            {
+                builder.AppendLine("************  Response ************ ");
 
-            context.Response.Body.Position = 0;
+                context.Response.Body.Position = 0;
 
-            var reader = new StreamReader(context.Response.Body);
-            var content = reader.ReadToEnd();
-            _logger.LogDebug(content);
-            context.Response.Body.Position = 0;
+                var reader = new StreamReader(context.Response.Body);
+                var content = reader.ReadToEnd();
+
+                builder.Append(content);
+                _logger.LogDebug(builder.ToString());
+
+                context.Response.Body.Position = 0;
+            }
+            finally
+            {
+                _cachedBuilder.Release(builder);
+            }
         }
     }
 

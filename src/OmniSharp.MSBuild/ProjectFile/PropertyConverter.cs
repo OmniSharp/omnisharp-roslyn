@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using NuGet.Frameworks;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -47,10 +49,10 @@ namespace OmniSharp.MSBuild.ProjectFile
             if (string.IsNullOrWhiteSpace(propertyValue) ||
                 propertyValue.Equals("Default", StringComparison.OrdinalIgnoreCase))
             {
-                return LanguageVersion.CSharp6;
+                return LanguageVersion.Default;
             }
 
-            // ISO-1, ISO-2, 3, 4, 5, 6 or Default
+            // ISO-1, ISO-2, 3, 4, 5, 6, 7 or Default
             switch (propertyValue.ToLower())
             {
                 case "iso-1": return LanguageVersion.CSharp1;
@@ -59,8 +61,49 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "4": return LanguageVersion.CSharp4;
                 case "5": return LanguageVersion.CSharp5;
                 case "6": return LanguageVersion.CSharp6;
-                default: return LanguageVersion.CSharp6;
+                case "7": return LanguageVersion.CSharp7;
+                default: return LanguageVersion.Default;
             }
+        }
+
+        public static IList<string> ToList(string propertyValue, char separator, bool trimValues = true)
+        {
+            if (string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return new string[0];
+            }
+
+            var result = new List<string>();
+            foreach (var value in propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                result.Add(value.Trim());
+            }
+
+            return result;
+        }
+
+        public static IList<NuGetFramework> ToTargetFrameworks(string propertyValue)
+        {
+            if (string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return new NuGetFramework[0];
+            }
+
+            var result = new SortedSet<NuGetFramework>();
+            foreach (var value in propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                try
+                {
+                    var framework = NuGetFramework.Parse(value.TrimEnd());
+                    result.Add(framework);
+                }
+                catch
+                {
+                    // If the value can't be parsed, ignore it.
+                }
+            }
+
+            return result.ToArray();
         }
 
         public static IList<string> ToDefineConstants(string propertyValue)
@@ -70,9 +113,33 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return new string[0];
             }
 
-            var values = propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var values = propertyValue.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
             return new SortedSet<string>(values).ToArray();
+        }
+
+        public static IList<string> ToSuppressDiagnostics(string propertyValue)
+        {
+            if (string.IsNullOrWhiteSpace(propertyValue))
+            {
+                return new string[0];
+            }
+
+            // Remove quotes
+            propertyValue = propertyValue.Trim('"');
+            var values = propertyValue.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var result = new SortedSet<string>();
+
+            foreach (var id in values)
+            {
+                ushort number;
+                if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
+                {
+                    result.Add("CS" + number.ToString("0000"));
+                }
+            }
+
+            return result.ToArray();
         }
 
         public static Guid ToGuid(string propertyValue)

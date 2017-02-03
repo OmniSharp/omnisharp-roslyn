@@ -2,20 +2,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindImplementationFacts
+    public class FindImplementationFacts : AbstractTestFixture
     {
+        public FindImplementationFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task CanFindInterfaceTypeImplementation()
         {
-            var source = @"
-                public interface Som$eInterface {}
+            const string source = @"
+                public interface Som$$eInterface {}
                 public class SomeClass : SomeInterface {}";
 
             var implementations = await FindImplementations(source);
@@ -27,8 +35,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindInterfaceMethodImplementation()
         {
-            var source = @"
-                public interface SomeInterface { void Some$Method(); }
+            const string source = @"
+                public interface SomeInterface { void Some$$Method(); }
                 public class SomeClass : SomeInterface {
                     public void SomeMethod() {}
                 }";
@@ -42,8 +50,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindOverride()
         {
-            var source = @"
-                public class BaseClass { public abstract Some$Method() {} }
+            const string source = @"
+                public class BaseClass { public abstract Some$$Method() {} }
                 public class SomeClass : BaseClass
                 {
                     public override SomeMethod() {}
@@ -59,9 +67,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindSubclass()
         {
-            var source = @"
+            const string source = @"
                 public class BaseClass {}
-                public class SomeClass : Base$Class {}";
+                public class SomeClass : Base$$Class {}";
 
             var implementations = await FindImplementations(source);
             var implementation = implementations.First();
@@ -69,28 +77,42 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
+        private async Task<IEnumerable<ISymbol>> FindImplementations(string input)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new FindImplementationsService(workspace);
-            var request = CreateRequest(source);
+            var testFile = new TestFile("dummy.cs", input);
+            var point = testFile.Content.GetPointFromPosition();
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            var workspace = await CreateWorkspaceAsync(testFile);
+            var controller = new FindImplementationsService(workspace);
+
+            var request = new FindImplementationsRequest
+            {
+                Line = point.Line,
+                Column = point.Offset,
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code
+            };
 
             var implementations = await controller.Handle(request);
-            return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
+
+            return await SymbolsFromQuickFixesAsync(workspace, implementations.QuickFixes);
         }
 
-        private FindImplementationsRequest CreateRequest(string source, string fileName = "dummy.cs")
+        private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmnisharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
         {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new FindImplementationsRequest {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", "")
-            };
-        }
+            var symbols = new List<ISymbol>();
+            foreach (var quickfix in quickFixes)
+            {
+                var document = workspace.GetDocument(quickfix.FileName);
+                var sourceText = await document.GetTextAsync();
+                var position = sourceText.Lines.GetPosition(new LinePosition(quickfix.Line, quickfix.Column));
+                var semanticModel = await document.GetSemanticModelAsync();
+                var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
 
+                symbols.Add(symbol);
+            }
+
+            return symbols;
+        }
     }
 }

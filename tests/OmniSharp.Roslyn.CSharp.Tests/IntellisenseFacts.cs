@@ -1,41 +1,38 @@
 using System;
 using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading.Tasks;
-using OmniSharp.Models;
-using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
-using TestUtility;
+using Microsoft.Extensions.Logging;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class IntellisenseFacts
+    public class IntellisenseFacts : AbstractAutoCompleteTests
     {
-        private CompositionHost _plugInHost;
+        private readonly ILogger _logger;
 
-        public IntellisenseFacts()
+        public IntellisenseFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _plugInHost = TestHelpers.CreatePluginHost(new[] { typeof(IntellisenseService).GetTypeInfo().Assembly });
+            this._logger = this.LoggerFactory.CreateLogger<IntellisenseFacts>();
         }
 
         [Fact]
         public async Task DisplayText_is_correct_for_property()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public int Foo { get; set; }
                     public Class1()
                         {
-                            Foo$
+                            Foo$$
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: true);
-            var completions = await FindCompletionsAsync(source, request);
+            var request = CreateRequest(input, wantSnippet: true);
+            var completions = await FindCompletionsAsync(input, request);
 
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo");
         }
@@ -43,17 +40,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task DisplayText_is_correct_for_variable()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
                             var foo = 1;
-                            foo$
+                            foo$$
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: true);
-            var completions = await FindCompletionsAsync(source, request);
+            var request = CreateRequest(input, wantSnippet: true);
+            var completions = await FindCompletionsAsync(input, request);
 
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "foo");
         }
@@ -61,19 +58,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task DisplayText_matches_snippet_for_snippet_response()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            Foo$
+                            Foo$$
                         }
                     public void Foo(int bar = 1)
                         {
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: true);
-            var completions = await FindCompletionsAsync(source, request);
+            var request = CreateRequest(input, wantSnippet: true);
+            var completions = await FindCompletionsAsync(input, request);
 
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(2), "Foo()", "Foo(int bar = 1)");
         }
@@ -81,19 +78,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task DisplayText_matches_snippet_for_non_snippet_response()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            Foo$
+                            Foo$$
                         }
                     public void Foo(int bar = 1)
                         {
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: false);
-            var completions = await FindCompletionsAsync(source, request);
+            var request = CreateRequest(input, wantSnippet: false);
+            var completions = await FindCompletionsAsync(input, request);
 
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo(int bar = 1)");
         }
@@ -101,15 +98,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_camel_case_completions()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Guid.tp$
+                            System.Guid.tp$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
+            var completions = await FindCompletionsAsync(input);
 
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "TryParse");
         }
@@ -117,15 +114,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_sub_sequence_completions()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Guid.ng$
+                            System.Guid.ng$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
+            var completions = await FindCompletionsAsync(input);
 
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
         }
@@ -133,15 +130,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_method_header()
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Guid.ng$
+                            System.Guid.ng$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
+            var completions = await FindCompletionsAsync(input);
 
             ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "NewGuid()");
         }
@@ -149,17 +146,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_variable_before_class()
         {
-            var source =
+            const string input =
                 @"public class MyClass1 {
 
                     public MyClass1()
                         {
                             var myvar = 1;
-                            my$
+                            my$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
+            var completions = await FindCompletionsAsync(input);
 
             ContainsCompletions(completions.Select(c => c.CompletionText), "myvar", "MyClass1");
         }
@@ -167,82 +164,63 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_class_before_variable()
         {
-            var source =
+            const string input =
                 @"public class MyClass1 {
 
                     public MyClass1()
                         {
                             var myvar = 1;
-                            My$
+                            My$$
+                        }
+                    }";
+
+            var completions = await FindCompletionsAsync(input);
+
+            ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
+        }
+
+        [Fact]
+        public async Task Returns_empty_sequence_in_invalid_context()
+        {
+            const string source =
+                @"public class MyClass1 {
+
+                    public MyClass1()
+                        {
+                            var x$$
                         }
                     }";
 
             var completions = await FindCompletionsAsync(source);
-
-            ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
+            ContainsCompletions(completions.Select(c => c.CompletionText), Array.Empty<string>());
         }
 
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))
             {
-                Console.Error.WriteLine("Expected");
-                Console.Error.WriteLine("--------");
+                var builder = new StringBuilder();
+                builder.AppendLine("Expected");
+                builder.AppendLine("--------");
 
                 foreach (var completion in expected)
                 {
-                    Console.WriteLine(completion);
+                    builder.AppendLine(completion);
                 }
 
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("Found");
-                Console.Error.WriteLine("-----");
+                builder.AppendLine();
+                builder.AppendLine("Found");
+                builder.AppendLine("-----");
 
                 foreach (var completion in completions)
                 {
-                    Console.WriteLine(completion);
+                    builder.AppendLine(completion);
                 }
+
+                this._logger.LogError(builder.ToString());
             }
 
             Assert.Equal(expected, completions.ToArray());
-        }
-
-        private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
-        {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(_plugInHost, source);
-            var controller = new IntellisenseService(workspace, new FormattingOptions());
-
-            if (request == null)
-            {
-                request = CreateRequest(source);
-            }
-
-            var response = await controller.Handle(request);
-            var completions = response as IEnumerable<AutoCompleteResponse>;
-
-            return completions;
-        }
-
-        private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs", bool wantSnippet = false)
-        {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-
-            return new AutoCompleteRequest
-            {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", ""),
-                WordToComplete = GetPartialWord(source),
-                WantMethodHeader = true,
-                WantSnippet = wantSnippet
-            };
-        }
-
-        private static string GetPartialWord(string editorText)
-        {
-            MatchCollection matches = Regex.Matches(editorText, @"([a-zA-Z0-9_]*)\$");
-            return matches[0].Groups[1].ToString();
         }
     }
 }

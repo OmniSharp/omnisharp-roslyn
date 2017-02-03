@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -20,7 +20,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
-    [Export(typeof(IProjectSystem))]
+    [Export(typeof(IProjectSystem)), Shared]
     public class MSBuildProjectSystem : IProjectSystem
     {
         private readonly OmnisharpWorkspace _workspace;
@@ -39,7 +39,9 @@ namespace OmniSharp.MSBuild
 
         private static readonly Guid[] _supportedProjectTypes = new[]
         {
-            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc") // CSharp
+            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"),  // CSharp
+            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556"),  // CSharp (New .NET Core csproj)
+            new Guid("13B669BE-BB05-4DDF-9536-439F39A36129")   // Project GUID used by CLI when manipulation solution files
         };
 
         public string Key { get; } = "MsBuild";
@@ -63,7 +65,7 @@ namespace OmniSharp.MSBuild
             _metadataReferenceCache = metadataReferenceCache;
 
             _projects = new ProjectFileInfoCollection();
-            _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
+            _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
         }
 
         public void Initalize(IConfiguration configuration)
@@ -71,10 +73,12 @@ namespace OmniSharp.MSBuild
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
+            MSBuildEnvironment.Initialize(_logger);
+
             if (_options.WaitForDebugger)
             {
-                Console.WriteLine($"Attach to process {System.Diagnostics.Process.GetCurrentProcess().Id}");
-                while (!System.Diagnostics.Debugger.IsAttached)
+                Console.WriteLine($"Attach to process {Process.GetCurrentProcess().Id}");
+                while (!Debugger.IsAttached)
                 {
                     System.Threading.Thread.Sleep(100);
                 }
@@ -127,8 +131,8 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectBlock in solutionFile.ProjectBlocks)
             {
-                if (!_supportedProjectTypes.Contains(projectBlock.ProjectTypeGuid) &&
-                    !UnityHelper.IsUnityProject(projectBlock.ProjectName, projectBlock.ProjectTypeGuid))
+                var isUnityProject = UnityHelper.IsUnityProject(projectBlock.ProjectName, projectBlock.ProjectTypeGuid);
+                if (!_supportedProjectTypes.Contains(projectBlock.ProjectTypeGuid) && !isUnityProject)
                 {
                     _logger.LogWarning("Skipped unsupported project type '{0}'", projectBlock.ProjectPath);
                     continue;
@@ -148,7 +152,7 @@ namespace OmniSharp.MSBuild
 
                 _logger.LogInformation($"Loading project from '{projectFilePath}'.");
 
-                var projectFileInfo = AddProject(projectFilePath);
+                var projectFileInfo = AddProject(projectFilePath, isUnityProject);
                 if (projectFileInfo == null)
                 {
                     continue;
@@ -166,7 +170,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private ProjectFileInfo AddProject(string filePath)
+        private ProjectFileInfo AddProject(string filePath, bool isUnityProject = false)
         {
             if (_projects.ContainsKey(filePath))
             {
@@ -174,11 +178,13 @@ namespace OmniSharp.MSBuild
                 return null;
             }
 
-            var fileInfo = CreateProjectFileInfo(filePath);
+            var fileInfo = CreateProjectFileInfo(filePath, isUnityProject);
             if (fileInfo == null)
             {
                 return null;
             }
+
+            _logger.LogInformation($"Add project: {fileInfo.ProjectFilePath}");
 
             _projects.Add(fileInfo);
 
@@ -210,6 +216,26 @@ namespace OmniSharp.MSBuild
             {
                 result = result.WithAllowUnsafe(true);
             }
+
+            var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count);
+
+            // Ensure that specific warnings about assembly references are always suppressed.
+            specificDiagnosticOptions.Add("CS1701", ReportDiagnostic.Suppress);
+            specificDiagnosticOptions.Add("CS1702", ReportDiagnostic.Suppress);
+            specificDiagnosticOptions.Add("CS1705", ReportDiagnostic.Suppress);
+
+            if (projectFileInfo.SuppressedDiagnosticIds.Any())
+            {
+                foreach (var id in projectFileInfo.SuppressedDiagnosticIds)
+                {
+                    if (!specificDiagnosticOptions.ContainsKey(id))
+                    {
+                        specificDiagnosticOptions.Add(id, ReportDiagnostic.Suppress);
+                    }
+                }
+            }
+
+            result = result.WithSpecificDiagnosticOptions(specificDiagnosticOptions);
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
@@ -248,14 +274,14 @@ namespace OmniSharp.MSBuild
             return result.FilePath;
         }
 
-        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath)
+        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath, bool isUnityProject = false)
         {
             ProjectFileInfo projectFileInfo = null;
             var diagnostics = new List<MSBuildDiagnosticsMessage>();
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger("OmniSharp#ProjectFileInfo"), _options, diagnostics);
+                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics, isUnityProject);
 
                 if (projectFileInfo == null)
                 {
@@ -330,10 +356,16 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                // If not, add a new document.
+                // If the source file doesn't exist on disk, don't try to add it.
+                if (!File.Exists(sourceFile))
+                {
+                    continue;
+                }
+
+                // If all is OK, add a new document.
                 using (var stream = File.OpenRead(sourceFile))
                 {
-                    var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
+                    var sourceText = SourceText.From(stream);
                     var documentId = DocumentId.CreateNewId(project.Id);
                     var version = VersionStamp.Create();
                     var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
@@ -379,7 +411,10 @@ namespace OmniSharp.MSBuild
 
         private void UpdateProjectReferences(Project project, IList<string> projectReferences)
         {
+            _logger.LogInformation($"Update project: {project.Name}");
+
             var existingProjectReferences = new HashSet<ProjectReference>(project.ProjectReferences);
+            var addedProjectReferences = new HashSet<ProjectReference>();
 
             foreach (var projectReference in projectReferences)
             {
@@ -394,7 +429,11 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _workspace.AddProjectReference(project.Id, reference);
+                    if (!addedProjectReferences.Contains(reference))
+                    {
+                        _workspace.AddProjectReference(project.Id, reference);
+                        addedProjectReferences.Add(reference);
+                    }
                 }
                 else
                 {
@@ -411,6 +450,7 @@ namespace OmniSharp.MSBuild
         private void UpdateReferences(Project project, IList<string> references)
         {
             var existingReferences = new HashSet<MetadataReference>(project.MetadataReferences);
+            var addedReferences = new HashSet<MetadataReference>();
 
             foreach (var referencePath in references)
             {
@@ -427,8 +467,12 @@ namespace OmniSharp.MSBuild
                         continue;
                     }
 
-                    _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
-                    _workspace.AddMetadataReference(project.Id, metadataReference);
+                    if (!addedReferences.Contains(metadataReference))
+                    {
+                        _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
+                        _workspace.AddMetadataReference(project.Id, metadataReference);
+                        addedReferences.Add(metadataReference);
+                    }
                 }
             }
 
@@ -472,7 +516,7 @@ namespace OmniSharp.MSBuild
             }
 
             return Task.FromResult<object>(
-                new MSBuildProject(projectFileInfo));
+                new MSBuildProjectInformation(projectFileInfo));
         }
     }
 }

@@ -10,19 +10,14 @@
     "Microsoft.Extensions.DependencyModel": "1.0.0"
   },
   "frameworks": {
-    "net451": {
-      "frameworkAssemblies": {
-        "System.Collections.Concurrent": ""
-      }
-    },
+    "net46": {},
     "netstandard1.6": {
       "imports": [
         "dotnet5.4",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0",
-        "System.Runtime.Loader": "4.0.0"
+        "NETStandard.Library": "1.6.1"
       }
     }
   }

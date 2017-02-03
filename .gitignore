@@ -4,7 +4,7 @@ TestResults/
 .nuget/
 *.sln.ide/
 _ReSharper.*/
-packages/
+packages/**/
 artifacts/
 PublishProfiles/
 *.user
@@ -31,6 +31,7 @@ buildlog
 *.lock.json
 /omnisharp*.tar.gz
 scripts/Omnisharp*
+.msbuild-*/
 
 # NuGet
 *.nuget.targets

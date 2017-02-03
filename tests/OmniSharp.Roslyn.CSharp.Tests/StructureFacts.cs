@@ -3,22 +3,29 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class StructureFacts
+    public class StructureFacts : AbstractTestFixture
     {
+        public StructureFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task SimpleClass()
         {
-            var source =
+            const string source =
                 @"public class Far {
 
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var testFile = new TestFile("d.cs", source);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
-            var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
+            var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
             Assert.Equal(1, nodes.Count());
             Assert.Equal("Far", nodes.First().Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
@@ -35,9 +42,10 @@ namespace OmniSharp.Tests
                     public event Action E;
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var testFile = new TestFile("d.cs", source);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
-            var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
+            var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
             Assert.Equal(1, nodes.Count());
             Assert.Equal("Far", nodes.First().Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
@@ -59,9 +67,10 @@ namespace OmniSharp.Tests
 
                 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source, "d.cs");
+            var testFile = new TestFile("d.cs", source);
+            var workspace = await CreateWorkspaceAsync(testFile);
 
-            var nodes = await StructureComputer.Compute(workspace.GetDocuments("d.cs"));
+            var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
             Assert.Equal(1, nodes.Count());
             Assert.Equal("Far", nodes.First().Location.Text);
             Assert.Equal(SyntaxKind.InterfaceDeclaration.ToString(), nodes.First().Kind);

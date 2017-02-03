@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
@@ -7,38 +6,37 @@ using OmniSharp.Services;
 using TestUtility;
 using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToDefinitionFacts
+    public class GoToDefinitionFacts : AbstractTestFixture
     {
-        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IOmnisharpAssemblyLoader _loader;
 
-        public GoToDefinitionFacts()
+        public GoToDefinitionFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
-
+            _logger = this.LoggerFactory.CreateLogger<GoToDefinitionFacts>();
             _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]
         public async Task ReturnsLocationSourceDefinition()
         {
-            var source1 = @"using System;
+            const string source1 = @"using System;
 
 class Foo {
 }";
-            var source2 = @"class Bar {
+            const string source2 = @"class Bar {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
+
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
@@ -57,17 +55,18 @@ class Foo {
         [Fact]
         public async Task ReturnsEmptyResultWhenDefinitionIsNotFound()
         {
-            var source1 = @"using System;
+            const string source1 = @"using System;
 
 class Foo {
 }";
-            var source2 = @"class Bar {
+            const string source2 = @"class Bar {
     private Baz foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
+
             var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
             RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
             var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
@@ -99,7 +98,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Guid", definitionResponse.MetadataSource.TypeName);
             // We probably shouldn't hard code metadata locations (they could change randomly)
             Assert.NotEqual(0, definitionResponse.Line);
@@ -122,7 +121,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -144,7 +143,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -166,7 +165,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.Collections.Generic.Dictionary`2", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -188,7 +187,7 @@ class Foo {
 
             Assert.Null(definitionResponse.FileName);
             Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal("System.Private.CoreLib", definitionResponse.MetadataSource.AssemblyName);
+            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
             Assert.Equal("System.String", definitionResponse.MetadataSource.TypeName);
             Assert.NotEqual(0, definitionResponse.Line);
             Assert.NotEqual(0, definitionResponse.Column);
@@ -201,11 +200,11 @@ class Foo {
 
         private async Task<OmnisharpWorkspace> CreateTestWorkspace()
         {
-            var source1 = @"using System;
+            const string source1 = @"using System;
 
 class Foo {
 }";
-            var source2 = @"using System;
+            const string source2 = @"using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -221,9 +220,9 @@ class Bar {
     }
 }";
 
-            return await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            return await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
         }
     }
 }

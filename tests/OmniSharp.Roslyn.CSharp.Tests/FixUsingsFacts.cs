@@ -11,22 +11,27 @@ using TestUtility;
 using TestUtility.Annotate;
 using TestUtility.Fake;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FixUsingsFacts
+    public class FixUsingsFacts : AbstractTestFixture
     {
-        private readonly string fileName = "test.cs";
-        private readonly LoggerFactory _loggerFactory;
-        private readonly ILogger<FixUsingsFacts> _logger;
+        private const string fileName = "test.cs";
+
+        private readonly ILogger _logger;
         private readonly IOmnisharpAssemblyLoader _loader;
 
-        public FixUsingsFacts()
+        public FixUsingsFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<FixUsingsFacts>();
+            _logger = this.LoggerFactory.CreateLogger<FixUsingsFacts>();
             _loader = new AnnotateAssemblyLoader(_logger);
+        }
+
+        protected override IEnumerable<Assembly> GetHostAssemblies()
+        {
+            yield return GetAssembly<FixUsingService>();
         }
 
         [Fact]
@@ -230,21 +235,26 @@ namespace OmniSharp
     {
         public method1()
         {
-            var c1 = new $classX();
+            var c1 = new $$classX();
         }
     }
 }";
-            var classLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContents));
-            var fileContentNoDollarMarker = TestHelpers.RemoveDollarMarker(fileContents);
-            var expectedUnresolved = new List<QuickFix>();
-            expectedUnresolved.Add(new QuickFix()
+
+            var markup = TestContent.Parse(fileContents);
+            var point = markup.GetPointFromPosition();
+
+            var expectedUnresolved = new List<QuickFix>()
             {
-                Line = classLineColumn.Line,
-                Column = classLineColumn.Column,
-                FileName = fileName,
-                Text = "`classX` is ambiguous"
-            });
-            await AssertUnresolvedReferences(fileContentNoDollarMarker, expectedUnresolved);
+                new QuickFix()
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = fileName,
+                    Text = "`classX` is ambiguous"
+                }
+            };
+
+            await AssertUnresolvedReferences(markup.Code, expectedUnresolved);
         }
 
         [Fact]
@@ -472,18 +482,19 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
         {
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(FixUsingService).GetTypeInfo().Assembly });
-            var workspace = await TestHelpers.CreateSimpleWorkspace(host, fileContents, fileName);
+            var host = CreatePlugInHost();
+            var workspace = await CreateWorkspaceAsync(host, new TestFile(fileName, fileContents));
 
             var fakeOptions = new FakeOmniSharpOptions();
             fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });
             var providers = host.GetExports<ICodeActionProvider>();
-            var controller = new FixUsingService(workspace, new FakeLoggerFactory(), _loader, providers);
+            var controller = new FixUsingService(workspace, this.LoggerFactory, _loader, providers);
             var request = new FixUsingsRequest
             {
                 FileName = fileName,
                 Buffer = fileContents
             };
+
             return await controller.Handle(request);
         }
     }

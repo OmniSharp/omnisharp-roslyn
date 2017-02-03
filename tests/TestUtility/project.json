@@ -6,20 +6,21 @@
   "dependencies": {
     "OmniSharp.Host": "1.0.0",
     "OmniSharp.Roslyn.CSharp": "1.0.0",
-    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-beta3",
-    "Microsoft.DotNet.ProjectModel": "1.0.0-rc3-003121",
-    "Microsoft.DotNet.ProjectModel.Workspaces": "1.0.0-preview2-003121"
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": "2.0.0-rc3-61318-04",
+    "Microsoft.DotNet.ProjectModel": "1.0.0-rc3-1-003177",
+    "Microsoft.DotNet.ProjectModel.Workspaces": "1.0.0-preview2-1-003177",
+    "xunit": "2.1.0"
   },
   "frameworks": {
+    "net46": {},
     "netstandard1.6": {
       "imports": [
         "dotnet5.4",
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.0"
+        "NETStandard.Library": "1.6.1"
       }
-    },
-    "net451": {}
+    }
   }
 }

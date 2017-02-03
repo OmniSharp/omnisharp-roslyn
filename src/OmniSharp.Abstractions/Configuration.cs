@@ -7,6 +7,10 @@ namespace OmniSharp
         public const string RoslynVersion = "2.0.0.0";
         public const string RoslynPublicKeyToken = "31bf3856ad364e35";
 
+        public readonly static string RoslynFeatures = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Features");
+        public readonly static string RoslynCSharpFeatures = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.CSharp.Features");
+        public readonly static string RoslynWorkspaces = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Workspaces");
+
         public static string GetRoslynAssemblyFullName(string name)
         {
             return $"{name}, Version={RoslynVersion}, Culture=neutral, PublicKeyToken={RoslynPublicKeyToken}";

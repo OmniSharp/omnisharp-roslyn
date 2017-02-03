@@ -4,15 +4,21 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindSymbolsFacts
+    public class FindSymbolsFacts : AbstractTestFixture
     {
+        public FindSymbolsFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task Can_find_symbols()
         {
-            var source = @"
+            const string source = @"
                 namespace Some.Long.Namespace
                 {
                     public class Foo
@@ -37,7 +43,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Foo",
                 "_field",
                 "AutoProperty",
@@ -47,13 +54,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Nested",
                 "NestedMethod()"
             };
+
             Assert.Equal(expected, symbols);
         }
 
         [Fact]
         public async Task Does_not_return_event_keyword()
         {
-            var source = @"
+            const string source = @"
                 public static class Game
                 {
                     public static event GameEvent GameResumed;
@@ -62,17 +70,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Game",
                 "GameResumed"
             };
+
             Assert.Equal(expected, symbols);
         }
 
         [Fact]
         public async Task Can_find_symbols_kinds()
         {
-            var source = @"
+            const string source = @"
                 namespace Some.Long.Namespace
                 {
                     public class Foo
@@ -97,7 +107,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
 
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Class",
                 "Field",
                 "Property",
@@ -107,13 +118,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Class",
                 "Method"
             };
+
             Assert.Equal(expected, symbols);
         }
 
         [Fact]
         public async Task Returns_interface_kind()
         {
-            var source = @"public interface Foo {}";
+            const string source = @"public interface Foo {}";
 
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
@@ -123,7 +135,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_enum_kind()
         {
-            var source = @"public enum Foo {}";
+            const string source = @"public enum Foo {}";
 
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
@@ -133,7 +145,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_struct_kind()
         {
-            var source = @"public struct Foo {}";
+            const string source = @"public struct Foo {}";
 
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
@@ -143,7 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Returns_delegate_kind()
         {
-            var source = @"public delegate void Foo();";
+            const string source = @"public delegate void Foo();";
 
             var usages = await FindSymbols(source);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
@@ -153,7 +165,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Can_find_symbols_using_filter()
         {
-            var source = @"
+            const string source = @"
                 namespace Some.Long.Namespace
                 {
                     public class Foo
@@ -178,16 +190,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindSymbolsWithFilter(source, "meth");
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            var expected = new[] {
+            var expected = new[]
+            {
                 "Method()",
                 "Method(string param)"
             };
+
             Assert.Equal(expected, symbols);
         }
 
         private async Task<QuickFixResponse> FindSymbols(string source)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var testFile = new TestFile("dummy.cs", source);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             return await requestHandler.Handle(null);
@@ -195,7 +210,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindSymbolsWithFilter(string source, string filter)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
+            var testFile = new TestFile("dummy.cs", source);
+            var workspace = await CreateWorkspaceAsync(testFile);
             var controller = new FindSymbolsService(workspace);
             RequestHandler<FindSymbolsRequest, QuickFixResponse> requestHandler = controller;
             var request = new FindSymbolsRequest { Filter = filter };

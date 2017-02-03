@@ -1,23 +1,29 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class OpenCloseFacts
+    public class OpenCloseFacts : AbstractTestFixture
     {
+        public OpenCloseFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task AddsOpenFile()
         {
             var source1 = @"using System; class Foo { }";
             var source2 = @"class Bar { private Foo foo; }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
+
             var document = workspace.GetDocumentId("foo.cs");
 
             var controller = new FileOpenService(workspace);
@@ -34,9 +40,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var source1 = @"using System; class Foo { }";
             var source2 = @"class Bar { private Foo foo; }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
+
             var document = workspace.GetDocumentId("foo.cs");
 
             var openController = new FileOpenService(workspace);

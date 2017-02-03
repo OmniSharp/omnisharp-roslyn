@@ -1,35 +1,44 @@
 {
   "UseSystemDotNetPath": "false",
   "DotNetFolder": ".dotnet",
-  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain",
+  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2.1/scripts/obtain",
   "DotNetChannel": "preview",
-  "DotNetVersion": "1.0.0-preview2-003131",
+  "DotNetVersion": "1.0.0-preview2-1-003177",
+  "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
+  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha2.zip",
+  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha2.zip",
   "BuildToolsFolder": ".tools",
   "ArtifactsFolder": "artifacts",
+  "PackagesFolder": "packages",
   "TestProjects": {
     "OmniSharp.MSBuild.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.Roslyn.CSharp.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.Stdio.Tests": [
-      "netcoreapp1.0",
-      "net451"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.DotNet.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.DotNetTest.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.1",
+      "net46"
     ],
     "OmniSharp.Tests": [
-      "netcoreapp1.0"
+      "netcoreapp1.1",
+      "net46"
     ]
   },
   "Frameworks": [
-    "net451",
-    "netcoreapp1.0"
+    "net46",
+    "netcoreapp1.1"
   ],
   "MainProject": "OmniSharp"
 }

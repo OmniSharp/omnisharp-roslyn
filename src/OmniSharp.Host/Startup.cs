@@ -73,8 +73,7 @@ namespace OmniSharp
 
         public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
                                                    OmniSharpOptions options,
-                                                   IEnumerable<Assembly> assemblies,
-                                                   Func<ContainerConfiguration, ContainerConfiguration> configure = null)
+                                                   IEnumerable<Assembly> assemblies)
         {
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<Startup>();

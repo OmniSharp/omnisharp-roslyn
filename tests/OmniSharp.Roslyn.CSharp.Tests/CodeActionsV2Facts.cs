@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
@@ -11,8 +12,9 @@ using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 using OmniSharp.Tests;
 using TestUtility;
-using TestUtility.Fake;
+using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -35,59 +37,37 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     using MyNamespace4;";
      */
 
-    public class CodingActionsV2Facts : IClassFixture<RoslynTestFixture>
+    public class CodingActionsV2Facts : AbstractTestFixture
     {
         private readonly string BufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
-        private OmnisharpWorkspace _omnisharpWorkspace;
-        private CompositionHost _pluginHost;
-        private readonly RoslynTestFixture _fixture;
+        private readonly ILogger _logger;
+        private readonly IOmnisharpAssemblyLoader _loader;
+        private readonly CompositionHost _plugInHost;
 
-        public CodingActionsV2Facts(RoslynTestFixture fixture)
+        public CodingActionsV2Facts(ITestOutputHelper output)
+            : base(output)
         {
-            _fixture = fixture;
+            _logger = this.LoggerFactory.CreateLogger<CodingActionsV2Facts>();
+            _loader = new AnnotateAssemblyLoader(_logger);
+            _plugInHost = CreatePlugInHost();
         }
 
-        private CompositionHost PluginHost
+        protected override IEnumerable<Assembly> GetHostAssemblies()
         {
-            get
-            {
-                if (_pluginHost == null)
-                {
-                    _pluginHost = TestHelpers.CreatePluginHost(
-                        new Assembly[]
-                        {
-                            typeof(RoslynCodeActionProvider).GetTypeInfo().Assembly,
-                            typeof(GetCodeActionsService).GetTypeInfo().Assembly
-                        });
-                }
-
-                return _pluginHost;
-            }
-        }
-
-        private async Task<OmnisharpWorkspace> GetOmniSharpWorkspace(OmniSharp.Models.Request request)
-        {
-            if (_omnisharpWorkspace == null)
-            {
-                _omnisharpWorkspace = await TestHelpers.CreateSimpleWorkspace(
-                    PluginHost,
-                    request.Buffer,
-                    BufferPath);
-            }
-
-            return _omnisharpWorkspace;
+            yield return GetAssembly<RoslynCodeActionProvider>();
+            yield return GetAssembly<GetCodeActionsService>();
         }
 
         [Fact]
         public async Task Can_get_code_actions_from_roslyn()
         {
-            var source =
+            const string source =
                   @"public class Class1
                     {
                         public void Whatever()
                         {
-                            Gu$id.NewGuid();
+                            Gu[||]id.NewGuid();
                         }
                     }";
 
@@ -98,16 +78,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Can_remove_unnecessary_usings()
         {
-            var source =
+            const string source =
                 @"using MyNamespace3;
                 using MyNamespace4;
                 using MyNamespace2;
                 using System;
-                u$sing MyNamespace1;
+                u[||]sing MyNamespace1;
 
                 public class c {public c() {Guid.NewGuid();}}";
 
-            var expected =
+            const string expected =
                 @"using System;
 
                 public class c {public c() {Guid.NewGuid();}}";
@@ -119,14 +99,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Can_get_ranged_code_action()
         {
-            var source =
-            @"public class Class1
-              {
-                  public void Whatever()
+            const string source =
+                @"public class Class1
                   {
-                      $Console.Write(""should be using System;"");$
-                  }
-              }";
+                      public void Whatever()
+                      {
+                          [|Console.Write(""should be using System;"");|]
+                      }
+                  }";
 
             var refactorings = await FindRefactoringNamesAsync(source);
             Assert.Contains("Extract Method", refactorings);
@@ -135,16 +115,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Can_extract_method()
         {
-            var source =
+            const string source =
                 @"public class Class1
                   {
                       public void Whatever()
                       {
-                          $Console.Write(""should be using System;"");$
+                          [|Console.Write(""should be using System;"");|]
                       }
                   }";
 
-            var expected =
+            const string expected =
                   @"public class Class1
                     {
                         public void Whatever()
@@ -171,7 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public void Whatever()
                     {
-                        MyNew$Class.DoSomething();
+                        MyNew[||]Class.DoSomething();
                     }
                 }";
 
@@ -240,11 +220,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
         {
-            var request = CreateGetCodeActionsRequest(source);
-            var workspace = await GetOmniSharpWorkspace(request);
+            var testFile = new TestFile(BufferPath, source);
+            var span = testFile.Content.GetSpans().Single();
+            var range = testFile.Content.GetRangeFromSpan(span);
+
+            var request = new GetCodeActionsRequest
+            {
+                Line = range.Start.Line,
+                Column = range.Start.Offset,
+                FileName = BufferPath,
+                Buffer = testFile.Content.Code,
+                Selection = GetSelection(range)
+            };
+
+            var workspace = await CreateWorkspaceAsync(testFile);
             var codeActions = CreateCodeActionProviders();
 
-            var controller = new GetCodeActionsService(workspace, codeActions, _fixture.FakeLoggerFactory);
+            var controller = new GetCodeActionsService(workspace, codeActions, this.LoggerFactory);
             var response = await controller.Handle(request);
 
             return response.CodeActions;
@@ -255,64 +247,47 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             string identifier,
             bool wantsChanges = false)
         {
-            var request = CreateRunCodeActionRequest(source, identifier, wantsChanges);
-            var workspace = await GetOmniSharpWorkspace(request);
+            var testFile = new TestFile(BufferPath, source);
+            var span = testFile.Content.GetSpans().Single();
+            var range = testFile.Content.GetRangeFromSpan(span);
+
+            var request = new RunCodeActionRequest
+            {
+                Line = range.Start.Line,
+                Column = range.Start.Offset,
+                Selection = GetSelection(range),
+                FileName = BufferPath,
+                Buffer = testFile.Content.Code,
+                Identifier = identifier,
+                WantsTextChanges = wantsChanges
+            };
+
+            var workspace = await CreateWorkspaceAsync(testFile);
             var codeActions = CreateCodeActionProviders();
 
-            var controller = new RunCodeActionService(workspace, codeActions, _fixture.FakeLoggerFactory);
+            var controller = new RunCodeActionService(workspace, codeActions, this.LoggerFactory);
             var response = await controller.Handle(request);
 
             return response;
         }
 
-        private GetCodeActionsRequest CreateGetCodeActionsRequest(string source)
+        private static Range GetSelection(TextRange range)
         {
-            var range = TestHelpers.GetRangeFromDollars(source);
-
-            return new GetCodeActionsRequest
+            if (range.IsEmpty)
             {
-                Line = range.Start.Line,
-                Column = range.Start.Column,
-                FileName = BufferPath,
-                Buffer = source.Replace("$", ""),
-                Selection = GetSelection(range)
-            };
-        }
-
-        private RunCodeActionRequest CreateRunCodeActionRequest(string source, string identifier, bool wantChanges)
-        {
-            var range = TestHelpers.GetRangeFromDollars(source);
-            var selection = GetSelection(range);
-
-            return new RunCodeActionRequest
-            {
-                Line = range.Start.Line,
-                Column = range.Start.Column,
-                Selection = selection,
-                FileName = BufferPath,
-                Buffer = source.Replace("$", ""),
-                Identifier = identifier,
-                WantsTextChanges = wantChanges
-            };
-        }
-
-        private static Range GetSelection(TestHelpers.Range range)
-        {
-            Range selection = null;
-            if (!range.IsEmpty)
-            {
-                var start = new Point { Line = range.Start.Line, Column = range.Start.Column };
-                var end = new Point { Line = range.End.Line, Column = range.End.Column };
-                selection = new Range { Start = start, End = end };
+                return null;
             }
 
-            return selection;
+            return new Range
+            {
+                Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
+                End = new Point { Line = range.End.Line, Column = range.End.Offset }
+            };
         }
 
         private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
         {
-            var loader = _fixture.CreateAssemblyLoader(_fixture.FakeLogger);
-            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(loader);
+            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(_loader);
 
             yield return new RoslynCodeActionProvider(new FakeLoggerFactory(), hostServicesProvider);
         }

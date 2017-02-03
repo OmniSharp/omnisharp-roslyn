@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
-#if NET451
+#if NET46
 using NuGet.Logging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
@@ -20,7 +20,7 @@ using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
-#if NET451
+#if NET46
     [OmniSharpHandler(OmnisharpEndpoints.PackageVersion, "NuGet")]
     public class PackageVersionService : RequestHandler<PackageVersionRequest, PackageVersionResponse>
     {

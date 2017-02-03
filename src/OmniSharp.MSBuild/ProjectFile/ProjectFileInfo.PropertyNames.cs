@@ -14,12 +14,18 @@
             public const string LangVersion = nameof(LangVersion);
             public const string OutputType = nameof(OutputType);
             public const string MSBuildExtensionsPath = nameof(MSBuildExtensionsPath);
+            public const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
+            public const string NoWarn = nameof(NoWarn);
+            public const string OutputPath = nameof(OutputPath);
             public const string ProjectGuid = nameof(ProjectGuid);
             public const string ProjectName = nameof(ProjectName);
             public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
             public const string SignAssembly = nameof(SignAssembly);
             public const string SolutionDir = nameof(SolutionDir);
+            public const string TargetFramework = nameof(TargetFramework);
             public const string TargetFrameworkMoniker = nameof(TargetFrameworkMoniker);
+            public const string TargetFrameworkRootPath = nameof(TargetFrameworkRootPath);
+            public const string TargetFrameworks = nameof(TargetFrameworks);
             public const string TargetPath = nameof(TargetPath);
             public const string VisualStudioVersion = nameof(VisualStudioVersion);
         }

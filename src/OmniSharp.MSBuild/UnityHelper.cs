@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.CodeAnalysis.MSBuild;
 
 namespace OmniSharp.MSBuild
 {

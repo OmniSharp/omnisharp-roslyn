@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
@@ -7,22 +6,19 @@ using OmniSharp.Services;
 using TestUtility;
 using TestUtility.Annotate;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class MetadataFacts
+    public class MetadataFacts : AbstractTestFixture
     {
-        private readonly TestAssistant _assistant = new TestAssistant();
         private readonly ILogger _logger;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly IOmnisharpAssemblyLoader _loader;
 
-        public MetadataFacts()
+        public MetadataFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _loggerFactory = new LoggerFactory();
-            _loggerFactory.AddConsole();
-            _logger = _loggerFactory.CreateLogger<GoToDefinitionFacts>();
-
+            _logger = this.LoggerFactory.CreateLogger<MetadataFacts>();
             _loader = new AnnotateAssemblyLoader(_logger);
         }
 
@@ -37,13 +33,14 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
+
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "System.Private.CoreLib",
+                AssemblyName = AssemblyHelpers.CorLibName,
                 TypeName = "System.String",
                 Timeout = 60000
             });
@@ -62,13 +59,14 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
+
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-#if NETCOREAPP1_0
+#if NETCOREAPP1_1
                 AssemblyName = "System.Linq",
 #else
                 AssemblyName = "System.Core",
@@ -91,16 +89,14 @@ class Foo {
     private Foo foo;
 }";
 
-            var workspace = _assistant.CreateWorkspace(
-                new Dictionary<string, string>
-                {
-                    { "foo.cs", source1 }, { "bar.cs", source2 }
-                });
+            var workspace = await CreateWorkspaceAsync(
+                new TestFile("foo.cs", source1),
+                new TestFile("bar.cs", source2));
 
             var controller = new MetadataService(workspace, new MetadataHelper(_loader));
             var response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "System.Private.CoreLib",
+                AssemblyName = AssemblyHelpers.CorLibName,
                 TypeName = "System.Collections.Generic.List`1",
                 Timeout = 60000
             });
@@ -109,7 +105,7 @@ class Foo {
 
             response = await controller.Handle(new MetadataRequest
             {
-                AssemblyName = "System.Private.CoreLib",
+                AssemblyName = AssemblyHelpers.CorLibName,
                 TypeName = "System.Collections.Generic.Dictionary`2"
             });
 

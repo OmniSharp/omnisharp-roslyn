@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
@@ -17,11 +16,17 @@ using OmniSharp.Models.v1;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class EndpointMiddlewareFacts
+    public class EndpointMiddlewareFacts : AbstractTestFixture
     {
+        public EndpointMiddlewareFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
         public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
@@ -80,30 +85,13 @@ namespace OmniSharp.Tests
             public void Initalize(IConfiguration configuration) { }
         }
 
-        class LoggerFactory : ILoggerFactory
-        {
-            public LogLevel MinimumLevel { get; set; }
-            public void AddProvider(ILoggerProvider provider) { }
-            public ILogger CreateLogger(string categoryName) => new Logger();
-            public void Dispose() { }
-        }
-
-        class Disposable : IDisposable { public void Dispose() { } }
-
-        class Logger : ILogger
-        {
-            public IDisposable BeginScope<TState>(TState state) => new Disposable();
-            public bool IsEnabled(LogLevel logLevel) => true;
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
-        }
-
         [Fact]
         public async Task Passes_through_for_invalid_path()
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
+            var host = CreatePlugInHost(GetAssembly<EndpointMiddlewareFacts>());
+            var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/notvalid");
@@ -116,8 +104,10 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
+            var host = CreatePlugInHost(
+                GetAssembly<EndpointMiddlewareFacts>(),
+                GetAssembly<EndpointDescriptor>());
+            var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -144,8 +134,10 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
+            var host = CreatePlugInHost(
+                GetAssembly<EndpointMiddlewareFacts>(),
+                GetAssembly<EndpointDescriptor>());
+            var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/gotodefinition");
@@ -172,8 +164,10 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
+            var host = CreatePlugInHost(
+                GetAssembly<EndpointMiddlewareFacts>(),
+                GetAssembly<EndpointDescriptor>());
+            var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -197,8 +191,10 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = (ctx) => Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly, typeof(EndpointDescriptor).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
+            var host = CreatePlugInHost(
+                typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly,
+                typeof(EndpointDescriptor).GetTypeInfo().Assembly);
+            var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/findsymbols");
@@ -231,8 +227,8 @@ namespace OmniSharp.Tests
         {
             RequestDelegate _next = async (ctx) => await Task.Run(() => { throw new NotImplementedException(); });
 
-            var host = TestHelpers.CreatePluginHost(new[] { typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly });
-            var middleware = new EndpointMiddleware(_next, host, new LoggerFactory());
+            var host = CreatePlugInHost(GetAssembly<EndpointMiddlewareFacts>());
+            var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
             context.Request.Path = PathString.FromUriComponent("/throw");

@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -318,7 +317,6 @@ namespace OmniSharp.DotNet
             var context = state.ProjectContext;
             var project = context.ProjectFile;
             var option = project.GetCompilerOptions(context.TargetFramework, _compilationConfiguration);
-
             var outputKind = option.EmitEntryPoint.GetValueOrDefault() ? OutputKind.ConsoleApplication :
                                                                          OutputKind.DynamicallyLinkedLibrary;
 
@@ -327,16 +325,30 @@ namespace OmniSharp.DotNet
 
             var optimize = (option.Optimize ?? false) ? OptimizationLevel.Release : OptimizationLevel.Debug;
 
+            var suppressedDiagnostics = new Dictionary<string, ReportDiagnostic>
+            {
+                {"CS1701", ReportDiagnostic.Suppress},
+                {"CS1702", ReportDiagnostic.Suppress},
+                {"CS1705", ReportDiagnostic.Suppress},
+            };
+
+            if (option.SuppressWarnings != null && option.SuppressWarnings.Any())
+            {
+                foreach (var nowarn in option.SuppressWarnings)
+                {
+                    if (!suppressedDiagnostics.ContainsKey(nowarn))
+                    {
+                        suppressedDiagnostics.Add(nowarn, ReportDiagnostic.Suppress);
+                    }
+                }
+            }
+
             var csharpOptions = new CSharpCompilationOptions(outputKind)
                 .WithAllowUnsafe(option.AllowUnsafe ?? false)
                 .WithPlatform(ParsePlatfrom(option.Platform))
                 .WithGeneralDiagnosticOption(generalDiagnosticOpt)
                 .WithOptimizationLevel(optimize)
-                .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic> {
-                    { "CS1701", ReportDiagnostic.Suppress },
-                    { "CS1702", ReportDiagnostic.Suppress },
-                    { "CS1705", ReportDiagnostic.Suppress },
-                })
+                .WithSpecificDiagnosticOptions(suppressedDiagnostics)
                 .WithConcurrentBuild(false); // TODO: actually just need to disable on mono
 
             if (!string.IsNullOrEmpty(option.KeyFile))
@@ -383,13 +395,11 @@ namespace OmniSharp.DotNet
                 // TODO: performance optimize
                 using (var stream = File.OpenRead(file))
                 {
-                    // TODO: other encoding option?
-                    var sourceText = SourceText.From(stream, encoding: Encoding.UTF8);
+                    var sourceText = SourceText.From(stream);
                     var docId = DocumentId.CreateNewId(state.Id);
                     var version = VersionStamp.Create();
 
                     var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
-
 
                     var doc = DocumentInfo.Create(docId, file, filePath: file, loader: loader);
                     _omnisharpWorkspace.AddDocument(doc);
@@ -430,7 +440,7 @@ namespace OmniSharp.DotNet
             LanguageVersion languageVersion;
             if (!Enum.TryParse<LanguageVersion>(value, ignoreCase: true, result: out languageVersion))
             {
-                languageVersion = LanguageVersion.CSharp6;
+                languageVersion = LanguageVersion.Default;
             }
 
             return languageVersion;

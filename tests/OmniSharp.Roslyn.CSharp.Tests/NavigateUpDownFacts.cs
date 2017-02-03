@@ -1,19 +1,26 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    enum NavigateDirection
+    enum Direction
     {
-        UP,
-        DOWN
+        Up,
+        Down
     }
 
-    public class NavigateUpDownFacts
+    public class NavigateUpDownFacts : AbstractTestFixture
     {
+        public NavigateUpDownFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task NavigateUp_ReturnsCorrectPositionFromMethodBodyToMethodName()
         {
@@ -28,9 +35,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public class NavigateController
                     {
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> %NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateUp(Request request)
                         {
-                            return await Navi$gate(request);
+                            return await Navi{|start:|}gate(request);
                         }
 
                         private async Task<NavigateResponse> Navigate(Request request) {
@@ -38,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -55,13 +62,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public class NavigateController
                     {
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> %NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
 
                         [HttpPost(""navigatedown"")]
-                        public async $Task<NavigateResponse> NavigateDown(Request request)
+                        public async {|start:|}Task<NavigateResponse> NavigateDown(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -72,7 +79,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -88,10 +95,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public class NavigateController
                     {
-                        private string %text;
+                        private string {|end:|}text;
 
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> $NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|start:|}NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -108,7 +115,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -126,7 +133,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     {
                         private string text;
 
-                        public string %MoreText
+                        public string {|end:|}MoreText
                         {
                             get
                             {
@@ -134,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
                             set
                             {
-                                text = valu$e;
+                                text = valu{|start:|}e;
                             }
                         }
 
@@ -156,7 +163,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -170,9 +177,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 namespace OmniSharp
                 {
-                    public class %NavigateController
+                    public class {|end:|}NavigateController
                     {
-                        public string navigationText;$
+                        public string navigationText;{|start:|}
 
                             [HttpPost(""navigateup"")]
                             public async Task<NavigateResponse> NavigateUp(Request request)
@@ -191,7 +198,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -221,18 +228,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             return await Navigate(request);
                         }
 
-                        private async Task<NavigateResponse> %Navigate(Request request) {
+                        private async Task<NavigateResponse> {|end:|}Navigate(Request request) {
                             return new NavigateResponse();
                         }
                     }
-                    p$ublic class AnotherController
+                    p{|start:|}ublic class AnotherController
                     {
                         public string navigationText;
                     }
 
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -258,9 +265,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                         private class NestedController
                         {
-                            private string %text;
+                            private string {|end:|}text;
 
-                            private Nested$Controller()
+                            private Nested{|start:|}Controller()
                             {
                                 Console.WriteLine(""In nested controller constructor"");
                             }
@@ -278,7 +285,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -297,7 +304,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         public string navigationText;
 
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> %NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -308,7 +315,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         //    Console.Writeline(""Do nothing else"");
                         //}
 
-                        $private class NestedController
+                        {|start:|}private class NestedController
                         {
                             public string Text;
                             public NestedController()
@@ -329,7 +336,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -341,7 +348,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 using Microsoft.AspNetCore.Mvc;
                 using OmniSharp.Models;
 
-                namespace $%OmniSharp
+                namespace {|start:|}{|end:|}OmniSharp
                 {
                     public class NavigateController
                     {
@@ -359,7 +366,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.UP);
+            await AssertEndPosition(fileContent, Direction.Up);
         }
 
         [Fact]
@@ -378,17 +385,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         [HttpPost(""navigateup"")]
                         public async Task<NavigateResponse> NavigateUp(Request request)
                         {
-                            return await Nav$igate(request);
+                            return await Nav{|start:|}igate(request);
                         }
 
-                        private async Task<NavigateResponse> %Navigate(Request request) {
+                        private async Task<NavigateResponse> {|end:|}Navigate(Request request) {
                             return new NavigateResponse();
                         }
                     }
 
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -405,13 +412,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public class NavigateController
                     {
                         [HttpPost(""navigateup"")]
-                        public async $Task<NavigateResponse> NavigateUp(Request request)
+                        public async {|start:|}Task<NavigateResponse> NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
 
                         [HttpPost(""navigatedown"")]
-                        public async Task<NavigateResponse> %NavigateDown(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateDown(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -422,7 +429,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -448,12 +455,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
                             set
                             {
-                                this.te$xt = value;
+                                this.te{|start:|}xt = value;
                             }
                         }
 
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> %NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -470,7 +477,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
 
@@ -487,10 +494,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public class NavigateController
                     {
-                        public stri$ng Text;
+                        public stri{|start:|}ng Text;
 
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> %NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -507,7 +514,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -521,10 +528,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 namespace OmniSharp
                 {
-                    public class Navigat$eController
+                    public class Navigat{|start:|}eController
                     {
                         [HttpPost(""navigateup"")]
-                        public async Task<NavigateResponse> %NavigateUp(Request request)
+                        public async Task<NavigateResponse> {|end:|}NavigateUp(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -540,7 +547,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -571,17 +578,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
 
                         private async Task<NavigateResponse> Navigate(Request request) {
-                            return new NavigateRespo$nse();
+                            return new NavigateRespo{|start:|}nse();
                         }
                     }
-                    public class %AnotherController
+                    public class {|end:|}AnotherController
                     {
                         public string navigationText;
                     }
 
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -608,11 +615,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         private class NestedController
                         {
                             public string Text;
-                            public Nested$Controller()
+                            public Nested{|start:|}Controller()
                             {
                                 Console.WriteLine(""In nested controller constructor"");
                             }
-                            public void %AnotherMethod()
+                            public void {|end:|}AnotherMethod()
                             {
                                 Console.WriteLine(""In nested controller method"");
                             }
@@ -630,7 +637,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -665,12 +672,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             public string Text;
                             public NestedController()
                             {
-                                Consol$e.WriteLine(""In nested controller constructor"");
+                                Consol{|start:|}e.WriteLine(""In nested controller constructor"");
                             }
                         }
 
                         [HttpPost(""navigatedown"")]
-                        public async Task<NavigateResponse> %Navigate(Request request)
+                        public async Task<NavigateResponse> {|end:|}Navigate(Request request)
                         {
                             return await Navigate(request);
                         }
@@ -681,7 +688,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
         [Fact]
@@ -706,53 +713,71 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
 
                         private async Task<NavigateResponse> Navigate(Request request) {
-                            return new $%NavigateResponse();
+                            return new {|start:|}{|end:|}NavigateResponse();
                         }
                     }
                 }";
 
-            await AssertPosition(fileContent, NavigateDirection.DOWN);
+            await AssertEndPosition(fileContent, Direction.Down);
         }
 
-        private async Task AssertPosition(string fileContent, NavigateDirection navigateDirection)
+        private async Task AssertEndPosition(string source, Direction direction)
         {
-            var fileContentNoPercentMarker = TestHelpers.RemovePercentMarker(fileContent);
-            var workspace = await TestHelpers.CreateSimpleWorkspace(fileContentNoPercentMarker, "test.cs");
-            var finalCursorLineColumn = TestHelpers.GetLineAndColumnFromPercent(TestHelpers.RemoveDollarMarker(fileContent));
-            var response = await SendRequest(workspace, "test.cs", fileContentNoPercentMarker, navigateDirection);
-            Assert.Equal(finalCursorLineColumn.Line, response.Line);
-            Assert.Equal(finalCursorLineColumn.Column, response.Column);
+            var testFile = new TestFile("test.cs", source);
+
+            var start = testFile.Content.GetSpans("start").Single().Start;
+            var end = testFile.Content.GetSpans("end").Single().Start;
+
+            var startPoint = testFile.Content.Text.GetPointFromPosition(start);
+            var endPoint = testFile.Content.Text.GetPointFromPosition(end);
+
+            var workspace = await CreateWorkspaceAsync(testFile);
+
+            var response = await SendRequest(workspace, testFile, startPoint.Line, startPoint.Offset, direction);
+
+            Assert.Equal(endPoint.Line, response.Line);
+            Assert.Equal(endPoint.Offset, response.Column);
         }
 
-        private async Task<NavigateResponse> SendRequest(OmnisharpWorkspace workspace, string fileName, string fileContent, NavigateDirection upOrDown)
+        private static async Task<NavigateResponse> SendRequest(
+            OmnisharpWorkspace workspace,
+            TestFile testFile,
+            int startLine,
+            int startColumn,
+            Direction direction)
         {
-            var initialCursorLineColumn = TestHelpers.GetLineAndColumnFromDollar(TestHelpers.RemovePercentMarker(fileContent));
-            var fileContentNoDollarMarker = TestHelpers.RemovePercentMarker(TestHelpers.RemoveDollarMarker(fileContent));
+            switch (direction)
+            {
+                case Direction.Up:
+                    {
+                        var service = new NavigateUpService(workspace);
+                        var request = new NavigateUpRequest
+                        {
+                            Line = startLine,
+                            Column = startColumn,
+                            FileName = testFile.FileName,
+                            Buffer = testFile.Content.Code
+                        };
 
-            if (upOrDown == NavigateDirection.UP)
-            {
-                var naviagteUpService = new NavigateUpService(workspace);
-                var request = new NavigateUpRequest
-                {
-                    Line = initialCursorLineColumn.Line,
-                    Column = initialCursorLineColumn.Column,
-                    FileName = fileName,
-                    Buffer = fileContentNoDollarMarker
-                };
-                return await naviagteUpService.Handle(request);
+                        return await service.Handle(request);
+                    }
+
+                case Direction.Down:
+                    {
+                        var service = new NavigateDownService(workspace);
+                        var request = new NavigateDownRequest
+                        {
+                            Line = startLine,
+                            Column = startColumn,
+                            FileName = testFile.FileName,
+                            Buffer = testFile.Content.Code
+                        };
+
+                        return await service.Handle(request);
+                    }
             }
-            else
-            {
-                var navigateDownService = new NavigateDownService(workspace);
-                var request = new NavigateDownRequest
-                {
-                    Line = initialCursorLineColumn.Line,
-                    Column = initialCursorLineColumn.Column,
-                    FileName = fileName,
-                    Buffer = fileContentNoDollarMarker
-                };
-                return await navigateDownService.Handle(request);
-            }
+
+            return null;
         }
     }
 }
