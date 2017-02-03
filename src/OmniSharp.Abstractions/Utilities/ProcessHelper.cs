@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -41,16 +42,19 @@ namespace OmniSharp.Utilities
             string arguments,
             string workingDirectory = null,
             Action<string> outputDataReceived = null,
-            Action<string> errorDataReceived = null)
+            Action<string> errorDataReceived = null,
+            Action<IDictionary<string, string>> updateEnvironment = null)
         {
             var startInfo = new ProcessStartInfo(fileName, arguments)
             {
-                RedirectStandardOutput = outputDataReceived != null,
-                RedirectStandardError = errorDataReceived != null,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 WorkingDirectory = workingDirectory ?? string.Empty,
             };
+
+            updateEnvironment(startInfo.Environment);
 
             var process = new Process();
             process.StartInfo = startInfo;

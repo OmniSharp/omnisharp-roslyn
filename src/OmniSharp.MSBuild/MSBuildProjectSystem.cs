@@ -26,6 +26,7 @@ namespace OmniSharp.MSBuild
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly DotNetCliService _dotNetCliService;
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -53,6 +54,7 @@ namespace OmniSharp.MSBuild
         public MSBuildProjectSystem(
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
+            DotNetCliService dotNetCliService,
             IMetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
@@ -60,6 +62,7 @@ namespace OmniSharp.MSBuild
         {
             _environment = environment;
             _workspace = workspace;
+            _dotNetCliService = dotNetCliService;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
@@ -96,19 +99,19 @@ namespace OmniSharp.MSBuild
                 // as "updates". We should properly remove projects that are deleted.
                 _fileSystemWatcher.Watch(projectFilePath, file =>
                 {
-                    OnProjectChanged(projectFilePath);
+                    OnProjectChanged(projectFilePath, allowAutoRestore: true);
                 });
 
                 if (!string.IsNullOrEmpty(projectAssetsFile))
                 {
                     _fileSystemWatcher.Watch(projectAssetsFile, file =>
                     {
-                        OnProjectChanged(projectFilePath);
+                        OnProjectChanged(projectFilePath, allowAutoRestore: false);
                     });
                 }
 
                 UpdateProject(projectFileInfo);
-                CheckForUnresolvedDependences(projectFileInfo);
+                CheckForUnresolvedDependences(projectFileInfo, allowAutoRestore: true);
             }
         }
 
@@ -324,11 +327,10 @@ namespace OmniSharp.MSBuild
             return projectFileInfo;
         }
 
-        private void OnProjectChanged(string projectFilePath)
+        private void OnProjectChanged(string projectFilePath, bool allowAutoRestore)
         {
             var newProjectFileInfo = CreateProjectFileInfo(projectFilePath);
 
-            // TODO: Should we remove the entry if the project is malformed?
             if (newProjectFileInfo != null)
             {
                 lock (_gate)
@@ -340,7 +342,7 @@ namespace OmniSharp.MSBuild
                         newProjectFileInfo.SetProjectId(oldProjectFileInfo.ProjectId);
 
                         UpdateProject(newProjectFileInfo);
-                        CheckForUnresolvedDependences(newProjectFileInfo, oldProjectFileInfo);
+                        CheckForUnresolvedDependences(newProjectFileInfo, oldProjectFileInfo, allowAutoRestore);
                     }
                 }
             }
@@ -508,7 +510,7 @@ namespace OmniSharp.MSBuild
             return list;
         }
 
-        private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, ProjectFileInfo previousProjectFileInfo = null)
+        private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, ProjectFileInfo previousProjectFileInfo = null, bool allowAutoRestore = false)
         {
             List<PackageDependency> unresolvedDependencies;
 
@@ -564,13 +566,28 @@ namespace OmniSharp.MSBuild
 
             if (unresolvedDependencies.Count > 0)
             {
-                _eventEmitter.Emit(EventTypes.UnresolvedDependencies,
-                    new UnresolvedDependenciesMessage()
+                if (allowAutoRestore && _options.EnablePackageAutoRestore)
+                {
+                    _dotNetCliService.Restore(projectFileInfo.ProjectFilePath, onFailure: () =>
                     {
-                        FileName = projectFileInfo.ProjectFilePath,
-                        UnresolvedDependencies = unresolvedDependencies
+                        FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
                     });
+                }
+                else
+                {
+                    FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+                }
             }
+        }
+
+        private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, List<PackageDependency> unresolvedDependencies)
+        {
+            _eventEmitter.Emit(EventTypes.UnresolvedDependencies,
+                new UnresolvedDependenciesMessage()
+                {
+                    FileName = projectFileInfo.ProjectFilePath,
+                    UnresolvedDependencies = unresolvedDependencies
+                });
         }
 
         private ProjectFileInfo GetProjectFileInfo(string path)
