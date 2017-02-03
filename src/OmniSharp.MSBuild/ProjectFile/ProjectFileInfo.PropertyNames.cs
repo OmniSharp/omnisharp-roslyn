@@ -17,6 +17,7 @@
             public const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
             public const string NoWarn = nameof(NoWarn);
             public const string OutputPath = nameof(OutputPath);
+            public const string ProjectAssetsFile = nameof(ProjectAssetsFile);
             public const string ProjectGuid = nameof(ProjectGuid);
             public const string ProjectName = nameof(ProjectName);
             public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);

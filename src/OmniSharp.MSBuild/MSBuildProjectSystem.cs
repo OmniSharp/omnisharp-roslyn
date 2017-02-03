@@ -91,7 +91,18 @@ namespace OmniSharp.MSBuild
 
                 // TODO: This needs some improvement. Currently, it tracks both deletions and changes
                 // as "updates". We should properly remove projects that are deleted.
-                _fileSystemWatcher.Watch(projectFileInfo.ProjectFilePath, OnProjectChanged);
+                _fileSystemWatcher.Watch(projectFileInfo.ProjectFilePath, file =>
+                {
+                    OnProjectChanged(projectFileInfo.ProjectFilePath);
+                });
+
+                if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
+                {
+                    _fileSystemWatcher.Watch(projectFileInfo.ProjectAssetsFile, file =>
+                    {
+                        OnProjectChanged(projectFileInfo.ProjectFilePath);
+                    });
+                }
             }
         }
 

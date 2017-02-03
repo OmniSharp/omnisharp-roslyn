@@ -33,6 +33,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string AssemblyOriginatorKeyFile { get; }
         public bool GenerateXmlDocumentation { get; }
         public string OutputPath { get; }
+        public string ProjectAssetsFile { get; }
         public IList<string> PreprocessorSymbolNames { get; }
         public IList<string> SuppressedDiagnosticIds { get; }
 
@@ -61,6 +62,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string assemblyOriginatorKeyFile,
             bool generateXmlDocumentation,
             string outputPath,
+            string projectAssetsFile,
             bool isUnityProject,
             IList<string> defineConstants,
             IList<string> suppressedDiagnosticIds,
@@ -83,6 +85,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             this.AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
             this.GenerateXmlDocumentation = generateXmlDocumentation;
             this.OutputPath = outputPath;
+            this.ProjectAssetsFile = projectAssetsFile;
             this.IsUnityProject = isUnityProject;
             this.PreprocessorSymbolNames = defineConstants;
             this.SuppressedDiagnosticIds = suppressedDiagnosticIds;
@@ -212,6 +215,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var defineConstants = PropertyConverter.ToDefineConstants(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
             var noWarn = PropertyConverter.ToSuppressDiagnostics(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
             var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
+            var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
 
             var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
             var references =  GetFullPaths(projectInstance.GetItems(ItemNames.ReferencePath));
@@ -221,7 +225,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
-                !string.IsNullOrWhiteSpace(documentationFile), outputPath, isUnityProject, defineConstants, noWarn,
+                !string.IsNullOrWhiteSpace(documentationFile), outputPath, projectAssetsFile, isUnityProject, defineConstants, noWarn,
                 sourceFiles, references, projectReferences, analyzers);
         }
 
