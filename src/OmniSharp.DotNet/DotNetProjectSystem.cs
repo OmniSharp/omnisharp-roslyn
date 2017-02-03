@@ -17,6 +17,7 @@ using OmniSharp.DotNet.Tools;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.Services;
+using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.DotNet
 {

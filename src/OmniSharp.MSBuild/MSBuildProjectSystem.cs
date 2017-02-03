@@ -16,6 +16,7 @@ using OmniSharp.Models.v1;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.MSBuild
 {

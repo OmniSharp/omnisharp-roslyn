@@ -19,6 +19,7 @@ using OmniSharp.Middleware;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
+using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
 

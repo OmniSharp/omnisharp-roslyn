@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace OmniSharp.Services
+namespace OmniSharp.Services.FileWatching
 {
     public class FileSystemWatcherWrapper : IFileSystemWatcher
     {
