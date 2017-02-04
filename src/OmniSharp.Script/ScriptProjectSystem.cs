@@ -216,7 +216,7 @@ namespace OmniSharp.Script
                 hostObjectType: typeof(InteractiveScriptGlobals));
 
             Workspace.AddProject(project);
-            AddFile(csxPath, project.Id);
+            Workspace.AddDocument(project.Id, csxPath, SourceCodeKind.Script);
 
             //----------LOG ONLY------------
             Logger.LogDebug($"All references by {csxFileName}: \n{string.Join("\n", project.MetadataReferences.Select(r => r.Display))}");
@@ -229,19 +229,6 @@ namespace OmniSharp.Script
             Context.CsxFilesBeingProcessed.Remove(csxPath);
 
             return project;
-        }
-
-        private void AddFile(string filePath, ProjectId projectId)
-        {
-            using (var stream = File.OpenRead(filePath))
-            {
-                var fileName = Path.GetFileName(filePath);
-                var documentId = DocumentId.CreateNewId(projectId, fileName);
-                var documentInfo = DocumentInfo.Create(documentId, fileName, null, SourceCodeKind.Script, null, filePath)
-                    .WithSourceCodeKind(SourceCodeKind.Script)
-                    .WithTextLoader(TextLoader.From(TextAndVersion.Create(SourceText.From(stream), VersionStamp.Create())));
-                Workspace.AddDocument(documentInfo);
-            }
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
