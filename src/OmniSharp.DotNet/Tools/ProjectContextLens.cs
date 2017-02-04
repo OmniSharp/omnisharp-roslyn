@@ -18,6 +18,7 @@ namespace OmniSharp.DotNet.Tools
         {
             _context = context;
             _configuration = configuration;
+
             Resolve();
         }
 
@@ -59,7 +60,16 @@ namespace OmniSharp.DotNet.Tools
 
         private void ResolveFileReferences(LibraryExport export)
         {
-            if (export.Library.Identity.Type != LibraryType.Project)
+            if (export.Library.Identity.Type == LibraryType.Project)
+            {
+                // If this is a project, only add its compilation assembly if it is simply wrapping another assembly.
+                var projectDescription = export.Library as ProjectDescription;
+                if (!string.IsNullOrEmpty(projectDescription.TargetFrameworkInfo?.AssemblyPath))
+                {
+                    _fileReferences.AddRange(export.CompilationAssemblies.Select(asset => asset.ResolvedPath));
+                }
+            }
+            else
             {
                 _fileReferences.AddRange(export.CompilationAssemblies.Select(asset => asset.ResolvedPath));
             }
