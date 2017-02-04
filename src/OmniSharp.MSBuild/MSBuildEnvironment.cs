@@ -6,6 +6,10 @@ namespace OmniSharp.MSBuild
 {
     public static class MSBuildEnvironment
     {
+        public const string MSBuildExePathName = "MSBUILD_EXE_PATH";
+        public const string MSBuildExtensionsPathName = "MSBuildExtensionsPath";
+        public const string MSBuildSDKsPathName = "MSBuildSDKsPath";
+
         private static bool s_isInitialized;
         private static string s_msbuildFolder;
         private static string s_msbuildExtensionsPath;
@@ -77,24 +81,24 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
-            Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExePath);
-            logger.LogInformation($"MSBUILD_EXE_PATH environment variable set to {msbuildExePath}");
+            Environment.SetEnvironmentVariable(MSBuildExePathName, msbuildExePath);
+            logger.LogInformation($"{MSBuildExePathName} environment variable set to {msbuildExePath}");
 
             // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
-            Environment.SetEnvironmentVariable("MSBuildExtensionsPath", msbuildFolder);
-            logger.LogInformation($"MSBuildExtensionsPath environment variable set to {msbuildFolder}");
+            Environment.SetEnvironmentVariable(MSBuildExtensionsPathName, msbuildFolder);
+            logger.LogInformation($"{MSBuildExtensionsPathName} environment variable set to {msbuildFolder}");
 
             // Set the MSBuildSDKsPath environment variable to the location of the SDKs.
             var msbuildSdksFolder = Path.Combine(msbuildFolder, "Sdks");
             if (Directory.Exists(msbuildSdksFolder))
             {
                 s_msbuildSDKsPath = msbuildSdksFolder;
-                Environment.SetEnvironmentVariable("MSBuildSDKsPath", msbuildSdksFolder);
-                logger.LogInformation($"MSBuildSDKsPath environment variable set to {msbuildSdksFolder}");
+                Environment.SetEnvironmentVariable(MSBuildSDKsPathName, msbuildSdksFolder);
+                logger.LogInformation($"{MSBuildSDKsPathName} environment variable set to {msbuildSdksFolder}");
             }
             else
             {
-                logger.LogError("Could not locate MSBuild Sdks path to set MSBuildSDKsPath");
+                logger.LogError($"Could not locate MSBuild Sdks path to set {MSBuildSDKsPathName}");
             }
 
             s_msbuildFolder = msbuildFolder;

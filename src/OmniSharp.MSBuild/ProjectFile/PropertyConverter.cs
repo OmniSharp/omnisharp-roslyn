@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NuGet.Frameworks;
+using NuGet.Versioning;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -162,6 +163,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "Exe": return OutputKind.ConsoleApplication;
                 default: return OutputKind.ConsoleApplication;
             }
+        }
+
+        public static NuGetVersion ToNuGetVersion(string propertyValue)
+        {
+            NuGetVersion version;
+            if (NuGetVersion.TryParse(propertyValue.Trim(), out version))
+            {
+                return version;
+            }
+
+            return null;
         }
     }
 }
