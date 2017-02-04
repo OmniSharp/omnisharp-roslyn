@@ -139,9 +139,6 @@ namespace OmniSharp
                     .WithProvider(MefValueProvider.From<IEventEmitter>(new NullEventEmitter()));
             }
 
-            if (configure != null)
-                config = configure(config);
-
             try
             {
                 return config.CreateContainer();

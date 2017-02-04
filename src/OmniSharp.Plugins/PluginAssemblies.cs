@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-#if !NET451
+#if !NET46
 using System.Runtime.Loader;
 #endif
 using Microsoft.Extensions.DependencyModel;
@@ -36,7 +36,7 @@ namespace OmniSharp.Plugins
                 {
                     this._assemblies = ImmutableArray.CreateRange(
                         this._plugins
-#if NET451
+#if NET46
                             .Select(AssemblyName.GetAssemblyName)
                             .Select(Assembly.Load)
 #else

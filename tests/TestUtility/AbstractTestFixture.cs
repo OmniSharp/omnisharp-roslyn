@@ -50,6 +50,17 @@ namespace TestUtility
                 assemblies: ComputeHostAssemblies(assemblies));
         }
 
+        protected CompositionHost CreatePlugInHost(Action<IFakeServiceProvider> serviceCallback, params Assembly[] assemblies)
+        {
+            var serviceProvider = new FakeServiceProvider(this.LoggerFactory);
+            serviceCallback(serviceProvider);
+
+            return Startup.ConfigureMef(
+                serviceProvider: serviceProvider,
+                options: new FakeOmniSharpOptions().Value,
+                assemblies: ComputeHostAssemblies(assemblies));
+        }
+
         protected Task<OmnisharpWorkspace> CreateWorkspaceAsync(params TestFile[] testFiles)
         {
             var plugInHost = CreatePlugInHost();

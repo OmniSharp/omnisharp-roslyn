@@ -7,28 +7,21 @@ using System.Threading.Tasks;
 using OmniSharp.Plugins;
 using OmniSharp.Plugins.CodeActions;
 using OmniSharp.Services;
-using TestCommon;
+using TestUtility;
 using TestUtility.Fake;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class PluginsFacts
+    public class PluginsFacts : AbstractTestFixture
     {
+        public PluginsFacts(ITestOutputHelper output) : base(output) { }
+
         [Fact]
         public void LoadsCodeFixesFromExternalAssembly()
         {
-            var plugins = new PluginAssemblies(new[]
-            {
-                Path.Combine(TestsContext.Default.TestRoot, "RefactoringEssentials")
-            });
-            var serviceProvider = new TestServiceProvider(new FakeLoggerFactory());
-            serviceProvider.SetService(typeof(PluginAssemblies), plugins);
-            var container = Startup.ConfigureMef(
-                serviceProvider,
-                new FakeOmniSharpOptions().Value,
-                plugins.Assemblies.Concat(new [] { typeof(PluginCodeActionProvider).GetTypeInfo().Assembly }));
-
+            var container = CreatePlugInHost(CustomServices, typeof(PluginCodeActionProvider).GetTypeInfo().Assembly);
             var providers = container.GetExports<ICodeActionProvider>();
 
             var codeFixes = providers
@@ -40,23 +33,23 @@ namespace OmniSharp.Tests
         [Fact]
         public void LoadsRefactoringsFromExternalAssembly()
         {
-            var plugins = new PluginAssemblies(new[]
-            {
-                Path.Combine(TestsContext.Default.TestRoot, "RefactoringEssentials")
-            });
-            var serviceProvider = new TestServiceProvider(new FakeLoggerFactory());
-            serviceProvider.SetService(typeof(PluginAssemblies), plugins);
-            var container = Startup.ConfigureMef(
-                serviceProvider,
-                new FakeOmniSharpOptions().Value,
-                plugins.Assemblies.Concat(new[] { typeof(PluginCodeActionProvider).GetTypeInfo().Assembly }));
-
+            var container = CreatePlugInHost(CustomServices, typeof(PluginCodeActionProvider).GetTypeInfo().Assembly);
             var providers = container.GetExports<ICodeActionProvider>();
 
             var refactorings = providers
                 .SelectMany(x => x.Refactorings);
 
             Assert.Contains(refactorings, x => x.GetType().FullName.StartsWith("RefactoringEssentials."));
+        }
+
+        private void CustomServices(IFakeServiceProvider serviceProvider)
+        {
+            var plugins = new PluginAssemblies(new[]
+            {
+                Path.Combine(TestAssets.Instance.TestAssetsFolder, "RefactoringEssentials")
+            });
+
+            serviceProvider.SetService(typeof(PluginAssemblies), plugins);
         }
     }
 }

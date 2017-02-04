@@ -42,11 +42,30 @@ namespace OmniSharp.Services
 
             this.Assemblies = assemblies;
 
-            var types = this.Assemblies
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => !type.GetTypeInfo().IsInterface &&
-                               !type.GetTypeInfo().IsAbstract &&
-                               !type.GetTypeInfo().ContainsGenericParameters));
+            var types = new List<Type>();
+
+            foreach (var assembly in this.Assemblies)
+            {
+                try
+                {
+                    types.AddRange(assembly
+                        .GetTypes()
+                        .Where(type => !type.GetTypeInfo().IsInterface &&
+                                       !type.GetTypeInfo().IsAbstract &&
+                                       !type.GetTypeInfo().ContainsGenericParameters));
+
+                }
+                catch (ReflectionTypeLoadException e)
+                {
+                    _logger.LogCritical(new EventId(1), e.InnerException, "Failed when loading assembly");
+                    foreach (var loaderException in e.LoaderExceptions)
+                    {
+                        _logger.LogCritical(new EventId(1), loaderException, "Loader Exception");
+                    }
+                    // throw;
+                }
+            }
+
             // TODO: handle providers with generic params
 
             this.Refactorings = types

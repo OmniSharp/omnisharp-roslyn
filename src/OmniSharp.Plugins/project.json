@@ -17,7 +17,8 @@
         "portable-net45+win8"
       ],
       "dependencies": {
-        "NETStandard.Library": "1.6.1"
+        "NETStandard.Library": "1.6.1",
+        "System.Runtime.Loader": "4.3.0"
       }
     }
   }

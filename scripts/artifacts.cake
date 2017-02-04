@@ -19,7 +19,7 @@ void CreateRunScript(string outputRoot, string scriptFolder)
 void WriteWindowsScript(string outputRoot, string scriptFolder)
 {
     var desktopScript = System.IO.Path.Combine(scriptFolder, $"OmniSharp.cmd");
-    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "net451", "OmniSharp");
+    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "net46", "OmniSharp");
 
     var coreScript = System.IO.Path.Combine(scriptFolder, $"OmniSharp.Core.cmd");
     var omniSharpCorePath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "netcoreapp1.0", "OmniSharp");
@@ -48,7 +48,7 @@ void WriteWindowsScript(string outputRoot, string scriptFolder)
 void WriteUnixScript(string outputRoot, string scriptFolder)
 {
     var desktopScript = System.IO.Path.Combine(scriptFolder, "OmniSharp");
-    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "net451", "OmniSharp");
+    var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "net46", "OmniSharp");
 
     var coreScript = System.IO.Path.Combine(scriptFolder, $"OmniSharp.Core");
     var omniSharpCorePath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "netcoreapp1.0", "OmniSharp");

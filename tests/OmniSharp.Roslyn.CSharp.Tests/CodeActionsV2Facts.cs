@@ -289,7 +289,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var hostServicesProvider = new RoslynFeaturesHostServicesProvider(_loader);
 
-            yield return new RoslynCodeActionProvider(new FakeLoggerFactory(), hostServicesProvider);
+            yield return new RoslynCodeActionProvider(LoggerFactory, hostServicesProvider);
         }
     }
 }

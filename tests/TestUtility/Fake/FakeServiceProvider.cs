@@ -6,7 +6,12 @@ using TestUtility.Annotate;
 
 namespace TestUtility.Fake
 {
-    internal class FakeServiceProvider : IServiceProvider
+    public interface IFakeServiceProvider
+    {
+        void SetService(Type type, object instance);
+    }
+
+    internal class FakeServiceProvider : IServiceProvider, IFakeServiceProvider
     {
         private readonly ILogger<FakeServiceProvider> _logger;
         private readonly ILoggerFactory _loggerFactory;
