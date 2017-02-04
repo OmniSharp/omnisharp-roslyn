@@ -17,5 +17,20 @@
             this.Started = started;
             this.TimedOut = timedOut;
         }
+
+        public override string ToString()
+        {
+            var suffix = string.Empty;
+            if (!Started)
+            {
+                suffix = " (not started)";
+            }
+            else if (TimedOut)
+            {
+                suffix = " (timed out)";
+            }
+
+            return Code.ToString() + suffix;
+        }
     }
 }

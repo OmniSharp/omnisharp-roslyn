@@ -296,7 +296,7 @@ namespace OmniSharp.DotNet
             {
                 if (allowRestore && _enableRestorePackages)
                 {
-                    _dotNetCliService.Restore(state.ProjectContext.ProjectDirectory, onFailure: () =>
+                    _dotNetCliService.Restore(state.ProjectContext.ProjectFile.ProjectFilePath, onFailure: () =>
                     {
                         _eventEmitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
                         {
