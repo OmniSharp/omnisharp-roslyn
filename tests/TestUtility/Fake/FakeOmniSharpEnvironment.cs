@@ -12,5 +12,6 @@ namespace TestUtility.Fake
         public string SolutionFilePath { get; }
         public string ConfigurationPath { get; }
         public TransportType TransportType { get; }
+        public string[] OtherArgs { get; }
     }
 }

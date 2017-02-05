@@ -5,7 +5,7 @@ using System.Threading;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
         var argsList = new List<string>(args);
         if (argsList.Contains("--debug"))
@@ -18,6 +18,6 @@ public class Program
             }
         }
 
-        OmniSharp.Program.Main(argsList.ToArray());
+        return OmniSharp.Program.Main(argsList.ToArray());
     }
 }
