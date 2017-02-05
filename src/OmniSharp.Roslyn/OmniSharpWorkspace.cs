@@ -12,7 +12,6 @@ namespace OmniSharp
     [Export, Shared]
     public class OmniSharpWorkspace : Workspace
     {
-        private HashSet<DocumentId> _activeDocuments = new HashSet<DocumentId>();
         public bool Initialized { get; set; }
         public BufferManager BufferManager { get; private set; }
 
