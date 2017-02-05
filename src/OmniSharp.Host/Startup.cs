@@ -27,8 +27,11 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup()
+        private readonly IOmniSharpEnvironment _omniSharpEnvironment;
+
+        public Startup(IOmniSharpEnvironment omniSharpEnvironment)
         {
+            _omniSharpEnvironment = omniSharpEnvironment;
             var appEnv = PlatformServices.Default.Application;
 
             var configBuilder = new ConfigurationBuilder()
@@ -36,14 +39,14 @@ namespace OmniSharp
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
-            if (Program.Environment.OtherArgs != null)
+            if (omniSharpEnvironment.OtherArgs != null)
             {
-                configBuilder.AddCommandLine(Program.Environment.OtherArgs);
+                configBuilder.AddCommandLine(omniSharpEnvironment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
-                new PhysicalFileProvider(Program.Environment.Path),
+                new PhysicalFileProvider(omniSharpEnvironment.Path),
                 "omnisharp.json",
                 optional: true,
                 reloadOnChange: false);
@@ -124,7 +127,6 @@ namespace OmniSharp
         public void Configure(
             IApplicationBuilder app,
             IServiceProvider serviceProvider,
-            IOmniSharpEnvironment env,
             ILoggerFactory loggerFactory,
             ISharedTextWriter writer,
             IAssemblyLoader loader,
@@ -144,13 +146,13 @@ namespace OmniSharp
 
             Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
-                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, env));
+                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, _omniSharpEnvironment));
             }
             else
             {
-                loggerFactory.AddConsole((category, level) => LogFilter(category, level, env));
+                loggerFactory.AddConsole((category, level) => LogFilter(category, level, _omniSharpEnvironment));
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
@@ -166,13 +168,13 @@ namespace OmniSharp
             app.UseMiddleware<StatusMiddleware>();
             app.UseMiddleware<StopServerMiddleware>();
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
-                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_omniSharpEnvironment.Path}' on host {_omniSharpEnvironment.HostPID}.");
             }
             else
             {
-                logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running on port '{_omniSharpEnvironment.Port}' at location '{_omniSharpEnvironment.Path}' on host {_omniSharpEnvironment.HostPID}.");
             }
 
             // ProjectEventForwarder register event to OmnisharpWorkspace during instantiation
