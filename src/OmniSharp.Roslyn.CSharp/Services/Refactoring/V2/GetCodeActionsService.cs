@@ -6,7 +6,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
-using OmniSharp.Roslyn.CSharp.Extensions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
@@ -27,12 +26,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         public override async Task<GetCodeActionsResponse> Handle(GetCodeActionsRequest request)
         {
-            var actions = await GetActionsAsync(request);
+            var availableActions = await GetAvailableCodeActions(request);
 
             return new GetCodeActionsResponse
             {
-                CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title))
+                CodeActions = availableActions.Select(ConvertToOmniSharpCodeAction)
             };
+        }
+
+        private static OmniSharpCodeAction ConvertToOmniSharpCodeAction(AvailableCodeAction availableAction)
+        {
+            return new OmniSharpCodeAction(availableAction.GetIdentifier(), availableAction.GetTitle());
         }
     }
 }

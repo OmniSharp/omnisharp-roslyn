@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using OmniSharp.Roslyn.CSharp.Extensions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
@@ -33,16 +32,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         public override async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
-            var actions = await GetActionsAsync(request);
-            var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
-            if (action == null)
+            var availableActions = await GetAvailableCodeActions(request);
+            var availableAction = availableActions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
+            if (availableAction == null)
             {
                 return new RunCodeActionResponse();
             }
 
-            Logger.LogInformation($"Applying code action: {action.Title}");
+            Logger.LogInformation($"Applying code action: {availableAction.GetTitle()}");
 
-            var operations = await action.GetOperationsAsync(CancellationToken.None);
+            var operations = await availableAction.GetOperationsAsync(CancellationToken.None);
 
             var solution = this.Workspace.CurrentSolution;
             var changes = new List<ModifiedFileResponse>();
