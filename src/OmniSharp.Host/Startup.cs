@@ -27,8 +27,11 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup()
+        private readonly IOmniSharpEnvironment _omniSharpEnvironment;
+
+        public Startup(IOmniSharpEnvironment omniSharpEnvironment)
         {
+            _omniSharpEnvironment = omniSharpEnvironment;
             var appEnv = PlatformServices.Default.Application;
 
             var configBuilder = new ConfigurationBuilder()
@@ -36,14 +39,14 @@ namespace OmniSharp
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
-            if (Program.Environment.OtherArgs != null)
+            if (omniSharpEnvironment.OtherArgs != null)
             {
-                configBuilder.AddCommandLine(Program.Environment.OtherArgs);
+                configBuilder.AddCommandLine(omniSharpEnvironment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
-                new PhysicalFileProvider(Program.Environment.Path),
+                new PhysicalFileProvider(omniSharpEnvironment.Path),
                 "omnisharp.json",
                 optional: true,
                 reloadOnChange: false);
@@ -71,7 +74,7 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static CompositionHost ConfigureMef(
+        public CompositionHost ConfigureMef(
             IServiceProvider serviceProvider,
             OmniSharpOptions options,
             IEnumerable<Assembly> assemblies)
@@ -88,7 +91,6 @@ namespace OmniSharp
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var env = serviceProvider.GetService<IOmniSharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
             var loader = serviceProvider.GetService<IAssemblyLoader>();
@@ -98,7 +100,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(new ManualFileSystemWatcher()))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
-                .WithProvider(MefValueProvider.From(env))
+                .WithProvider(MefValueProvider.From(_omniSharpEnvironment))
                 .WithProvider(MefValueProvider.From(writer))
                 .WithProvider(MefValueProvider.From(applicationLifetime))
                 .WithProvider(MefValueProvider.From(options))
@@ -106,7 +108,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(loader))
                 .WithProvider(MefValueProvider.From(new MetadataHelper(loader))); // other way to do singleton and autowire?
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
                 config = config
                     .WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(writer)));
@@ -124,7 +126,6 @@ namespace OmniSharp
         public void Configure(
             IApplicationBuilder app,
             IServiceProvider serviceProvider,
-            IOmniSharpEnvironment env,
             ILoggerFactory loggerFactory,
             ISharedTextWriter writer,
             IAssemblyLoader loader,
@@ -144,13 +145,13 @@ namespace OmniSharp
 
             Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
-                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, env));
+                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, _omniSharpEnvironment));
             }
             else
             {
-                loggerFactory.AddConsole((category, level) => LogFilter(category, level, env));
+                loggerFactory.AddConsole((category, level) => LogFilter(category, level, _omniSharpEnvironment));
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
@@ -166,13 +167,13 @@ namespace OmniSharp
             app.UseMiddleware<StatusMiddleware>();
             app.UseMiddleware<StopServerMiddleware>();
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
-                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_omniSharpEnvironment.Path}' on host {_omniSharpEnvironment.HostPID}.");
             }
             else
             {
-                logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running on port '{_omniSharpEnvironment.Port}' at location '{_omniSharpEnvironment.Path}' on host {_omniSharpEnvironment.HostPID}.");
             }
 
             // ProjectEventForwarder register event to OmnisharpWorkspace during instantiation

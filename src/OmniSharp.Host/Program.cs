@@ -20,8 +20,6 @@ namespace OmniSharp
 {
     public class Program
     {
-        public static OmniSharpEnvironment Environment { get; set; }
-
         public static int Main(string[] args)
         {
             try
@@ -83,7 +81,7 @@ namespace OmniSharp
                 var otherArgs = omnisharpApp.RemainingArguments;
                 Configuration.ZeroBasedIndices = zeroBasedIndicesOption.HasValue();
 
-                Environment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
+                var omniSharpEnvironment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
 
                 var config = new ConfigurationBuilder()
                     .AddCommandLine(new[] { "--server.urls", $"http://{serverInterface}:{serverPort}" });
@@ -103,14 +101,14 @@ namespace OmniSharp
                 var builder = new WebHostBuilder()
                     .UseConfiguration(config.Build())
                     .UseEnvironment("OmniSharp")
-                    .UseStartup(typeof(Startup))
                     .ConfigureServices(serviceCollection =>
                     {
-                        serviceCollection.AddSingleton<IOmniSharpEnvironment>(Environment);
+                        serviceCollection.AddSingleton<IOmniSharpEnvironment>(omniSharpEnvironment);
                         serviceCollection.AddSingleton<ISharedTextWriter>(writer);
                         serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
                         serviceCollection.AddSingleton<IAssemblyLoader, AssemblyLoader>();
-                    });
+                    })
+                    .UseStartup(typeof(Startup));
 
                 if (transportType == TransportType.Stdio)
                 {
