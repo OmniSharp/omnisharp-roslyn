@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.CommandLineUtils;
@@ -54,7 +55,11 @@ namespace OmniSharp
         {
             Console.WriteLine($"OmniSharp: {string.Join(" ", args)}");
 
-            var omnisharpApp = new CommandLineApplication(throwOnUnexpectedArg: false) {AllowArgumentSeparator = true};
+            // omnisharp.json arguments should not be parsed by the CLI args parser
+            // they will contain "=" so we should filter them out
+            var omnisharpJsonArgs = args.Where(x => x.Contains("="));
+
+            var omnisharpApp = new CommandLineApplication(throwOnUnexpectedArg: false);
             omnisharpApp.HelpOption("-? | -h | --help");
 
             var applicationRootOption = omnisharpApp.Option("-s | --solution", "Solution, project file or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
@@ -78,7 +83,7 @@ namespace OmniSharp
                 var serverInterface = serverInterfaceOption.GetValueOrDefault("localhost");
                 var encodingString = encodingOption.GetValueOrDefault<string>(null);
                 var plugins = pluginOption.Values;
-                var otherArgs = omnisharpApp.RemainingArguments;
+                var otherArgs = omnisharpApp.RemainingArguments.Union(omnisharpJsonArgs).Distinct();
                 Configuration.ZeroBasedIndices = zeroBasedIndicesOption.HasValue();
 
                 var omniSharpEnvironment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
@@ -153,7 +158,7 @@ namespace OmniSharp
                 return 0;
             });
 
-            return omnisharpApp.Execute(args);
+            return omnisharpApp.Execute(args.Except(omnisharpJsonArgs).ToArray());
         }
     }
 }
