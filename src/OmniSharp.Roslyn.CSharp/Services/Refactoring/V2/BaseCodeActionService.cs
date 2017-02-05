@@ -145,15 +145,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         continue;
                     }
 
+                    var typeName = codeFix.GetType().FullName;
+
                     // TODO: This is a horrible hack! However, remove unnecessary usings only
                     // responds for diagnostics that are produced by its diagnostic analyzer.
                     // We need to provide a *real* diagnostic engine to address this.
-                    if (codeFix.GetType().FullName != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
+                    if (typeName != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
                     {
                         if (!diagnosticIds.Any(id => codeFix.FixableDiagnosticIds.Contains(id)))
                         {
                             continue;
                         }
+                    }
+
+                    if (typeName == CodeActionHelper.RemoveUnnecessaryUsingsProviderName &&
+                        !diagnosticIds.Contains("CS8019")) // ErrorCode.HDN_UnusedUsingDirective
+                    {
+                        continue;
                     }
 
                     try
@@ -162,7 +170,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     }
                     catch (Exception ex)
                     {
-                        this.Logger.LogError(ex, $"Error registering code fixes for {codeFix.GetType().FullName}");
+                        this.Logger.LogError(ex, $"Error registering code fixes for {typeName}");
                     }
                 }
             }
