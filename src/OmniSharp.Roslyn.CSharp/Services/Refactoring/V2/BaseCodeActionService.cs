@@ -75,7 +75,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             // TODO: Determine good way to order code actions.
             actions.Reverse();
 
-            return ConvertToCodeActionAndParents(actions);
+            // Be sure to filter out any code actions that inherit from CodeActionWithOptions.
+            // This isn't a great solution and might need changing later, but every Roslyn code action
+            // derived from this type tries to display a dialog. For now, this is a reasonable solution.
+            var availableActions = ConvertToAvailableCodeAction(actions)
+                .Where(a => !a.CodeAction.GetType().GetTypeInfo().IsSubclassOf(typeof(CodeActionWithOptions)));
+
+            return availableActions;
         }
 
         private async Task<CodeRefactoringContext?> GetRefactoringContext(Document originalDocument, ICodeActionRequest request, List<CodeAction> actionsDestination)
@@ -142,7 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     // TODO: This is a horrible hack! However, remove unnecessary usings only
                     // responds for diagnostics that are produced by its diagnostic analyzer.
                     // We need to provide a *real* diagnostic engine to address this.
-                    if (codeFix.ToString() != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
+                    if (codeFix.GetType().FullName != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
                     {
                         if (!diagnosticIds.Any(id => codeFix.FixableDiagnosticIds.Contains(id)))
                         {
@@ -185,7 +191,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private IEnumerable<AvailableCodeAction> ConvertToCodeActionAndParents(IEnumerable<CodeAction> actions)
+        private IEnumerable<AvailableCodeAction> ConvertToAvailableCodeAction(IEnumerable<CodeAction> actions)
         {
             var codeActions = new List<AvailableCodeAction>();
 
