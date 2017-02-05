@@ -3,9 +3,9 @@ using Microsoft.Extensions.CommandLineUtils;
 
 namespace OmniSharp.Host.Internal
 {
-    public static class CommandOptionExtensions
+    internal static class CommandOptionExtensions
     {
-        public static T GetValueOrDefault<T>(this CommandOption opt, T defaultValue)
+        internal static T GetValueOrDefault<T>(this CommandOption opt, T defaultValue)
         {
             if (opt.HasValue())
             {
