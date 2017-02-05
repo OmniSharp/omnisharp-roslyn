@@ -7,29 +7,32 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Extensions;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     [OmniSharpHandler(OmnisharpEndpoints.V2.GetCodeActions, LanguageNames.CSharp)]
-    public class GetCodeActionsService : RequestHandler<GetCodeActionsRequest, GetCodeActionsResponse>
+    public class GetCodeActionsService : BaseCodeActionService<GetCodeActionsRequest, GetCodeActionsResponse>
     {
-        private readonly OmniSharpWorkspace _workspace;
-        private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
-        private readonly ILogger _logger;
-
         [ImportingConstructor]
-        public GetCodeActionsService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
+        public GetCodeActionsService(
+            OmniSharpWorkspace workspace,
+            CodeActionHelper helper,
+            [ImportMany] IEnumerable<ICodeActionProvider> providers,
+            ILoggerFactory loggerFactory)
+            : base(workspace, helper, providers, loggerFactory.CreateLogger<GetCodeActionsService>())
         {
-            _workspace = workspace;
-            _codeActionProviders = providers;
-            _logger = loggerFactory.CreateLogger<GetCodeActionsService>();
         }
 
-        public async Task<GetCodeActionsResponse> Handle(GetCodeActionsRequest request)
+        public override async Task<GetCodeActionsResponse> Handle(GetCodeActionsRequest request)
         {
-            var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
-            return new GetCodeActionsResponse { CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title)) };
+            var actions = await GetActionsAsync(request);
+
+            return new GetCodeActionsResponse
+            {
+                CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title))
+            };
         }
     }
 }

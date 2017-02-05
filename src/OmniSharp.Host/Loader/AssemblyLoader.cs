@@ -23,7 +23,7 @@ namespace OmniSharp.Host.Loader
             }
             catch (Exception ex)
             {
-                _logger.LogError(0, ex, $"Failed to load assembly: {name}");
+                _logger.LogError(ex, $"Failed to load assembly: {name}");
                 throw;
             }
 

@@ -223,9 +223,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             };
 
             var workspace = await CreateWorkspaceAsync(testFile);
-            var codeActions = CreateCodeActionProviders();
+            var helper = new CodeActionHelper(this.AssemblyLoader);
+            var providers = CreateCodeActionProviders();
 
-            var controller = new GetCodeActionsService(workspace, codeActions, this.LoggerFactory);
+            var controller = new GetCodeActionsService(workspace, helper, providers, this.LoggerFactory);
             var response = await controller.Handle(request);
 
             return response.CodeActions;
@@ -252,9 +253,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             };
 
             var workspace = await CreateWorkspaceAsync(testFile);
-            var codeActions = CreateCodeActionProviders();
+            var helper = new CodeActionHelper(this.AssemblyLoader);
+            var providers = CreateCodeActionProviders();
 
-            var controller = new RunCodeActionService(workspace, codeActions, this.LoggerFactory);
+            var controller = new RunCodeActionService(workspace, helper, providers, this.LoggerFactory);
             var response = await controller.Handle(request);
 
             return response;

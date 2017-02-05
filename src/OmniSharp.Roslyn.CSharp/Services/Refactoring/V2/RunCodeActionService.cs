@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Extensions;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
 using RunCodeActionRequest = OmniSharp.Models.V2.RunCodeActionRequest;
@@ -18,34 +19,32 @@ using RunCodeActionResponse = OmniSharp.Models.V2.RunCodeActionResponse;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     [OmniSharpHandler(OmnisharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp)]
-    public class RunCodeActionService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
+    public class RunCodeActionService : BaseCodeActionService<RunCodeActionRequest, RunCodeActionResponse>
     {
-        private readonly OmniSharpWorkspace _workspace;
-        private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
-        private readonly ILogger _logger;
-
         [ImportingConstructor]
-        public RunCodeActionService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers, ILoggerFactory loggerFactory)
+        public RunCodeActionService(
+            OmniSharpWorkspace workspace,
+            CodeActionHelper helper,
+            [ImportMany] IEnumerable<ICodeActionProvider> providers,
+            ILoggerFactory loggerFactory)
+            : base(workspace, helper, providers, loggerFactory.CreateLogger<RunCodeActionService>())
         {
-            _workspace = workspace;
-            _codeActionProviders = providers;
-            _logger = loggerFactory.CreateLogger<RunCodeActionService>();
         }
 
-        public async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
+        public override async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
-            var actions = await CodeActionHelper.GetActions(_workspace, _codeActionProviders, _logger, request);
+            var actions = await GetActionsAsync(request);
             var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
             if (action == null)
             {
                 return new RunCodeActionResponse();
             }
 
-            _logger.LogInformation($"Applying code action: {action.Title}");
+            Logger.LogInformation($"Applying code action: {action.Title}");
 
             var operations = await action.GetOperationsAsync(CancellationToken.None);
 
-            var solution = _workspace.CurrentSolution;
+            var solution = this.Workspace.CurrentSolution;
             var changes = new List<ModifiedFileResponse>();
             var directory = Path.GetDirectoryName(request.FileName);
 
@@ -64,7 +63,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             if (request.ApplyTextChanges)
             {
                 // Will this fail if FileChanges.GetFileChangesAsync(...) added files to the workspace?
-                _workspace.TryApplyChanges(solution);
+                this.Workspace.TryApplyChanges(solution);
             }
 
             return new RunCodeActionResponse
@@ -106,7 +105,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     // tries to modify them. This is a strange interaction because the workspace could be left
                     // in an incomplete state if the host editor doesn't apply changes to the new file, but it's
                     // what we've got today.
-                    if (_workspace.GetDocument(newFilePath) == null)
+                    if (this.Workspace.GetDocument(newFilePath) == null)
                     {
                         var fileInfo = new FileInfo(newFilePath);
                         if (!fileInfo.Exists)
@@ -118,17 +117,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             // The file already exists on disk? Ensure that it's zero-length. If so, we can still use it.
                             if (fileInfo.Length > 0)
                             {
-                                _logger.LogError($"File already exists on disk: '{newFilePath}'");
+                                Logger.LogError($"File already exists on disk: '{newFilePath}'");
                                 break;
                             }
                         }
 
-                        _workspace.AddDocument(projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
+                        this.Workspace.AddDocument(projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
                     }
                     else
                     {
                         // The file already exists in the workspace? We're in a bad state.
-                        _logger.LogError($"File already exists in workspace: '{newFilePath}'");
+                        Logger.LogError($"File already exists in workspace: '{newFilePath}'");
                     }
                 }
 
