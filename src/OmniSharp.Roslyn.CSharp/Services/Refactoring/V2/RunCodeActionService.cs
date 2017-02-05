@@ -33,16 +33,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         public override async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
         {
-            var actions = await GetActionsAsync(request);
-            var action = actions.FirstOrDefault(a => a.GetIdentifier().Equals(request.Identifier));
-            if (action == null)
+            var codeActionAndParents = await GetActionsAsync(request);
+            var codeActionAndParent = codeActionAndParents.FirstOrDefault(a => a.CodeAction.GetIdentifier().Equals(request.Identifier));
+            if (codeActionAndParent == null)
             {
                 return new RunCodeActionResponse();
             }
 
-            Logger.LogInformation($"Applying code action: {action.Title}");
+            Logger.LogInformation($"Applying code action: {codeActionAndParent.GetTitle()}");
 
-            var operations = await action.GetOperationsAsync(CancellationToken.None);
+            var operations = await codeActionAndParent.CodeAction.GetOperationsAsync(CancellationToken.None);
 
             var solution = this.Workspace.CurrentSolution;
             var changes = new List<ModifiedFileResponse>();

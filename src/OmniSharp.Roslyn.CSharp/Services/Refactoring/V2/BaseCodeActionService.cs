@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -11,9 +12,10 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
-namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
+namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     public abstract class BaseCodeActionService<TRequest, TResponse> : RequestHandler<TRequest, TResponse>
     {
@@ -23,24 +25,45 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
 
         private readonly CodeActionHelper _helper;
 
+        private readonly MethodInfo _getNestedCodeActions;
+
         protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger)
         {
             this.Workspace = workspace;
             this.Providers = providers;
             this.Logger = logger;
             this._helper = helper;
+
+            // Sadly, the CodeAction.NestedCodeActions property is still internal.
+            var nestedCodeActionsProperty = typeof(CodeAction).GetProperty("NestedCodeActions", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (nestedCodeActionsProperty == null)
+            {
+                throw new InvalidOperationException("Could not find CodeAction.NestedCodeActions property.");
+            }
+
+            this._getNestedCodeActions = nestedCodeActionsProperty.GetGetMethod(nonPublic: true);
+            if (this._getNestedCodeActions == null)
+            {
+                throw new InvalidOperationException("Could not retrieve 'get' method for CodeAction.NestedCodeActions property.");
+            }
         }
 
         public abstract Task<TResponse> Handle(TRequest request);
 
-
-        protected async Task<IEnumerable<CodeAction>> GetActionsAsync(ICodeActionRequest request)
+        protected async Task<IEnumerable<CodeActionAndParent>> GetActionsAsync(ICodeActionRequest request)
         {
-            var actions = new List<CodeAction>();
             var originalDocument = this.Workspace.GetDocument(request.FileName);
             if (originalDocument == null)
             {
-                return actions;
+                return Array.Empty<CodeActionAndParent>();
+            }
+
+            var actions = new List<CodeAction>();
+
+            var codeFixContext = await GetCodeFixContext(originalDocument, request, actions);
+            if (codeFixContext != null)
+            {
+                await CollectCodeFixActions(codeFixContext.Value);
             }
 
             var refactoringContext = await GetRefactoringContext(originalDocument, request, actions);
@@ -49,15 +72,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
                 await CollectRefactoringActions(refactoringContext.Value);
             }
 
-            var codeFixContext = await GetCodeFixContext(originalDocument, request, actions);
-            if (codeFixContext != null)
-            {
-                await CollectCodeFixActions(codeFixContext.Value);
-            }
-
+            // TODO: Determine good way to order code actions.
             actions.Reverse();
 
-            return actions;
+            return ConvertToCodeActionAndParents(actions);
         }
 
         private async Task<CodeRefactoringContext?> GetRefactoringContext(Document originalDocument, ICodeActionRequest request, List<CodeAction> actionsDestination)
@@ -165,6 +183,36 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
                     }
                 }
             }
+        }
+
+        private IEnumerable<CodeActionAndParent> ConvertToCodeActionAndParents(IEnumerable<CodeAction> actions)
+        {
+            var codeActions = new List<CodeActionAndParent>();
+
+            foreach (var action in actions)
+            {
+                var handledNestedActions = false;
+
+                // Roslyn supports "nested" code actions in order to allow submenus in the VS light bulb menu.
+                // For now, we'll just expand nested code actions in place.
+                var nestedActions = this._getNestedCodeActions.Invoke<ImmutableArray<CodeAction>>(action, null);
+                if (nestedActions.Length > 0)
+                {
+                    foreach (var nestedAction in nestedActions)
+                    {
+                        codeActions.Add(new CodeActionAndParent(nestedAction, action));
+                    }
+
+                    handledNestedActions = true;
+                }
+
+                if (!handledNestedActions)
+                {
+                    codeActions.Add(new CodeActionAndParent(action));
+                }
+            }
+
+            return codeActions;
         }
     }
 }

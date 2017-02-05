@@ -34,11 +34,12 @@ namespace OmniSharp.Services
 
             return new Lazy<MethodInfo>(() =>
             {
-                var methodInfo = lazyType.Value.GetMethod(methodName);
+                var type = lazyType.Value;
+                var methodInfo = type.GetMethod(methodName);
 
                 if (methodInfo == null)
                 {
-                    throw new InvalidOperationException($"Could not get type '{methodName}'");
+                    throw new InvalidOperationException($"Could not get method '{methodName}' on type '{type.FullName}'");
                 }
 
                 return methodInfo;
@@ -54,11 +55,12 @@ namespace OmniSharp.Services
 
             return new Lazy<MethodInfo>(() =>
             {
-                var methodInfo = lazyType.Value.GetMethod(methodName, bindingFlags);
+                var type = lazyType.Value;
+                var methodInfo = type.GetMethod(methodName, bindingFlags);
 
                 if (methodInfo == null)
                 {
-                    throw new InvalidOperationException($"Could not get type '{methodName}'");
+                    throw new InvalidOperationException($"Could not get method '{methodName}' on type '{type.FullName}'");
                 }
 
                 return methodInfo;
@@ -72,11 +74,12 @@ namespace OmniSharp.Services
                 throw new ArgumentNullException(nameof(lazyType));
             }
 
-            var methodInfo = lazyType.Value.GetMethod(methodName);
+            var type = lazyType.Value;
+            var methodInfo = type.GetMethod(methodName);
 
             if (methodInfo == null)
             {
-                throw new InvalidOperationException($"Could not get type '{methodName}'");
+                throw new InvalidOperationException($"Could not get method '{methodName}' on type '{type.FullName}'");
             }
 
             return methodInfo;
@@ -89,11 +92,12 @@ namespace OmniSharp.Services
                 throw new ArgumentNullException(nameof(lazyType));
             }
 
-            var methodInfo = lazyType.Value.GetMethod(methodName, bindingFlags);
+            var type = lazyType.Value;
+            var methodInfo = type.GetMethod(methodName, bindingFlags);
 
             if (methodInfo == null)
             {
-                throw new InvalidOperationException($"Could not get type '{methodName}'");
+                throw new InvalidOperationException($"Could not get method '{methodName}' on type '{type.FullName}'");
             }
 
             return methodInfo;

@@ -31,8 +31,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             return new GetCodeActionsResponse
             {
-                CodeActions = actions.Select(a => new OmniSharpCodeAction(a.GetIdentifier(), a.Title))
+                CodeActions = actions.Select(ConvertToOmniSharpCodeAction)
             };
+        }
+
+        private static OmniSharpCodeAction ConvertToOmniSharpCodeAction(CodeActionAndParent codeActionAndParent)
+        {
+            return new OmniSharpCodeAction(codeActionAndParent.CodeAction.GetIdentifier(), codeActionAndParent.GetTitle());
         }
     }
 }
