@@ -176,9 +176,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
             "ICSharpCode.NRefactory6.CSharp.Refactoring.ConditionIsAlwaysTrueOrFalseFixProvider"
         };
 
-        [ImportingConstructor]
-        public CodeActionHelper(IAssemblyLoader loader)
+        private static bool s_validated;
+
+        private static void ValidateRoslynList(IAssemblyLoader loader)
         {
+            if (s_validated)
+            {
+                return;
+            }
+
             // Check to see if the Roslyn code fix and refactoring provider type names can be found.
             // If this fails, OmniSharp has updated to a new version of Roslyn and one of the type names changed.
             var csharpFeatureAssembly = loader.Load(Configuration.RoslynCSharpFeatures);
@@ -194,6 +200,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
                     throw new InvalidOperationException($"Could not find '{typeName}'. Has this type name changed?");
                 }
             }
+
+            s_validated = true;
+        }
+
+        [ImportingConstructor]
+        public CodeActionHelper(IAssemblyLoader loader)
+        {
+            ValidateRoslynList(loader);
         }
 
         public bool IsDisallowed(string typeName)
