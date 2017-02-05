@@ -74,7 +74,7 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public CompositionHost ConfigureMef(
+        public static CompositionHost ConfigureMef(
             IServiceProvider serviceProvider,
             OmniSharpOptions options,
             IEnumerable<Assembly> assemblies)
@@ -91,6 +91,7 @@ namespace OmniSharp
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var env = serviceProvider.GetService<IOmniSharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
             var loader = serviceProvider.GetService<IAssemblyLoader>();
@@ -100,7 +101,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(new ManualFileSystemWatcher()))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
-                .WithProvider(MefValueProvider.From(_omniSharpEnvironment))
+                .WithProvider(MefValueProvider.From(env))
                 .WithProvider(MefValueProvider.From(writer))
                 .WithProvider(MefValueProvider.From(applicationLifetime))
                 .WithProvider(MefValueProvider.From(options))
@@ -108,7 +109,7 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(loader))
                 .WithProvider(MefValueProvider.From(new MetadataHelper(loader))); // other way to do singleton and autowire?
 
-            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
+            if (env.TransportType == TransportType.Stdio)
             {
                 config = config
                     .WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(writer)));
