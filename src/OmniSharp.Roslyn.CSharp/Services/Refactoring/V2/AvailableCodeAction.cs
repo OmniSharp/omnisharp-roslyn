@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Immutable;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CodeActions;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    public class CodeActionAndParent
+    public class AvailableCodeAction
     {
         public CodeAction CodeAction { get; }
         public CodeAction ParentCodeAction { get; }
 
-        public CodeActionAndParent(CodeAction codeAction, CodeAction parentCodeAction = null)
+        public AvailableCodeAction(CodeAction codeAction, CodeAction parentCodeAction = null)
         {
             if (codeAction == null)
             {
@@ -19,11 +22,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             this.ParentCodeAction = parentCodeAction;
         }
 
+        public string GetIdentifier()
+        {
+            return CodeAction.EquivalenceKey ?? GetTitle();
+        }
+
         public string GetTitle()
         {
             return ParentCodeAction != null
                 ? $"{ParentCodeAction.Title} -> {CodeAction.Title}"
                 : CodeAction.Title;
+        }
+
+        public Task<ImmutableArray<CodeActionOperation>> GetOperationsAsync(CancellationToken cancellationToken)
+        {
+            return CodeAction.GetOperationsAsync(cancellationToken);
         }
     }
 }

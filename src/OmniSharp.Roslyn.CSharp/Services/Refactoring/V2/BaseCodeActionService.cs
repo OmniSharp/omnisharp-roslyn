@@ -50,12 +50,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         public abstract Task<TResponse> Handle(TRequest request);
 
-        protected async Task<IEnumerable<CodeActionAndParent>> GetActionsAsync(ICodeActionRequest request)
+        protected async Task<IEnumerable<AvailableCodeAction>> GetAvailableCodeActions(ICodeActionRequest request)
         {
             var originalDocument = this.Workspace.GetDocument(request.FileName);
             if (originalDocument == null)
             {
-                return Array.Empty<CodeActionAndParent>();
+                return Array.Empty<AvailableCodeAction>();
             }
 
             var actions = new List<CodeAction>();
@@ -185,9 +185,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private IEnumerable<CodeActionAndParent> ConvertToCodeActionAndParents(IEnumerable<CodeAction> actions)
+        private IEnumerable<AvailableCodeAction> ConvertToCodeActionAndParents(IEnumerable<CodeAction> actions)
         {
-            var codeActions = new List<CodeActionAndParent>();
+            var codeActions = new List<AvailableCodeAction>();
 
             foreach (var action in actions)
             {
@@ -200,7 +200,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 {
                     foreach (var nestedAction in nestedActions)
                     {
-                        codeActions.Add(new CodeActionAndParent(nestedAction, action));
+                        codeActions.Add(new AvailableCodeAction(nestedAction, action));
                     }
 
                     handledNestedActions = true;
@@ -208,7 +208,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                 if (!handledNestedActions)
                 {
-                    codeActions.Add(new CodeActionAndParent(action));
+                    codeActions.Add(new AvailableCodeAction(action));
                 }
             }
 
