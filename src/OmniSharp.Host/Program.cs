@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -9,6 +8,7 @@ using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Host.Internal;
 using OmniSharp.Host.Loader;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
@@ -18,19 +18,6 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
-    public static class CommandOptionExtensions
-    {
-        public static T GetValueOrDefault<T>(this CommandOption opt, T defaultValue)
-        {
-            if (opt.HasValue())
-            {
-                return (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFrom(opt.Value());
-            }
-
-            return defaultValue;
-        }
-    }
-
     public class Program
     {
         public static OmniSharpEnvironment Environment { get; set; }
@@ -39,46 +26,6 @@ namespace OmniSharp
         {
             try
             {
-                return Run(args);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.GetBaseException().Message);
-                return 0xbad;
-            }
-        }
-
-        public static int Run(string[] args)
-        {
-            Console.WriteLine($"OmniSharp: {string.Join(" ", args)}");
-
-            var omnisharpApp = new CommandLineApplication(throwOnUnexpectedArg: false) {AllowArgumentSeparator = true};
-            omnisharpApp.HelpOption("-? | -h | --help");
-
-            var applicationRootOption = omnisharpApp.Option("-s | --solution", "Solution / project file or directory for OmniSharp to point at.", CommandOptionType.SingleValue);
-            var portOption = omnisharpApp.Option("-p | --port", "OmniSharp port.", CommandOptionType.SingleValue);
-            var logLevelOption = omnisharpApp.Option("-l | --loglevel", "Level of logging.", CommandOptionType.SingleValue);
-            var verboseOption = omnisharpApp.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
-            var hostPidOption = omnisharpApp.Option("-hpid | --hostPID", "Host process ID.", CommandOptionType.SingleValue);
-            var stdioOption = omnisharpApp.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp commincation protocol.", CommandOptionType.NoValue);
-            var zeroBasedIndicesOption = omnisharpApp.Option("-z | --zero-based-indices", "Use zero based indices in request/responses.", CommandOptionType.NoValue);
-            var serverInterfaceOption = omnisharpApp.Option("-i | --interface", "Server interface address.", CommandOptionType.SingleValue);
-            var encodingOption = omnisharpApp.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
-            var pluginOption = omnisharpApp.Option("-pl | --plugin", "Plugin name(s).", CommandOptionType.MultipleValue);
-
-            omnisharpApp.OnExecute(() =>
-            {
-                var applicationRoot = applicationRootOption.GetValueOrDefault(Directory.GetCurrentDirectory());
-                var serverPort = portOption.GetValueOrDefault(2000);
-                var logLevel = verboseOption.HasValue() ? LogLevel.Debug : logLevelOption.GetValueOrDefault(LogLevel.Information);
-                var hostPid = hostPidOption.GetValueOrDefault(-1);
-                var transportType = stdioOption.HasValue() ? TransportType.Stdio : TransportType.Http;
-                var serverInterface = serverInterfaceOption.GetValueOrDefault("localhost");
-                var encodingString = encodingOption.GetValueOrDefault<string>(null);
-                var plugins = pluginOption.Values;
-                var otherArgs = omnisharpApp.RemainingArguments;
-                Configuration.ZeroBasedIndices = zeroBasedIndicesOption.HasValue();
-
 #if NET46
                 if (PlatformHelper.IsMono)
                 {
@@ -95,6 +42,46 @@ namespace OmniSharp
                     }
                 }
 #endif
+
+                return Run(args);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.GetBaseException().Message);
+                return 0xbad;
+            }
+        }
+
+        public static int Run(string[] args)
+        {
+            Console.WriteLine($"OmniSharp: {string.Join(" ", args)}");
+
+            var omnisharpApp = new CommandLineApplication(throwOnUnexpectedArg: false) {AllowArgumentSeparator = true};
+            omnisharpApp.HelpOption("-? | -h | --help");
+
+            var applicationRootOption = omnisharpApp.Option("-s | --solution", "Solution, project file or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
+            var portOption = omnisharpApp.Option("-p | --port", "OmniSharp port (defaults to 2000).", CommandOptionType.SingleValue);
+            var logLevelOption = omnisharpApp.Option("-l | --loglevel", "Level of logging (defaults to 'Information').", CommandOptionType.SingleValue);
+            var verboseOption = omnisharpApp.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
+            var hostPidOption = omnisharpApp.Option("-hpid | --hostPID", "Host process ID.", CommandOptionType.SingleValue);
+            var stdioOption = omnisharpApp.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp commincation protocol.", CommandOptionType.NoValue);
+            var zeroBasedIndicesOption = omnisharpApp.Option("-z | --zero-based-indices", "Use zero based indices in request/responses (defaults to 'false').", CommandOptionType.NoValue);
+            var serverInterfaceOption = omnisharpApp.Option("-i | --interface", "Server interface address (defaults to 'localhost').", CommandOptionType.SingleValue);
+            var encodingOption = omnisharpApp.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
+            var pluginOption = omnisharpApp.Option("-pl | --plugin", "Plugin name(s).", CommandOptionType.MultipleValue);
+
+            omnisharpApp.OnExecute(() =>
+            {
+                var applicationRoot = applicationRootOption.GetValueOrDefault(Directory.GetCurrentDirectory());
+                var serverPort = portOption.GetValueOrDefault(2000);
+                var logLevel = verboseOption.HasValue() ? LogLevel.Debug : logLevelOption.GetValueOrDefault(LogLevel.Information);
+                var hostPid = hostPidOption.GetValueOrDefault(-1);
+                var transportType = stdioOption.HasValue() ? TransportType.Stdio : TransportType.Http;
+                var serverInterface = serverInterfaceOption.GetValueOrDefault("localhost");
+                var encodingString = encodingOption.GetValueOrDefault<string>(null);
+                var plugins = pluginOption.Values;
+                var otherArgs = omnisharpApp.RemainingArguments;
+                Configuration.ZeroBasedIndices = zeroBasedIndicesOption.HasValue();
 
                 Environment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
 
