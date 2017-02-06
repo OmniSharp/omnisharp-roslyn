@@ -6,22 +6,19 @@ using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Script
 {
-    [Export, Shared]
     public class ScriptContext
     {
-        public HashSet<string> CsxFilesBeingProcessed { get; } = new HashSet<string>();
+        public ScriptContext(string entryFilePath)
+        {
+            EntryFilePath = entryFilePath;
+        }
 
-        // All of the followings are keyed with the file path
-        // Each .csx file is wrapped into a project
-        public Dictionary<string, ProjectInfo> CsxFileProjects { get; } = new Dictionary<string, ProjectInfo>();
+        public string EntryFilePath { get; }
+        public HashSet<string> CsxFilesBeingProcessed { get; } = new HashSet<string>();
         public Dictionary<string, HashSet<MetadataReference>> CsxReferences { get; } = new Dictionary<string, HashSet<MetadataReference>>();
         public Dictionary<string, List<string>> CsxLoadReferences { get; } = new Dictionary<string, List<string>>();
         public Dictionary<string, List<string>> CsxUsings { get; } = new Dictionary<string, List<string>>();
         public HashSet<MetadataReference> CommonReferences { get; } = new HashSet<MetadataReference>();
-        public HashSet<string> CommonUsings { get; } = new HashSet<string> { "System" };
-        public string RootPath { get; set; }
-
-        public HashSet<string> CsxFiles = new HashSet<string>();
-
+        public HashSet<string> CsxFiles { get; } = new HashSet<string>();
     }
 }

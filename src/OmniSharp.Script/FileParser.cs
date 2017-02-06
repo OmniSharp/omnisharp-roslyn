@@ -24,10 +24,7 @@ namespace OmniSharp.Script
                 return;
             }
 
-            result.LoadedScripts.Add(fullPath);
-
             var scriptCode = File.ReadAllText(fullPath);
-
             var syntaxTree = CSharpSyntaxTree.ParseText(scriptCode, parseOptions);
 
             var namespaces = syntaxTree.GetCompilationUnitRoot().Usings.Select(x => x.Name.ToString());
@@ -57,6 +54,7 @@ namespace OmniSharp.Script
                 var loadFullPath = Path.IsPathRooted(filePath) ? filePath : Path.Combine(currentWorkingDirectory, filePath);
                 if (!string.IsNullOrWhiteSpace(loadFullPath))
                 {
+                    result.LoadedScripts.Add(loadFullPath);
                     ParseFile(loadFullPath, result, parseOptions);
                 }
             }
