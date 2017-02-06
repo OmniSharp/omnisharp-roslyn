@@ -15,10 +15,13 @@ namespace OmniSharp.Script
         // Each .csx file is wrapped into a project
         public Dictionary<string, ProjectInfo> CsxFileProjects { get; } = new Dictionary<string, ProjectInfo>();
         public Dictionary<string, HashSet<MetadataReference>> CsxReferences { get; } = new Dictionary<string, HashSet<MetadataReference>>();
-        public Dictionary<string, List<ProjectInfo>> CsxLoadReferences { get; } = new Dictionary<string, List<ProjectInfo>>();
+        public Dictionary<string, List<string>> CsxLoadReferences { get; } = new Dictionary<string, List<string>>();
         public Dictionary<string, List<string>> CsxUsings { get; } = new Dictionary<string, List<string>>();
         public HashSet<MetadataReference> CommonReferences { get; } = new HashSet<MetadataReference>();
         public HashSet<string> CommonUsings { get; } = new HashSet<string> { "System" };
         public string RootPath { get; set; }
+
+        public HashSet<string> CsxFiles = new HashSet<string>();
+
     }
 }

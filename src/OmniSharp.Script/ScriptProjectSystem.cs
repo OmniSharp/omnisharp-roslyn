@@ -50,7 +50,7 @@ namespace OmniSharp.Script
             Logger.LogInformation($"Detecting CSX files in '{Env.Path}'.");
 
             // Nothing to do if there are no CSX files
-            var allCsxFiles = Directory.GetFiles(Env.Path, "*.csx", SearchOption.AllDirectories);
+            var allCsxFiles = Directory.GetFiles(Env.Path, "*.csx", SearchOption.TopDirectoryOnly);
             if (allCsxFiles.Length == 0)
             {
                 Logger.LogInformation("Could not find any CSX files");
@@ -122,7 +122,33 @@ namespace OmniSharp.Script
             {
                 try
                 {
-                    CreateCsxProject(csxPath);
+                    var csxFileName = Path.GetFileName(csxPath);
+                    var compilationOptions = new CSharpCompilationOptions(
+                        outputKind: OutputKind.DynamicallyLinkedLibrary,
+                        metadataReferenceResolver: ScriptMetadataResolver.Default);
+
+                    var project = ProjectInfo.Create(
+                        id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
+                        version: VersionStamp.Create(),
+                        name: csxFileName,
+                        assemblyName: $"{csxFileName}.dll",
+                        language: LanguageNames.CSharp,
+                        compilationOptions: compilationOptions,
+                        parseOptions: CsxParseOptions,
+                        isSubmission: false,
+                        hostObjectType: typeof(InteractiveScriptGlobals));
+
+                    var scriptContext = new ScriptContext();
+
+                    CreateCsxProject(csxPath, project, scriptContext);
+                    project = project.WithMetadataReferences(Context.CommonReferences.Union(scriptContext.CsxReferences.SelectMany(x => x.Value)));
+
+                    Workspace.AddProject(project);
+
+                    foreach (var csxFile in scriptContext.CsxFiles)
+                    {
+                        Workspace.AddDocument(project.Id, csxFile, SourceCodeKind.Script);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -156,32 +182,28 @@ namespace OmniSharp.Script
         /// Each .csx file is to be wrapped in its own project.
         /// This recursive function does a depth first traversal of the .csx files, following #load references
         /// </summary>
-        private ProjectInfo CreateCsxProject(string csxPath)
+        private void CreateCsxProject(string csxPath, ProjectInfo project, ScriptContext scriptContext)
         {
             // Circular #load chains are not allowed
-            if (Context.CsxFilesBeingProcessed.Contains(csxPath))
+            if (scriptContext.CsxFilesBeingProcessed.Contains(csxPath))
             {
                 throw new Exception($"Circular refrences among script files are not allowed: {csxPath} #loads files that end up trying to #load it again.");
             }
 
             // If we already have a project for this path just use that
-            if (Context.CsxFileProjects.ContainsKey(csxPath))
+            if (scriptContext.CsxFileProjects.ContainsKey(csxPath))
             {
-                return Context.CsxFileProjects[csxPath];
+                return;
             }
 
             Logger.LogInformation($"Processing script {csxPath}...");
-            Context.CsxFilesBeingProcessed.Add(csxPath);
+            scriptContext.CsxFilesBeingProcessed.Add(csxPath);
+            scriptContext.CsxFiles.Add(csxPath);
 
             var processResult = FileParser.ProcessFile(csxPath, CsxParseOptions);
 
             // CSX file usings
-            Context.CsxUsings[csxPath] = processResult.Namespaces.Union(Context.CommonUsings).ToList();
-
-            var compilationOptions = new CSharpCompilationOptions(
-                outputKind: OutputKind.DynamicallyLinkedLibrary,
-                usings: Context.CsxUsings[csxPath], 
-                metadataReferenceResolver: ScriptMetadataResolver.Default);
+            scriptContext.CsxUsings[csxPath] = processResult.Namespaces.Union(Context.CommonUsings).ToList();
 
             // #r references
             var metadataReferencesDeclaredInCsx = new HashSet<MetadataReference>();
@@ -190,45 +212,28 @@ namespace OmniSharp.Script
                 AddMetadataReference(metadataReferencesDeclaredInCsx, assemblyReference);
             }
 
-            Context.CsxReferences[csxPath] = metadataReferencesDeclaredInCsx;
-            Context.CsxLoadReferences[csxPath] =
+            scriptContext.CsxReferences[csxPath] = metadataReferencesDeclaredInCsx;
+            scriptContext.CsxLoadReferences[csxPath] =
                 processResult
                     .LoadedScripts
                     .Distinct()
                     .Except(new[] {csxPath})
-                    .Select(loadedCsxPath => CreateCsxProject(loadedCsxPath))
                     .ToList();
 
-            // Create the wrapper project and add it to the workspace
-            Logger.LogDebug($"Creating project for script {csxPath}.");
-            var csxFileName = Path.GetFileName(csxPath);
-            var project = ProjectInfo.Create(
-                id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
-                version: VersionStamp.Create(),
-                name: csxFileName,
-                assemblyName: $"{csxFileName}.dll",
-                language: LanguageNames.CSharp,
-                compilationOptions: compilationOptions,
-                parseOptions: CsxParseOptions,
-                metadataReferences: Context.CommonReferences.Union(Context.CsxReferences[csxPath]),
-                projectReferences: Context.CsxLoadReferences[csxPath].Select(p => new ProjectReference(p.Id)),
-                isSubmission: true,
-                hostObjectType: typeof(InteractiveScriptGlobals));
-
-            Workspace.AddProject(project);
-            Workspace.AddDocument(project.Id, csxPath, SourceCodeKind.Script);
+            foreach (var loadedScript in scriptContext.CsxLoadReferences[csxPath])
+            {
+                CreateCsxProject(loadedScript, project, scriptContext);
+            }
 
             //----------LOG ONLY------------
-            Logger.LogDebug($"All references by {csxFileName}: \n{string.Join("\n", project.MetadataReferences.Select(r => r.Display))}");
-            Logger.LogDebug($"All #load projects by {csxFileName}: \n{string.Join("\n", Context.CsxLoadReferences[csxPath].Select(p => p.Name))}");
-            Logger.LogDebug($"All usings in {csxFileName}: \n{string.Join("\n", (project.CompilationOptions as CSharpCompilationOptions)?.Usings ?? new ImmutableArray<string>())}");
+            Logger.LogDebug($"All references by {csxPath}: \n{string.Join("\n", project.MetadataReferences.Select(r => r.Display))}");
+            Logger.LogDebug($"All #load by {csxPath}: \n{string.Join("\n", scriptContext.CsxLoadReferences[csxPath])}");
+            Logger.LogDebug($"All usings in {csxPath}: \n{string.Join("\n", (project.CompilationOptions as CSharpCompilationOptions)?.Usings ?? new ImmutableArray<string>())}");
             //------------------------------
 
             // Traversal administration
-            Context.CsxFileProjects[csxPath] = project;
-            Context.CsxFilesBeingProcessed.Remove(csxPath);
-
-            return project;
+            scriptContext.CsxFileProjects[csxPath] = project;
+            scriptContext.CsxFilesBeingProcessed.Remove(csxPath);
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
