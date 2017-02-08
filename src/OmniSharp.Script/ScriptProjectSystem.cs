@@ -48,18 +48,19 @@ namespace OmniSharp.Script
                 sourceReferenceResolver: ScriptSourceResolver.Default);
 
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
-
-        private OmniSharpWorkspace Workspace { get; }
-        private IOmniSharpEnvironment Env { get; }
-        private ILogger Logger { get; }
+        private readonly Dictionary<string, ProjectInfo> _projects;
+        private readonly OmniSharpWorkspace _workspace;
+        private readonly IOmniSharpEnvironment _env;
+        private readonly ILogger _logger;
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
-            Workspace = workspace;
-            Env = env;
-            Logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
+            _workspace = workspace;
+            _env = env;
+            _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
+            _projects = new Dictionary<string, ProjectInfo>();
         }
 
         public string Key => "Script";
@@ -68,17 +69,17 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            Logger.LogInformation($"Detecting CSX files in '{Env.Path}'.");
+            _logger.LogInformation($"Detecting CSX files in '{_env.Path}'.");
 
             // Nothing to do if there are no CSX files
-            var allCsxFiles = Directory.GetFiles(Env.Path, "*.csx", SearchOption.AllDirectories);
+            var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.AllDirectories);
             if (allCsxFiles.Length == 0)
             {
-                Logger.LogInformation("Could not find any CSX files");
+                _logger.LogInformation("Could not find any CSX files");
                 return;
             }
 
-            Logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
+            _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
             // explicitly inherit scripting library references to all global script object (InteractiveScriptGlobals) to be recognized
             var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
@@ -88,7 +89,7 @@ namespace OmniSharp.Script
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                     x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
-            var runtimeContexts = File.Exists(Path.Combine(Env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(Env.Path) : null;
+            var runtimeContexts = File.Exists(Path.Combine(_env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.Path) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
             // if we have no context, then we also have no dependencies
@@ -96,7 +97,7 @@ namespace OmniSharp.Script
             // and add mscorlib
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
-                Logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
+                _logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
 
                 AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
                 AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
@@ -109,7 +110,7 @@ namespace OmniSharp.Script
             {
                 // assume the first one
                 var runtimeContext = runtimeContexts.First();
-                Logger.LogInformation($"Found script runtime context '{runtimeContext?.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
+                _logger.LogInformation($"Found script runtime context '{runtimeContext?.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
 
                 var projectExporter = runtimeContext.CreateExporter("Release");
                 var projectDependencies = projectExporter.GetDependencies();
@@ -118,7 +119,7 @@ namespace OmniSharp.Script
                 var compilationAssemblies = projectDependencies.SelectMany(x => x.CompilationAssemblies);
                 foreach (var compilationAssembly in compilationAssemblies)
                 {
-                    Logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
+                    _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
                     AddMetadataReference(commonReferences, compilationAssembly.ResolvedPath);
                 }
 
@@ -133,7 +134,7 @@ namespace OmniSharp.Script
             // inject all inherited assemblies
             foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
-                Logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
+                _logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
                 AddMetadataReference(commonReferences, inheritedCompileLib);
             }
 
@@ -157,13 +158,14 @@ namespace OmniSharp.Script
                         hostObjectType: typeof(InteractiveScriptGlobals));
 
                     // add CSX project to workspace
-                    Workspace.AddProject(project);
-                    Workspace.AddDocument(project.Id, csxPath, SourceCodeKind.Script);
-                    Logger.LogDebug($"Added CSX project '{csxPath}' to the workspace.");
+                    _workspace.AddProject(project);
+                    _workspace.AddDocument(project.Id, csxPath, SourceCodeKind.Script);
+                    _projects[csxPath] = project;
+                    _logger.LogDebug($"Added CSX project '{csxPath}' to the workspace.");
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(0, ex, $"{csxPath} will be ignored due to an following error");
+                    _logger.LogError(0, ex, $"{csxPath} will be ignored due to an following error");
                 }
             }
         }
@@ -172,24 +174,48 @@ namespace OmniSharp.Script
         {
             if (!File.Exists(fileReference))
             {
-                Logger.LogWarning($"Couldn't add reference to '{fileReference}' because the file was not found.");
+                _logger.LogWarning($"Couldn't add reference to '{fileReference}' because the file was not found.");
                 return;
             }
 
             var metadataReference = _metadataFileReferenceCache.GetMetadataReference(fileReference);
             if (metadataReference == null)
             {
-                Logger.LogWarning($"Couldn't add reference to '{fileReference}' because the loaded metadata reference was null.");
+                _logger.LogWarning($"Couldn't add reference to '{fileReference}' because the loaded metadata reference was null.");
                 return;
             }
 
             referenceCollection.Add(metadataReference);
-            Logger.LogDebug($"Added reference to '{fileReference}'");
+            _logger.LogDebug($"Added reference to '{fileReference}'");
+        }
+
+        private ProjectInfo GetProjectFileInfo(string path)
+        {
+            ProjectInfo projectFileInfo;
+            if (!_projects.TryGetValue(path, out projectFileInfo))
+            {
+                return null;
+            }
+
+            return projectFileInfo;
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
-            return Task.FromResult<object>(null);
+            var document = _workspace.GetDocument(filePath);
+
+            var projectFilePath = document != null
+                ? document.Project.FilePath
+                : filePath;
+
+            var projectInfo = GetProjectFileInfo(projectFilePath);
+            if (projectInfo == null)
+            {
+                _logger.LogDebug($"Could not locate project for '{projectFilePath}'");
+                return Task.FromResult<object>(null);
+            }
+
+            return Task.FromResult<object>(projectInfo);
         }
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
