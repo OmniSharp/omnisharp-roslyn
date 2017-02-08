@@ -25,7 +25,7 @@ namespace OmniSharp.Script
     {
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
-        private static readonly IEnumerable<string> DefaultNamespaces = new[]
+        internal static readonly IEnumerable<string> DefaultNamespaces = new[]
         {
             "System",
             "System.IO",
@@ -203,7 +203,6 @@ namespace OmniSharp.Script
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
             var document = _workspace.GetDocument(filePath);
-
             var projectFilePath = document != null
                 ? document.Project.FilePath
                 : filePath;
@@ -215,12 +214,17 @@ namespace OmniSharp.Script
                 return Task.FromResult<object>(null);
             }
 
-            return Task.FromResult<object>(projectInfo);
+            return Task.FromResult<object>(new ScriptContextModel(filePath, projectInfo));
         }
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
-            return Task.FromResult<object>(null);
+            var scriptContextModels = new List<ScriptContextModel>();
+            foreach (var project in _projects)
+            {
+                scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value));
+            }
+            return Task.FromResult<object>(scriptContextModels);
         }
     }
 }
