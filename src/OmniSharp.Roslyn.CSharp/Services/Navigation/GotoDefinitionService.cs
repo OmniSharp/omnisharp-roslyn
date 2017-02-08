@@ -55,32 +55,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     }
                     else if (location.IsInMetadata && request.WantMetadata)
                     {
-                        try
+                        var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
+                        var metadataDocument = await _metadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+                        if (metadataDocument != null)
                         {
-                            var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                            var metadataDocument = await _metadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
-                            if (metadataDocument != null)
-                            {
-                                cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                                var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
-                                var lineSpan = metadataLocation.GetMappedLineSpan();
+                            cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
+                            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
+                            var lineSpan = metadataLocation.GetMappedLineSpan();
 
-                                response = new GotoDefinitionResponse
+                            response = new GotoDefinitionResponse
+                            {
+                                Line = lineSpan.StartLinePosition.Line,
+                                Column = lineSpan.StartLinePosition.Character,
+                                MetadataSource = new MetadataSource()
                                 {
-                                    Line = lineSpan.StartLinePosition.Line,
-                                    Column = lineSpan.StartLinePosition.Character,
-                                    MetadataSource = new MetadataSource()
-                                    {
-                                        AssemblyName = symbol.ContainingAssembly.Name,
-                                        ProjectName = document.Project.Name,
-                                        TypeName = _metadataHelper.GetSymbolName(symbol)
-                                    },
-                                };
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.ToString());
+                                    AssemblyName = symbol.ContainingAssembly.Name,
+                                    ProjectName = document.Project.Name,
+                                    TypeName = _metadataHelper.GetSymbolName(symbol)
+                                },
+                            };
                         }
                     }
                 }
