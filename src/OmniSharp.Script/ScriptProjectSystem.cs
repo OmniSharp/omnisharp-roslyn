@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.DotNet.ProjectModel;
@@ -48,6 +46,10 @@ namespace OmniSharp.Script
                 sourceReferenceResolver: ScriptSourceResolver.Default);
 
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+
+        // used for tracking purposes only
+        private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
+
         private readonly Dictionary<string, ProjectInfo> _projects;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
@@ -161,7 +163,7 @@ namespace OmniSharp.Script
                     _workspace.AddProject(project);
                     _workspace.AddDocument(project.Id, csxPath, SourceCodeKind.Script);
                     _projects[csxPath] = project;
-                    _logger.LogDebug($"Added CSX project '{csxPath}' to the workspace.");
+                    _logger.LogInformation($"Added CSX project '{csxPath}' to the workspace.");
                 }
                 catch (Exception ex)
                 {
@@ -186,6 +188,7 @@ namespace OmniSharp.Script
             }
 
             referenceCollection.Add(metadataReference);
+            _assemblyReferences.Add(fileReference);
             _logger.LogDebug($"Added reference to '{fileReference}'");
         }
 
@@ -214,7 +217,7 @@ namespace OmniSharp.Script
                 return Task.FromResult<object>(null);
             }
 
-            return Task.FromResult<object>(new ScriptContextModel(filePath, projectInfo));
+            return Task.FromResult<object>(new ScriptContextModel(filePath, projectInfo, _assemblyReferences));
         }
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
@@ -222,9 +225,9 @@ namespace OmniSharp.Script
             var scriptContextModels = new List<ScriptContextModel>();
             foreach (var project in _projects)
             {
-                scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value));
+                scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value, _assemblyReferences));
             }
-            return Task.FromResult<object>(scriptContextModels);
+            return Task.FromResult<object>(new ScriptContextModelCollection(scriptContextModels));
         }
     }
 }
