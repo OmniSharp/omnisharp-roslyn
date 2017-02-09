@@ -148,7 +148,7 @@ namespace OmniSharp.Script
                 {
                     var csxFileName = Path.GetFileName(csxPath);
                     var project = ProjectInfo.Create(
-                        id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
+                        id: ProjectId.CreateNewId(),
                         version: VersionStamp.Create(),
                         name: csxFileName,
                         assemblyName: $"{csxFileName}.dll",
