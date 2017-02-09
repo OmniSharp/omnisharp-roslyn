@@ -167,7 +167,7 @@ namespace OmniSharp.Script
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(0, ex, $"{csxPath} will be ignored due to an following error");
+                    _logger.LogError(ex, $"{csxPath} will be ignored due to an following error");
                 }
             }
         }
