@@ -3,9 +3,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 {
+    public class CSharpWorkspaceOptionsProvider : IWorkspaceOptionsProvider
+    {
+        
+    }
+
     public static class DocumentationConverter
     {
         /// <summary>
