@@ -348,6 +348,7 @@ namespace OmniSharp.DotNet
             }
 
             var csharpOptions = new CSharpCompilationOptions(outputKind)
+                .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
                 .WithAllowUnsafe(option.AllowUnsafe ?? false)
                 .WithPlatform(ParsePlatfrom(option.Platform))
                 .WithGeneralDiagnosticOption(generalDiagnosticOpt)
