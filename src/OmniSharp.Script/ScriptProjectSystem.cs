@@ -43,7 +43,8 @@ namespace OmniSharp.Script
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
                 metadataReferenceResolver: ScriptMetadataResolver.Default, 
-                sourceReferenceResolver: ScriptSourceResolver.Default);
+                sourceReferenceResolver: ScriptSourceResolver.Default, 
+                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
 
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
 
