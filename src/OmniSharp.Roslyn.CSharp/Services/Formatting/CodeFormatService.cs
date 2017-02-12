@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CodeFormatService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
+        public CodeFormatService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

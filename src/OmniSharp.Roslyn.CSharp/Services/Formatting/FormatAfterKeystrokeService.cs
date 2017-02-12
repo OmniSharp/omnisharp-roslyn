@@ -14,13 +14,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     public class FormatAfterKeystrokeService : RequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
-        private readonly OptionSet _options;
 
         [ImportingConstructor]
-        public FormatAfterKeystrokeService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
+        public FormatAfterKeystrokeService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
-            _options = FormattingWorker.GetOptions(_workspace, formattingOptions);
         }
 
         public async Task<FormatRangeResponse> Handle(FormatAfterKeystrokeRequest request)
@@ -33,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 
             var text = await document.GetTextAsync();
             int position = text.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-            var changes = await FormattingWorker.GetFormattingChangesAfterKeystroke(_workspace, _options, document, position, request.Char);
+            var changes = await FormattingWorker.GetFormattingChangesAfterKeystroke(_workspace, document, position, request.Char);
 
             return new FormatRangeResponse()
             {
