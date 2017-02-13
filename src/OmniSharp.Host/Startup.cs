@@ -189,15 +189,28 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    var message = $"The project system '{projectSystem.GetType().Name}' threw exception during initialization.\n{e.Message}\n{e.StackTrace}";
+                    var message = $"The project system '{projectSystem.GetType().FullName}' threw exception during initialization.";
                     // if a project system throws an unhandled exception it should not crash the entire server
-                    logger.LogError(message);
+                    logger.LogError(e, message);
+                }
+            }
+
+            // run all workspace options providers
+            foreach (var workspaceOptionsProvider in PluginHost.GetExports<IWorkspaceOptionsProvider>())
+            {
+                try
+                {
+                    Workspace.Options = workspaceOptionsProvider.Process(Workspace.Options);
+                }
+                catch (Exception e)
+                {
+                    var message = $"The workspace options provider '{workspaceOptionsProvider.GetType().FullName}' threw exception during initialization.";
+                    logger.LogError(e, message);
                 }
             }
 
             // Mark the workspace as initialized
             Workspace.Initialized = true;
-
             logger.LogInformation("Configuration finished.");
         }
 
