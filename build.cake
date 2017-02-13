@@ -454,7 +454,7 @@ Task("Test")
             var xunitToolsFolder = CombinePaths(toolsFolder, "xunit.runner.console", "tools");
             var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
             System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
-            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
+            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), true);
             var targetPath = CombinePaths(instanceFolder, $"{project}.dll");
             var logFile = CombinePaths(logFolder, $"{project}-{framework}-result.xml");
             var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
