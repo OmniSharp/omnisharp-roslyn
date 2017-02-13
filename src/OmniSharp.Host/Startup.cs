@@ -189,7 +189,7 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    var message = $"The project system '{projectSystem.GetType().Name}' threw exception during initialization.";
+                    var message = $"The project system '{projectSystem.GetType().FullName}' threw exception during initialization.";
                     // if a project system throws an unhandled exception it should not crash the entire server
                     logger.LogError(e, message);
                 }
@@ -204,7 +204,7 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    var message = $"The workspace optiosn provider '{workspaceOptionsProvider.GetType().Name}' threw exception during initialization.";
+                    var message = $"The workspace options provider '{workspaceOptionsProvider.GetType().FullName}' threw exception during initialization.";
                     logger.LogError(e, message);
                 }
             }

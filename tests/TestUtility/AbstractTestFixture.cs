@@ -72,8 +72,12 @@ namespace TestUtility
             var workspace = plugInHost.GetExport<OmniSharpWorkspace>();
 
             // OmniSharp ships only one provider, CSharpWorkspaceOptionsProvider
-            var formattingProvider = plugInHost.GetExports<IWorkspaceOptionsProvider>().FirstOrDefault() as CSharpWorkspaceOptionsProvider;
-            workspace.Options = formattingProvider?.Process(workspace.Options);
+            var formattingProvider = plugInHost.GetExports<IWorkspaceOptionsProvider>().Single() as CSharpWorkspaceOptionsProvider;
+
+            if (formattingProvider != null)
+            {
+                workspace.Options = formattingProvider.Process(workspace.Options);
+            }
 
             await TestHelpers.AddProjectToWorkspaceAsync(
                 workspace,
