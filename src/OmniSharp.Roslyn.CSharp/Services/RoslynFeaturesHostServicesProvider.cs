@@ -12,7 +12,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public RoslynFeaturesHostServicesProvider(IOmnisharpAssemblyLoader loader)
+        public RoslynFeaturesHostServicesProvider(IAssemblyLoader loader)
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 

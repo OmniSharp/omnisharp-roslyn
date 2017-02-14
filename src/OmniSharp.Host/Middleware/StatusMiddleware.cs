@@ -10,9 +10,9 @@ namespace OmniSharp.Middleware
     public class StatusMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
-        public StatusMiddleware(RequestDelegate next, OmnisharpWorkspace workspace)
+        public StatusMiddleware(RequestDelegate next, OmniSharpWorkspace workspace)
         {
             _next = next;
             _workspace = workspace;

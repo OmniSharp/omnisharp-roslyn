@@ -1,10 +1,7 @@
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Services;
 using TestUtility;
-using TestUtility.Annotate;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -12,14 +9,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class MetadataFacts : AbstractTestFixture
     {
-        private readonly ILogger _logger;
-        private readonly IOmnisharpAssemblyLoader _loader;
-
         public MetadataFacts(ITestOutputHelper output)
             : base(output)
         {
-            _logger = this.LoggerFactory.CreateLogger<MetadataFacts>();
-            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         [Fact]
@@ -37,7 +29,7 @@ class Foo {
                 new TestFile("foo.cs", source1),
                 new TestFile("bar.cs", source2));
 
-            var controller = new MetadataService(workspace, new MetadataHelper(_loader));
+            var controller = new MetadataService(workspace, new MetadataHelper(this.AssemblyLoader));
             var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = AssemblyHelpers.CorLibName,
@@ -63,7 +55,7 @@ class Foo {
                 new TestFile("foo.cs", source1),
                 new TestFile("bar.cs", source2));
 
-            var controller = new MetadataService(workspace, new MetadataHelper(_loader));
+            var controller = new MetadataService(workspace, new MetadataHelper(this.AssemblyLoader));
             var response = await controller.Handle(new MetadataRequest
             {
 #if NETCOREAPP1_1
@@ -93,7 +85,7 @@ class Foo {
                 new TestFile("foo.cs", source1),
                 new TestFile("bar.cs", source2));
 
-            var controller = new MetadataService(workspace, new MetadataHelper(_loader));
+            var controller = new MetadataService(workspace, new MetadataHelper(this.AssemblyLoader));
             var response = await controller.Handle(new MetadataRequest
             {
                 AssemblyName = AssemblyHelpers.CorLibName,

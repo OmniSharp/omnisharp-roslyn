@@ -12,14 +12,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     [OmniSharpHandler(OmnisharpEndpoints.CodeFormat, LanguageNames.CSharp)]
     public class CodeFormatService : RequestHandler<CodeFormatRequest, CodeFormatResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
-        private readonly OptionSet _options;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CodeFormatService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        public CodeFormatService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
-            _options = FormattingWorker.GetOptions(_workspace, formattingOptions);
         }
 
         public async Task<CodeFormatResponse> Handle(CodeFormatRequest request)
@@ -32,14 +30,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 
             if (request.WantsTextChanges)
             {
-                var textChanges = await FormattingWorker.GetFormattedDocumentTextChanges(_workspace, _options, document);
+                var textChanges = await FormattingWorker.GetFormattedDocumentTextChanges(_workspace, document);
                 return new CodeFormatResponse()
                 {
                     Changes = textChanges
                 };
             }
 
-            var newText = await FormattingWorker.GetFormattedDocument(_workspace, _options, document);
+            var newText = await FormattingWorker.GetFormattedDocument(_workspace, document);
             return new CodeFormatResponse()
             {
                 Buffer = newText

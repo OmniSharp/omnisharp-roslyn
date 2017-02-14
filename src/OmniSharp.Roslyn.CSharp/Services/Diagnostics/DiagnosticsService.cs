@@ -14,10 +14,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly CSharpDiagnosticService _diagnostics;
         private readonly DiagnosticEventForwarder _forwarder;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public DiagnosticsService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
+        public DiagnosticsService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
         {
             _forwarder = forwarder;
             _workspace = workspace;

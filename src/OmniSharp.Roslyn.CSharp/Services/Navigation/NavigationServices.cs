@@ -12,10 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.NavigateUp, LanguageNames.CSharp)]
     public class NavigateUpService : RequestHandler<NavigateUpRequest, NavigateResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public NavigateUpService(OmnisharpWorkspace workspace)
+        public NavigateUpService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -29,10 +29,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.NavigateDown, LanguageNames.CSharp)]
     public class NavigateDownService : RequestHandler<NavigateDownRequest, NavigateResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public NavigateDownService(OmnisharpWorkspace workspace)
+        public NavigateDownService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

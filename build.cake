@@ -72,6 +72,7 @@ var packageFolder = CombinePaths(artifactFolder, "package");
 var scriptFolder =  CombinePaths(artifactFolder, "scripts");
 
 var packagesFolder = CombinePaths(workingDirectory, buildPlan.PackagesFolder);
+var msbuildFolder = CombinePaths(workingDirectory, "msbuild");
 var msbuildBaseFolder = CombinePaths(workingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
@@ -101,7 +102,7 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
-    .IsDependentOn("AcquirePackages")
+    .IsDependentOn("SetupMSBuild")
     .Does(() =>
 {
 });
@@ -109,7 +110,7 @@ Task("Setup")
 /// <summary>
 /// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
 /// </summary>
-Task("AcquirePackages")
+Task("SetupMSBuild")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
@@ -206,6 +207,26 @@ Task("AcquirePackages")
         DeleteFiles(CombinePaths(net46SdkTargetFolder, "*.nupkg"));
         DeleteFiles(CombinePaths(netCoreAppSdkTargetFolder, "*.nupkg"));
     }
+
+    // Copy NuGet ImportAfter targets
+    var nugetImportAfterTargetsName = "Microsoft.NuGet.ImportAfter.targets";
+    var nugetImportAfterTargetsFolder = CombinePaths("15.0", "Microsoft.Common.targets", "ImportAfter");
+    var nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
+
+    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
+    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
+
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
+
+    nugetImportAfterTargetsFolder = CombinePaths("15.0", "SolutionFile", "ImportAfter");
+    nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
+
+    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
+    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
+
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
 
     // Copy NuGet.targets from NuGet.Build.Tasks
     var nugetTargetsName = "NuGet.targets";
@@ -513,7 +534,7 @@ Task("Test")
             var xunitToolsFolder = CombinePaths(toolsFolder, "xunit.runner.console", "tools");
             var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
             System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
-            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.desktop.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.desktop.dll"), true);
+            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), true);
             var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
             var logFile = CombinePaths(logFolder, $"{testProject}-{framework}-result.xml");
             var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";

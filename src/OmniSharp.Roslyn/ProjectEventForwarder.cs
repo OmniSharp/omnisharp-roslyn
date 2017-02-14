@@ -10,14 +10,14 @@ namespace OmniSharp.Roslyn
     [Export]
     public class ProjectEventForwarder
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IEventEmitter _emitter;
         private readonly ISet<SimpleWorkspaceEvent> _queue = new HashSet<SimpleWorkspaceEvent>();
         private readonly object _lock = new object();
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
-        public ProjectEventForwarder(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems, IEventEmitter emitter)
+        public ProjectEventForwarder(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems, IEventEmitter emitter)
         {
             _projectSystems = projectSystems;
             _workspace = workspace;

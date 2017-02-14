@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
-namespace OmniSharp
+namespace OmniSharp.Utilities
 {
     public static class PlatformHelper
     {
@@ -18,7 +17,7 @@ namespace OmniSharp
         private static string FindMonoPath()
         {
             // To locate Mono on unix, we use the 'which' command (https://en.wikipedia.org/wiki/Which_(Unix))
-            var monoFilePath = LaunchProcessAndCaptureOutput("which", "mono");
+            var monoFilePath = RunOnBashAndCaptureOutput("which", "mono");
 
             if (string.IsNullOrEmpty(monoFilePath))
             {
@@ -88,7 +87,7 @@ namespace OmniSharp
                 // the final path.
 
                 var originalPath = paths[paths.Count - 1];
-                var newPath = LaunchProcessAndCaptureOutput("readlink", $"{originalPath}");
+                var newPath = RunOnBashAndCaptureOutput("readlink", $"{originalPath}");
 
                 if (string.IsNullOrEmpty(newPath) ||
                     string.CompareOrdinal(originalPath, newPath) == 0)
@@ -145,34 +144,12 @@ namespace OmniSharp
         private static string CanonicalizeDirectory(string directoryName)
         {
             // Use "pwd -P" to get the directory name with all symbolic links on Unix.
-            return LaunchProcessAndCaptureOutput("pwd", "-P", directoryName);
+            return RunOnBashAndCaptureOutput("pwd", "-P", directoryName);
         }
 
-        private static string LaunchProcessAndCaptureOutput(string command, string args, string workingDirectory = null)
+        private static string RunOnBashAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)
         {
-            var startInfo = new ProcessStartInfo(command, args);
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = false;
-            startInfo.WorkingDirectory = workingDirectory ?? string.Empty;
-
-            var process = new Process();
-            process.StartInfo = startInfo;
-
-            try
-            {
-                process.Start();
-                var output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                return output.Trim();
-            }
-            catch
-            {
-                Console.WriteLine($"Failed to launch '{command}' with args, '{args}'");
-                return null;
-            }
+            return ProcessHelper.RunAndCaptureOutput("/bin/bash", $"-c '{fileName} {arguments}'", workingDirectory);
         }
     }
 }

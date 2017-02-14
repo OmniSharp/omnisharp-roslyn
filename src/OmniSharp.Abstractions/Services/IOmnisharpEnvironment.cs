@@ -2,7 +2,7 @@
 
 namespace OmniSharp.Services
 {
-    public interface IOmnisharpEnvironment
+    public interface IOmniSharpEnvironment
     {
         LogLevel TraceType { get; }
         int Port { get; }
@@ -10,5 +10,6 @@ namespace OmniSharp.Services
         string Path { get; }
         string SolutionFilePath { get; }
         TransportType TransportType { get; }
+        string[] OtherArgs { get; }
     }
 }

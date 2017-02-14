@@ -15,10 +15,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     [OmniSharpHandler(OmnisharpEndpoints.Rename, LanguageNames.CSharp)]
     public class RenameService : RequestHandler<RenameRequest, RenameResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public RenameService(OmnisharpWorkspace workspace)
+        public RenameService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

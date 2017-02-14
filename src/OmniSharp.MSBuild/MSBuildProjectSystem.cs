@@ -5,31 +5,32 @@ using System.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NuGet.ProjectModel;
 using OmniSharp.Models;
 using OmniSharp.Models.v1;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.MSBuild
 {
     [Export(typeof(IProjectSystem)), Shared]
     public class MSBuildProjectSystem : IProjectSystem
     {
-        private readonly OmnisharpWorkspace _workspace;
-        private readonly IOmnisharpEnvironment _environment;
-        private readonly ILoggerFactory _loggerFactory;
+        private readonly IOmniSharpEnvironment _environment;
+        private readonly OmniSharpWorkspace _workspace;
+        private readonly DotNetCliService _dotNetCliService;
+        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
-        private readonly IMetadataFileReferenceCache _metadataReferenceCache;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
         private readonly object _gate = new object();
@@ -40,8 +41,9 @@ namespace OmniSharp.MSBuild
 
         private static readonly Guid[] _supportedProjectTypes = new[]
         {
-            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"), // CSharp
-            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556")  // CSharp (New .NET Core csproj)
+            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"),  // CSharp
+            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556"),  // CSharp (New .NET Core csproj)
+            new Guid("13B669BE-BB05-4DDF-9536-439F39A36129")   // Project GUID used by CLI when manipulation solution files
         };
 
         public string Key { get; } = "MsBuild";
@@ -50,22 +52,24 @@ namespace OmniSharp.MSBuild
 
         [ImportingConstructor]
         public MSBuildProjectSystem(
-            OmnisharpWorkspace workspace,
-            IOmnisharpEnvironment environment,
-            ILoggerFactory loggerFactory,
+            IOmniSharpEnvironment environment,
+            OmniSharpWorkspace workspace,
+            DotNetCliService dotNetCliService,
+            IMetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
-            IMetadataFileReferenceCache metadataReferenceCache,
-            IFileSystemWatcher fileSystemWatcher)
+            IFileSystemWatcher fileSystemWatcher,
+            ILoggerFactory loggerFactory)
         {
-            _workspace = workspace;
             _environment = environment;
-            _loggerFactory = loggerFactory;
+            _workspace = workspace;
+            _dotNetCliService = dotNetCliService;
+            _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
-            _metadataReferenceCache = metadataReferenceCache;
+            _loggerFactory = loggerFactory;
 
             _projects = new ProjectFileInfoCollection();
-            _logger = loggerFactory.CreateLogger("OmniSharp#MSBuild");
+            _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
         }
 
         public void Initalize(IConfiguration configuration)
@@ -88,11 +92,26 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectFileInfo in _projects)
             {
-                UpdateProject(projectFileInfo);
+                var projectFilePath = projectFileInfo.ProjectFilePath;
+                var projectAssetsFile = projectFileInfo.ProjectAssetsFile;
 
                 // TODO: This needs some improvement. Currently, it tracks both deletions and changes
                 // as "updates". We should properly remove projects that are deleted.
-                _fileSystemWatcher.Watch(projectFileInfo.ProjectFilePath, OnProjectChanged);
+                _fileSystemWatcher.Watch(projectFilePath, file =>
+                {
+                    OnProjectChanged(projectFilePath, allowAutoRestore: true);
+                });
+
+                if (!string.IsNullOrEmpty(projectAssetsFile))
+                {
+                    _fileSystemWatcher.Watch(projectAssetsFile, file =>
+                    {
+                        OnProjectChanged(projectFilePath, allowAutoRestore: false);
+                    });
+                }
+
+                UpdateProject(projectFileInfo);
+                CheckForUnresolvedDependences(projectFileInfo, allowAutoRestore: true);
             }
         }
 
@@ -281,7 +300,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger("OmniSharp#ProjectFileInfo"), _options, diagnostics, isUnityProject);
+                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics, isUnityProject);
 
                 if (projectFileInfo == null)
                 {
@@ -308,11 +327,10 @@ namespace OmniSharp.MSBuild
             return projectFileInfo;
         }
 
-        private void OnProjectChanged(string projectFilePath)
+        private void OnProjectChanged(string projectFilePath, bool allowAutoRestore)
         {
             var newProjectFileInfo = CreateProjectFileInfo(projectFilePath);
 
-            // TODO: Should we remove the entry if the project is malformed?
             if (newProjectFileInfo != null)
             {
                 lock (_gate)
@@ -322,7 +340,9 @@ namespace OmniSharp.MSBuild
                     {
                         _projects[projectFilePath] = newProjectFileInfo;
                         newProjectFileInfo.SetProjectId(oldProjectFileInfo.ProjectId);
+
                         UpdateProject(newProjectFileInfo);
+                        CheckForUnresolvedDependences(newProjectFileInfo, oldProjectFileInfo, allowAutoRestore);
                     }
                 }
             }
@@ -362,17 +382,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                // If all is OK, add a new document.
-                using (var stream = File.OpenRead(sourceFile))
-                {
-                    var sourceText = SourceText.From(stream);
-                    var documentId = DocumentId.CreateNewId(project.Id);
-                    var version = VersionStamp.Create();
-                    var loader = TextLoader.From(TextAndVersion.Create(sourceText, version));
-                    var documentInfo = DocumentInfo.Create(documentId, sourceFile, filePath: sourceFile, loader: loader);
-
-                    _workspace.AddDocument(documentInfo);
-                }
+                _workspace.AddDocument(project.Id, sourceFile);
             }
 
             // Removing any remaining documents from the project.
@@ -460,7 +470,7 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    var metadataReference = _metadataReferenceCache.GetMetadataReference(referencePath);
+                    var metadataReference = _metadataFileReferenceCache.GetMetadataReference(referencePath);
 
                     if (existingReferences.Remove(metadataReference))
                     {
@@ -480,6 +490,104 @@ namespace OmniSharp.MSBuild
             {
                 _workspace.RemoveMetadataReference(project.Id, existingReference);
             }
+        }
+
+        private List<PackageDependency> CreatePackageDependencies(IEnumerable<PackageReference> packageReferences)
+        {
+            var list = new List<PackageDependency>();
+
+            foreach (var packageReference in packageReferences)
+            {
+                var dependency = new PackageDependency
+                {
+                    Name = packageReference.Identity.Id,
+                    Version = packageReference.Identity.Version?.ToNormalizedString()
+                };
+
+                list.Add(dependency);
+            }
+
+            return list;
+        }
+
+        private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, ProjectFileInfo previousProjectFileInfo = null, bool allowAutoRestore = false)
+        {
+            List<PackageDependency> unresolvedDependencies;
+
+            if (!File.Exists(projectFileInfo.ProjectAssetsFile))
+            {
+                // Simplest case: If there's no lock file and the project file has package references,
+                // there are certainly unresolved dependencies.
+                unresolvedDependencies = CreatePackageDependencies(projectFileInfo.PackageReferences);
+            }
+            else
+            {
+                // Note: This is a bit of misnmomer. It's entirely possible that a package reference has been removed
+                // and a restore needs to happen in order to update project.assets.json file. Otherwise, the MSBuild targets
+                // will still resolve the removed reference as a reference in the user's project. In that case, the package
+                // reference isn't so much "unresolved" as "incorrectly resolved".
+                IEnumerable<PackageReference> unresolvedPackageReferences;
+
+                // Did the project file change? Diff the package references and see if there are unresolved dependencies.
+                if (previousProjectFileInfo != null)
+                {
+                    var packageReferencesToRemove = new HashSet<PackageReference>(previousProjectFileInfo.PackageReferences);
+                    var packageReferencesToAdd = new HashSet<PackageReference>();
+
+                    foreach (var packageReference in projectFileInfo.PackageReferences)
+                    {
+                        if (packageReferencesToRemove.Contains(packageReference))
+                        {
+                            packageReferencesToRemove.Remove(packageReference);
+                        }
+                        else
+                        {
+                            packageReferencesToAdd.Add(packageReference);
+                        }
+                    }
+
+                    unresolvedPackageReferences = packageReferencesToAdd.Concat(packageReferencesToRemove);
+                }
+                else
+                {
+                    // Finally, if the project.assets.json file exists but there's no old project to compare against,
+                    // we'll just check to ensure that all of the project's package references can be found in the
+                    // current project.assets.json file.
+
+                    var lockFileFormat = new LockFileFormat();
+                    var lockFile = lockFileFormat.Read(projectFileInfo.ProjectAssetsFile);
+
+                    unresolvedPackageReferences = projectFileInfo.PackageReferences
+                        .Where(pr => lockFile.GetLibrary(pr.Identity.Id, pr.Identity.Version) == null);
+                }
+
+                unresolvedDependencies = CreatePackageDependencies(unresolvedPackageReferences);
+            }
+
+            if (unresolvedDependencies.Count > 0)
+            {
+                if (allowAutoRestore && _options.EnablePackageAutoRestore)
+                {
+                    _dotNetCliService.Restore(projectFileInfo.ProjectFilePath, onFailure: () =>
+                    {
+                        FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+                    });
+                }
+                else
+                {
+                    FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+                }
+            }
+        }
+
+        private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, List<PackageDependency> unresolvedDependencies)
+        {
+            _eventEmitter.Emit(EventTypes.UnresolvedDependencies,
+                new UnresolvedDependenciesMessage()
+                {
+                    FileName = projectFileInfo.ProjectFilePath,
+                    UnresolvedDependencies = unresolvedDependencies
+                });
         }
 
         private ProjectFileInfo GetProjectFileInfo(string path)

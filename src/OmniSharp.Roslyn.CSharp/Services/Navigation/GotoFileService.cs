@@ -10,10 +10,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.GotoFile, LanguageNames.CSharp)]
     public class GotoFileService : RequestHandler<GotoFileRequest, QuickFixResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoFileService(OmnisharpWorkspace workspace)
+        public GotoFileService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

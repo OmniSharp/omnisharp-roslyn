@@ -12,7 +12,7 @@ namespace OmniSharp.Roslyn
 {
     public class MetadataHelper
     {
-        private readonly IOmnisharpAssemblyLoader _loader;
+        private readonly IAssemblyLoader _loader;
         private readonly Lazy<Assembly> _featureAssembly;
         private readonly Lazy<Assembly> _csharpFeatureAssembly;
         private readonly Lazy<Assembly> _workspaceAssembly;
@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn
         private const string AddSourceToAsync = "AddSourceToAsync";
         private const string Create = "Create";
 
-        public MetadataHelper(IOmnisharpAssemblyLoader loader)
+        public MetadataHelper(IAssemblyLoader loader)
         {
             _loader = loader;
             _featureAssembly = _loader.LazyLoad(Configuration.RoslynFeatures);
