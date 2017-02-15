@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Services
 {
-    public class OmnisharpEnvironment : IOmnisharpEnvironment
+    public class OmniSharpEnvironment : IOmniSharpEnvironment
     {
-        public OmnisharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType, string[] otherArgs)
+        public OmniSharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType, string[] otherArgs)
         {
             if (System.IO.Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {

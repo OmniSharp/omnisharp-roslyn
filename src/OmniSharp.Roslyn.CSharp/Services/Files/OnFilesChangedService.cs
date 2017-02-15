@@ -1,11 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using OmniSharp.Services;
+using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {

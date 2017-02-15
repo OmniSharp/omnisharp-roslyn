@@ -11,19 +11,13 @@ namespace TestUtility
 {
     public static class TestHelpers
     {
-#if NETSTANDARD1_6
-        public const string CorLib = "System.Private.CoreLib";
-#else
-        public const string CorLib = "mscorlib";
-#endif
-
-        public static OmnisharpWorkspace CreateCsxWorkspace(TestFile testFile)
+        public static OmniSharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
             var versionStamp = VersionStamp.Create();
             var mscorlib = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(object)).Location);
             var systemCore = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(Enumerable)).Location);
             var references = new[] { mscorlib, systemCore };
-            var workspace = new OmnisharpWorkspace(
+            var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
@@ -56,7 +50,7 @@ namespace TestUtility
             return workspace;
         }
 
-        public static Task AddProjectToWorkspaceAsync(OmnisharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
+        public static Task AddProjectToWorkspaceAsync(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
         {
             var versionStamp = VersionStamp.Create();
 

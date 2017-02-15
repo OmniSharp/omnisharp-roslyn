@@ -16,11 +16,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
     [OmniSharpHandler(OmnisharpEndpoints.TestCommand, LanguageNames.CSharp)]
     public class TestCommandService : RequestHandler<TestCommandRequest, GetTestCommandResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
         private IEnumerable<ITestCommandProvider> _testCommandProviders;
 
         [ImportingConstructor]
-        public TestCommandService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ITestCommandProvider> testCommandProviders)
+        public TestCommandService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ITestCommandProvider> testCommandProviders)
         {
             _workspace = workspace;
             _testCommandProviders = testCommandProviders;

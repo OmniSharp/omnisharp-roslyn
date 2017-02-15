@@ -21,7 +21,7 @@ namespace OmniSharp.DotNet.Cache
 
         public ProjectStatesCache(ILoggerFactory loggerFactory, IEventEmitter emitter)
         {
-            _logger = loggerFactory?.CreateLogger<ProjectStatesCache>() ?? new DummyLogger<ProjectStatesCache>();
+            _logger = loggerFactory.CreateLogger<ProjectStatesCache>();
             _emitter = emitter;
         }
 

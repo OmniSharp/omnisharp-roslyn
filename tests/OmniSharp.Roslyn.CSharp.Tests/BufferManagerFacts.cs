@@ -89,7 +89,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnNearestPath()
         {
-            var workspace = new OmnisharpWorkspace(
+            var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
@@ -151,9 +151,9 @@ namespace OmniSharp.Tests
             Assert.Equal("interface I {}", (await document.GetTextAsync()).ToString());
         }
 
-        private async static Task<OmnisharpWorkspace> GetWorkspaceWithProjects()
+        private async static Task<OmniSharpWorkspace> GetWorkspaceWithProjects()
         {
-            var workspace = new OmnisharpWorkspace(
+            var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 

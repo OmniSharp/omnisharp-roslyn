@@ -11,12 +11,12 @@ namespace OmniSharp.Roslyn
 {
     public class BufferManager
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IDictionary<string, IEnumerable<DocumentId>> _transientDocuments = new Dictionary<string, IEnumerable<DocumentId>>(StringComparer.OrdinalIgnoreCase);
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
 
-        public BufferManager(OmnisharpWorkspace workspace)
+        public BufferManager(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
@@ -139,9 +139,9 @@ namespace OmniSharp.Roslyn
                 _transientDocumentIds.UnionWith(documentIds);
             }
 
-            foreach (var document in documentInfos)
+            foreach (var documentInfo in documentInfos)
             {
-                _workspace.AddDocument(document);
+                _workspace.AddDocument(documentInfo);
             }
 
             return true;

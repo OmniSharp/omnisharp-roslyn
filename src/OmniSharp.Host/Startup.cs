@@ -19,6 +19,7 @@ using OmniSharp.Middleware;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
+using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
 
@@ -26,8 +27,11 @@ namespace OmniSharp
 {
     public class Startup
     {
-        public Startup()
+        private readonly IOmniSharpEnvironment _omniSharpEnvironment;
+
+        public Startup(IOmniSharpEnvironment omniSharpEnvironment)
         {
+            _omniSharpEnvironment = omniSharpEnvironment;
             var appEnv = PlatformServices.Default.Application;
 
             var configBuilder = new ConfigurationBuilder()
@@ -35,14 +39,14 @@ namespace OmniSharp
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
-            if (Program.Environment.OtherArgs != null)
+            if (omniSharpEnvironment.OtherArgs != null)
             {
-                configBuilder.AddCommandLine(Program.Environment.OtherArgs);
+                configBuilder.AddCommandLine(omniSharpEnvironment.OtherArgs);
             }
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
-                new PhysicalFileProvider(Program.Environment.Path),
+                new PhysicalFileProvider(omniSharpEnvironment.Path),
                 "omnisharp.json",
                 optional: true,
                 reloadOnChange: false);
@@ -52,14 +56,14 @@ namespace OmniSharp
 
         public IConfiguration Configuration { get; }
 
-        public OmnisharpWorkspace Workspace { get; set; }
+        public OmniSharpWorkspace Workspace { get; set; }
 
         public CompositionHost PluginHost { get; private set; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             // Add the omnisharp workspace to the container
-            services.AddSingleton(typeof(OmnisharpWorkspace), (x) => Workspace);
+            services.AddSingleton(typeof(OmniSharpWorkspace), (x) => Workspace);
             services.AddSingleton(typeof(CompositionHost), (x) => PluginHost);
 
             // Caching
@@ -70,13 +74,14 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static CompositionHost ConfigureMef(IServiceProvider serviceProvider,
-                                                   OmniSharpOptions options,
-                                                   IEnumerable<Assembly> assemblies)
+        public static CompositionHost ConfigureMef(
+            IServiceProvider serviceProvider,
+            OmniSharpOptions options,
+            IEnumerable<Assembly> assemblies)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
-                .Concat(new[] { typeof(OmnisharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
                 .Distinct();
 
             foreach (var assembly in assemblies)
@@ -86,10 +91,10 @@ namespace OmniSharp
 
             var memoryCache = serviceProvider.GetService<IMemoryCache>();
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var env = serviceProvider.GetService<IOmnisharpEnvironment>();
+            var env = serviceProvider.GetService<IOmniSharpEnvironment>();
             var writer = serviceProvider.GetService<ISharedTextWriter>();
             var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
-            var loader = serviceProvider.GetService<IOmnisharpAssemblyLoader>();
+            var loader = serviceProvider.GetService<IAssemblyLoader>();
 
             config = config
                 .WithProvider(MefValueProvider.From(serviceProvider))
@@ -119,13 +124,13 @@ namespace OmniSharp
             return container;
         }
 
-        public void Configure(IApplicationBuilder app,
-                              IServiceProvider serviceProvider,
-                              IOmnisharpEnvironment env,
-                              ILoggerFactory loggerFactory,
-                              ISharedTextWriter writer,
-                              IOmnisharpAssemblyLoader loader,
-                              IOptions<OmniSharpOptions> optionsAccessor)
+        public void Configure(
+            IApplicationBuilder app,
+            IServiceProvider serviceProvider,
+            ILoggerFactory loggerFactory,
+            ISharedTextWriter writer,
+            IAssemblyLoader loader,
+            IOptions<OmniSharpOptions> optionsAccessor)
         {
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
@@ -139,15 +144,15 @@ namespace OmniSharp
 
             PluginHost = ConfigureMef(serviceProvider, optionsAccessor.Value, assemblies);
 
-            Workspace = PluginHost.GetExport<OmnisharpWorkspace>();
+            Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
-                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, env));
+                loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, _omniSharpEnvironment));
             }
             else
             {
-                loggerFactory.AddConsole((category, level) => LogFilter(category, level, env));
+                loggerFactory.AddConsole((category, level) => LogFilter(category, level, _omniSharpEnvironment));
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
@@ -163,13 +168,13 @@ namespace OmniSharp
             app.UseMiddleware<StatusMiddleware>();
             app.UseMiddleware<StopServerMiddleware>();
 
-            if (env.TransportType == TransportType.Stdio)
+            if (_omniSharpEnvironment.TransportType == TransportType.Stdio)
             {
-                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_omniSharpEnvironment.Path}' on host {_omniSharpEnvironment.HostPID}.");
             }
             else
             {
-                logger.LogInformation($"Omnisharp server running on port '{env.Port}' at location '{env.Path}' on host {env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running on port '{_omniSharpEnvironment.Port}' at location '{_omniSharpEnvironment.Path}' on host {_omniSharpEnvironment.HostPID}.");
             }
 
             // ProjectEventForwarder register event to OmnisharpWorkspace during instantiation
@@ -184,28 +189,39 @@ namespace OmniSharp
                 }
                 catch (Exception e)
                 {
-                    var message = $"The project system '{projectSystem.GetType().Name}' threw exception during initialization.\n{e.Message}\n{e.StackTrace}";
+                    var message = $"The project system '{projectSystem.GetType().FullName}' threw exception during initialization.";
                     // if a project system throws an unhandled exception it should not crash the entire server
-                    logger.LogError(message);
+                    logger.LogError(e, message);
+                }
+            }
+
+            // run all workspace options providers
+            foreach (var workspaceOptionsProvider in PluginHost.GetExports<IWorkspaceOptionsProvider>())
+            {
+                try
+                {
+                    Workspace.Options = workspaceOptionsProvider.Process(Workspace.Options);
+                }
+                catch (Exception e)
+                {
+                    var message = $"The workspace options provider '{workspaceOptionsProvider.GetType().FullName}' threw exception during initialization.";
+                    logger.LogError(e, message);
                 }
             }
 
             // Mark the workspace as initialized
             Workspace.Initialized = true;
-
             logger.LogInformation("Configuration finished.");
         }
 
-        private static bool LogFilter(string category, LogLevel level, IOmnisharpEnvironment environment)
+        private static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
         {
             if (environment.TraceType > level)
             {
                 return false;
             }
 
-            if (string.Equals(category,
-                              typeof(ExceptionHandlerMiddleware).FullName,
-                              StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(category, typeof(ExceptionHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -215,16 +231,12 @@ namespace OmniSharp
                 return false;
             }
 
-            if (string.Equals(category,
-                              typeof(WorkspaceInformationService).FullName,
-                              StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(category, typeof(WorkspaceInformationService).FullName, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            if (string.Equals(category,
-                              typeof(ProjectEventForwarder).FullName,
-                              StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(category, typeof(ProjectEventForwarder).FullName, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

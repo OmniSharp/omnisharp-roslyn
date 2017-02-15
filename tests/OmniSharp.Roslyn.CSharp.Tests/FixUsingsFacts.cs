@@ -2,13 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using OmniSharp.Services;
 using TestUtility;
-using TestUtility.Annotate;
 using TestUtility.Fake;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,14 +17,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private const string fileName = "test.cs";
 
-        private readonly ILogger _logger;
-        private readonly IOmnisharpAssemblyLoader _loader;
-
         public FixUsingsFacts(ITestOutputHelper output)
             : base(output)
         {
-            _logger = this.LoggerFactory.CreateLogger<FixUsingsFacts>();
-            _loader = new AnnotateAssemblyLoader(_logger);
         }
 
         protected override IEnumerable<Assembly> GetHostAssemblies()
@@ -488,7 +481,7 @@ namespace OmniSharp
             var fakeOptions = new FakeOmniSharpOptions();
             fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });
             var providers = host.GetExports<ICodeActionProvider>();
-            var controller = new FixUsingService(workspace, this.LoggerFactory, _loader, providers);
+            var controller = new FixUsingService(workspace, this.LoggerFactory, this.AssemblyLoader, providers);
             var request = new FixUsingsRequest
             {
                 FileName = fileName,

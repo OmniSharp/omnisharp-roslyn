@@ -15,10 +15,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmnisharpEndpoints.GotoRegion, LanguageNames.CSharp)]
     public class GotoRegionService : RequestHandler<GotoRegionRequest, QuickFixResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoRegionService(OmnisharpWorkspace workspace)
+        public GotoRegionService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

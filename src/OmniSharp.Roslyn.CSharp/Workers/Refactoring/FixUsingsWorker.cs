@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -23,9 +24,6 @@ namespace OmniSharp
 
     public class FixUsingsWorker
     {
-        private const string AddImportProviderName = "Microsoft.CodeAnalysis.CSharp.AddImport.CSharpAddImportCodeFixProvider";
-        private const string RemoveUnnecessaryUsingsProviderName = "Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryImports.CSharpRemoveUnnecessaryImportsCodeFixProvider";
-
         private readonly IEnumerable<ICodeActionProvider> _providers;
         private readonly CodeFixProvider _addImportProvider;
         private readonly CodeFixProvider _removeUnnecessaryUsingsProvider;
@@ -36,8 +34,8 @@ namespace OmniSharp
 
             var codeFixProviders = providers.SelectMany(p => p.CodeFixes);
 
-            _addImportProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, AddImportProviderName);
-            _removeUnnecessaryUsingsProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, RemoveUnnecessaryUsingsProviderName);
+            _addImportProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, CodeActionHelper.AddImportProviderName);
+            _removeUnnecessaryUsingsProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, CodeActionHelper.RemoveUnnecessaryUsingsProviderName);
         }
 
         private static CodeFixProvider FindCodeFixProviderByTypeFullName(IEnumerable<CodeFixProvider> providers, string fullName)

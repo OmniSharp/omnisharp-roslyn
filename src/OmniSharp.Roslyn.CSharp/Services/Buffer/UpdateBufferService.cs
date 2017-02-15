@@ -10,10 +10,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Buffer
     [OmniSharpHandler(OmnisharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
     public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public UpdateBufferService(OmnisharpWorkspace workspace)
+        public UpdateBufferService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

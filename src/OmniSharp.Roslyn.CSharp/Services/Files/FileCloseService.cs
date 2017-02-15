@@ -12,10 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Files
     [OmniSharpHandler(OmnisharpEndpoints.Close, LanguageNames.CSharp)]
     public class FileCloseService : RequestHandler<FileCloseRequest, FileCloseResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FileCloseService(OmnisharpWorkspace workspace)
+        public FileCloseService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

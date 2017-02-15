@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OmniSharp.Abstractions.Services;
+using OmniSharp.Extensions;
 using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Helpers
@@ -25,7 +26,7 @@ namespace OmniSharp.DotNetTest.Helpers
                 bool isTestMethod = false;
                 string featureName = null;
 
-                if(IsTestMethod(method, semanticModel, IsDerivedFromFactAttribute))
+                if (IsTestMethod(method, semanticModel, IsDerivedFromFactAttribute))
                 {
                     isTestMethod = true;
                     featureName = XunitFeatureName;
@@ -38,8 +39,7 @@ namespace OmniSharp.DotNetTest.Helpers
 
                 if (isTestMethod)
                 {
-                    var methodName = semanticModel.GetDeclaredSymbol(node).ToDisplayString();
-                    methodName = methodName.Substring(0, methodName.IndexOf('('));
+                    var methodName = semanticModel.GetDeclaredSymbol(node).GetMetadataName();
 
                     yield return new SyntaxFeature
                     {
@@ -50,8 +50,7 @@ namespace OmniSharp.DotNetTest.Helpers
             }
         }
 
-        private bool IsTestMethod(MethodDeclarationSyntax node,
-                                         SemanticModel sematicModel, Func<ITypeSymbol, bool> predicate)
+        private bool IsTestMethod(MethodDeclarationSyntax node, SemanticModel sematicModel, Func<ITypeSymbol, bool> predicate)
         {
             return node.DescendantNodes()
                        .OfType<AttributeSyntax>()

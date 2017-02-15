@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
+using OmniSharp.Host.Loader;
+using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Services;
 using TestUtility.Fake;
 using TestUtility.Logging;
 using Xunit.Abstractions;
@@ -17,12 +21,14 @@ namespace TestUtility
         private readonly ITestOutputHelper _output;
 
         protected readonly ILoggerFactory LoggerFactory;
+        protected readonly IAssemblyLoader AssemblyLoader;
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
             this._output = output;
             this.LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
+            this.AssemblyLoader = new AssemblyLoader(this.LoggerFactory);
         }
 
         protected Assembly GetAssembly<T>()
@@ -50,20 +56,28 @@ namespace TestUtility
                 assemblies: ComputeHostAssemblies(assemblies));
         }
 
-        protected Task<OmnisharpWorkspace> CreateWorkspaceAsync(params TestFile[] testFiles)
+        protected Task<OmniSharpWorkspace> CreateWorkspaceAsync(params TestFile[] testFiles)
         {
             var plugInHost = CreatePlugInHost();
             return CreateWorkspaceAsync(plugInHost, testFiles);
         }
 
-        protected async Task<OmnisharpWorkspace> CreateWorkspaceAsync(CompositionHost plugInHost, params TestFile[] testFiles)
+        protected async Task<OmniSharpWorkspace> CreateWorkspaceAsync(CompositionHost plugInHost, params TestFile[] testFiles)
         {
             if (plugInHost == null)
             {
                 throw new ArgumentNullException(nameof(plugInHost));
             }
 
-            var workspace = plugInHost.GetExport<OmnisharpWorkspace>();
+            var workspace = plugInHost.GetExport<OmniSharpWorkspace>();
+
+            // OmniSharp ships only one provider, CSharpWorkspaceOptionsProvider
+            var formattingProvider = plugInHost.GetExports<IWorkspaceOptionsProvider>().Single() as CSharpWorkspaceOptionsProvider;
+
+            if (formattingProvider != null)
+            {
+                workspace.Options = formattingProvider.Process(workspace.Options);
+            }
 
             await TestHelpers.AddProjectToWorkspaceAsync(
                 workspace,

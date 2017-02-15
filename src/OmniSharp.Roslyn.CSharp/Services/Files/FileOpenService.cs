@@ -12,10 +12,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Files
     [OmniSharpHandler(OmnisharpEndpoints.Open, LanguageNames.CSharp)]
     public class FileOpenService : RequestHandler<FileOpenRequest, FileOpenResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FileOpenService(OmnisharpWorkspace workspace)
+        public FileOpenService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

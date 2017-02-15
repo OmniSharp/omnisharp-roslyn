@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 using TestUtility;
@@ -132,12 +133,12 @@ class C {
 
             var testFile = new TestFile("dummy.cs", source);
             var workspace = await CreateWorkspaceAsync(testFile);
-            var controller = new CodeFormatService(workspace,
-                new FormattingOptions
-                {
-                    NewLine = "\n",
-                    IndentationSize = 1
-                });
+            workspace.Options = new CSharpWorkspaceOptionsProvider(new FormattingOptions
+            {
+                NewLine = "\n",
+                IndentationSize = 1
+            }).Process(workspace.Options);
+            var controller = new CodeFormatService(workspace);
 
             var result = await controller.Handle(
                 new CodeFormatRequest
@@ -176,7 +177,7 @@ class C {
             };
 
             var workspace = await CreateWorkspaceAsync(testFile);
-            var controller = new FormatRangeService(workspace, new FormattingOptions());
+            var controller = new FormatRangeService(workspace);
 
             var response = await controller.Handle(request);
             var actual = response.Changes.ToArray();

@@ -17,11 +17,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
     [OmniSharpHandler(OmnisharpEndpoints.AutoComplete, LanguageNames.CSharp)]
     public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly FormattingOptions _formattingOptions;
 
         [ImportingConstructor]
-        public IntellisenseService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        public IntellisenseService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;
