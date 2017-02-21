@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
@@ -53,6 +56,31 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         existingQuickFix.Projects.Add(document.Project.Name);
                     }
                 }
+
+                var root = await document.GetSyntaxRootAsync().ConfigureAwait(false);
+                foreach (var item in root.DescendantTrivia().Where(x => x.IsKind(SyntaxKind.SingleLineCommentTrivia)))
+                {
+                    var match = Regex.Match(item.ToFullString(), @"//\s?TODO:?\s*(.*)", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        var position = item.GetLocation().GetMappedLineSpan();
+
+                        var quickFix = new DiagnosticLocation
+                        {
+                            FileName = document.FilePath,
+                            Line = position.StartLinePosition.Line,
+                            EndLine = position.EndLinePosition.Line,
+                            Column = position.StartLinePosition.Character,
+                            EndColumn = position.EndLinePosition.Character,
+                            Text = $"TODO: {match.Groups[1].Value}",
+                            LogLevel = DiagnosticSeverity.Hidden.ToString()
+                        };
+
+                        quickFix.Projects.Add(document.Project.Name);
+                        quickFixes.Add(quickFix);
+                    }
+                }
+
             }
 
             return new QuickFixResponse(quickFixes);
