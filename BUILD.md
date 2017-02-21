@@ -18,10 +18,10 @@ All build related activites should be encapsulated in this file for cross-platfo
 
   `-test-configuration=(Release|Debug)`: The configuration to use for the unit tests.
     Defaults to `Debug`.
-  
+
   `-install-path=Path`: Path used for the **Install** target.
     Defaults to `(%USERPROFILE%|$HOME)/.omnisharp/local`
-  
+
   `-archive`: Enable the generation of publishable archives after a build.
 
 # Targets
@@ -38,9 +38,6 @@ All build related activites should be encapsulated in this file for cross-platfo
 
 **Install**: Same as quick, but installs the generated binaries into `install-path`.
 
-**SetPackageVersions**: Updates the dependency versions found within `project.json` files using information from `depversion.json`.
-  Used for maintainence within the project, not needed for end-users. More information below.
-
 # Configuration files
 
 ## build.json
@@ -54,11 +51,6 @@ A number of build-related options, including folder names for different entities
 
 **"DotNetVersion"**: The .NET SDK version used for the build. Can be used to pin to a specific version.
   Using the string `Latest` will retrieve the latest version.
-
-## depversion.json
-
-A listing of all dependencies (and their desired versions) used by `project.json` files throughout the project.
-Allows for quick and automatic updates to the dependency version numbers using the **SetPackageVersions** target.
 
 # Artifacts generated
 

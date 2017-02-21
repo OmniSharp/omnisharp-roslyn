@@ -807,33 +807,6 @@ Task("Travis")
 });
 
 /// <summary>
-///  Update the package versions within project.json files.
-///  Uses depversion.json file as input.
-/// </summary>
-Task("SetPackageVersions")
-    .Does(() =>
-{
-    var jDepVersion = JObject.Parse(System.IO.File.ReadAllText(CombinePaths(env.WorkingDirectory, "depversion.json")));
-    var projects = System.IO.Directory.GetFiles(env.Folders.Source, "project.json", SearchOption.AllDirectories).ToList();
-    projects.AddRange(System.IO.Directory.GetFiles(env.Folders.Tests, "project.json", SearchOption.AllDirectories));
-    foreach (var project in projects)
-    {
-        var jProject = JObject.Parse(System.IO.File.ReadAllText(project));
-        var dependencies = jProject.SelectTokens("dependencies")
-                            .Union(jProject.SelectTokens("frameworks.*.dependencies"))
-                            .SelectMany(dependencyToken => dependencyToken.Children<JProperty>());
-        foreach (JProperty dependency in dependencies)
-        {
-            if (jDepVersion[dependency.Name] != null)
-            {
-                dependency.Value = jDepVersion[dependency.Name];
-            }
-        }
-        System.IO.File.WriteAllText(project, JsonConvert.SerializeObject(jProject, Formatting.Indented));
-    }
-});
-
-/// <summary>
 ///  Default Task aliases to Local.
 /// </summary>
 Task("Default")
