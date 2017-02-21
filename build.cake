@@ -28,7 +28,6 @@ public class Folders
     public string Tools { get; }
 
     public string MSBuild { get; }
-    public string Packages { get; }
     public string Source { get; }
     public string Tests { get; }
     public string TestAssets { get; }
@@ -42,10 +41,9 @@ public class Folders
     public Folders(string workingDirectory)
     {
         this.DotNet = PathHelper.Combine(workingDirectory, ".dotnet");
-        this.Tools = PathHelper.Combine(workingDirectory, ".tools");
+        this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
         this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
-        this.Packages = PathHelper.Combine(workingDirectory, "packages");
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
         this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
@@ -142,8 +140,8 @@ var dotnetcli = useGlobalDotNetSdk ? "dotnet" : CombinePaths(env.Folders.DotNet,
 var msbuildBaseFolder = CombinePaths(env.WorkingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
-var msbuildRuntimeForMonoInstallFolder = CombinePaths(env.Folders.Packages, "Microsoft.Build.Runtime.Mono");
-var msbuildLibForMonoInstallFolder = CombinePaths(env.Folders.Packages, "Microsoft.Build.Lib.Mono");
+var msbuildRuntimeForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime.Mono");
+var msbuildLibForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Lib.Mono");
 
 /// <summary>
 ///  Clean artifacts.
@@ -180,14 +178,6 @@ Task("SetupMSBuild")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    var configFilePath = CombinePaths(env.Folders.Packages, "packages.config");
-
-    InstallNuGetPackages(
-        configFilePath: configFilePath,
-        excludeVersion: true,
-        noCache: true,
-        outputDirectory: $"\"{env.Folders.Packages}\"");
-
     if (!IsRunningOnWindows())
     {
         if (DirectoryExists(msbuildRuntimeForMonoInstallFolder))
@@ -233,7 +223,7 @@ Task("SetupMSBuild")
     CreateDirectory(msbuildNetCoreAppFolder);
 
     // Copy MSBuild runtime to appropriate locations
-    var msbuildInstallFolder = CombinePaths(env.Folders.Packages, "Microsoft.Build.Runtime", "contentFiles", "any");
+    var msbuildInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any");
     var msbuildNet46InstallFolder = CombinePaths(msbuildInstallFolder, "net46");
     var msbuildNetCoreAppInstallFolder = CombinePaths(msbuildInstallFolder, "netcoreapp1.0");
 
@@ -262,7 +252,7 @@ Task("SetupMSBuild")
 
     foreach (var sdk in sdks)
     {
-        var sdkInstallFolder = CombinePaths(env.Folders.Packages, sdk);
+        var sdkInstallFolder = CombinePaths(env.Folders.Tools, sdk);
         var net46SdkTargetFolder = CombinePaths(net46SdkFolder, sdk);
         var netCoreAppSdkTargetFolder = CombinePaths(netCoreAppSdkFolder, sdk);
 
@@ -296,14 +286,14 @@ Task("SetupMSBuild")
 
     // Copy NuGet.targets from NuGet.Build.Tasks
     var nugetTargetsName = "NuGet.targets";
-    var nugetTargetsPath = CombinePaths(env.Folders.Packages, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
+    var nugetTargetsPath = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
 
     CopyFile(nugetTargetsPath, CombinePaths(msbuildNet46Folder, nugetTargetsName));
     CopyFile(nugetTargetsPath, CombinePaths(msbuildNetCoreAppFolder, nugetTargetsName));
 
     // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
     var csharpTargetsName = "Microsoft.CSharp.Core.targets";
-    var csharpTargetsPath = CombinePaths(env.Folders.Packages, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
+    var csharpTargetsPath = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
 
     var csharpTargetsNet46Folder = CombinePaths(msbuildNet46Folder, "Roslyn");
     var csharpTargetsNetCoreAppFolder = CombinePaths(msbuildNetCoreAppFolder, "Roslyn");
@@ -403,15 +393,6 @@ Task("BuildEnvironment")
             break;
         }
     }
-
-    System.IO.Directory.CreateDirectory(env.Folders.Tools);
-
-    InstallNuGetPackage(
-        packageID: "xunit.runner.console",
-        excludeVersion: true,
-        noCache: true,
-        prerelease: true,
-        outputDirectory: $"\"{env.Folders.Tools}\"");
 });
 
 /// <summary>

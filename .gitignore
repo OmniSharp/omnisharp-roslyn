@@ -4,7 +4,6 @@ TestResults/
 .nuget/
 *.sln.ide/
 _ReSharper.*/
-packages/**/
 artifacts/
 PublishProfiles/
 *.user
@@ -37,8 +36,9 @@ scripts/Omnisharp*
 *.nuget.targets
 
 # Build folder
-.tools/
 .dotnet/
+tools/*
+!tools/packages.config
 
 # VS Code
 /.vscode/settings.json
