@@ -42,6 +42,7 @@ namespace OmniSharp.Script
         private static readonly CSharpCompilationOptions CompilationOptions = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
+                allowUnsafe: true,
                 metadataReferenceResolver: ScriptMetadataResolver.Default, 
                 sourceReferenceResolver: ScriptSourceResolver.Default, 
                 assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
