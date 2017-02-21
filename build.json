@@ -1,15 +1,11 @@
 {
   "UseSystemDotNetPath": "false",
-  "DotNetFolder": ".dotnet",
   "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
   "DotNetChannel": "preview",
   "DotNetVersion": "1.0.0-rc4-004578",
   "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
   "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha3.zip",
   "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha3.zip",
-  "BuildToolsFolder": ".tools",
-  "ArtifactsFolder": "artifacts",
-  "PackagesFolder": "packages",
   "TestProjects": [
     "OmniSharp.MSBuild.Tests",
     "OmniSharp.Roslyn.CSharp.Tests",
