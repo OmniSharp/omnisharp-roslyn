@@ -50,7 +50,30 @@ public class BuildPlan
     public string[] Rids { get; set; }
     public string MainProject { get; set; }
     public string[] TestProjectsToRestoreWithNuGet3 { get; set; }
-    public string CurrentRid { get; set; }
+
+    private string currentRid;
+
+    public void SetCurrentRid(string currentRid)
+    {
+        this.currentRid = currentRid;
+    }
+
+    public string GetDefaultRid()
+    {
+        if (currentRid.StartsWith("win"))
+        {
+            return currentRid.EndsWith("-x86")
+                ? "win7-x86"
+                : "win7-x64";
+        }
+
+        // This is a temporary hack to handle the macOS Sierra. At this point,
+        // runtime == "default" but the current RID is macOS Sierra (10.12).
+        // In that case, fall back to El Capitan (10.11).
+        return currentRid == "osx.10.12-x64"
+            ? "osx.10.11-x64"
+            : currentRid;
+    }
 }
 
 var buildPlan = JsonConvert.DeserializeObject<BuildPlan>(
@@ -336,7 +359,8 @@ Task("BuildEnvironment")
         var index = line.IndexOf("RID:");
         if (index >= 0)
         {
-            buildPlan.CurrentRid = line.Substring(index + "RID:".Length).Trim();
+            var currentRid = line.Substring(index + "RID:".Length).Trim();
+            buildPlan.SetCurrentRid(currentRid);
             break;
         }
     }
@@ -370,30 +394,13 @@ Task("Restore")
     }
 });
 
-string GetCurrentRid()
-{
-    if (buildPlan.CurrentRid.StartsWith("win"))
-    {
-        return buildPlan.CurrentRid.EndsWith("-x86")
-            ? "win7-x86"
-            : "win7-x64";
-    }
-
-    // This is a temporary hack to handle the macOS Sierra. At this point,
-    // runtime == "default" but the current RID is macOS Sierra (10.12).
-    // In that case, fall back to El Capitan (10.11).
-    return buildPlan.CurrentRid == "osx.10.12-x64"
-        ? "osx.10.11-x64"
-        : buildPlan.CurrentRid;
-}
-
-void GetRIDParts(string rid, out string name, out string version, out string arch)
+void GetRIDParts(BuildPlan plan, string rid, out string name, out string version, out string arch)
 {
     rid = rid ?? "default";
 
     if (rid == "default")
     {
-        rid = GetCurrentRid();
+        rid = plan.GetDefaultRid();
     }
 
     var firstDotIndex = rid.IndexOf('.');
@@ -421,12 +428,12 @@ void GetRIDParts(string rid, out string name, out string version, out string arc
     arch = rid.Substring(lastDashIndex + 1);
 }
 
-void BuildProject(string projectName, string projectFilePath, string configuration, string rid = null)
+void BuildProject(BuildPlan plan, string dotnetcli, string logFolder, string projectName, string projectFilePath, string configuration, string rid = null)
 {
     string osName, osVersion, osArch;
-    GetRIDParts(rid, out osName, out osVersion, out osArch);
+    GetRIDParts(plan, rid, out osName, out osVersion, out osArch);
 
-    foreach (var framework in buildPlan.Frameworks)
+    foreach (var framework in plan.Frameworks)
     {
         var runLog = new List<string>();
 
@@ -451,7 +458,7 @@ Task("BuildMain")
     var projectName = buildPlan.MainProject + ".csproj";
     var projectFilePath = CombinePaths(sourceFolder, buildPlan.MainProject, projectName);
 
-    BuildProject(projectName, projectFilePath, configuration);
+    BuildProject(buildPlan, dotnetcli, logFolder, projectName, projectFilePath, configuration);
 });
 
 /// <summary>
@@ -468,7 +475,7 @@ Task("BuildTest")
         var testProjectName = testProject + ".csproj";
         var testProjectFilePath = CombinePaths(testFolder, testProject, testProjectName);
 
-        BuildProject(testProjectName, testProjectFilePath, testConfiguration);
+        BuildProject(buildPlan, dotnetcli, logFolder, testProjectName, testProjectFilePath, testConfiguration);
     }
 });
 
@@ -573,7 +580,7 @@ Task("OnlyPublish")
         foreach (var runtime in buildPlan.Rids)
         {
             var rid = runtime.Equals("default")
-                ? GetCurrentRid()
+                ? buildPlan.GetDefaultRid()
                 : runtime;
 
             // Restore the OmniSharp.csproj with this runtime.
