@@ -20,11 +20,14 @@ var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
+var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 public class Folders
 {
     public string DotNet { get; }
     public string Tools { get; }
+
+    public string MSBuild { get; }
     public string Packages { get; }
     public string Source { get; }
     public string Tests { get; }
@@ -40,6 +43,8 @@ public class Folders
     {
         this.DotNet = PathHelper.Combine(workingDirectory, ".dotnet");
         this.Tools = PathHelper.Combine(workingDirectory, ".tools");
+
+        this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
         this.Packages = PathHelper.Combine(workingDirectory, "packages");
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
@@ -79,7 +84,6 @@ var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 public class BuildPlan
 {
     public string[] TestProjects { get; set; }
-    public bool UseSystemDotNetPath { get; set; }
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
@@ -126,9 +130,8 @@ public class BuildPlan
 var buildPlan = BuildPlan.Load(env);
 
 // Folders and tools
-var dotnetcli = buildPlan.UseSystemDotNetPath ? "dotnet" : CombinePaths(env.Folders.DotNet, "dotnet");
+var dotnetcli = useGlobalDotNetSdk ? "dotnet" : CombinePaths(env.Folders.DotNet, "dotnet");
 
-var msbuildFolder = CombinePaths(env.WorkingDirectory, "msbuild");
 var msbuildBaseFolder = CombinePaths(env.WorkingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
@@ -272,8 +275,8 @@ Task("SetupMSBuild")
     CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
     CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
 
-    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
-    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
 
     nugetImportAfterTargetsFolder = CombinePaths("15.0", "SolutionFile", "ImportAfter");
     nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
@@ -281,8 +284,8 @@ Task("SetupMSBuild")
     CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
     CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
 
-    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
-    CopyFile(CombinePaths(msbuildFolder, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
+    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
 
     // Copy NuGet.targets from NuGet.Build.Tasks
     var nugetTargetsName = "NuGet.targets";
@@ -368,7 +371,7 @@ Task("BuildEnvironment")
         installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
     }
 
-    if (!buildPlan.UseSystemDotNetPath)
+    if (!useGlobalDotNetSdk)
     {
         installArgs = $"{installArgs} -InstallDir {env.Folders.DotNet}";
     }
@@ -386,7 +389,7 @@ Task("BuildEnvironment")
 
     // Capture 'dotnet --info' output and parse out RID.
     var infoOutput = new List<string>();
-    Run(dotnetcli, "--info", new RunOptions { StandardOutputListing = infoOutput });
+    Run(dotnetcli, "--info", new RunOptions(output: infoOutput));
     foreach (var line in infoOutput)
     {
         var index = line.IndexOf("RID:");
@@ -473,10 +476,7 @@ void BuildProject(BuildPlan plan, string dotnetcli, string logFolder, string pro
         Information($"Building {projectName} on {framework}...");
 
         Run(dotnetcli, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration} -p:OSName={osName} -p:OSVersion={osVersion} -p:OSArch={osArch}",
-                new RunOptions
-                {
-                    StandardOutputListing = runLog
-                })
+                new RunOptions(output: runLog))
             .ExceptionOnError($"Building {projectName} failed for {framework}.");
 
         System.IO.File.WriteAllLines(CombinePaths(logFolder, $"{projectName}-{framework}-build.log"), runLog.ToArray());
@@ -706,10 +706,7 @@ Task("TestPublished")
     {
         var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
         var didNotExitWithError = Run($"{shell}", $"{shellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                    new RunOptions
-                                    {
-                                        TimeOut = 10000
-                                    })
+                                    new RunOptions(timeOut: 10000))
                                 .DidTimeOut;
         if (!didNotExitWithError)
         {

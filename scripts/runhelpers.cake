@@ -9,15 +9,24 @@ public class RunOptions
     /// <summary>
     ///  The working directory of the process.
     /// </summary>
-    public string WorkingDirectory { get; set; }
+    public string WorkingDirectory { get; }
+
     /// <summary>
     ///  Container logging the StandardOutput content.
     /// </summary>
-    public IList<string> StandardOutputListing { get; set; }
+    public IList<string> Output { get; }
+
     /// <summary>
     ///  Desired maximum time-out for the process
     /// </summary>
-    public int TimeOut { get; set; }
+    public int TimeOut { get; }
+
+    public RunOptions(string workingDirectory = null, IList<string> output = null, int timeOut = 0)
+    {
+        this.WorkingDirectory = workingDirectory;
+        this.Output = output;
+        this.TimeOut = timeOut;
+    }
 }
 
 /// <summary>
@@ -28,6 +37,7 @@ public struct ExitStatus
 {
     private int _code;
     private bool _timeOut;
+
     /// <summary>
     ///  Default constructor when the execution finished.
     /// </summary>
@@ -37,6 +47,7 @@ public struct ExitStatus
         this._code = code;
         this._timeOut = false;
     }
+
     /// <summary>
     ///  Default constructor when the execution potentially timed out.
     /// </summary>
@@ -47,10 +58,12 @@ public struct ExitStatus
         this._code = code;
         this._timeOut = timeOut;
     }
+
     /// <summary>
     ///  Flag signalling that the execution timed out.
     /// </summary>
     public bool DidTimeOut { get { return _timeOut; } }
+
     /// <summary>
     ///  Implicit conversion from ExitStatus to the exit code.
     /// </summary>
@@ -60,6 +73,7 @@ public struct ExitStatus
     {
         return exitStatus._code;
     }
+
     /// <summary>
     ///  Trigger Exception for non-zero exit code.
     /// </summary>
@@ -71,6 +85,7 @@ public struct ExitStatus
         {
             throw new Exception(errorMessage);
         }
+
         return this;
     }
 }
@@ -78,60 +93,59 @@ public struct ExitStatus
 /// <summary>
 ///  Run the given executable with the given arguments.
 /// </summary>
-/// <param name="exec">Executable to run</param>
-/// <param name="args">Arguments</param>
+/// <param name="command">Executable to run</param>
+/// <param name="arguments">Arguments</param>
 /// <returns>The exit status for further queries</returns>
-ExitStatus Run(string exec, string args)
+ExitStatus Run(string command, string arguments)
 {
-    return Run(exec, args, new RunOptions());
+    return Run(command, arguments, new RunOptions());
 }
 
 /// <summary>
 ///  Run the given executable with the given arguments.
 /// </summary>
-/// <param name="exec">Executable to run</param>
-/// <param name="args">Arguments</param>
+/// <param name="command">Executable to run</param>
+/// <param name="arguments">Arguments</param>
 /// <param name="workingDirectory">Working directory</param>
 /// <returns>The exit status for further queries</returns>
-ExitStatus Run(string exec, string args, string workingDirectory)
+ExitStatus Run(string command, string arguments, string workingDirectory)
 {
-    return Run(exec, args,
-        new RunOptions()
-        {
-            WorkingDirectory = workingDirectory
-        });
+    return Run(command, arguments, new RunOptions(workingDirectory));
 }
 
 /// <summary>
-///  Run the given executable with the given arguments.
+///  Run the given command with the given arguments.
 /// </summary>
-/// <param name="exec">Executable to run</param>
-/// <param name="args">Arguments</param>
+/// <param name="exec">Command to run</param>
+/// <param name="arguments">Arguments</param>
 /// <param name="runOptions">Optional settings</param>
 /// <returns>The exit status for further queries</returns>
-ExitStatus Run(string exec, string args, RunOptions runOptions)
+ExitStatus Run(string command, string arguments, RunOptions runOptions)
 {
-    Information("Run: {0} {1}", exec, args);
+    Information("Run: {0} {1}", command, arguments);
 
     var workingDirectory = runOptions.WorkingDirectory ?? System.IO.Directory.GetCurrentDirectory();
     var process = System.Diagnostics.Process.Start(
-            new ProcessStartInfo(exec, args)
+            new ProcessStartInfo(command, arguments)
             {
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
-                RedirectStandardOutput = runOptions.StandardOutputListing != null
+                RedirectStandardOutput = runOptions.Output != null
             });
-    if (runOptions.StandardOutputListing != null)
+
+    if (runOptions.Output != null)
     {
         process.OutputDataReceived += (s, e) =>
         {
             if (e.Data != null)
             {
-                runOptions.StandardOutputListing.Add(e.Data);
+                runOptions.Output.Add(e.Data);
             }
         };
+
         process.BeginOutputReadLine();
     }
+
     if (runOptions.TimeOut == 0)
     {
         process.WaitForExit();
@@ -155,18 +169,18 @@ ExitStatus Run(string exec, string args, RunOptions runOptions)
 /// <summary>
 ///  Run restore with the given arguments
 /// </summary>
-/// <param name="exec">Executable to run</param>
-/// <param name="args">Arguments</param>
+/// <param name="command">Executable to run</param>
+/// <param name="arguments">Arguments</param>
 /// <param name="runOptions">Optional settings</param>
 /// <returns>The exit status for further queries</returns>
-ExitStatus RunRestore(string exec, string args, string workingDirectory)
+ExitStatus RunRestore(string command, string arguments, string workingDirectory)
 {
     Information("Restoring packages in {0}....", workingDirectory);
 
-    var p = StartAndReturnProcess(exec,
+    var p = StartAndReturnProcess(command,
         new ProcessSettings
         {
-            Arguments = args,
+            Arguments = arguments,
             RedirectStandardOutput = true,
             WorkingDirectory = workingDirectory
         });
@@ -182,6 +196,7 @@ ExitStatus RunRestore(string exec, string args, string workingDirectory)
     {
         Error(string.Join("\n", p.GetStandardOutput()));
     }
+
     return new ExitStatus(exitCode);
 }
 

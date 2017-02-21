@@ -1,5 +1,4 @@
 {
-  "UseSystemDotNetPath": "false",
   "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
   "DotNetChannel": "preview",
   "DotNetVersion": "1.0.0-rc4-004578",
