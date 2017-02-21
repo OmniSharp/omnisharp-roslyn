@@ -35,7 +35,7 @@ public class RunOptions
 /// </summary>
 public struct ExitStatus
 {
-    private int _code;
+    public int Code { get; }
     private bool _timeOut;
 
     /// <summary>
@@ -44,7 +44,7 @@ public struct ExitStatus
     /// <param name="code">The exit code</param>
     public ExitStatus(int code)
     {
-        this._code = code;
+        this.Code = code;
         this._timeOut = false;
     }
 
@@ -55,7 +55,7 @@ public struct ExitStatus
     /// <param name="timeOut">True if the execution timed out</param>
     public ExitStatus(int code, bool timeOut)
     {
-        this._code = code;
+        this.Code = code;
         this._timeOut = timeOut;
     }
 
@@ -71,7 +71,7 @@ public struct ExitStatus
     /// <returns>The exit code</returns>
     public static implicit operator int(ExitStatus exitStatus)
     {
-        return exitStatus._code;
+        return exitStatus.Code;
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public struct ExitStatus
     /// <returns>The exit status for further queries</returns>
     public ExitStatus ExceptionOnError(string errorMessage)
     {
-        if (this._code != 0)
+        if (this.Code != 0)
         {
             throw new Exception(errorMessage);
         }
@@ -177,27 +177,19 @@ ExitStatus RunRestore(string command, string arguments, string workingDirectory)
 {
     Information("Restoring packages in {0}....", workingDirectory);
 
-    var p = StartAndReturnProcess(command,
-        new ProcessSettings
-        {
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            WorkingDirectory = workingDirectory
-        });
+    var output = new List<string>();
+    var exitStatus = Run(command, arguments, new RunOptions(workingDirectory, output));
 
-    p.WaitForExit();
-    var exitCode = p.GetExitCode();
-
-    if (exitCode == 0)
+    if (exitStatus.Code == 0)
     {
         Information("Package restore successful!");
     }
     else
     {
-        Error(string.Join("\n", p.GetStandardOutput()));
+        Error(string.Join(System.Environment.NewLine, output));
     }
 
-    return new ExitStatus(exitCode);
+    return exitStatus;
 }
 
 /// <summary>

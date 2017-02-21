@@ -4,17 +4,16 @@ ExitStatus NuGetRestore(string workingDirectory)
 {
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
     var arguments = "restore";
-    var options = new RunOptions(workingDirectory);
 
     return IsRunningOnWindows()
-        ? Run(nugetPath, arguments, options)
-        : Run("mono", $"\"{nugetPath}\" {arguments}", options);
+        ? RunRestore(nugetPath, arguments, workingDirectory)
+        : RunRestore("mono", $"\"{nugetPath}\" {arguments}", workingDirectory);
 }
 
-private ExitStatus RunNuGetInstall(string packageIdOConfigFilePath, string version, bool excludeVersion, bool noCache, bool prerelease, string outputDirectory)
+private ExitStatus RunNuGetInstall(string packageIdOrConfigFilePath, string version, bool excludeVersion, bool noCache, bool prerelease, string outputDirectory)
 {
     var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
-    var argList = new List<string> { "install", packageIdOConfigFilePath };
+    var argList = new List<string> { "install", packageIdOrConfigFilePath };
 
     if (!string.IsNullOrWhiteSpace(version))
     {

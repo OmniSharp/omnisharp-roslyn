@@ -83,7 +83,6 @@ var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
 /// </summary>
 public class BuildPlan
 {
-    public string[] TestProjects { get; set; }
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
@@ -91,15 +90,23 @@ public class BuildPlan
     public string MSBuildRuntimeForMono { get; set; }
     public string MSBuildLibForMono { get; set; }
     public string[] Frameworks { get; set; }
-    public string[] Rids { get; set; }
     public string MainProject { get; set; }
-    public string[] TestProjectsToRestoreWithNuGet3 { get; set; }
+    public string[] TestProjects { get; set; }
+    public string[] TestAssetsToRestoreWithNuGet3 { get; set; }
 
     private string currentRid;
+    private string[] targetRids;
 
     public void SetCurrentRid(string currentRid)
     {
         this.currentRid = currentRid;
+    }
+
+    public string[] TargetRids => targetRids;
+
+    public void SetTargetRids(params string[] targetRids)
+    {
+        this.targetRids = targetRids;
     }
 
     public string GetDefaultRid()
@@ -318,31 +325,27 @@ Task("PopulateRuntimes")
 {
     if (IsRunningOnWindows() && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
     {
-        buildPlan.Rids = new string[]
-            {
-                "default", // To allow testing the published artifact
-                "win7-x86",
-                "win7-x64"
-            };
+        buildPlan.SetTargetRids(
+            "default", // To allow testing the published artifact
+            "win7-x86",
+            "win7-x64");
     }
     else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
     {
-        buildPlan.Rids = new string[]
-            {
-                "default", // To allow testing the published artifact
-                "ubuntu.14.04-x64",
-                "ubuntu.16.04-x64",
-                "centos.7-x64",
-                "rhel.7.2-x64",
-                "debian.8-x64",
-                "fedora.23-x64",
-                "opensuse.13.2-x64"
-            };
+        buildPlan.SetTargetRids(
+            "default", // To allow testing the published artifact
+            "ubuntu.14.04-x64",
+            "ubuntu.16.04-x64",
+            "centos.7-x64",
+            "rhel.7.2-x64",
+            "debian.8-x64",
+            "fedora.23-x64",
+            "opensuse.13.2-x64");
     }
     else
     {
         // In this case, the build is not happening in CI, so just use the default RID.
-        buildPlan.Rids = new string[] {"default"};
+        buildPlan.SetTargetRids("default");
     }
 });
 
@@ -423,7 +426,7 @@ Task("Restore")
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
 
     // Restore test assets
-    foreach (var project in buildPlan.TestProjectsToRestoreWithNuGet3)
+    foreach (var project in buildPlan.TestAssetsToRestoreWithNuGet3)
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
         NuGetRestore(folder);
@@ -607,7 +610,7 @@ Task("OnlyPublish")
 
     foreach (var framework in buildPlan.Frameworks)
     {
-        foreach (var runtime in buildPlan.Rids)
+        foreach (var runtime in buildPlan.TargetRids)
         {
             var rid = runtime.Equals("default")
                 ? buildPlan.GetDefaultRid()
@@ -676,7 +679,7 @@ Task("RestrictToLocalRuntime")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    buildPlan.Rids = new string[] {"default"};
+    buildPlan.SetTargetRids("default");
 });
 
 /// <summary>
