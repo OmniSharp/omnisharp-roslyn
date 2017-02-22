@@ -21,6 +21,8 @@ public class RunOptions
     /// </summary>
     public int TimeOut { get; }
 
+    public IDictionary<string, string> Environment { get; }
+
     public RunOptions(string workingDirectory = null, IList<string> output = null, int timeOut = 0)
     {
         this.WorkingDirectory = workingDirectory;

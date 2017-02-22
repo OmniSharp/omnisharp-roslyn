@@ -22,12 +22,7 @@ var installFolder = Argument("install-path",
 var requireArchive = HasArgument("archive");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
-var env = new BuildEnvironment(useGlobalDotNetSdk);
-
-// System specific shell configuration
-var shell = IsRunningOnWindows() ? "powershell" : "bash";
-var shellArgument = IsRunningOnWindows() ? "-NoProfile /Command" : "-C";
-var shellExtension = IsRunningOnWindows() ? "ps1" : "sh";
+var env = new BuildEnvironment(IsRunningOnWindows(), useGlobalDotNetSdk);
 
 /// <summary>
 ///  Class representing build.json
@@ -338,7 +333,7 @@ Task("BuildEnvironment")
             CreateDirectory(env.Folders.DotNetSdk);
         }
 
-        var scriptFileName = $"dotnet-install.{shellExtension}";
+        var scriptFileName = $"dotnet-install.{env.ShellScriptFileExtension}";
         var scriptFilePath = CombinePaths(env.Folders.DotNetSdk, scriptFileName);
         var url = $"{buildPlan.DotNetInstallScriptURL}/{scriptFileName}";
 
@@ -373,7 +368,7 @@ Task("BuildEnvironment")
 
         Information("Launching .NET CLI install script...");
 
-        Run(shell, $"{shellArgument} {scriptFilePath} {string.Join(" ", argList)}");
+        Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
     }
 
     // Capture 'dotnet --info' output and parse out RID.
@@ -439,7 +434,7 @@ void GetRIDParts(string rid, out string name, out string version, out string arc
     else
     {
         name = rid.Substring(0, firstDotIndex);
-        version = rid.Substring(firstDotIndex + 1, lastDashIndex - firstDotIndex);
+        version = rid.Substring(firstDotIndex + 1, lastDashIndex - firstDotIndex - 1);
     }
 
     arch = rid.Substring(lastDashIndex + 1);
@@ -463,9 +458,20 @@ void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, stri
 
         Information($"Building {projectName} on {framework}...");
 
-        Run(env.DotNetCommand, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration} -p:OSName={osName} -p:OSVersion={osVersion} -p:OSArch={osArch}",
-                new RunOptions(output: runLog))
-            .ExceptionOnError($"Building {projectName} failed for {framework}.");
+        if (!IsRunningOnWindows() &&
+            !framework.StartsWith("netcore") &&
+            !framework.StartsWith("netstandard"))
+        {
+            Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:TargetFramework={framework} /p:Configuration={configuration} /p:OSName={osName} /p:OSVersion={osVersion} /p:OSArch={osArch}",
+                    new RunOptions(output: runLog))
+                .ExceptionOnError($"Building {projectName} failed for {framework}.");
+        }
+        else
+        {
+            Run(env.DotNetCommand, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration} -p:OSName={osName} -p:OSVersion={osVersion} -p:OSArch={osArch}",
+                    new RunOptions(output: runLog))
+                .ExceptionOnError($"Building {projectName} failed for {framework}.");
+        }
 
         System.IO.File.WriteAllLines(CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-{framework}-build.log"), runLog.ToArray());
     }
@@ -606,26 +612,52 @@ Task("OnlyPublish")
                 .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
 
             var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
-            var argList = new List<string> { "publish" };
+            var argList = new List<string>();
 
-            argList.Add($"\"{projectFileName}\"");
+            if (!IsRunningOnWindows() &&
+                !framework.StartsWith("netcore") &&
+                !framework.StartsWith("netstandard"))
+            {
+                argList.Add($"\"{projectFileName}\"");
+                argList.Add("/t:Publish");
+                argList.Add($"/p:RuntimeIdentifier={rid}");
+                argList.Add($"/p:TargetFramework={framework}");
+                argList.Add($"/p:Configuration={configuration}");
+                argList.Add($"/p:PublishDir={outputFolder}");
+            }
+            else
+            {
+                argList.Add("publish");
 
-            argList.Add("--runtime");
-            argList.Add(rid);
+                argList.Add($"\"{projectFileName}\"");
 
-            argList.Add("--framework");
-            argList.Add(framework);
+                argList.Add("--runtime");
+                argList.Add(rid);
 
-            argList.Add("--configuration");
-            argList.Add(configuration);
+                argList.Add("--framework");
+                argList.Add(framework);
 
-            argList.Add("--output");
-            argList.Add($"\"{outputFolder}\"");
+                argList.Add("--configuration");
+                argList.Add(configuration);
+
+                argList.Add("--output");
+                argList.Add($"\"{outputFolder}\"");
+            }
 
             var publishArguments = string.Join(" ", argList);
 
-            Run(env.DotNetCommand, publishArguments)
-                .ExceptionOnError($"Failed to publish {project} / {framework}");
+            if (!IsRunningOnWindows() &&
+                !framework.StartsWith("netcore") &&
+                !framework.StartsWith("netstandard"))
+            {
+                Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {publishArguments}")
+                    .ExceptionOnError($"Failed to publish {project} / {framework}");
+            }
+            else
+            {
+                Run(env.DotNetCommand, publishArguments)
+                    .ExceptionOnError($"Failed to publish {project} / {framework}");
+            }
 
             // Copy MSBuild and SDKs to output
             CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
@@ -693,7 +725,7 @@ Task("TestPublished")
     foreach (var script in scriptsToTest)
     {
         var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
-        var didNotExitWithError = Run($"{shell}", $"{shellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
                                     new RunOptions(timeOut: 10000))
                                 .DidTimeOut;
         if (!didNotExitWithError)

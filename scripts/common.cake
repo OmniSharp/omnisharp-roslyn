@@ -53,7 +53,11 @@ public class BuildEnvironment
 
     public string DotNetCommand { get; }
 
-    public BuildEnvironment(bool useGlobalDotNetSdk)
+    public string ShellCommand { get; }
+    public string ShellArgument { get; }
+    public string ShellScriptFileExtension { get; }
+
+    public BuildEnvironment(bool isWindows, bool useGlobalDotNetSdk)
     {
         this.WorkingDirectory = PathHelper.GetFullPath(
             System.IO.Directory.GetCurrentDirectory());
@@ -62,5 +66,9 @@ public class BuildEnvironment
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
+
+        this.ShellCommand = isWindows ? "powershell" : "bash";
+        this.ShellArgument = isWindows ? "-NoProfile /Command" : "-C";
+        this.ShellScriptFileExtension = isWindows ? "ps1" : "sh";
     }
 }
