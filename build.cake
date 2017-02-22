@@ -24,7 +24,7 @@ var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 public class Folders
 {
-    public string DotNet { get; }
+    public string DotNetSdk { get; }
     public string Tools { get; }
 
     public string MSBuild { get; }
@@ -40,7 +40,7 @@ public class Folders
 
     public Folders(string workingDirectory)
     {
-        this.DotNet = PathHelper.Combine(workingDirectory, ".dotnet");
+        this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
         this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
@@ -61,15 +61,21 @@ public class BuildEnvironment
     public string WorkingDirectory { get; }
     public Folders Folders { get; }
 
-    public BuildEnvironment()
+    public string DotNetCommand { get; }
+
+    public BuildEnvironment(bool useGlobalDotNetSdk)
     {
         this.WorkingDirectory = PathHelper.GetFullPath(
             System.IO.Directory.GetCurrentDirectory());
         this.Folders = new Folders(this.WorkingDirectory);
+
+        this.DotNetCommand = useGlobalDotNetSdk
+            ? "dotnet"
+            : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
     }
 }
 
-var env = new BuildEnvironment();
+var env = new BuildEnvironment(useGlobalDotNetSdk);
 
 // System specific shell configuration
 var shell = IsRunningOnWindows() ? "powershell" : "bash";
@@ -135,8 +141,6 @@ public class BuildPlan
 var buildPlan = BuildPlan.Load(env);
 
 // Folders and tools
-var dotnetcli = useGlobalDotNetSdk ? "dotnet" : CombinePaths(env.Folders.DotNet, "dotnet");
-
 var msbuildBaseFolder = CombinePaths(env.WorkingDirectory, ".msbuild");
 var msbuildNet46Folder = msbuildBaseFolder + "-net46";
 var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
@@ -339,60 +343,113 @@ Task("PopulateRuntimes")
     }
 });
 
+void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out string rid, out string basePath)
+{
+    var keyValueMap = new Dictionary<string, string>();
+    foreach (var line in lines)
+    {
+        var index = line.IndexOf(":");
+        if (index >= 0)
+        {
+            var key = line.Substring(0, index).Trim();
+            var value = line.Substring(index + 1).Trim();
+
+            if (!string.IsNullOrEmpty(key) &&
+                !string.IsNullOrEmpty(value))
+            {
+                keyValueMap.Add(key, value);
+            }
+        }
+    }
+
+    if (!keyValueMap.TryGetValue("Version", out version))
+    {
+        throw new Exception("Could not locate Version in 'dotnet --info' output.");
+    }
+
+    if (!keyValueMap.TryGetValue("RID", out rid))
+    {
+        throw new Exception("Could not locate RID in 'dotnet --info' output.");
+    }
+
+    if (!keyValueMap.TryGetValue("Base Path", out basePath))
+    {
+        throw new Exception("Could not locate Base Path in 'dotnet --info' output.");
+    }
+}
+
 /// <summary>
 ///  Install/update build environment.
 /// </summary>
 Task("BuildEnvironment")
     .Does(() =>
 {
-    var installScript = $"dotnet-install.{shellExtension}";
-    System.IO.Directory.CreateDirectory(env.Folders.DotNet);
-    var scriptPath = CombinePaths(env.Folders.DotNet, installScript);
-    using (WebClient client = new WebClient())
-    {
-        client.DownloadFile($"{buildPlan.DotNetInstallScriptURL}/{installScript}", scriptPath);
-    }
-
-    if (!IsRunningOnWindows())
-    {
-        Run("chmod", $"+x '{scriptPath}'");
-    }
-
-    var installArgs = $"-Channel {buildPlan.DotNetChannel}";
-    if (!String.IsNullOrEmpty(buildPlan.DotNetVersion))
-    {
-        installArgs = $"{installArgs} -Version {buildPlan.DotNetVersion}";
-    }
-
     if (!useGlobalDotNetSdk)
     {
-        installArgs = $"{installArgs} -InstallDir {env.Folders.DotNet}";
-    }
+        if (!DirectoryExists(env.Folders.DotNetSdk))
+        {
+            CreateDirectory(env.Folders.DotNetSdk);
+        }
 
-    Run(shell, $"{shellArgument} {scriptPath} {installArgs}");
+        var scriptFileName = $"dotnet-install.{shellExtension}";
+        var scriptFilePath = CombinePaths(env.Folders.DotNetSdk, scriptFileName);
+        var url = $"{buildPlan.DotNetInstallScriptURL}/{scriptFileName}";
 
-    try
-    {
-        Run(dotnetcli, "--info");
-    }
-    catch (Win32Exception)
-    {
-        throw new Exception(".NET CLI binary cannot be found.");
+        Information("Downloading .NET CLI install script...");
+
+        using (var client = new WebClient())
+        {
+            client.DownloadFile(url, scriptFilePath);
+        }
+
+        if (!IsRunningOnWindows())
+        {
+            Run("chmod", $"+x '{scriptFilePath}'");
+        }
+
+        var argList = new List<string>();
+
+        argList.Add("-Channel");
+        argList.Add(buildPlan.DotNetChannel);
+
+        if (!string.IsNullOrEmpty(buildPlan.DotNetVersion))
+        {
+            argList.Add("-Version");
+            argList.Add(buildPlan.DotNetVersion);
+        }
+
+        if (!useGlobalDotNetSdk)
+        {
+            argList.Add("-InstallDir");
+            argList.Add(env.Folders.DotNetSdk);
+        }
+
+        Information("Launching .NET CLI install script...");
+
+        Run(shell, $"{shellArgument} {scriptFilePath} {string.Join(" ", argList)}");
     }
 
     // Capture 'dotnet --info' output and parse out RID.
-    var infoOutput = new List<string>();
-    Run(dotnetcli, "--info", new RunOptions(output: infoOutput));
-    foreach (var line in infoOutput)
+    var lines = new List<string>();
+
+    try
     {
-        var index = line.IndexOf("RID:");
-        if (index >= 0)
-        {
-            var currentRid = line.Substring(index + "RID:".Length).Trim();
-            buildPlan.SetCurrentRid(currentRid);
-            break;
-        }
+        Run(env.DotNetCommand, "--info", new RunOptions(output: lines));
     }
+    catch (Win32Exception)
+    {
+        throw new Exception("Failed to run 'dotnet --info'");
+    }
+
+    string version, rid, basePath;
+    ParseDotNetInfoValues(lines, out version, out rid, out basePath);
+
+    buildPlan.SetCurrentRid(rid);
+
+    Information("Using .NET CLI");
+    Information("  Version: {0}", version);
+    Information("  RID: {0}", rid);
+    Information("  Base Path: {0}", basePath);
 });
 
 /// <summary>
@@ -403,7 +460,7 @@ Task("Restore")
     .Does(() =>
 {
     // Restore the projects in OmniSharp.sln
-    RunRestore(dotnetcli, "restore OmniSharp.sln", env.WorkingDirectory)
+    RunRestore(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
 
     // Restore test assets
@@ -448,7 +505,7 @@ void GetRIDParts(BuildPlan plan, string rid, out string name, out string version
     arch = rid.Substring(lastDashIndex + 1);
 }
 
-void BuildProject(BuildPlan plan, string dotnetcli, string logFolder, string projectName, string projectFilePath, string configuration, string rid = null)
+void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, string projectFilePath, string configuration, string rid = null)
 {
     string osName, osVersion, osArch;
     GetRIDParts(plan, rid, out osName, out osVersion, out osArch);
@@ -459,11 +516,11 @@ void BuildProject(BuildPlan plan, string dotnetcli, string logFolder, string pro
 
         Information($"Building {projectName} on {framework}...");
 
-        Run(dotnetcli, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration} -p:OSName={osName} -p:OSVersion={osVersion} -p:OSArch={osArch}",
+        Run(env.DotNetCommand, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration} -p:OSName={osName} -p:OSVersion={osVersion} -p:OSArch={osArch}",
                 new RunOptions(output: runLog))
             .ExceptionOnError($"Building {projectName} failed for {framework}.");
 
-        System.IO.File.WriteAllLines(CombinePaths(logFolder, $"{projectName}-{framework}-build.log"), runLog.ToArray());
+        System.IO.File.WriteAllLines(CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-{framework}-build.log"), runLog.ToArray());
     }
 }
 
@@ -475,7 +532,7 @@ Task("BuildMain")
     var projectName = buildPlan.MainProject + ".csproj";
     var projectFilePath = CombinePaths(env.Folders.Source, buildPlan.MainProject, projectName);
 
-    BuildProject(buildPlan, dotnetcli, env.Folders.ArtifactsLogs, projectName, projectFilePath, configuration);
+    BuildProject(env, buildPlan, projectName, projectFilePath, configuration);
 });
 
 /// <summary>
@@ -492,7 +549,7 @@ Task("BuildTest")
         var testProjectName = testProject + ".csproj";
         var testProjectFilePath = CombinePaths(env.Folders.Tests, testProject, testProjectName);
 
-        BuildProject(buildPlan, dotnetcli, env.Folders.ArtifactsLogs, testProjectName, testProjectFilePath, testConfiguration);
+        BuildProject(env, buildPlan, testProjectName, testProjectFilePath, testConfiguration);
     }
 });
 
@@ -526,7 +583,7 @@ Task("TestCore")
         var testProjectName = testProject + ".csproj";
         var testProjectFileName = CombinePaths(env.Folders.Tests, testProject, testProjectName);
 
-        Run(dotnetcli, $"test {testProjectFileName} --framework netcoreapp1.1 --logger \"trx;LogFileName={logFile}\" --no-build -- RunConfiguration.ResultsDirectory=\"{env.Folders.ArtifactsLogs}\"")
+        Run(env.DotNetCommand, $"test {testProjectFileName} --framework netcoreapp1.1 --logger \"trx;LogFileName={logFile}\" --no-build -- RunConfiguration.ResultsDirectory=\"{env.Folders.ArtifactsLogs}\"")
             .ExceptionOnError($"Test {testProject} failed for .NET Core.");
     }
 });
@@ -598,7 +655,7 @@ Task("OnlyPublish")
                 : runtime;
 
             // Restore the OmniSharp.csproj with this runtime.
-            RunRestore(dotnetcli, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
+            RunRestore(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
                 .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
 
             var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
@@ -620,7 +677,7 @@ Task("OnlyPublish")
 
             var publishArguments = string.Join(" ", argList);
 
-            Run(dotnetcli, publishArguments)
+            Run(env.DotNetCommand, publishArguments)
                 .ExceptionOnError($"Failed to publish {project} / {framework}");
 
             // Copy MSBuild and SDKs to output
