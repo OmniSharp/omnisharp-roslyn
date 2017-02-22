@@ -4,7 +4,8 @@
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
     <WarningsAsErrors>true</WarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <AssemblyName>OmniSharp.Stdio</AssemblyName>
+
+    <!-- Needed for Microsoft.Composition -->
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>
 
@@ -21,10 +22,6 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
   </ItemGroup>
   
 </Project>

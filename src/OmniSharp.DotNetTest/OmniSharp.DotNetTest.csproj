@@ -4,7 +4,9 @@
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <WarningsAsErrors>true</WarningsAsErrors>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.6;portable-net45+win8</PackageTargetFallback>
+
+    <!-- Needed for Microsoft.Composition -->
+    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.0.0-rc4-61325-08" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.0.0-rc4" />
     <PackageReference Include="Microsoft.Extensions.Testing.Abstractions" Version="1.0.0-preview2-1-003177" />
   </ItemGroup>
 
