@@ -1,6 +1,6 @@
 #addin "Newtonsoft.Json"
 
-#load "scripts/pathhelpers.cake"
+#load "scripts/common.cake"
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
@@ -21,59 +21,6 @@ var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
-
-public class Folders
-{
-    public string DotNetSdk { get; }
-    public string Tools { get; }
-
-    public string MSBuild { get; }
-    public string Source { get; }
-    public string Tests { get; }
-    public string TestAssets { get; }
-
-    public string Artifacts { get; }
-    public string ArtifactsPublish { get; }
-    public string ArtifactsLogs { get; }
-    public string ArtifactsPackage { get; }
-    public string ArtifactsScripts { get; }
-
-    public Folders(string workingDirectory)
-    {
-        this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
-        this.Tools = PathHelper.Combine(workingDirectory, "tools");
-
-        this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
-        this.Source = PathHelper.Combine(workingDirectory, "src");
-        this.Tests = PathHelper.Combine(workingDirectory, "tests");
-        this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
-
-        this.Artifacts = PathHelper.Combine(workingDirectory, "artifacts");
-        this.ArtifactsPublish = PathHelper.Combine(this.Artifacts, "publish");
-        this.ArtifactsLogs = PathHelper.Combine(this.Artifacts, "logs");
-        this.ArtifactsPackage = PathHelper.Combine(this.Artifacts, "package");
-        this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
-    }
-}
-
-public class BuildEnvironment
-{
-    public string WorkingDirectory { get; }
-    public Folders Folders { get; }
-
-    public string DotNetCommand { get; }
-
-    public BuildEnvironment(bool useGlobalDotNetSdk)
-    {
-        this.WorkingDirectory = PathHelper.GetFullPath(
-            System.IO.Directory.GetCurrentDirectory());
-        this.Folders = new Folders(this.WorkingDirectory);
-
-        this.DotNetCommand = useGlobalDotNetSdk
-            ? "dotnet"
-            : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
-    }
-}
 
 var env = new BuildEnvironment(useGlobalDotNetSdk);
 
@@ -471,15 +418,8 @@ Task("Restore")
     }
 });
 
-void GetRIDParts(BuildPlan plan, string rid, out string name, out string version, out string arch)
+void GetRIDParts(string rid, out string name, out string version, out string arch)
 {
-    rid = rid ?? "default";
-
-    if (rid == "default")
-    {
-        rid = plan.GetDefaultRid();
-    }
-
     var firstDotIndex = rid.IndexOf('.');
     var lastDashIndex = rid.LastIndexOf('-');
 
@@ -507,8 +447,15 @@ void GetRIDParts(BuildPlan plan, string rid, out string name, out string version
 
 void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, string projectFilePath, string configuration, string rid = null)
 {
+    rid = rid ?? "default";
+
+    if (rid == "default")
+    {
+        rid = plan.GetDefaultRid();
+    }
+
     string osName, osVersion, osArch;
-    GetRIDParts(plan, rid, out osName, out osVersion, out osArch);
+    GetRIDParts(rid, out osName, out osVersion, out osArch);
 
     foreach (var framework in plan.Frameworks)
     {

@@ -122,9 +122,13 @@ ExitStatus Run(string command, string arguments, string workingDirectory)
 /// <returns>The exit status for further queries</returns>
 ExitStatus Run(string command, string arguments, RunOptions runOptions)
 {
-    Information("Run: {0} {1}", command, arguments);
-
     var workingDirectory = runOptions.WorkingDirectory ?? System.IO.Directory.GetCurrentDirectory();
+
+    Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "Run:");
+    Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Command: {0}", command);
+    Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Arguments: {0}", arguments);
+    Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  CWD: {0}", workingDirectory);
+
     var process = System.Diagnostics.Process.Start(
             new ProcessStartInfo(command, arguments)
             {

@@ -2,10 +2,10 @@
 
 ExitStatus NuGetRestore(string workingDirectory)
 {
-    var nugetPath = Environment.GetEnvironmentVariable("NUGET_EXE");
+    var nugetPath = Context.Tools.Resolve("nuget.exe");;
     var arguments = "restore";
 
     return IsRunningOnWindows()
-        ? RunRestore(nugetPath, arguments, workingDirectory)
-        : RunRestore("mono", $"\"{nugetPath}\" {arguments}", workingDirectory);
+        ? RunRestore(nugetPath.FullPath, arguments, workingDirectory)
+        : RunRestore("mono", $"\"{nugetPath.FullPath}\" {arguments}", workingDirectory);
 }
