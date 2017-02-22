@@ -65,6 +65,11 @@ namespace OmniSharp.Script
             _env = env;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
+
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            topLevelBinderFlagsProperty.SetValue(CompilationOptions, ignoreCorLibraryDuplicatedTypesMember.GetValue(null));
         }
 
         public string Key => "Script";
@@ -96,14 +101,16 @@ namespace OmniSharp.Script
             var runtimeContexts = File.Exists(Path.Combine(_env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.Path) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
+
+            // and add mscorlib
+            AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
+
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
-            // and add mscorlib
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
                 _logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
 
-                AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
                 AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
 
                 inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
