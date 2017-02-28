@@ -39,13 +39,28 @@ namespace OmniSharp.Script
 
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
 
-        private static readonly CSharpCompilationOptions CompilationOptions = new CSharpCompilationOptions(
+        private static readonly Lazy<CSharpCompilationOptions> CompilationOptions = new Lazy<CSharpCompilationOptions>(() =>
+        {
+            var compilationOptions = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
                 allowUnsafe: true,
-                metadataReferenceResolver: ScriptMetadataResolver.Default, 
-                sourceReferenceResolver: ScriptSourceResolver.Default, 
+                metadataReferenceResolver: ScriptMetadataResolver.Default,
+                sourceReferenceResolver: ScriptSourceResolver.Default,
                 assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
+
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
+            if (ignoreCorLibraryDuplicatedTypesValue != null)
+            {
+                topLevelBinderFlagsProperty?.SetValue(compilationOptions, ignoreCorLibraryDuplicatedTypesValue);
+            }
+
+            return compilationOptions;
+        });
 
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
 
@@ -65,11 +80,6 @@ namespace OmniSharp.Script
             _env = env;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
-
-            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
-            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
-            topLevelBinderFlagsProperty.SetValue(CompilationOptions, ignoreCorLibraryDuplicatedTypesMember.GetValue(null));
         }
 
         public string Key => "Script";
@@ -102,15 +112,14 @@ namespace OmniSharp.Script
 
             var commonReferences = new HashSet<MetadataReference>();
 
-            // and add mscorlib
-            AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
-
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
+            // and add mscorlib
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
                 _logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
 
+                AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
                 AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
 
                 inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
@@ -137,6 +146,7 @@ namespace OmniSharp.Script
                 // for non .NET Core, include System.Runtime
                 if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
                 {
+
                     inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                             x.Name.ToLowerInvariant().StartsWith("system.runtime")));
                 }
@@ -162,7 +172,7 @@ namespace OmniSharp.Script
                         name: csxFileName,
                         assemblyName: $"{csxFileName}.dll",
                         language: LanguageNames.CSharp,
-                        compilationOptions: CompilationOptions,
+                        compilationOptions: CompilationOptions.Value,
                         metadataReferences: commonReferences,
                         parseOptions: ParseOptions,
                         isSubmission: true,
