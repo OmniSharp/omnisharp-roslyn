@@ -39,13 +39,28 @@ namespace OmniSharp.Script
 
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
 
-        private static readonly CSharpCompilationOptions CompilationOptions = new CSharpCompilationOptions(
+        private static readonly Lazy<CSharpCompilationOptions> CompilationOptions = new Lazy<CSharpCompilationOptions>(() =>
+        {
+            var compilationOptions = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
                 allowUnsafe: true,
-                metadataReferenceResolver: ScriptMetadataResolver.Default, 
-                sourceReferenceResolver: ScriptSourceResolver.Default, 
+                metadataReferenceResolver: ScriptMetadataResolver.Default,
+                sourceReferenceResolver: ScriptSourceResolver.Default,
                 assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
+
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
+            if (ignoreCorLibraryDuplicatedTypesValue != null)
+            {
+                topLevelBinderFlagsProperty?.SetValue(compilationOptions, ignoreCorLibraryDuplicatedTypesValue);
+            }
+
+            return compilationOptions;
+        });
 
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
 
@@ -96,6 +111,7 @@ namespace OmniSharp.Script
             var runtimeContexts = File.Exists(Path.Combine(_env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.Path) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
+
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
             // and add mscorlib
@@ -130,6 +146,7 @@ namespace OmniSharp.Script
                 // for non .NET Core, include System.Runtime
                 if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
                 {
+
                     inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                             x.Name.ToLowerInvariant().StartsWith("system.runtime")));
                 }
@@ -155,7 +172,7 @@ namespace OmniSharp.Script
                         name: csxFileName,
                         assemblyName: $"{csxFileName}.dll",
                         language: LanguageNames.CSharp,
-                        compilationOptions: CompilationOptions,
+                        compilationOptions: CompilationOptions.Value,
                         metadataReferences: commonReferences,
                         parseOptions: ParseOptions,
                         isSubmission: true,
