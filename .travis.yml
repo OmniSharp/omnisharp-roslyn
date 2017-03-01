@@ -19,8 +19,8 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew list; fi
   - ./build.sh -target Restore
 script:
-  - travis_retry ./build.sh -target TravisTestAll
-  - ./build.sh -target Travis -archive
+  - travis_retry ./build.sh --target TravisTestAll
+  - ./build.sh --target Travis --archive
 addons:
   apt:
     packages:
