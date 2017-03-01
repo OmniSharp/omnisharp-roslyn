@@ -10,10 +10,14 @@ os:
   - linux
   - osx
 osx_image: xcode7.3
+
+# Ensure MSBuild is installed
 before_install:
   - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
   - echo "deb http://download.mono-project.com/repo/debian wheezy main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list
   - sudo apt-get -qq update
+  - sudo apt-get install msbuild
+
 # install automagically retries
 install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
@@ -33,7 +37,6 @@ addons:
       - libicu-dev
       - libssl-dev
       - libunwind8
-      - msbuild
       - zlib1g
       - curl
 notifications:
