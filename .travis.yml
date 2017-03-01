@@ -17,7 +17,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install openssl; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew list; fi
-  - ./build.sh -target Restore
+  - ./build.sh --target Restore
 script:
   - travis_retry ./build.sh --target TravisTestAll
   - ./build.sh --target Travis --archive
