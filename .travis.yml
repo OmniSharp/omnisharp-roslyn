@@ -12,17 +12,16 @@ os:
 osx_image: xcode7.3
 
 # Ensure MSBuild is installed
-before_install: |
-  if [ "$TRAVIS_OS_NAME" == "linux" ]
-  then
-    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-    echo "deb http://download.mono-project.com/repo/debian wheezy main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list
-    sudo apt-get -qq update
-    sudo apt-get install msbuild
-  fi
+before_install:
+  - | 
+    if [ "$TRAVIS_OS_NAME" == "linux" ]
+    then
+      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+      echo "deb http://download.mono-project.com/repo/debian wheezy main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list
+      sudo apt-get -qq update
+      sudo apt-get install msbuild
+    fi
 
-# install automagically retries
-install:
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]
     then
@@ -33,10 +32,11 @@ install:
       ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
       brew list
     fi
-  - ./build.sh --target Restore
+
 script:
   - travis_retry ./build.sh --target TravisTestAll
   - ./build.sh --target Travis --archive
+
 addons:
   apt:
     packages:
@@ -47,6 +47,7 @@ addons:
       - libunwind8
       - zlib1g
       - curl
+
 notifications:
   slack:
     rooms:
@@ -54,6 +55,7 @@ notifications:
     on_success: change
     on_failure: always
     on_pull_requests: false
+
 deploy:
   provider: releases
   api_key:
@@ -64,6 +66,7 @@ deploy:
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
+
 after_deploy: |
   openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
   chmod 600 ~/.ssh/id_rsa
