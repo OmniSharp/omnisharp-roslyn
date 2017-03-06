@@ -186,13 +186,17 @@ ExitStatus RunRestore(string command, string arguments, string workingDirectory)
     var output = new List<string>();
     var exitStatus = Run(command, arguments, new RunOptions(workingDirectory, output));
 
+    var log = string.Join(System.Environment.NewLine, output);
+
     if (exitStatus.Code == 0)
     {
         Information("Package restore successful!");
+
+        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, log);
     }
     else
     {
-        Error(string.Join(System.Environment.NewLine, output));
+        Error(log);
     }
 
     return exitStatus;
