@@ -10,11 +10,9 @@ using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-// Basic arguments
+// Arguments
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-
-// Optional arguments
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
@@ -38,7 +36,7 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string MainProject { get; set; }
     public string[] TestProjects { get; set; }
-    public string[] TestAssetsToRestoreWithNuGet3 { get; set; }
+    public string[] LegacyTestAssets { get; set; }
 
     private string currentRid;
     private string[] targetRids;
@@ -64,12 +62,7 @@ public class BuildPlan
                 : "win7-x64";
         }
 
-        // This is a temporary hack to handle the macOS Sierra. At this point,
-        // runtime == "default" but the current RID is macOS Sierra (10.12).
-        // In that case, fall back to El Capitan (10.11).
-        return currentRid == "osx.10.12-x64"
-            ? "osx.10.11-x64"
-            : currentRid;
+        return currentRid;
     }
 
     public static BuildPlan Load(BuildEnvironment env)
@@ -410,8 +403,8 @@ Task("Restore")
     RunRestore(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
 
-    // Restore test assets
-    foreach (var project in buildPlan.TestAssetsToRestoreWithNuGet3)
+    // Restore legacy test assets with legacy .NET Core SDK
+    foreach (var project in buildPlan.LegacyTestAssets)
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
         RunRestore(env.LegacyDotNetCommand, "restore", folder)

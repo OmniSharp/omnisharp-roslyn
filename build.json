@@ -19,7 +19,7 @@
     "OmniSharp.DotNetTest.Tests",
     "OmniSharp.Tests"
   ],
-  "TestAssetsToRestoreWithNuGet3": [
+  "LegacyTestAssets": [
     "BasicTestProjectSample01",
     "BasicTestProjectSample02"
   ]
