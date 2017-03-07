@@ -419,45 +419,8 @@ Task("Restore")
     }
 });
 
-void GetRIDParts(string rid, out string name, out string version, out string arch)
+void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, string projectFilePath, string configuration)
 {
-    var firstDotIndex = rid.IndexOf('.');
-    var lastDashIndex = rid.LastIndexOf('-');
-
-    if (lastDashIndex < 0 ||
-        firstDotIndex > lastDashIndex ||
-        firstDotIndex + 1 >= rid.Length ||
-        lastDashIndex + 1 >= rid.Length)
-    {
-        throw new ArgumentException($"{nameof(rid)} is not in a valid format: {rid}", nameof(rid));
-    }
-
-    if (firstDotIndex == -1)
-    {
-        name = rid.Substring(0, lastDashIndex);
-        version = string.Empty;
-    }
-    else
-    {
-        name = rid.Substring(0, firstDotIndex);
-        version = rid.Substring(firstDotIndex + 1, lastDashIndex - firstDotIndex - 1);
-    }
-
-    arch = rid.Substring(lastDashIndex + 1);
-}
-
-void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, string projectFilePath, string configuration, string rid = null)
-{
-    rid = rid ?? "default";
-
-    if (rid == "default")
-    {
-        rid = plan.GetDefaultRid();
-    }
-
-    string osName, osVersion, osArch;
-    GetRIDParts(rid, out osName, out osVersion, out osArch);
-
     foreach (var framework in plan.Frameworks)
     {
         var runLog = new List<string>();
@@ -468,13 +431,13 @@ void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, stri
             !framework.StartsWith("netcore") &&
             !framework.StartsWith("netstandard"))
         {
-            Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:TargetFramework={framework} /p:Configuration={configuration} /p:OSName={osName} /p:OSVersion={osVersion} /p:OSArch={osArch}",
+            Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:TargetFramework={framework} /p:Configuration={configuration}",
                     new RunOptions(output: runLog))
                 .ExceptionOnError($"Building {projectName} failed for {framework}.");
         }
         else
         {
-            Run(env.DotNetCommand, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration} -p:OSName={osName} -p:OSVersion={osVersion} -p:OSArch={osArch}",
+            Run(env.DotNetCommand, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration}",
                     new RunOptions(output: runLog))
                 .ExceptionOnError($"Building {projectName} failed for {framework}.");
         }
