@@ -421,27 +421,24 @@ Task("Restore")
 
 void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, string projectFilePath, string configuration)
 {
-    foreach (var framework in plan.Frameworks)
+    var runLog = new List<string>();
+
+    Information($"Building {projectName}");
+
+    if (IsRunningOnWindows())
     {
-        var runLog = new List<string>();
-
-        Information($"Building {projectName} on {framework}...");
-
-        if (IsNetFrameworkOnUnix(framework))
-        {
-            Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:TargetFramework={framework} /p:Configuration={configuration}",
-                    new RunOptions(output: runLog))
-                .ExceptionOnError($"Building {projectName} failed for {framework}.");
-        }
-        else
-        {
-            Run(env.DotNetCommand, $"build \"{projectFilePath}\" --framework {framework} --configuration {configuration}",
-                    new RunOptions(output: runLog))
-                .ExceptionOnError($"Building {projectName} failed for {framework}.");
-        }
-
-        System.IO.File.WriteAllLines(CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-{framework}-build.log"), runLog.ToArray());
+        Run(env.DotNetCommand, $"build \"{projectFilePath}\" --configuration {configuration}",
+                new RunOptions(output: runLog))
+            .ExceptionOnError($"Building {projectName} failed.");
     }
+    else
+    {
+        Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration}",
+                new RunOptions(output: runLog))
+            .ExceptionOnError($"Building {projectName} failed.");
+    }
+
+    System.IO.File.WriteAllLines(CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log"), runLog.ToArray());
 }
 
 Task("BuildMain")
@@ -449,7 +446,6 @@ Task("BuildMain")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-
     var projectName = buildPlan.MainProject + ".csproj";
     var projectFilePath = CombinePaths(env.Folders.Source, buildPlan.MainProject, projectName);
 
@@ -519,37 +515,28 @@ Task("Test")
 {
     foreach (var testProject in buildPlan.TestProjects)
     {
-        foreach (var framework in buildPlan.Frameworks)
+        var instanceFolder = CombinePaths(env.Folders.Tests, testProject, "bin", testConfiguration, "net46");
+
+        // Copy xunit executable to test folder to solve path errors
+        var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools");
+        var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
+        System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
+        System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), true);
+        var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
+        var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
+        var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
+        if (IsRunningOnWindows())
         {
-            // Testing against core happens in TestCore
-            if (framework.Contains("netcoreapp"))
-            {
-                continue;
-            }
+            Run(xunitInstancePath, arguments, instanceFolder)
+                .ExceptionOnError($"Test {testProject} failed for net46");
+        }
+        else
+        {
+            // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+            CopyDirectory($"{msbuildLibForMonoInstallFolder}", instanceFolder);
 
-            var instanceFolder = CombinePaths(env.Folders.Tests, testProject, "bin", testConfiguration, framework);
-
-            // Copy xunit executable to test folder to solve path errors
-            var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools");
-            var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
-            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
-            System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), true);
-            var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
-            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-{framework}-result.xml");
-            var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
-            if (IsRunningOnWindows())
-            {
-                Run(xunitInstancePath, arguments, instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for {framework}");
-            }
-            else
-            {
-                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-                CopyDirectory($"{msbuildLibForMonoInstallFolder}", instanceFolder);
-
-                Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for {framework}");
-            }
+            Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+                .ExceptionOnError($"Test {testProject} failed for net46");
         }
     }
 });
