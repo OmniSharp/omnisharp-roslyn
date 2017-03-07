@@ -34,8 +34,8 @@ before_install:
     fi
 
 script:
-  - travis_retry ./build.sh --target TravisTestAll --verbosity diagnostic
-  - ./build.sh --target Travis --archive --verbosity diagnostic
+  - travis_retry ./build.sh --target TravisTestAll
+  - ./build.sh --target Travis --archive
 
 addons:
   apt:
