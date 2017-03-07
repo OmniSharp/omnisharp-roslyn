@@ -15,6 +15,7 @@ string CombinePaths(params string[] paths)
 public class Folders
 {
     public string DotNetSdk { get; }
+    public string LegacyDotNetSdk { get; }
     public string Tools { get; }
 
     public string MSBuild { get; }
@@ -31,6 +32,7 @@ public class Folders
     public Folders(string workingDirectory)
     {
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
+        this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
         this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
@@ -52,6 +54,7 @@ public class BuildEnvironment
     public Folders Folders { get; }
 
     public string DotNetCommand { get; }
+    public string LegacyDotNetCommand { get; }
 
     public string ShellCommand { get; }
     public string ShellArgument { get; }
@@ -66,6 +69,8 @@ public class BuildEnvironment
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
+
+        this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
 
         this.ShellCommand = isWindows ? "powershell" : "bash";
         this.ShellArgument = isWindows ? "-NoProfile /Command" : "-C";

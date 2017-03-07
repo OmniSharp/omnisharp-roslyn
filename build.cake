@@ -4,7 +4,6 @@
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
-#load "scripts/nuget.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -32,6 +31,7 @@ public class BuildPlan
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
+    public string LegacyDotNetVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MSBuildRuntimeForMono { get; set; }
     public string MSBuildLibForMono { get; set; }
@@ -337,7 +337,7 @@ Task("BuildEnvironment")
         var scriptFilePath = CombinePaths(env.Folders.DotNetSdk, scriptFileName);
         var url = $"{buildPlan.DotNetInstallScriptURL}/{scriptFileName}";
 
-        Information("Downloading .NET CLI install script...");
+        Information("Downloading .NET Core SDK install script...");
 
         using (var client = new WebClient())
         {
@@ -366,7 +366,47 @@ Task("BuildEnvironment")
             argList.Add(env.Folders.DotNetSdk);
         }
 
-        Information("Launching .NET CLI install script...");
+        Information("Launching .NET Core SDK install script...");
+
+        Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
+    }
+
+    // Install legacy .NET Core SDKs
+    if (!DirectoryExists(env.Folders.LegacyDotNetSdk))
+    {
+        CreateDirectory(env.Folders.LegacyDotNetSdk);
+
+        var scriptFileName = $"dotnet-install.{env.ShellScriptFileExtension}";
+        var scriptFilePath = CombinePaths(env.Folders.LegacyDotNetSdk, scriptFileName);
+        var url = $"{buildPlan.DotNetInstallScriptURL}/{scriptFileName}";
+
+        Information("Downloading legacy .NET Core SDK install script...");
+
+        using (var client = new WebClient())
+        {
+            client.DownloadFile(url, scriptFilePath);
+        }
+
+        if (!IsRunningOnWindows())
+        {
+            Run("chmod", $"+x '{scriptFilePath}'");
+        }
+
+        var argList = new List<string>();
+
+        argList.Add("-Channel");
+        argList.Add(buildPlan.DotNetChannel);
+
+        if (!string.IsNullOrEmpty(buildPlan.LegacyDotNetVersion))
+        {
+            argList.Add("-Version");
+            argList.Add(buildPlan.LegacyDotNetVersion);
+        }
+
+        argList.Add("-InstallDir");
+        argList.Add(env.Folders.LegacyDotNetSdk);
+
+        Information("Launching legacy .NET Core SDK install script...");
 
         Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
     }
@@ -409,7 +449,8 @@ Task("Restore")
     foreach (var project in buildPlan.TestAssetsToRestoreWithNuGet3)
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
-        NuGetRestore(folder);
+        RunRestore(env.LegacyDotNetCommand, "restore", folder)
+            .ExceptionOnError($"Failed to restore '{folder}'.");
     }
 });
 

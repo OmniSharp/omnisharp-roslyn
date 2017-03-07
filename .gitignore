@@ -37,6 +37,7 @@ scripts/Omnisharp*
 
 # Build folder
 .dotnet/
+.dotnet-legacy/
 tools/*
 !tools/packages.config
 
