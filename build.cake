@@ -320,6 +320,44 @@ void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out st
     }
 }
 
+void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder)
+{
+    if (!DirectoryExists(installFolder))
+    {
+        CreateDirectory(installFolder);
+    }
+
+    var scriptFileName = $"dotnet-install.{env.ShellScriptFileExtension}";
+    var scriptFilePath = CombinePaths(installFolder, scriptFileName);
+    var url = $"{plan.DotNetInstallScriptURL}/{scriptFileName}";
+
+    using (var client = new WebClient())
+    {
+        client.DownloadFile(url, scriptFilePath);
+    }
+
+    if (!IsRunningOnWindows())
+    {
+        Run("chmod", $"+x '{scriptFilePath}'");
+    }
+
+    var argList = new List<string>();
+
+    argList.Add("-Channel");
+    argList.Add(plan.DotNetChannel);
+
+    if (!string.IsNullOrEmpty(version))
+    {
+        argList.Add("-Version");
+        argList.Add(version);
+    }
+
+    argList.Add("-InstallDir");
+    argList.Add(installFolder);
+
+    Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
+}
+
 /// <summary>
 ///  Install/update build environment.
 /// </summary>
@@ -328,88 +366,15 @@ Task("BuildEnvironment")
 {
     if (!useGlobalDotNetSdk)
     {
-        if (!DirectoryExists(env.Folders.DotNetSdk))
-        {
-            CreateDirectory(env.Folders.DotNetSdk);
-        }
-
-        var scriptFileName = $"dotnet-install.{env.ShellScriptFileExtension}";
-        var scriptFilePath = CombinePaths(env.Folders.DotNetSdk, scriptFileName);
-        var url = $"{buildPlan.DotNetInstallScriptURL}/{scriptFileName}";
-
-        Information("Downloading .NET Core SDK install script...");
-
-        using (var client = new WebClient())
-        {
-            client.DownloadFile(url, scriptFilePath);
-        }
-
-        if (!IsRunningOnWindows())
-        {
-            Run("chmod", $"+x '{scriptFilePath}'");
-        }
-
-        var argList = new List<string>();
-
-        argList.Add("-Channel");
-        argList.Add(buildPlan.DotNetChannel);
-
-        if (!string.IsNullOrEmpty(buildPlan.DotNetVersion))
-        {
-            argList.Add("-Version");
-            argList.Add(buildPlan.DotNetVersion);
-        }
-
-        if (!useGlobalDotNetSdk)
-        {
-            argList.Add("-InstallDir");
-            argList.Add(env.Folders.DotNetSdk);
-        }
-
-        Information("Launching .NET Core SDK install script...");
-
-        Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
+        InstallDotNetSdk(env, buildPlan,
+            version: buildPlan.DotNetVersion,
+            installFolder: env.Folders.DotNetSdk);
     }
 
-    // Install legacy .NET Core SDKs
-    if (!DirectoryExists(env.Folders.LegacyDotNetSdk))
-    {
-        CreateDirectory(env.Folders.LegacyDotNetSdk);
-
-        var scriptFileName = $"dotnet-install.{env.ShellScriptFileExtension}";
-        var scriptFilePath = CombinePaths(env.Folders.LegacyDotNetSdk, scriptFileName);
-        var url = $"{buildPlan.DotNetInstallScriptURL}/{scriptFileName}";
-
-        Information("Downloading legacy .NET Core SDK install script...");
-
-        using (var client = new WebClient())
-        {
-            client.DownloadFile(url, scriptFilePath);
-        }
-
-        if (!IsRunningOnWindows())
-        {
-            Run("chmod", $"+x '{scriptFilePath}'");
-        }
-
-        var argList = new List<string>();
-
-        argList.Add("-Channel");
-        argList.Add(buildPlan.DotNetChannel);
-
-        if (!string.IsNullOrEmpty(buildPlan.LegacyDotNetVersion))
-        {
-            argList.Add("-Version");
-            argList.Add(buildPlan.LegacyDotNetVersion);
-        }
-
-        argList.Add("-InstallDir");
-        argList.Add(env.Folders.LegacyDotNetSdk);
-
-        Information("Launching legacy .NET Core SDK install script...");
-
-        Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
-    }
+    // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
+    InstallDotNetSdk(env, buildPlan,
+        version: buildPlan.LegacyDotNetVersion,
+        installFolder: env.Folders.LegacyDotNetSdk);
 
     // Capture 'dotnet --info' output and parse out RID.
     var lines = new List<string>();
