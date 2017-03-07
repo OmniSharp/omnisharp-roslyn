@@ -427,9 +427,7 @@ void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, stri
 
         Information($"Building {projectName} on {framework}...");
 
-        if (!IsRunningOnWindows() &&
-            !framework.StartsWith("netcore") &&
-            !framework.StartsWith("netstandard"))
+        if (IsNetFrameworkOnUnix(framework))
         {
             Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:TargetFramework={framework} /p:Configuration={configuration}",
                     new RunOptions(output: runLog))
@@ -451,6 +449,7 @@ Task("BuildMain")
     .IsDependentOn("Restore")
     .Does(() =>
 {
+
     var projectName = buildPlan.MainProject + ".csproj";
     var projectFilePath = CombinePaths(env.Folders.Source, buildPlan.MainProject, projectName);
 
@@ -555,6 +554,13 @@ Task("Test")
     }
 });
 
+bool IsNetFrameworkOnUnix(string framework)
+{
+    return !IsRunningOnWindows()
+        && !framework.StartsWith("netcore")
+        && !framework.StartsWith("netstandard");
+}
+
 /// <summary>
 ///  Build, publish and package artifacts.
 ///  Targets all RIDs specified in build.json unless restricted by RestrictToLocalRuntime.
@@ -583,9 +589,7 @@ Task("OnlyPublish")
             var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
             var argList = new List<string>();
 
-            if (!IsRunningOnWindows() &&
-                !framework.StartsWith("netcore") &&
-                !framework.StartsWith("netstandard"))
+            if (IsNetFrameworkOnUnix(framework))
             {
                 argList.Add($"\"{projectFileName}\"");
                 argList.Add("/t:Publish");
@@ -593,38 +597,24 @@ Task("OnlyPublish")
                 argList.Add($"/p:TargetFramework={framework}");
                 argList.Add($"/p:Configuration={configuration}");
                 argList.Add($"/p:PublishDir={outputFolder}");
-            }
-            else
-            {
-                argList.Add("publish");
 
-                argList.Add($"\"{projectFileName}\"");
+                var args = string.Join(" ", argList);
 
-                argList.Add("--runtime");
-                argList.Add(rid);
-
-                argList.Add("--framework");
-                argList.Add(framework);
-
-                argList.Add("--configuration");
-                argList.Add(configuration);
-
-                argList.Add("--output");
-                argList.Add($"\"{outputFolder}\"");
-            }
-
-            var publishArguments = string.Join(" ", argList);
-
-            if (!IsRunningOnWindows() &&
-                !framework.StartsWith("netcore") &&
-                !framework.StartsWith("netstandard"))
-            {
-                Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {publishArguments}")
+                Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}")
                     .ExceptionOnError($"Failed to publish {project} / {framework}");
             }
             else
             {
-                Run(env.DotNetCommand, publishArguments)
+                argList.Add("publish");
+                argList.Add($"\"{projectFileName}\"");
+                argList.Add($"--runtime {rid}");
+                argList.Add($"--framework {framework}");
+                argList.Add($"--configuration {configuration}");
+                argList.Add($"--output \"{outputFolder}\"");
+
+                var args = string.Join(" ", argList);
+
+                Run(env.DotNetCommand, args)
                     .ExceptionOnError($"Failed to publish {project} / {framework}");
             }
 
