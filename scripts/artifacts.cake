@@ -26,7 +26,7 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         {
             System.IO.File.Delete(coreScript);
         }
-        content[2] = String.Format(content[2], "netcoreapp1.0");
+        content[2] = String.Format(content[2], "netcoreapp1.1");
         System.IO.File.WriteAllLines(coreScript, content);
     }
     else
@@ -50,7 +50,7 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         {
             System.IO.File.Delete(coreScript);
         }
-        content[2] = String.Format(content[2], "", "netcoreapp1.0", "");
+        content[2] = String.Format(content[2], "", "netcoreapp1.1", "");
         System.IO.File.WriteAllLines(coreScript, content);
         Run("chmod", $"+x \"{desktopScript}\"");
     }

@@ -6,18 +6,18 @@ namespace TestUtility
     {
         public static TestAssets Instance { get; } = new TestAssets();
 
-        public string SolutionFolder { get; }
+        public string RootFolder { get; }
         public string TestAssetsFolder { get; }
         public string TestProjectsFolder { get; }
 
         private TestAssets()
         {
-            SolutionFolder = FindSolutionFolder();
-            TestAssetsFolder = Path.Combine(SolutionFolder, "test-assets");
+            RootFolder = FindRootFolder();
+            TestAssetsFolder = Path.Combine(RootFolder, "test-assets");
             TestProjectsFolder = Path.Combine(TestAssetsFolder, "test-projects");
         }
 
-        private static string FindSolutionFolder()
+        private static string FindRootFolder()
         {
             var current = Directory.GetCurrentDirectory();
             while (!File.Exists(Path.Combine(current, "OmniSharp.sln")))

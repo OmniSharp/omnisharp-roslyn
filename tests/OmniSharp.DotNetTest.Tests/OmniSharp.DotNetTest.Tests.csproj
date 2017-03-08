@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net46;netcoreapp1.1</TargetFrameworks>
+    <WarningsAsErrors>true</WarningsAsErrors>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <PackageTargetFallback>$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\app.config" Link="app.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
+    <ProjectReference Include="..\TestUtility\TestUtility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0-preview-20170217-05" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="1.0.500-preview2-1-003177" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
+    <WarningsAsErrors>true</WarningsAsErrors>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <!-- Needed for Microsoft.Composition -->
+    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OmniSharp.Host\OmniSharp.Host.csproj" />
+    <ProjectReference Include="..\..\src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.0.0-rc4" />
+    <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="1.0.0-rc3-1-003177" />
+    <PackageReference Include="Microsoft.DotNet.ProjectModel.Workspaces" Version="1.0.0-preview2-1-003177" />
+    <PackageReference Include="xunit" Version="2.2.0" />
+  </ItemGroup>
+
+</Project>
