@@ -18,9 +18,4 @@
     <PackageReference Include="Microsoft.Extensions.Testing.Abstractions" Version="1.0.0-preview2-1-003177" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
 </Project>
