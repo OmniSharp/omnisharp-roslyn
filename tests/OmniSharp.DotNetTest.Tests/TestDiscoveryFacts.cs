@@ -4,14 +4,26 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Helpers;
 using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public class TestDiscoveryFacts
+    public class TestDiscoveryFacts : AbstractTestFixture
     {
+        private readonly TestAssets _testAssets;
+        private readonly ILogger _logger;
+
+        public TestDiscoveryFacts(ITestOutputHelper output)
+            : base(output)
+        {
+            this._testAssets = TestAssets.Instance;
+            this._logger = this.LoggerFactory.CreateLogger<TestDiscoveryFacts>();
+        }
+
         [Theory]
         [InlineData("BasicTestProjectSample01", "TestProgram.cs", 8, 23, true, "XunitTestMethod")]
         [InlineData("BasicTestProjectSample01", "TestProgram.cs", 15, 26, true, "XunitTestMethod")]
@@ -20,34 +32,37 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData("BasicTestProjectSample02", "TestProgram.cs", 15, 26, true, "NUnitTestMethod")]
         [InlineData("BasicTestProjectSample02", "TestProgram.cs", 21, 26, true, "NUnitTestMethod")]
         [InlineData("BasicTestProjectSample02", "TestProgram.cs", 25, 35, false, "")]
-        public async Task FoundFactsBasedTest(string projectName, string filename, int line, int column, bool found, string expectedFeatureName)
+        public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
-            var sampleProject = TestAssets.Instance.GetTestProjectFolder(projectName);
+            var sampleProject = this._testAssets.GetTestProjectFolder(projectName);
             var workspace = WorkspaceHelper.Create(sampleProject).FirstOrDefault();
 
-            var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(Path.Combine(sampleProject, filename)).First();
-            var doc = workspace.CurrentSolution.GetDocument(docId);
+            var filePath = Path.Combine(sampleProject, fileName);
+            var solution = workspace.CurrentSolution;
+            var documentId = solution.GetDocumentIdsWithFilePath(filePath).First();
+            var document = solution.GetDocument(documentId);
 
-            var root = await doc.GetSyntaxRootAsync();
-            var text = await doc.GetTextAsync();
-            var semanticModel = await doc.GetSemanticModelAsync();
+            var semanticModel = await document.GetSemanticModelAsync();
+
+            var text = semanticModel.SyntaxTree.GetText();
             var position = text.Lines.GetPosition(new LinePosition(line, column));
-            var descNodes =  root.DescendantNodes();
-            var methodDeclarations = descNodes.OfType<MethodDeclarationSyntax>();
-            var syntaxNode = methodDeclarations
-                                 .Single(node => node.Span.Contains(position));
 
-            var symbol = semanticModel.GetDeclaredSymbol(syntaxNode);
+            var root = semanticModel.SyntaxTree.GetRoot();
+            var methodDeclaration = root.DescendantNodes()
+                .OfType<MethodDeclarationSyntax>()
+                .Single(node => node.Span.Contains(position));
+
+            var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
 
             var discover = new TestFeaturesDiscover();
-            var features = discover.Discover(syntaxNode, await doc.GetSemanticModelAsync());
+            var features = discover.Discover(methodDeclaration, semanticModel);
 
             if (found)
             {
                 var feature = features.Single();
                 Assert.Equal(expectedFeatureName, feature.Name);
 
-                var symbolName = symbol.ToDisplayString();
+                var symbolName = methodSymbol.ToDisplayString();
                 symbolName = symbolName.Substring(0, symbolName.IndexOf('('));
                 Assert.Equal(symbolName, feature.Data);
             }

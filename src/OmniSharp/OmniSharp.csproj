@@ -7,41 +7,13 @@
     <OutputType>Exe</OutputType>
     <RuntimeIdentifiers>win7-x64;win7-x86;osx.10.11-x64;ubuntu.14.04-x64;ubuntu.16.04-x64;centos.7-x64;rhel.7.2-x64;debian.8-x64;fedora.23-x64;opensuse.13.2-x64</RuntimeIdentifiers>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
-    <OSName Condition=" '$(OSName)' == ''">win</OSName>
-    <OSArch Condition=" '$(OSArch)' == ''">x86</OSArch>
   </PropertyGroup>
-
-  <Choose>
-    <When Condition="$(OSName.StartsWith('win')) and '$(OSArch)' == 'x86'">
-      <PropertyGroup>
-        <RuntimeIdentifier>win7-x86</RuntimeIdentifier>
-      </PropertyGroup>
-    </When>
-
-    <When Condition="$(OSName.StartsWith('win')) and '$(OSArch)' == 'x64'">
-      <PropertyGroup>
-        <RuntimeIdentifier>win7-x86</RuntimeIdentifier>
-      </PropertyGroup>
-    </When>
-
-    <When Condition="'$(OSVersion)' == ''">
-      <PropertyGroup>
-        <RuntimeIdentifier>$(OSName)-$(OSArch)</RuntimeIdentifier>
-      </PropertyGroup>
-    </When>
-
-    <Otherwise>
-      <PropertyGroup>
-        <RuntimeIdentifier>$(OSName).$(OSVersion)-$(OSArch)</RuntimeIdentifier>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
 
   <ItemGroup>
     <Content Include="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="App.config" />
+    <None Include="app.config" />
   </ItemGroup>
 
   <ItemGroup>
