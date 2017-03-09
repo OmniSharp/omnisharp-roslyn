@@ -47,7 +47,15 @@ namespace OmniSharp.Script
                 allowUnsafe: true,
                 metadataReferenceResolver: ScriptMetadataResolver.Default,
                 sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
+                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
+                WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
+                {
+                    // ensure that specific warnings about assembly references are always suppressed
+                    // https://github.com/dotnet/roslyn/issues/5501
+                    { "CS1701", ReportDiagnostic.Suppress },
+                    { "CS1702", ReportDiagnostic.Suppress },
+                    { "CS1705", ReportDiagnostic.Suppress }
+                 });
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
