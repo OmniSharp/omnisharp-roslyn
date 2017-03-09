@@ -13,7 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.json = build.json
 		build.sh = build.sh
 		global.json = global.json
-		packages\packages.config = packages\packages.config
+		NuGet.Config = NuGet.Config
+		tools\packages.config = tools\packages.config
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
 		global_1json__JSONSchema = http://json.schemastore.org/global
