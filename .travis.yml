@@ -26,12 +26,12 @@ before_install:
     if [ "$TRAVIS_OS_NAME" == "osx" ]
     then
       brew update
-      brew install jq
-      brew install openssl
+      brew install jq --verbose
+      brew install openssl --verbose
       ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
       ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
-      brew install mono
-      brew install caskroom/cask/mono-mdk
+      brew install mono --verbose
+      brew install caskroom/cask/mono-mdk --verbose
       brew list
     fi
 
