@@ -11,6 +11,7 @@ In order to build OmniSharp, the [.NET 4.6 targeting pack](http://go.microsoft.c
 ```
 brew update
 brew install mono
+brew install caskroom/cask/mono-mdk
 ```
 
 ## Linux
