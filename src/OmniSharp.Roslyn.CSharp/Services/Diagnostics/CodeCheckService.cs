@@ -33,13 +33,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var semanticModel = await document.GetSemanticModelAsync();
                 IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
 
-                if (document.SourceCodeKind != SourceCodeKind.Regular)
-                {
-                    // CS8099 needs to be surpressed so that we can use #load directives in scripts
-                    // additionally, we need to suppress CS1701: https://github.com/dotnet/roslyn/issues/5501
-                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS8099" && diagnostic.Id != "CS1701");
-                }
-
                 foreach (var quickFix in diagnostics.Select(MakeQuickFix))
                 {
                     var existingQuickFix = quickFixes.FirstOrDefault(q => q.Equals(quickFix));
