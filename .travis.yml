@@ -1,4 +1,5 @@
 language: csharp
+mono: none
 sudo: required
 dist: trusty
 env:
