@@ -34,41 +34,43 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData("BasicTestProjectSample02", "TestProgram.cs", 25, 35, false, "")]
         public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
-            var sampleProject = this._testAssets.GetTestProjectFolder(projectName);
-            var workspace = WorkspaceHelper.Create(sampleProject).FirstOrDefault();
-
-            var filePath = Path.Combine(sampleProject, fileName);
-            var solution = workspace.CurrentSolution;
-            var documentId = solution.GetDocumentIdsWithFilePath(filePath).First();
-            var document = solution.GetDocument(documentId);
-
-            var semanticModel = await document.GetSemanticModelAsync();
-
-            var text = semanticModel.SyntaxTree.GetText();
-            var position = text.Lines.GetPosition(new LinePosition(line, column));
-
-            var root = semanticModel.SyntaxTree.GetRoot();
-            var methodDeclaration = root.DescendantNodes()
-                .OfType<MethodDeclarationSyntax>()
-                .Single(node => node.Span.Contains(position));
-
-            var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
-
-            var discover = new TestFeaturesDiscover();
-            var features = discover.Discover(methodDeclaration, semanticModel);
-
-            if (found)
+            using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
             {
-                var feature = features.Single();
-                Assert.Equal(expectedFeatureName, feature.Name);
+                var workspace = WorkspaceHelper.Create(testProject.Directory).FirstOrDefault();
 
-                var symbolName = methodSymbol.ToDisplayString();
-                symbolName = symbolName.Substring(0, symbolName.IndexOf('('));
-                Assert.Equal(symbolName, feature.Data);
-            }
-            else
-            {
-                Assert.Empty(features);
+                var filePath = Path.Combine(testProject.Directory, fileName);
+                var solution = workspace.CurrentSolution;
+                var documentId = solution.GetDocumentIdsWithFilePath(filePath).First();
+                var document = solution.GetDocument(documentId);
+
+                var semanticModel = await document.GetSemanticModelAsync();
+
+                var text = semanticModel.SyntaxTree.GetText();
+                var position = text.Lines.GetPosition(new LinePosition(line, column));
+
+                var root = semanticModel.SyntaxTree.GetRoot();
+                var methodDeclaration = root.DescendantNodes()
+                    .OfType<MethodDeclarationSyntax>()
+                    .Single(node => node.Span.Contains(position));
+
+                var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
+
+                var discover = new TestFeaturesDiscover();
+                var features = discover.Discover(methodDeclaration, semanticModel);
+
+                if (found)
+                {
+                    var feature = features.Single();
+                    Assert.Equal(expectedFeatureName, feature.Name);
+
+                    var symbolName = methodSymbol.ToDisplayString();
+                    symbolName = symbolName.Substring(0, symbolName.IndexOf('('));
+                    Assert.Equal(symbolName, feature.Data);
+                }
+                else
+                {
+                    Assert.Empty(features);
+                }
             }
         }
     }
