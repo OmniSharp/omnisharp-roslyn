@@ -259,10 +259,17 @@ namespace OmniSharp.DotNet
                 }
 
                 var referencedProjectState = _projectStates.Find(projectPath, description.Framework);
-                projectReferences.Add(new ProjectReference(referencedProjectState.Id));
-                state.ProjectReferences[projectPath] = referencedProjectState.Id;
+                if (referencedProjectState != null)
+                {
+                    projectReferences.Add(new ProjectReference(referencedProjectState.Id));
+                    state.ProjectReferences[projectPath] = referencedProjectState.Id;
 
-                _logger.LogDebug($"    Add project reference {description.Path}");
+                    _logger.LogDebug($"    Add project reference {description.Path}");
+                }
+                else
+                {
+                    _logger.LogError($"    Could not find project reference {description.Path}");
+                }
             }
 
             foreach (var reference in projectReferences)
