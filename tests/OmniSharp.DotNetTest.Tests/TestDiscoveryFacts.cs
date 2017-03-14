@@ -35,11 +35,10 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
+            using (var omnisharp = TestOmniSharp.Create(testProject.Directory, null, this.LoggerFactory))
             {
-                var workspace = WorkspaceHelper.Create(testProject.Directory).FirstOrDefault();
-
                 var filePath = Path.Combine(testProject.Directory, fileName);
-                var solution = workspace.CurrentSolution;
+                var solution = omnisharp.Workspace.CurrentSolution;
                 var documentId = solution.GetDocumentIdsWithFilePath(filePath).First();
                 var document = solution.GetDocument(documentId);
 

@@ -159,7 +159,7 @@ namespace OmniSharp
             ILoggerFactory loggerFactory,
             ISharedTextWriter writer,
             IAssemblyLoader loader,
-            IOptions<OmniSharpOptions> optionsAccessor)
+            IOptions<OmniSharpOptions> options)
         {
             Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
                                                                                        dep.Name == "OmniSharp.Roslyn");
@@ -171,7 +171,7 @@ namespace OmniSharp
                                               .Select(each => loader.Load(each.Name))
                                               .ToList();
 
-            PluginHost = CreateCompositionHost(serviceProvider, optionsAccessor.Value, assemblies);
+            PluginHost = CreateCompositionHost(serviceProvider, options.Value, assemblies);
 
             Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 

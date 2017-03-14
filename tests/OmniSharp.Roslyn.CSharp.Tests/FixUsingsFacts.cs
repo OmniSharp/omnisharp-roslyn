@@ -478,8 +478,6 @@ namespace OmniSharp
             var host = CreatePlugInHost();
             var workspace = await CreateWorkspaceAsync(host, new TestFile(fileName, fileContents));
 
-            var fakeOptions = new FakeOmniSharpOptions();
-            fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });
             var providers = host.GetExports<ICodeActionProvider>();
             var controller = new FixUsingService(workspace, this.LoggerFactory, this.AssemblyLoader, providers);
             var request = new FixUsingsRequest

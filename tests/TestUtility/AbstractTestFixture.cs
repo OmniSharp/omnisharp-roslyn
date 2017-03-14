@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.Host.Loader;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
@@ -51,8 +52,8 @@ namespace TestUtility
         protected CompositionHost CreatePlugInHost(params Assembly[] assemblies)
         {
             return Startup.CreateCompositionHost(
-                serviceProvider: new FakeServiceProvider(this.LoggerFactory),
-                options: new FakeOmniSharpOptions().Value,
+                serviceProvider: new FakeServiceProvider(null, this.LoggerFactory),
+                options: new OmniSharpOptions(),
                 assemblies: ComputeHostAssemblies(assemblies));
         }
 

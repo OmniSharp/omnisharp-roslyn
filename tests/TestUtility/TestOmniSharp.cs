@@ -7,6 +7,7 @@ using OmniSharp;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
 using OmniSharp.MSBuild;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using TestUtility.Fake;
 
@@ -36,11 +37,11 @@ namespace TestUtility
             this.CompositionHost = compositionHost;
         }
 
-        public static TestOmniSharp Create(IConfiguration configuration, ILoggerFactory loggerFactory)
+        public static TestOmniSharp Create(string path, IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             var compositionHost = Startup.CreateCompositionHost(
-                serviceProvider: new FakeServiceProvider(loggerFactory),
-                options: new FakeOmniSharpOptions().Value,
+                serviceProvider: new FakeServiceProvider(path, loggerFactory),
+                options: new OmniSharpOptions(),
                 assemblies: s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
