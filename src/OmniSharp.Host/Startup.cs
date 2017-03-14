@@ -39,7 +39,7 @@ namespace OmniSharp
                 .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
-            if (env.OtherArgs != null)
+            if (env.OtherArgs?.Length > 0)
             {
                 configBuilder.AddCommandLine(env.OtherArgs);
             }
@@ -68,7 +68,7 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static CompositionHost CreateComposition(IServiceProvider serviceProvider, OmniSharpOptions options, IEnumerable<Assembly> assemblies)
+        public static CompositionHost CreateCompositionHost(IServiceProvider serviceProvider, OmniSharpOptions options, IEnumerable<Assembly> assemblies)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
@@ -115,13 +115,13 @@ namespace OmniSharp
             return config.CreateContainer();
         }
 
-        private static void InitializeWorkspace(OmniSharpWorkspace workspace, CompositionHost composition, IConfiguration configuration, ILogger logger)
+        public static void InitializeWorkspace(OmniSharpWorkspace workspace, CompositionHost compositionHost, IConfiguration configuration, ILogger logger)
         {
-            var projectEventForwarder = composition.GetExport<ProjectEventForwarder>();
+            var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
 
             // Initialize all the project systems
-            foreach (var projectSystem in composition.GetExports<IProjectSystem>())
+            foreach (var projectSystem in compositionHost.GetExports<IProjectSystem>())
             {
                 try
                 {
@@ -136,7 +136,7 @@ namespace OmniSharp
             }
 
             // run all workspace options providers
-            foreach (var workspaceOptionsProvider in composition.GetExports<IWorkspaceOptionsProvider>())
+            foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>())
             {
                 try
                 {
@@ -171,7 +171,7 @@ namespace OmniSharp
                                               .Select(each => loader.Load(each.Name))
                                               .ToList();
 
-            PluginHost = CreateComposition(serviceProvider, optionsAccessor.Value, assemblies);
+            PluginHost = CreateCompositionHost(serviceProvider, optionsAccessor.Value, assemblies);
 
             Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 

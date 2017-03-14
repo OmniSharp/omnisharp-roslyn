@@ -19,15 +19,14 @@ namespace TestUtility.Fake
             _logger = _loggerFactory.CreateLogger<FakeServiceProvider>();
 
             _services[typeof(ILoggerFactory)] = _loggerFactory;
-            _services[typeof(IOmniSharpEnvironment)] = new FakeEnvironment();
+            _services[typeof(IOmniSharpEnvironment)] = new OmniSharpEnvironment();
             _services[typeof(IAssemblyLoader)] = new AssemblyLoader(_loggerFactory);
             _services[typeof(IMemoryCache)] = new MemoryCache(new MemoryCacheOptions());
         }
 
         public object GetService(Type serviceType)
         {
-            object result;
-            if (!_services.TryGetValue(serviceType, out result))
+            if (!_services.TryGetValue(serviceType, out var result))
             {
                 result = null;
             }

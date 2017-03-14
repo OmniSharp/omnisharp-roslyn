@@ -50,7 +50,7 @@ namespace TestUtility
 
         protected CompositionHost CreatePlugInHost(params Assembly[] assemblies)
         {
-            return Startup.CreateComposition(
+            return Startup.CreateCompositionHost(
                 serviceProvider: new FakeServiceProvider(this.LoggerFactory),
                 options: new FakeOmniSharpOptions().Value,
                 assemblies: ComputeHostAssemblies(assemblies));
