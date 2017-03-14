@@ -50,7 +50,7 @@ namespace TestUtility
 
         protected CompositionHost CreatePlugInHost(params Assembly[] assemblies)
         {
-            return Startup.ConfigureMef(
+            return Startup.CreateComposition(
                 serviceProvider: new FakeServiceProvider(this.LoggerFactory),
                 options: new FakeOmniSharpOptions().Value,
                 assemblies: ComputeHostAssemblies(assemblies));

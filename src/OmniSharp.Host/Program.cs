@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -86,7 +85,7 @@ namespace OmniSharp
                 var otherArgs = omnisharpApp.RemainingArguments.Union(omnisharpJsonArgs).Distinct();
                 Configuration.ZeroBasedIndices = zeroBasedIndicesOption.HasValue();
 
-                var omniSharpEnvironment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
+                var env = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
 
                 var config = new ConfigurationBuilder()
                     .AddCommandLine(new[] { "--server.urls", $"http://{serverInterface}:{serverPort}" });
@@ -108,7 +107,7 @@ namespace OmniSharp
                     .UseEnvironment("OmniSharp")
                     .ConfigureServices(serviceCollection =>
                     {
-                        serviceCollection.AddSingleton<IOmniSharpEnvironment>(omniSharpEnvironment);
+                        serviceCollection.AddSingleton<IOmniSharpEnvironment>(env);
                         serviceCollection.AddSingleton<ISharedTextWriter>(writer);
                         serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
                         serviceCollection.AddSingleton<IAssemblyLoader, AssemblyLoader>();

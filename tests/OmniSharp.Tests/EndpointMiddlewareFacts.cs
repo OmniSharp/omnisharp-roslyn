@@ -106,7 +106,7 @@ namespace OmniSharp.Tests
 
             var host = CreatePlugInHost(
                 GetAssembly<EndpointMiddlewareFacts>(),
-                GetAssembly<EndpointDescriptor>());
+                GetAssembly<OmniSharpEndpointMetadata>());
             var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
@@ -136,7 +136,7 @@ namespace OmniSharp.Tests
 
             var host = CreatePlugInHost(
                 GetAssembly<EndpointMiddlewareFacts>(),
-                GetAssembly<EndpointDescriptor>());
+                GetAssembly<OmniSharpEndpointMetadata>());
             var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
@@ -166,7 +166,7 @@ namespace OmniSharp.Tests
 
             var host = CreatePlugInHost(
                 GetAssembly<EndpointMiddlewareFacts>(),
-                GetAssembly<EndpointDescriptor>());
+                GetAssembly<OmniSharpEndpointMetadata>());
             var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();
@@ -193,7 +193,7 @@ namespace OmniSharp.Tests
 
             var host = CreatePlugInHost(
                 typeof(EndpointMiddlewareFacts).GetTypeInfo().Assembly,
-                typeof(EndpointDescriptor).GetTypeInfo().Assembly);
+                typeof(OmniSharpEndpointMetadata).GetTypeInfo().Assembly);
             var middleware = new EndpointMiddleware(_next, host, this.LoggerFactory);
 
             var context = new DefaultHttpContext();

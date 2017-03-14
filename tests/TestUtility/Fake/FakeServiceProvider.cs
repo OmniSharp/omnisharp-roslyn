@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Host.Loader;
 using OmniSharp.Services;
@@ -20,6 +21,7 @@ namespace TestUtility.Fake
             _services[typeof(ILoggerFactory)] = _loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = new FakeEnvironment();
             _services[typeof(IAssemblyLoader)] = new AssemblyLoader(_loggerFactory);
+            _services[typeof(IMemoryCache)] = new MemoryCache(new MemoryCacheOptions());
         }
 
         public object GetService(Type serviceType)
