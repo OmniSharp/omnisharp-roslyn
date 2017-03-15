@@ -11,7 +11,6 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
-using TestUtility.Fake;
 using TestUtility.Logging;
 using Xunit.Abstractions;
 
@@ -19,14 +18,14 @@ namespace TestUtility
 {
     public abstract class AbstractTestFixture
     {
-        private readonly ITestOutputHelper _output;
+        private readonly ITestOutputHelper _testOutput;
 
         protected readonly ILoggerFactory LoggerFactory;
         protected readonly IAssemblyLoader AssemblyLoader;
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
-            this._output = output;
+            this._testOutput = output;
             this.LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
             this.AssemblyLoader = new AssemblyLoader(this.LoggerFactory);
@@ -51,8 +50,9 @@ namespace TestUtility
 
         protected CompositionHost CreatePlugInHost(params Assembly[] assemblies)
         {
+            var environment = new OmniSharpEnvironment();
             return Startup.CreateCompositionHost(
-                serviceProvider: new FakeServiceProvider(null, this.LoggerFactory),
+                serviceProvider: new TestServiceProvider(environment, this.LoggerFactory),
                 options: new OmniSharpOptions(),
                 assemblies: ComputeHostAssemblies(assemblies));
         }
@@ -80,7 +80,7 @@ namespace TestUtility
                 workspace.Options = formattingProvider.Process(workspace.Options);
             }
 
-            await TestHelpers.AddProjectToWorkspaceAsync(
+            TestHelpers.AddProjectToWorkspace(
                 workspace,
                 "project.json",
                 new[] { "dnx451", "dnxcore50" },
@@ -88,6 +88,20 @@ namespace TestUtility
 
             await Task.Delay(50);
             return workspace;
+        }
+
+        protected TestOmniSharpHost CreateOmniSharpHost(string path = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
+        {
+            return TestOmniSharpHost.Create(path, this._testOutput, configurationData);
+        }
+
+        protected TestOmniSharpHost CreateOmniSharpHost(params TestFile[] testFiles)
+        {
+            var host = TestOmniSharpHost.Create(path: null, testOutput: this._testOutput, configurationData: null);
+
+            host.AddFilesToWorkspace(testFiles);
+
+            return host;
         }
     }
 }

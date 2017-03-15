@@ -50,7 +50,7 @@ namespace TestUtility
             return workspace;
         }
 
-        public static Task AddProjectToWorkspaceAsync(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
+        public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
         {
             var versionStamp = VersionStamp.Create();
 
@@ -99,8 +99,6 @@ namespace TestUtility
                     workspace.AddDocument(documentInfo);
                 }
             }
-
-            return Task.FromResult(workspace);
         }
     }
 }

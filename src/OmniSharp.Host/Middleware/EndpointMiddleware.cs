@@ -33,7 +33,7 @@ namespace OmniSharp.Middleware
             var endpoints = _host.GetExports<Lazy<IRequest, OmniSharpEndpointMetadata>>()
                 .Select(x => x.Metadata);
 
-            var handlers = _host.GetExports<Lazy<IRequestHandler, OmniSharpLanguage>>();
+            var handlers = _host.GetExports<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>>();
 
             _endpoints = new HashSet<string>(
                     endpoints

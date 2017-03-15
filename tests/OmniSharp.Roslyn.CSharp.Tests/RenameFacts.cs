@@ -239,7 +239,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             if (updateBuffer)
             {
-                await workspace.BufferManager.UpdateBuffer(request);
+                await workspace.BufferManager.UpdateBufferAsync(request);
             }
 
             return await controller.Handle(request);

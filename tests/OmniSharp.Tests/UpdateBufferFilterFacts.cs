@@ -25,24 +25,24 @@ namespace OmniSharp.Tests
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath(testFile.FileName).First();
 
             // ignore void buffers
-            await workspace.BufferManager.UpdateBuffer(new Request() { });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { });
             var sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = testFile.FileName });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = testFile.FileName });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { Buffer = "// c", FileName = "some_other_file.cs" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { Buffer = "// c", FileName = "some_other_file.cs" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
             // valid updates
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = testFile.FileName, Buffer = "interface I {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = testFile.FileName, Buffer = "interface I {}" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("interface I {}", sourceText.ToString());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = testFile.FileName, Buffer = "" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = testFile.FileName, Buffer = "" });
             sourceText = await workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
             Assert.Equal("", sourceText.ToString());
         }
@@ -53,7 +53,7 @@ namespace OmniSharp.Tests
             var testFile = new TestFile("test.cs", "class C {}");
             var workspace = await CreateWorkspaceAsync(testFile);
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = "test2.cs", Buffer = "interface I {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "test2.cs", Buffer = "interface I {}" });
 
             Assert.Equal(2, workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs").Length);
             var docId = workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs").FirstOrDefault();
@@ -73,7 +73,7 @@ namespace OmniSharp.Tests
             var testFile = new TestFile("test.cs", "class C {}");
             var workspace = await CreateWorkspaceAsync(testFile);
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = "transient.cs", Buffer = "interface I {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "transient.cs", Buffer = "interface I {}" });
 
             var docIds = workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
             Assert.Equal(2, docIds.Length);
@@ -88,7 +88,7 @@ namespace OmniSharp.Tests
             docIds = workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
             Assert.Equal(2, docIds.Length);
 
-            await workspace.BufferManager.UpdateBuffer(new Models.Request() { FileName = "transient.cs", Buffer = "enum E {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Models.Request() { FileName = "transient.cs", Buffer = "enum E {}" });
             var sourceText = await workspace.CurrentSolution.GetDocument(docIds.First()).GetTextAsync();
             Assert.Equal("enum E {}", sourceText.ToString());
             sourceText = await workspace.CurrentSolution.GetDocument(docIds.Last()).GetTextAsync();

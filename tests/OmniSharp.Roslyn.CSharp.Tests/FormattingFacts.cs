@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models;
 using OmniSharp.Options;
@@ -129,24 +130,26 @@ class C {
         [Fact]
         public async Task FormatRespectsIndentationSize()
         {
-            const string source = "namespace Bar\n{\n    class Foo {}\n}";
+            var testFile = new TestFile("dummy.cs", "namespace Bar\n{\n    class Foo {}\n}");
 
-            var testFile = new TestFile("dummy.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
-            workspace.Options = new CSharpWorkspaceOptionsProvider(new FormattingOptions
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                NewLine = "\n",
-                IndentationSize = 1
-            }).Process(workspace.Options);
-            var controller = new CodeFormatService(workspace);
+                var optionsProvider = new CSharpWorkspaceOptionsProvider(
+                    new FormattingOptions
+                    {
+                        NewLine = "\n",
+                        IndentationSize = 1
+                    });
 
-            var result = await controller.Handle(
-                new CodeFormatRequest
-                {
-                    FileName = testFile.FileName
-                });
+                host.Workspace.Options = optionsProvider.Process(host.Workspace.Options);
 
-            Assert.Equal("namespace Bar\n{\n class Foo { }\n}", result.Buffer);
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmnisharpEndpoints.CodeFormat, LanguageNames.CSharp);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal("namespace Bar\n{\n class Foo { }\n}", response.Buffer);
+            }
         }
 
         private static void AssertFormatTargetKind(SyntaxKind kind, string input)
@@ -163,34 +166,37 @@ class C {
         private async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
         {
             var testFile = new TestFile("dummy.cs", source);
-            var span = testFile.Content.GetSpans().Single();
-            var range = testFile.Content.GetRangeFromSpan(span);
 
-            var request = new FormatRangeRequest()
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                Buffer = testFile.Content.Code,
-                FileName = testFile.FileName,
-                Line = range.Start.Line,
-                Column = range.Start.Offset,
-                EndLine = range.End.Line,
-                EndColumn = range.End.Offset
-            };
+                var span = testFile.Content.GetSpans().Single();
+                var range = testFile.Content.GetRangeFromSpan(span);
 
-            var workspace = await CreateWorkspaceAsync(testFile);
-            var controller = new FormatRangeService(workspace);
+                var request = new FormatRangeRequest()
+                {
+                    Buffer = testFile.Content.Code,
+                    FileName = testFile.FileName,
+                    Line = range.Start.Line,
+                    Column = range.Start.Offset,
+                    EndLine = range.End.Line,
+                    EndColumn = range.End.Offset
+                };
 
-            var response = await controller.Handle(request);
-            var actual = response.Changes.ToArray();
+                var requestHandler = host.GetRequestHandler<FormatRangeService>(OmnisharpEndpoints.FormatRange, LanguageNames.CSharp);
 
-            Assert.Equal(expected.Length, actual.Length);
+                var response = await requestHandler.Handle(request);
+                var actual = response.Changes.ToArray();
 
-            for (var i = 0; i < expected.Length; i++)
-            {
-                Assert.Equal(expected[i].NewText, actual[i].NewText);
-                Assert.Equal(expected[i].StartLine, actual[i].StartLine);
-                Assert.Equal(expected[i].StartColumn, actual[i].StartColumn);
-                Assert.Equal(expected[i].EndLine, actual[i].EndLine);
-                Assert.Equal(expected[i].EndColumn, actual[i].EndColumn);
+                Assert.Equal(expected.Length, actual.Length);
+
+                for (var i = 0; i < expected.Length; i++)
+                {
+                    Assert.Equal(expected[i].NewText, actual[i].NewText);
+                    Assert.Equal(expected[i].StartLine, actual[i].StartLine);
+                    Assert.Equal(expected[i].StartColumn, actual[i].StartColumn);
+                    Assert.Equal(expected[i].EndLine, actual[i].EndLine);
+                    Assert.Equal(expected[i].EndColumn, actual[i].EndColumn);
+                }
             }
         }
     }

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Helpers;
 using TestUtility;
 using Xunit;
@@ -15,13 +14,11 @@ namespace OmniSharp.DotNetTest.Tests
     public class TestDiscoveryFacts : AbstractTestFixture
     {
         private readonly TestAssets _testAssets;
-        private readonly ILogger _logger;
 
         public TestDiscoveryFacts(ITestOutputHelper output)
             : base(output)
         {
             this._testAssets = TestAssets.Instance;
-            this._logger = this.LoggerFactory.CreateLogger<TestDiscoveryFacts>();
         }
 
         [Theory]
@@ -35,7 +32,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
-            using (var omnisharp = TestOmniSharp.Create(testProject.Directory, null, this.LoggerFactory))
+            using (var omnisharp = CreateOmniSharpHost(testProject.Directory))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
                 var solution = omnisharp.Workspace.CurrentSolution;

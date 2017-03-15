@@ -20,28 +20,30 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferIgnoresVoidRequests()
         {
-            var workspace = await CreateWorkspaceAsync(new TestFile("test.cs", "class C {}"));
-            Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
-            Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
-            Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+            using (var host = CreateOmniSharpHost(new TestFile("test.cs", "class C {}")))
+            {
+                Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
+                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
+                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { });
-            Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
-            Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
-            Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+                await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { });
+                Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
+                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
+                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = "", Buffer = "enum E {}" });
-            Assert.Equal(2, workspace.CurrentSolution.Projects.Count());
-            Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
-            Assert.Equal(1, workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+                await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "", Buffer = "enum E {}" });
+                Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
+                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
+                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+            }
         }
 
         [Fact]
         public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
         {
-            var workspace = await GetWorkspaceWithProjects();
+            var workspace = GetWorkspaceWithProjects();
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
             Assert.Equal(0, documents.Count());
         }
@@ -49,9 +51,9 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateBufferFindsProjectBasedOnPath()
         {
-            var workspace = await GetWorkspaceWithProjects();
+            var workspace = GetWorkspaceWithProjects();
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("src", "newFile.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "newFile.cs"));
             Assert.Equal(2, documents.Count());
 
@@ -78,7 +80,7 @@ namespace OmniSharp.Tests
                 FromDisk = true
             };
 
-            await workspace.BufferManager.UpdateBuffer(request);
+            await workspace.BufferManager.UpdateBufferAsync(request);
 
             var document = workspace.GetDocument(fileName);
             var text = await document.GetTextAsync();
@@ -93,23 +95,23 @@ namespace OmniSharp.Tests
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
-            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
+            TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo.csproj"),
                 frameworks: null,
                 testFiles: new[] { new TestFile(Path.Combine("src", "root", "foo.cs"), "class C1 {}") });
 
-            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
+            TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo", "bar", "insane.csproj"),
                 frameworks: null,
                 testFiles: new [] { new TestFile(Path.Combine("src", "root", "foo", "bar", "nested", "code.cs"), "class C2 {}") });
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "root", "bar.cs"));
             Assert.Equal(1, documents.Count());
             Assert.Equal(Path.Combine("src", "root", "foo.csproj"), documents.ElementAt(0).Project.FilePath);
             Assert.Equal(2, documents.ElementAt(0).Project.Documents.Count());
 
-            await workspace.BufferManager.UpdateBuffer(new Request() { FileName = Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"), Buffer = "enum E {}" });
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"), Buffer = "enum E {}" });
             documents = workspace.GetDocuments(Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"));
             Assert.Equal(1, documents.Count());
             Assert.Equal(Path.Combine("src", "root", "foo", "bar", "insane.csproj"), documents.ElementAt(0).Project.FilePath);
@@ -119,9 +121,9 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task UpdateRequestHandleChanges()
         {
-            var workspace = await GetWorkspaceWithProjects();
+            var workspace = GetWorkspaceWithProjects();
 
-            await workspace.BufferManager.UpdateBuffer(new Request()
+            await workspace.BufferManager.UpdateBufferAsync(new Request()
             {
                 FileName = Path.Combine("src", "a.cs"),
                 Changes = new LinePositionSpanTextChange[]
@@ -148,21 +150,23 @@ namespace OmniSharp.Tests
             });
 
             var document = workspace.GetDocument(Path.Combine("src", "a.cs"));
-            Assert.Equal("interface I {}", (await document.GetTextAsync()).ToString());
+            var text = await document.GetTextAsync();
+
+            Assert.Equal("interface I {}", text.ToString());
         }
 
-        private async static Task<OmniSharpWorkspace> GetWorkspaceWithProjects()
+        private static OmniSharpWorkspace GetWorkspaceWithProjects()
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
-            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
+            TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "project.json"),
                 frameworks: new[] { "dnx451", "dnxcore50" },
                 testFiles: new [] { new TestFile(Path.Combine("src", "a.cs"), "class C {}") });
 
-            await TestHelpers.AddProjectToWorkspaceAsync(workspace,
+            TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("test", "project.json"),
                 frameworks: new[] { "dnx451", "dnxcore50" },
                 testFiles: new [] { new TestFile(Path.Combine("test", "b.cs"), "class C {}") });
