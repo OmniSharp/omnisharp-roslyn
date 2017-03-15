@@ -161,20 +161,6 @@ namespace OmniSharp
             IAssemblyLoader loader,
             IOptions<OmniSharpOptions> options)
         {
-            Func<RuntimeLibrary, bool> shouldLoad = lib => lib.Dependencies.Any(dep => dep.Name == "OmniSharp.Abstractions" ||
-                                                                                       dep.Name == "OmniSharp.Roslyn");
-
-            var dependencyContext = DependencyContext.Default;
-            var assemblies = dependencyContext.RuntimeLibraries
-                                              .Where(shouldLoad)
-                                              .SelectMany(lib => lib.GetDefaultAssemblyNames(dependencyContext))
-                                              .Select(each => loader.Load(each.Name))
-                                              .ToList();
-
-            PluginHost = CreateCompositionHost(serviceProvider, options.Value, assemblies);
-
-            Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
-
             if (_env.TransportType == TransportType.Stdio)
             {
                 loggerFactory.AddStdio(writer, (category, level) => LogFilter(category, level, _env));
@@ -186,10 +172,10 @@ namespace OmniSharp
 
             var logger = loggerFactory.CreateLogger<Startup>();
 
-            foreach (var assembly in assemblies)
-            {
-                logger.LogDebug($"Loaded {assembly.FullName}");
-            }
+            var assemblies = DiscoverOmniSharpAssemblies(loader, logger);
+
+            PluginHost = CreateCompositionHost(serviceProvider, options.Value, assemblies);
+            Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
             app.UseRequestLogging();
             app.UseExceptionHandler("/error");
@@ -209,6 +195,48 @@ namespace OmniSharp
             InitializeWorkspace(Workspace, PluginHost, Configuration, logger);
 
             logger.LogInformation("Configuration finished.");
+        }
+
+        private static List<Assembly> DiscoverOmniSharpAssemblies(IAssemblyLoader loader, ILogger logger)
+        {
+            // Iterate through all runtime libraries in the dependency context and
+            // load them if they depend on OmniSharp.
+
+            var assemblies = new List<Assembly>();
+            var dependencyContext = DependencyContext.Default;
+
+            foreach (var runtimeLibrary in dependencyContext.RuntimeLibraries)
+            {
+                if (DependsOnOmniSharp(runtimeLibrary))
+                {
+                    foreach (var name in runtimeLibrary.GetDefaultAssemblyNames(dependencyContext))
+                    {
+                        var assembly = loader.Load(name);
+                        if (assembly != null)
+                        {
+                            assemblies.Add(assembly);
+
+                            logger.LogDebug($"Loaded {assembly.FullName}");
+                        }
+                    }
+                }
+            }
+
+            return assemblies;
+        }
+
+        private static bool DependsOnOmniSharp(RuntimeLibrary runtimeLibrary)
+        {
+            foreach (var dependency in runtimeLibrary.Dependencies)
+            {
+                if (dependency.Name == "OmniSharp.Abstractions" ||
+                    dependency.Name == "OmniSharp.Roslyn")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
