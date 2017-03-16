@@ -37,6 +37,7 @@ namespace OmniSharp.Script
             "System.Threading.Tasks"
         };
 
+        private const string CsxExtension = ".csx";
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private static readonly Lazy<CSharpCompilationOptions> CompilationOptions = new Lazy<CSharpCompilationOptions>(() =>
@@ -92,7 +93,7 @@ namespace OmniSharp.Script
 
         public string Key => "Script";
         public string Language => LanguageNames.CSharp;
-        public IEnumerable<string> Extensions => new[] { ".csx" };
+        public IEnumerable<string> Extensions => new[] { CsxExtension };
 
         public void Initalize(IConfiguration configuration)
         {
@@ -232,6 +233,12 @@ namespace OmniSharp.Script
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
+            // only react to .CSX file paths
+            if (!filePath.EndsWith(CsxExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<object>(null);
+            }
+
             var document = _workspace.GetDocument(filePath);
             var projectFilePath = document != null
                 ? document.Project.FilePath
