@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.CodeAnalysis.Classification;
-using Microsoft.CodeAnalysis.Text;
-
 namespace OmniSharp.Models
 {
     public enum HighlightClassification
