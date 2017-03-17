@@ -9,7 +9,7 @@ using OmniSharp.Utilities;
 
 namespace TestUtility
 {
-    internal class TestServiceProvider : DisposableObject, IServiceProvider
+    public class TestServiceProvider : DisposableObject, IServiceProvider
     {
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
