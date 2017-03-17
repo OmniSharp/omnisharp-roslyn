@@ -111,11 +111,6 @@ namespace TestUtility
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)
         {
-            if (testFiles.Length == 0)
-            {
-                return;
-            }
-
             TestHelpers.AddProjectToWorkspace(
                 this.Workspace,
                 "project.json",

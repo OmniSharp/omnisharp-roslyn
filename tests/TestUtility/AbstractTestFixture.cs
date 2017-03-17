@@ -90,6 +90,13 @@ namespace TestUtility
             return workspace;
         }
 
+        protected OmniSharpTestHost CreateEmptyOmniSharpHost()
+        {
+            var host = OmniSharpTestHost.Create(path: null, testOutput: this._testOutput, configurationData: null);
+            host.AddFilesToWorkspace();
+            return host;
+        }
+
         protected OmniSharpTestHost CreateOmniSharpHost(string path = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
             return OmniSharpTestHost.Create(path, this._testOutput, configurationData);
@@ -99,7 +106,10 @@ namespace TestUtility
         {
             var host = OmniSharpTestHost.Create(path: null, testOutput: this._testOutput, configurationData: null);
 
-            host.AddFilesToWorkspace(testFiles);
+            if (testFiles.Length > 0)
+            {
+                host.AddFilesToWorkspace(testFiles);
+            }
 
             return host;
         }
