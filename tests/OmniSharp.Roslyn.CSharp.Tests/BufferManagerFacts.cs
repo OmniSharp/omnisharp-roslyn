@@ -70,22 +70,23 @@ namespace OmniSharp.Tests
 
             var fileName = Path.GetTempPath() + Guid.NewGuid().ToString() + ".cs";
             var testFile = new TestFile(fileName, string.Empty);
-            var workspace = await CreateWorkspaceAsync(testFile);
-
-            File.WriteAllText(fileName, newCode);
-
-            var request = new UpdateBufferRequest
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                FileName = fileName,
-                FromDisk = true
-            };
+                File.WriteAllText(fileName, newCode);
 
-            await workspace.BufferManager.UpdateBufferAsync(request);
+                var request = new UpdateBufferRequest
+                {
+                    FileName = fileName,
+                    FromDisk = true
+                };
 
-            var document = workspace.GetDocument(fileName);
-            var text = await document.GetTextAsync();
+                await host.Workspace.BufferManager.UpdateBufferAsync(request);
 
-            Assert.Equal(newCode, text.ToString());
+                var document = host.Workspace.GetDocument(fileName);
+                var text = await document.GetTextAsync();
+
+                Assert.Equal(newCode, text.ToString());
+            }
         }
 
         [Fact]
