@@ -741,7 +741,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         private static async Task<NavigateResponse> SendRequest(
-            TestOmniSharpHost host,
+            OmniSharpTestHost host,
             TestFile testFile,
             int startLine,
             int startColumn,

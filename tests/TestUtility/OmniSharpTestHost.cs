@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -21,7 +20,7 @@ using Xunit.Abstractions;
 
 namespace TestUtility
 {
-    public class TestOmniSharpHost : DisposableObject
+    public class OmniSharpTestHost : DisposableObject
     {
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
@@ -42,7 +41,7 @@ namespace TestUtility
         public ILoggerFactory LoggerFactory { get; }
         public OmniSharpWorkspace Workspace { get; }
 
-        private TestOmniSharpHost(
+        private OmniSharpTestHost(
             TestServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             OmniSharpWorkspace workspace,
@@ -55,9 +54,9 @@ namespace TestUtility
             this.Workspace = workspace;
         }
 
-        ~TestOmniSharpHost()
+        ~OmniSharpTestHost()
         {
-            throw new InvalidOperationException($"{nameof(TestOmniSharpHost)}.{nameof(Dispose)}() not called.");
+            throw new InvalidOperationException($"{nameof(OmniSharpTestHost)}.{nameof(Dispose)}() not called.");
         }
 
         protected override void DisposeCore(bool disposing)
@@ -69,7 +68,7 @@ namespace TestUtility
             this.Workspace.Dispose();
         }
 
-        public static TestOmniSharpHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
+        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
             var builder = new ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
@@ -85,11 +84,11 @@ namespace TestUtility
                 assemblies: s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
-            var logger = loggerFactory.CreateLogger<TestOmniSharpHost>();
+            var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
 
             Startup.InitializeWorkspace(workspace, compositionHost, configuration, logger);
 
-            return new TestOmniSharpHost(serviceProvider, loggerFactory, workspace, compositionHost);
+            return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }
 
         public T GetExport<T>()
