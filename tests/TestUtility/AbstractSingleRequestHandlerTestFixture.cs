@@ -16,7 +16,7 @@ namespace TestUtility
 
         protected TRequestHandler GetRequestHandler(TestOmniSharpHost host)
         {
-            return host.GetRequestHandler<TRequestHandler>(EndpointName, LanguageNames.CSharp);
+            return host.GetRequestHandler<TRequestHandler>(EndpointName);
         }
     }
 }

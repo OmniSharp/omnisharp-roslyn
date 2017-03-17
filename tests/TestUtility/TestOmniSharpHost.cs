@@ -4,6 +4,7 @@ using System.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
@@ -96,7 +97,7 @@ namespace TestUtility
             return this._compositionHost.GetExport<T>();
         }
 
-        public THandler GetRequestHandler<THandler>(string name, string language) where THandler : IRequestHandler
+        public THandler GetRequestHandler<THandler>(string name) where THandler : IRequestHandler
         {
             if (_handlers == null)
             {
@@ -106,7 +107,7 @@ namespace TestUtility
                     elementSelector: export => export);
             }
 
-            return (THandler)_handlers[(name, language)].Value;
+            return (THandler)_handlers[(name, LanguageNames.CSharp)].Value;
         }
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)

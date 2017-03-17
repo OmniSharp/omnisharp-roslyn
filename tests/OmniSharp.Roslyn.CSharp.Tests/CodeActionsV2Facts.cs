@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
@@ -135,7 +134,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             using (var host = CreateOmniSharpHost(testFile))
             {
-                var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmnisharpEndpoints.V2.GetCodeActions, LanguageNames.CSharp);
+                var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmnisharpEndpoints.V2.GetCodeActions);
 
                 var span = testFile.Content.GetSpans().Single();
                 var range = testFile.Content.GetRangeFromSpan(span);
@@ -161,7 +160,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             using (var host = CreateOmniSharpHost(testFile))
             {
-                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmnisharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp);
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmnisharpEndpoints.V2.RunCodeAction);
 
                 var span = testFile.Content.GetSpans().Single();
                 var range = testFile.Content.GetRangeFromSpan(span);

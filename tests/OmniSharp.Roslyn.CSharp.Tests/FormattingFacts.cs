@@ -143,7 +143,7 @@ class C {
 
                 host.Workspace.Options = optionsProvider.Process(host.Workspace.Options);
 
-                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmnisharpEndpoints.CodeFormat, LanguageNames.CSharp);
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmnisharpEndpoints.CodeFormat);
 
                 var request = new CodeFormatRequest { FileName = testFile.FileName };
                 var response = await requestHandler.Handle(request);
@@ -182,7 +182,7 @@ class C {
                     EndColumn = range.End.Offset
                 };
 
-                var requestHandler = host.GetRequestHandler<FormatRangeService>(OmnisharpEndpoints.FormatRange, LanguageNames.CSharp);
+                var requestHandler = host.GetRequestHandler<FormatRangeService>(OmnisharpEndpoints.FormatRange);
 
                 var response = await requestHandler.Handle(request);
                 var actual = response.Changes.ToArray();
