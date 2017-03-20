@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -70,6 +71,12 @@ namespace TestUtility
 
         public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
+            var dotNetPath = Path.Combine(TestAssets.Instance.RootFolder, ".dotnet", "dotnet.exe");
+            if (!File.Exists(dotNetPath))
+            {
+                throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
+            }
+
             var builder = new ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
             var configuration = builder.Build();
@@ -86,6 +93,9 @@ namespace TestUtility
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
+
+            var dotNetCli = compositionHost.GetExport<DotNetCliService>();
+            dotNetCli.SetDotNetPath(dotNetPath);
 
             Startup.InitializeWorkspace(workspace, compositionHost, configuration, logger);
 
