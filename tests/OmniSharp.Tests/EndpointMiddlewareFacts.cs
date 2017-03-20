@@ -114,7 +114,8 @@ namespace OmniSharp.Tests
         private PlugInHost CreatePlugInHost(params Assembly[] assemblies)
         {
             var environment = new OmniSharpEnvironment();
-            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory);
+            var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
+            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter);
             var compositionHost = Startup.CreateCompositionHost(
                 serviceProvider: serviceProvider,
                 options: new OmniSharpOptions(),

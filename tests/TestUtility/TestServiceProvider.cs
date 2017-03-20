@@ -14,7 +14,7 @@ namespace TestUtility
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
 
-        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory)
+        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
 
@@ -22,7 +22,7 @@ namespace TestUtility
             _services[typeof(IOmniSharpEnvironment)] = environment;
             _services[typeof(IAssemblyLoader)] = new AssemblyLoader(loggerFactory);
             _services[typeof(IMemoryCache)] = new MemoryCache(new MemoryCacheOptions());
-            _services[typeof(ISharedTextWriter)] = new SharedConsoleWriter();
+            _services[typeof(ISharedTextWriter)] = sharedTextWriter;
         }
 
         ~TestServiceProvider()

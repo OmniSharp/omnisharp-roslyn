@@ -76,7 +76,8 @@ namespace TestUtility
 
             var environment = new OmniSharpEnvironment(path);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory);
+            var sharedTextWriter = new TestSharedTextWriter(testOutput);
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter);
 
             var compositionHost = Startup.CreateCompositionHost(
                 serviceProvider,
