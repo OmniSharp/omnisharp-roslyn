@@ -71,7 +71,13 @@ namespace TestUtility
 
         public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
-            var dotNetPath = Path.Combine(TestAssets.Instance.RootFolder, ".dotnet", "dotnet.exe");
+            var dotNetPath = Path.Combine(TestAssets.Instance.RootFolder, ".dotnet", "dotnet");
+
+            if (!File.Exists(dotNetPath))
+            {
+                dotNetPath = Path.ChangeExtension(dotNetPath, ".exe");
+            }
+
             if (!File.Exists(dotNetPath))
             {
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
