@@ -23,7 +23,7 @@ namespace OmniSharp.Script
     {
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
-        private static readonly IEnumerable<string> DefaultNamespaces = new[]
+        internal static readonly IEnumerable<string> DefaultNamespaces = new[]
         {
             "System",
             "System.IO",
