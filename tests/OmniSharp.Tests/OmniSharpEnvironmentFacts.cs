@@ -4,7 +4,7 @@ using Xunit;
 
 namespace OmniSharp.Tests
 {
-    public class OmnisharpEnvironmentFacts
+    public class OmniSharpEnvironmentFacts
     {
 
         [Fact]

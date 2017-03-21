@@ -99,9 +99,12 @@ namespace OmniSharp.Workers.Diagnostics
             var tasks = new List<Task<DiagnosticResult>>();
             for (var i = 0; i < 50; i++)
             {
-                if (_openDocuments.IsEmpty) break;
-                string filePath = null;
-                if (_openDocuments.TryDequeue(out filePath))
+                if (_openDocuments.IsEmpty)
+                {
+                    break;
+                }
+
+                if (_openDocuments.TryDequeue(out var filePath))
                 {
                     tasks.Add(this.ProcessNextItem(filePath));
                 }

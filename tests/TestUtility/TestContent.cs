@@ -61,8 +61,7 @@ namespace TestUtility
 
         public ImmutableList<TextSpan> GetSpans(string name = null)
         {
-            ImmutableList<TextSpan> result;
-            if (this.spans.TryGetValue(name ?? string.Empty, out result))
+            if (this.spans.TryGetValue(name ?? string.Empty, out var result))
             {
                 return result;
             }
@@ -200,8 +199,7 @@ namespace TestUtility
 
         private static void AddSpan(Dictionary<string, List<TextSpan>> spans, string spanName, int spanStart, int spanEnd)
         {
-            List<TextSpan> spanList;
-            if (!spans.TryGetValue(spanName, out spanList))
+            if (!spans.TryGetValue(spanName, out var spanList))
             {
                 spanList = new List<TextSpan>();
                 spans.Add(spanName, spanList);

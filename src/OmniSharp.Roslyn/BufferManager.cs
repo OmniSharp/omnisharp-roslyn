@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
 
-        public async Task UpdateBuffer(Request request)
+        public async Task UpdateBufferAsync(Request request)
         {
             var buffer = request.Buffer;
             var changes = request.Changes;
@@ -75,7 +75,7 @@ namespace OmniSharp.Roslyn
             }
         }
 
-        public async Task UpdateBuffer(ChangeBufferRequest request)
+        public async Task UpdateBufferAsync(ChangeBufferRequest request)
         {
             if (request.FileName == null)
             {

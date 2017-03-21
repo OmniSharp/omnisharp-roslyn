@@ -2,15 +2,6 @@ using System.Composition;
 
 namespace OmniSharp.Mef
 {
-    public interface IRequestHandler { }
-
-    public class OmniSharpLanguage
-    {
-        public string EndpointName { get; set; }
-
-        public string Language { get; set; }
-    }
-
     [MetadataAttribute]
     public class OmniSharpHandlerAttribute : ExportAttribute
     {

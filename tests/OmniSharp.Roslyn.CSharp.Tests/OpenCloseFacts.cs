@@ -7,60 +7,35 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class OpenCloseFacts : AbstractTestFixture
+    public class OpenCloseFacts : AbstractSingleRequestHandlerTestFixture<FileOpenService>
     {
         public OpenCloseFacts(ITestOutputHelper output)
             : base(output)
         {
         }
 
+        protected override string EndpointName => OmnisharpEndpoints.Open;
+
         [Fact]
         public async Task AddsOpenFile()
         {
-            var source1 = @"using System; class Foo { }";
-            var source2 = @"class Bar { private Foo foo; }";
+            var testFile1 = new TestFile("foo.cs", @"using System; class Foo { }");
+            var testFile2 = new TestFile("bar.cs", @"class Bar { private Foo foo; }");
 
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
-
-            var document = workspace.GetDocumentId("foo.cs");
-
-            var controller = new FileOpenService(workspace);
-            var response = await controller.Handle(new FileOpenRequest
+            using (var host = CreateOmniSharpHost(testFile1, testFile2))
             {
-                FileName = "foo.cs"
-            });
+                var documentId = host.Workspace.GetDocumentId("foo.cs");
+                var requestHandler = GetRequestHandler(host);
 
-            Assert.True(workspace.IsDocumentOpen(document));
-        }
+                var request = new FileOpenRequest
+                {
+                    FileName = "foo.cs"
+                };
 
-        public async Task RemovesOpenFile()
-        {
-            var source1 = @"using System; class Foo { }";
-            var source2 = @"class Bar { private Foo foo; }";
+                var response = await requestHandler.Handle(request);
 
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
-
-            var document = workspace.GetDocumentId("foo.cs");
-
-            var openController = new FileOpenService(workspace);
-            var closeController = new FileOpenService(workspace);
-            var openResponse = await openController.Handle(new FileOpenRequest
-            {
-                FileName = "foo.cs"
-            });
-
-            Assert.True(workspace.IsDocumentOpen(document));
-
-            var closeResponse = await openController.Handle(new FileOpenRequest
-            {
-                FileName = "foo.cs"
-            });
-
-            Assert.False(workspace.IsDocumentOpen(document));
+                Assert.True(host.Workspace.IsDocumentOpen(documentId));
+            }
         }
     }
 }

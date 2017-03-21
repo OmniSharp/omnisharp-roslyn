@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class IntellisenseFacts : AbstractAutoCompleteTests
+    public class IntellisenseFacts : AbstractAutoCompleteTestFixture
     {
         private readonly ILogger _logger;
 
@@ -31,9 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(input, wantSnippet: true);
-            var completions = await FindCompletionsAsync(input, request);
-
+            var completions = await FindCompletionsAsync(input, wantSnippet: true);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo");
         }
 
@@ -49,9 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(input, wantSnippet: true);
-            var completions = await FindCompletionsAsync(input, request);
-
+            var completions = await FindCompletionsAsync(input, wantSnippet: true);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "foo");
         }
 
@@ -69,9 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(input, wantSnippet: true);
-            var completions = await FindCompletionsAsync(input, request);
-
+            var completions = await FindCompletionsAsync(input, wantSnippet: true);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(2), "Foo()", "Foo(int bar = 1)");
         }
 
@@ -89,9 +83,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var request = CreateRequest(input, wantSnippet: false);
-            var completions = await FindCompletionsAsync(input, request);
-
+            var completions = await FindCompletionsAsync(input, wantSnippet: false);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo(int bar = 1)");
         }
 
@@ -107,7 +99,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(input);
-
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "TryParse");
         }
 
@@ -123,7 +114,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(input);
-
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
         }
 
@@ -139,7 +129,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(input);
-
             ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "NewGuid()");
         }
 
@@ -157,7 +146,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(input);
-
             ContainsCompletions(completions.Select(c => c.CompletionText), "myvar", "MyClass1");
         }
 
@@ -175,7 +163,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }";
 
             var completions = await FindCompletionsAsync(input);
-
             ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
         }
 

@@ -8,12 +8,14 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class SignatureHelpFacts : AbstractTestFixture
+    public class SignatureHelpFacts : AbstractSingleRequestHandlerTestFixture<SignatureHelpService>
     {
         public SignatureHelpFacts(ITestOutputHelper output)
             : base(output)
         {
         }
+
+        protected override string EndpointName => OmnisharpEndpoints.SignatureHelp;
 
         [Fact]
         public async Task NoInvocationNoHelp1()
@@ -401,20 +403,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<SignatureHelp> GetSignatureHelp(string source)
         {
             var testFile = new TestFile("dummy.cs", source);
-            var point = testFile.Content.Text.GetPointFromPosition(testFile.Content.Position);
-
-            var request = new SignatureHelpRequest()
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                FileName = testFile.FileName,
-                Line = point.Line,
-                Column = point.Offset,
-                Buffer = testFile.Content.Code
-            };
+                var point = testFile.Content.GetPointFromPosition();
 
-            var workspace = await CreateWorkspaceAsync(testFile);
-            var controller = new SignatureHelpService(workspace);
+                var request = new SignatureHelpRequest()
+                {
+                    FileName = testFile.FileName,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Buffer = testFile.Content.Code
+                };
 
-            return await controller.Handle(request);
+                var requestHandler = GetRequestHandler(host);
+
+                return await requestHandler.Handle(request);
+            }
         }
     }
 }

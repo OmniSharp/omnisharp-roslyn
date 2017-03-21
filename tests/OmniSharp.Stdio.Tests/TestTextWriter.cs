@@ -11,21 +11,14 @@ namespace OmniSharp.Stdio.Tests
         private readonly IEnumerator<Action<string>> _callbacks;
         private readonly ManualResetEvent _completion;
 
+        public WaitHandle Completion => _completion;
+        public Exception Exception { get; private set; }
+
         public TestTextWriter(params Action<string>[] callback)
         {
             _callbacks = new List<Action<string>>(callback).GetEnumerator();
             _callbacks.MoveNext();
             _completion = new ManualResetEvent(false);
-        }
-
-        public WaitHandle Completion
-        {
-            get { return _completion; }
-        }
-
-        public Exception Exception
-        {
-            get; private set;
         }
 
         public void WriteLine(object value)
