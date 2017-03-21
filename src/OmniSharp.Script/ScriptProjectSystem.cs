@@ -23,7 +23,7 @@ namespace OmniSharp.Script
     {
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
-        internal static readonly IEnumerable<string> DefaultNamespaces = new[]
+        private static readonly IEnumerable<string> DefaultNamespaces = new[]
         {
             "System",
             "System.IO",
@@ -93,7 +93,7 @@ namespace OmniSharp.Script
 
         public string Key => "Script";
         public string Language => LanguageNames.CSharp;
-        public IEnumerable<string> Extensions => new[] { CsxExtension };
+        public IEnumerable<string> Extensions { get; } = new[] { CsxExtension };
 
         public void Initalize(IConfiguration configuration)
         {
@@ -222,8 +222,7 @@ namespace OmniSharp.Script
 
         private ProjectInfo GetProjectFileInfo(string path)
         {
-            ProjectInfo projectFileInfo;
-            if (!_projects.TryGetValue(path, out projectFileInfo))
+            if (!_projects.TryGetValue(path, out ProjectInfo projectFileInfo))
             {
                 return null;
             }
