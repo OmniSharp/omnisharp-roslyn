@@ -173,16 +173,14 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
 }
 
 /// <summary>
-///  Run restore with the given arguments
+///  Run tool with the given arguments
 /// </summary>
 /// <param name="command">Executable to run</param>
 /// <param name="arguments">Arguments</param>
 /// <param name="runOptions">Optional settings</param>
 /// <returns>The exit status for further queries</returns>
-ExitStatus RunRestore(string command, string arguments, string workingDirectory)
+ExitStatus RunTool(string command, string arguments, string workingDirectory, string logFileName = null)
 {
-    Information("Restoring packages in {0}....", workingDirectory);
-
     var output = new List<string>();
     var exitStatus = Run(command, arguments, new RunOptions(workingDirectory, output));
 
@@ -190,13 +188,16 @@ ExitStatus RunRestore(string command, string arguments, string workingDirectory)
 
     if (exitStatus.Code == 0)
     {
-        Information("Package restore successful!");
-
-        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, log);
+        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "{0}", log);
     }
     else
     {
-        Error(log);
+        Context.Log.Write(Verbosity.Normal, LogLevel.Error, "{0}", log);
+    }
+
+    if (logFileName != null)
+    {
+        System.IO.File.WriteAllText(logFileName, log);
     }
 
     return exitStatus;
