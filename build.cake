@@ -410,7 +410,7 @@ Task("Restore")
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        Information($"Restoring packages in {folder}...");
+        Information($"Restoring project.json packages in {folder}...");
 
         RunTool(env.LegacyDotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
@@ -509,6 +509,8 @@ Task("Test")
 {
     foreach (var testProject in buildPlan.TestProjects)
     {
+        PrintBlankLine();
+
         var instanceFolder = CombinePaths(env.Folders.Tests, testProject, "bin", testConfiguration, "net46");
 
         // Copy xunit executable to test folder to solve path errors
@@ -519,6 +521,7 @@ Task("Test")
         var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
         var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
         var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
+
         if (IsRunningOnWindows())
         {
             Run(xunitInstancePath, arguments, instanceFolder)
@@ -595,6 +598,7 @@ Task("OnlyPublish")
         }
 
         // Restore the OmniSharp.csproj with this runtime.
+        PrintBlankLine();
         Information($"Restoring packages in {projectName} for {rid}...");
 
         RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)

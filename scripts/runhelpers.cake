@@ -197,7 +197,6 @@ ExitStatus RunTool(string command, string arguments, string workingDirectory, st
 
     if (logFileName != null)
     {
-        Information("Writing Log File");
         System.IO.File.WriteAllText(logFileName, log);
     }
 
