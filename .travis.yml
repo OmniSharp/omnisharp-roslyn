@@ -33,7 +33,7 @@ before_install:
       brew list
     fi
 
-  - ./msbuild.sh /version
+  - msbuild /version
 
 script:
   - travis_retry ./build.sh --target TravisTestAll
