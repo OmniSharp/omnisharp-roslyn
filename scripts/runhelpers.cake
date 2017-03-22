@@ -188,15 +188,16 @@ ExitStatus RunTool(string command, string arguments, string workingDirectory, st
 
     if (exitStatus.Code == 0)
     {
-        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, log);
+        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "{0}", log);
     }
     else
     {
-        Error(log);
+        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Error, "{0}", log);
     }
 
     if (logFileName != null)
     {
+        Information("Writing Log File");
         System.IO.File.WriteAllText(logFileName, log);
     }
 
