@@ -18,6 +18,10 @@ namespace OmniSharp.Services
         private readonly ConcurrentDictionary<string, object> _locks;
         private readonly SemaphoreSlim _semaphore;
 
+        private string _dotnetPath = "dotnet";
+
+        public string DotNetPath => _dotnetPath;
+
         [ImportingConstructor]
         public DotNetCliService(ILoggerFactory loggerFactory, IEventEmitter eventEmitter)
         {
@@ -34,6 +38,24 @@ namespace OmniSharp.Services
             environment.Remove("MSBUILD_EXE_PATH");
             environment.Remove("MSBuildExtensionsPath");
             environment.Remove("MSBuildSDKsPath");
+        }
+
+        public void SetDotNetPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                path = "dotnet";
+            }
+
+            if (string.Equals(_dotnetPath, path, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _dotnetPath = path;
+
+            _logger.LogInformation($"DotNetPath set to {_dotnetPath}");
+
         }
 
         public void Restore(string projectFilePath, Action onFailure = null)
@@ -54,14 +76,13 @@ namespace OmniSharp.Services
                     {
                         // A successful restore will update the project lock file which is monitored
                         // by the dotnet project system which eventually update the Roslyn model
-                        exitStatus = ProcessHelper.Run("dotnet", "restore", projectDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables);
+                        exitStatus = ProcessHelper.Run(_dotnetPath, "restore", projectDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables);
                     }
                     finally
                     {
                         _semaphore.Release();
 
-                        object removedLock;
-                        _locks.TryRemove(projectFilePath, out removedLock);
+                        _locks.TryRemove(projectFilePath, out _);
 
                         _eventEmitter.RestoreFinished(projectFilePath, exitStatus.Succeeded);
 

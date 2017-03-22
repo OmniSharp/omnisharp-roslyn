@@ -1,12 +1,5 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Composition;
-using System.Linq;
-using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Models.V2;
-using OmniSharp.Services;
 
 namespace OmniSharp.Services
 {

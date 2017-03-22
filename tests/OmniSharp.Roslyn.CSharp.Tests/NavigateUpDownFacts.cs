@@ -731,16 +731,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var startPoint = testFile.Content.Text.GetPointFromPosition(start);
             var endPoint = testFile.Content.Text.GetPointFromPosition(end);
 
-            var workspace = await CreateWorkspaceAsync(testFile);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var response = await SendRequest(host, testFile, startPoint.Line, startPoint.Offset, direction);
 
-            var response = await SendRequest(workspace, testFile, startPoint.Line, startPoint.Offset, direction);
-
-            Assert.Equal(endPoint.Line, response.Line);
-            Assert.Equal(endPoint.Offset, response.Column);
+                Assert.Equal(endPoint.Line, response.Line);
+                Assert.Equal(endPoint.Offset, response.Column);
+            }
         }
 
         private static async Task<NavigateResponse> SendRequest(
-            OmniSharpWorkspace workspace,
+            OmniSharpTestHost host,
             TestFile testFile,
             int startLine,
             int startColumn,
@@ -750,7 +751,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 case Direction.Up:
                     {
-                        var service = new NavigateUpService(workspace);
+                        var requestHandler = host.GetRequestHandler<NavigateUpService>(OmnisharpEndpoints.NavigateUp);
                         var request = new NavigateUpRequest
                         {
                             Line = startLine,
@@ -759,12 +760,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             Buffer = testFile.Content.Code
                         };
 
-                        return await service.Handle(request);
+                        return await requestHandler.Handle(request);
                     }
 
                 case Direction.Down:
                     {
-                        var service = new NavigateDownService(workspace);
+                        var requestHandler = host.GetRequestHandler<NavigateDownService>(OmnisharpEndpoints.NavigateDown);
                         var request = new NavigateDownRequest
                         {
                             Line = startLine,
@@ -773,7 +774,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             Buffer = testFile.Content.Code
                         };
 
-                        return await service.Handle(request);
+                        return await requestHandler.Handle(request);
                     }
             }
 

@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class SnippetFacts : AbstractAutoCompleteTests
+    public class SnippetFacts : AbstractAutoCompleteTestFixture
     {
         private readonly ILogger _logger;
 

@@ -5,8 +5,24 @@ namespace OmniSharp.Services
 {
     public class OmniSharpEnvironment : IOmniSharpEnvironment
     {
-        public OmniSharpEnvironment(string path, int port, int hostPid, LogLevel traceType, TransportType transportType, string[] otherArgs)
+        public string Path { get; }
+        public string SolutionFilePath { get; }
+        public int Port { get; }
+        public int HostPID { get; }
+        public LogLevel TraceType { get; }
+        public TransportType TransportType { get; }
+        public string[] OtherArgs { get; }
+
+        public OmniSharpEnvironment(
+            string path = null,
+            int port = -1,
+            int hostPid = -1,
+            LogLevel traceType = LogLevel.None,
+            TransportType transportType = TransportType.Stdio,
+            string[] otherArgs = null)
         {
+            path = path ?? ".";
+
             if (System.IO.Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {
                 SolutionFilePath = path;
@@ -23,19 +39,5 @@ namespace OmniSharp.Services
             TransportType = transportType;
             OtherArgs = otherArgs;
         }
-
-        public LogLevel TraceType { get; }
-
-        public int Port { get; }
-
-        public int HostPID { get; }
-
-        public string Path { get; }
-
-        public string SolutionFilePath { get; }
-
-        public TransportType TransportType { get; }
-
-        public string[] OtherArgs { get; }
     }
 }

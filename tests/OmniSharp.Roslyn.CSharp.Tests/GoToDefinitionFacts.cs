@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
@@ -7,214 +8,176 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToDefinitionFacts : AbstractTestFixture
+    public class GoToDefinitionFacts : AbstractSingleRequestHandlerTestFixture<GotoDefinitionService>
     {
         public GoToDefinitionFacts(ITestOutputHelper output)
             : base(output)
         {
         }
 
+        protected override string EndpointName => OmnisharpEndpoints.GotoDefinition;
+
         [Fact]
-        public async Task ReturnsLocationSourceDefinition()
+        public async Task ReturnsDefinitionInSameFile()
         {
-            const string source1 = @"using System;
+            var testFile = new TestFile("foo.cs", @"
+class {|def:Foo|} {
+    private F$$oo foo;
+}");
 
-class Foo {
-}";
-            const string source2 = @"class Bar {
-    private Foo foo;
-}";
+            await TestGoToSourceAsync(testFile);
+        }
 
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
+        [Fact]
+        public async Task ReturnsDefinitionInDifferentFile()
+        {
+            var testFile1 = new TestFile("foo.cs", @"
+using System;
+class {|def:Foo|} {
+}");
+            var testFile2 = new TestFile("bar.cs", @"
+class Bar {
+    private F$$oo foo;
+}");
 
-            var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 1,
-                Column = 13,
-                Timeout = 60000
-            });
-
-            Assert.Equal("foo.cs", definitionResponse.FileName);
-            Assert.Equal(2, definitionResponse.Line);
-            Assert.Equal(6, definitionResponse.Column);
+            await TestGoToSourceAsync(testFile1, testFile2);
         }
 
         [Fact]
         public async Task ReturnsEmptyResultWhenDefinitionIsNotFound()
         {
-            const string source1 = @"using System;
-
+            var testFile1 = new TestFile("foo.cs", @"
+using System;
 class Foo {
-}";
-            const string source2 = @"class Bar {
-    private Baz foo;
-}";
+}");
+            var testFile2 = new TestFile("bar.cs", @"
+class Bar {
+    private B$$az foo;
+}");
 
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
-
-            var controller = new GotoDefinitionService(workspace, CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 1,
-                Column = 13,
-                Timeout = 60000
-            });
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.Equal(0, definitionResponse.Line);
-            Assert.Equal(0, definitionResponse.Column);
+            await TestGoToSourceAsync(testFile1, testFile2);
         }
 
         [Fact]
-        public async Task ReturnsPositionInMetadata_WhenSymbolIsMethod()
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsStaticMethod()
         {
-            var controller = new GotoDefinitionService(await CreateTestWorkspace(), CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 12,
-                Column = 17,
-                Timeout = 60000,
-                WantMetadata = true
-            });
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.Guid", definitionResponse.MetadataSource.TypeName);
-            // We probably shouldn't hard code metadata locations (they could change randomly)
-            Assert.NotEqual(0, definitionResponse.Line);
-            Assert.NotEqual(0, definitionResponse.Column);
-        }
-
-        [Fact]
-        public async Task ReturnsPositionInMetadata_WhenSymbolIsExtensionMethod()
-        {
-            var controller = new GotoDefinitionService(await CreateTestWorkspace(), CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 10,
-                Column = 16,
-                Timeout = 60000,
-                WantMetadata = true
-            });
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
-            Assert.NotEqual(0, definitionResponse.Line);
-            Assert.NotEqual(0, definitionResponse.Column);
-        }
-
-        [Fact]
-        public async Task ReturnsPositionInMetadata_WhenSymbolIsType()
-        {
-            var controller = new GotoDefinitionService(await CreateTestWorkspace(), CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 8,
-                Column = 24,
-                Timeout = 60000,
-                WantMetadata = true
-            });
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.Collections.Generic.List`1", definitionResponse.MetadataSource.TypeName);
-            Assert.NotEqual(0, definitionResponse.Line);
-            Assert.NotEqual(0, definitionResponse.Column);
-        }
-
-        [Fact]
-        public async Task ReturnsPositionInMetadata_WhenSymbolIsGenericType()
-        {
-            var controller = new GotoDefinitionService(await CreateTestWorkspace(), CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 11,
-                Column = 25,
-                Timeout = 60000,
-                WantMetadata = true
-            });
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.Collections.Generic.Dictionary`2", definitionResponse.MetadataSource.TypeName);
-            Assert.NotEqual(0, definitionResponse.Line);
-            Assert.NotEqual(0, definitionResponse.Column);
-        }
-
-        [Fact]
-        public async Task ReturnsFullNameInMetadata_WhenSymbolIsType()
-        {
-            var controller = new GotoDefinitionService(await CreateTestWorkspace(), CreateMetadataHelper());
-            RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> requestHandler = controller;
-            var definitionResponse = await requestHandler.Handle(new GotoDefinitionRequest
-            {
-                FileName = "bar.cs",
-                Line = 9,
-                Column = 22,
-                Timeout = 60000,
-                WantMetadata = true
-            });
-
-            Assert.Null(definitionResponse.FileName);
-            Assert.NotNull(definitionResponse.MetadataSource);
-            Assert.Equal(AssemblyHelpers.CorLibName, definitionResponse.MetadataSource.AssemblyName);
-            Assert.Equal("System.String", definitionResponse.MetadataSource.TypeName);
-            Assert.NotEqual(0, definitionResponse.Line);
-            Assert.NotEqual(0, definitionResponse.Column);
-        }
-
-        private MetadataHelper CreateMetadataHelper()
-        {
-            return new MetadataHelper(this.AssemblyLoader);
-        }
-
-        private async Task<OmniSharpWorkspace> CreateTestWorkspace()
-        {
-            const string source1 = @"using System;
-
-class Foo {
-}";
-            const string source2 = @"using System;
-using System.Collections.Generic;
-using System.Linq;
-
+            var testFile = new TestFile("bar.cs", @"
+using System;
 class Bar {
     public void Baz() {
-        Console.WriteLine(""Stuff"");
-
-        var foo = new List<string>();
-        var str = String.Empty;
-        foo.ToArray();
-        var dict = new Dictionary<string, string>();
-        Guid.NewGuid();
+        Guid.NewG$$uid();
     }
-}";
+}");
 
-            return await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
+            await TestGoToMetadataAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.Guid");
+        }
+
+        [Fact]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsInstanceMethod()
+        {
+            var testFile = new TestFile("bar.cs", @"
+using System.Collections.Generic;
+class Bar {
+    public void Baz() {
+        var foo = new List<string>();
+        foo.ToAr$$ray();
+    }
+}");
+
+            await TestGoToMetadataAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.Collections.Generic.List`1");
+        }
+
+        [Fact]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsGenericType()
+        {
+            var testFile = new TestFile("bar.cs", @"
+using System.Collections.Generic;
+class Bar {
+    public void Baz() {
+        var foo = new Li$$st<string>();
+        foo.ToArray();
+    }
+}");
+
+            await TestGoToMetadataAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.Collections.Generic.List`1");
+        }
+
+        [Fact]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsType()
+        {
+            var testFile = new TestFile("bar.cs", @"
+using System;
+class Bar {
+    public void Baz() {
+        var str = Stri$$ng.Empty;
+    }
+}");
+
+            await TestGoToMetadataAsync(testFile,
+                expectedAssemblyName: AssemblyHelpers.CorLibName,
+                expectedTypeName: "System.String");
+        }
+
+        private async Task TestGoToSourceAsync(params TestFile[] testFiles)
+        {
+            var response = await GetResponseAsync(testFiles, wantMetadata: false);
+
+            var target = testFiles.FirstOrDefault(tf => tf.Content.GetSpans("def").Count > 0);
+            if (target != null)
+            {
+                var definitionSpan = target.Content.GetSpans("def").First();
+                var definitionRange = target.Content.GetRangeFromSpan(definitionSpan);
+
+                Assert.Equal(target.FileName, response.FileName);
+                Assert.Equal(definitionRange.Start.Line, response.Line);
+                Assert.Equal(definitionRange.Start.Offset, response.Column);
+            }
+            else
+            {
+                Assert.Null(response.FileName);
+                Assert.Equal(0, response.Line);
+                Assert.Equal(0, response.Column);
+            }
+        }
+
+        private async Task TestGoToMetadataAsync(TestFile testFile, string expectedAssemblyName, string expectedTypeName)
+        {
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: true);
+
+            Assert.NotNull(response.MetadataSource);
+            Assert.Equal(expectedAssemblyName, response.MetadataSource.AssemblyName);
+            Assert.Equal(expectedTypeName, response.MetadataSource.TypeName);
+
+            // We probably shouldn't hard code metadata locations (they could change randomly)
+            Assert.NotEqual(0, response.Line);
+            Assert.NotEqual(0, response.Column);
+        }
+
+        private async Task<GotoDefinitionResponse> GetResponseAsync(TestFile[] testFiles, bool wantMetadata)
+        {
+            using (var host = CreateOmniSharpHost(testFiles))
+            {
+                var source = testFiles.Single(tf => tf.Content.HasPosition);
+                var point = source.Content.GetPointFromPosition();
+
+                var request = new GotoDefinitionRequest
+                {
+                    FileName = source.FileName,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Timeout = 60000,
+                    WantMetadata = wantMetadata
+                };
+
+                var requestHandler = GetRequestHandler(host);
+                return await requestHandler.Handle(request);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.DotNet.Projects;
 using TestUtility;
 using Xunit;
@@ -16,15 +17,15 @@ namespace OmniSharp.DotNet.Tests
             _testAssets = TestAssets.Instance;
         }
 
-        private string GetLocation(string filePath)
+        private string GetLocation(string baseDirectory, string filePath)
         {
             var directoryPath = File.Exists(filePath)
                 ? Path.GetDirectoryName(filePath)
                 : filePath;
 
-            if (directoryPath.StartsWith(_testAssets.TestProjectsFolder, StringComparison.OrdinalIgnoreCase))
+            if (directoryPath.StartsWith(baseDirectory, StringComparison.OrdinalIgnoreCase))
             {
-                directoryPath = directoryPath.Substring(_testAssets.TestProjectsFolder.Length);
+                directoryPath = directoryPath.Substring(baseDirectory.Length);
             }
 
             directoryPath = directoryPath.Replace(Path.DirectorySeparatorChar, '/');
@@ -41,81 +42,90 @@ namespace OmniSharp.DotNet.Tests
         [InlineData("ProjectSearchSample01", "ProjectSearchSample01")]
         [InlineData("ProjectSearchSample03", "ProjectSearchSample03/src/Project1")]
         [InlineData("ProjectSearchSample04", "ProjectSearchSample04")]
-        public void SingleResultExpect(string testSampleName, string projectName)
+        public async Task SingleResultExpect(string testSampleName, string projectName)
         {
-            var directory = _testAssets.GetTestProjectFolder(testSampleName);
-            var projectFilePath = ProjectSearcher.Search(directory).Single();
-
-            Assert.Equal(projectName, GetLocation(projectFilePath));
-        }
-
-        [Fact]
-        public void NoneProjectJson()
-        {
-            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample02");
-            var projectFilePaths = ProjectSearcher.Search(directory);
-
-            Assert.Empty(projectFilePaths);
-        }
-
-        [Fact]
-        public void RecursivelySearch()
-        {
-            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample05");
-            var projectFilePaths = ProjectSearcher.Search(directory);
-            var locations = projectFilePaths.Select(GetLocation);
-
-            var expected = new []
+            using (var testProject = await _testAssets.GetTestProjectAsync(testSampleName))
             {
-                "ProjectSearchSample05/src/Project1",
-                "ProjectSearchSample05/src/Project2/Embed",
-                "ProjectSearchSample05/src/Project2",
-                "ProjectSearchSample05/test/Test01"
-            };
-            
-            Assert.Equal(expected, locations);
+                var projectFilePath = ProjectSearcher.Search(testProject.Directory).Single();
+                Assert.Equal(projectName, GetLocation(testProject.BaseDirectory, projectFilePath));
+            }
         }
-        
-        [Fact]
-        public void GlobalJsonExpand()
-        {
-            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample06");
-            var projectFilePaths = ProjectSearcher.Search(directory);
-            var locations = projectFilePaths.Select(GetLocation);
 
-            var expected = new []
+        [Fact]
+        public async Task NoneProjectJson()
+        {
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample02"))
             {
-                "ProjectSearchSample06/src/Project1",
-                "ProjectSearchSample06/src/Project2",
-            };
-
-            Assert.Equal(expected, locations);
+                var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
+                Assert.Empty(projectFilePaths);
+            }
         }
 
         [Fact]
-        public void GlobalJsonFindNothing()
+        public async Task RecursivelySearch()
         {
-            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample07");
-            var projectFilePaths = ProjectSearcher.Search(directory);
-
-            Assert.Empty(projectFilePaths);
-        }
-
-        [Fact]
-        public void GlobalJsonTopLevelFolders()
-        {
-            var directory = _testAssets.GetTestProjectFolder("ProjectSearchSample08");
-            var projectFilePaths = ProjectSearcher.Search(directory);
-            var locations = projectFilePaths.Select(GetLocation);
-
-            var expected = new []
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample05"))
             {
-                "ProjectSearchSample08/Project1",
-                "ProjectSearchSample08/Project2",
-                "ProjectSearchSample08/Test1",
-            };
+                var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
+                var locations = projectFilePaths.Select(p => GetLocation(testProject.BaseDirectory, p));
 
-            Assert.Equal(expected, locations);
+                var expected = new[]
+                {
+                    "ProjectSearchSample05/src/Project1",
+                    "ProjectSearchSample05/src/Project2/Embed",
+                    "ProjectSearchSample05/src/Project2",
+                    "ProjectSearchSample05/test/Test01"
+                };
+
+                Assert.Equal(expected, locations);
+            }
+        }
+
+        [Fact]
+        public async Task GlobalJsonExpand()
+        {
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample06"))
+            {
+                var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
+                var locations = projectFilePaths.Select(p => GetLocation(testProject.BaseDirectory, p));
+
+                var expected = new[]
+                {
+                    "ProjectSearchSample06/src/Project1",
+                    "ProjectSearchSample06/src/Project2",
+                };
+
+                Assert.Equal(expected, locations);
+            }
+        }
+
+        [Fact]
+        public async Task GlobalJsonFindNothing()
+        {
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample07"))
+            {
+                var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
+                Assert.Empty(projectFilePaths);
+            }
+        }
+
+        [Fact]
+        public async Task GlobalJsonTopLevelFolders()
+        {
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample08"))
+            {
+                var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
+                var locations = projectFilePaths.Select(p => GetLocation(testProject.BaseDirectory, p));
+
+                var expected = new[]
+                {
+                    "ProjectSearchSample08/Project1",
+                    "ProjectSearchSample08/Project2",
+                    "ProjectSearchSample08/Test1",
+                };
+
+                Assert.Equal(expected, locations);
+            }
         }
     }
 }

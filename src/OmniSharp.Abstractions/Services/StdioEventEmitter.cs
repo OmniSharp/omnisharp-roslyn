@@ -14,11 +14,13 @@ namespace OmniSharp.Services
 
         public void Emit(string kind, object args)
         {
-            _writer.WriteLineAsync(new EventPacket()
+            var packet = new EventPacket
             {
                 Event = kind,
                 Body = args
-            });
+            };
+
+            _writer.WriteLineAsync(packet);
         }
     }
 }

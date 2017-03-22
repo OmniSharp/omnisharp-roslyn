@@ -7,101 +7,66 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class MetadataFacts : AbstractTestFixture
+    public class MetadataFacts : AbstractSingleRequestHandlerTestFixture<MetadataService>
     {
         public MetadataFacts(ITestOutputHelper output)
             : base(output)
         {
         }
 
+        protected override string EndpointName => OmnisharpEndpoints.Metadata;
+
         [Fact]
         public async Task ReturnsSource_ForSpecialType()
         {
-            var source1 = @"using System;
+            var assemblyName = AssemblyHelpers.CorLibName;
+            var typeName = "System.String";
 
-class Foo {
-}";
-            var source2 = @"class Bar {
-    private Foo foo;
-}";
-
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
-
-            var controller = new MetadataService(workspace, new MetadataHelper(this.AssemblyLoader));
-            var response = await controller.Handle(new MetadataRequest
-            {
-                AssemblyName = AssemblyHelpers.CorLibName,
-                TypeName = "System.String",
-                Timeout = 60000
-            });
-
-            Assert.NotNull(response.Source);
+            await TestMetadataAsync(assemblyName, typeName);
         }
 
         [Fact]
         public async Task ReturnsSource_ForNormalType()
         {
-            var source1 = @"using System;
-
-class Foo {
-}";
-            var source2 = @"class Bar {
-    private Foo foo;
-}";
-
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
-
-            var controller = new MetadataService(workspace, new MetadataHelper(this.AssemblyLoader));
-            var response = await controller.Handle(new MetadataRequest
-            {
 #if NETCOREAPP1_1
-                AssemblyName = "System.Linq",
+            var assemblyName = "System.Linq";
 #else
-                AssemblyName = "System.Core",
+            var assemblyName = "System.Core";
 #endif
-                TypeName = "System.Linq.Enumerable",
-                Timeout = 60000
-            });
 
-            Assert.NotNull(response.Source);
+            var typeName = "System.Linq.Enumerable";
+
+            await TestMetadataAsync(assemblyName, typeName);
         }
 
         [Fact]
         public async Task ReturnsSource_ForGenericType()
         {
-            var source1 = @"using System;
+            var assemblyName = AssemblyHelpers.CorLibName;
+            var typeName = "System.Collections.Generic.List`1";
 
-class Foo {
-}";
-            var source2 = @"class Bar {
-    private Foo foo;
-}";
+            await TestMetadataAsync(assemblyName, typeName);
+        }
 
-            var workspace = await CreateWorkspaceAsync(
-                new TestFile("foo.cs", source1),
-                new TestFile("bar.cs", source2));
+        private async Task TestMetadataAsync(string assemblyName, string typeName)
+        {
+            var testFile = new TestFile("dummy.cs", "class C {}");
 
-            var controller = new MetadataService(workspace, new MetadataHelper(this.AssemblyLoader));
-            var response = await controller.Handle(new MetadataRequest
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                AssemblyName = AssemblyHelpers.CorLibName,
-                TypeName = "System.Collections.Generic.List`1",
-                Timeout = 60000
-            });
+                var requestHandler = GetRequestHandler(host);
 
-            Assert.NotNull(response.Source);
+                var request = new MetadataRequest
+                {
+                    AssemblyName = assemblyName,
+                    TypeName = typeName,
+                    Timeout = 60000
+                };
 
-            response = await controller.Handle(new MetadataRequest
-            {
-                AssemblyName = AssemblyHelpers.CorLibName,
-                TypeName = "System.Collections.Generic.Dictionary`2"
-            });
+                var response = await requestHandler.Handle(request);
 
-            Assert.NotNull(response.Source);
+                Assert.NotNull(response.Source);
+            }
         }
     }
 }
