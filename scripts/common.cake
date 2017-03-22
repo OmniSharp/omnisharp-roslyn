@@ -77,3 +77,8 @@ public class BuildEnvironment
         this.ShellScriptFileExtension = isWindows ? "ps1" : "sh";
     }
 }
+
+void PrintBlankLine()
+{
+    Information("");
+}
