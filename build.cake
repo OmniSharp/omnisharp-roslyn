@@ -424,8 +424,8 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
         : env.ShellCommand;
 
     var arguments = IsRunningOnWindows()
-        ? $"build \"{projectFilePath}\" --configuration {configuration}"
-        : $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration}";
+        ? $"build \"{projectFilePath}\" --configuration {configuration} /v:d"
+        : $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
 
     var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
 
