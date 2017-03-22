@@ -400,14 +400,19 @@ Task("Restore")
     .Does(() =>
 {
     // Restore the projects in OmniSharp.sln
-    RunRestore(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
+    Information("Restoring packages in OmniSharp.sln...");
+
+    RunTool(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
 
     // Restore legacy test assets with legacy .NET Core SDK
     foreach (var project in buildPlan.LegacyTestAssets)
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
-        RunRestore(env.LegacyDotNetCommand, "restore", folder)
+
+        Information($"Restoring packages in {folder}...");
+
+        RunTool(env.LegacyDotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
     }
 });
@@ -537,6 +542,32 @@ bool IsNetFrameworkOnUnix(string framework)
         && !framework.StartsWith("netstandard");
 }
 
+string GetPublishArguments(string projectFileName, string rid, string framework, string configuration, string outputFolder)
+{
+    var argList = new List<string>();
+    
+    if (IsNetFrameworkOnUnix(framework))
+    {
+        argList.Add($"\"{projectFileName}\"");
+        argList.Add("/t:Publish");
+        argList.Add($"/p:RuntimeIdentifier={rid}");
+        argList.Add($"/p:TargetFramework={framework}");
+        argList.Add($"/p:Configuration={configuration}");
+        argList.Add($"/p:PublishDir={outputFolder}");
+    }
+    else
+    {
+        argList.Add("publish");
+        argList.Add($"\"{projectFileName}\"");
+        argList.Add($"--runtime {rid}");
+        argList.Add($"--framework {framework}");
+        argList.Add($"--configuration {configuration}");
+        argList.Add($"--output \"{outputFolder}\"");
+    }
+
+    return string.Join(" ", argList);
+}
+
 /// <summary>
 ///  Build, publish and package artifacts.
 ///  Targets all RIDs specified in build.json unless restricted by RestrictToLocalRuntime.
@@ -559,40 +590,27 @@ Task("OnlyPublish")
                 : runtime;
 
             // Restore the OmniSharp.csproj with this runtime.
-            RunRestore(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
+            Information($"Restoring packages in {projectName} for {rid}...");
+
+            RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
                 .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
 
             var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
-            var argList = new List<string>();
 
-            if (IsNetFrameworkOnUnix(framework))
-            {
-                argList.Add($"\"{projectFileName}\"");
-                argList.Add("/t:Publish");
-                argList.Add($"/p:RuntimeIdentifier={rid}");
-                argList.Add($"/p:TargetFramework={framework}");
-                argList.Add($"/p:Configuration={configuration}");
-                argList.Add($"/p:PublishDir={outputFolder}");
+            var command = IsNetFrameworkOnUnix(framework)
+                ? env.ShellCommand
+                : env.DotNetCommand;
 
-                var args = string.Join(" ", argList);
+            var args = GetPublishArguments(projectFileName, rid, framework, configuration, outputFolder);
 
-                Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}")
-                    .ExceptionOnError($"Failed to publish {project} / {framework}");
-            }
-            else
-            {
-                argList.Add("publish");
-                argList.Add($"\"{projectFileName}\"");
-                argList.Add($"--runtime {rid}");
-                argList.Add($"--framework {framework}");
-                argList.Add($"--configuration {configuration}");
-                argList.Add($"--output \"{outputFolder}\"");
+            args = IsNetFrameworkOnUnix(framework)
+                ? $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}"
+                : args;
 
-                var args = string.Join(" ", argList);
-
-                Run(env.DotNetCommand, args)
-                    .ExceptionOnError($"Failed to publish {project} / {framework}");
-            }
+            Information($"Publishing {projectName} for {framework}/{rid}...");
+            
+            RunTool(command, args, env.WorkingDirectory)
+                .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
 
             // Copy MSBuild and SDKs to output
             CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
