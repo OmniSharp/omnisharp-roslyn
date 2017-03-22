@@ -202,6 +202,30 @@ ExitStatus RunRestore(string command, string arguments, string workingDirectory)
     return exitStatus;
 }
 
+ExitStatus RunTool(string command, string arguments, string workingDirectory, string logFileName = null)
+{
+    var output = new List<string>();
+    var exitStatus = Run(command, arguments, new RunOptions(workingDirectory, output));
+
+    var log = string.Join(System.Environment.NewLine, output);
+
+    if (exitStatus.Code == 0)
+    {
+        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, log);
+    }
+    else
+    {
+        Error(log);
+    }
+
+    if (logFileName != null)
+    {
+        System.IO.File.WriteAllText(logFileName, log);
+    }
+
+    return exitStatus;
+}
+
 /// <summary>
 ///  Kill the given process and all its child processes.
 /// </summary>

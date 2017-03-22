@@ -412,26 +412,22 @@ Task("Restore")
     }
 });
 
-void BuildProject(BuildEnvironment env, BuildPlan plan, string projectName, string projectFilePath, string configuration)
+void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
 {
-    var runLog = new List<string>();
+    var command = IsRunningOnWindows()
+        ? env.DotNetCommand
+        : env.ShellCommand;
 
-    Information($"Building {projectName}");
+    var arguments = IsRunningOnWindows()
+        ? $"build \"{projectFilePath}\" --configuration {configuration}"
+        : $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration}";
 
-    if (IsRunningOnWindows())
-    {
-        Run(env.DotNetCommand, $"build \"{projectFilePath}\" --configuration {configuration}",
-                new RunOptions(output: runLog))
-            .ExceptionOnError($"Building {projectName} failed.");
-    }
-    else
-    {
-        Run(env.ShellCommand, $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration}",
-                new RunOptions(output: runLog))
-            .ExceptionOnError($"Building {projectName} failed.");
-    }
+    var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
 
-    System.IO.File.WriteAllLines(CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log"), runLog.ToArray());
+    Information($"Building {projectName}...");
+
+    RunTool(command, arguments, env.WorkingDirectory, logFileName)
+        .ExceptionOnError($"Building {projectName} failed.");
 }
 
 Task("BuildMain")
@@ -442,7 +438,7 @@ Task("BuildMain")
     var projectName = buildPlan.MainProject + ".csproj";
     var projectFilePath = CombinePaths(env.Folders.Source, buildPlan.MainProject, projectName);
 
-    BuildProject(env, buildPlan, projectName, projectFilePath, configuration);
+    BuildProject(env, projectName, projectFilePath, configuration);
 });
 
 /// <summary>
@@ -459,7 +455,7 @@ Task("BuildTest")
         var testProjectName = testProject + ".csproj";
         var testProjectFilePath = CombinePaths(env.Folders.Tests, testProject, testProjectName);
 
-        BuildProject(env, buildPlan, testProjectName, testProjectFilePath, testConfiguration);
+        BuildProject(env, testProjectName, testProjectFilePath, testConfiguration);
     }
 });
 
