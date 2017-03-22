@@ -192,7 +192,7 @@ ExitStatus RunTool(string command, string arguments, string workingDirectory, st
     }
     else
     {
-        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Error, "{0}", log);
+        Context.Log.Write(Verbosity.Normal, LogLevel.Error, "{0}", log);
     }
 
     if (logFileName != null)
