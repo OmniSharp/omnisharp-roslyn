@@ -581,20 +581,27 @@ Task("OnlyPublish")
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
 
-    foreach (var framework in buildPlan.Frameworks)
+    var completed = new HashSet<string>();
+
+    foreach (var runtime in buildPlan.TargetRids)
     {
-        foreach (var runtime in buildPlan.TargetRids)
+        var rid = runtime.Equals("default")
+            ? buildPlan.GetDefaultRid()
+            : runtime;
+
+        if (completed.Contains(rid))
         {
-            var rid = runtime.Equals("default")
-                ? buildPlan.GetDefaultRid()
-                : runtime;
+            continue;
+        }
 
-            // Restore the OmniSharp.csproj with this runtime.
-            Information($"Restoring packages in {projectName} for {rid}...");
+        // Restore the OmniSharp.csproj with this runtime.
+        Information($"Restoring packages in {projectName} for {rid}...");
 
-            RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
-                .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
+        RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
+            .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
 
+        foreach (var framework in buildPlan.Frameworks)
+        {
             var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
 
             var command = IsNetFrameworkOnUnix(framework)
@@ -626,6 +633,8 @@ Task("OnlyPublish")
                 Package(runtime, framework, outputFolder, env.Folders.ArtifactsPackage, buildPlan.MainProject.ToLower());
             }
         }
+
+        completed.Add(rid);
     }
 
     CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts);
