@@ -94,7 +94,7 @@ namespace TestUtility
 
             var compositionHost = Startup.CreateCompositionHost(
                 serviceProvider,
-                options: new OmniSharpOptions(),
+                options: null,
                 assemblies: s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
