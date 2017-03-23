@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+    <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
   </ItemGroup>
 
   <ItemGroup>
