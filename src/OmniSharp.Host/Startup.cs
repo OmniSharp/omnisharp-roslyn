@@ -37,7 +37,7 @@ namespace OmniSharp
 
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("config.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("config.json", optional: true)
                 .AddEnvironmentVariables();
 
             if (env.OtherArgs?.Length > 0)
@@ -135,24 +135,27 @@ namespace OmniSharp
                 }
             }
 
-            InitializeWorkspaceOptions(workspace, compositionHost, logger, options.CurrentValue);
+            ProvideWorkspaceOptions(workspace, compositionHost, logger, options.CurrentValue);
 
             // Mark the workspace as initialized
             workspace.Initialized = true;
         }
 
-        private static void InitializeWorkspaceOptions(OmniSharpWorkspace workspace, CompositionHost compositionHost, ILogger logger, OmniSharpOptions options)
+        private static void ProvideWorkspaceOptions(OmniSharpWorkspace workspace, CompositionHost compositionHost, ILogger logger, OmniSharpOptions options)
         {
             // run all workspace options providers
             foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>())
             {
+                var providerName = workspaceOptionsProvider.GetType().FullName;
+
                 try
                 {
+                    logger.LogInformation($"Invoking Workspace Options Provider: {providerName}");
                     workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.FormattingOptions);
                 }
                 catch (Exception e)
                 {
-                    var message = $"The workspace options provider '{workspaceOptionsProvider.GetType().FullName}' threw exception during initialization.";
+                    var message = $"The workspace options provider '{providerName}' threw exception during initialization.";
                     logger.LogError(e, message);
                 }
             }
@@ -199,10 +202,11 @@ namespace OmniSharp
 
             InitializeWorkspace(Workspace, PluginHost, Configuration, logger, options);
 
+            // when configuration options change
+            // run workspace options providers automatically
             options.OnChange(o =>
             {
-                Console.WriteLine("Woo! new value");
-                InitializeWorkspaceOptions(Workspace, PluginHost, logger, o);
+                ProvideWorkspaceOptions(Workspace, PluginHost, logger, o);
             });
 
             logger.LogInformation("Configuration finished.");
