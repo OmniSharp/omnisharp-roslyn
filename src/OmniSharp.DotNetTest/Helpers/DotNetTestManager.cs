@@ -96,7 +96,10 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
 
             if (!testProcess.HasExited)
             {
-                testProcess.Kill();
+                if (!testProcess.WaitForExit(3000))
+                {
+                    testProcess.KillAll();
+                }
             }
 
             return new RunDotNetTestResponse
