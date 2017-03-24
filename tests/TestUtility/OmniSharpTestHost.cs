@@ -92,9 +92,10 @@ namespace TestUtility
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
             var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter);
 
+            var omnisharpOptions = new OmniSharpOptions();
             var compositionHost = Startup.CreateCompositionHost(
                 serviceProvider,
-                options: null,
+                options: omnisharpOptions,
                 assemblies: s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
@@ -103,7 +104,7 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
-            Startup.InitializeWorkspace(workspace, compositionHost, configuration, logger);
+            Startup.InitializeWorkspace(workspace, compositionHost, configuration, logger, omnisharpOptions);
 
             return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }

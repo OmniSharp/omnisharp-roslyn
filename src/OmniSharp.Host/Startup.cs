@@ -68,7 +68,7 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(Configuration);
         }
 
-        public static CompositionHost CreateCompositionHost(IServiceProvider serviceProvider, IOptionsMonitor<OmniSharpOptions> options, IEnumerable<Assembly> assemblies)
+        public static CompositionHost CreateCompositionHost(IServiceProvider serviceProvider, OmniSharpOptions options, IEnumerable<Assembly> assemblies)
         {
             var config = new ContainerConfiguration();
             assemblies = assemblies
@@ -96,8 +96,8 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(env))
                 .WithProvider(MefValueProvider.From(writer))
-                .WithProvider(MefValueProvider.From(options.CurrentValue))
-                .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
+                .WithProvider(MefValueProvider.From(options))
+                .WithProvider(MefValueProvider.From(options.FormattingOptions))
                 .WithProvider(MefValueProvider.From(loader))
                 .WithProvider(MefValueProvider.From(metadataHelper));
 
@@ -115,7 +115,7 @@ namespace OmniSharp
             return config.CreateContainer();
         }
 
-        public static void InitializeWorkspace(OmniSharpWorkspace workspace, CompositionHost compositionHost, IConfiguration configuration, ILogger logger, IOptionsMonitor<OmniSharpOptions> options = null)
+        public static void InitializeWorkspace(OmniSharpWorkspace workspace, CompositionHost compositionHost, IConfiguration configuration, ILogger logger, OmniSharpOptions options)
         {
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
@@ -135,7 +135,7 @@ namespace OmniSharp
                 }
             }
 
-            ProvideWorkspaceOptions(workspace, compositionHost, logger, options.CurrentValue);
+            ProvideWorkspaceOptions(workspace, compositionHost, logger, options);
 
             // Mark the workspace as initialized
             workspace.Initialized = true;
@@ -179,10 +179,9 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
-
             var assemblies = DiscoverOmniSharpAssemblies(loader, logger);
 
-            PluginHost = CreateCompositionHost(serviceProvider, options, assemblies);
+            PluginHost = CreateCompositionHost(serviceProvider, options.CurrentValue, assemblies);
             Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
             app.UseRequestLogging();
@@ -200,7 +199,7 @@ namespace OmniSharp
                 logger.LogInformation($"Omnisharp server running on port '{_env.Port}' at location '{_env.Path}' on host {_env.HostPID}.");
             }
 
-            InitializeWorkspace(Workspace, PluginHost, Configuration, logger, options);
+            InitializeWorkspace(Workspace, PluginHost, Configuration, logger, options.CurrentValue);
 
             // when configuration options change
             // run workspace options providers automatically
