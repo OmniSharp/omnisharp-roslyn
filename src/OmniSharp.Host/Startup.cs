@@ -47,7 +47,8 @@ namespace OmniSharp
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
-                Path.Combine(env.Path, "omnisharp.json"),
+                new PhysicalFileProvider(env.Path),
+                "omnisharp.json",
                 optional: true,
                 reloadOnChange: true);
 
