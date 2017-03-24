@@ -20,7 +20,6 @@ using OmniSharp.Services;
 using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
-using System.IO;
 
 namespace OmniSharp
 {
