@@ -10,14 +10,6 @@ namespace OmniSharp.Roslyn.CSharp.Services
     [Export(typeof(IWorkspaceOptionsProvider)), Shared]
     public class CSharpWorkspaceOptionsProvider : IWorkspaceOptionsProvider
     {
-        private readonly Options.FormattingOptions _formattingOptions;
-
-        [ImportingConstructor]
-        public CSharpWorkspaceOptionsProvider(Options.FormattingOptions formattingOptions)
-        {
-            _formattingOptions = formattingOptions;
-        }
-
         private static OptionSet GetOptions(OptionSet optionSet, Options.FormattingOptions formattingOptions)
         {
             return optionSet
@@ -99,9 +91,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
         }
 
-        public OptionSet Process(OptionSet workOptionSet)
+        public OptionSet Process(OptionSet workOptionSet, Options.FormattingOptions options)
         {
-            return GetOptions(workOptionSet, _formattingOptions);
+            return GetOptions(workOptionSet, options);
         }
     }
 }

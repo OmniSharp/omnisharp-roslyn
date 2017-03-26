@@ -49,7 +49,7 @@ namespace OmniSharp
                 new PhysicalFileProvider(env.Path),
                 "omnisharp.json",
                 optional: true,
-                reloadOnChange: false);
+                reloadOnChange: true);
 
             Configuration = configBuilder.Build();
         }
@@ -115,7 +115,7 @@ namespace OmniSharp
             return config.CreateContainer();
         }
 
-        public static void InitializeWorkspace(OmniSharpWorkspace workspace, CompositionHost compositionHost, IConfiguration configuration, ILogger logger)
+        public static void InitializeWorkspace(OmniSharpWorkspace workspace, CompositionHost compositionHost, IConfiguration configuration, ILogger logger, OmniSharpOptions options)
         {
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
@@ -135,22 +135,30 @@ namespace OmniSharp
                 }
             }
 
-            // run all workspace options providers
-            foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>())
-            {
-                try
-                {
-                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options);
-                }
-                catch (Exception e)
-                {
-                    var message = $"The workspace options provider '{workspaceOptionsProvider.GetType().FullName}' threw exception during initialization.";
-                    logger.LogError(e, message);
-                }
-            }
+            ProvideWorkspaceOptions(workspace, compositionHost, logger, options);
 
             // Mark the workspace as initialized
             workspace.Initialized = true;
+        }
+
+        private static void ProvideWorkspaceOptions(OmniSharpWorkspace workspace, CompositionHost compositionHost, ILogger logger, OmniSharpOptions options)
+        {
+            // run all workspace options providers
+            foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>())
+            {
+                var providerName = workspaceOptionsProvider.GetType().FullName;
+
+                try
+                {
+                    logger.LogInformation($"Invoking Workspace Options Provider: {providerName}");
+                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.FormattingOptions);
+                }
+                catch (Exception e)
+                {
+                    var message = $"The workspace options provider '{providerName}' threw exception during initialization.";
+                    logger.LogError(e, message);
+                }
+            }
         }
 
         public void Configure(
@@ -159,7 +167,7 @@ namespace OmniSharp
             ILoggerFactory loggerFactory,
             ISharedTextWriter writer,
             IAssemblyLoader loader,
-            IOptions<OmniSharpOptions> options)
+            IOptionsMonitor<OmniSharpOptions> options)
         {
             if (_env.TransportType == TransportType.Stdio)
             {
@@ -171,10 +179,9 @@ namespace OmniSharp
             }
 
             var logger = loggerFactory.CreateLogger<Startup>();
-
             var assemblies = DiscoverOmniSharpAssemblies(loader, logger);
 
-            PluginHost = CreateCompositionHost(serviceProvider, options.Value, assemblies);
+            PluginHost = CreateCompositionHost(serviceProvider, options.CurrentValue, assemblies);
             Workspace = PluginHost.GetExport<OmniSharpWorkspace>();
 
             app.UseRequestLogging();
@@ -192,7 +199,14 @@ namespace OmniSharp
                 logger.LogInformation($"Omnisharp server running on port '{_env.Port}' at location '{_env.Path}' on host {_env.HostPID}.");
             }
 
-            InitializeWorkspace(Workspace, PluginHost, Configuration, logger);
+            InitializeWorkspace(Workspace, PluginHost, Configuration, logger, options.CurrentValue);
+
+            // when configuration options change
+            // run workspace options providers automatically
+            options.OnChange(o =>
+            {
+                ProvideWorkspaceOptions(Workspace, PluginHost, logger, o);
+            });
 
             logger.LogInformation("Configuration finished.");
         }
