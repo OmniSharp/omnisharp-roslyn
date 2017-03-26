@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,43 +59,55 @@ namespace OmniSharp.Services
 
         }
 
-        public void Restore(string projectFilePath, Action onFailure = null)
+        public Task RestoreAsync(string workingDirectory, string arguments = null, Action onFailure = null)
         {
-            var projectDirectory = Path.GetDirectoryName(projectFilePath);
-
-            Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew(() =>
             {
-                _logger.LogInformation($"Begin restoring project {projectFilePath}");
+                _logger.LogInformation($"Begin dotnet restore in '{workingDirectory}'");
 
-                var restoreLock = _locks.GetOrAdd(projectFilePath, new object());
+                var restoreLock = _locks.GetOrAdd(workingDirectory, new object());
                 lock (restoreLock)
                 {
                     var exitStatus = new ProcessExitStatus(-1);
-                    _eventEmitter.RestoreStarted(projectFilePath);
+                    _eventEmitter.RestoreStarted(workingDirectory);
                     _semaphore.Wait();
                     try
                     {
                         // A successful restore will update the project lock file which is monitored
                         // by the dotnet project system which eventually update the Roslyn model
-                        exitStatus = ProcessHelper.Run(_dotnetPath, "restore", projectDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables);
+                        exitStatus = ProcessHelper.Run(_dotnetPath, $"restore {arguments}", workingDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables);
                     }
                     finally
                     {
                         _semaphore.Release();
 
-                        _locks.TryRemove(projectFilePath, out _);
+                        _locks.TryRemove(workingDirectory, out _);
 
-                        _eventEmitter.RestoreFinished(projectFilePath, exitStatus.Succeeded);
+                        _eventEmitter.RestoreFinished(workingDirectory, exitStatus.Succeeded);
 
                         if (exitStatus.Failed && onFailure != null)
                         {
                             onFailure();
                         }
 
-                        _logger.LogInformation($"Finish restoring project {projectFilePath}. Exit code {exitStatus}");
+                        _logger.LogInformation($"Finish restoring project {workingDirectory}. Exit code {exitStatus}");
                     }
                 }
             });
+        }
+
+        public Process Start(string arguments, string workingDirectory)
+        {
+            var startInfo = new ProcessStartInfo(_dotnetPath, arguments)
+            {
+                WorkingDirectory = workingDirectory,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            return Process.Start(startInfo);
         }
     }
 }

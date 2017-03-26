@@ -13,7 +13,7 @@ using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
+using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
@@ -31,7 +31,7 @@ namespace TestUtility
             typeof(DotNetTestManager).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
-            typeof(IntellisenseService).GetTypeInfo().Assembly // OmniSharp.Roslyn.CSharp
+            typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly // OmniSharp.Roslyn.CSharp
         });
 
         private readonly TestServiceProvider _serviceProvider;
@@ -69,9 +69,12 @@ namespace TestUtility
             this.Workspace.Dispose();
         }
 
-        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null)
+        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, bool useLegacyDotNetCli = false)
         {
-            var dotNetPath = Path.Combine(TestAssets.Instance.RootFolder, ".dotnet", "dotnet");
+            var dotNetPath = Path.Combine(
+                TestAssets.Instance.RootFolder,
+                useLegacyDotNetCli ? ".dotnet-legacy" : ".dotnet",
+                "dotnet");
 
             if (!File.Exists(dotNetPath))
             {

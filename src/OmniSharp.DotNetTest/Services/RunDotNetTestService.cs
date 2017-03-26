@@ -10,29 +10,29 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GetTestStartInfo, LanguageNames.CSharp)]
-    public class GetTestStartInfoService : RequestHandler<GetTestStartInfoRequest, GetTestStartInfoResponse>
+    [OmniSharpHandler(OmnisharpEndpoints.RunDotNetTest, LanguageNames.CSharp)]
+    public class RunDotNetTestService : RequestHandler<RunDotNetTestRequest, RunDotNetTestResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCli;
         private readonly ILoggerFactory _loggerFactory;
 
         [ImportingConstructor]
-        public GetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public RunDotNetTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _dotNetCli = dotNetCli;
             _loggerFactory = loggerFactory;
         }
 
-        public Task<GetTestStartInfoResponse> Handle(GetTestStartInfoRequest request)
+        public Task<RunDotNetTestResponse> Handle(RunDotNetTestRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var projectFolder = Path.GetDirectoryName(document.Project.FilePath);
 
             using (var dtm = DotNetTestManager.Start(projectFolder, _dotNetCli, _loggerFactory))
             {
-                var response = dtm.GetTestStartInfo(request.MethodName, request.TestFrameworkName);
+                var response = dtm.ExecuteTestMethod(request.MethodName, request.TestFrameworkName);
                 return Task.FromResult(response);
             }
         }
