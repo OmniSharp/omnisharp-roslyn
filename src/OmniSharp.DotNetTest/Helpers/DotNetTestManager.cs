@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.DotNetTest;
+using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
 {
@@ -34,7 +36,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             ReadMessage<JToken>();
         }
 
-        public static DotNetTestManager Start(string projectDir, ILoggerFactory loggerFactory)
+        public static DotNetTestManager Start(string projectDir, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             var port = FindFreePort();
 
@@ -42,8 +44,11 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
             listener.Listen(1);
 
-            var process = StartDotnet($"test --port {port} --parentProcessId {Process.GetCurrentProcess().Id}", projectDir);
-            var stream = new NetworkStream(listener.Accept());
+            var currentProcess = Process.GetCurrentProcess();
+            var process = dotNetCli.Start($"test --port {port} --parentProcessId {currentProcess.Id}", projectDir);
+
+            var socket = listener.Accept();
+            var stream = new NetworkStream(socket);
             var reader = new BinaryReader(stream);
             var writer = new BinaryWriter(stream);
 
@@ -53,13 +58,26 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
         public RunDotNetTestResponse ExecuteTestMethod(string methodName, string testFrameworkName)
         {
             SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
-            string testMethodArgument = testFrameworkName == "nunit" ? "--test" : "-method";
 
-            var startInfo = ReadMessage<TestStartInfo>();
-            var testProcess = StartProcess(
-                startInfo.Payload.FileName,
-                $"{startInfo.Payload.Arguments} {testMethodArgument} {methodName}",
-                _projectDir);
+            var testMethodArgument = testFrameworkName == "nunit"
+                ? "--test"
+                : "-method";
+
+            var testStartInfo = ReadMessage<TestStartInfo>();
+
+            var fileName = testStartInfo.Payload.FileName;
+            var arguments = $"{testStartInfo.Payload.Arguments} {testMethodArgument} {methodName}";
+
+            var startInfo = new ProcessStartInfo(fileName, arguments)
+            {
+                WorkingDirectory = _projectDir,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false
+            };
+
+            var testProcess = Process.Start(startInfo);
 
             var results = new List<TestResult>();
             while (true)
@@ -73,6 +91,14 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
                 else if (message.MessageType == "TestExecution.Completed")
                 {
                     break;
+                }
+            }
+
+            if (!testProcess.HasExited)
+            {
+                if (!testProcess.WaitForExit(3000))
+                {
+                    testProcess.KillAll();
                 }
             }
 
@@ -107,7 +133,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
         {
             if (_process != null && !_process.HasExited)
             {
-                _process.Kill();
+                _process.KillAll();
             }
         }
 
@@ -125,23 +151,6 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             _logger.LogInformation($"send: {content}");
 
             _writer.Write(content);
-        }
-
-        private static Process StartDotnet(string argument, string workingDir)
-        {
-            return StartProcess("dotnet", argument, workingDir);
-        }
-
-        private static Process StartProcess(string executable, string argument, string workingDir)
-        {
-            return Process.Start(new ProcessStartInfo(executable, argument)
-            {
-                WorkingDirectory = workingDir,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false
-            });
         }
 
         private static int FindFreePort()
