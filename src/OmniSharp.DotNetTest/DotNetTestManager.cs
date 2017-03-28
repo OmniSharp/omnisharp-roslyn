@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.DotNetTest;
+using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -18,15 +19,15 @@ namespace OmniSharp.DotNetTest
 {
     public class DotNetTestManager : IDisposable
     {
-        private readonly string _projectDir;
+        private readonly string _workingDirectory;
         private readonly Process _process;
         private readonly BinaryReader _reader;
         private readonly BinaryWriter _writer;
         private readonly ILogger _logger;
 
-        public DotNetTestManager(string projectDir, ILogger logger, Process process, BinaryReader reader, BinaryWriter writer)
+        public DotNetTestManager(string workingDirectory, ILogger logger, Process process, BinaryReader reader, BinaryWriter writer)
         {
-            _projectDir = projectDir;
+            _workingDirectory = workingDirectory;
             _logger = logger;
             _process = process;
             _reader = reader;
@@ -36,7 +37,7 @@ namespace OmniSharp.DotNetTest
             ReadMessage<JToken>();
         }
 
-        public static DotNetTestManager Start(string projectDir, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static DotNetTestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             var port = FindFreePort();
 
@@ -45,32 +46,34 @@ namespace OmniSharp.DotNetTest
             listener.Listen(1);
 
             var currentProcess = Process.GetCurrentProcess();
-            var process = dotNetCli.Start($"test --port {port} --parentProcessId {currentProcess.Id}", projectDir);
+            var process = dotNetCli.Start($"test --port {port} --parentProcessId {currentProcess.Id}", workingDirectory);
 
             var socket = listener.Accept();
             var stream = new NetworkStream(socket);
             var reader = new BinaryReader(stream);
             var writer = new BinaryWriter(stream);
 
-            return new DotNetTestManager(projectDir, loggerFactory.CreateLogger<DotNetTestManager>(), process, reader, writer);
+            return new DotNetTestManager(workingDirectory, loggerFactory.CreateLogger<DotNetTestManager>(), process, reader, writer);
         }
 
         public RunDotNetTestResponse ExecuteTestMethod(string methodName, string testFrameworkName)
         {
-            SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
+            var testFramework = TestFramework.GetFramework(testFrameworkName);
+            if (testFramework == null)
+            {
+                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
+            }
 
-            var testMethodArgument = testFrameworkName == "nunit"
-                ? "--test"
-                : "-method";
+            SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
 
             var testStartInfo = ReadMessage<TestStartInfo>();
 
             var fileName = testStartInfo.Payload.FileName;
-            var arguments = $"{testStartInfo.Payload.Arguments} {testMethodArgument} {methodName}";
+            var arguments = $"{testStartInfo.Payload.Arguments} {testFramework.MethodArgument} {methodName}";
 
             var startInfo = new ProcessStartInfo(fileName, arguments)
             {
-                WorkingDirectory = _projectDir,
+                WorkingDirectory = _workingDirectory,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = false,
@@ -110,22 +113,34 @@ namespace OmniSharp.DotNetTest
 
         public GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
+            var testFramework = TestFramework.GetFramework(testFrameworkName);
+            if (testFramework == null)
+            {
+                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
+            }
+
             SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
 
-            var message = ReadMessage<TestStartInfo>();
-            var end = message.Payload.Arguments.IndexOf("--designtime");
-            var argument = message.Payload.Arguments.Substring(0, end);
+            var testStartInfo = ReadMessage<TestStartInfo>();
+
+            var fileName = testStartInfo.Payload.FileName;
+            var arguments = testStartInfo.Payload.Arguments;
+
+            var endIndex = arguments.IndexOf("--designtime");
+            if (endIndex >= 0)
+            {
+                arguments = arguments.Substring(0, endIndex).TrimEnd();
+            }
 
             if (!string.IsNullOrEmpty(methodName))
             {
-                string testMethodArgument = testFrameworkName == "nunit" ? "--test" : "-method";
-                argument = $"{argument} {testMethodArgument} {methodName}";
+                arguments = $"{arguments} {testFramework.MethodArgument} {methodName}";
             }
 
             return new GetDotNetTestStartInfoResponse
             {
-                Argument = argument,
-                Executable = message.Payload.FileName
+                Executable = fileName,
+                Argument = arguments
             };
         }
 
