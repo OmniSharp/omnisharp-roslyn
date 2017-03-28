@@ -10,7 +10,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.RunDotNetTest, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.V2.RunDotNetTest, LanguageNames.CSharp)]
     public class RunDotNetTestService : RequestHandler<RunDotNetTestRequest, RunDotNetTestResponse>
     {
         private readonly OmniSharpWorkspace _workspace;

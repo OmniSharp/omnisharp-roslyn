@@ -108,7 +108,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
             };
         }
 
-        public GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
             SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
 
@@ -122,7 +122,7 @@ namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
                 argument = $"{argument} {testMethodArgument} {methodName}";
             }
 
-            return new GetTestStartInfoResponse
+            return new GetDotNetTestStartInfoResponse
             {
                 Argument = argument,
                 Executable = message.Payload.FileName

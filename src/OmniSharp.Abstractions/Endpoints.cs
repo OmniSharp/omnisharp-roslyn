@@ -62,10 +62,9 @@ namespace OmniSharp
         {
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
+
+            public const string GetDotNetTestStartInfo = "/v2/getteststartinfo";
+            public const string RunDotNetTest = "/v2/runtest";
         }
-
-        public const string GetTestStartInfo = "/v2/getteststartinfo";
-
-        public const string RunDotNetTest = "/v2/runtest";
     }
 }

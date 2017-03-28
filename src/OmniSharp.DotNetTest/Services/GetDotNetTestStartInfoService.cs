@@ -10,22 +10,22 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GetTestStartInfo, LanguageNames.CSharp)]
-    public class GetTestStartInfoService : RequestHandler<GetTestStartInfoRequest, GetTestStartInfoResponse>
+    [OmniSharpHandler(OmnisharpEndpoints.V2.GetDotNetTestStartInfo, LanguageNames.CSharp)]
+    public class GetDotNetTestStartInfoService : RequestHandler<GetDotNetTestStartInfoRequest, GetDotNetTestStartInfoResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCli;
         private readonly ILoggerFactory _loggerFactory;
 
         [ImportingConstructor]
-        public GetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public GetDotNetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _dotNetCli = dotNetCli;
             _loggerFactory = loggerFactory;
         }
 
-        public Task<GetTestStartInfoResponse> Handle(GetTestStartInfoRequest request)
+        public Task<GetDotNetTestStartInfoResponse> Handle(GetDotNetTestStartInfoRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var projectFolder = Path.GetDirectoryName(document.Project.FilePath);
