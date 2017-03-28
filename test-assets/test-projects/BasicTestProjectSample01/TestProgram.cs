@@ -13,9 +13,17 @@ namespace Main.Test
         [Theory]
         [InlineData(0)]
         [InlineData(1)]
-        public void DataDrivenTest(int i)
+        public void DataDrivenTest1(int i)
         {
             Assert.True(i > 0);
+        }
+        
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        public void DataDrivenTest2(int i)
+        {
+            Assert.True(i >= 0);
         }
         
         private void UtilityFunction()

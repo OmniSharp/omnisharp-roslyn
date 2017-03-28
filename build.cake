@@ -412,7 +412,7 @@ Task("Restore")
 
         Information($"Restoring project.json packages in {folder}...");
 
-        RunTool(env.LegacyDotNetCommand, "restore", folder)
+        RunTool(env.LegacyDotNetCommand, "restore --infer-runtimes", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
     }
 });

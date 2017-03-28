@@ -14,10 +14,12 @@ namespace OmniSharp.DotNetTest.Tests
     /// </summary>
     public class LegacyRunTestFacts : AbstractSingleRequestHandlerTestFixture<RunDotNetTestService>
     {
+        private const string LegacyXunitTestProject = "LegacyXunitTestProject";
+        private const string LegacyNunitTestProject = "LegacyNunitTestProject";
+
         public LegacyRunTestFacts(ITestOutputHelper output)
             : base(output)
         {
-
         }
 
         protected override string EndpointName => OmnisharpEndpoints.RunDotNetTest;
@@ -25,72 +27,97 @@ namespace OmniSharp.DotNetTest.Tests
         [Fact]
         public async Task RunXunitTest()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyXunitTestProject"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, useLegacyDotNetCli: true))
-            {
-                var dotNetCli = host.GetExport<DotNetCliService>();
-                await dotNetCli.RestoreAsync(testProject.Directory, "--infer-runtimes");
-
-                var service = GetRequestHandler(host);
-
-                var request = new RunDotNetTestRequest
-                {
-                    FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
-                    MethodName = "Main.Test.MainTest.Test",
-                    TestFrameworkName = "xunit"
-                };
-
-                var response = await service.Handle(request);
-
-                Assert.True(response.Pass);
-            }
+            await RunLegacyTestAsync(
+                LegacyXunitTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "xunit",
+                shouldPass: true);
         }
 
         [Fact]
         public async Task RunXunitTheoryWithInlineData1()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyXunitTestProject"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, useLegacyDotNetCli: true))
-            {
-                var dotNetCli = host.GetExport<DotNetCliService>();
-                await dotNetCli.RestoreAsync(testProject.Directory, "--infer-runtimes");
-
-                var service = GetRequestHandler(host);
-
-                var request = new RunDotNetTestRequest
-                {
-                    FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
-                    MethodName = "Main.Test.MainTest.DataDrivenTest1",
-                    TestFrameworkName = "xunit"
-                };
-
-                var response = await service.Handle(request);
-
-                Assert.False(response.Pass);
-            }
+            await RunLegacyTestAsync(
+                LegacyXunitTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest1",
+                testFramework: "xunit",
+                shouldPass: false);
         }
 
         [Fact]
         public async Task RunXunitTheoryWithInlineData2()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyXunitTestProject"))
+            await RunLegacyTestAsync(
+                LegacyXunitTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest2",
+                testFramework: "xunit",
+                shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunNunitTest()
+        {
+            await RunLegacyTestAsync(
+                LegacyNunitTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "nunit",
+                shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunNunitDataDriveTest1()
+        {
+            await RunLegacyTestAsync(
+                LegacyNunitTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest1",
+                testFramework: "nunit",
+                shouldPass: false);
+        }
+
+        [Fact]
+        public async Task RunNunitDataDriveTest2()
+        {
+            await RunLegacyTestAsync(
+                LegacyNunitTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest2",
+                testFramework: "nunit",
+                shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunNunitSourceDataDrivenTest()
+        {
+            await RunLegacyTestAsync(
+                LegacyNunitTestProject,
+                methodName: "Main.Test.MainTest.SourceDataDrivenTest",
+                testFramework: "nunit",
+                shouldPass: true);
+        }
+
+        private async Task RunLegacyTestAsync(string projectName, string methodName, string testFramework, bool shouldPass)
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
             using (var host = CreateOmniSharpHost(testProject.Directory, useLegacyDotNetCli: true))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
-                await dotNetCli.RestoreAsync(testProject.Directory, "--infer-runtimes");
-
                 var service = GetRequestHandler(host);
 
                 var request = new RunDotNetTestRequest
                 {
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
-                    MethodName = "Main.Test.MainTest.DataDrivenTest2",
-                    TestFrameworkName = "xunit"
+                    MethodName = methodName,
+                    TestFrameworkName = testFramework
                 };
 
                 var response = await service.Handle(request);
 
-                Assert.True(response.Pass);
+                if (shouldPass)
+                {
+                    Assert.True(response.Pass, "Expected test to pass but it failed");
+                }
+                else
+                {
+                    Assert.False(response.Pass, "Expected test to fail but it passed");
+                }
             }
         }
     }

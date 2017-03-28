@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.DotNetTest.Helpers;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,20 +23,22 @@ namespace OmniSharp.DotNetTest.Tests
         }
 
         [Theory]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 8, 23, true, "XunitTestMethod")]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 15, 26, true, "XunitTestMethod")]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 21, 28, false, "")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 8, 23, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 15, 26, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 21, 26, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 25, 35, false, "")]
+        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 7, 20, true, "XunitTestMethod")]
+        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 15, 20, true, "XunitTestMethod")]
+        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 23, 20, true, "XunitTestMethod")]
+        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 28, 20, false, "")]
+        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 7, 20, true, "NUnitTestMethod")]
+        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 14, 20, true, "NUnitTestMethod")]
+        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 21, 20, true, "NUnitTestMethod")]
+        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 27, 20, true, "NUnitTestMethod")]
+        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 32, 20, false, "")]
         public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
-            using (var omnisharp = CreateOmniSharpHost(testProject.Directory))
+            using (var host = CreateOmniSharpHost(testProject.Directory, useLegacyDotNetCli: true))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
-                var solution = omnisharp.Workspace.CurrentSolution;
+                var solution = host.Workspace.CurrentSolution;
                 var documentId = solution.GetDocumentIdsWithFilePath(filePath).First();
                 var document = solution.GetDocument(documentId);
 

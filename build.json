@@ -22,6 +22,7 @@
   "LegacyTestAssets": [
     "BasicTestProjectSample01",
     "BasicTestProjectSample02",
+    "LegacyNunitTestProject",
     "LegacyXunitTestProject"
   ]
 }
