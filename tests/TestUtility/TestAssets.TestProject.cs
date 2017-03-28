@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace TestUtility
 {
@@ -35,7 +36,20 @@ namespace TestUtility
 
                 if (this.ShadowCopied)
                 {
-                    System.IO.Directory.Delete(this.BaseDirectory, recursive: true);
+                    var retries = 0;
+                    while (retries <= 5)
+                    {
+                        try
+                        {
+                            System.IO.Directory.Delete(this.BaseDirectory, recursive: true);
+                            break;
+                        }
+                        catch
+                        {
+                            Thread.Sleep(1000);
+                            retries++;
+                        }
+                    }
 
                     if (System.IO.Directory.Exists(this.BaseDirectory))
                     {
