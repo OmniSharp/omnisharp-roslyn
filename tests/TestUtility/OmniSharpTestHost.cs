@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.DotNet;
-using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
+using OmniSharp.DotNetTest;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;

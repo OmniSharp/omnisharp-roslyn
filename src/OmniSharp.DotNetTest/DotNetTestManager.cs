@@ -14,7 +14,7 @@ using OmniSharp.DotNetTest.Models.DotNetTest;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.DotNetTest.Helpers.DotNetTestManager
+namespace OmniSharp.DotNetTest
 {
     public class DotNetTestManager : IDisposable
     {

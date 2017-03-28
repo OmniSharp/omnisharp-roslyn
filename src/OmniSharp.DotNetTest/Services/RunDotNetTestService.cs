@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Mef;
 using OmniSharp.Services;
