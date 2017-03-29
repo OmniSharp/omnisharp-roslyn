@@ -27,6 +27,19 @@ namespace OmniSharp.DotNetTest
             return $"test --port {port} --parentProcessId {parentProcessId}";
         }
 
+        protected override void VersionCheck()
+        {
+            SendMessage(MessageType.VersionCheck);
+
+            var message = ReadMessage();
+            var payload = message.DeserializePayload<ProtocolVersion>();
+
+            if (payload.Version != 1)
+            {
+                throw new InvalidOperationException($"Expected ProtocolVersion 1, but was {payload.Version}");
+            }
+        }
+
         public static DotNetTestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             var manager = new DotNetTestManager(workingDirectory, dotNetCli, loggerFactory.CreateLogger<DotNetTestManager>());

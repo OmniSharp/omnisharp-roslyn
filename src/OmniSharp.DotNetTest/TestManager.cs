@@ -68,6 +68,7 @@ namespace OmniSharp.DotNetTest
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
+        protected abstract void VersionCheck();
 
         protected void Connect()
         {
@@ -85,13 +86,15 @@ namespace OmniSharp.DotNetTest
             _reader = new BinaryReader(_stream);
             _writer = new BinaryWriter(_stream);
 
-            // Read the inital response
+            // Read the initial "connected" response
             var message = ReadMessage();
 
             if (message.MessageType != MessageType.SessionConnected)
             {
                 throw new InvalidOperationException($"Expected {MessageType.SessionConnected} but was {message.MessageType}");
             }
+
+            VersionCheck();
         }
 
         private static int FindFreePort()
