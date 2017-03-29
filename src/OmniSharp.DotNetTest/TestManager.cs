@@ -32,6 +32,10 @@ namespace OmniSharp.DotNetTest
 
         protected override void DisposeCore(bool disposing)
         {
+            SendMessage(MessageType.SessionEnd);
+
+            _process.WaitForExit(2000);
+
             if (_process?.HasExited == false)
             {
                 _process.KillChildrenAndThis();
