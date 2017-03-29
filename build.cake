@@ -36,6 +36,7 @@ public class BuildPlan
     public string[] Frameworks { get; set; }
     public string MainProject { get; set; }
     public string[] TestProjects { get; set; }
+    public string[] TestAssets { get; set; }
     public string[] LegacyTestAssets { get; set; }
 
     private string currentRid;
@@ -404,6 +405,17 @@ Task("Restore")
 
     RunTool(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
+
+    // Restore test assets
+    foreach (var project in buildPlan.TestAssets)
+    {
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+
+        Information($"Restoring packages in {folder}...");
+
+        RunTool(env.DotNetCommand, "restore", folder)
+            .ExceptionOnError($"Failed to restore '{folder}'.");
+    }
 
     // Restore legacy test assets with legacy .NET Core SDK
     foreach (var project in buildPlan.LegacyTestAssets)
