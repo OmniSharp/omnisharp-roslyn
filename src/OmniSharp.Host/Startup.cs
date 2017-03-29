@@ -20,6 +20,7 @@ using OmniSharp.Services;
 using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+using OmniSharp.Host.Internal;
 
 namespace OmniSharp
 {
@@ -44,10 +45,17 @@ namespace OmniSharp
                 configBuilder.AddCommandLine(env.OtherArgs);
             }
 
+            // Use the global omnisharp config if there's any in the shared path
+            configBuilder.AddJsonFile(
+                new PhysicalFileProvider(env.SharedPath),
+                OmniSharpConstants.OmnisharpOptionsFile,
+                optional: true,
+                reloadOnChange: true);
+
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
                 new PhysicalFileProvider(env.Path),
-                "omnisharp.json",
+                OmniSharpConstants.OmnisharpOptionsFile,
                 optional: true,
                 reloadOnChange: true);
 
