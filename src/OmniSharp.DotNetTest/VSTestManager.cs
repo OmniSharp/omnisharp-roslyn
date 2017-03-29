@@ -51,7 +51,23 @@ namespace OmniSharp.DotNetTest
 
         public override GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
-            throw new NotImplementedException();
+            var testCases = DiscoverTests(methodName);
+
+            SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
+                new
+                {
+                    TestCases = testCases,
+                    DebuggingEnabled = true
+                });
+
+            var message = ReadMessage();
+            var launchPayload = message.DeserializePayload<TestProcessStartInfo>();
+
+            return new GetDotNetTestStartInfoResponse
+            {
+                Executable = launchPayload.FileName,
+                Argument = launchPayload.Arguments
+            };
         }
 
         public override RunDotNetTestResponse RunTest(string methodName, string testFrameworkName)

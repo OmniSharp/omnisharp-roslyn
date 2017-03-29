@@ -4,28 +4,31 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public class LegacyGetTestStartInfoFacts : AbstractGetTestStartInfoFacts
+    public class GetTestStartInfoFacts : AbstractGetTestStartInfoFacts
     {
-        public LegacyGetTestStartInfoFacts(ITestOutputHelper testOutput) : base(testOutput)
+        public GetTestStartInfoFacts(ITestOutputHelper output) : base(output)
         {
         }
 
-        public override bool UseLegacyDotNetCli { get; } = true;
+        public override bool UseLegacyDotNetCli { get; } = false;
 
         [Fact]
         public async Task RunXunitTest()
         {
             await GetDotNetTestStartInfoAsync(
-                LegacyXunitTestProject,
+                XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit");
         }
 
-        [Fact]
+        // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
+        // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
+
+        //[Fact]
         public async Task RunNunitTest()
         {
             await GetDotNetTestStartInfoAsync(
-                LegacyNunitTestProject,
+                NunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit");
         }
