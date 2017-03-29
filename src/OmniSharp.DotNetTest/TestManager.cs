@@ -1,41 +1,112 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
     public abstract class TestManager : DisposableObject
     {
+        protected readonly DotNetCliService DotNetCli;
         protected readonly string WorkingDirectory;
-        private readonly Process _process;
-        private readonly BinaryReader _reader;
-        private readonly BinaryWriter _writer;
-        private readonly ILogger _logger;
+        protected readonly ILogger Logger;
 
-        protected TestManager(Process process, BinaryReader reader, BinaryWriter writer, string workingDirectory, ILogger logger)
+        private Process _process;
+        private Socket _socket;
+        private NetworkStream _stream;
+        private BinaryReader _reader;
+        private BinaryWriter _writer;
+
+        protected TestManager(DotNetCliService dotNetCli, string workingDirectory, ILogger logger)
         {
-            _process = process ?? throw new ArgumentNullException(nameof(process));
-            _reader = reader ?? throw new ArgumentNullException(nameof(reader));
-            _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+            DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
             WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         protected override void DisposeCore(bool disposing)
         {
-            if (!_process.HasExited)
+            if (_process?.HasExited == false)
             {
                 _process.KillChildrenAndThis();
+            }
+
+            if (_process != null)
+            {
+                _process = null;
+            }
+
+            if (_reader != null)
+            {
+                _reader.Dispose();
+                _reader = null;
+            }
+
+            if (_writer != null)
+            {
+                _writer.Dispose();
+                _writer = null;
+            }
+
+            if (_stream != null)
+            {
+                _stream.Dispose();
+                _stream = null;
+            }
+
+            if (_socket != null)
+            {
+                _socket.Dispose();
+                _socket = null;
+            }
+        }
+
+        protected abstract string GetCliTestArguments(int port, int parentProcessId);
+
+        protected void Connect()
+        {
+            var port = FindFreePort();
+
+            var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
+            listener.Listen(1);
+
+            var currentProcess = Process.GetCurrentProcess();
+            _process = DotNetCli.Start(GetCliTestArguments(port, currentProcess.Id), WorkingDirectory);
+
+            _socket = listener.Accept();
+            _stream = new NetworkStream(_socket);
+            _reader = new BinaryReader(_stream);
+            _writer = new BinaryWriter(_stream);
+
+            // Read the inital response
+            var message = ReadMessage();
+
+            if (message.MessageType != MessageType.SessionConnected)
+            {
+                throw new InvalidOperationException($"Expected {MessageType.SessionConnected} but was {message.MessageType}");
+            }
+        }
+
+        private static int FindFreePort()
+        {
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
+                socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                return ((IPEndPoint)socket.LocalEndPoint).Port;
             }
         }
 
         protected Message ReadMessage()
         {
             var rawMessage = _reader.ReadString();
-            _logger.LogInformation($"read: {rawMessage}");
+            Logger.LogInformation($"read: {rawMessage}");
 
             return JsonDataSerializer.Instance.DeserializeMessage(rawMessage);
         }
@@ -43,7 +114,7 @@ namespace OmniSharp.DotNetTest
         protected void SendMessage(string messageType)
         {
             var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, new object());
-            _logger.LogInformation($"send: {rawMessage}");
+            Logger.LogInformation($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
         }
@@ -51,7 +122,7 @@ namespace OmniSharp.DotNetTest
         protected void SendMessage<T>(string messageType, T payload)
         {
             var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, payload);
-            _logger.LogInformation($"send: {rawMessage}");
+            Logger.LogInformation($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
         }

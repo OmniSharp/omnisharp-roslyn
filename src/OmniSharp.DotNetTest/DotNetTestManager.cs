@@ -1,46 +1,37 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Testing.Abstractions;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Models;
-using OmniSharp.DotNetTest.Models.DotNetTest;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
-    public class DotNetTestManager : TestManager
+    public partial class DotNetTestManager : TestManager
     {
-        public DotNetTestManager(Process process, BinaryReader reader, BinaryWriter writer, string workingDirectory, ILogger logger)
-            : base(process, reader, writer, workingDirectory, logger)
+        private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
+        private const string TestExecution_TestResult = "TestExecution.TestResult";
+
+        public DotNetTestManager(string workingDirectory, DotNetCliService dotNetCli, ILogger logger)
+            : base(dotNetCli, workingDirectory, logger)
         {
-            // Read the inital response
-            var message = ReadMessage();
+        }
+
+        protected override string GetCliTestArguments(int port, int parentProcessId)
+        {
+            return $"test --port {port} --parentProcessId {parentProcessId}";
         }
 
         public static DotNetTestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
-            var port = FindFreePort();
-
-            var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
-            listener.Listen(1);
-
-            var currentProcess = Process.GetCurrentProcess();
-            var process = dotNetCli.Start($"test --port {port} --parentProcessId {currentProcess.Id}", workingDirectory);
-
-            var socket = listener.Accept();
-            var stream = new NetworkStream(socket);
-            var reader = new BinaryReader(stream);
-            var writer = new BinaryWriter(stream);
-
-            return new DotNetTestManager(process, reader, writer, workingDirectory, loggerFactory.CreateLogger<DotNetTestManager>());
+            var manager = new DotNetTestManager(workingDirectory, dotNetCli, loggerFactory.CreateLogger<DotNetTestManager>());
+            manager.Connect();
+            return manager;
         }
 
         public RunDotNetTestResponse ExecuteTestMethod(string methodName, string testFrameworkName)
@@ -51,7 +42,7 @@ namespace OmniSharp.DotNetTest
                 throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
             }
 
-            SendMessage("TestExecution.GetTestRunnerProcessStartInfo");
+            SendMessage(TestExecution_GetTestRunnerProcessStartInfo);
 
             var message = ReadMessage();
 
@@ -72,17 +63,20 @@ namespace OmniSharp.DotNetTest
             var testProcess = Process.Start(startInfo);
 
             var results = new List<TestResult>();
-            while (true)
+            var done = false;
+
+            while (!done)
             {
                 var m = ReadMessage();
+                switch (m.MessageType)
+                {
+                    case TestExecution_TestResult:
+                        results.Add(m.DeserializePayload<TestResult>());
+                        break;
 
-                if (m.MessageType == "TestExecution.TestResult")
-                {
-                    results.Add(m.Payload.ToObject<TestResult>());
-                }
-                else if (m.MessageType == "TestExecution.Completed")
-                {
-                    break;
+                    case MessageType.ExecutionComplete:
+                        done = true;
+                        break;
                 }
             }
 
@@ -108,7 +102,7 @@ namespace OmniSharp.DotNetTest
                 throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
             }
 
-            SendMessage("TestExecution.GetTestRunnerProcessStartInfo");
+            SendMessage(TestExecution_GetTestRunnerProcessStartInfo);
 
             var message = ReadMessage();
 
@@ -132,15 +126,6 @@ namespace OmniSharp.DotNetTest
                 Executable = testStartInfo.FileName,
                 Argument = arguments
             };
-        }
-
-        private static int FindFreePort()
-        {
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-            {
-                socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-                return ((IPEndPoint)socket.LocalEndPoint).Port;
-            }
         }
     }
 }

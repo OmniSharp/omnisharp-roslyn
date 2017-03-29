@@ -7,7 +7,7 @@ using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Extensions;
 using OmniSharp.Models;
 
-namespace OmniSharp.DotNetTest.Helpers
+namespace OmniSharp.DotNetTest
 {
     [Export(typeof(ISyntaxFeaturesDiscover))]
     public class TestFeaturesDiscover : ISyntaxFeaturesDiscover
