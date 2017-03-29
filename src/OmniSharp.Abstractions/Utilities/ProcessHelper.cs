@@ -87,7 +87,7 @@ namespace OmniSharp.Utilities
                 {
                     if (DateTime.UtcNow - lastSignal > timeout)
                     {
-                        process.KillAll();
+                        process.KillChildrenAndThis();
                     }
 
                     await Task.Delay(delay);
