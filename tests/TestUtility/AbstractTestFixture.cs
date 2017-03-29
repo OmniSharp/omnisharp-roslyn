@@ -19,7 +19,7 @@ namespace TestUtility
 
         protected OmniSharpTestHost CreateEmptyOmniSharpHost()
         {
-            var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput, configurationData: null);
+            var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput);
             host.AddFilesToWorkspace();
             return host;
         }
