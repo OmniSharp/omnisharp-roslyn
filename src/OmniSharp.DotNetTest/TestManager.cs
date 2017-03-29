@@ -2,8 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using OmniSharp.DotNetTest.Models.DotNetTest;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
@@ -33,20 +32,28 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        protected Message<T> ReadMessage<T>()
+        protected Message ReadMessage()
         {
-            var content = _reader.ReadString();
-            _logger.LogInformation($"read: {content}");
+            var rawMessage = _reader.ReadString();
+            _logger.LogInformation($"read: {rawMessage}");
 
-            return JsonConvert.DeserializeObject<Message<T>>(content);
+            return JsonDataSerializer.Instance.DeserializeMessage(rawMessage);
         }
 
-        protected void SendMessage(object message)
+        protected void SendMessage(string messageType)
         {
-            var content = JsonConvert.SerializeObject(message);
-            _logger.LogInformation($"send: {content}");
+            var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, new object());
+            _logger.LogInformation($"send: {rawMessage}");
 
-            _writer.Write(content);
+            _writer.Write(rawMessage);
+        }
+
+        protected void SendMessage<T>(string messageType, T payload)
+        {
+            var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, payload);
+            _logger.LogInformation($"send: {rawMessage}");
+
+            _writer.Write(rawMessage);
         }
     }
 }

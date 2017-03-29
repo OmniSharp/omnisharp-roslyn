@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Testing.Abstractions;
-using Newtonsoft.Json.Linq;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.DotNetTest;
 using OmniSharp.DotNetTest.TestFrameworks;
@@ -22,7 +21,7 @@ namespace OmniSharp.DotNetTest
             : base(process, reader, writer, workingDirectory, logger)
         {
             // Read the inital response
-            ReadMessage<JToken>();
+            var message = ReadMessage();
         }
 
         public static DotNetTestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
@@ -52,12 +51,14 @@ namespace OmniSharp.DotNetTest
                 throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
             }
 
-            SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
+            SendMessage("TestExecution.GetTestRunnerProcessStartInfo");
 
-            var testStartInfo = ReadMessage<TestStartInfo>();
+            var message = ReadMessage();
 
-            var fileName = testStartInfo.Payload.FileName;
-            var arguments = $"{testStartInfo.Payload.Arguments} {testFramework.MethodArgument} {methodName}";
+            var testStartInfo = message.DeserializePayload<TestStartInfo>();
+
+            var fileName = testStartInfo.FileName;
+            var arguments = $"{testStartInfo.Arguments} {testFramework.MethodArgument} {methodName}";
 
             var startInfo = new ProcessStartInfo(fileName, arguments)
             {
@@ -73,13 +74,13 @@ namespace OmniSharp.DotNetTest
             var results = new List<TestResult>();
             while (true)
             {
-                var message = ReadMessage<JObject>();
+                var m = ReadMessage();
 
-                if (message.MessageType == "TestExecution.TestResult")
+                if (m.MessageType == "TestExecution.TestResult")
                 {
-                    results.Add(message.Payload.ToObject<TestResult>());
+                    results.Add(m.Payload.ToObject<TestResult>());
                 }
-                else if (message.MessageType == "TestExecution.Completed")
+                else if (m.MessageType == "TestExecution.Completed")
                 {
                     break;
                 }
@@ -107,12 +108,13 @@ namespace OmniSharp.DotNetTest
                 throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
             }
 
-            SendMessage(new { MessageType = "TestExecution.GetTestRunnerProcessStartInfo" });
+            SendMessage("TestExecution.GetTestRunnerProcessStartInfo");
 
-            var testStartInfo = ReadMessage<TestStartInfo>();
+            var message = ReadMessage();
 
-            var fileName = testStartInfo.Payload.FileName;
-            var arguments = testStartInfo.Payload.Arguments;
+            var testStartInfo = message.DeserializePayload<TestStartInfo>();
+
+            var arguments = testStartInfo.Arguments;
 
             var endIndex = arguments.IndexOf("--designtime");
             if (endIndex >= 0)
@@ -127,7 +129,7 @@ namespace OmniSharp.DotNetTest
 
             return new GetDotNetTestStartInfoResponse
             {
-                Executable = fileName,
+                Executable = testStartInfo.FileName,
                 Argument = arguments
             };
         }
