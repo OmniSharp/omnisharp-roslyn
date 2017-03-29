@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
+using OmniSharp.DotNetTest.Models;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -28,6 +29,69 @@ namespace OmniSharp.DotNetTest
             DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
             WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public static TestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        {
+            var manager = Create(workingDirectory, dotNetCli, loggerFactory);
+            manager.Connect();
+            return manager;
+        }
+
+        public static TestManager Create(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        {
+            var version = dotNetCli.GetVersion();
+
+            if (version.Major < 1)
+            {
+                throw new InvalidOperationException($"'dotnet test' is not supported for .NET CLI {version}");
+            }
+
+            if (version.Major == 1 &&
+                version.Minor == 0 &&
+                version.Patch == 0)
+            {
+                if (version.Release.StartsWith("preview1") ||
+                    version.Release.StartsWith("preview2"))
+                {
+                    return new LegacyTestManager(workingDirectory, dotNetCli, loggerFactory);
+                }
+            }
+
+            throw new InvalidOperationException($"'dotnet test' is not supported for .NET CLI {version}");
+        }
+
+        protected abstract string GetCliTestArguments(int port, int parentProcessId);
+        protected abstract void VersionCheck();
+
+        public abstract RunDotNetTestResponse RunTest(string methodName, string testFrameworkName);
+        public abstract GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
+
+        private void Connect()
+        {
+            var port = FindFreePort();
+
+            var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
+            listener.Listen(1);
+
+            var currentProcess = Process.GetCurrentProcess();
+            _process = DotNetCli.Start(GetCliTestArguments(port, currentProcess.Id), WorkingDirectory);
+
+            _socket = listener.Accept();
+            _stream = new NetworkStream(_socket);
+            _reader = new BinaryReader(_stream);
+            _writer = new BinaryWriter(_stream);
+
+            // Read the initial "connected" response
+            var message = ReadMessage();
+
+            if (message.MessageType != MessageType.SessionConnected)
+            {
+                throw new InvalidOperationException($"Expected {MessageType.SessionConnected} but was {message.MessageType}");
+            }
+
+            VersionCheck();
         }
 
         protected override void DisposeCore(bool disposing)
@@ -69,36 +133,6 @@ namespace OmniSharp.DotNetTest
                 _socket.Dispose();
                 _socket = null;
             }
-        }
-
-        protected abstract string GetCliTestArguments(int port, int parentProcessId);
-        protected abstract void VersionCheck();
-
-        protected void Connect()
-        {
-            var port = FindFreePort();
-
-            var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            listener.Bind(new IPEndPoint(IPAddress.Loopback, port));
-            listener.Listen(1);
-
-            var currentProcess = Process.GetCurrentProcess();
-            _process = DotNetCli.Start(GetCliTestArguments(port, currentProcess.Id), WorkingDirectory);
-
-            _socket = listener.Accept();
-            _stream = new NetworkStream(_socket);
-            _reader = new BinaryReader(_stream);
-            _writer = new BinaryWriter(_stream);
-
-            // Read the initial "connected" response
-            var message = ReadMessage();
-
-            if (message.MessageType != MessageType.SessionConnected)
-            {
-                throw new InvalidOperationException($"Expected {MessageType.SessionConnected} but was {message.MessageType}");
-            }
-
-            VersionCheck();
         }
 
         private static int FindFreePort()

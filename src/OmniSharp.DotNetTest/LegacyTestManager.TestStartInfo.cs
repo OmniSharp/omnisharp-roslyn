@@ -1,6 +1,6 @@
 ﻿namespace OmniSharp.DotNetTest
 {
-    public partial class DotNetTestManager
+    public partial class LegacyTestManager
     {
         private class TestStartInfo
         {

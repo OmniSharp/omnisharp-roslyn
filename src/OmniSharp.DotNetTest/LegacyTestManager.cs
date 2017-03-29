@@ -12,13 +12,13 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
-    public partial class DotNetTestManager : TestManager
+    public partial class LegacyTestManager : TestManager
     {
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
         private const string TestExecution_TestResult = "TestExecution.TestResult";
 
-        public DotNetTestManager(string workingDirectory, DotNetCliService dotNetCli, ILogger logger)
-            : base(dotNetCli, workingDirectory, logger)
+        public LegacyTestManager(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+            : base(dotNetCli, workingDirectory, loggerFactory.CreateLogger<LegacyTestManager>())
         {
         }
 
@@ -40,14 +40,7 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public static DotNetTestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-        {
-            var manager = new DotNetTestManager(workingDirectory, dotNetCli, loggerFactory.CreateLogger<DotNetTestManager>());
-            manager.Connect();
-            return manager;
-        }
-
-        public RunDotNetTestResponse ExecuteTestMethod(string methodName, string testFrameworkName)
+        public override RunDotNetTestResponse RunTest(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -107,7 +100,7 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        public GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)

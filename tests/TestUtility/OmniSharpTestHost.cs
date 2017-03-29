@@ -28,7 +28,7 @@ namespace TestUtility
             typeof(OmnisharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
             typeof(Startup).GetTypeInfo().Assembly, // OmniSharp.Host
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
-            typeof(DotNetTestManager).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
+            typeof(TestManager).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly // OmniSharp.Roslyn.CSharp
