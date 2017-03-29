@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Testing.Abstractions;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.DotNetTest;
@@ -17,22 +16,11 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
-    public class DotNetTestManager : IDisposable
+    public class DotNetTestManager : TestManager
     {
-        private readonly string _workingDirectory;
-        private readonly Process _process;
-        private readonly BinaryReader _reader;
-        private readonly BinaryWriter _writer;
-        private readonly ILogger _logger;
-
-        public DotNetTestManager(string workingDirectory, ILogger logger, Process process, BinaryReader reader, BinaryWriter writer)
+        public DotNetTestManager(Process process, BinaryReader reader, BinaryWriter writer, string workingDirectory, ILogger logger)
+            : base(process, reader, writer, workingDirectory, logger)
         {
-            _workingDirectory = workingDirectory;
-            _logger = logger;
-            _process = process;
-            _reader = reader;
-            _writer = writer;
-
             // Read the inital response
             ReadMessage<JToken>();
         }
@@ -53,7 +41,7 @@ namespace OmniSharp.DotNetTest
             var reader = new BinaryReader(stream);
             var writer = new BinaryWriter(stream);
 
-            return new DotNetTestManager(workingDirectory, loggerFactory.CreateLogger<DotNetTestManager>(), process, reader, writer);
+            return new DotNetTestManager(process, reader, writer, workingDirectory, loggerFactory.CreateLogger<DotNetTestManager>());
         }
 
         public RunDotNetTestResponse ExecuteTestMethod(string methodName, string testFrameworkName)
@@ -73,7 +61,7 @@ namespace OmniSharp.DotNetTest
 
             var startInfo = new ProcessStartInfo(fileName, arguments)
             {
-                WorkingDirectory = _workingDirectory,
+                WorkingDirectory = WorkingDirectory,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = false,
@@ -101,7 +89,7 @@ namespace OmniSharp.DotNetTest
             {
                 if (!testProcess.WaitForExit(3000))
                 {
-                    testProcess.KillAll();
+                    testProcess.KillChildrenAndThis();
                 }
             }
 
@@ -142,30 +130,6 @@ namespace OmniSharp.DotNetTest
                 Executable = fileName,
                 Argument = arguments
             };
-        }
-
-        public void Dispose()
-        {
-            if (_process != null && !_process.HasExited)
-            {
-                _process.KillAll();
-            }
-        }
-
-        private Message<T> ReadMessage<T>()
-        {
-            var content = _reader.ReadString();
-            _logger.LogInformation($"read: {content}");
-
-            return JsonConvert.DeserializeObject<Message<T>>(content);
-        }
-
-        private void SendMessage(object message)
-        {
-            var content = JsonConvert.SerializeObject(message);
-            _logger.LogInformation($"send: {content}");
-
-            _writer.Write(content);
         }
 
         private static int FindFreePort()
