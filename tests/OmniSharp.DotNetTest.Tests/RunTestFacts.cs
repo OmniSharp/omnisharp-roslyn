@@ -4,23 +4,20 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    /// <summary>
-    /// Tests for legacy 'dotnet test' support for project.json support.
-    /// </summary>
-    public class LegacyRunTestFacts : AbstractRunTestFacts
+    public class RunTestFacts : AbstractRunTestFacts
     {
-        public LegacyRunTestFacts(ITestOutputHelper output)
-            : base(output)
+        public RunTestFacts(ITestOutputHelper testOutput)
+            : base(testOutput)
         {
         }
 
-        public override bool UseLegacyDotNetCli { get; } = true;
+        public override bool UseLegacyDotNetCli { get; } = false;
 
         [Fact]
         public async Task RunXunitTest()
         {
             await RunDotNetTestAsync(
-                LegacyXunitTestProject,
+                XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit",
                 shouldPass: true);
@@ -30,7 +27,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunXunitTheoryWithInlineData1()
         {
             await RunDotNetTestAsync(
-                LegacyXunitTestProject,
+                XunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest1",
                 testFramework: "xunit",
                 shouldPass: false);
@@ -40,47 +37,50 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunXunitTheoryWithInlineData2()
         {
             await RunDotNetTestAsync(
-                LegacyXunitTestProject,
+                XunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "xunit",
                 shouldPass: true);
         }
 
-        [Fact]
+        // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
+        // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
+
+        //[Fact]
         public async Task RunNunitTest()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                NunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit",
                 shouldPass: true);
         }
 
-        [Fact]
+        //[Fact]
         public async Task RunNunitDataDriveTest1()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                NunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest1",
                 testFramework: "nunit",
                 shouldPass: false);
         }
 
-        [Fact]
+        //[Fact]
         public async Task RunNunitDataDriveTest2()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                NunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "nunit",
                 shouldPass: true);
         }
 
-        [Fact]
+        //[Fact]
         public async Task RunNunitSourceDataDrivenTest()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                NunitTestProject,
                 methodName: "Main.Test.MainTest.SourceDataDrivenTest",
                 testFramework: "nunit",
                 shouldPass: true);

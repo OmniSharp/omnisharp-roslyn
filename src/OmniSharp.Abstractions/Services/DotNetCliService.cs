@@ -107,6 +107,8 @@ namespace OmniSharp.Services
                 RedirectStandardError = true
             };
 
+            RemoveMSBuildEnvironmentVariables(startInfo.Environment);
+
             return Process.Start(startInfo);
         }
 

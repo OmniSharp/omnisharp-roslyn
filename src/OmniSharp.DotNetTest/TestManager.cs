@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
@@ -14,31 +16,39 @@ namespace OmniSharp.DotNetTest
 {
     public abstract class TestManager : DisposableObject
     {
+        protected readonly Project Project;
         protected readonly DotNetCliService DotNetCli;
-        protected readonly string WorkingDirectory;
         protected readonly ILogger Logger;
+        protected readonly string WorkingDirectory;
 
+        private bool _isConnected;
         private Process _process;
         private Socket _socket;
         private NetworkStream _stream;
         private BinaryReader _reader;
         private BinaryWriter _writer;
+        private StringBuilder _outputBuilder;
+        private StringBuilder _errorBuilder;
 
-        protected TestManager(DotNetCliService dotNetCli, string workingDirectory, ILogger logger)
+        public bool IsConnected => _isConnected;
+
+        protected TestManager(Project project, DotNetCliService dotNetCli, ILogger logger)
         {
+            Project = project ?? throw new ArgumentNullException(nameof(project));
             DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
-            WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            WorkingDirectory = Path.GetDirectoryName(Project.FilePath);
         }
 
-        public static TestManager Start(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static TestManager Start(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
-            var manager = Create(workingDirectory, dotNetCli, loggerFactory);
+            var manager = Create(project, dotNetCli, loggerFactory);
             manager.Connect();
             return manager;
         }
 
-        public static TestManager Create(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static TestManager Create(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             var version = dotNetCli.GetVersion();
 
@@ -54,11 +64,11 @@ namespace OmniSharp.DotNetTest
                 if (version.Release.StartsWith("preview1") ||
                     version.Release.StartsWith("preview2"))
                 {
-                    return new LegacyTestManager(workingDirectory, dotNetCli, loggerFactory);
+                    return new LegacyTestManager(project, dotNetCli, loggerFactory);
                 }
             }
 
-            throw new InvalidOperationException($"'dotnet test' is not supported for .NET CLI {version}");
+            return new VSTestManager(project, dotNetCli, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
@@ -67,8 +77,24 @@ namespace OmniSharp.DotNetTest
         public abstract RunDotNetTestResponse RunTest(string methodName, string testFrameworkName);
         public abstract GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
 
+        protected virtual bool PrepareToConnect()
+        {
+            // Descendents can override.
+            return true;
+        }
+
         private void Connect()
         {
+            if (_isConnected)
+            {
+                throw new InvalidOperationException("Already connected.");
+            }
+
+            if (!PrepareToConnect())
+            {
+                return;
+            }
+
             var port = FindFreePort();
 
             var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -77,6 +103,15 @@ namespace OmniSharp.DotNetTest
 
             var currentProcess = Process.GetCurrentProcess();
             _process = DotNetCli.Start(GetCliTestArguments(port, currentProcess.Id), WorkingDirectory);
+
+            _outputBuilder = new StringBuilder();
+            _errorBuilder = new StringBuilder();
+
+            _process.OutputDataReceived += (_, e) => _outputBuilder.AppendLine(e.Data);
+            _process.ErrorDataReceived += (_, e) => _errorBuilder.AppendLine(e.Data);
+
+            _process.BeginOutputReadLine();
+            _process.BeginErrorReadLine();
 
             _socket = listener.Accept();
             _stream = new NetworkStream(_socket);
@@ -92,13 +127,17 @@ namespace OmniSharp.DotNetTest
             }
 
             VersionCheck();
+
+            _isConnected = true;
         }
 
         protected override void DisposeCore(bool disposing)
         {
-            SendMessage(MessageType.SessionEnd);
-
-            _process.WaitForExit(2000);
+            if (_isConnected)
+            {
+                SendMessage(MessageType.SessionEnd);
+                _process.WaitForExit(2000);
+            }
 
             if (_process?.HasExited == false)
             {
@@ -133,6 +172,8 @@ namespace OmniSharp.DotNetTest
                 _socket.Dispose();
                 _socket = null;
             }
+
+            _isConnected = false;
         }
 
         private static int FindFreePort()

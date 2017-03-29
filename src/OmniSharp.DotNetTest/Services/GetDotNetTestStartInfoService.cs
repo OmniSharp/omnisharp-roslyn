@@ -27,9 +27,8 @@ namespace OmniSharp.DotNetTest.Services
         public Task<GetDotNetTestStartInfoResponse> Handle(GetDotNetTestStartInfoRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
-            var projectFolder = Path.GetDirectoryName(document.Project.FilePath);
 
-            using (var dtm = TestManager.Start(projectFolder, _dotNetCli, _loggerFactory))
+            using (var dtm = TestManager.Start(document.Project, _dotNetCli, _loggerFactory))
             {
                 var response = dtm.GetTestStartInfo(request.MethodName, request.TestFrameworkName);
                 return Task.FromResult(response);

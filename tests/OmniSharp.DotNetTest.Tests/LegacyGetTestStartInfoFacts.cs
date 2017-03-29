@@ -18,7 +18,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.V2.GetDotNetTestStartInfo;
+        protected override string EndpointName { get; } = OmnisharpEndpoints.V2.GetDotNetTestStartInfo;
 
         [Fact]
         public async Task RunXunitTest()

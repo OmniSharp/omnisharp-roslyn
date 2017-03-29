@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Testing.Abstractions;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
@@ -17,8 +18,8 @@ namespace OmniSharp.DotNetTest
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
         private const string TestExecution_TestResult = "TestExecution.TestResult";
 
-        public LegacyTestManager(string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(dotNetCli, workingDirectory, loggerFactory.CreateLogger<LegacyTestManager>())
+        public LegacyTestManager(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+            : base(project, dotNetCli, loggerFactory.CreateLogger<LegacyTestManager>())
         {
         }
 

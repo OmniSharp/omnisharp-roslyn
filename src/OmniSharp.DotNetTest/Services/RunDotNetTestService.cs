@@ -27,11 +27,15 @@ namespace OmniSharp.DotNetTest.Services
         public Task<RunDotNetTestResponse> Handle(RunDotNetTestRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
-            var projectFolder = Path.GetDirectoryName(document.Project.FilePath);
 
-            using (var dtm = TestManager.Start(projectFolder, _dotNetCli, _loggerFactory))
+            using (var dtm = TestManager.Start(document.Project, _dotNetCli, _loggerFactory))
             {
-                var response = dtm.RunTest(request.MethodName, request.TestFrameworkName);
+                RunDotNetTestResponse response;
+
+                response = dtm.IsConnected
+                    ? dtm.RunTest(request.MethodName, request.TestFrameworkName)
+                    : new RunDotNetTestResponse { Failure = "Failed to connect to 'dotnet test' process", Pass = false };
+
                 return Task.FromResult(response);
             }
         }

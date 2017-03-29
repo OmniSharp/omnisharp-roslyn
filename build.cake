@@ -415,6 +415,11 @@ Task("Restore")
 
         RunTool(env.DotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
+
+        Information($"Building {folder}...");
+
+        RunTool(env.DotNetCommand, "build", folder)
+            .ExceptionOnError($"Failed to restore '{folder}'.");
     }
 
     // Restore legacy test assets with legacy .NET Core SDK
@@ -426,7 +431,12 @@ Task("Restore")
 
         RunTool(env.LegacyDotNetCommand, "restore --infer-runtimes", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
-    }
+ 
+        Information($"Building {folder}...");
+
+        RunTool(env.LegacyDotNetCommand, "build", folder)
+            .ExceptionOnError($"Failed to restore '{folder}'.");
+   }
 });
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
