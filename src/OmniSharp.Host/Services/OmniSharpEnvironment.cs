@@ -1,7 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using System.IO;
-using OmniSharp.Host.Internal;
 
 namespace OmniSharp.Services
 {
@@ -9,27 +7,7 @@ namespace OmniSharp.Services
     {
         public string Path { get; }
         public string SolutionFilePath { get; }
-
-        public string SharedPath
-        {
-            get
-            {
-                // On Windows: %APPDATA%\Omnisharp\omnisharp.json
-                // On Mac/Linux: ~/.omnisharp/omnisharp.json
-                var root = Environment.GetEnvironmentVariable("APPDATA") ?? 
-                    Environment.GetEnvironmentVariable("HOME");             
-
-                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPDATA")))
-                {
-                    return System.IO.Path.Combine(root, "Omnisharp");
-                }
-                else
-                {
-                    return System.IO.Path.Combine(root, ".omnisharp");
-                }
-            }
-        }
-
+        public string SharedPath { get; }
         public int Port { get; }
         public int HostPID { get; }
         public LogLevel TraceType { get; }
@@ -61,6 +39,20 @@ namespace OmniSharp.Services
             TraceType = traceType;
             TransportType = transportType;
             OtherArgs = otherArgs;
+
+            // On Windows: %APPDATA%\Omnisharp\omnisharp.json
+            // On Mac/Linux: ~/.omnisharp/omnisharp.json
+            var root = Environment.GetEnvironmentVariable("APPDATA") ??
+                Environment.GetEnvironmentVariable("HOME");
+
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPDATA")))
+            {
+                SharedPath = System.IO.Path.Combine(root, "Omnisharp");
+            }
+            else
+            {
+                SharedPath = System.IO.Path.Combine(root, ".omnisharp");
+            }
         }
     }
 }
