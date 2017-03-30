@@ -32,13 +32,12 @@ namespace OmniSharp.DotNetTest
 
         public bool IsConnected => _isConnected;
 
-        protected TestManager(Project project, DotNetCliService dotNetCli, ILogger logger)
+        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILogger logger)
         {
             Project = project ?? throw new ArgumentNullException(nameof(project));
+            WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
             DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            WorkingDirectory = Path.GetDirectoryName(Project.FilePath);
         }
 
         public static TestManager Start(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
@@ -50,7 +49,8 @@ namespace OmniSharp.DotNetTest
 
         public static TestManager Create(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
-            var version = dotNetCli.GetVersion();
+            var workingDirectory = Path.GetDirectoryName(project.FilePath);
+            var version = dotNetCli.GetVersion(workingDirectory);
 
             if (version.Major < 1)
             {
@@ -64,11 +64,11 @@ namespace OmniSharp.DotNetTest
                 if (version.Release.StartsWith("preview1") ||
                     version.Release.StartsWith("preview2"))
                 {
-                    return new LegacyTestManager(project, dotNetCli, loggerFactory);
+                    return new LegacyTestManager(project, workingDirectory, dotNetCli, loggerFactory);
                 }
             }
 
-            return new VSTestManager(project, dotNetCli, loggerFactory);
+            return new VSTestManager(project, workingDirectory, dotNetCli, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);

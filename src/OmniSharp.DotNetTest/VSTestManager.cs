@@ -14,8 +14,8 @@ namespace OmniSharp.DotNetTest
 {
     public class VSTestManager : TestManager
     {
-        public VSTestManager(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(project, dotNetCli, loggerFactory.CreateLogger<VSTestManager>())
+        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, loggerFactory.CreateLogger<VSTestManager>())
         {
         }
 
@@ -61,12 +61,13 @@ namespace OmniSharp.DotNetTest
                 });
 
             var message = ReadMessage();
-            var launchPayload = message.DeserializePayload<TestProcessStartInfo>();
+            var startInfo = message.DeserializePayload<TestProcessStartInfo>();
 
             return new GetDotNetTestStartInfoResponse
             {
-                Executable = launchPayload.FileName,
-                Argument = launchPayload.Arguments
+                Executable = startInfo.FileName,
+                Argument = startInfo.Arguments,
+                WorkingDirectory = startInfo.WorkingDirectory
             };
         }
 

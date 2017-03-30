@@ -18,8 +18,8 @@ namespace OmniSharp.DotNetTest
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
         private const string TestExecution_TestResult = "TestExecution.TestResult";
 
-        public LegacyTestManager(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(project, dotNetCli, loggerFactory.CreateLogger<LegacyTestManager>())
+        public LegacyTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, loggerFactory.CreateLogger<LegacyTestManager>())
         {
         }
 
@@ -131,7 +131,8 @@ namespace OmniSharp.DotNetTest
             return new GetDotNetTestStartInfoResponse
             {
                 Executable = testStartInfo.FileName,
-                Argument = arguments
+                Argument = arguments,
+                WorkingDirectory = WorkingDirectory
             };
         }
     }
