@@ -24,7 +24,9 @@ namespace OmniSharp.DotNetTest.TestFrameworks
 
         public static TestFramework GetFramework(string name)
         {
-            return s_frameworks[name];
+            return s_frameworks.TryGetValue(name, out var result)
+                ? result
+                : null;
         }
 
         public static IEnumerable<TestFramework> GetFrameworks()
