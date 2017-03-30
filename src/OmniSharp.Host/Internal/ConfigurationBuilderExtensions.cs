@@ -10,31 +10,26 @@ namespace OmniSharp.Host.Internal
     {
         internal static void CreateAndAddGlobalOptionsFile(this IConfigurationBuilder configBuilder, IOmniSharpEnvironment env)
         {
-            if (env?.SharedPath == null) return;
+            if (env?.SharedDirectoryPath == null) return;
 
             try
             {
-                if (!Directory.Exists(env.SharedPath))
+                if (!Directory.Exists(env.SharedDirectoryPath))
                 {
-                    Directory.CreateDirectory(env.SharedPath);
+                    Directory.CreateDirectory(env.SharedDirectoryPath);
                 }
 
-                var omnisharpGlobalFilePath = Path.Combine(env.SharedPath, OmniSharpConstants.OmnisharpOptionsFile);
-                if (!File.Exists(omnisharpGlobalFilePath))
-                {
-                    File.WriteAllText(omnisharpGlobalFilePath, "{}");
-                }
-
+                var omnisharpGlobalFilePath = Path.Combine(env.SharedDirectoryPath, Constants.OptionsFile);
                 configBuilder.AddJsonFile(
-                    new PhysicalFileProvider(env.SharedPath),
-                    OmniSharpConstants.OmnisharpOptionsFile,
+                    new PhysicalFileProvider(env.SharedDirectoryPath),
+                    Constants.OptionsFile,
                     optional: true,
                     reloadOnChange: true);
             }
             catch (Exception e)
             {
                 // at this point we have no ILogger yet
-                Console.Error.WriteLine($"There was an error when trying to create a global '{OmniSharpConstants.OmnisharpOptionsFile}' file in '{env.SharedPath}'. {e.ToString()}");
+                Console.Error.WriteLine($"There was an error when trying to create a global '{Constants.OptionsFile}' file in '{env.SharedDirectoryPath}'. {e.ToString()}");
             }
         }
     }

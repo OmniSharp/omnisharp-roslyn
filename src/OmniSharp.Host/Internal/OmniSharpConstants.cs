@@ -1,8 +1,8 @@
 ﻿namespace OmniSharp.Host.Internal
 {
-    internal static class OmniSharpConstants
+    internal static class Constants
     {
-        internal const string OmnisharpConfigFile = "config.json";
-        internal const string OmnisharpOptionsFile = "omnisharp.json";
+        internal const string ConfigFile = "config.json";
+        internal const string OptionsFile = "omnisharp.json";
     }
 }

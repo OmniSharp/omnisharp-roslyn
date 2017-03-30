@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using System.IO;
 
 namespace OmniSharp.Services
 {
@@ -8,7 +7,7 @@ namespace OmniSharp.Services
     {
         public string Path { get; }
         public string SolutionFilePath { get; }
-        public string SharedPath { get; }
+        public string SharedDirectoryPath { get; }
         public int Port { get; }
         public int HostPID { get; }
         public LogLevel TraceType { get; }
@@ -41,18 +40,14 @@ namespace OmniSharp.Services
             TransportType = transportType;
             OtherArgs = otherArgs;
 
-            // On Windows: %APPDATA%\OmniSharp\omnisharp.json
+            // On Windows: %APPDATA%\.omnisharp\omnisharp.json
             // On Mac/Linux: ~/.omnisharp/omnisharp.json
-            var root = Environment.GetEnvironmentVariable("APPDATA") ??
+            var root = Environment.GetEnvironmentVariable("USERPROFILE") ??
                 Environment.GetEnvironmentVariable("HOME");
 
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPDATA")))
+            if (root != null)
             {
-                SharedPath = System.IO.Path.Combine(root, "OmniSharp");
-            }
-            else
-            {
-                SharedPath = System.IO.Path.Combine(root, ".omnisharp");
+                SharedDirectoryPath = System.IO.Path.Combine(root, ".omnisharp");
             }
         }
     }
