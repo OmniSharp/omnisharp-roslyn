@@ -47,6 +47,7 @@ public class BuildPlan
         this.currentRid = currentRid;
     }
 
+    public string CurrentRid => currentRid;
     public string[] TargetRids => targetRids;
 
     public void SetTargetRids(params string[] targetRids)
@@ -385,6 +386,12 @@ Task("BuildEnvironment")
     string version, rid, basePath;
     ParseDotNetInfoValues(lines, out version, out rid, out basePath);
 
+    if (rid == "osx.10.12-x64")
+    {
+        rid = "osx.10.11-x64";
+        Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", rid);
+    }
+
     buildPlan.SetCurrentRid(rid);
 
     Information("Using .NET CLI");
@@ -405,8 +412,16 @@ Task("Restore")
 
     RunTool(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
         .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
+});
 
-    // Restore test assets
+/// <summary>
+///  Prepare test assets.
+/// </summary>
+Task("PrepareTestAssets")
+    .IsDependentOn("Setup")
+    .Does(() =>
+{
+    // Restore and build test assets
     foreach (var project in buildPlan.TestAssets)
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
@@ -422,21 +437,21 @@ Task("Restore")
             .ExceptionOnError($"Failed to restore '{folder}'.");
     }
 
-    // Restore legacy test assets with legacy .NET Core SDK
+    // Restore and build legacy test assets with legacy .NET Core SDK
     foreach (var project in buildPlan.LegacyTestAssets)
     {
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
         Information($"Restoring project.json packages in {folder}...");
 
-        RunTool(env.LegacyDotNetCommand, "restore --infer-runtimes", folder)
+        RunTool(env.LegacyDotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
  
         Information($"Building {folder}...");
 
-        RunTool(env.LegacyDotNetCommand, "build", folder)
+        RunTool(env.LegacyDotNetCommand, $"build", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
-   }
+    }
 });
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
@@ -507,7 +522,8 @@ Task("TravisTestAll")
 /// </summary>
 Task("TestCore")
     .IsDependentOn("Setup")
-    .IsDependentOn("Restore")
+    .IsDependentOn("BuildTest")
+    .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
     foreach (var testProject in buildPlan.TestProjects)
@@ -527,6 +543,7 @@ Task("TestCore")
 Task("Test")
     .IsDependentOn("Setup")
     .IsDependentOn("BuildTest")
+    .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
     foreach (var testProject in buildPlan.TestProjects)
