@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Configuration;
 
 namespace OmniSharp.Host.Internal
 {

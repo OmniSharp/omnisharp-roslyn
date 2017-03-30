@@ -54,11 +54,6 @@ namespace OmniSharp.Services
             {
                 SharedPath = System.IO.Path.Combine(root, ".omnisharp");
             }
-
-            if (!Directory.Exists(SharedPath))
-            {
-                Directory.CreateDirectory(SharedPath);
-            }
         }
     }
 }

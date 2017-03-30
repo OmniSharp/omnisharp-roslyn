@@ -20,14 +20,13 @@ using OmniSharp.Services;
 using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+using System.IO;
+using OmniSharp.Host.Internal;
 
 namespace OmniSharp
 {
     public class Startup
     {
-        private const string OmnisharpConfigFile = "config.json";
-        private const string OmnisharpOptionsFile = "omnisharp.json";
-
         private readonly IOmniSharpEnvironment _env;
         public IConfiguration Configuration { get; }
         public OmniSharpWorkspace Workspace { get; private set; }
@@ -39,7 +38,7 @@ namespace OmniSharp
 
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile(OmnisharpConfigFile, optional: true)
+                .AddJsonFile(OmniSharpConstants.OmnisharpConfigFile, optional: true)
                 .AddEnvironmentVariables();
 
             if (env.OtherArgs?.Length > 0)
@@ -48,16 +47,12 @@ namespace OmniSharp
             }
 
             // Use the global omnisharp config if there's any in the shared path
-            configBuilder.AddJsonFile(
-                new PhysicalFileProvider(env.SharedPath),
-                OmnisharpOptionsFile,
-                optional: true,
-                reloadOnChange: true);
+            configBuilder.CreateAndAddGlobalOptionsFile(env);
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
                 new PhysicalFileProvider(env.Path),
-                OmnisharpOptionsFile,
+                OmniSharpConstants.OmnisharpOptionsFile,
                 optional: true,
                 reloadOnChange: true);
 
