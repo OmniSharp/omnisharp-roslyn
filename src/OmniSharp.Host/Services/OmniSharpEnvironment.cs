@@ -7,6 +7,7 @@ namespace OmniSharp.Services
     {
         public string Path { get; }
         public string SolutionFilePath { get; }
+        public string SharedDirectoryPath { get; }
         public int Port { get; }
         public int HostPID { get; }
         public LogLevel TraceType { get; }
@@ -38,6 +39,16 @@ namespace OmniSharp.Services
             TraceType = traceType;
             TransportType = transportType;
             OtherArgs = otherArgs;
+
+            // On Windows: %APPDATA%\.omnisharp\omnisharp.json
+            // On Mac/Linux: ~/.omnisharp/omnisharp.json
+            var root = Environment.GetEnvironmentVariable("USERPROFILE") ??
+                Environment.GetEnvironmentVariable("HOME");
+
+            if (root != null)
+            {
+                SharedDirectoryPath = System.IO.Path.Combine(root, ".omnisharp");
+            }
         }
     }
 }

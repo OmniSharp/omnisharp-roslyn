@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OmniSharp.Host.Internal;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Options;
@@ -36,7 +37,7 @@ namespace OmniSharp
 
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("config.json", optional: true)
+                .AddJsonFile(Constants.ConfigFile, optional: true)
                 .AddEnvironmentVariables();
 
             if (env.OtherArgs?.Length > 0)
@@ -44,10 +45,13 @@ namespace OmniSharp
                 configBuilder.AddCommandLine(env.OtherArgs);
             }
 
+            // Use the global omnisharp config if there's any in the shared path
+            configBuilder.CreateAndAddGlobalOptionsFile(env);
+
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
                 new PhysicalFileProvider(env.Path),
-                "omnisharp.json",
+                Constants.OptionsFile,
                 optional: true,
                 reloadOnChange: true);
 
