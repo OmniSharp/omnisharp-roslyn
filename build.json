@@ -19,9 +19,14 @@
     "OmniSharp.DotNetTest.Tests",
     "OmniSharp.Tests"
   ],
+  "TestAssets": [
+    "NUnitTestProject",
+    "XunitTestProject"
+  ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",
     "BasicTestProjectSample02",
+    "LegacyNunitTestProject",
     "LegacyXunitTestProject"
   ]
 }
