@@ -77,7 +77,10 @@ namespace OmniSharp.MSBuild
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
-            MSBuildEnvironment.Initialize(_logger);
+            if (!MSBuildEnvironment.IsInitialized)
+            {
+                MSBuildEnvironment.Initialize(_logger);
+            }
 
             if (_options.WaitForDebugger)
             {
@@ -216,6 +219,7 @@ namespace OmniSharp.MSBuild
                 assemblyName: fileInfo.AssemblyName,
                 language: LanguageNames.CSharp,
                 filePath: fileInfo.ProjectFilePath,
+                outputFilePath: fileInfo.TargetPath,
                 compilationOptions: compilationOptions);
 
             _workspace.AddProject(projectInfo);
@@ -236,12 +240,13 @@ namespace OmniSharp.MSBuild
                 result = result.WithAllowUnsafe(true);
             }
 
-            var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count);
-
-            // Ensure that specific warnings about assembly references are always suppressed.
-            specificDiagnosticOptions.Add("CS1701", ReportDiagnostic.Suppress);
-            specificDiagnosticOptions.Add("CS1702", ReportDiagnostic.Suppress);
-            specificDiagnosticOptions.Add("CS1705", ReportDiagnostic.Suppress);
+            var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count)
+            {
+                // Ensure that specific warnings about assembly references are always suppressed.
+                { "CS1701", ReportDiagnostic.Suppress },
+                { "CS1702", ReportDiagnostic.Suppress },
+                { "CS1705", ReportDiagnostic.Suppress }
+            };
 
             if (projectFileInfo.SuppressedDiagnosticIds.Any())
             {
@@ -335,8 +340,7 @@ namespace OmniSharp.MSBuild
             {
                 lock (_gate)
                 {
-                    ProjectFileInfo oldProjectFileInfo;
-                    if (_projects.TryGetValue(projectFilePath, out oldProjectFileInfo))
+                    if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                     {
                         _projects[projectFilePath] = newProjectFileInfo;
                         newProjectFileInfo.SetProjectId(oldProjectFileInfo.ProjectId);
@@ -428,8 +432,7 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectReference in projectReferences)
             {
-                ProjectFileInfo projectReferenceInfo;
-                if (_projects.TryGetValue(projectReference, out projectReferenceInfo))
+                if (_projects.TryGetValue(projectReference, out var projectReferenceInfo))
                 {
                     var reference = new ProjectReference(projectReferenceInfo.ProjectId);
 
@@ -592,8 +595,7 @@ namespace OmniSharp.MSBuild
 
         private ProjectFileInfo GetProjectFileInfo(string path)
         {
-            ProjectFileInfo projectFileInfo;
-            if (!_projects.TryGetValue(path, out projectFileInfo))
+            if (!_projects.TryGetValue(path, out var projectFileInfo))
             {
                 return null;
             }

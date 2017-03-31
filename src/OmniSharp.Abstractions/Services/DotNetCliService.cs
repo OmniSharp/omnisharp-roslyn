@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
@@ -107,7 +107,16 @@ namespace OmniSharp.Services
                 RedirectStandardError = true
             };
 
+            RemoveMSBuildEnvironmentVariables(startInfo.Environment);
+
             return Process.Start(startInfo);
+        }
+
+        public SemanticVersion GetVersion(string workingDirectory = null)
+        {
+            var output = ProcessHelper.RunAndCaptureOutput(_dotnetPath, "--version", workingDirectory);
+
+            return SemanticVersion.Parse(output);
         }
     }
 }

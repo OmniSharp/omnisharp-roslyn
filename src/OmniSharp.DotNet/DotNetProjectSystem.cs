@@ -95,8 +95,7 @@ namespace OmniSharp.DotNet
 
         public void Initalize(IConfiguration configuration)
         {
-            bool enabled;
-            if (!bool.TryParse(configuration["enabled"], out enabled))
+            if (!bool.TryParse(configuration["enabled"], out var enabled))
             {
                 enabled = true;
             }
@@ -427,8 +426,7 @@ namespace OmniSharp.DotNet
 
         private static Platform ParsePlatfrom(string value)
         {
-            Platform platform;
-            if (!Enum.TryParse(value, ignoreCase: true, result: out platform))
+            if (!Enum.TryParse(value, ignoreCase: true, result: out Platform platform))
             {
                 platform = Platform.AnyCpu;
             }
@@ -438,8 +436,7 @@ namespace OmniSharp.DotNet
 
         private static LanguageVersion ParseLanguageVersion(string value)
         {
-            LanguageVersion languageVersion;
-            if (!Enum.TryParse(value, ignoreCase: true, result: out languageVersion))
+            if (!Enum.TryParse(value, ignoreCase: true, result: out LanguageVersion languageVersion))
             {
                 languageVersion = LanguageVersion.Default;
             }
