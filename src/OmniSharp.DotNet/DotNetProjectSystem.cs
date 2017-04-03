@@ -106,7 +106,7 @@ namespace OmniSharp.DotNet
                 return;
             }
 
-            _logger.LogInformation($"Initializing in {_environment.Path}");
+            _logger.LogInformation($"Initializing in {_environment.TargetDirectory}");
 
             if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))
             {
@@ -115,7 +115,7 @@ namespace OmniSharp.DotNet
 
             _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
-            _workspaceContext = new DotNetWorkspace(_environment.Path);
+            _workspaceContext = new DotNetWorkspace(_environment.TargetDirectory);
 
             Update(allowRestore: true);
         }

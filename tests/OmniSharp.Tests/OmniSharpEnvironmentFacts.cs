@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.IO;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace OmniSharp.Tests
         public void OmnisharpEnvironmentSetsPathCorrectly()
         {
             var environment = new OmniSharpEnvironment(@"foo.sln", 1000, -1, LogLevel.Information, TransportType.Http, null);
-            Assert.Equal(@"", environment.Path);
+            Assert.Equal(Directory.GetCurrentDirectory(), environment.TargetDirectory);
         }
 
         [Fact]

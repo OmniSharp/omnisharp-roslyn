@@ -61,7 +61,7 @@ namespace OmniSharp
             var omnisharpApp = new CommandLineApplication(throwOnUnexpectedArg: false);
             omnisharpApp.HelpOption("-? | -h | --help");
 
-            var applicationRootOption = omnisharpApp.Option("-s | --source", "Solution, project file or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
+            var applicationRootOption = omnisharpApp.Option("-s | --source", "Solution or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
             var portOption = omnisharpApp.Option("-p | --port", "OmniSharp port (defaults to 2000).", CommandOptionType.SingleValue);
             var logLevelOption = omnisharpApp.Option("-l | --loglevel", "Level of logging (defaults to 'Information').", CommandOptionType.SingleValue);
             var verboseOption = omnisharpApp.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
