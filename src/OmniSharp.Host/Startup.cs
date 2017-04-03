@@ -21,6 +21,7 @@ using OmniSharp.Services;
 using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
@@ -50,7 +51,7 @@ namespace OmniSharp
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
-                new PhysicalFileProvider(env.TargetDirectory),
+                new PhysicalFileProvider(env.TargetDirectory).WrapForPolling(),
                 Constants.OptionsFile,
                 optional: true,
                 reloadOnChange: true);
