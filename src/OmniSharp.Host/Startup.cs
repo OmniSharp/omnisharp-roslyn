@@ -21,6 +21,7 @@ using OmniSharp.Services;
 using OmniSharp.Services.FileWatching;
 using OmniSharp.Stdio.Logging;
 using OmniSharp.Stdio.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
@@ -40,9 +41,9 @@ namespace OmniSharp
                 .AddJsonFile(Constants.ConfigFile, optional: true)
                 .AddEnvironmentVariables();
 
-            if (env.OtherArgs?.Length > 0)
+            if (env.AdditionalArguments?.Length > 0)
             {
-                configBuilder.AddCommandLine(env.OtherArgs);
+                configBuilder.AddCommandLine(env.AdditionalArguments);
             }
 
             // Use the global omnisharp config if there's any in the shared path
@@ -50,7 +51,7 @@ namespace OmniSharp
 
             // Use the local omnisharp config if there's any in the root path
             configBuilder.AddJsonFile(
-                new PhysicalFileProvider(env.Path),
+                new PhysicalFileProvider(env.TargetDirectory).WrapForPolling(),
                 Constants.OptionsFile,
                 optional: true,
                 reloadOnChange: true);
@@ -196,11 +197,11 @@ namespace OmniSharp
 
             if (_env.TransportType == TransportType.Stdio)
             {
-                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_env.Path}' on host {_env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_env.TargetDirectory}' on host {_env.HostProcessId}.");
             }
             else
             {
-                logger.LogInformation($"Omnisharp server running on port '{_env.Port}' at location '{_env.Path}' on host {_env.HostPID}.");
+                logger.LogInformation($"Omnisharp server running on port '{_env.Port}' at location '{_env.TargetDirectory}' on host {_env.HostProcessId}.");
             }
 
             InitializeWorkspace(Workspace, PluginHost, Configuration, logger, options.CurrentValue);
@@ -259,7 +260,7 @@ namespace OmniSharp
 
         private static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
         {
-            if (environment.TraceType > level)
+            if (environment.LogLevel > level)
             {
                 return false;
             }

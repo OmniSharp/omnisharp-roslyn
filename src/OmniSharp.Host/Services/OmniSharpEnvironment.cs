@@ -1,18 +1,22 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Services
 {
     public class OmniSharpEnvironment : IOmniSharpEnvironment
     {
-        public string Path { get; }
+        public string TargetDirectory { get; }
+        public string SharedDirectory { get; }
+
         public string SolutionFilePath { get; }
-        public string SharedDirectoryPath { get; }
+
         public int Port { get; }
-        public int HostPID { get; }
-        public LogLevel TraceType { get; }
+        public int HostProcessId { get; }
+        public LogLevel LogLevel { get; }
         public TransportType TransportType { get; }
-        public string[] OtherArgs { get; }
+
+        public string[] AdditionalArguments { get; }
 
         public OmniSharpEnvironment(
             string path = null,
@@ -20,35 +24,50 @@ namespace OmniSharp.Services
             int hostPid = -1,
             LogLevel traceType = LogLevel.None,
             TransportType transportType = TransportType.Stdio,
-            string[] otherArgs = null)
+            string[] additionalArguments = null)
         {
-            path = path ?? ".";
-
-            if (System.IO.Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(path))
+            {
+                TargetDirectory = Directory.GetCurrentDirectory();
+            }
+            else if (Directory.Exists(path))
+            {
+                TargetDirectory = path;
+            }
+            else if (File.Exists(path) && Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {
                 SolutionFilePath = path;
-                Path = System.IO.Path.GetDirectoryName(path);
+                TargetDirectory = Path.GetDirectoryName(path);
             }
-            else
+
+            if (TargetDirectory == null)
             {
-                Path = path;
+                throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln) file.", nameof(path));
             }
 
             Port = port;
-            HostPID = hostPid;
-            TraceType = traceType;
+            HostProcessId = hostPid;
+            LogLevel = traceType;
             TransportType = transportType;
-            OtherArgs = otherArgs;
+            AdditionalArguments = additionalArguments;
 
-            // On Windows: %APPDATA%\.omnisharp\omnisharp.json
+            // On Windows: %USERPROFILE%\.omnisharp\omnisharp.json
             // On Mac/Linux: ~/.omnisharp/omnisharp.json
-            var root = Environment.GetEnvironmentVariable("USERPROFILE") ??
+            var root =
+                Environment.GetEnvironmentVariable("USERPROFILE") ??
                 Environment.GetEnvironmentVariable("HOME");
 
             if (root != null)
             {
-                SharedDirectoryPath = System.IO.Path.Combine(root, ".omnisharp");
+                SharedDirectory = Path.Combine(root, ".omnisharp");
             }
+        }
+
+        public static bool IsValidPath(string path)
+        {
+            return string.IsNullOrEmpty(path)
+                || Directory.Exists(path)
+                || (File.Exists(path) && Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase));
         }
     }
 }

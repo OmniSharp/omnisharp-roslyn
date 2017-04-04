@@ -120,10 +120,10 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            _logger.LogInformation($"Detecting CSX files in '{_env.Path}'.");
+            _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
-            var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.AllDirectories);
+            var allCsxFiles = Directory.GetFiles(_env.TargetDirectory, "*.csx", SearchOption.AllDirectories);
             if (allCsxFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any CSX files");
@@ -140,7 +140,7 @@ namespace OmniSharp.Script
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                     x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
-            var runtimeContexts = File.Exists(Path.Combine(_env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.Path) : null;
+            var runtimeContexts = File.Exists(Path.Combine(_env.TargetDirectory, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.TargetDirectory) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
 
