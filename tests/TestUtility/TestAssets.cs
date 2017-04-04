@@ -9,12 +9,14 @@ namespace TestUtility
         public static TestAssets Instance { get; } = new TestAssets();
 
         public string RootFolder { get; }
+        public string OmniSharpSolutionPath { get; }
         public string TestAssetsFolder { get; }
         public string TestProjectsFolder { get; }
 
         private TestAssets()
         {
             RootFolder = FindRootFolder();
+            OmniSharpSolutionPath = Path.Combine(RootFolder, "OmniSharp.sln");
             TestAssetsFolder = Path.Combine(RootFolder, "test-assets");
             TestProjectsFolder = Path.Combine(TestAssetsFolder, "test-projects");
         }

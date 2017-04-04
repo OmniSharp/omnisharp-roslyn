@@ -12,7 +12,7 @@ namespace OmniSharp.Services.FileWatching
         public FileSystemWatcherWrapper(IOmniSharpEnvironment env)
         {
             // Environment.SetEnvironmentVariable ("MONO_MANAGED_WATCHER", "1");
-            _watcher = new FileSystemWatcher(env.Path);
+            _watcher = new FileSystemWatcher(env.TargetDirectory);
             _watcher.IncludeSubdirectories = true;
             _watcher.EnableRaisingEvents = true;
             _watcher.Changed += OnChanged;

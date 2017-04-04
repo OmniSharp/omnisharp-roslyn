@@ -130,7 +130,7 @@ namespace OmniSharp.MSBuild
 
             // Otherwise, assume that the path provided is a directory and
             // look for a solution there.
-            var solutionFilePath = FindSolutionFilePath(_environment.Path, _logger);
+            var solutionFilePath = FindSolutionFilePath(_environment.TargetDirectory, _logger);
             if (!string.IsNullOrEmpty(solutionFilePath))
             {
                 _solutionFileOrRootPath = solutionFilePath;
@@ -140,8 +140,8 @@ namespace OmniSharp.MSBuild
 
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
-            _solutionFileOrRootPath = _environment.Path;
-            AddProjectsFromRootPath(_environment.Path);
+            _solutionFileOrRootPath = _environment.TargetDirectory;
+            AddProjectsFromRootPath(_environment.TargetDirectory);
         }
 
         private void AddProjectsFromSolution(string solutionFilePath)
@@ -169,7 +169,7 @@ namespace OmniSharp.MSBuild
                 // Solution files are assumed to contain relative paths to project files
                 // with Windows-style slashes.
                 var projectFilePath = projectBlock.ProjectPath.Replace('\\', Path.DirectorySeparatorChar);
-                projectFilePath = Path.Combine(_environment.Path, projectFilePath);
+                projectFilePath = Path.Combine(_environment.TargetDirectory, projectFilePath);
                 projectFilePath = Path.GetFullPath(projectFilePath);
 
                 _logger.LogInformation($"Loading project from '{projectFilePath}'.");
@@ -305,7 +305,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.Path, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics, isUnityProject);
+                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics, isUnityProject);
 
                 if (projectFileInfo == null)
                 {

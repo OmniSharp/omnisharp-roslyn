@@ -4,13 +4,13 @@ namespace OmniSharp.Services
 {
     public interface IOmniSharpEnvironment
     {
-        LogLevel TraceType { get; }
+        LogLevel LogLevel { get; }
         int Port { get; }
-        int HostPID { get; }
-        string Path { get; }
+        int HostProcessId { get; }
+        string TargetDirectory { get; }
         string SolutionFilePath { get; }
-        string SharedDirectoryPath { get; }
+        string SharedDirectory { get; }
         TransportType TransportType { get; }
-        string[] OtherArgs { get; }
+        string[] AdditionalArguments { get; }
     }
 }
