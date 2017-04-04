@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dotnet.Script.NuGetMetadataResolver;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
+using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
@@ -17,10 +19,7 @@ using OmniSharp.Models.v1;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
-{
-    using Dotnet.Script.NuGetMetadataResolver;    
-    using Microsoft.DotNet.InternalAbstractions;
-
+{    
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
@@ -46,15 +45,13 @@ namespace OmniSharp.Script
         private CSharpCompilationOptions CreateCompilation()
         {
             var resolver = NuGetMetadataReferenceResolver.Create(ScriptMetadataResolver.Default,
-                NugetFrameworkProvider.GetFrameworkNameFromAssembly(),loggerFactory, _env.Path);
+                NugetFrameworkProvider.GetFrameworkNameFromAssembly(), _loggerFactory, _env.TargetDirectory);
            
-
             var compilationOptions = new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,
                     usings: DefaultNamespaces,
                     allowUnsafe: true,
-                    metadataReferenceResolver:
-                    new CachingScriptMetadataResolver(resolver),
+                    metadataReferenceResolver: new CachingScriptMetadataResolver(resolver),                    
                     sourceReferenceResolver: ScriptSourceResolver.Default,
                     assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
                 WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
@@ -89,8 +86,9 @@ namespace OmniSharp.Script
         private readonly Dictionary<string, ProjectInfo> _projects;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
-        private readonly ILoggerFactory loggerFactory;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+        private readonly IAssemblyLoader _assemblyLoader;
         private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
 
         private static string ResolveTargetFramework()
@@ -103,12 +101,13 @@ namespace OmniSharp.Script
 
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache, IAssemblyLoader assemblyLoader)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
-            this.loggerFactory = loggerFactory;
+            _loggerFactory = loggerFactory;
+            _assemblyLoader = assemblyLoader;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilation);
@@ -160,7 +159,7 @@ namespace OmniSharp.Script
 
                     foreach (var inheritedAssemblyName in inheritedAssemblyNames)
                     {
-                        var assembly = Assembly.Load(inheritedAssemblyName);
+                        var assembly = _assemblyLoader.Load(inheritedAssemblyName);
                         AddMetadataReference(commonReferences, assembly.Location);
                     }
                 }

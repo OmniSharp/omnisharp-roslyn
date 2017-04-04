@@ -6,27 +6,26 @@ namespace OmniSharp.Script
 {
     public class CachingScriptMetadataResolver : MetadataReferenceResolver
     {
-        private readonly MetadataReferenceResolver defaultReferenceResolver;
+        private readonly MetadataReferenceResolver _defaultReferenceResolver;
         private static Dictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new Dictionary<string, ImmutableArray<PortableExecutableReference>>();
         private static Dictionary<string, PortableExecutableReference> MissingReferenceCache = new Dictionary<string, PortableExecutableReference>();
 
-
         public CachingScriptMetadataResolver(MetadataReferenceResolver defaultReferenceResolver)
         {
-            this.defaultReferenceResolver = defaultReferenceResolver;
+            _defaultReferenceResolver = defaultReferenceResolver;
         }
 
         public override bool Equals(object other)
         {
-            return defaultReferenceResolver.Equals(other);
+            return _defaultReferenceResolver.Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return defaultReferenceResolver.GetHashCode();
+            return _defaultReferenceResolver.GetHashCode();
         }
 
-        public override bool ResolveMissingAssemblies => defaultReferenceResolver.ResolveMissingAssemblies;
+        public override bool ResolveMissingAssemblies => _defaultReferenceResolver.ResolveMissingAssemblies;
 
         public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
         {
@@ -35,7 +34,7 @@ namespace OmniSharp.Script
                 return MissingReferenceCache[referenceIdentity.Name];
             }
 
-            var result = defaultReferenceResolver.ResolveMissingAssembly(definition, referenceIdentity);
+            var result = _defaultReferenceResolver.ResolveMissingAssembly(definition, referenceIdentity);
             if (result != null)
             {
                 MissingReferenceCache[referenceIdentity.Name] = result;
@@ -52,7 +51,7 @@ namespace OmniSharp.Script
                 return DirectReferenceCache[key];
             }
 
-            var result = defaultReferenceResolver.ResolveReference(reference, baseFilePath, properties);
+            var result = _defaultReferenceResolver.ResolveReference(reference, baseFilePath, properties);
             if (result.Length > 0)
             {
                 DirectReferenceCache[key] = result;
