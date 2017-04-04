@@ -18,6 +18,9 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Script
 {
+    using Dotnet.Script.NuGetMetadataResolver;    
+    using Microsoft.DotNet.InternalAbstractions;
+
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
@@ -39,29 +42,37 @@ namespace OmniSharp.Script
 
         private const string CsxExtension = ".csx";
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
-
-        private static readonly Lazy<CSharpCompilationOptions> CompilationOptions = new Lazy<CSharpCompilationOptions>(() =>
+        private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
+        private CSharpCompilationOptions CreateCompilation()
         {
+            var resolver = NuGetMetadataReferenceResolver.Create(ScriptMetadataResolver.Default,
+                NugetFrameworkProvider.GetFrameworkNameFromAssembly(),loggerFactory, _env.Path);
+           
+
             var compilationOptions = new CSharpCompilationOptions(
-                OutputKind.DynamicallyLinkedLibrary,
-                usings: DefaultNamespaces,
-                allowUnsafe: true,
-                metadataReferenceResolver: new CachingScriptMetadataResolver(),
-                sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
+                    OutputKind.DynamicallyLinkedLibrary,
+                    usings: DefaultNamespaces,
+                    allowUnsafe: true,
+                    metadataReferenceResolver:
+                    new CachingScriptMetadataResolver(resolver),
+                    sourceReferenceResolver: ScriptSourceResolver.Default,
+                    assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
                 WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
                 {
                     // ensure that specific warnings about assembly references are always suppressed
                     // https://github.com/dotnet/roslyn/issues/5501
-                    { "CS1701", ReportDiagnostic.Suppress },
-                    { "CS1702", ReportDiagnostic.Suppress },
-                    { "CS1705", ReportDiagnostic.Suppress }
-                 });
+                    {"CS1701", ReportDiagnostic.Suppress},
+                    {"CS1702", ReportDiagnostic.Suppress},
+                    {"CS1705", ReportDiagnostic.Suppress}
+                });
 
-            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType =
+                typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
 
-            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes",
+                BindingFlags.Static | BindingFlags.Public);
             var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
             if (ignoreCorLibraryDuplicatedTypesValue != null)
             {
@@ -69,8 +80,7 @@ namespace OmniSharp.Script
             }
 
             return compilationOptions;
-        });
-
+        }
         private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
 
         // used for tracking purposes only
@@ -79,7 +89,18 @@ namespace OmniSharp.Script
         private readonly Dictionary<string, ProjectInfo> _projects;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
+        private readonly ILoggerFactory loggerFactory;
         private readonly ILogger _logger;
+        private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
+
+        private static string ResolveTargetFramework()
+        {
+            return Assembly.GetEntryAssembly().GetCustomAttributes()
+                .OfType<System.Runtime.Versioning.TargetFrameworkAttribute>()
+                .Select(x => x.FrameworkName)
+                .FirstOrDefault();            
+        }
+
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache)
@@ -87,8 +108,10 @@ namespace OmniSharp.Script
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
+            this.loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
+            _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilation);
         }
 
         public string Key => "Script";
@@ -121,18 +144,38 @@ namespace OmniSharp.Script
 
             var commonReferences = new HashSet<MetadataReference>();
 
-            // if we have no context, then we also have no dependencies
-            // we can assume desktop framework
-            // and add mscorlib
+            
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
-                _logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage.");
+                _logger.LogInformation($"Unable to find project context for CSX files. Will default to non-context usage for target framework {_targetFrameWork.Value}");
 
-                AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
-                AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
+                // We are running in the context of a .Net Core app.
+                if (_targetFrameWork.Value.StartsWith(".NETCoreApp"))
+                {                    
+                    var runtimeId = RuntimeEnvironment.GetRuntimeIdentifier();
+                    var inheritedAssemblyNames = DependencyContext.Default.GetRuntimeAssemblyNames(runtimeId).Where(x =>
+                        x.FullName.StartsWith("system.", StringComparison.OrdinalIgnoreCase) ||
+                        x.FullName.StartsWith("microsoft.codeanalysis", StringComparison.OrdinalIgnoreCase) ||
+                        x.FullName.StartsWith("mscorlib", StringComparison.OrdinalIgnoreCase));
 
-                inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+                    foreach (var inheritedAssemblyName in inheritedAssemblyNames)
+                    {
+                        var assembly = Assembly.Load(inheritedAssemblyName);
+                        AddMetadataReference(commonReferences, assembly.Location);
+                    }
+                }
+                else
+                {
+
+                    // Assume desktop framework.
+                    AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
+                    AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
+
+                    inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
+                            x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+                }
+                
+
             }
             // otherwise we will grab dependencies for the script from the runtime context
             else
@@ -181,7 +224,7 @@ namespace OmniSharp.Script
                         name: csxFileName,
                         assemblyName: $"{csxFileName}.dll",
                         language: LanguageNames.CSharp,
-                        compilationOptions: CompilationOptions.Value,
+                        compilationOptions: _compilationOptions.Value,
                         metadataReferences: commonReferences,
                         parseOptions: ParseOptions,
                         isSubmission: true,
