@@ -1,6 +1,5 @@
 {
     "dotnet": {
-        "projects": "src/*/project.json;tests/*/project.json",
-        "enablePackageRestore": false
+        "enabled": false
     }
 }
