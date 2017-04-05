@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
+using OmniSharp.Models;
+using OmniSharp.Models.Events;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -65,11 +68,31 @@ namespace OmniSharp.DotNetTest
                 WorkingDirectory = WorkingDirectory,
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
 
             var testProcess = Process.Start(startInfo);
+
+            var output = new StringBuilder();
+            var error = new StringBuilder();
+
+            testProcess.OutputDataReceived += (_, e) =>
+            {
+                EventEmitter.Emit(EventTypes.TestMessage,
+                    new TestMessageEvent
+                    {
+                        MessageLevel = "info",
+                        Message = e.Data ?? string.Empty
+                    });
+
+                output.AppendLine(e.Data);
+            };
+
+            testProcess.ErrorDataReceived += (_, e) => error.AppendLine(e.Data);
+
+            testProcess.BeginOutputReadLine();
+            testProcess.BeginErrorReadLine();
 
             var testResults = new List<LegacyTestResult>();
             var done = false;
