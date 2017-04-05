@@ -77,7 +77,7 @@ namespace OmniSharp.DotNetTest
         {
             var testCases = DiscoverTests(methodName);
 
-            var results = new List<TestResult>();
+            var testResults = new List<TestResult>();
 
             if (testCases.Length > 0)
             {
@@ -110,7 +110,7 @@ namespace OmniSharp.DotNetTest
                         case MessageType.TestRunStatsChange:
                             var testRunChange = message.DeserializePayload<TestRunChangedEventArgs>();
 
-                            results.AddRange(testRunChange.NewTestResults);
+                            testResults.AddRange(testRunChange.NewTestResults);
                             break;
 
                         case MessageType.ExecutionComplete:
@@ -122,9 +122,19 @@ namespace OmniSharp.DotNetTest
                 }
             }
 
+            var results = testResults.Select(testResult =>
+                new DotNetTestResult
+                {
+                    MethodName = testResult.TestCase.FullyQualifiedName,
+                    Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
+                    ErrorMessage = testResult.ErrorMessage,
+                    ErrorStackTrace = testResult.ErrorStackTrace
+                });
+
             return new RunDotNetTestResponse
             {
-                Pass = !results.Any(r => r.Outcome == TestOutcome.Failed)
+                Results = results.ToArray(),
+                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed)
             };
         }
 

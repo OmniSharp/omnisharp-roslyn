@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Testing.Abstractions;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
+
+using LegacyTestOutcome = Microsoft.Extensions.Testing.Abstractions.TestOutcome;
+using LegacyTestResult = Microsoft.Extensions.Testing.Abstractions.TestResult;
 
 namespace OmniSharp.DotNetTest
 {
@@ -51,9 +53,9 @@ namespace OmniSharp.DotNetTest
 
             SendMessage(TestExecution_GetTestRunnerProcessStartInfo);
 
-            var message = ReadMessage();
+            var testStartInfoMessage = ReadMessage();
 
-            var testStartInfo = message.DeserializePayload<TestStartInfo>();
+            var testStartInfo = testStartInfoMessage.DeserializePayload<TestStartInfo>();
 
             var fileName = testStartInfo.FileName;
             var arguments = $"{testStartInfo.Arguments} {testFramework.MethodArgument} {methodName}";
@@ -69,16 +71,16 @@ namespace OmniSharp.DotNetTest
 
             var testProcess = Process.Start(startInfo);
 
-            var results = new List<TestResult>();
+            var testResults = new List<LegacyTestResult>();
             var done = false;
 
             while (!done)
             {
-                var m = ReadMessage();
-                switch (m.MessageType)
+                var message = ReadMessage();
+                switch (message.MessageType)
                 {
                     case TestExecution_TestResult:
-                        results.Add(m.DeserializePayload<TestResult>());
+                        testResults.Add(message.DeserializePayload<LegacyTestResult>());
                         break;
 
                     case MessageType.ExecutionComplete:
@@ -95,9 +97,19 @@ namespace OmniSharp.DotNetTest
                 }
             }
 
+            var results = testResults.Select(testResult =>
+                new DotNetTestResult
+                {
+                    MethodName = testResult.Test.FullyQualifiedName,
+                    Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
+                    ErrorMessage = testResult.ErrorMessage,
+                    ErrorStackTrace = testResult.ErrorStackTrace
+                });
+
             return new RunDotNetTestResponse
             {
-                Pass = !results.Any(r => r.Outcome == TestOutcome.Failed)
+                Results = results.ToArray(),
+                Pass = !testResults.Any(r => r.Outcome == LegacyTestOutcome.Failed)
             };
         }
 
