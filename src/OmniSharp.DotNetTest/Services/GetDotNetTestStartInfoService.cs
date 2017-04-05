@@ -11,8 +11,8 @@ namespace OmniSharp.DotNetTest.Services
     public class GetDotNetTestStartInfoService : BaseTestService<GetDotNetTestStartInfoRequest, GetDotNetTestStartInfoResponse>
     {
         [ImportingConstructor]
-        public GetDotNetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(workspace, dotNetCli, loggerFactory)
+        public GetDotNetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
         }
 

@@ -1,5 +1,4 @@
 using System.Composition;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
@@ -12,8 +11,8 @@ namespace OmniSharp.DotNetTest.Services
     public class RunDotNetTestService : BaseTestService<RunDotNetTestRequest, RunDotNetTestResponse>
     {
         [ImportingConstructor]
-        public RunDotNetTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(workspace, dotNetCli, loggerFactory)
+        public RunDotNetTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
         }
 

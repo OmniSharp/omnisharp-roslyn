@@ -18,6 +18,7 @@ namespace OmniSharp.DotNetTest
     {
         protected readonly Project Project;
         protected readonly DotNetCliService DotNetCli;
+        protected readonly IEventEmitter EventEmitter;
         protected readonly ILogger Logger;
         protected readonly string WorkingDirectory;
 
@@ -32,22 +33,23 @@ namespace OmniSharp.DotNetTest
 
         public bool IsConnected => _isConnected;
 
-        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILogger logger)
+        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILogger logger)
         {
             Project = project ?? throw new ArgumentNullException(nameof(project));
             WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
             DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
+            EventEmitter = eventEmitter ?? throw new ArgumentNullException(nameof(eventEmitter));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public static TestManager Start(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static TestManager Start(Project project, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
         {
-            var manager = Create(project, dotNetCli, loggerFactory);
+            var manager = Create(project, dotNetCli, eventEmitter, loggerFactory);
             manager.Connect();
             return manager;
         }
 
-        public static TestManager Create(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static TestManager Create(Project project, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
         {
             var workingDirectory = Path.GetDirectoryName(project.FilePath);
             var version = dotNetCli.GetVersion(workingDirectory);
@@ -64,11 +66,11 @@ namespace OmniSharp.DotNetTest
                 if (version.Release.StartsWith("preview1") ||
                     version.Release.StartsWith("preview2"))
                 {
-                    return new LegacyTestManager(project, workingDirectory, dotNetCli, loggerFactory);
+                    return new LegacyTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
                 }
             }
 
-            return new VSTestManager(project, workingDirectory, dotNetCli, loggerFactory);
+            return new VSTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);

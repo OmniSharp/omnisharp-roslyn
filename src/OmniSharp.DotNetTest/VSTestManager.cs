@@ -14,8 +14,8 @@ namespace OmniSharp.DotNetTest
 {
     public class VSTestManager : TestManager
     {
-        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(project, workingDirectory, dotNetCli, loggerFactory.CreateLogger<VSTestManager>())
+        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
         }
 
