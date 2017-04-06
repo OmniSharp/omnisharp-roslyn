@@ -49,7 +49,7 @@ namespace OmniSharp.DotNetTest.Legacy
             }
         }
 
-        public override RunDotNetTestResponse RunTest(string methodName, string testFrameworkName)
+        public override RunTestResponse RunTest(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -132,14 +132,14 @@ namespace OmniSharp.DotNetTest.Legacy
                     ErrorStackTrace = testResult.ErrorStackTrace
                 });
 
-            return new RunDotNetTestResponse
+            return new RunTestResponse
             {
                 Results = results.ToArray(),
                 Pass = !testResults.Any(r => r.Outcome == LegacyTestOutcome.Failed)
             };
         }
 
-        public override GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -166,7 +166,7 @@ namespace OmniSharp.DotNetTest.Legacy
                 arguments = $"{arguments} {testFramework.MethodArgument} {methodName}";
             }
 
-            return new GetDotNetTestStartInfoResponse
+            return new GetTestStartInfoResponse
             {
                 Executable = testStartInfo.FileName,
                 Argument = arguments,
@@ -174,14 +174,14 @@ namespace OmniSharp.DotNetTest.Legacy
             };
         }
 
-        public override DebugDotNetTestStartResponse StartDebug(string methodName, string testFrameworkName)
+        public override Process DebugStart(string methodName, string testFrameworkName)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void DebugReady()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

@@ -8,7 +8,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public abstract class AbstractRunTestFacts : AbstractSingleRequestHandlerTestFixture<RunDotNetTestService>
+    public abstract class AbstractRunTestFacts : AbstractSingleRequestHandlerTestFixture<RunTestService>
     {
         protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
         protected const string LegacyNunitTestProject = "LegacyNunitTestProject";
@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        protected override string EndpointName { get; } = OmnisharpEndpoints.V2.RunDotNetTest;
+        protected override string EndpointName { get; } = OmnisharpEndpoints.V2.RunTest;
 
         public abstract bool UseLegacyDotNetCli { get; }
 
@@ -31,7 +31,7 @@ namespace OmniSharp.DotNetTest.Tests
             {
                 var service = GetRequestHandler(host);
 
-                var request = new RunDotNetTestRequest
+                var request = new RunTestRequest
                 {
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,

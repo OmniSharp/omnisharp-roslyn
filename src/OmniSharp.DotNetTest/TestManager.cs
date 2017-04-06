@@ -77,10 +77,10 @@ namespace OmniSharp.DotNetTest
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
         protected abstract void VersionCheck();
 
-        public abstract RunDotNetTestResponse RunTest(string methodName, string testFrameworkName);
-        public abstract GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
+        public abstract RunTestResponse RunTest(string methodName, string testFrameworkName);
+        public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
 
-        public abstract DebugDotNetTestStartResponse StartDebug(string methodName, string testFrameworkName);
+        public abstract Process DebugStart(string methodName, string testFrameworkName);
         public abstract void DebugReady();
 
         protected virtual bool PrepareToConnect()

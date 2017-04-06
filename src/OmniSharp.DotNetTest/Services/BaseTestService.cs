@@ -1,15 +1,9 @@
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Logging;
-using OmniSharp.Mef;
-using OmniSharp.Models;
+﻿using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.V2.GetDotNetTestStartInfo, LanguageNames.CSharp)]
-    public abstract class BaseTestService<TRequest, TResponse> : RequestHandler<TRequest, TResponse>
-        where TRequest: Request
+    public abstract class BaseTestService
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCli;
@@ -29,14 +23,6 @@ namespace OmniSharp.DotNetTest.Services
             var document = _workspace.GetDocument(fileName);
 
             return TestManager.Start(document.Project, _dotNetCli, _eventEmitter, _loggerFactory);
-        }
-
-        protected abstract TResponse HandleRequest(TRequest request);
-
-        public Task<TResponse> Handle(TRequest request)
-        {
-            var response = HandleRequest(request);
-            return Task.FromResult(response);
         }
     }
 }

@@ -58,7 +58,7 @@ namespace OmniSharp.DotNetTest
             return File.Exists(Project.OutputFilePath);
         }
 
-        public override GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -78,7 +78,7 @@ namespace OmniSharp.DotNetTest
             var message = ReadMessage();
             var testStartInfo = message.DeserializePayload<TestProcessStartInfo>();
 
-            return new GetDotNetTestStartInfoResponse
+            return new GetTestStartInfoResponse
             {
                 Executable = testStartInfo.FileName,
                 Argument = testStartInfo.Arguments,
@@ -86,7 +86,7 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        public override DebugDotNetTestStartResponse StartDebug(string methodName, string testFrameworkName)
+        public override Process DebugStart(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -140,11 +140,7 @@ namespace OmniSharp.DotNetTest
             _testProcess.BeginOutputReadLine();
             _testProcess.BeginErrorReadLine();
 
-            return new DebugDotNetTestStartResponse
-            {
-                HostProcessId = Process.GetCurrentProcess().Id,
-                ProcessId = _testProcess.Id
-            };
+            return _testProcess;
         }
 
         public override void DebugReady()
@@ -156,7 +152,7 @@ namespace OmniSharp.DotNetTest
                 });
         }
 
-        public override RunDotNetTestResponse RunTest(string methodName, string testFrameworkName)
+        public override RunTestResponse RunTest(string methodName, string testFrameworkName)
         {
             var testCases = DiscoverTests(methodName);
 
@@ -214,7 +210,7 @@ namespace OmniSharp.DotNetTest
                     ErrorStackTrace = testResult.ErrorStackTrace
                 });
 
-            return new RunDotNetTestResponse
+            return new RunTestResponse
             {
                 Results = results.ToArray(),
                 Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed)
