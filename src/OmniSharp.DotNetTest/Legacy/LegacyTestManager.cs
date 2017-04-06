@@ -16,8 +16,11 @@ using OmniSharp.Utilities;
 using LegacyTestOutcome = Microsoft.Extensions.Testing.Abstractions.TestOutcome;
 using LegacyTestResult = Microsoft.Extensions.Testing.Abstractions.TestResult;
 
-namespace OmniSharp.DotNetTest
+namespace OmniSharp.DotNetTest.Legacy
 {
+    /// <summary>
+    /// Handles 'dotnet test' for .NET Core SDK earlier than "1.0.0-preview3"
+    /// </summary>
     public partial class LegacyTestManager : TestManager
     {
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
