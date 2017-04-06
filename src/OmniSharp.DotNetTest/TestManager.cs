@@ -187,7 +187,7 @@ namespace OmniSharp.DotNetTest
         protected void SendMessage(string messageType)
         {
             var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, new object());
-            Logger.LogInformation($"send: {rawMessage}");
+            Logger.LogDebug($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
         }
@@ -195,7 +195,7 @@ namespace OmniSharp.DotNetTest
         protected void SendMessage<T>(string messageType, T payload)
         {
             var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, payload);
-            Logger.LogInformation($"send: {rawMessage}");
+            Logger.LogDebug($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
         }
