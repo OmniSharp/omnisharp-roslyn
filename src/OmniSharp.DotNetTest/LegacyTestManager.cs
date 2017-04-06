@@ -170,5 +170,15 @@ namespace OmniSharp.DotNetTest
                 WorkingDirectory = WorkingDirectory
             };
         }
+
+        public override DebugDotNetTestStartResponse StartDebug(string methodName, string testFrameworkName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void DebugReady()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

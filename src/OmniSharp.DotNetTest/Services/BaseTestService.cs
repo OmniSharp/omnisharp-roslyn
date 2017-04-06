@@ -24,17 +24,19 @@ namespace OmniSharp.DotNetTest.Services
             _loggerFactory = loggerFactory;
         }
 
-        protected abstract TResponse HandleRequest(TRequest request, TestManager testManager);
+        protected TestManager CreateTestManager(string fileName)
+        {
+            var document = _workspace.GetDocument(fileName);
+
+            return TestManager.Start(document.Project, _dotNetCli, _eventEmitter, _loggerFactory);
+        }
+
+        protected abstract TResponse HandleRequest(TRequest request);
 
         public Task<TResponse> Handle(TRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
-
-            using (var testManager = TestManager.Start(document.Project, _dotNetCli, _eventEmitter, _loggerFactory))
-            {
-                var response = HandleRequest(request, testManager);
-                return Task.FromResult(response);
-            }
+            var response = HandleRequest(request);
+            return Task.FromResult(response);
         }
     }
 }

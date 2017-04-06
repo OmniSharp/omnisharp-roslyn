@@ -16,9 +16,12 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected override GetDotNetTestStartInfoResponse HandleRequest(GetDotNetTestStartInfoRequest request, TestManager testManager)
+        protected override GetDotNetTestStartInfoResponse HandleRequest(GetDotNetTestStartInfoRequest request)
         {
-            return testManager.GetTestStartInfo(request.MethodName, request.TestFrameworkName);
+            using (var testManager = CreateTestManager(request.FileName))
+            {
+                return testManager.GetTestStartInfo(request.MethodName, request.TestFrameworkName);
+            }
         }
     }
 }

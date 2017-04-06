@@ -16,11 +16,14 @@ namespace OmniSharp.DotNetTest.Services
         {
         }
 
-        protected override RunDotNetTestResponse HandleRequest(RunDotNetTestRequest request, TestManager testManager)
+        protected override RunDotNetTestResponse HandleRequest(RunDotNetTestRequest request)
         {
-            return testManager.IsConnected
-                ? testManager.RunTest(request.MethodName, request.TestFrameworkName)
-                : new RunDotNetTestResponse { Failure = "Failed to connect to 'dotnet test' process", Pass = false };
+            using (var testManager = CreateTestManager(request.FileName))
+            {
+                return testManager.IsConnected
+                    ? testManager.RunTest(request.MethodName, request.TestFrameworkName)
+                    : new RunDotNetTestResponse { Failure = "Failed to connect to 'dotnet test' process", Pass = false };
+            }
         }
     }
 }

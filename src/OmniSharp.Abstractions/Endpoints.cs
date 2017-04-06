@@ -65,6 +65,8 @@ namespace OmniSharp
 
             public const string GetDotNetTestStartInfo = "/v2/getteststartinfo";
             public const string RunDotNetTest = "/v2/runtest";
+            public const string DebugDotNetTestStart = "/v2/debugtest/start";
+            public const string DebugDotNetTestReady = "/v2/debugtest/ready";
         }
     }
 }
