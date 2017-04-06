@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
-using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Utilities;
 
@@ -114,7 +113,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string solutionDirectory,
             ILogger logger,
             MSBuildOptions options = null,
-            ICollection<MSBuildDiagnosticsMessage> diagnostics = null,
+            ICollection<Models.MSBuildDiagnosticsMessage> diagnostics = null,
             bool isUnityProject = false)
         {
             if (!File.Exists(projectFilePath))
@@ -250,11 +249,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             foreach (var item in items)
             {
                 var name = item.EvaluatedInclude;
-                var version = PropertyConverter.ToNuGetVersion(item.GetMetadataValue(MetadataNames.Version));
-                var identity = new PackageIdentity(name, version);
+                var versionRange = PropertyConverter.ToVersionRange(item.GetMetadataValue(MetadataNames.Version));
+                var dependency = new PackageDependency(name, versionRange);
                 var isImplicitlyDefined = PropertyConverter.ToBoolean(item.GetMetadataValue(MetadataNames.IsImplicitlyDefined), false);
 
-                list.Add(new PackageReference(identity, isImplicitlyDefined));
+                list.Add(new PackageReference(dependency, isImplicitlyDefined));
             }
 
             return list;

@@ -495,24 +495,6 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private List<PackageDependency> CreatePackageDependencies(IEnumerable<PackageReference> packageReferences)
-        {
-            var list = new List<PackageDependency>();
-
-            foreach (var packageReference in packageReferences)
-            {
-                var dependency = new PackageDependency
-                {
-                    Name = packageReference.Identity.Id,
-                    Version = packageReference.Identity.Version?.ToNormalizedString()
-                };
-
-                list.Add(dependency);
-            }
-
-            return list;
-        }
-
         private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, ProjectFileInfo previousProjectFileInfo = null, bool allowAutoRestore = false)
         {
             List<PackageDependency> unresolvedDependencies;
@@ -534,14 +516,14 @@ namespace OmniSharp.MSBuild
                 // Did the project file change? Diff the package references and see if there are unresolved dependencies.
                 if (previousProjectFileInfo != null)
                 {
-                    var packageReferencesToRemove = new HashSet<PackageReference>(previousProjectFileInfo.PackageReferences);
+                    var remainingPackageReferences = new HashSet<PackageReference>(previousProjectFileInfo.PackageReferences);
                     var packageReferencesToAdd = new HashSet<PackageReference>();
 
                     foreach (var packageReference in projectFileInfo.PackageReferences)
                     {
-                        if (packageReferencesToRemove.Contains(packageReference))
+                        if (remainingPackageReferences.Contains(packageReference))
                         {
-                            packageReferencesToRemove.Remove(packageReference);
+                            remainingPackageReferences.Remove(packageReference);
                         }
                         else
                         {
@@ -549,7 +531,7 @@ namespace OmniSharp.MSBuild
                         }
                     }
 
-                    unresolvedPackageReferences = packageReferencesToAdd.Concat(packageReferencesToRemove);
+                    unresolvedPackageReferences = packageReferencesToAdd.Concat(remainingPackageReferences);
                 }
                 else
                 {
@@ -561,7 +543,7 @@ namespace OmniSharp.MSBuild
                     var lockFile = lockFileFormat.Read(projectFileInfo.ProjectAssetsFile);
 
                     unresolvedPackageReferences = projectFileInfo.PackageReferences
-                        .Where(pr => lockFile.GetLibrary(pr.Identity.Id, pr.Identity.Version) == null);
+                        .Where(pr => !ContainsPackageReference(lockFile, pr));
                 }
 
                 unresolvedDependencies = CreatePackageDependencies(unresolvedPackageReferences);
@@ -581,6 +563,38 @@ namespace OmniSharp.MSBuild
                     FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
                 }
             }
+        }
+
+        private List<PackageDependency> CreatePackageDependencies(IEnumerable<PackageReference> packageReferences)
+        {
+            var list = new List<PackageDependency>();
+
+            foreach (var packageReference in packageReferences)
+            {
+                var dependency = new PackageDependency
+                {
+                    Name = packageReference.Identity.Id,
+                    Version = packageReference.Identity.VersionRange.ToNormalizedString()
+                };
+
+                list.Add(dependency);
+            }
+
+            return list;
+        }
+
+        private static bool ContainsPackageReference(LockFile lockFile, PackageReference reference)
+        {
+            foreach (var library in lockFile.Libraries)
+            {
+                if (string.Equals(library.Name, reference.Identity.Id) &&
+                    reference.Identity.VersionRange.Satisfies(library.Version))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, List<PackageDependency> unresolvedDependencies)

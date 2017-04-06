@@ -165,10 +165,9 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
-        public static NuGetVersion ToNuGetVersion(string propertyValue)
+        public static VersionRange ToVersionRange(string propertyValue)
         {
-            NuGetVersion version;
-            if (NuGetVersion.TryParse(propertyValue.Trim(), out version))
+            if (VersionRange.TryParse(propertyValue.Trim(), out var version))
             {
                 return version;
             }
