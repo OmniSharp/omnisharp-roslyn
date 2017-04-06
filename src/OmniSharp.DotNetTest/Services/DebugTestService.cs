@@ -1,4 +1,5 @@
 ﻿using System.Composition;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -8,9 +9,12 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
+    [Shared]
+    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestCheck, LanguageNames.CSharp)]
     [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestReady, LanguageNames.CSharp)]
     [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestStart, LanguageNames.CSharp)]
     public class DebugTestService : BaseTestService,
+        RequestHandler<DebugTestCheckRequest, DebugTestCheckResponse>,
         RequestHandler<DebugTestReadyRequest, DebugTestReadyResponse>,
         RequestHandler<DebugTestStartRequest, DebugTestStartResponse>
     {
@@ -21,6 +25,23 @@ namespace OmniSharp.DotNetTest.Services
             : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
             _debugSessionManager = debugSessionManager;
+        }
+
+        public Task<DebugTestCheckResponse> Handle(DebugTestCheckRequest request)
+        {
+            var document = Workspace.GetDocument(request.FileName);
+            var workingDirectory = Path.GetDirectoryName(document.Project.FilePath);
+
+            var debugType = DotNetCli.IsLegacy(workingDirectory)
+                ? "launch"
+                : "attach";
+
+            var response = new DebugTestCheckResponse
+            {
+                DebugType = debugType
+            };
+
+            return Task.FromResult(response);
         }
 
         public Task<DebugTestReadyResponse> Handle(DebugTestReadyRequest request)

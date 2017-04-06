@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
@@ -19,10 +18,6 @@ namespace OmniSharp.DotNetTest
 {
     public class VSTestManager : TestManager
     {
-        private Process _testProcess;
-        private StringBuilder _testOutput;
-        private StringBuilder _testError;
-
         public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
@@ -114,33 +109,11 @@ namespace OmniSharp.DotNetTest
                 WorkingDirectory = WorkingDirectory,
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardOutput = false,
+                RedirectStandardError = false
             };
 
-            _testProcess = Process.Start(startInfo);
-
-            _testOutput = new StringBuilder();
-            _testError = new StringBuilder();
-
-            _testProcess.OutputDataReceived += (_, e) =>
-            {
-                EventEmitter.Emit(EventTypes.TestMessage,
-                    new TestMessageEvent
-                    {
-                        MessageLevel = "info",
-                        Message = e.Data ?? string.Empty
-                    });
-
-                _testOutput.AppendLine(e.Data);
-            };
-
-            _testProcess.ErrorDataReceived += (_, e) => _testError.AppendLine(e.Data);
-
-            _testProcess.BeginOutputReadLine();
-            _testProcess.BeginErrorReadLine();
-
-            return _testProcess;
+            return Process.Start(startInfo);
         }
 
         public override void DebugReady()

@@ -53,25 +53,10 @@ namespace OmniSharp.DotNetTest
         public static TestManager Create(Project project, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
         {
             var workingDirectory = Path.GetDirectoryName(project.FilePath);
-            var version = dotNetCli.GetVersion(workingDirectory);
 
-            if (version.Major < 1)
-            {
-                throw new InvalidOperationException($"'dotnet test' is not supported for .NET CLI {version}");
-            }
-
-            if (version.Major == 1 &&
-                version.Minor == 0 &&
-                version.Patch == 0)
-            {
-                if (version.Release.StartsWith("preview1") ||
-                    version.Release.StartsWith("preview2"))
-                {
-                    return new LegacyTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
-                }
-            }
-
-            return new VSTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
+            return dotNetCli.IsLegacy(workingDirectory)
+                ? new LegacyTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory)
+                : (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
