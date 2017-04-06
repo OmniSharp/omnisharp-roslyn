@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -8,14 +9,17 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.DotNetTest.TestFrameworks;
+using OmniSharp.Models;
+using OmniSharp.Models.Events;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest
 {
     public class VSTestManager : TestManager
     {
-        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(project, workingDirectory, dotNetCli, loggerFactory.CreateLogger<VSTestManager>())
+        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
         }
 
@@ -49,8 +53,14 @@ namespace OmniSharp.DotNetTest
             return File.Exists(Project.OutputFilePath);
         }
 
-        public override GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
+            var testFramework = TestFramework.GetFramework(testFrameworkName);
+            if (testFramework == null)
+            {
+                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
+            }
+
             var testCases = DiscoverTests(methodName);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
@@ -61,21 +71,65 @@ namespace OmniSharp.DotNetTest
                 });
 
             var message = ReadMessage();
-            var startInfo = message.DeserializePayload<TestProcessStartInfo>();
+            var testStartInfo = message.DeserializePayload<TestProcessStartInfo>();
 
-            return new GetDotNetTestStartInfoResponse
+            return new GetTestStartInfoResponse
             {
-                Executable = startInfo.FileName,
-                Argument = startInfo.Arguments,
-                WorkingDirectory = startInfo.WorkingDirectory
+                Executable = testStartInfo.FileName,
+                Argument = testStartInfo.Arguments,
+                WorkingDirectory = testStartInfo.WorkingDirectory
             };
         }
 
-        public override RunDotNetTestResponse RunTest(string methodName, string testFrameworkName)
+        public override Process DebugStart(string methodName, string testFrameworkName)
+        {
+            var testFramework = TestFramework.GetFramework(testFrameworkName);
+            if (testFramework == null)
+            {
+                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
+            }
+
+            var testCases = DiscoverTests(methodName);
+
+            SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
+                new
+                {
+                    TestCases = testCases,
+                    DebuggingEnabled = true
+                });
+
+            var message = ReadMessage();
+            var testStartInfo = message.DeserializePayload<TestProcessStartInfo>();
+
+            var fileName = testStartInfo.FileName;
+            var arguments = testStartInfo.Arguments;
+
+            var startInfo = new ProcessStartInfo(fileName, arguments)
+            {
+                WorkingDirectory = WorkingDirectory,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false
+            };
+
+            return Process.Start(startInfo);
+        }
+
+        public override void DebugReady()
+        {
+            SendMessage(MessageType.CustomTestHostLaunchCallback,
+                new
+                {
+                    HostProcessId = Process.GetCurrentProcess().Id
+                });
+        }
+
+        public override RunTestResponse RunTest(string methodName, string testFrameworkName)
         {
             var testCases = DiscoverTests(methodName);
 
-            var results = new List<TestResult>();
+            var testResults = new List<TestResult>();
 
             if (testCases.Length > 0)
             {
@@ -95,12 +149,20 @@ namespace OmniSharp.DotNetTest
                     switch (message.MessageType)
                     {
                         case MessageType.TestMessage:
+                            var testMessage = message.DeserializePayload<TestMessagePayload>();
+                            EventEmitter.Emit(EventTypes.TestMessage,
+                                new TestMessageEvent
+                                {
+                                    MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
+                                    Message = testMessage.Message
+                                });
+
                             break;
 
                         case MessageType.TestRunStatsChange:
                             var testRunChange = message.DeserializePayload<TestRunChangedEventArgs>();
 
-                            results.AddRange(testRunChange.NewTestResults);
+                            testResults.AddRange(testRunChange.NewTestResults);
                             break;
 
                         case MessageType.ExecutionComplete:
@@ -112,9 +174,19 @@ namespace OmniSharp.DotNetTest
                 }
             }
 
-            return new RunDotNetTestResponse
+            var results = testResults.Select(testResult =>
+                new DotNetTestResult
+                {
+                    MethodName = testResult.TestCase.FullyQualifiedName,
+                    Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
+                    ErrorMessage = testResult.ErrorMessage,
+                    ErrorStackTrace = testResult.ErrorStackTrace
+                });
+
+            return new RunTestResponse
             {
-                Pass = !results.Any(r => r.Outcome == TestOutcome.Failed)
+                Results = results.ToArray(),
+                Pass = !testResults.Any(r => r.Outcome == TestOutcome.Failed)
             };
         }
 

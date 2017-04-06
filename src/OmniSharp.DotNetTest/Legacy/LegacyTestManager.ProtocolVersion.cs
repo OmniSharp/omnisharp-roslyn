@@ -1,4 +1,4 @@
-﻿namespace OmniSharp.DotNetTest
+﻿namespace OmniSharp.DotNetTest.Legacy
 {
     public partial class LegacyTestManager
     {

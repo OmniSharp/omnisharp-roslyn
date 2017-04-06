@@ -2,24 +2,32 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Testing.Abstractions;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
+using OmniSharp.Models;
+using OmniSharp.Models.Events;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.DotNetTest
+using LegacyTestOutcome = Microsoft.Extensions.Testing.Abstractions.TestOutcome;
+using LegacyTestResult = Microsoft.Extensions.Testing.Abstractions.TestResult;
+
+namespace OmniSharp.DotNetTest.Legacy
 {
+    /// <summary>
+    /// Handles 'dotnet test' for .NET Core SDK earlier than "1.0.0-preview3"
+    /// </summary>
     public partial class LegacyTestManager : TestManager
     {
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
         private const string TestExecution_TestResult = "TestExecution.TestResult";
 
-        public LegacyTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
-            : base(project, workingDirectory, dotNetCli, loggerFactory.CreateLogger<LegacyTestManager>())
+        public LegacyTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<LegacyTestManager>())
         {
         }
 
@@ -41,7 +49,7 @@ namespace OmniSharp.DotNetTest
             }
         }
 
-        public override RunDotNetTestResponse RunTest(string methodName, string testFrameworkName)
+        public override RunTestResponse RunTest(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -51,9 +59,9 @@ namespace OmniSharp.DotNetTest
 
             SendMessage(TestExecution_GetTestRunnerProcessStartInfo);
 
-            var message = ReadMessage();
+            var testStartInfoMessage = ReadMessage();
 
-            var testStartInfo = message.DeserializePayload<TestStartInfo>();
+            var testStartInfo = testStartInfoMessage.DeserializePayload<TestStartInfo>();
 
             var fileName = testStartInfo.FileName;
             var arguments = $"{testStartInfo.Arguments} {testFramework.MethodArgument} {methodName}";
@@ -63,22 +71,42 @@ namespace OmniSharp.DotNetTest
                 WorkingDirectory = WorkingDirectory,
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
 
             var testProcess = Process.Start(startInfo);
 
-            var results = new List<TestResult>();
+            var output = new StringBuilder();
+            var error = new StringBuilder();
+
+            testProcess.OutputDataReceived += (_, e) =>
+            {
+                EventEmitter.Emit(EventTypes.TestMessage,
+                    new TestMessageEvent
+                    {
+                        MessageLevel = "info",
+                        Message = e.Data ?? string.Empty
+                    });
+
+                output.AppendLine(e.Data);
+            };
+
+            testProcess.ErrorDataReceived += (_, e) => error.AppendLine(e.Data);
+
+            testProcess.BeginOutputReadLine();
+            testProcess.BeginErrorReadLine();
+
+            var testResults = new List<LegacyTestResult>();
             var done = false;
 
             while (!done)
             {
-                var m = ReadMessage();
-                switch (m.MessageType)
+                var message = ReadMessage();
+                switch (message.MessageType)
                 {
                     case TestExecution_TestResult:
-                        results.Add(m.DeserializePayload<TestResult>());
+                        testResults.Add(message.DeserializePayload<LegacyTestResult>());
                         break;
 
                     case MessageType.ExecutionComplete:
@@ -95,13 +123,23 @@ namespace OmniSharp.DotNetTest
                 }
             }
 
-            return new RunDotNetTestResponse
+            var results = testResults.Select(testResult =>
+                new DotNetTestResult
+                {
+                    MethodName = testResult.Test.FullyQualifiedName,
+                    Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
+                    ErrorMessage = testResult.ErrorMessage,
+                    ErrorStackTrace = testResult.ErrorStackTrace
+                });
+
+            return new RunTestResponse
             {
-                Pass = !results.Any(r => r.Outcome == TestOutcome.Failed)
+                Results = results.ToArray(),
+                Pass = !testResults.Any(r => r.Outcome == LegacyTestOutcome.Failed)
             };
         }
 
-        public override GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -128,12 +166,22 @@ namespace OmniSharp.DotNetTest
                 arguments = $"{arguments} {testFramework.MethodArgument} {methodName}";
             }
 
-            return new GetDotNetTestStartInfoResponse
+            return new GetTestStartInfoResponse
             {
                 Executable = testStartInfo.FileName,
                 Argument = arguments,
                 WorkingDirectory = WorkingDirectory
             };
+        }
+
+        public override Process DebugStart(string methodName, string testFrameworkName)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void DebugReady()
+        {
+            throw new NotSupportedException();
         }
     }
 }

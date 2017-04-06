@@ -1,6 +1,6 @@
 namespace OmniSharp.DotNetTest.Models
 {
-    public class GetDotNetTestStartInfoResponse
+    public class GetTestStartInfoResponse
     {
         public string Executable { get; set; }
         public string Argument { get; set; }
