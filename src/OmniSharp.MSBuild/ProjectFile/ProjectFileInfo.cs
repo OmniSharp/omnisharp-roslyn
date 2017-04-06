@@ -217,7 +217,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
 
             var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
-            var references = GetFullPaths(projectInstance.GetItems(ItemNames.ReferencePath));
+            var references = GetFullPaths(
+                projectInstance.GetItems(ItemNames.ReferencePath).Where(ReferenceSourceTargetIsNotProjectReference));
             var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
             var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
 
@@ -230,7 +231,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 sourceFiles, references, projectReferences, analyzers, packageReferences);
         }
 
-        private static IList<string> GetFullPaths(ICollection<ProjectItemInstance> items)
+        private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
+        {
+            return item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
+        }
+
+        private static IList<string> GetFullPaths(IEnumerable<ProjectItemInstance> items)
         {
             var sortedSet = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
