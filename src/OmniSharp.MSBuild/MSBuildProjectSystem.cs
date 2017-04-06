@@ -573,8 +573,8 @@ namespace OmniSharp.MSBuild
             {
                 var dependency = new PackageDependency
                 {
-                    Name = packageReference.Identity.Id,
-                    Version = packageReference.Identity.VersionRange.ToNormalizedString()
+                    Name = packageReference.Dependency.Id,
+                    Version = packageReference.Dependency.VersionRange.ToNormalizedString()
                 };
 
                 list.Add(dependency);
@@ -587,8 +587,8 @@ namespace OmniSharp.MSBuild
         {
             foreach (var library in lockFile.Libraries)
             {
-                if (string.Equals(library.Name, reference.Identity.Id) &&
-                    reference.Identity.VersionRange.Satisfies(library.Version))
+                if (string.Equals(library.Name, reference.Dependency.Id) &&
+                    reference.Dependency.VersionRange.Satisfies(library.Version))
                 {
                     return true;
                 }
