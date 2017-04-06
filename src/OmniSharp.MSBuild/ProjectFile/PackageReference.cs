@@ -5,26 +5,25 @@ namespace OmniSharp.MSBuild.ProjectFile
 {
     public class PackageReference : IEquatable<PackageReference>
     {
-        public PackageIdentity Identity { get; }
+        public PackageDependency Dependency { get; }
         public bool IsImplicitlyDefined { get; }
 
-        public PackageReference(PackageIdentity identity, bool isImplicitlyDefined)
+        public PackageReference(PackageDependency dependency, bool isImplicitlyDefined)
         {
-            this.Identity = identity;
+            this.Dependency = dependency;
             this.IsImplicitlyDefined = isImplicitlyDefined;
         }
 
         public override string ToString()
         {
-            var version = Identity.HasVersion ? ", " + Identity.Version.ToNormalizedString() : string.Empty;
             var implicitSuffix = IsImplicitlyDefined ? " (implicit)" : string.Empty;
 
-            return Identity.Id + version + implicitSuffix;
+            return Dependency.Id + ", " + Dependency.VersionRange + implicitSuffix;
         }
 
         public bool Equals(PackageReference other)
         {
-            if (!Identity.Equals(other.Identity))
+            if (!Dependency.Equals(other.Dependency))
             {
                 return false;
             }
@@ -34,7 +33,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public override int GetHashCode()
         {
-            return this.Identity.GetHashCode() + (IsImplicitlyDefined ? 1 : 0);
+            return this.Dependency.GetHashCode() + (IsImplicitlyDefined ? 1 : 0);
         }
     }
 }
