@@ -14,6 +14,8 @@ namespace OmniSharp.Utilities
         public static string MonoFilePath => _monoPath.Value;
         public static string MonoXBuildFrameworksDirPath => _monoXBuildFrameworksDirPath.Value;
 
+        public static bool IsWindows => Path.DirectorySeparatorChar == '\\';
+
         private static string FindMonoPath()
         {
             // To locate Mono on unix, we use the 'which' command (https://en.wikipedia.org/wiki/Which_(Unix))
