@@ -123,46 +123,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             options = options ?? new MSBuildOptions();
 
-            var globalProperties = new Dictionary<string, string>
-            {
-                { PropertyNames.DesignTimeBuild, "true" },
-                { PropertyNames.BuildProjectReferences, "false" },
-                { PropertyNames._ResolveReferenceDependencies, "true" },
-                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
-            };
-
-            if (!string.IsNullOrWhiteSpace(options.MSBuildExtensionsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
-            }
-            else if (!string.IsNullOrWhiteSpace(MSBuildEnvironment.MSBuildExtensionsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, MSBuildEnvironment.MSBuildExtensionsPath);
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.MSBuildSDKsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildSDKsPath, options.MSBuildSDKsPath);
-            }
-            else if (!string.IsNullOrWhiteSpace(MSBuildEnvironment.MSBuildSDKsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildSDKsPath, MSBuildEnvironment.MSBuildSDKsPath);
-            }
-
-            if (PlatformHelper.IsMono)
-            {
-                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
-                if (monoXBuildFrameworksDirPath != null)
-                {
-                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
-                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
-            {
-                globalProperties.Add(PropertyNames.VisualStudioVersion, options.VisualStudioVersion);
-            }
+            var globalProperties = GetGlobalProperties(options, solutionDirectory, logger);
 
             var collection = new ProjectCollection(globalProperties);
 
@@ -229,6 +190,44 @@ namespace OmniSharp.MSBuild.ProjectFile
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
                 !string.IsNullOrWhiteSpace(documentationFile), outputPath, projectAssetsFile, isUnityProject, defineConstants, noWarn,
                 sourceFiles, references, projectReferences, analyzers, packageReferences);
+        }
+
+        private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, ILogger logger)
+        {
+            var globalProperties = new Dictionary<string, string>
+            {
+                { PropertyNames.DesignTimeBuild, "true" },
+                { PropertyNames.BuildProjectReferences, "false" },
+                { PropertyNames._ResolveReferenceDependencies, "true" },
+                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
+            };
+
+            globalProperties.AddPropertyIfNeeded(
+                PropertyNames.MSBuildExtensionsPath,
+                userOptionValue: options.MSBuildExtensionsPath,
+                environmentValue: MSBuildEnvironment.MSBuildExtensionsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                PropertyNames.MSBuildSDKsPath,
+                userOptionValue: options.MSBuildSDKsPath,
+                environmentValue: MSBuildEnvironment.MSBuildSDKsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                PropertyNames.VisualStudioVersion,
+                userOptionValue: options.VisualStudioVersion,
+                environmentValue: null);
+
+            if (PlatformHelper.IsMono)
+            {
+                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
+                if (monoXBuildFrameworksDirPath != null)
+                {
+                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
+                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
+                }
+            }
+
+            return globalProperties;
         }
 
         private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)

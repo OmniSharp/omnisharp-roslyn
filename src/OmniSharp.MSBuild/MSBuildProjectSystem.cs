@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -80,14 +79,12 @@ namespace OmniSharp.MSBuild
             if (!MSBuildEnvironment.IsInitialized)
             {
                 MSBuildEnvironment.Initialize(_logger);
-            }
 
-            if (_options.WaitForDebugger)
-            {
-                Console.WriteLine($"Attach to process {Process.GetCurrentProcess().Id}");
-                while (!Debugger.IsAttached)
+                if (MSBuildEnvironment.IsInitialized &&
+                    _environment.LogLevel < LogLevel.Information)
                 {
-                    System.Threading.Thread.Sleep(100);
+                    var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
+                    _logger.LogDebug($"MSBuild environment: {Environment.NewLine}{buildEnvironmentInfo}");
                 }
             }
 
