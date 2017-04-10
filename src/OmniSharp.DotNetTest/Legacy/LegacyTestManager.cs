@@ -179,7 +179,12 @@ namespace OmniSharp.DotNetTest.Legacy
             throw new NotSupportedException();
         }
 
-        public override void DebugReady()
+        public override DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void DebugRun()
         {
             throw new NotSupportedException();
         }

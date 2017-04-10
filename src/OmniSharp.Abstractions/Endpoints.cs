@@ -65,9 +65,8 @@ namespace OmniSharp
 
             public const string GetTestStartInfo = "/v2/getteststartinfo";
             public const string RunTest = "/v2/runtest";
-            public const string DebugTestCheck = "/v2/debugtest/check";
-            public const string DebugTestStart = "/v2/debugtest/start";
-            public const string DebugTestReady = "/v2/debugtest/ready";
+            public const string DebugTestGetStartInfo = "/v2/debugtest/getstartinfo";
+            public const string DebugTestRun = "/v2/debugtest/run";
         }
     }
 }

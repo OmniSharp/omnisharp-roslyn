@@ -1,5 +1,4 @@
 ﻿using System.Composition;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -10,13 +9,11 @@ using OmniSharp.Services;
 namespace OmniSharp.DotNetTest.Services
 {
     [Shared]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestCheck, LanguageNames.CSharp)]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestReady, LanguageNames.CSharp)]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestStart, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestGetStartInfo, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestRun, LanguageNames.CSharp)]
     public class DebugTestService : BaseTestService,
-        RequestHandler<DebugTestCheckRequest, DebugTestCheckResponse>,
-        RequestHandler<DebugTestReadyRequest, DebugTestReadyResponse>,
-        RequestHandler<DebugTestStartRequest, DebugTestStartResponse>
+        RequestHandler<DebugTestGetStartInfoRequest, DebugTestGetStartInfoResponse>,
+        RequestHandler<DebugTestRunRequest, DebugTestRunResponse>
     {
         private DebugSessionManager _debugSessionManager;
 
@@ -27,38 +24,22 @@ namespace OmniSharp.DotNetTest.Services
             _debugSessionManager = debugSessionManager;
         }
 
-        public Task<DebugTestCheckResponse> Handle(DebugTestCheckRequest request)
-        {
-            var document = Workspace.GetDocument(request.FileName);
-            var workingDirectory = Path.GetDirectoryName(document.Project.FilePath);
-
-            var debugType = DotNetCli.IsLegacy(workingDirectory)
-                ? "launch"
-                : "attach";
-
-            var response = new DebugTestCheckResponse
-            {
-                DebugType = debugType
-            };
-
-            return Task.FromResult(response);
-        }
-
-        public Task<DebugTestReadyResponse> Handle(DebugTestReadyRequest request)
-        {
-            var response = _debugSessionManager.DebugReady();
-
-            return Task.FromResult(response);
-        }
-
-        public Task<DebugTestStartResponse> Handle(DebugTestStartRequest request)
+        public Task<DebugTestGetStartInfoResponse> Handle(DebugTestGetStartInfoRequest request)
         {
             var testManager = CreateTestManager(request.FileName);
             _debugSessionManager.StartSession(testManager);
 
-            var response = _debugSessionManager.DebugStart(request.MethodName, request.TestFrameworkName);
+            var response = _debugSessionManager.DebugGetStartInfo(request.MethodName, request.TestFrameworkName);
 
             return Task.FromResult(response);
         }
+
+        public Task<DebugTestRunResponse> Handle(DebugTestRunRequest request)
+        {
+            var response = _debugSessionManager.DebugRun();
+
+            return Task.FromResult(response);
+        }
+
     }
 }

@@ -116,13 +116,67 @@ namespace OmniSharp.DotNetTest
             return Process.Start(startInfo);
         }
 
-        public override void DebugReady()
+        public override DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName)
+        {
+            var testFrameowkr = TestFramework.GetFramework(testFrameworkName);
+            if (testFrameworkName == null)
+            {
+                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
+            }
+
+            var testCases = DiscoverTests(methodName);
+
+            SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
+                new
+                {
+                    TestCases = testCases,
+                    DebuggingEnabled = true
+                });
+
+            var message = ReadMessage();
+            var startInfo = message.DeserializePayload<TestProcessStartInfo>();
+
+            return new DebugTestGetStartInfoResponse
+            {
+                FileName = startInfo.FileName,
+                Arguments = startInfo.Arguments,
+                WorkingDirectory = startInfo.WorkingDirectory,
+                EnvironmentVariables = startInfo.EnvironmentVariables
+            };
+        }
+
+        public override void DebugRun()
         {
             SendMessage(MessageType.CustomTestHostLaunchCallback,
                 new
                 {
                     HostProcessId = Process.GetCurrentProcess().Id
                 });
+
+            var done = false;
+
+            while (!done)
+            {
+                var message = ReadMessage();
+
+                switch (message.MessageType)
+                {
+                    case MessageType.TestMessage:
+                        var testMessage = message.DeserializePayload<TestMessagePayload>();
+                        EventEmitter.Emit(EventTypes.TestMessage,
+                            new TestMessageEvent
+                            {
+                                MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
+                                Message = testMessage.Message
+                            });
+
+                        break;
+
+                    case MessageType.ExecutionComplete:
+                        done = true;
+                        break;
+                }
+            }
         }
 
         public override RunTestResponse RunTest(string methodName, string testFrameworkName)

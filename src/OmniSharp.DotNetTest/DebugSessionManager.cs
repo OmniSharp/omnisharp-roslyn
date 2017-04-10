@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Composition;
-using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
-using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
@@ -12,10 +10,6 @@ namespace OmniSharp.DotNetTest
     {
         private readonly ILogger _logger;
         private TestManager _testManager;
-        private Process _testProcess;
-
-        public bool IsSessionStarted => _testManager != null;
-        public bool IsTestProcessRunning => _testProcess != null && !_testProcess.HasExited;
 
         [ImportingConstructor]
         public DebugSessionManager(ILoggerFactory loggerFactory)
@@ -23,12 +17,24 @@ namespace OmniSharp.DotNetTest
             _logger = loggerFactory.CreateLogger<DebugSessionManager>();
         }
 
+        private void VerifySession(bool isStarted)
+        {
+            if (_testManager != null != isStarted)
+            {
+                if (isStarted)
+                {
+                    throw new InvalidOperationException("Debug session not started.");
+                }
+                else
+                {
+                    throw new InvalidOperationException("Debug session already started.");
+                }
+            }
+        }
+
         public void StartSession(TestManager testManager)
         {
-            if (IsSessionStarted)
-            {
-                throw new InvalidOperationException("Debug session already started.");
-            }
+            VerifySession(isStarted: false);
 
             _testManager = testManager;
             _logger.LogInformation("Debug session started.");
@@ -36,57 +42,29 @@ namespace OmniSharp.DotNetTest
 
         public void EndSession()
         {
-            if (!IsSessionStarted)
-            {
-                throw new InvalidOperationException("Debug session not started.");
-            }
+            VerifySession(isStarted: true);
 
-            _testProcess = null;
+            _testManager.Dispose();
             _testManager = null;
 
             _logger.LogInformation("Debug session ended.");
         }
 
-        public DebugTestStartResponse DebugStart(string methodName, string testFrameworkName)
+        public DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName)
         {
-            if (!IsSessionStarted)
-            {
-                throw new InvalidOperationException("Debug session not started.");
-            }
+            VerifySession(isStarted: true);
 
-            _testProcess = _testManager.DebugStart(methodName, testFrameworkName);
-
-            _testProcess.EnableRaisingEvents = true;
-            _testProcess.OnExit(() =>
-            {
-                EndSession();
-            });
-
-            return new DebugTestStartResponse
-            {
-                HostProcessId = Process.GetCurrentProcess().Id,
-                ProcessId = _testProcess.Id
-            };
+            return _testManager.DebugGetStartInfo(methodName, testFrameworkName);
         }
 
-        public DebugTestReadyResponse DebugReady()
+        public DebugTestRunResponse DebugRun()
         {
-            if (!IsSessionStarted)
-            {
-                throw new InvalidOperationException("Debug session not started.");
-            }
+            VerifySession(isStarted: true);
 
-            if (!IsTestProcessRunning)
-            {
-                throw new InvalidOperationException("Test process is not running.");
-            }
+            _testManager.DebugRun();
+            EndSession();
 
-            _testManager.DebugReady();
-
-            return new DebugTestReadyResponse
-            {
-                IsReady = true
-            };
+            return new DebugTestRunResponse();
         }
     }
 }
