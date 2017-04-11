@@ -3,8 +3,8 @@ using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.V2.DebugTestStart, typeof(DebugTestStartRequest), typeof(DebugTestStartResponse))]
-    public class DebugTestStartRequest : Request
+    [OmniSharpEndpoint(OmnisharpEndpoints.V2.DebugTestGetStartInfo, typeof(DebugTestGetStartInfoRequest), typeof(DebugTestGetStartInfoResponse))]
+    public class DebugTestGetStartInfoRequest : Request
     {
         public string MethodName { get; set; }
         public string TestFrameworkName { get; set; }

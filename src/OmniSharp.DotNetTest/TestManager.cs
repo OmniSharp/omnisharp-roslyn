@@ -66,7 +66,8 @@ namespace OmniSharp.DotNetTest
         public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
 
         public abstract Process DebugStart(string methodName, string testFrameworkName);
-        public abstract void DebugReady();
+        public abstract DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName);
+        public abstract void DebugRun();
 
         protected virtual bool PrepareToConnect()
         {
