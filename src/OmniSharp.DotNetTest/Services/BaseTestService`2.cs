@@ -8,7 +8,7 @@ using OmniSharp.Services;
 namespace OmniSharp.DotNetTest.Services
 {
     [OmniSharpHandler(OmnisharpEndpoints.V2.GetTestStartInfo, LanguageNames.CSharp)]
-    public abstract class BaseTestService<TRequest, TResponse> : BaseTestService, RequestHandler<TRequest, TResponse>
+    internal abstract class BaseTestService<TRequest, TResponse> : BaseTestService, RequestHandler<TRequest, TResponse>
         where TRequest: Request
     {
         protected BaseTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)

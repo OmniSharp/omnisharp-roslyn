@@ -8,7 +8,7 @@ using OmniSharp.Services;
 namespace OmniSharp.DotNetTest.Services
 {
     [OmniSharpHandler(OmnisharpEndpoints.V2.RunTest, LanguageNames.CSharp)]
-    public class RunTestService : BaseTestService<RunTestRequest, RunTestResponse>
+    internal class RunTestService : BaseTestService<RunTestRequest, RunTestResponse>
     {
         [ImportingConstructor]
         public RunTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
@@ -18,9 +18,18 @@ namespace OmniSharp.DotNetTest.Services
 
         protected override RunTestResponse HandleRequest(RunTestRequest request, TestManager testManager)
         {
-            return testManager.IsConnected
-                ? testManager.RunTest(request.MethodName, request.TestFrameworkName)
-                : new RunTestResponse { Failure = "Failed to connect to 'dotnet test' process", Pass = false };
+            if (testManager.IsConnected)
+            {
+                return testManager.RunTest(request.MethodName, request.TestFrameworkName);
+            }
+
+            var response = new RunTestResponse
+            {
+                Failure = "Failed to connect to 'dotnet test' process",
+                Pass = false
+            };
+
+            return response;
         }
     }
 }

@@ -4,6 +4,8 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
@@ -15,7 +17,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
-    public abstract class TestManager : DisposableObject
+    internal abstract class TestManager : DisposableObject
     {
         protected readonly Project Project;
         protected readonly DotNetCliService DotNetCli;
@@ -65,9 +67,8 @@ namespace OmniSharp.DotNetTest
         public abstract RunTestResponse RunTest(string methodName, string testFrameworkName);
         public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
 
-        public abstract Process DebugStart(string methodName, string testFrameworkName);
-        public abstract DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName);
-        public abstract void DebugRun();
+        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken);
+        public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
         protected virtual bool PrepareToConnect()
         {
@@ -199,6 +200,64 @@ namespace OmniSharp.DotNetTest
             Logger.LogDebug($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
+        }
+
+        protected async Task<(bool succeeded, Message message)> TryReadMessageAsync(CancellationToken cancellationToken)
+        {
+            var rawMessage = await Task.Run(() => ReadRawMessage(cancellationToken));
+
+            if (rawMessage == null)
+            {
+                return (succeeded: false, message: null);
+            }
+
+            Logger.LogDebug($"read: {rawMessage}");
+
+            return (succeeded: true, message: JsonDataSerializer.Instance.DeserializeMessage(rawMessage));
+        }
+
+        protected async Task<Message> ReadMessageAsync(CancellationToken cancellationToken)
+        {
+            var rawMessage = await Task.Run(() => ReadRawMessage(cancellationToken));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Logger.LogDebug($"read: {rawMessage}");
+
+            return JsonDataSerializer.Instance.DeserializeMessage(rawMessage);
+        }
+
+        private string ReadRawMessage(CancellationToken cancellationToken)
+        {
+            const int Timeout = 1000 * 1000;
+
+            string str = null;
+            bool success = false;
+
+            // We set a read timeout below to avoid blocking.
+            while (!cancellationToken.IsCancellationRequested && !success && IsConnected && !IsDisposed)
+            {
+                try
+                {
+                    if (this._socket.Poll(Timeout, SelectMode.SelectRead))
+                    {
+                        str = _reader.ReadString();
+                        success = true;
+                    }
+                }
+                catch (IOException ex) when (ex.InnerException is SocketException se &&
+                                             se.SocketErrorCode == SocketError.TimedOut)
+                {
+                    Logger.LogTrace(se, $"{nameof(ReadRawMessage)}: failed to receive message because it timed out.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogTrace(ex, $"{nameof(ReadRawMessage)}: failed to receive message.");
+                    break;
+                }
+            }
+
+            return str;
         }
     }
 }

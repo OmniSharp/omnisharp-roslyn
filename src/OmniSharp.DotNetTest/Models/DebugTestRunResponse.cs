@@ -2,12 +2,12 @@
 
 namespace OmniSharp.DotNetTest.Models
 {
-    public class DebugTestRunResponse : IAggregateResponse
+    public class DebugTestLaunchResponse : IAggregateResponse
     {
         public IAggregateResponse Merge(IAggregateResponse response)
         {
             // Need this to keep endpoint middleware happy.
-            return response ?? new DebugTestRunResponse();
+            return response ?? new DebugTestLaunchResponse();
         }
     }
 }
