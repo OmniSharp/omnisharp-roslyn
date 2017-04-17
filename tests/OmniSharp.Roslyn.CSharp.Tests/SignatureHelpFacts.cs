@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.SignatureHelp;
+        protected override string EndpointName => OmniSharpEndpoints.SignatureHelp;
 
         [Fact]
         public async Task NoInvocationNoHelp1()

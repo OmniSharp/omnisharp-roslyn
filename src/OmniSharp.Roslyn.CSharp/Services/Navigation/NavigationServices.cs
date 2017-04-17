@@ -9,7 +9,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.NavigateUp, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.NavigateUp, LanguageNames.CSharp)]
     public class NavigateUpService : IRequestHandler<NavigateUpRequest, NavigateResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         }
     }
 
-    [OmniSharpHandler(OmnisharpEndpoints.NavigateDown, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.NavigateDown, LanguageNames.CSharp)]
     public class NavigateDownService : IRequestHandler<NavigateDownRequest, NavigateResponse>
     {
         private readonly OmniSharpWorkspace _workspace;

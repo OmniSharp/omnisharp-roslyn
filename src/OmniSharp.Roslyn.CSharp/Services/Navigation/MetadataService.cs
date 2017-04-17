@@ -8,7 +8,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Metadata, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.Metadata, LanguageNames.CSharp)]
     public class MetadataService : IRequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly MetadataHelper _metadataHelper;

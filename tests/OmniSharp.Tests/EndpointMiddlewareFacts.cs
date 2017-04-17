@@ -30,7 +30,7 @@ namespace OmniSharp.Tests
         {
         }
 
-        [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
+        [OmniSharpHandler(OmniSharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
         public class GotoDefinitionService : IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
             [Import]
@@ -42,7 +42,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpHandler(OmnisharpEndpoints.FindSymbols, LanguageNames.CSharp)]
+        [OmniSharpHandler(OmniSharpEndpoints.FindSymbols, LanguageNames.CSharp)]
         public class FindSymbolsService : IRequestHandler<FindSymbolsRequest, QuickFixResponse>
         {
             [Import]
@@ -54,7 +54,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpHandler(OmnisharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
+        [OmniSharpHandler(OmniSharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
         public class UpdateBufferService : IRequestHandler<UpdateBufferRequest, object>
         {
             [Import]

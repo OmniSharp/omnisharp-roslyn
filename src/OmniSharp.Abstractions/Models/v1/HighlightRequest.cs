@@ -4,7 +4,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.Highlight, typeof(HighlightRequest), typeof(HighlightResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.Highlight, typeof(HighlightRequest), typeof(HighlightResponse))]
     public class HighlightRequest : Request
     {
         /// <summary>

@@ -9,7 +9,7 @@ using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
-    [OmniSharpHandler(OmnisharpEndpoints.CodeFormat, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.CodeFormat, LanguageNames.CSharp)]
     public class CodeFormatService : IRequestHandler<CodeFormatRequest, CodeFormatResponse>
     {
         private readonly OmniSharpWorkspace _workspace;

@@ -751,7 +751,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 case Direction.Up:
                     {
-                        var requestHandler = host.GetRequestHandler<NavigateUpService>(OmnisharpEndpoints.NavigateUp);
+                        var requestHandler = host.GetRequestHandler<NavigateUpService>(OmniSharpEndpoints.NavigateUp);
                         var request = new NavigateUpRequest
                         {
                             Line = startLine,
@@ -765,7 +765,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 case Direction.Down:
                     {
-                        var requestHandler = host.GetRequestHandler<NavigateDownService>(OmnisharpEndpoints.NavigateDown);
+                        var requestHandler = host.GetRequestHandler<NavigateDownService>(OmniSharpEndpoints.NavigateDown);
                         var request = new NavigateDownRequest
                         {
                             Line = startLine,

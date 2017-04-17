@@ -9,7 +9,7 @@ using OmniSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Diagnostics, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.Diagnostics, LanguageNames.CSharp)]
     public class DiagnosticsService : IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>
     {
         private readonly CSharpDiagnosticService _diagnostics;

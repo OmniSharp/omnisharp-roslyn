@@ -3,7 +3,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.PackageSearch, typeof(PackageSearchRequest), typeof(PackageSearchResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.PackageSearch, typeof(PackageSearchRequest), typeof(PackageSearchResponse))]
     public class PackageSearchRequest : IRequest
     {
         /// <summary>

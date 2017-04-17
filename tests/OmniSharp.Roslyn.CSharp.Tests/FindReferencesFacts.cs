@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.FindUsages;
+        protected override string EndpointName => OmniSharpEndpoints.FindUsages;
 
         [Fact]
         public async Task CanFindReferencesOfLocalVariable()

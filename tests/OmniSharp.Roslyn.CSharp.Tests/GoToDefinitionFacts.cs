@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.GotoDefinition;
+        protected override string EndpointName => OmniSharpEndpoints.GotoDefinition;
 
         [Fact]
         public async Task ReturnsDefinitionInSameFile()

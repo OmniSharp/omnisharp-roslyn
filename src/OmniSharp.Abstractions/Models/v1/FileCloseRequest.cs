@@ -6,6 +6,6 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.Close, typeof(FileCloseRequest), typeof(FileCloseResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.Close, typeof(FileCloseRequest), typeof(FileCloseResponse))]
     public class FileCloseRequest : Request { }
 }

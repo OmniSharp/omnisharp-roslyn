@@ -21,7 +21,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        protected override string EndpointName { get; } = OmnisharpEndpoints.V2.GetTestStartInfo;
+        protected override string EndpointName { get; } = OmniSharpEndpoints.V2.GetTestStartInfo;
 
         public abstract bool UseLegacyDotNetCli { get; }
 

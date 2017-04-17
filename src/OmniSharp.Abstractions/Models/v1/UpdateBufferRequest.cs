@@ -2,7 +2,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.UpdateBuffer, typeof(UpdateBufferRequest), typeof(object))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.UpdateBuffer, typeof(UpdateBufferRequest), typeof(object))]
     public class UpdateBufferRequest : Request
     {
         // Instead of updating the buffer from the editor,

@@ -25,7 +25,7 @@ namespace TestUtility
     {
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
-            typeof(OmnisharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
+            typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
             typeof(Startup).GetTypeInfo().Assembly, // OmniSharp.Host
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest

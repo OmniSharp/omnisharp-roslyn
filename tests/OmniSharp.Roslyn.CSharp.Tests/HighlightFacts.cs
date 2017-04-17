@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.Highlight;
+        protected override string EndpointName => OmniSharpEndpoints.Highlight;
 
         [Fact]
         public async Task HighlightSingleLine()

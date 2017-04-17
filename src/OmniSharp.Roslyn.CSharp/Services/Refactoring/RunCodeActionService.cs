@@ -13,7 +13,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
     public class RunCodeActionsService : IRequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
         private readonly OmniSharpWorkspace _workspace;

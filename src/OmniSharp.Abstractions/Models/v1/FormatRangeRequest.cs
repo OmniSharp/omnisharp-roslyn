@@ -4,7 +4,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.FormatRange, typeof(FormatRangeRequest), typeof(FormatRangeResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.FormatRange, typeof(FormatRangeRequest), typeof(FormatRangeResponse))]
     public class FormatRangeRequest : Request
     {
         [JsonConverter(typeof(ZeroBasedIndexConverter))]

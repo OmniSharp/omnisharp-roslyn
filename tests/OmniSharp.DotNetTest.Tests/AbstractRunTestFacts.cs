@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        protected override string EndpointName { get; } = OmnisharpEndpoints.V2.RunTest;
+        protected override string EndpointName { get; } = OmniSharpEndpoints.V2.RunTest;
 
         public abstract bool UseLegacyDotNetCli { get; }
 

@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.GotoRegion;
+        protected override string EndpointName => OmniSharpEndpoints.GotoRegion;
 
         [Fact]
         public async Task CanFindRegionsInFileWithRegions()

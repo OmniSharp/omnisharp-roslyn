@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.Rename;
+        protected override string EndpointName => OmniSharpEndpoints.Rename;
 
         [Fact]
         public async Task Rename_UpdatesWorkspaceAndDocumentText()

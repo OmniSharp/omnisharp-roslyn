@@ -10,7 +10,7 @@ using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FormatAfterKeystroke, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.FormatAfterKeystroke, LanguageNames.CSharp)]
     public class FormatAfterKeystrokeService : IRequestHandler<FormatAfterKeystrokeRequest, FormatRangeResponse>
     {
         private readonly OmniSharpWorkspace _workspace;

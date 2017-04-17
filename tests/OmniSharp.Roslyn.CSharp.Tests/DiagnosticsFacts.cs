@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.CodeCheck;
+        protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
 
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()

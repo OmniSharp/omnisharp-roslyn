@@ -14,7 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.Open;
+        protected override string EndpointName => OmniSharpEndpoints.Open;
 
         [Fact]
         public async Task AddsOpenFile()

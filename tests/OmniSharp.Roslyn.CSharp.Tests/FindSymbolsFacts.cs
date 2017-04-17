@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.FindSymbols;
+        protected override string EndpointName => OmniSharpEndpoints.FindSymbols;
 
         [Fact]
         public async Task Can_find_symbols()

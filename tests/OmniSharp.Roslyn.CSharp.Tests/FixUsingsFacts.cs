@@ -17,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.FixUsings;
+        protected override string EndpointName => OmniSharpEndpoints.FixUsings;
 
         [Fact]
         public async Task FixUsings_AddsUsingSingle()

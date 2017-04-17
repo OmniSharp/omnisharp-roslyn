@@ -15,7 +15,7 @@ namespace OmniSharp
 
     public interface IRequest { }
 
-    public static class OmnisharpEndpoints
+    public static class OmniSharpEndpoints
     {
         public const string GotoDefinition = "/gotodefinition";
         public const string FindSymbols = "/findsymbols";

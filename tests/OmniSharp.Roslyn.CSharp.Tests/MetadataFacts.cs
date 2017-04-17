@@ -14,7 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.Metadata;
+        protected override string EndpointName => OmniSharpEndpoints.Metadata;
 
         [Fact]
         public async Task ReturnsSource_ForSpecialType()

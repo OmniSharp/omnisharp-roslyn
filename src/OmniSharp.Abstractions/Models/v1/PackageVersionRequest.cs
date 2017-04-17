@@ -4,7 +4,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.PackageVersion, typeof(PackageVersionRequest), typeof(PackageVersionResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.PackageVersion, typeof(PackageVersionRequest), typeof(PackageVersionResponse))]
     public class PackageVersionRequest : IRequest
     {
         /// <summary>

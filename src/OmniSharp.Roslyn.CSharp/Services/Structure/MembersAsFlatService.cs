@@ -7,7 +7,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [OmniSharpHandler(OmnisharpEndpoints.MembersFlat, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.MembersFlat, LanguageNames.CSharp)]
     public class MembersAsFlatService : IRequestHandler<MembersFlatRequest, IEnumerable<QuickFix>>
     {
         private readonly OmniSharpWorkspace _workspace;

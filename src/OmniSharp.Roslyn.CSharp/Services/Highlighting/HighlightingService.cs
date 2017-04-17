@@ -11,7 +11,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Highlight, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.Highlight, LanguageNames.CSharp)]
     public class HighlightingService : IRequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]

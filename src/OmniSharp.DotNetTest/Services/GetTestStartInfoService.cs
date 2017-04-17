@@ -7,7 +7,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.V2.GetTestStartInfo, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.GetTestStartInfo, LanguageNames.CSharp)]
     internal class GetTestStartInfoService : BaseTestService<GetTestStartInfoRequest, GetTestStartInfoResponse>
     {
         [ImportingConstructor]

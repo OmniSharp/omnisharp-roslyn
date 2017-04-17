@@ -10,7 +10,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
-    [OmniSharpHandler(OmnisharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
     public class SignatureHelpService : IRequestHandler<SignatureHelpRequest, SignatureHelp>
     {
         private readonly OmniSharpWorkspace _workspace;

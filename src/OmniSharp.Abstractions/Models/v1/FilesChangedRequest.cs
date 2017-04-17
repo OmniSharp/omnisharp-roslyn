@@ -3,6 +3,6 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.FilesChanged, typeof(IEnumerable<Request>), typeof(FilesChangedResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.FilesChanged, typeof(IEnumerable<Request>), typeof(FilesChangedResponse))]
     public class FilesChangedRequest : IRequest { }
 }

@@ -3,7 +3,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.Diagnostics, typeof(DiagnosticsRequest), typeof(DiagnosticsResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.Diagnostics, typeof(DiagnosticsRequest), typeof(DiagnosticsResponse))]
     public class DiagnosticsRequest : Request
     {
     }

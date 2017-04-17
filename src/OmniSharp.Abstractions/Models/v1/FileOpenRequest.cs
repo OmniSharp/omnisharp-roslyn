@@ -6,6 +6,6 @@ using OmniSharp.Mef;
 
 namespace OmniSharp.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.Open, typeof(FileOpenRequest), typeof(FileOpenResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.Open, typeof(FileOpenRequest), typeof(FileOpenResponse))]
     public class FileOpenRequest : Request { }
 }

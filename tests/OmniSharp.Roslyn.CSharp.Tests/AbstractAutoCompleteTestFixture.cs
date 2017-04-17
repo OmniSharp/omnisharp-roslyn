@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.AutoComplete;
+        protected override string EndpointName => OmniSharpEndpoints.AutoComplete;
 
         protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, bool wantSnippet = false)
         {

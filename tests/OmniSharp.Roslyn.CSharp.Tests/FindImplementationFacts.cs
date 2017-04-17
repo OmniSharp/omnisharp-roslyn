@@ -19,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.FindImplementations;
+        protected override string EndpointName => OmniSharpEndpoints.FindImplementations;
 
         [Fact]
         public async Task CanFindInterfaceTypeImplementation()

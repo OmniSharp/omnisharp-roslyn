@@ -8,7 +8,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [OmniSharpHandler(OmnisharpEndpoints.MembersTree, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.MembersTree, LanguageNames.CSharp)]
     public class MembersAsTreeService : IRequestHandler<MembersTreeRequest, FileMemberTree>
     {
         private readonly OmniSharpWorkspace _workspace;

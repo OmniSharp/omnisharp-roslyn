@@ -7,7 +7,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.V2.RunTest, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.RunTest, LanguageNames.CSharp)]
     internal class RunTestService : BaseTestService<RunTestRequest, RunTestResponse>
     {
         [ImportingConstructor]
