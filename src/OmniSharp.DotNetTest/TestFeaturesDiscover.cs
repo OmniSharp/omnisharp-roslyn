@@ -10,7 +10,7 @@ using OmniSharp.Models;
 namespace OmniSharp.DotNetTest
 {
     [Export(typeof(ISyntaxFeaturesDiscover))]
-    public class TestFeaturesDiscover : ISyntaxFeaturesDiscover
+    internal class TestFeaturesDiscover : ISyntaxFeaturesDiscover
     {
         public bool NeedSemanticModel { get; } = true;
 

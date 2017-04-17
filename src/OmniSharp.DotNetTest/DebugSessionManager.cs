@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Composition;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
     [Export, Shared]
-    public class DebugSessionManager
+    internal class DebugSessionManager
     {
+        private readonly object _gate = new object();
         private readonly ILogger _logger;
+
         private TestManager _testManager;
+        private CancellationTokenSource _tokenSource;
 
         [ImportingConstructor]
         public DebugSessionManager(ILoggerFactory loggerFactory)
@@ -19,52 +26,86 @@ namespace OmniSharp.DotNetTest
 
         private void VerifySession(bool isStarted)
         {
-            if (_testManager != null != isStarted)
+            lock (_gate)
             {
-                if (isStarted)
+                if ((_testManager != null) != isStarted)
                 {
-                    throw new InvalidOperationException("Debug session not started.");
-                }
-                else
-                {
-                    throw new InvalidOperationException("Debug session already started.");
+                    if (isStarted)
+                    {
+                        _logger.LogError("Debug session not started.");
+                        throw new InvalidOperationException("Debug session not started.");
+                    }
+                    else
+                    {
+                        _logger.LogError("Debug session not started.");
+                        throw new InvalidOperationException("Debug session already started.");
+                    }
                 }
             }
         }
 
         public void StartSession(TestManager testManager)
         {
-            VerifySession(isStarted: false);
+            lock (_gate)
+            {
+                VerifySession(isStarted: false);
 
-            _testManager = testManager;
-            _logger.LogInformation("Debug session started.");
+                _testManager = testManager;
+                _tokenSource = new CancellationTokenSource();
+
+                _logger.LogInformation("Debug session started.");
+            }
         }
 
         public void EndSession()
         {
-            VerifySession(isStarted: true);
+            lock (_gate)
+            {
+                if (_tokenSource == null && _testManager == null)
+                {
+                    return;
+                }
 
-            _testManager.Dispose();
-            _testManager = null;
+                _tokenSource.Cancel();
+                _tokenSource.Dispose();
+                _tokenSource = null;
 
-            _logger.LogInformation("Debug session ended.");
+                _testManager.Dispose();
+                _testManager = null;
+
+                _logger.LogInformation("Debug session ended.");
+            }
         }
 
-        public DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName)
+        public Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken)
         {
             VerifySession(isStarted: true);
 
-            return _testManager.DebugGetStartInfo(methodName, testFrameworkName);
+            return _testManager.DebugGetStartInfoAsync(methodName, testFrameworkName, cancellationToken);
         }
 
-        public DebugTestRunResponse DebugRun()
+        public async Task<DebugTestLaunchResponse> DebugLaunchAsync(int targetProcessId)
         {
             VerifySession(isStarted: true);
 
-            _testManager.DebugRun();
+            var process = Process.GetProcessById(targetProcessId);
+
+            process.EnableRaisingEvents = true;
+            process.OnExit(() =>
+            {
+                EndSession();
+            });
+
+            await _testManager.DebugLaunchAsync(_tokenSource.Token);
+
+            return new DebugTestLaunchResponse();
+        }
+
+        internal Task<DebugTestStopResponse> DebugStopAsync()
+        {
             EndSession();
 
-            return new DebugTestRunResponse();
+            return Task.FromResult(new DebugTestStopResponse());
         }
     }
 }

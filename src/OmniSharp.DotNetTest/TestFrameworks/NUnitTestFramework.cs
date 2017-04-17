@@ -1,6 +1,6 @@
 ﻿namespace OmniSharp.DotNetTest.TestFrameworks
 {
-    public class NUnitTestFramework : TestFramework
+    internal class NUnitTestFramework : TestFramework
     {
         public override string FeatureName { get; } = "NUnitTestMethod";
         public override string Name { get; } = "nunit";

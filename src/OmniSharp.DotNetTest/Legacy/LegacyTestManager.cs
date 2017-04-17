@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
@@ -21,7 +23,7 @@ namespace OmniSharp.DotNetTest.Legacy
     /// <summary>
     /// Handles 'dotnet test' for .NET Core SDK earlier than "1.0.0-preview3"
     /// </summary>
-    public partial class LegacyTestManager : TestManager
+    internal partial class LegacyTestManager : TestManager
     {
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
         private const string TestExecution_TestResult = "TestExecution.TestResult";
@@ -103,6 +105,7 @@ namespace OmniSharp.DotNetTest.Legacy
             while (!done)
             {
                 var message = ReadMessage();
+
                 switch (message.MessageType)
                 {
                     case TestExecution_TestResult:
@@ -174,17 +177,12 @@ namespace OmniSharp.DotNetTest.Legacy
             };
         }
 
-        public override Process DebugStart(string methodName, string testFrameworkName)
+        public override Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
 
-        public override DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void DebugRun()
+        public override Task DebugLaunchAsync(CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

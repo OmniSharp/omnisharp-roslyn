@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
@@ -16,7 +18,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest
 {
-    public class VSTestManager : TestManager
+    internal class VSTestManager : TestManager
     {
         public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
@@ -44,22 +46,24 @@ namespace OmniSharp.DotNetTest
         protected override bool PrepareToConnect()
         {
             // The project must be built before we can test.
-            if (!File.Exists(Project.OutputFilePath))
-            {
-                var process = DotNetCli.Start("build", WorkingDirectory);
-                process.WaitForExit();
-            }
+            var process = DotNetCli.Start("build", WorkingDirectory);
+            process.WaitForExit();
 
             return File.Exists(Project.OutputFilePath);
         }
 
-        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        private static void VerifyTestFramework(string testFrameworkName)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
             {
                 throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
             }
+        }
+
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        {
+            VerifyTestFramework(testFrameworkName);
 
             var testCases = DiscoverTests(methodName);
 
@@ -81,15 +85,11 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        public override Process DebugStart(string methodName, string testFrameworkName)
+        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken)
         {
-            var testFramework = TestFramework.GetFramework(testFrameworkName);
-            if (testFramework == null)
-            {
-                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
-            }
+            VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(methodName);
+            var testCases = await DiscoverTestsAsync(methodName, cancellationToken);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
@@ -98,42 +98,7 @@ namespace OmniSharp.DotNetTest
                     DebuggingEnabled = true
                 });
 
-            var message = ReadMessage();
-            var testStartInfo = message.DeserializePayload<TestProcessStartInfo>();
-
-            var fileName = testStartInfo.FileName;
-            var arguments = testStartInfo.Arguments;
-
-            var startInfo = new ProcessStartInfo(fileName, arguments)
-            {
-                WorkingDirectory = WorkingDirectory,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false
-            };
-
-            return Process.Start(startInfo);
-        }
-
-        public override DebugTestGetStartInfoResponse DebugGetStartInfo(string methodName, string testFrameworkName)
-        {
-            var testFrameowkr = TestFramework.GetFramework(testFrameworkName);
-            if (testFrameworkName == null)
-            {
-                throw new InvalidOperationException($"Unknown test framework: {testFrameworkName}");
-            }
-
-            var testCases = DiscoverTests(methodName);
-
-            SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
-                new
-                {
-                    TestCases = testCases,
-                    DebuggingEnabled = true
-                });
-
-            var message = ReadMessage();
+            var message = await ReadMessageAsync(cancellationToken);
             var startInfo = message.DeserializePayload<TestProcessStartInfo>();
 
             return new DebugTestGetStartInfoResponse
@@ -145,7 +110,7 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        public override void DebugRun()
+        public override async Task DebugLaunchAsync(CancellationToken cancellationToken)
         {
             SendMessage(MessageType.CustomTestHostLaunchCallback,
                 new
@@ -157,7 +122,11 @@ namespace OmniSharp.DotNetTest
 
             while (!done)
             {
-                var message = ReadMessage();
+                var (success, message) = await TryReadMessageAsync(cancellationToken);
+                if (!success)
+                {
+                    break;
+                }
 
                 switch (message.MessageType)
                 {
@@ -181,6 +150,8 @@ namespace OmniSharp.DotNetTest
 
         public override RunTestResponse RunTest(string methodName, string testFrameworkName)
         {
+            VerifyTestFramework(testFrameworkName);
+
             var testCases = DiscoverTests(methodName);
 
             var testResults = new List<TestResult>();
@@ -244,9 +215,8 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        private TestCase[] DiscoverTests(string methodName)
+        private async Task<TestCase[]> DiscoverTestsAsync(string methodName, CancellationToken cancellationToken)
         {
-            // First, we need to discover tests.
             SendMessage(MessageType.StartDiscovery,
                 new
                 {
@@ -261,7 +231,11 @@ namespace OmniSharp.DotNetTest
 
             while (!done)
             {
-                var message = ReadMessage();
+                var (success, message) = await TryReadMessageAsync(cancellationToken);
+                if (!success)
+                {
+                    return Array.Empty<TestCase>();
+                }
 
                 switch (message.MessageType)
                 {
@@ -286,6 +260,11 @@ namespace OmniSharp.DotNetTest
             }
 
             return testCases.ToArray();
+        }
+
+        private TestCase[] DiscoverTests(string methodName)
+        {
+            return DiscoverTestsAsync(methodName, CancellationToken.None).Result;
         }
     }
 }

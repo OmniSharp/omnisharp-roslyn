@@ -1,6 +1,6 @@
 ﻿namespace OmniSharp.DotNetTest.Legacy
 {
-    public partial class LegacyTestManager
+    internal partial class LegacyTestManager
     {
         private class ProtocolVersion
         {

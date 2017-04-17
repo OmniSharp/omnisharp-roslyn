@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    public abstract class AbstractGetTestStartInfoFacts : AbstractSingleRequestHandlerTestFixture<GetTestStartInfoService>
+    internal abstract class AbstractGetTestStartInfoFacts : AbstractSingleRequestHandlerTestFixture<GetTestStartInfoService>
     {
         protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
         protected const string LegacyNunitTestProject = "LegacyNunitTestProject";

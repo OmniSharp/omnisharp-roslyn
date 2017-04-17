@@ -3,7 +3,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    public abstract class BaseTestService
+    internal abstract class BaseTestService
     {
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly DotNetCliService DotNetCli;

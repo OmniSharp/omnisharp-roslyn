@@ -1,4 +1,5 @@
 ﻿using System.Composition;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -10,10 +11,12 @@ namespace OmniSharp.DotNetTest.Services
 {
     [Shared]
     [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestGetStartInfo, LanguageNames.CSharp)]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestRun, LanguageNames.CSharp)]
-    public class DebugTestService : BaseTestService,
+    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestLaunch, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestStop, LanguageNames.CSharp)]
+    internal class DebugTestService : BaseTestService,
         RequestHandler<DebugTestGetStartInfoRequest, DebugTestGetStartInfoResponse>,
-        RequestHandler<DebugTestRunRequest, DebugTestRunResponse>
+        RequestHandler<DebugTestLaunchRequest, DebugTestLaunchResponse>,
+        RequestHandler<DebugTestStopRequest, DebugTestStopResponse>
     {
         private DebugSessionManager _debugSessionManager;
 
@@ -29,17 +32,17 @@ namespace OmniSharp.DotNetTest.Services
             var testManager = CreateTestManager(request.FileName);
             _debugSessionManager.StartSession(testManager);
 
-            var response = _debugSessionManager.DebugGetStartInfo(request.MethodName, request.TestFrameworkName);
-
-            return Task.FromResult(response);
+            return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.TestFrameworkName, CancellationToken.None);
         }
 
-        public Task<DebugTestRunResponse> Handle(DebugTestRunRequest request)
+        public Task<DebugTestLaunchResponse> Handle(DebugTestLaunchRequest request)
         {
-            var response = _debugSessionManager.DebugRun();
-
-            return Task.FromResult(response);
+            return _debugSessionManager.DebugLaunchAsync(request.TargetProcessId);
         }
 
+        public Task<DebugTestStopResponse> Handle(DebugTestStopRequest request)
+        {
+            return _debugSessionManager.DebugStopAsync();
+        }
     }
 }

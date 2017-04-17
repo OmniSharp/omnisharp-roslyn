@@ -8,7 +8,7 @@ using OmniSharp.Services;
 namespace OmniSharp.DotNetTest.Services
 {
     [OmniSharpHandler(OmnisharpEndpoints.V2.GetTestStartInfo, LanguageNames.CSharp)]
-    public class GetTestStartInfoService : BaseTestService<GetTestStartInfoRequest, GetTestStartInfoResponse>
+    internal class GetTestStartInfoService : BaseTestService<GetTestStartInfoRequest, GetTestStartInfoResponse>
     {
         [ImportingConstructor]
         public GetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
