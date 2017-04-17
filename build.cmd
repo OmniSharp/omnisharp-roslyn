@@ -1,2 +1,2 @@
 @echo off
-powershell.exe .\build.ps1 "%*"
+powershell.exe -NoProfile .\build.ps1 "%*"
