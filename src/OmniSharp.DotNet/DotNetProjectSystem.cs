@@ -83,6 +83,12 @@ namespace OmniSharp.DotNet
                 ? document.Project.FilePath
                 : filePath;
 
+            // Is this a path to the project file? If so, make sure we look for the directory.
+            if (File.Exists(projectFilePath))
+            {
+                projectFilePath = Path.GetDirectoryName(projectFilePath);
+            }
+
             var projectEntry = _projectStates.GetEntry(projectFilePath);
             if (projectEntry == null)
             {
