@@ -3,7 +3,7 @@ using OmniSharp.Mef;
 
 namespace OmniSharp
 {
-    public interface RequestHandler<TRequest, TResponse> : IRequestHandler
+    public interface IRequestHandler<TRequest, TResponse> : IRequestHandler
     {
         Task<TResponse> Handle(TRequest request);
     }

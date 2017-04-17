@@ -7,7 +7,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
     [OmniSharpHandler(OmnisharpEndpoints.Open, LanguageNames.CSharp)]
-    public class FileOpenService : RequestHandler<FileOpenRequest, FileOpenResponse>
+    public class FileOpenService : IRequestHandler<FileOpenRequest, FileOpenResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

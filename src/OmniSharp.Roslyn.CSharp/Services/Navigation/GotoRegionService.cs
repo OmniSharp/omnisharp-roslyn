@@ -11,7 +11,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [OmniSharpHandler(OmnisharpEndpoints.GotoRegion, LanguageNames.CSharp)]
-    public class GotoRegionService : RequestHandler<GotoRegionRequest, QuickFixResponse>
+    public class GotoRegionService : IRequestHandler<GotoRegionRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

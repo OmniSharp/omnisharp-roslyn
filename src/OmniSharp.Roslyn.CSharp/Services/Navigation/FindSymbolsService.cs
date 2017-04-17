@@ -11,7 +11,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [OmniSharpHandler(OmnisharpEndpoints.FindSymbols, LanguageNames.CSharp)]
-    public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
+    public class FindSymbolsService : IRequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
         private OmniSharpWorkspace _workspace;
 

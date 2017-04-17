@@ -10,7 +10,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
     [OmniSharpHandler(OmnisharpEndpoints.CodeCheck, LanguageNames.CSharp)]
-    public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
+    public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private OmniSharpWorkspace _workspace;
 

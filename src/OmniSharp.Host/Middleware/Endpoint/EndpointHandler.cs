@@ -80,7 +80,7 @@ namespace OmniSharp.Middleware.Endpoint
         private Task<Dictionary<string, ExportHandler<TRequest, TResponse>>> LoadExportHandlers(IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> handlers)
         {
             var interfaceHandlers = handlers
-                .Select(export => new RequestHandlerExportHandler<TRequest, TResponse>(export.Metadata.Language, (RequestHandler<TRequest, TResponse>)export.Value))
+                .Select(export => new RequestHandlerExportHandler<TRequest, TResponse>(export.Metadata.Language, (IRequestHandler<TRequest, TResponse>)export.Value))
                 .Cast<ExportHandler<TRequest, TResponse>>();
 
             var plugins = _plugins.Where(x => x.Config.Endpoints.Contains(EndpointName))

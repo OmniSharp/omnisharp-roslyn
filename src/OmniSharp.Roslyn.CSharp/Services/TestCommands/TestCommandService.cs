@@ -14,7 +14,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
 {
     [OmniSharpHandler(OmnisharpEndpoints.TestCommand, LanguageNames.CSharp)]
-    public class TestCommandService : RequestHandler<TestCommandRequest, GetTestCommandResponse>
+    public class TestCommandService : IRequestHandler<TestCommandRequest, GetTestCommandResponse>
     {
         private OmniSharpWorkspace _workspace;
         private IEnumerable<ITestCommandProvider> _testCommandProviders;

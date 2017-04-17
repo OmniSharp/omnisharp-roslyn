@@ -22,7 +22,7 @@ namespace OmniSharp
 {
 #if NET46
     [OmniSharpHandler(OmnisharpEndpoints.PackageVersion, "NuGet")]
-    public class PackageVersionService : RequestHandler<PackageVersionRequest, PackageVersionResponse>
+    public class PackageVersionService : IRequestHandler<PackageVersionRequest, PackageVersionResponse>
     {
         [ImportingConstructor]
         public PackageVersionService() { }

@@ -10,7 +10,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
     [OmniSharpHandler(OmnisharpEndpoints.Close, LanguageNames.CSharp)]
-    public class FileCloseService : RequestHandler<FileCloseRequest, FileCloseResponse>
+    public class FileCloseService : IRequestHandler<FileCloseRequest, FileCloseResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

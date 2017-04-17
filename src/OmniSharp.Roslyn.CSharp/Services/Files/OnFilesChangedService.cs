@@ -9,7 +9,7 @@ using OmniSharp.Services.FileWatching;
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
     [OmniSharpHandler(OmnisharpEndpoints.FilesChanged, LanguageNames.CSharp)]
-    public class OnFilesChangedService : RequestHandler<IEnumerable<Request> ,FilesChangedResponse>
+    public class OnFilesChangedService : IRequestHandler<IEnumerable<Request> ,FilesChangedResponse>
     {
         private readonly IFileSystemWatcher _watcher;
 

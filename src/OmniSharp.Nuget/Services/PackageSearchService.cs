@@ -22,7 +22,7 @@ namespace OmniSharp
 {
 #if NET46
     [OmniSharpHandler(OmnisharpEndpoints.PackageSearch, "NuGet")]
-    public class PackageSearchService : RequestHandler<PackageSearchRequest, PackageSearchResponse>
+    public class PackageSearchService : IRequestHandler<PackageSearchRequest, PackageSearchResponse>
     {
         [ImportingConstructor]
         public PackageSearchService() { }

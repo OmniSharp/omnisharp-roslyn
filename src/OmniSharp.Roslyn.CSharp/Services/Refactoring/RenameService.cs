@@ -13,7 +13,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
     [OmniSharpHandler(OmnisharpEndpoints.Rename, LanguageNames.CSharp)]
-    public class RenameService : RequestHandler<RenameRequest, RenameResponse>
+    public class RenameService : IRequestHandler<RenameRequest, RenameResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

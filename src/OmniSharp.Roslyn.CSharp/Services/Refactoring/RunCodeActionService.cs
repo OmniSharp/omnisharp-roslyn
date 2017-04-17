@@ -14,7 +14,7 @@ using OmniSharp.Services;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
     [OmniSharpHandler(OmnisharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
-    public class RunCodeActionsService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
+    public class RunCodeActionsService : IRequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;

@@ -8,7 +8,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Buffer
 {
     [OmniSharpHandler(OmnisharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
-    public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
+    public class UpdateBufferService : IRequestHandler<UpdateBufferRequest, object>
     {
         private OmniSharpWorkspace _workspace;
 

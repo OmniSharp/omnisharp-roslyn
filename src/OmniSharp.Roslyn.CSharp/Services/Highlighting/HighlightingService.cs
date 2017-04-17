@@ -12,7 +12,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {
     [OmniSharpHandler(OmnisharpEndpoints.Highlight, LanguageNames.CSharp)]
-    public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
+    public class HighlightingService : IRequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]
         public HighlightingService(OmniSharpWorkspace workspace)

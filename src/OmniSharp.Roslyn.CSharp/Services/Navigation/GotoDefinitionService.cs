@@ -13,7 +13,7 @@ using OmniSharp.Models;
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
     [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
-    public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
+    public class GotoDefinitionService : IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
         private readonly MetadataHelper _metadataHelper;
         private readonly OmniSharpWorkspace _workspace;
