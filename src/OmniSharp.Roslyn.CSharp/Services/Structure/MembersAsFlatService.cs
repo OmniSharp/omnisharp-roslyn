@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.MembersFlat;
+using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {

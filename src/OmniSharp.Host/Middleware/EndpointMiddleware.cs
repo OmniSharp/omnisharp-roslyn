@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Middleware.Endpoint;
-using OmniSharp.Models;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
 

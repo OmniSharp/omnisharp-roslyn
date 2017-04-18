@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FindSymbols;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {

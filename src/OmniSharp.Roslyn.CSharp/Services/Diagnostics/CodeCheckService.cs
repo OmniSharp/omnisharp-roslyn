@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {

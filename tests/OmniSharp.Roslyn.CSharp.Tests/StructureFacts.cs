@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
-using OmniSharp.Models;
+using OmniSharp.Models.MembersTree;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -80,6 +80,5 @@ namespace OmniSharp.Tests
                 return nodes.ToArray();
             }
         }
-
     }
 }

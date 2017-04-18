@@ -1,5 +1,6 @@
 using System.Composition;
 using OmniSharp.Models;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Services
 {

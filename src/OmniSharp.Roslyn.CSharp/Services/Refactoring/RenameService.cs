@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.Rename;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
@@ -57,8 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     {
                         var changedDocument = solution.GetDocument(changedDocumentId);
 
-                        ModifiedFileResponse modifiedFileResponse;
-                        if (!changes.TryGetValue(changedDocument.FilePath, out modifiedFileResponse))
+                        if (!changes.TryGetValue(changedDocument.FilePath, out var modifiedFileResponse))
                         {
                             modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
                             changes[changedDocument.FilePath] = modifiedFileResponse;

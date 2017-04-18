@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NuGet.Frameworks;
 using OmniSharp.DotNet.Models;
 using OmniSharp.Models;
+using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNet.Cache

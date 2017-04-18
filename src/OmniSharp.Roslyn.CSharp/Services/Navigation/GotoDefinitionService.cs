@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {

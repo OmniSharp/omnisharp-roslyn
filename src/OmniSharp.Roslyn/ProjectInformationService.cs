@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp

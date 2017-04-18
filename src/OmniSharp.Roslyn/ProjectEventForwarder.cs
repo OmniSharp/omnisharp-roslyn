@@ -3,6 +3,7 @@ using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
+using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Composition;
-using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.TestCommand;
 
 namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
 {

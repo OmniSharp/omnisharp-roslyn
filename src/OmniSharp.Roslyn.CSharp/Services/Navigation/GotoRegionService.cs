@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoRegion;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {

@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.Metadata;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;

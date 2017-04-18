@@ -1,8 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeFormat;
+using OmniSharp.Models.Format;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;

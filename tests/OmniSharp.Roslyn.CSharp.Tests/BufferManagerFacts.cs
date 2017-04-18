@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;

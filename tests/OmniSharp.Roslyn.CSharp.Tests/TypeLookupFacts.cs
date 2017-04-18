@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.TypeLookup;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;

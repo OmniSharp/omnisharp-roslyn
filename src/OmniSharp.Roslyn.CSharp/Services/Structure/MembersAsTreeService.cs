@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Abstractions.Services;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoFile;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {

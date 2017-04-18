@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FindUsages;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {

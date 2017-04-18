@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FilesChanged;
 using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
     [OmniSharpHandler(OmniSharpEndpoints.FilesChanged, LanguageNames.CSharp)]
-    public class OnFilesChangedService : IRequestHandler<IEnumerable<Request> ,FilesChangedResponse>
+    public class OnFilesChangedService : IRequestHandler<IEnumerable<Request>, FilesChangedResponse>
     {
         private readonly IFileSystemWatcher _watcher;
 

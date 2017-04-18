@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Highlight;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {

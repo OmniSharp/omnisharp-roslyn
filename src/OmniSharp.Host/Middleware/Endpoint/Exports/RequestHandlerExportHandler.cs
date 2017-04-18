@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using OmniSharp.Mef;
 
 namespace OmniSharp.Middleware.Endpoint.Exports
 {

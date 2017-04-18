@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.FixUsings;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
 using Xunit;

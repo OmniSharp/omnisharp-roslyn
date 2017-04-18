@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using OmniSharp.Mef;
 using OmniSharp.Middleware.Endpoint.Exports;
 using OmniSharp.Models;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 
 namespace OmniSharp.Middleware.Endpoint

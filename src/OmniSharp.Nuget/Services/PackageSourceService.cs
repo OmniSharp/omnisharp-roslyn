@@ -1,26 +1,16 @@
+#if NET46
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Recommendations;
-using Microsoft.CodeAnalysis.Text;
-#if NET46
-using NuGet.Logging;
-using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
-#endif
-using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.PackageSource;
 using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
-#if NET46
     [OmniSharpHandler(OmniSharpEndpoints.PackageSource, "NuGet")]
     public class PackageSourceService : IRequestHandler<PackageSourceRequest, PackageSourceResponse>
     {
@@ -49,5 +39,5 @@ namespace OmniSharp
             return Task.FromResult(new PackageSourceResponse());
         }
     }
-#endif
 }
+#endif

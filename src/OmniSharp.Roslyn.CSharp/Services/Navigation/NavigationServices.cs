@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Navigate;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {

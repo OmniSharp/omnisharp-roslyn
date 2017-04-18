@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.FileOpen;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
 using Xunit;
