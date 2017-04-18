@@ -5,12 +5,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FixUsings;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FixUsings, LanguageNames.CSharp)]
-    public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.FixUsings, LanguageNames.CSharp)]
+    public class FixUsingService : IRequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly ILoggerFactory _loggerFactory;

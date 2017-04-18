@@ -7,11 +7,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoRegion;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GotoRegion, LanguageNames.CSharp)]
-    public class GotoRegionService : RequestHandler<GotoRegionRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.GotoRegion, LanguageNames.CSharp)]
+    public class GotoRegionService : IRequestHandler<GotoRegionRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

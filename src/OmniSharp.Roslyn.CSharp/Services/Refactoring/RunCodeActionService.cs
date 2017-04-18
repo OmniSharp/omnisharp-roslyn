@@ -9,12 +9,13 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeAction;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
-    public class RunCodeActionsService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
+    public class RunCodeActionsService : IRequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;

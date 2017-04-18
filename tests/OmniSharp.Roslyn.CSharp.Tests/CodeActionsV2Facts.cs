@@ -134,7 +134,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             using (var host = CreateOmniSharpHost(testFile))
             {
-                var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmnisharpEndpoints.V2.GetCodeActions);
+                var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
 
                 var span = testFile.Content.GetSpans().Single();
                 var range = testFile.Content.GetRangeFromSpan(span);
@@ -160,7 +160,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             using (var host = CreateOmniSharpHost(testFile))
             {
-                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmnisharpEndpoints.V2.RunCodeAction);
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
 
                 var span = testFile.Content.GetSpans().Single();
                 var range = testFile.Content.GetRangeFromSpan(span);

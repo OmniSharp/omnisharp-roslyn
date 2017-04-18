@@ -7,12 +7,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Highlight;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Highlight, LanguageNames.CSharp)]
-    public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Highlight, LanguageNames.CSharp)]
+    public class HighlightingService : IRequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]
         public HighlightingService(OmniSharpWorkspace workspace)

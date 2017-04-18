@@ -3,7 +3,7 @@ using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Models
 {
-    [OmniSharpEndpoint(OmnisharpEndpoints.V2.DebugTestStop, typeof(DebugTestStopRequest), typeof(DebugTestStopResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.V2.DebugTestStop, typeof(DebugTestStopRequest), typeof(DebugTestStopResponse))]
     public class DebugTestStopRequest : Request
     {
     }

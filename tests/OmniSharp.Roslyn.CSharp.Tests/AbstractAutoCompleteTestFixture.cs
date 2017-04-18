@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.AutoComplete;
 using OmniSharp.Roslyn.CSharp.Services.Intellisense;
 using TestUtility;
 using Xunit.Abstractions;
@@ -15,7 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.AutoComplete;
+        protected override string EndpointName => OmniSharpEndpoints.AutoComplete;
 
         protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, bool wantSnippet = false)
         {

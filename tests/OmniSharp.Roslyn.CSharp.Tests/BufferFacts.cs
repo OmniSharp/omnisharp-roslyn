@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Services;
 using Xunit;
@@ -38,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var (workspace, controller, documentInfo) = CreateSimpleWorkspace("test.cs", "class C {}");
 
             // insert edit
-            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
+            await controller.Handle(new ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -52,7 +53,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("farbooclass C {}", sourceText.ToString());
 
             // remove edit
-            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
+            await controller.Handle(new ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -66,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("class C {}", sourceText.ToString());
 
             // modification edit
-            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
+            await controller.Handle(new ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,

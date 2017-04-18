@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Tests

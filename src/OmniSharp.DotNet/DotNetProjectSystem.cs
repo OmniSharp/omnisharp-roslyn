@@ -15,7 +15,7 @@ using OmniSharp.DotNet.Extensions;
 using OmniSharp.DotNet.Models;
 using OmniSharp.DotNet.Tools;
 using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 using OmniSharp.Services.FileWatching;
 

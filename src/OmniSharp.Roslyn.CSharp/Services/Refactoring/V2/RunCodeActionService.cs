@@ -17,7 +17,7 @@ using RunCodeActionResponse = OmniSharp.Models.V2.RunCodeActionResponse;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    [OmniSharpHandler(OmnisharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp)]
     public class RunCodeActionService : BaseCodeActionService<RunCodeActionRequest, RunCodeActionResponse>
     {
         [ImportingConstructor]

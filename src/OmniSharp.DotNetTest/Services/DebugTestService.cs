@@ -10,13 +10,13 @@ using OmniSharp.Services;
 namespace OmniSharp.DotNetTest.Services
 {
     [Shared]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestGetStartInfo, LanguageNames.CSharp)]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestLaunch, LanguageNames.CSharp)]
-    [OmniSharpHandler(OmnisharpEndpoints.V2.DebugTestStop, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.DebugTestGetStartInfo, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.DebugTestLaunch, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.DebugTestStop, LanguageNames.CSharp)]
     internal class DebugTestService : BaseTestService,
-        RequestHandler<DebugTestGetStartInfoRequest, DebugTestGetStartInfoResponse>,
-        RequestHandler<DebugTestLaunchRequest, DebugTestLaunchResponse>,
-        RequestHandler<DebugTestStopRequest, DebugTestStopResponse>
+        IRequestHandler<DebugTestGetStartInfoRequest, DebugTestGetStartInfoResponse>,
+        IRequestHandler<DebugTestLaunchRequest, DebugTestLaunchResponse>,
+        IRequestHandler<DebugTestStopRequest, DebugTestStopResponse>
     {
         private DebugSessionManager _debugSessionManager;
 

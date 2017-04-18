@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Models.ChangeBuffer;
+using OmniSharp.Models.UpdateBuffer;
 
 namespace OmniSharp.Roslyn
 {
@@ -27,8 +29,7 @@ namespace OmniSharp.Roslyn
             var buffer = request.Buffer;
             var changes = request.Changes;
 
-            var updateRequest = request as UpdateBufferRequest;
-            if (updateRequest != null && updateRequest.FromDisk)
+            if (request is UpdateBufferRequest updateRequest && updateRequest.FromDisk)
             {
                 buffer = File.ReadAllText(updateRequest.FileName);
             }
@@ -193,8 +194,7 @@ namespace OmniSharp.Roslyn
                     return;
                 }
 
-                IEnumerable<DocumentId> documentIds;
-                if (!_transientDocuments.TryGetValue(fileName, out documentIds))
+                if (!_transientDocuments.TryGetValue(fileName, out var documentIds))
                 {
                     return;
                 }

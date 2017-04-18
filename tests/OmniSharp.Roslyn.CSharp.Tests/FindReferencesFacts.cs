@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.FindUsages;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
@@ -15,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.FindUsages;
+        protected override string EndpointName => OmniSharpEndpoints.FindUsages;
 
         [Fact]
         public async Task CanFindReferencesOfLocalVariable()

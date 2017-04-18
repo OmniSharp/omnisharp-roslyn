@@ -11,7 +11,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    [OmniSharpHandler(OmnisharpEndpoints.V2.GetCodeActions, LanguageNames.CSharp)]
+    [OmniSharpHandler(OmniSharpEndpoints.V2.GetCodeActions, LanguageNames.CSharp)]
     public class GetCodeActionsService : BaseCodeActionService<GetCodeActionsRequest, GetCodeActionsResponse>
     {
         [ImportingConstructor]

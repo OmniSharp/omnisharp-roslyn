@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.FixUsings;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
 using Xunit;
@@ -17,7 +18,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.FixUsings;
+        protected override string EndpointName => OmniSharpEndpoints.FixUsings;
 
         [Fact]
         public async Task FixUsings_AddsUsingSingle()

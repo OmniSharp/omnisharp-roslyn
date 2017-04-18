@@ -1,4 +1,5 @@
 ﻿using System;
+using OmniSharp.Models;
 
 namespace OmniSharp.DotNetTest.Models
 {

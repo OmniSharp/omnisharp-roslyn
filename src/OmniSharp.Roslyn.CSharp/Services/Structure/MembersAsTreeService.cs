@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Abstractions.Services;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [OmniSharpHandler(OmnisharpEndpoints.MembersTree, LanguageNames.CSharp)]
-    public class MembersAsTreeService : RequestHandler<MembersTreeRequest, FileMemberTree>
+    [OmniSharpHandler(OmniSharpEndpoints.MembersTree, LanguageNames.CSharp)]
+    public class MembersAsTreeService : IRequestHandler<MembersTreeRequest, FileMemberTree>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ISyntaxFeaturesDiscover> _discovers;

@@ -1,16 +1,14 @@
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Options;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Options;
+using OmniSharp.Models.CodeFormat;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 {
-    [OmniSharpHandler(OmnisharpEndpoints.CodeFormat, LanguageNames.CSharp)]
-    public class CodeFormatService : RequestHandler<CodeFormatRequest, CodeFormatResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.CodeFormat, LanguageNames.CSharp)]
+    public class CodeFormatService : IRequestHandler<CodeFormatRequest, CodeFormatResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

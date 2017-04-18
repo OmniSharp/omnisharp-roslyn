@@ -1,4 +1,6 @@
-﻿namespace OmniSharp.DotNetTest.Models
+﻿using OmniSharp.Models;
+
+namespace OmniSharp.DotNetTest.Models
 {
     public class DebugTestStopResponse : IAggregateResponse
     {
