@@ -58,7 +58,9 @@ namespace OmniSharp.Roslyn
         {
             var filePath = GetFilePathForSymbol(project, symbol);
             var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
-            var temporaryProject = project.Solution.AddProject("metadataTemp", "metadataTemp.dll", LanguageNames.CSharp);
+            var temporaryProject = project.Solution.AddProject("metadataTemp", "metadataTemp.dll", LanguageNames.CSharp).
+                WithCompilationOptions(project.CompilationOptions).
+                WithMetadataReferences(project.MetadataReferences);
             var temporaryDocument = temporaryProject.AddDocument(filePath, string.Empty);
 
             var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
