@@ -136,7 +136,12 @@ namespace TestUtility
                 this.Workspace,
                 "project.json",
                 new[] { "dnx451", "dnxcore50" },
-                testFiles);
+                testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)).ToArray());
+
+            foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.CurrentCultureIgnoreCase)))
+            {
+                TestHelpers.AddCsxProjectToWorkspace(Workspace, csxFile);
+            }
         }
     }
 }

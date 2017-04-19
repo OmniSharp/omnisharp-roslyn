@@ -12,13 +12,16 @@ namespace TestUtility
     {
         public static OmniSharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
-            var versionStamp = VersionStamp.Create();
+            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>()));
+            AddCsxProjectToWorkspace(workspace, testFile);
+            return workspace;
+        }
+
+        public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
+        {
             var mscorlib = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(object)).Location);
             var systemCore = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(Enumerable)).Location);
             var references = new[] { mscorlib, systemCore };
-            var workspace = new OmniSharpWorkspace(
-                new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>()));
 
             var parseOptions = new CSharpParseOptions(
                 LanguageVersion.Default,
@@ -46,7 +49,6 @@ namespace TestUtility
                 filePath: testFile.FileName);
 
             workspace.AddDocument(documentInfo);
-            return workspace;
         }
 
         public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
