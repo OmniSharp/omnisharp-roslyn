@@ -15,10 +15,10 @@ using OmniSharp.DotNet.Extensions;
 using OmniSharp.DotNet.Models;
 using OmniSharp.DotNet.Tools;
 using OmniSharp.Eventing;
+using OmniSharp.FileWatching;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
-using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.DotNet
 {
