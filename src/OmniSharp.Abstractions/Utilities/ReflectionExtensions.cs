@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace OmniSharp.Services
+namespace OmniSharp.Utilities
 {
     public static class ReflectionExtensions
     {

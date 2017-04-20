@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Extensions;
 using OmniSharp.Roslyn;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
