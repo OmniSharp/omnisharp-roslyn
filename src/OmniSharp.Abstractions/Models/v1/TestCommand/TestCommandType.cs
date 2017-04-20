@@ -1,4 +1,4 @@
-namespace OmniSharp
+namespace OmniSharp.Models.TestCommand
 {
     public enum TestCommandType
     {

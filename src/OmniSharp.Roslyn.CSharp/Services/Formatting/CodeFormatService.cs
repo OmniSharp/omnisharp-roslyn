@@ -28,15 +28,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 
             if (request.WantsTextChanges)
             {
-                var textChanges = await FormattingWorker.GetFormattedDocumentTextChanges(_workspace, document);
+                var textChanges = await FormattingWorker.GetFormattedTextChanges(document);
                 return new CodeFormatResponse()
                 {
                     Changes = textChanges
                 };
             }
 
-            var newText = await FormattingWorker.GetFormattedDocument(_workspace, document);
-            return new CodeFormatResponse()
+            var newText = await FormattingWorker.GetFormattedText(document);
+
+            return new CodeFormatResponse
             {
                 Buffer = newText
             };

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace OmniSharp.Mef
 {
-    public class MefValueProvider<T> : ExportDescriptorProvider
+    internal class MefValueProvider<T> : ExportDescriptorProvider
     {
         private readonly T _item;
 
@@ -24,7 +24,7 @@ namespace OmniSharp.Mef
         }
     }
 
-    public static class MefValueProvider
+    internal static class MefValueProvider
     {
         public static MefValueProvider<T> From<T>(T value)
         {

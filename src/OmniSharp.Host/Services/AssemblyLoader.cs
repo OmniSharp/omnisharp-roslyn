@@ -5,7 +5,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Host.Loader
 {
-    public class AssemblyLoader : IAssemblyLoader
+    internal class AssemblyLoader : IAssemblyLoader
     {
         private readonly ILogger _logger;
 
