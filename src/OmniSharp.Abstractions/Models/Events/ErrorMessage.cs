@@ -1,6 +1,4 @@
 using Newtonsoft.Json;
-using OmniSharp.Json;
-
 namespace OmniSharp.Models.Events
 {
     public class ErrorMessage

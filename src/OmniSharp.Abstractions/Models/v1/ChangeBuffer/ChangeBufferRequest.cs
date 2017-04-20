@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using OmniSharp.Json;
 using OmniSharp.Mef;
 
 namespace OmniSharp.Models.ChangeBuffer

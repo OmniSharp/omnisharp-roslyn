@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
-using OmniSharp.Json;
 
 namespace OmniSharp.Models.Highlight
 {
