@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis.Options;
 using OmniSharp.Options;
 
-namespace OmniSharp.Options
+namespace OmniSharp.Roslyn.Options
 {
     public interface IWorkspaceOptionsProvider
     {
