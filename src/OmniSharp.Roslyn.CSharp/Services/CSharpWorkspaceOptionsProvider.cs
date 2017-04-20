@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.Options;
 using OmniSharp.Options;
-
+using OmniSharp.Roslyn.Options;
 using RoslynFormattingOptions = Microsoft.CodeAnalysis.Formatting.FormattingOptions;
 
 namespace OmniSharp.Roslyn.CSharp.Services
@@ -92,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
         }
 
-        public OptionSet Process(OptionSet workOptionSet, Options.FormattingOptions options)
+        public OptionSet Process(OptionSet workOptionSet, FormattingOptions options)
         {
             return GetOptions(workOptionSet, options);
         }
