@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Legacy;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 

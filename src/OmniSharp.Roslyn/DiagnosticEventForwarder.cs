@@ -1,8 +1,9 @@
 using System.Composition;
+using OmniSharp.Eventing;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
 
-namespace OmniSharp.Services
+namespace OmniSharp.Roslyn
 {
     [Export, Shared]
     public class DiagnosticEventForwarder

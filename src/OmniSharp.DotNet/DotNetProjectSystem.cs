@@ -14,6 +14,7 @@ using OmniSharp.DotNet.Cache;
 using OmniSharp.DotNet.Extensions;
 using OmniSharp.DotNet.Models;
 using OmniSharp.DotNet.Tools;
+using OmniSharp.Eventing;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;

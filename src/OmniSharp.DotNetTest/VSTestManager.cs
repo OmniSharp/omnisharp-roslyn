@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
+using OmniSharp.Eventing;
 using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.Services;

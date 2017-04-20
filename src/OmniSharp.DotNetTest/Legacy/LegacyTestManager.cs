@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
+using OmniSharp.Eventing;
 using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.Services;

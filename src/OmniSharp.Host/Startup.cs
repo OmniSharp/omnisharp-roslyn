@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OmniSharp.Eventing;
 using OmniSharp.Host.Internal;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;

@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
+using OmniSharp.Eventing;
 using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
