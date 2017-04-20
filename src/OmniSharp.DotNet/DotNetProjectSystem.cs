@@ -30,7 +30,7 @@ namespace OmniSharp.DotNet
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCliService;
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILogger _logger;
@@ -44,7 +44,7 @@ namespace OmniSharp.DotNet
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             DotNetCliService dotNetCliService,
-            IMetadataFileReferenceCache metadataFileReferenceCache,
+            MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
             ILoggerFactory loggerFactory)
