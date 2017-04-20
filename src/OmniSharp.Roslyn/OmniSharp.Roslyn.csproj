@@ -16,12 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
-    <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="1.1.0" />
   </ItemGroup>
 
 </Project>
