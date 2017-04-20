@@ -9,10 +9,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Eventing;
-using OmniSharp.Models;
-using OmniSharp.Models.Events;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -85,7 +84,7 @@ namespace OmniSharp.DotNetTest.Legacy
 
             testProcess.OutputDataReceived += (_, e) =>
             {
-                EventEmitter.Emit(EventTypes.TestMessage,
+                EventEmitter.Emit(TestMessageEvent.Id,
                     new TestMessageEvent
                     {
                         MessageLevel = "info",
