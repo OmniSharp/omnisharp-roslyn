@@ -4,20 +4,25 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
+using OmniSharp.DotNetTest.Legacy;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.DotNetTest
 {
-    public abstract class TestManager : DisposableObject
+    internal abstract class TestManager : DisposableObject
     {
         protected readonly Project Project;
         protected readonly DotNetCliService DotNetCli;
+        protected readonly IEventEmitter EventEmitter;
         protected readonly ILogger Logger;
         protected readonly string WorkingDirectory;
 
@@ -32,50 +37,39 @@ namespace OmniSharp.DotNetTest
 
         public bool IsConnected => _isConnected;
 
-        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, ILogger logger)
+        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILogger logger)
         {
             Project = project ?? throw new ArgumentNullException(nameof(project));
             WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
             DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
+            EventEmitter = eventEmitter ?? throw new ArgumentNullException(nameof(eventEmitter));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public static TestManager Start(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static TestManager Start(Project project, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
         {
-            var manager = Create(project, dotNetCli, loggerFactory);
+            var manager = Create(project, dotNetCli, eventEmitter, loggerFactory);
             manager.Connect();
             return manager;
         }
 
-        public static TestManager Create(Project project, DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public static TestManager Create(Project project, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
         {
             var workingDirectory = Path.GetDirectoryName(project.FilePath);
-            var version = dotNetCli.GetVersion(workingDirectory);
 
-            if (version.Major < 1)
-            {
-                throw new InvalidOperationException($"'dotnet test' is not supported for .NET CLI {version}");
-            }
-
-            if (version.Major == 1 &&
-                version.Minor == 0 &&
-                version.Patch == 0)
-            {
-                if (version.Release.StartsWith("preview1") ||
-                    version.Release.StartsWith("preview2"))
-                {
-                    return new LegacyTestManager(project, workingDirectory, dotNetCli, loggerFactory);
-                }
-            }
-
-            return new VSTestManager(project, workingDirectory, dotNetCli, loggerFactory);
+            return dotNetCli.IsLegacy(workingDirectory)
+                ? new LegacyTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory)
+                : (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
         protected abstract void VersionCheck();
 
-        public abstract RunDotNetTestResponse RunTest(string methodName, string testFrameworkName);
-        public abstract GetDotNetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
+        public abstract RunTestResponse RunTest(string methodName, string testFrameworkName);
+        public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
+
+        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken);
+        public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
         protected virtual bool PrepareToConnect()
         {
@@ -196,7 +190,7 @@ namespace OmniSharp.DotNetTest
         protected void SendMessage(string messageType)
         {
             var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, new object());
-            Logger.LogInformation($"send: {rawMessage}");
+            Logger.LogDebug($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
         }
@@ -204,9 +198,67 @@ namespace OmniSharp.DotNetTest
         protected void SendMessage<T>(string messageType, T payload)
         {
             var rawMessage = JsonDataSerializer.Instance.SerializePayload(messageType, payload);
-            Logger.LogInformation($"send: {rawMessage}");
+            Logger.LogDebug($"send: {rawMessage}");
 
             _writer.Write(rawMessage);
+        }
+
+        protected async Task<(bool succeeded, Message message)> TryReadMessageAsync(CancellationToken cancellationToken)
+        {
+            var rawMessage = await Task.Run(() => ReadRawMessage(cancellationToken));
+
+            if (rawMessage == null)
+            {
+                return (succeeded: false, message: null);
+            }
+
+            Logger.LogDebug($"read: {rawMessage}");
+
+            return (succeeded: true, message: JsonDataSerializer.Instance.DeserializeMessage(rawMessage));
+        }
+
+        protected async Task<Message> ReadMessageAsync(CancellationToken cancellationToken)
+        {
+            var rawMessage = await Task.Run(() => ReadRawMessage(cancellationToken));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Logger.LogDebug($"read: {rawMessage}");
+
+            return JsonDataSerializer.Instance.DeserializeMessage(rawMessage);
+        }
+
+        private string ReadRawMessage(CancellationToken cancellationToken)
+        {
+            const int Timeout = 1000 * 1000;
+
+            string str = null;
+            bool success = false;
+
+            // We set a read timeout below to avoid blocking.
+            while (!cancellationToken.IsCancellationRequested && !success && IsConnected && !IsDisposed)
+            {
+                try
+                {
+                    if (this._socket.Poll(Timeout, SelectMode.SelectRead))
+                    {
+                        str = _reader.ReadString();
+                        success = true;
+                    }
+                }
+                catch (IOException ex) when (ex.InnerException is SocketException se &&
+                                             se.SocketErrorCode == SocketError.TimedOut)
+                {
+                    Logger.LogTrace(se, $"{nameof(ReadRawMessage)}: failed to receive message because it timed out.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogTrace(ex, $"{nameof(ReadRawMessage)}: failed to receive message.");
+                    break;
+                }
+            }
+
+            return str;
         }
     }
 }

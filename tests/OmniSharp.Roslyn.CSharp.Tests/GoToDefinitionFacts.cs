@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.GotoDefinition;
+        protected override string EndpointName => OmniSharpEndpoints.GotoDefinition;
 
         [Fact]
         public async Task ReturnsDefinitionInSameFile()
@@ -58,10 +58,12 @@ class Bar {
             await TestGoToSourceAsync(testFile1, testFile2);
         }
 
-        [Fact]
-        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsStaticMethod()
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsStaticMethod(string filename)
         {
-            var testFile = new TestFile("bar.cs", @"
+            var testFile = new TestFile(filename, @"
 using System;
 class Bar {
     public void Baz() {
@@ -74,10 +76,12 @@ class Bar {
                 expectedTypeName: "System.Guid");
         }
 
-        [Fact]
-        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsInstanceMethod()
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsInstanceMethod(string filename)
         {
-            var testFile = new TestFile("bar.cs", @"
+            var testFile = new TestFile(filename, @"
 using System.Collections.Generic;
 class Bar {
     public void Baz() {
@@ -91,10 +95,12 @@ class Bar {
                 expectedTypeName: "System.Collections.Generic.List`1");
         }
 
-        [Fact]
-        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsGenericType()
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsGenericType(string filename)
         {
-            var testFile = new TestFile("bar.cs", @"
+            var testFile = new TestFile(filename, @"
 using System.Collections.Generic;
 class Bar {
     public void Baz() {
@@ -108,10 +114,12 @@ class Bar {
                 expectedTypeName: "System.Collections.Generic.List`1");
         }
 
-        [Fact]
-        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsType()
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDefinitionInMetadata_WhenSymbolIsType(string filename)
         {
-            var testFile = new TestFile("bar.cs", @"
+            var testFile = new TestFile(filename, @"
 using System;
 class Bar {
     public void Baz() {

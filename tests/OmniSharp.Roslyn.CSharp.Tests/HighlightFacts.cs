@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Models;
+using OmniSharp.Models.Highlight;
 using OmniSharp.Roslyn.CSharp.Services.Highlighting;
 using TestUtility;
 using Xunit;
@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.Highlight;
+        protected override string EndpointName => OmniSharpEndpoints.Highlight;
 
         [Fact]
         public async Task HighlightSingleLine()

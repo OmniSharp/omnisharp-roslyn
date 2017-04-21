@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoRegion;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
@@ -15,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.GotoRegion;
+        protected override string EndpointName => OmniSharpEndpoints.GotoRegion;
 
         [Fact]
         public async Task CanFindRegionsInFileWithRegions()

@@ -15,7 +15,7 @@ using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
@@ -78,8 +78,10 @@ namespace OmniSharp.Script
             }
 
             return compilationOptions;
-        }
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        });
+
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
+
 
         // used for tracking purposes only
         private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
@@ -88,11 +90,9 @@ namespace OmniSharp.Script
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
-        private readonly IAssemblyLoader _assemblyLoader;
+        private readonly ILogger _logger;        
         private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
         private readonly IScriptProjectProvider _scriptProjectProvider;
-
 
         private static string ResolveTargetFramework()
         {
@@ -104,13 +104,12 @@ namespace OmniSharp.Script
 
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache, IAssemblyLoader assemblyLoader)
+        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, MetadataFileReferenceCache metadataFileReferenceCache)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
-            _loggerFactory = loggerFactory;
-            _assemblyLoader = assemblyLoader;
+            _loggerFactory = loggerFactory;            
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilation);

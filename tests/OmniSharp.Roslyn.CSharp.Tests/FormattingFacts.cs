@@ -1,8 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeFormat;
+using OmniSharp.Models.Format;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
@@ -143,7 +144,7 @@ class C {
                         IndentationSize = 1
                     });
 
-                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmnisharpEndpoints.CodeFormat);
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
 
                 var request = new CodeFormatRequest { FileName = testFile.FileName };
                 var response = await requestHandler.Handle(request);
@@ -182,7 +183,7 @@ class C {
                     EndColumn = range.End.Offset
                 };
 
-                var requestHandler = host.GetRequestHandler<FormatRangeService>(OmnisharpEndpoints.FormatRange);
+                var requestHandler = host.GetRequestHandler<FormatRangeService>(OmniSharpEndpoints.FormatRange);
 
                 var response = await requestHandler.Handle(request);
                 var actual = response.Changes.ToArray();

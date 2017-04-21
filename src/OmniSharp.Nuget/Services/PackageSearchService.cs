@@ -1,3 +1,4 @@
+#if NET46
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -5,24 +6,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Recommendations;
-using Microsoft.CodeAnalysis.Text;
-#if NET46
-using NuGet.Logging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
-#endif
-using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.PackageSearch;
 using OmniSharp.NuGet;
 
 namespace OmniSharp
 {
-#if NET46
-    [OmniSharpHandler(OmnisharpEndpoints.PackageSearch, "NuGet")]
-    public class PackageSearchService : RequestHandler<PackageSearchRequest, PackageSearchResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.PackageSearch, "NuGet")]
+    public class PackageSearchService : IRequestHandler<PackageSearchRequest, PackageSearchResponse>
     {
         [ImportingConstructor]
         public PackageSearchService() { }
@@ -98,5 +91,5 @@ namespace OmniSharp
             };
         }
     }
-#endif
 }
+#endif

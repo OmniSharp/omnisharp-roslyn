@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Models;
+using OmniSharp.Roslyn.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,9 +22,11 @@ namespace OmniSharp.Tests
             using (var host = CreateOmniSharpHost(testFile))
             {
                 var document = host.Workspace.GetDocument(testFile.FileName);
+                var text = await document.GetTextAsync();
 
                 var textChange = new TextChange(TextSpan.FromBounds(8, 11), "\n}");
-                var adjustedTextChanges = await LinePositionSpanTextChange.Convert(document, new[] { textChange });
+
+                var adjustedTextChanges = TextChanges.Convert(text, textChange);
 
                 var adjustedTextChange = adjustedTextChanges.First();
                 Assert.Equal("\r\n}", adjustedTextChange.NewText);
@@ -42,9 +44,11 @@ namespace OmniSharp.Tests
             using (var host = CreateOmniSharpHost(testFile))
             {
                 var document = host.Workspace.GetDocument(testFile.FileName);
+                var text = await document.GetTextAsync();
 
                 var textChange = new TextChange(TextSpan.FromBounds(5, 7), "\r\n {\r");
-                var adjustedTextChanges = await LinePositionSpanTextChange.Convert(document, new[] { textChange });
+
+                var adjustedTextChanges = TextChanges.Convert(text, textChange);
 
                 var adjustedTextChange = adjustedTextChanges.First();
                 Assert.Equal("\r\n {\r\n", adjustedTextChange.NewText);

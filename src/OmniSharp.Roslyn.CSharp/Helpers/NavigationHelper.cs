@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.MembersTree;
+using OmniSharp.Models.Navigate;
 
 namespace OmniSharp.Helpers
 {

@@ -11,7 +11,7 @@ public class Program
         if (argsList.Contains("--debug"))
         {
             argsList.Remove("--debug");
-            Console.WriteLine($"Attach debugger to process {Process.GetCurrentProcess().Id} to continue. ..");
+            Console.WriteLine($"Attach debugger to process {Process.GetCurrentProcess().Id} to continue...");
             while (!Debugger.IsAttached)
             {
                 Thread.Sleep(100);

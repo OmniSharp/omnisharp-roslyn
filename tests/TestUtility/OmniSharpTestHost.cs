@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.DotNet;
-using OmniSharp.DotNetTest;
+using OmniSharp.DotNetTest.Models;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -25,10 +25,10 @@ namespace TestUtility
     {
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
-            typeof(OmnisharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
+            typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
             typeof(Startup).GetTypeInfo().Assembly, // OmniSharp.Host
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
-            typeof(TestManager).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
+            typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly // OmniSharp.Roslyn.CSharp
@@ -136,7 +136,12 @@ namespace TestUtility
                 this.Workspace,
                 "project.json",
                 new[] { "dnx451", "dnxcore50" },
-                testFiles);
+                testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray());
+
+            foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))
+            {
+                TestHelpers.AddCsxProjectToWorkspace(Workspace, csxFile);
+            }
         }
     }
 }

@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
-using OmniSharp.Models;
 using OmniSharp.Options;
 using OmniSharp.Utilities;
 
@@ -114,7 +113,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string solutionDirectory,
             ILogger logger,
             MSBuildOptions options = null,
-            ICollection<MSBuildDiagnosticsMessage> diagnostics = null,
+            ICollection<Models.MSBuildDiagnosticsMessage> diagnostics = null,
             bool isUnityProject = false)
         {
             if (!File.Exists(projectFilePath))
@@ -124,46 +123,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             options = options ?? new MSBuildOptions();
 
-            var globalProperties = new Dictionary<string, string>
-            {
-                { PropertyNames.DesignTimeBuild, "true" },
-                { PropertyNames.BuildProjectReferences, "false" },
-                { PropertyNames._ResolveReferenceDependencies, "true" },
-                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
-            };
-
-            if (!string.IsNullOrWhiteSpace(options.MSBuildExtensionsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath);
-            }
-            else if (!string.IsNullOrWhiteSpace(MSBuildEnvironment.MSBuildExtensionsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildExtensionsPath, MSBuildEnvironment.MSBuildExtensionsPath);
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.MSBuildSDKsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildSDKsPath, options.MSBuildSDKsPath);
-            }
-            else if (!string.IsNullOrWhiteSpace(MSBuildEnvironment.MSBuildSDKsPath))
-            {
-                globalProperties.Add(PropertyNames.MSBuildSDKsPath, MSBuildEnvironment.MSBuildSDKsPath);
-            }
-
-            if (PlatformHelper.IsMono)
-            {
-                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
-                if (monoXBuildFrameworksDirPath != null)
-                {
-                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
-                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
-            {
-                globalProperties.Add(PropertyNames.VisualStudioVersion, options.VisualStudioVersion);
-            }
+            var globalProperties = GetGlobalProperties(options, solutionDirectory, logger);
 
             var collection = new ProjectCollection(globalProperties);
 
@@ -218,7 +178,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
 
             var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
-            var references = GetFullPaths(projectInstance.GetItems(ItemNames.ReferencePath));
+            var references = GetFullPaths(
+                projectInstance.GetItems(ItemNames.ReferencePath).Where(ReferenceSourceTargetIsNotProjectReference));
             var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
             var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
 
@@ -231,7 +192,50 @@ namespace OmniSharp.MSBuild.ProjectFile
                 sourceFiles, references, projectReferences, analyzers, packageReferences);
         }
 
-        private static IList<string> GetFullPaths(ICollection<ProjectItemInstance> items)
+        private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, ILogger logger)
+        {
+            var globalProperties = new Dictionary<string, string>
+            {
+                { PropertyNames.DesignTimeBuild, "true" },
+                { PropertyNames.BuildProjectReferences, "false" },
+                { PropertyNames._ResolveReferenceDependencies, "true" },
+                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
+            };
+
+            globalProperties.AddPropertyIfNeeded(
+                PropertyNames.MSBuildExtensionsPath,
+                userOptionValue: options.MSBuildExtensionsPath,
+                environmentValue: MSBuildEnvironment.MSBuildExtensionsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                PropertyNames.MSBuildSDKsPath,
+                userOptionValue: options.MSBuildSDKsPath,
+                environmentValue: MSBuildEnvironment.MSBuildSDKsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                PropertyNames.VisualStudioVersion,
+                userOptionValue: options.VisualStudioVersion,
+                environmentValue: null);
+
+            if (PlatformHelper.IsMono)
+            {
+                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
+                if (monoXBuildFrameworksDirPath != null)
+                {
+                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
+                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
+                }
+            }
+
+            return globalProperties;
+        }
+
+        private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
+        {
+            return item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
+        }
+
+        private static IList<string> GetFullPaths(IEnumerable<ProjectItemInstance> items)
         {
             var sortedSet = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -250,11 +254,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             foreach (var item in items)
             {
                 var name = item.EvaluatedInclude;
-                var version = PropertyConverter.ToNuGetVersion(item.GetMetadataValue(MetadataNames.Version));
-                var identity = new PackageIdentity(name, version);
+                var versionRange = PropertyConverter.ToVersionRange(item.GetMetadataValue(MetadataNames.Version));
+                var dependency = new PackageDependency(name, versionRange);
                 var isImplicitlyDefined = PropertyConverter.ToBoolean(item.GetMetadataValue(MetadataNames.IsImplicitlyDefined), false);
 
-                list.Add(new PackageReference(identity, isImplicitlyDefined));
+                list.Add(new PackageReference(dependency, isImplicitlyDefined));
             }
 
             return list;

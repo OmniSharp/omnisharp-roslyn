@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.TypeLookup;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.TypeLookup;
+        protected override string EndpointName => OmniSharpEndpoints.TypeLookup;
 
         [Fact]
         public async Task OmitsNamespaceForNonRegularCSharpSyntax()

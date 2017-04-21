@@ -13,7 +13,10 @@ using Newtonsoft.Json;
 using OmniSharp.Mef;
 using OmniSharp.Middleware;
 using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.FindSymbols;
+using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Models.UpdateBuffer;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -30,8 +33,8 @@ namespace OmniSharp.Tests
         {
         }
 
-        [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
-        public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
+        [OmniSharpHandler(OmniSharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
+        public class GotoDefinitionService : IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
         {
             [Import]
             public OmniSharpWorkspace Workspace { get; set; }
@@ -42,8 +45,8 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpHandler(OmnisharpEndpoints.FindSymbols, LanguageNames.CSharp)]
-        public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
+        [OmniSharpHandler(OmniSharpEndpoints.FindSymbols, LanguageNames.CSharp)]
+        public class FindSymbolsService : IRequestHandler<FindSymbolsRequest, QuickFixResponse>
         {
             [Import]
             public OmniSharpWorkspace Workspace { get; set; }
@@ -54,8 +57,8 @@ namespace OmniSharp.Tests
             }
         }
 
-        [OmniSharpHandler(OmnisharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
-        public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
+        [OmniSharpHandler(OmniSharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
+        public class UpdateBufferService : IRequestHandler<UpdateBufferRequest, object>
         {
             [Import]
             public OmniSharpWorkspace Workspace { get; set; }

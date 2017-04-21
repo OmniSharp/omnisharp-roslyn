@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
+using OmniSharp.Models.CodeCheck;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.CodeCheck;
+        protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
 
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,12 +11,14 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
+using OmniSharp.Eventing;
+using OmniSharp.FileWatching;
 using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.Events;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.MSBuild
 {
@@ -27,7 +28,7 @@ namespace OmniSharp.MSBuild
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCliService;
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILoggerFactory _loggerFactory;
@@ -55,7 +56,7 @@ namespace OmniSharp.MSBuild
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             DotNetCliService dotNetCliService,
-            IMetadataFileReferenceCache metadataFileReferenceCache,
+            MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
             ILoggerFactory loggerFactory)
@@ -80,14 +81,12 @@ namespace OmniSharp.MSBuild
             if (!MSBuildEnvironment.IsInitialized)
             {
                 MSBuildEnvironment.Initialize(_logger);
-            }
 
-            if (_options.WaitForDebugger)
-            {
-                Console.WriteLine($"Attach to process {Process.GetCurrentProcess().Id}");
-                while (!Debugger.IsAttached)
+                if (MSBuildEnvironment.IsInitialized &&
+                    _environment.LogLevel < LogLevel.Information)
                 {
-                    System.Threading.Thread.Sleep(100);
+                    var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
+                    _logger.LogDebug($"MSBuild environment: {Environment.NewLine}{buildEnvironmentInfo}");
                 }
             }
 
@@ -495,24 +494,6 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private List<PackageDependency> CreatePackageDependencies(IEnumerable<PackageReference> packageReferences)
-        {
-            var list = new List<PackageDependency>();
-
-            foreach (var packageReference in packageReferences)
-            {
-                var dependency = new PackageDependency
-                {
-                    Name = packageReference.Identity.Id,
-                    Version = packageReference.Identity.Version?.ToNormalizedString()
-                };
-
-                list.Add(dependency);
-            }
-
-            return list;
-        }
-
         private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, ProjectFileInfo previousProjectFileInfo = null, bool allowAutoRestore = false)
         {
             List<PackageDependency> unresolvedDependencies;
@@ -534,14 +515,14 @@ namespace OmniSharp.MSBuild
                 // Did the project file change? Diff the package references and see if there are unresolved dependencies.
                 if (previousProjectFileInfo != null)
                 {
-                    var packageReferencesToRemove = new HashSet<PackageReference>(previousProjectFileInfo.PackageReferences);
+                    var remainingPackageReferences = new HashSet<PackageReference>(previousProjectFileInfo.PackageReferences);
                     var packageReferencesToAdd = new HashSet<PackageReference>();
 
                     foreach (var packageReference in projectFileInfo.PackageReferences)
                     {
-                        if (packageReferencesToRemove.Contains(packageReference))
+                        if (remainingPackageReferences.Contains(packageReference))
                         {
-                            packageReferencesToRemove.Remove(packageReference);
+                            remainingPackageReferences.Remove(packageReference);
                         }
                         else
                         {
@@ -549,7 +530,7 @@ namespace OmniSharp.MSBuild
                         }
                     }
 
-                    unresolvedPackageReferences = packageReferencesToAdd.Concat(packageReferencesToRemove);
+                    unresolvedPackageReferences = packageReferencesToAdd.Concat(remainingPackageReferences);
                 }
                 else
                 {
@@ -561,7 +542,7 @@ namespace OmniSharp.MSBuild
                     var lockFile = lockFileFormat.Read(projectFileInfo.ProjectAssetsFile);
 
                     unresolvedPackageReferences = projectFileInfo.PackageReferences
-                        .Where(pr => lockFile.GetLibrary(pr.Identity.Id, pr.Identity.Version) == null);
+                        .Where(pr => !ContainsPackageReference(lockFile, pr));
                 }
 
                 unresolvedDependencies = CreatePackageDependencies(unresolvedPackageReferences);
@@ -581,6 +562,38 @@ namespace OmniSharp.MSBuild
                     FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
                 }
             }
+        }
+
+        private List<PackageDependency> CreatePackageDependencies(IEnumerable<PackageReference> packageReferences)
+        {
+            var list = new List<PackageDependency>();
+
+            foreach (var packageReference in packageReferences)
+            {
+                var dependency = new PackageDependency
+                {
+                    Name = packageReference.Dependency.Id,
+                    Version = packageReference.Dependency.VersionRange.ToNormalizedString()
+                };
+
+                list.Add(dependency);
+            }
+
+            return list;
+        }
+
+        private static bool ContainsPackageReference(LockFile lockFile, PackageReference reference)
+        {
+            foreach (var library in lockFile.Libraries)
+            {
+                if (string.Equals(library.Name, reference.Dependency.Id) &&
+                    reference.Dependency.VersionRange.Satisfies(library.Version))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, List<PackageDependency> unresolvedDependencies)

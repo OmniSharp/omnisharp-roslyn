@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoFile;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
@@ -15,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmnisharpEndpoints.GotoFile;
+        protected override string EndpointName => OmniSharpEndpoints.GotoFile;
 
         [Fact]
         public async Task ReturnsAListOfAllWorkspaceFiles()

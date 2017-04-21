@@ -9,11 +9,12 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FindUsages;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FindUsages, LanguageNames.CSharp)]
-    public class FindUsagesService : RequestHandler<FindUsagesRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.FindUsages, LanguageNames.CSharp)]
+    public class FindUsagesService : IRequestHandler<FindUsagesRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

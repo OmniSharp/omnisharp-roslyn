@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp.DotNetTest.TestFrameworks
 {
-    public abstract class TestFramework
+    internal abstract class TestFramework
     {
         private static readonly ImmutableDictionary<string, TestFramework> s_frameworks;
 

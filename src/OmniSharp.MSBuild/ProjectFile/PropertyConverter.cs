@@ -133,10 +133,13 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             foreach (var id in values)
             {
-                ushort number;
-                if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
+                if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number))
                 {
                     result.Add("CS" + number.ToString("0000"));
+                }
+                else
+                {
+                    result.Add(id);
                 }
             }
 
@@ -145,8 +148,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static Guid ToGuid(string propertyValue)
         {
-            Guid result;
-            if (!Guid.TryParse(propertyValue, out result))
+            if (!Guid.TryParse(propertyValue, out var result))
             {
                 return Guid.Empty;
             }
@@ -165,10 +167,9 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
-        public static NuGetVersion ToNuGetVersion(string propertyValue)
+        public static VersionRange ToVersionRange(string propertyValue)
         {
-            NuGetVersion version;
-            if (NuGetVersion.TryParse(propertyValue.Trim(), out version))
+            if (VersionRange.TryParse(propertyValue.Trim(), out var version))
             {
                 return version;
             }

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
+using OmniSharp.Eventing;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
@@ -117,6 +118,33 @@ namespace OmniSharp.Services
             var output = ProcessHelper.RunAndCaptureOutput(_dotnetPath, "--version", workingDirectory);
 
             return SemanticVersion.Parse(output);
+        }
+
+        /// <summary>
+        /// Checks to see if this is a "legacy" .NET CLI. If true, this .NET CLI supports project.json
+        /// development; otherwise, it supports .csproj development.
+        /// </summary>
+        public bool IsLegacy(string workingDirectory = null)
+        {
+            var version = GetVersion(workingDirectory);
+
+            if (version.Major < 1)
+            {
+                return true;
+            }
+
+            if (version.Major == 1 &&
+                version.Minor == 0 &&
+                version.Patch == 0)
+            {
+                if (version.Release.StartsWith("preview1") ||
+                    version.Release.StartsWith("preview2"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

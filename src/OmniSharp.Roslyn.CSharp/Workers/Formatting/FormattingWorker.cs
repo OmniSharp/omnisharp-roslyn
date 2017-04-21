@@ -3,17 +3,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 {
     public static class FormattingWorker
     {
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Workspace workspace, Document document, int position, char character)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character)
         {
             if (character == '\n')
             {
@@ -23,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
                 if (!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
                 {
-                    return await GetFormattingChangesForRange(workspace, document, targetLine.Start, targetLine.End);
+                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End);
                 }
             }
             else if (character == '}' || character == ';')
@@ -33,7 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 var node = FindFormatTarget(root, position);
                 if (node != null)
                 {
-                    return await GetFormattingChangesForRange(workspace, document, node.FullSpan.Start, node.FullSpan.End);
+                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End);
                 }
             }
 
@@ -77,28 +76,26 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             return null;
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesForRange(Workspace workspace, Document document, int start, int end)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end)
         {
-            var changedDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), workspace.Options);
-            var textChanges = await changedDocument.GetTextChangesAsync(document);
+            var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), document.Project.Solution.Workspace.Options);
 
-            return await LinePositionSpanTextChange.Convert(document, textChanges);
+            return await TextChanges.GetAsync(newDocument, document);
         }
 
-        public static async Task<string> GetFormattedDocument(Workspace workspace, Document document)
+        public static async Task<string> GetFormattedText(Document document)
         {
-            var formattedDocument = await Formatter.FormatAsync(document, workspace.Options);
-            var text = await formattedDocument.GetTextAsync();
+            var newDocument = await Formatter.FormatAsync(document, document.Project.Solution.Workspace.Options);
+            var text = await newDocument.GetTextAsync();
 
             return text.ToString();
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedDocumentTextChanges(Workspace workspace, Document document)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document)
         {
-            var formattedDocument = await Formatter.FormatAsync(document, workspace.Options);
-            var textChanges = await formattedDocument.GetTextChangesAsync(document);
+            var newDocument = await Formatter.FormatAsync(document, document.Project.Solution.Workspace.Options);
 
-            return await LinePositionSpanTextChange.Convert(document, textChanges);
+            return await TextChanges.GetAsync(newDocument, document);
         }
     }
 }

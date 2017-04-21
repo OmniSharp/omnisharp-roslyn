@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpHandler(OmnisharpEndpoints.CodeCheck, LanguageNames.CSharp)]
-    public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.CodeCheck, LanguageNames.CSharp)]
+    public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private OmniSharpWorkspace _workspace;
 

@@ -2,14 +2,13 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    [OmniSharpHandler(OmnisharpEndpoints.WorkspaceInformation, "Projects")]
-    public class WorkspaceInformationService : RequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.WorkspaceInformation, "Projects")]
+    public class WorkspaceInformationService : IRequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>
     {
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
