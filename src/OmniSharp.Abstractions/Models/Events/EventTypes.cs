@@ -1,4 +1,4 @@
-namespace OmniSharp.Models
+namespace OmniSharp.Models.Events
 {
     public static class EventTypes
     {
@@ -10,7 +10,6 @@ namespace OmniSharp.Models
         public static readonly string MsBuildProjectDiagnostics = nameof(MsBuildProjectDiagnostics);
         public static readonly string PackageRestoreStarted = nameof(PackageRestoreStarted);
         public static readonly string PackageRestoreFinished = nameof(PackageRestoreFinished);
-        public static readonly string TestMessage = nameof(TestMessage);
         public static readonly string UnresolvedDependencies = nameof(UnresolvedDependencies);
     }
 }

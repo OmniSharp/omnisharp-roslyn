@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using OmniSharp.Json;
 
 namespace OmniSharp.Models.V2
 {

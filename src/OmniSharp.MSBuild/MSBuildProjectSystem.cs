@@ -11,13 +11,14 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
+using OmniSharp.Eventing;
+using OmniSharp.FileWatching;
 using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.MSBuild
 {
@@ -27,7 +28,7 @@ namespace OmniSharp.MSBuild
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCliService;
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILoggerFactory _loggerFactory;
@@ -55,7 +56,7 @@ namespace OmniSharp.MSBuild
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             DotNetCliService dotNetCliService,
-            IMetadataFileReferenceCache metadataFileReferenceCache,
+            MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
             ILoggerFactory loggerFactory)

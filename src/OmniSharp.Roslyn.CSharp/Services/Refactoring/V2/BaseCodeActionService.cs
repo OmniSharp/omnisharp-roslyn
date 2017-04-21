@@ -15,6 +15,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {

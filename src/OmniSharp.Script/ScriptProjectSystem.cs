@@ -71,7 +71,7 @@ namespace OmniSharp.Script
             return compilationOptions;
         });
 
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
         // used for tracking purposes only
         private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
@@ -82,7 +82,7 @@ namespace OmniSharp.Script
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, MetadataFileReferenceCache metadataFileReferenceCache)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.Services;
+using OmniSharp.Roslyn;
 
 namespace OmniSharp.Workers.Diagnostics
 {

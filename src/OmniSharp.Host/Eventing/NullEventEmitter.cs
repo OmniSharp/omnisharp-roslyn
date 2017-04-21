@@ -1,6 +1,6 @@
-namespace OmniSharp.Services
+namespace OmniSharp.Eventing
 {
-    public class NullEventEmitter : IEventEmitter
+    internal class NullEventEmitter : IEventEmitter
     {
         public static IEventEmitter Instance { get; } = new NullEventEmitter();
 

@@ -1,5 +1,6 @@
 namespace OmniSharp.Options
 {
+    // TODO: These are mostly C#-specific. Should they be moved into in OmniSharp.Roslyn.CSharp somehow?
     public class FormattingOptions
     {
         public FormattingOptions()

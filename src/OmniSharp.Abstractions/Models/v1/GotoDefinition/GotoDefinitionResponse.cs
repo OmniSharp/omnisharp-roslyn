@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using OmniSharp.Json;
 using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Models.GotoDefinition

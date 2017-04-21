@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace OmniSharp.Services.FileWatching
+namespace OmniSharp.FileWatching
 {
     public class ManualFileSystemWatcher : IFileSystemWatcher
     {

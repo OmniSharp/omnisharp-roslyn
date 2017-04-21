@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
-using OmniSharp.Models;
 using OmniSharp.Models.FixUsings;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
@@ -35,11 +35,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             var response = new FixUsingsResponse();
 
-            var document = _workspace.GetDocument(request.FileName);
-            if (document != null)
+            var oldDocument = _workspace.GetDocument(request.FileName);
+            if (oldDocument != null)
             {
                 var fixUsingsResponse = await new FixUsingsWorker(_providers)
-                    .FixUsingsAsync(document);
+                    .FixUsingsAsync(oldDocument);
 
                 response.AmbiguousResults = fixUsingsResponse.AmbiguousResults;
 
@@ -48,17 +48,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     _workspace.TryApplyChanges(fixUsingsResponse.Document.Project.Solution);
                 }
 
+                var newDocument = fixUsingsResponse.Document;
+
                 if (!request.WantsTextChanges)
                 {
-                    // return the new document
-                    var docText = await fixUsingsResponse.Document.GetTextAsync();
-                    response.Buffer = docText.ToString();
+                    // return the text of the new document
+                    var newText = await newDocument.GetTextAsync();
+                    response.Buffer = newText.ToString();
                 }
                 else
                 {
                     // return the text changes
-                    var changes = await fixUsingsResponse.Document.GetTextChangesAsync(document);
-                    response.Changes = await LinePositionSpanTextChange.Convert(document, changes);
+                    response.Changes = await TextChanges.GetAsync(newDocument, oldDocument);
                 }
             }
 

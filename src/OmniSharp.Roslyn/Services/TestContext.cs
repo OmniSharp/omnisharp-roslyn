@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
+using OmniSharp.Models.TestCommand;
 
-namespace OmniSharp
+namespace OmniSharp.Services
 {
     public class TestContext
     {

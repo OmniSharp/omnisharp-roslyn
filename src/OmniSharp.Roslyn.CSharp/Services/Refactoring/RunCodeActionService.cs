@@ -8,8 +8,8 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models;
 using OmniSharp.Models.CodeAction;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
@@ -47,19 +47,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 o.Apply(_workspace, CancellationToken.None);
             }
 
-            var originalDocument = context.Value.Document;
+            var oldDocument = context.Value.Document;
+            var newDocument = _workspace.CurrentSolution.GetDocument(oldDocument.Id);
+
             var response = new RunCodeActionResponse();
+
             if (!request.WantsTextChanges)
             {
-                // return the new document
-                var sourceText = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextAsync();
-                response.Text = sourceText.ToString();
+                // return the text of the new document
+                var newText = await newDocument.GetTextAsync();
+                response.Text = newText.ToString();
             }
             else
             {
                 // return the text changes
-                var changes = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextChangesAsync(originalDocument);
-                response.Changes = await LinePositionSpanTextChange.Convert(originalDocument, changes);
+                response.Changes = await TextChanges.GetAsync(newDocument, oldDocument);
             }
 
             return response;

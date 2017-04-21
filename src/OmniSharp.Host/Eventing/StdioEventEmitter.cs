@@ -1,9 +1,9 @@
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
 
-namespace OmniSharp.Services
+namespace OmniSharp.Eventing
 {
-    public class StdioEventEmitter : IEventEmitter
+    internal class StdioEventEmitter : IEventEmitter
     {
         private readonly ISharedTextWriter _writer;
 

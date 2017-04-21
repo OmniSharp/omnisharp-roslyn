@@ -1,4 +1,4 @@
-namespace OmniSharp.Models
+namespace OmniSharp.Models.Events
 {
     public class PackageRestoreMessage
     {

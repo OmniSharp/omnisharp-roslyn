@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OmniSharp.Services.FileWatching
+namespace OmniSharp.FileWatching
 {
     // TODO: Flesh out this API more
     public interface IFileSystemWatcher

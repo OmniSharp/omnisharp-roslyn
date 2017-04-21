@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 using RunCodeActionRequest = OmniSharp.Models.V2.RunCodeActionRequest;
@@ -49,8 +50,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             foreach (var o in operations)
             {
-                var applyChangesOperation = o as ApplyChangesOperation;
-                if (applyChangesOperation != null)
+                if (o is ApplyChangesOperation applyChangesOperation)
                 {
                     var fileChanges = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges);
 
@@ -136,8 +136,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     var newDocument = newSolution.GetDocument(documentId);
                     var filePath = newDocument.FilePath;
 
-                    ModifiedFileResponse modifiedFileResponse;
-                    if (!filePathToResponseMap.TryGetValue(filePath, out modifiedFileResponse))
+                    if (!filePathToResponseMap.TryGetValue(filePath, out var modifiedFileResponse))
                     {
                         modifiedFileResponse = new ModifiedFileResponse(filePath);
                         filePathToResponseMap[filePath] = modifiedFileResponse;
@@ -145,9 +144,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                     if (wantTextChanges)
                     {
-                        var originalDocument = oldSolution.GetDocument(documentId);
-                        var textChanges = await newDocument.GetTextChangesAsync(originalDocument);
-                        var linePositionSpanTextChanges = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
+                        var oldDocument = oldSolution.GetDocument(documentId);
+                        var linePositionSpanTextChanges = await TextChanges.GetAsync(newDocument, oldDocument);
 
                         modifiedFileResponse.Changes = modifiedFileResponse.Changes != null
                             ? modifiedFileResponse.Changes.Union(linePositionSpanTextChanges)

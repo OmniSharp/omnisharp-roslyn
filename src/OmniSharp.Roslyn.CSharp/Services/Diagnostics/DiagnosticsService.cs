@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.Services;
 using OmniSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics

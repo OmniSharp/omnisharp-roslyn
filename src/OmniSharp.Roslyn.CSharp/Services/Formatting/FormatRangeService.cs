@@ -30,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             var text = await document.GetTextAsync();
             var start = text.Lines.GetPosition(new LinePosition(request.Line, request.Column));
             var end = text.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
-            var changes = await FormattingWorker.GetFormattingChangesForRange(_workspace, document, start, end);
+            var changes = await FormattingWorker.GetFormattingChanges(document, start, end);
 
             return new FormatRangeResponse()
             {
