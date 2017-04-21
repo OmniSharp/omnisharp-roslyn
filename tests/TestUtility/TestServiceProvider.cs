@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using OmniSharp;
 using OmniSharp.Host.Loader;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Services;

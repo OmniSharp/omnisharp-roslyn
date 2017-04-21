@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace OmniSharp.Services
+namespace OmniSharp
 {
     public interface IOmniSharpEnvironment
     {

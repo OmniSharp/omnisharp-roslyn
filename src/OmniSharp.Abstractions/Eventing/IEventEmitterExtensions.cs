@@ -1,6 +1,6 @@
-﻿using OmniSharp.Models;
+﻿using OmniSharp.Models.Events;
 
-namespace OmniSharp.Services
+namespace OmniSharp.Eventing
 {
     public static class IEventEmitterExtensions
     {

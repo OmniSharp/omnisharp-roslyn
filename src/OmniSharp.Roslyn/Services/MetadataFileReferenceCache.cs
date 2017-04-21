@@ -10,8 +10,8 @@ using Microsoft.Extensions.Primitives;
 
 namespace OmniSharp.Services
 {
-    [Export(typeof(IMetadataFileReferenceCache)), Shared]
-    public class MetadataFileReferenceCache : IMetadataFileReferenceCache
+    [Export, Shared]
+    public class MetadataFileReferenceCache
     {
         private static readonly string _cacheKeyPrefix = nameof(MetadataFileReferenceCache);
 

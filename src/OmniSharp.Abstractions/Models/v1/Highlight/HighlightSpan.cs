@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis.Classification;
-using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
-using OmniSharp.Json;
 
 namespace OmniSharp.Models.Highlight
 {
@@ -19,21 +16,6 @@ namespace OmniSharp.Models.Highlight
         public int EndColumn { get; set; }
         public string Kind { get; set; }
         public IEnumerable<string> Projects { get; set; }
-
-        public static HighlightSpan FromClassifiedSpan(ClassifiedSpan span, TextLineCollection lines, IEnumerable<string> projects)
-        {
-            var linePos = lines.GetLinePositionSpan(span.TextSpan);
-
-            return new HighlightSpan
-            {
-                StartLine = linePos.Start.Line,
-                EndLine = linePos.End.Line,
-                StartColumn = linePos.Start.Character,
-                EndColumn = linePos.End.Character,
-                Kind = span.ClassificationType,
-                Projects = projects
-            };
-        }
 
         public int CompareTo(HighlightSpan other)
         {

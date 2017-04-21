@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace OmniSharp.Models
+namespace OmniSharp.Models.Events
 {
     public class UnresolvedDependenciesMessage
     {

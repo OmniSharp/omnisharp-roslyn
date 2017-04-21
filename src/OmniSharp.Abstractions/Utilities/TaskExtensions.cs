@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace OmniSharp.Extensions
+namespace OmniSharp.Utilities
 {
     public static class TaskExtensions
     {

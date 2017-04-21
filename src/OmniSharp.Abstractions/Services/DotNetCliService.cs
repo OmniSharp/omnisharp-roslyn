@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
+using OmniSharp.Eventing;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Services

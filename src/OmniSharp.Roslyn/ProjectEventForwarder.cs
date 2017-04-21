@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
+using OmniSharp.Eventing;
+using OmniSharp.Models.Events;
 using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
 

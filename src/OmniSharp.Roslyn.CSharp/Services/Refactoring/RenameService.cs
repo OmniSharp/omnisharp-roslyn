@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.Rename;
+using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
@@ -72,8 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         else
                         {
                             var originalDocument = _workspace.CurrentSolution.GetDocument(changedDocumentId);
-                            var textChanges = await changedDocument.GetTextChangesAsync(originalDocument);
-                            var linePositionSpanTextChanges = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
+                            var linePositionSpanTextChanges = await TextChanges.GetAsync(changedDocument, originalDocument);
 
                             modifiedFileResponse.Changes = modifiedFileResponse.Changes != null
                                 ? modifiedFileResponse.Changes.Union(linePositionSpanTextChanges)

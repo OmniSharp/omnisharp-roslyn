@@ -1,4 +1,4 @@
-namespace OmniSharp
+namespace OmniSharp.Services
 {
     public interface ITestCommandProvider
     {

@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.TestCommand;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
 {

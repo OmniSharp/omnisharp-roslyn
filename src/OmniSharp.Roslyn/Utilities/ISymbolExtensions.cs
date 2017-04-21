@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.Extensions
+namespace OmniSharp.Roslyn.Utilities
 {
     public static class ISymbolExtensions
     {

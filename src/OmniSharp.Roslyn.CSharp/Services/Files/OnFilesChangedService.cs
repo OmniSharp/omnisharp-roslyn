@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using OmniSharp.FileWatching;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FilesChanged;
-using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {

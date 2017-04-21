@@ -11,9 +11,9 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.DotNetTest.TestFrameworks;
-using OmniSharp.Models;
-using OmniSharp.Models.Events;
+using OmniSharp.Eventing;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest
@@ -132,7 +132,7 @@ namespace OmniSharp.DotNetTest
                 {
                     case MessageType.TestMessage:
                         var testMessage = message.DeserializePayload<TestMessagePayload>();
-                        EventEmitter.Emit(EventTypes.TestMessage,
+                        EventEmitter.Emit(TestMessageEvent.Id,
                             new TestMessageEvent
                             {
                                 MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
@@ -175,7 +175,7 @@ namespace OmniSharp.DotNetTest
                     {
                         case MessageType.TestMessage:
                             var testMessage = message.DeserializePayload<TestMessagePayload>();
-                            EventEmitter.Emit(EventTypes.TestMessage,
+                            EventEmitter.Emit(TestMessageEvent.Id,
                                 new TestMessageEvent
                                 {
                                     MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),

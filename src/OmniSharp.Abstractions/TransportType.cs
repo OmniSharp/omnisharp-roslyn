@@ -1,4 +1,4 @@
-namespace OmniSharp.Services
+namespace OmniSharp
 {
     public enum TransportType
     {
