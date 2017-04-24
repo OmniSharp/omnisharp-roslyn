@@ -145,51 +145,35 @@ namespace OmniSharp.Script
             var commonReferences = new HashSet<MetadataReference>();
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
-                var scriptProjectInfo = _scriptProjectProvider.CreateProject(_env.TargetDirectory);                
-                if (scriptProjectInfo != null)
-                {                    
-                    runtimeContexts = ProjectContext.CreateContextForEachTarget(Path.GetDirectoryName(scriptProjectInfo.PathToProjectJson));                    
-                }
-            }
+                _logger.LogInformation($"Unable to find project context for CSX files. Will create script context for target framework {_targetFrameWork.Value}");
+                var scriptProjectInfo = _scriptProjectProvider.CreateProject(_env.TargetDirectory,_targetFrameWork.Value);                                                
+                runtimeContexts = ProjectContext.CreateContextForEachTarget(Path.GetDirectoryName(scriptProjectInfo.PathToProjectJson));                    
                 
-            if (runtimeContexts == null || runtimeContexts.Any() == false)
+            }
+                           
+            // assume the first one
+            var runtimeContext = runtimeContexts.First();
+            _logger.LogInformation($"Found script runtime context '{runtimeContext?.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
+
+            var projectExporter = runtimeContext.CreateExporter("Release");
+            var projectDependencies = projectExporter.GetDependencies();
+
+            // let's inject all compilation assemblies needed
+            var compilationAssemblies = projectDependencies.SelectMany(x => x.CompilationAssemblies);
+            foreach (var compilationAssembly in compilationAssemblies)
             {
-                _logger.LogInformation($"Unable to find project context for CSX files. Will default to non-context usage for target framework {_targetFrameWork.Value}");
-                                              
-                // Assume desktop framework.
-                AddMetadataReference(commonReferences, typeof(object).GetTypeInfo().Assembly.Location);
-                AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
+                _logger.LogInformation("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
+                AddMetadataReference(commonReferences, compilationAssembly.ResolvedPath);
+            }
+
+            // for non .NET Core, include System.Runtime
+            if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
+            {
 
                 inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));                                
+                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));
             }
-            // otherwise we will grab dependencies for the script from the runtime context
-            else
-            {
-                // assume the first one
-                var runtimeContext = runtimeContexts.First();
-                _logger.LogInformation($"Found script runtime context '{runtimeContext?.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
-
-                var projectExporter = runtimeContext.CreateExporter("Release");
-                var projectDependencies = projectExporter.GetDependencies();
-
-                // let's inject all compilation assemblies needed
-                var compilationAssemblies = projectDependencies.SelectMany(x => x.CompilationAssemblies);
-                foreach (var compilationAssembly in compilationAssemblies)
-                {
-                    _logger.LogInformation("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
-                    AddMetadataReference(commonReferences, compilationAssembly.ResolvedPath);
-                }
-
-                // for non .NET Core, include System.Runtime
-                if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
-                {
-
-                    inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                            x.Name.ToLowerInvariant().StartsWith("system.runtime")));
-                }
-            }
-
+            
             // inject all inherited assemblies
             foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
             {
@@ -228,7 +212,7 @@ namespace OmniSharp.Script
                 }
             }
         }
-
+      
         private void AddMetadataReference(ISet<MetadataReference> referenceCollection, string fileReference)
         {
             if (!File.Exists(fileReference))
