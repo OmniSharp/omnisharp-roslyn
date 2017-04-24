@@ -19,9 +19,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
-{
-    using csx;
-
+{    
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
@@ -78,7 +76,7 @@ namespace OmniSharp.Script
             }
 
             return compilationOptions;
-        });
+        }
 
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
@@ -147,10 +145,10 @@ namespace OmniSharp.Script
             var commonReferences = new HashSet<MetadataReference>();
             if (runtimeContexts == null || runtimeContexts.Any() == false)
             {
-                var projectJson = _scriptProjectProvider.CreateProject(_env.TargetDirectory);                
-                if (projectJson != null)
+                var scriptProjectInfo = _scriptProjectProvider.CreateProject(_env.TargetDirectory);                
+                if (scriptProjectInfo != null)
                 {                    
-                    runtimeContexts = ProjectContext.CreateContextForEachTarget(Path.GetDirectoryName(projectJson));                    
+                    runtimeContexts = ProjectContext.CreateContextForEachTarget(Path.GetDirectoryName(scriptProjectInfo.PathToProjectJson));                    
                 }
             }
                 
