@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Build.Construction;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
@@ -39,13 +38,6 @@ namespace OmniSharp.MSBuild
 
         private MSBuildOptions _options;
         private string _solutionFileOrRootPath;
-
-        private static readonly Guid[] _supportedProjectTypes = new[]
-        {
-            new Guid("fae04ec0-301f-11d3-bf4b-00c04f79efbc"),  // CSharp
-            new Guid("9A19103F-16F7-4668-BE54-9A1E7A4F7556"),  // CSharp (New .NET Core csproj)
-            new Guid("13B669BE-BB05-4DDF-9536-439F39A36129")   // Project GUID used by CLI when manipulation solution files
-        };
 
         public string Key { get; } = "MsBuild";
         public string Language { get; } = LanguageNames.CSharp;
@@ -147,39 +139,34 @@ namespace OmniSharp.MSBuild
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
-            var solutionFile = ReadSolutionFile(solutionFilePath);
-            var processedProjects = new HashSet<Guid>();
+            var solutionFile = SolutionFile.Parse(solutionFilePath);
+            var processedProjects = new HashSet<string>();
 
-            foreach (var projectBlock in solutionFile.ProjectBlocks)
+            foreach (var project in solutionFile.ProjectsInOrder)
             {
-                var isUnityProject = UnityHelper.IsUnityProject(projectBlock.ProjectName, projectBlock.ProjectTypeGuid);
-                if (!_supportedProjectTypes.Contains(projectBlock.ProjectTypeGuid) && !isUnityProject)
-                {
-                    _logger.LogWarning("Skipped unsupported project type '{0}'", projectBlock.ProjectPath);
-                    continue;
-                }
-
-                // Have we seen this project GUID? If so, move on.
-                if (processedProjects.Contains(projectBlock.ProjectGuid))
+                if (project.ProjectType == SolutionProjectType.SolutionFolder)
                 {
                     continue;
                 }
 
-                // Solution files are assumed to contain relative paths to project files
-                // with Windows-style slashes.
-                var projectFilePath = projectBlock.ProjectPath.Replace('\\', Path.DirectorySeparatorChar);
-                projectFilePath = Path.Combine(_environment.TargetDirectory, projectFilePath);
-                projectFilePath = Path.GetFullPath(projectFilePath);
-
-                _logger.LogInformation($"Loading project from '{projectFilePath}'.");
-
-                var projectFileInfo = AddProject(projectFilePath, isUnityProject);
-                if (projectFileInfo == null)
+                // Have we seen this project? If so, move on.
+                if (processedProjects.Contains(project.AbsolutePath))
                 {
                     continue;
                 }
 
-                processedProjects.Add(projectBlock.ProjectGuid);
+                if (Path.GetExtension(project.AbsolutePath) == ".csproj")
+                {
+                    _logger.LogInformation($"Loading project from '{project.AbsolutePath}'.");
+
+                    var projectFileInfo = AddProject(project.AbsolutePath);
+                    if (projectFileInfo == null)
+                    {
+                        continue;
+                    }
+                }
+
+                processedProjects.Add(project.AbsolutePath);
             }
         }
 
@@ -191,7 +178,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private ProjectFileInfo AddProject(string filePath, bool isUnityProject = false)
+        private ProjectFileInfo AddProject(string filePath)
         {
             if (_projects.ContainsKey(filePath))
             {
@@ -199,7 +186,7 @@ namespace OmniSharp.MSBuild
                 return null;
             }
 
-            var fileInfo = CreateProjectFileInfo(filePath, isUnityProject);
+            var fileInfo = CreateProjectFileInfo(filePath);
             if (fileInfo == null)
             {
                 return null;
@@ -275,15 +262,6 @@ namespace OmniSharp.MSBuild
             return result;
         }
 
-        private static SolutionFile ReadSolutionFile(string filePath)
-        {
-            using (var stream = File.OpenRead(filePath))
-            using (var reader = new StreamReader(stream))
-            {
-                return SolutionFile.Parse(reader);
-            }
-        }
-
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
             var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln");
@@ -297,14 +275,14 @@ namespace OmniSharp.MSBuild
             return result.FilePath;
         }
 
-        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath, bool isUnityProject = false)
+        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath)
         {
             ProjectFileInfo projectFileInfo = null;
             var diagnostics = new List<MSBuildDiagnosticsMessage>();
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics, isUnityProject);
+                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
 
                 if (projectFileInfo == null)
                 {

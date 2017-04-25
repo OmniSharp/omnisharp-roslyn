@@ -113,8 +113,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string solutionDirectory,
             ILogger logger,
             MSBuildOptions options = null,
-            ICollection<Models.MSBuildDiagnosticsMessage> diagnostics = null,
-            bool isUnityProject = false)
+            ICollection<Models.MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(projectFilePath))
             {
@@ -185,11 +184,18 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
 
+            var isUnityProject = references.Any(IsUnityEngine);
+
             return new ProjectFileInfo(
                 projectFilePath, assemblyName, name, new FrameworkName(targetFrameworkMoniker), targetFrameworks, specifiedLanguageVersion,
                 projectGuid, targetPath, allowUnsafe, outputKind, signAssembly, assemblyOriginatorKeyFile,
                 !string.IsNullOrWhiteSpace(documentationFile), outputPath, projectAssetsFile, isUnityProject, defineConstants, noWarn,
                 sourceFiles, references, projectReferences, analyzers, packageReferences);
+        }
+
+        private static bool IsUnityEngine(string filePath)
+        {
+            return string.Equals(Path.GetFileName(filePath), "UnityEngine.dll", StringComparison.OrdinalIgnoreCase);
         }
 
         private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, ILogger logger)
