@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
+using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.Options;
 using OmniSharp.Utilities;
 
@@ -113,7 +114,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             string solutionDirectory,
             ILogger logger,
             MSBuildOptions options = null,
-            ICollection<Models.MSBuildDiagnosticsMessage> diagnostics = null)
+            ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(projectFilePath))
             {

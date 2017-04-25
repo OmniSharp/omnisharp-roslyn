@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis;
 using NuGet.Frameworks;
 using OmniSharp.MSBuild.ProjectFile;
 
-namespace OmniSharp.Models
+namespace OmniSharp.MSBuild.Models
 {
-    public class MSBuildProjectInformation
+    public class MSBuildProjectInfo
     {
         public Guid ProjectGuid { get; set; }
         public string Path { get; set; }
@@ -19,7 +19,7 @@ namespace OmniSharp.Models
         public bool IsExe { get; set; }
         public bool IsUnityProject { get; set; }
 
-        public MSBuildProjectInformation(ProjectFileInfo projectFileInfo)
+        public MSBuildProjectInfo(ProjectFileInfo projectFileInfo)
         {
             AssemblyName = projectFileInfo.AssemblyName;
             Path = projectFileInfo.ProjectFilePath;

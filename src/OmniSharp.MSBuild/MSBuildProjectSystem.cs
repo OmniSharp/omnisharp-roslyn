@@ -12,9 +12,10 @@ using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
-using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.MSBuild.Models;
+using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -292,19 +293,10 @@ namespace OmniSharp.MSBuild
             catch (Exception ex)
             {
                 _logger.LogWarning($"Failed to process project file '{projectFilePath}'.", ex);
-                _eventEmitter.Emit(EventTypes.Error, new ErrorMessage()
-                {
-                    FileName = projectFilePath,
-                    Text = ex.ToString()
-                });
+                _eventEmitter.Error(ex, fileName: projectFilePath);
             }
 
-            _eventEmitter.Emit(EventTypes.MsBuildProjectDiagnostics, new MSBuildProjectDiagnostics()
-            {
-                FileName = projectFilePath,
-                Warnings = diagnostics.Where(d => d.LogLevel == "Warning"),
-                Errors = diagnostics.Where(d => d.LogLevel == "Error"),
-            });
+            _eventEmitter.MSBuildProjectDiagnostics(projectFilePath, diagnostics);
 
             return projectFileInfo;
         }
@@ -596,9 +588,11 @@ namespace OmniSharp.MSBuild
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
-            return Task.FromResult<object>(
-                new MsBuildWorkspaceInformation(_solutionFileOrRootPath, _projects,
-                    excludeSourceFiles: request?.ExcludeSourceFiles ?? false));
+            var info = new MSBuildWorkspaceInfo(
+                _solutionFileOrRootPath, _projects,
+                excludeSourceFiles: request?.ExcludeSourceFiles ?? false);
+
+            return Task.FromResult<object>(info);
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
@@ -616,8 +610,9 @@ namespace OmniSharp.MSBuild
                 return Task.FromResult<object>(null);
             }
 
-            return Task.FromResult<object>(
-                new MSBuildProjectInformation(projectFileInfo));
+            var info = new MSBuildProjectInfo(projectFileInfo);
+
+            return Task.FromResult<object>(info);
         }
     }
 }

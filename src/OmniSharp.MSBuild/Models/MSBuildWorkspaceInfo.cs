@@ -2,18 +2,18 @@
 using System.Linq;
 using OmniSharp.MSBuild.ProjectFile;
 
-namespace OmniSharp.Models
+namespace OmniSharp.MSBuild.Models
 {
-    public class MsBuildWorkspaceInformation
+    public class MSBuildWorkspaceInfo
     {
-        public MsBuildWorkspaceInformation(string solutionFilePath, IEnumerable<ProjectFileInfo> projects, bool excludeSourceFiles)
+        public MSBuildWorkspaceInfo(string solutionFilePath, IEnumerable<ProjectFileInfo> projects, bool excludeSourceFiles)
         {
             SolutionPath = solutionFilePath;
 
             Projects = projects
                 .OrderBy(x => x.AssemblyName)
                 .Select(p => {
-                    var project = new MSBuildProjectInformation(p);
+                    var project = new MSBuildProjectInfo(p);
                     if (excludeSourceFiles)
                     {
                         project.SourceFiles = null;
@@ -24,6 +24,6 @@ namespace OmniSharp.Models
         }
 
         public string SolutionPath { get; }
-        public IEnumerable<MSBuildProjectInformation> Projects { get; }
+        public IEnumerable<MSBuildProjectInfo> Projects { get; }
     }
 }
