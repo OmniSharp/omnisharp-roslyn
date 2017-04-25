@@ -375,6 +375,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsSnippet("OptionalParam(${1:int i}, ${2:string s = null});$0 : void", completions);
         }
 
+        [Fact]
+        public async Task Can_complete_global_variable_in_CSX()
+        {
+            const string source = @"
+                        var aVariable = 1;
+                        av$$
+            ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source, wantSnippet: true);
+            ContainsSnippet("aVariable$0 : int", completions);
+        }
+
+        [Fact]
+        public async Task Can_return_global_method_type_arguments_snippets_in_CSX()
+        {
+            const string source =
+                @"using System.Collections.Generic;
+
+                         public string Get<SomeType>()
+                         {
+                         }
+
+                         G$$
+                 ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source, wantSnippet: true);
+            ContainsSnippet("Get<${1:SomeType}>()$0 : string", completions);
+        }
+
         private static IEnumerable<string> GetSnippetTexts(IEnumerable<AutoCompleteResponse> responses)
         {
             return responses.Select(r =>
