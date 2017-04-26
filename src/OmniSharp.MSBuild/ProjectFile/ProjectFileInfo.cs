@@ -78,21 +78,21 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return null;
             }
 
-            var projectInstance = LoadProject(filePath, solutionDirectory, logger, options, diagnostics);
+            var projectInstance = LoadProject(filePath, solutionDirectory, logger, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
             }
 
             var id = ProjectId.CreateNewId(debugName: filePath);
-            var data = CreateProjectData(projectInstance);
+            var data = CreateProjectData(projectInstance, targetFrameworks);
 
             return new ProjectFileInfo(id, filePath, data);
         }
 
         private static ProjectInstance LoadProject(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics)
+            MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
         {
             options = options ?? new MSBuildOptions();
 
@@ -106,7 +106,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : collection.LoadProject(filePath, options.ToolsVersion);
 
             var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
-            var targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+            targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
 
             // If the project supports multiple target frameworks and specific framework isn't
             // selected, we must pick one before execution. Otherwise, the ResolveReferences
@@ -132,7 +132,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 : null;
         }
 
-        private static ProjectData CreateProjectData(ProjectInstance projectInstance)
+        private static ProjectData CreateProjectData(ProjectInstance projectInstance, ImmutableArray<string> targetFrameworks)
         {
             var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
             var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
@@ -142,7 +142,6 @@ namespace OmniSharp.MSBuild.ProjectFile
             var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
 
             var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
-            var targetFrameworks = PropertyConverter.SplitList(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
 
             var languageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
             var allowUnsafeCode = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
@@ -172,13 +171,13 @@ namespace OmniSharp.MSBuild.ProjectFile
             string solutionDirectory, ILogger logger,
             MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
-            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, options, diagnostics);
+            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
             }
 
-            var data = CreateProjectData(projectInstance);
+            var data = CreateProjectData(projectInstance, targetFrameworks);
 
             return new ProjectFileInfo(Id, FilePath, data);
         }
@@ -237,11 +236,16 @@ namespace OmniSharp.MSBuild.ProjectFile
         private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items)
         {
             var builder = ImmutableArray.CreateBuilder<string>();
+            var addedSet = new HashSet<string>();
 
             foreach (var item in items)
             {
                 var fullPath = item.GetMetadataValue(MetadataNames.FullPath);
-                builder.Add(fullPath);
+
+                if (addedSet.Add(fullPath))
+                {
+                    builder.Add(fullPath);
+                }
             }
 
             return builder.ToImmutable();
@@ -250,6 +254,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         private static ImmutableArray<PackageReference> GetPackageReferences(ICollection<ProjectItemInstance> items)
         {
             var builder = ImmutableArray.CreateBuilder<PackageReference>(items.Count);
+            var addedSet = new HashSet<PackageReference>();
 
             foreach (var item in items)
             {
@@ -261,7 +266,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var isImplicitlyDefinedValue = item.GetMetadataValue(MetadataNames.IsImplicitlyDefined);
                 var isImplicitlyDefined = PropertyConverter.ToBoolean(isImplicitlyDefinedValue, defaultValue: false);
 
-                builder.Add(new PackageReference(dependency, isImplicitlyDefined));
+                var packageReference = new PackageReference(dependency, isImplicitlyDefined);
+
+                if (addedSet.Add(packageReference))
+                {
+                    builder.Add(packageReference);
+                }
             }
 
             return builder.ToImmutable();
