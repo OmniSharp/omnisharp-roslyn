@@ -43,6 +43,16 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
+        [Fact]
+        public async Task RunXunitTestWithDisplayName()
+        {
+            await RunDotNetTestAsync(
+                XunitTestProject,
+                methodName: "Main.Test.MainTest.UsesDisplayName",
+                testFramework: "xunit",
+                shouldPass: true);
+        }
+
         // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
         // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
 

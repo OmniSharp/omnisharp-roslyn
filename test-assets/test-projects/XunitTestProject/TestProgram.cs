@@ -30,5 +30,11 @@ namespace Main.Test
         {
             
         }
+
+        [Fact(DisplayName = "My Test Name")]
+        public void UsesDisplayName()
+        {
+            Assert.True(true);
+        }
     }
 }
