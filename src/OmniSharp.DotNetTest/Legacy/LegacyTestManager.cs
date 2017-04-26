@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.DotNetTest.TestFrameworks;
@@ -84,17 +85,15 @@ namespace OmniSharp.DotNetTest.Legacy
 
             testProcess.OutputDataReceived += (_, e) =>
             {
-                EventEmitter.Emit(TestMessageEvent.Id,
-                    new TestMessageEvent
-                    {
-                        MessageLevel = "info",
-                        Message = e.Data ?? string.Empty
-                    });
-
+                EmitTestMessage(TestMessageLevel.Informational, e.Data ?? string.Empty);
                 output.AppendLine(e.Data);
             };
 
-            testProcess.ErrorDataReceived += (_, e) => error.AppendLine(e.Data);
+            testProcess.ErrorDataReceived += (_, e) =>
+            {
+                EmitTestMessage(TestMessageLevel.Error, e.Data ?? string.Empty);
+                error.AppendLine(e.Data);
+            };
 
             testProcess.BeginOutputReadLine();
             testProcess.BeginErrorReadLine();

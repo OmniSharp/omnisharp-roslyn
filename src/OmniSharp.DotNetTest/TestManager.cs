@@ -10,8 +10,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using OmniSharp.DotNetTest.Legacy;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -177,6 +179,21 @@ namespace OmniSharp.DotNetTest
                 socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 return ((IPEndPoint)socket.LocalEndPoint).Port;
             }
+        }
+
+        protected void EmitTestMessage(TestMessageLevel messageLevel, string message)
+        {
+            EventEmitter.Emit(TestMessageEvent.Id,
+                new TestMessageEvent
+                {
+                    MessageLevel = messageLevel.ToString().ToLowerInvariant(),
+                    Message = message
+                });
+        }
+
+        protected void EmitTestMessage(TestMessagePayload testMessage)
+        {
+            EmitTestMessage(testMessage.MessageLevel, testMessage.Message);
         }
 
         protected Message ReadMessage()

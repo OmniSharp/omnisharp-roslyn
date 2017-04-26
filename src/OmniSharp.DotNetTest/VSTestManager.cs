@@ -10,8 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using OmniSharp.DotNetTest.Models;
-using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
@@ -47,9 +47,24 @@ namespace OmniSharp.DotNetTest
         {
             // The project must be built before we can test.
             var process = DotNetCli.Start("build", WorkingDirectory);
+
+            process.OutputDataReceived += (_, e) =>
+            {
+                EmitTestMessage(TestMessageLevel.Informational, e.Data ?? string.Empty);
+            };
+
+            process.ErrorDataReceived += (_, e) =>
+            {
+                EmitTestMessage(TestMessageLevel.Error, e.Data ?? string.Empty);
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
             process.WaitForExit();
 
-            return File.Exists(Project.OutputFilePath);
+            return process.ExitCode == 0
+                && File.Exists(Project.OutputFilePath);
         }
 
         private static void VerifyTestFramework(string testFrameworkName)
@@ -131,8 +146,7 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
-                        var testMessage = message.DeserializePayload<TestMessagePayload>();
-                        EmitTestMessage(testMessage);
+                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
                         break;
 
                     case MessageType.ExecutionComplete:
@@ -168,8 +182,7 @@ namespace OmniSharp.DotNetTest
                     switch (message.MessageType)
                     {
                         case MessageType.TestMessage:
-                            var testMessage = message.DeserializePayload<TestMessagePayload>();
-                            EmitTestMessage(testMessage);
+                            EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
                             break;
 
                         case MessageType.TestRunStatsChange:
@@ -228,8 +241,7 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
-                        var testMessage = message.DeserializePayload<TestMessagePayload>();
-                        EmitTestMessage(testMessage);
+                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
                         break;
 
                     case MessageType.TestCasesFound:
@@ -265,16 +277,6 @@ namespace OmniSharp.DotNetTest
         private TestCase[] DiscoverTests(string methodName)
         {
             return DiscoverTestsAsync(methodName, CancellationToken.None).Result;
-        }
-
-        private void EmitTestMessage(TestMessagePayload testMessage)
-        {
-            EventEmitter.Emit(TestMessageEvent.Id,
-                new TestMessageEvent
-                {
-                    MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
-                    Message = testMessage.Message
-                });
         }
     }
 }
