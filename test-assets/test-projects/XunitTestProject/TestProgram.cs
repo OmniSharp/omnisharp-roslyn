@@ -36,5 +36,17 @@ namespace Main.Test
         {
             Assert.True(true);
         }
+
+        [Fact]
+        public void TestWithSimilarName()
+        {
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestWithSimilarNameFooBar()
+        {
+            Assert.True(true);
+        }
     }
 }
