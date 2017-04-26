@@ -245,7 +245,17 @@ namespace OmniSharp.DotNetTest
                     case MessageType.TestCasesFound:
                         foreach (var testCase in message.DeserializePayload<TestCase[]>())
                         {
-                            if (testCase.DisplayName.StartsWith(methodName))
+                            var testName = testCase.FullyQualifiedName;
+
+                            var testNameEnd = testName.IndexOf('(');
+                            if (testNameEnd >= 0)
+                            {
+                                testName = testName.Substring(0, testNameEnd);
+                            }
+
+                            testName = testName.Trim();
+
+                            if (testName.Equals(methodName, StringComparison.Ordinal))
                             {
                                 testCases.Add(testCase);
                             }
