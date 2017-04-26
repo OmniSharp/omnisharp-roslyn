@@ -176,24 +176,7 @@ namespace OmniSharp.MSBuild
 
                     if (!_projects.ContainsKey(project.FilePath))
                     {
-                        // Add the project
-                        _projects.Add(project);
-
-                        var compilationOptions = CreateCompilationOptions(project);
-
-                        var projectInfo = ProjectInfo.Create(
-                            id: project.Id,
-                            version: VersionStamp.Create(),
-                            name: project.Name,
-                            assemblyName: project.AssemblyName,
-                            language: LanguageNames.CSharp,
-                            filePath: project.FilePath,
-                            outputFilePath: project.TargetPath,
-                            compilationOptions: compilationOptions);
-
-                        _workspace.AddProject(projectInfo);
-
-                        WatchProject(project);
+                        AddProject(project);
                     }
                     else
                     {
@@ -217,6 +200,27 @@ namespace OmniSharp.MSBuild
             }
         }
 
+        private void AddProject(ProjectFileInfo project)
+        {
+            _projects.Add(project);
+
+            var compilationOptions = CreateCompilationOptions(project);
+
+            var projectInfo = ProjectInfo.Create(
+                id: project.Id,
+                version: VersionStamp.Create(),
+                name: project.Name,
+                assemblyName: project.AssemblyName,
+                language: LanguageNames.CSharp,
+                filePath: project.FilePath,
+                outputFilePath: project.TargetPath,
+                compilationOptions: compilationOptions);
+
+            _workspace.AddProject(projectInfo);
+
+            WatchProject(project);
+        }
+
         private void WatchProject(ProjectFileInfo project)
         {
             // TODO: This needs some improvement. Currently, it tracks both deletions and changes
@@ -230,7 +234,7 @@ namespace OmniSharp.MSBuild
             {
                 _fileSystemWatcher.Watch(project.ProjectAssetsFile, file =>
                 {
-                    OnProjectChanged(project.ProjectAssetsFile, allowAutoRestore: false);
+                    OnProjectChanged(project.FilePath, allowAutoRestore: false);
                 });
             }
         }
@@ -425,40 +429,44 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectReferencePath in projectReferencePaths)
             {
-                if (_projects.TryGetValue(projectReferencePath, out var projectReferenceInfo))
+                if (!_projects.TryGetValue(projectReferencePath, out var referencedProject))
                 {
-                    var reference = new ProjectReference(projectReferenceInfo.Id);
-
-                    if (existingProjectReferences.Remove(reference))
+                    if (File.Exists(projectReferencePath))
                     {
-                        // This reference already exists
-                        continue;
-                    }
+                        _logger.LogInformation($"Found referenced project outside root directory: {projectReferencePath}");
 
-                    if (!addedProjectReferences.Contains(reference))
-                    {
-                        _workspace.AddProjectReference(project.Id, reference);
-                        addedProjectReferences.Add(reference);
+                        // We've found a project reference that we didn't know about already, but it exists on disk.
+                        // This is likely a project that is outside of OmniSharp's TargetDirectory.
+                        referencedProject = LoadProject(projectReferencePath);
+
+                        if (referencedProject != null)
+                        {
+                            AddProject(referencedProject);
+
+                            // Ensure this project is queued to be updated later.
+                            _projectsToProcess.Enqueue(referencedProject);
+                        }
                     }
                 }
-                else if (File.Exists(projectReferencePath))
-                {
-                    _logger.LogInformation($"Found referenced project outside root directory: {projectReferencePath}");
 
-                    // We've found a project reference that we didn't know about already, but it exists on disk.
-                    // This is likely a project that is outside of OmniSharp's TargetDirectory.
-                    var projectReference = LoadProject(projectReferencePath);
-                    if (projectReference == null)
-                    {
-                        // Diagnostics reported while loading the project have already been logged.
-                        continue;
-                    }
-
-                    _projectsToProcess.Enqueue(projectReference);
-                }
-                else
+                if (referencedProject == null)
                 {
                     _logger.LogWarning($"Unable to resolve project reference '{projectReferencePath}' for '{project.Name}'.");
+                    continue;
+                }
+
+                var projectReference = new ProjectReference(referencedProject.Id);
+
+                if (existingProjectReferences.Remove(projectReference))
+                {
+                    // This reference already exists
+                    continue;
+                }
+
+                if (!addedProjectReferences.Contains(projectReference))
+                {
+                    _workspace.AddProjectReference(project.Id, projectReference);
+                    addedProjectReferences.Add(projectReference);
                 }
             }
 

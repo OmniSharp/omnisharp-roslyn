@@ -57,7 +57,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> analyzers)
             {
                 Guid = guid;
-                Name = Name;
+                Name = name;
 
                 AssemblyName = assemblyName;
                 TargetPath = targetPath;
