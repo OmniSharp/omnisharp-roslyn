@@ -132,13 +132,7 @@ namespace OmniSharp.DotNetTest
                 {
                     case MessageType.TestMessage:
                         var testMessage = message.DeserializePayload<TestMessagePayload>();
-                        EventEmitter.Emit(TestMessageEvent.Id,
-                            new TestMessageEvent
-                            {
-                                MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
-                                Message = testMessage.Message
-                            });
-
+                        EmitTestMessage(testMessage);
                         break;
 
                     case MessageType.ExecutionComplete:
@@ -175,13 +169,7 @@ namespace OmniSharp.DotNetTest
                     {
                         case MessageType.TestMessage:
                             var testMessage = message.DeserializePayload<TestMessagePayload>();
-                            EventEmitter.Emit(TestMessageEvent.Id,
-                                new TestMessageEvent
-                                {
-                                    MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
-                                    Message = testMessage.Message
-                                });
-
+                            EmitTestMessage(testMessage);
                             break;
 
                         case MessageType.TestRunStatsChange:
@@ -240,6 +228,8 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
+                        var testMessage = message.DeserializePayload<TestMessagePayload>();
+                        EmitTestMessage(testMessage);
                         break;
 
                     case MessageType.TestCasesFound:
@@ -275,6 +265,16 @@ namespace OmniSharp.DotNetTest
         private TestCase[] DiscoverTests(string methodName)
         {
             return DiscoverTestsAsync(methodName, CancellationToken.None).Result;
+        }
+
+        private void EmitTestMessage(TestMessagePayload testMessage)
+        {
+            EventEmitter.Emit(TestMessageEvent.Id,
+                new TestMessageEvent
+                {
+                    MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
+                    Message = testMessage.Message
+                });
         }
     }
 }
