@@ -22,9 +22,9 @@ namespace OmniSharp.MSBuild.Models
         public MSBuildProjectInfo(ProjectFileInfo projectFileInfo)
         {
             AssemblyName = projectFileInfo.AssemblyName;
-            Path = projectFileInfo.ProjectFilePath;
+            Path = projectFileInfo.FilePath;
             TargetPath = projectFileInfo.TargetPath;
-            ProjectGuid = projectFileInfo.ProjectGuid;
+            ProjectGuid = projectFileInfo.Guid;
             TargetFramework = projectFileInfo.TargetFramework.ToString();
             SourceFiles = projectFileInfo.SourceFiles;
 
@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild.Models
             OutputPath = projectFileInfo.OutputPath;
             IsExe = projectFileInfo.OutputKind == OutputKind.ConsoleApplication ||
                 projectFileInfo.OutputKind == OutputKind.WindowsApplication;
-            IsUnityProject = projectFileInfo.IsUnityProject;
+            IsUnityProject = projectFileInfo.IsUnityProject();
         }
     }
 }

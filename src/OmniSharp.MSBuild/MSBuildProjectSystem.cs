@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -35,6 +36,7 @@ namespace OmniSharp.MSBuild
         private readonly ILogger _logger;
 
         private readonly object _gate = new object();
+        private readonly Queue<ProjectFileInfo> _projectsToProcess;
         private readonly ProjectFileInfoCollection _projects;
 
         private MSBuildOptions _options;
@@ -63,6 +65,7 @@ namespace OmniSharp.MSBuild
             _loggerFactory = loggerFactory;
 
             _projects = new ProjectFileInfoCollection();
+            _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
         }
 
@@ -83,65 +86,59 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            AddProjects();
+            var initialProjectPaths = GetInitialProjectPaths();
 
-            foreach (var projectFileInfo in _projects)
+            foreach (var projectPath in initialProjectPaths)
             {
-                var projectFilePath = projectFileInfo.ProjectFilePath;
-                var projectAssetsFile = projectFileInfo.ProjectAssetsFile;
-
-                // TODO: This needs some improvement. Currently, it tracks both deletions and changes
-                // as "updates". We should properly remove projects that are deleted.
-                _fileSystemWatcher.Watch(projectFilePath, file =>
+                if (!File.Exists(projectPath))
                 {
-                    OnProjectChanged(projectFilePath, allowAutoRestore: true);
-                });
-
-                if (!string.IsNullOrEmpty(projectAssetsFile))
-                {
-                    _fileSystemWatcher.Watch(projectAssetsFile, file =>
-                    {
-                        OnProjectChanged(projectFilePath, allowAutoRestore: false);
-                    });
+                    _logger.LogWarning($"Found project that doesn't exist on disk: {projectPath}");
+                    continue;
                 }
 
-                UpdateProject(projectFileInfo);
-                CheckForUnresolvedDependences(projectFileInfo, allowAutoRestore: true);
+                var project = LoadProject(projectPath);
+                if (project == null)
+                {
+                    // Diagnostics reported while loading the project have already been logged.
+                    continue;
+                }
+
+                _projectsToProcess.Enqueue(project);
             }
+
+            ProcessProjects();
         }
 
-        private void AddProjects()
+        private IEnumerable<string> GetInitialProjectPaths()
         {
+            // If a solution was provided, use it.
             if (!string.IsNullOrEmpty(_environment.SolutionFilePath))
             {
-                // If a solution file path was provided, process that solution
                 _solutionFileOrRootPath = _environment.SolutionFilePath;
-                AddProjectsFromSolution(_environment.SolutionFilePath);
-                return;
+                return GetProjectPathsFromSolution(_environment.SolutionFilePath);
             }
 
-            // Otherwise, assume that the path provided is a directory and
-            // look for a solution there.
+            // Otherwise, assume that the path provided is a directory and look for a solution there.
             var solutionFilePath = FindSolutionFilePath(_environment.TargetDirectory, _logger);
             if (!string.IsNullOrEmpty(solutionFilePath))
             {
                 _solutionFileOrRootPath = solutionFilePath;
-                AddProjectsFromSolution(solutionFilePath);
-                return;
+                return GetProjectPathsFromSolution(solutionFilePath);
             }
 
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
             _solutionFileOrRootPath = _environment.TargetDirectory;
-            AddProjectsFromRootPath(_environment.TargetDirectory);
+            return Directory.GetFiles(_environment.TargetDirectory, "*.csproj", SearchOption.AllDirectories);
         }
 
-        private void AddProjectsFromSolution(string solutionFilePath)
+        private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
             var solutionFile = SolutionFile.Parse(solutionFilePath);
             var processedProjects = new HashSet<string>();
+            var result = new List<string>();
 
             foreach (var project in solutionFile.ProjectsInOrder)
             {
@@ -158,62 +155,84 @@ namespace OmniSharp.MSBuild
 
                 if (Path.GetExtension(project.AbsolutePath) == ".csproj")
                 {
-                    _logger.LogInformation($"Loading project from '{project.AbsolutePath}'.");
-
-                    var projectFileInfo = AddProject(project.AbsolutePath);
-                    if (projectFileInfo == null)
-                    {
-                        continue;
-                    }
+                    result.Add(project.AbsolutePath);
                 }
 
                 processedProjects.Add(project.AbsolutePath);
             }
+
+            return result;
         }
 
-        private void AddProjectsFromRootPath(string rootPath)
+        private void ProcessProjects()
         {
-            foreach (var projectFilePath in Directory.GetFiles(rootPath, "*.csproj", SearchOption.AllDirectories))
+            while (_projectsToProcess.Count > 0)
             {
-                AddProject(projectFilePath);
+                var newProjects = new List<ProjectFileInfo>();
+
+                while (_projectsToProcess.Count > 0)
+                {
+                    var project = _projectsToProcess.Dequeue();
+
+                    if (!_projects.ContainsKey(project.FilePath))
+                    {
+                        // Add the project
+                        _projects.Add(project);
+
+                        var compilationOptions = CreateCompilationOptions(project);
+
+                        var projectInfo = ProjectInfo.Create(
+                            id: project.Id,
+                            version: VersionStamp.Create(),
+                            name: project.Name,
+                            assemblyName: project.AssemblyName,
+                            language: LanguageNames.CSharp,
+                            filePath: project.FilePath,
+                            outputFilePath: project.TargetPath,
+                            compilationOptions: compilationOptions);
+
+                        _workspace.AddProject(projectInfo);
+
+                        WatchProject(project);
+                    }
+                    else
+                    {
+                        _projects[project.FilePath] = project;
+                    }
+
+                    newProjects.Add(project);
+                }
+
+                // Next, update all projects.
+                foreach (var project in newProjects)
+                {
+                    UpdateProject(project);
+                }
+
+                // Finally, check for any unresolved dependencies in the projects we just processes.
+                foreach (var project in newProjects)
+                {
+                    CheckForUnresolvedDependences(project, allowAutoRestore: true);
+                }
             }
         }
 
-        private ProjectFileInfo AddProject(string filePath)
+        private void WatchProject(ProjectFileInfo project)
         {
-            if (_projects.ContainsKey(filePath))
+            // TODO: This needs some improvement. Currently, it tracks both deletions and changes
+            // as "updates". We should properly remove projects that are deleted.
+            _fileSystemWatcher.Watch(project.FilePath, file =>
             {
-                _logger.LogWarning($"Can't add project, it already exists: {filePath}");
-                return null;
-            }
+                OnProjectChanged(project.FilePath, allowAutoRestore: true);
+            });
 
-            var fileInfo = CreateProjectFileInfo(filePath);
-            if (fileInfo == null)
+            if (!string.IsNullOrEmpty(project.ProjectAssetsFile))
             {
-                return null;
+                _fileSystemWatcher.Watch(project.ProjectAssetsFile, file =>
+                {
+                    OnProjectChanged(project.ProjectAssetsFile, allowAutoRestore: false);
+                });
             }
-
-            _logger.LogInformation($"Add project: {fileInfo.ProjectFilePath}");
-
-            _projects.Add(fileInfo);
-
-            var compilationOptions = CreateCompilationOptions(fileInfo);
-
-            var projectInfo = ProjectInfo.Create(
-                id: ProjectId.CreateNewId(fileInfo.Name),
-                version: VersionStamp.Create(),
-                name: fileInfo.Name,
-                assemblyName: fileInfo.AssemblyName,
-                language: LanguageNames.CSharp,
-                filePath: fileInfo.ProjectFilePath,
-                outputFilePath: fileInfo.TargetPath,
-                compilationOptions: compilationOptions);
-
-            _workspace.AddProject(projectInfo);
-
-            fileInfo.SetProjectId(projectInfo.Id);
-
-            return fileInfo;
         }
 
         private static CSharpCompilationOptions CreateCompilationOptions(ProjectFileInfo projectFileInfo)
@@ -222,7 +241,7 @@ namespace OmniSharp.MSBuild
 
             result = result.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
 
-            if (projectFileInfo.AllowUnsafe)
+            if (projectFileInfo.AllowUnsafeCode)
             {
                 result = result.WithAllowUnsafe(true);
             }
@@ -250,12 +269,12 @@ namespace OmniSharp.MSBuild
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
-                var keyFile = Path.Combine(projectFileInfo.ProjectDirectory, projectFileInfo.AssemblyOriginatorKeyFile);
+                var keyFile = Path.Combine(projectFileInfo.Directory, projectFileInfo.AssemblyOriginatorKeyFile);
                 result = result.WithStrongNameProvider(new DesktopStrongNameProvider())
                                .WithCryptoKeyFile(keyFile);
             }
 
-            if (projectFileInfo.GenerateXmlDocumentation)
+            if (!string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile))
             {
                 result = result.WithXmlReferenceResolver(XmlFileResolver.Default);
             }
@@ -276,62 +295,67 @@ namespace OmniSharp.MSBuild
             return result.FilePath;
         }
 
-        private ProjectFileInfo CreateProjectFileInfo(string projectFilePath)
+        private ProjectFileInfo LoadProject(string projectFilePath)
         {
-            ProjectFileInfo projectFileInfo = null;
+            _logger.LogInformation($"Loading project: {projectFilePath}");
+
+            ProjectFileInfo project;
             var diagnostics = new List<MSBuildDiagnosticsMessage>();
 
             try
             {
-                projectFileInfo = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
 
-                if (projectFileInfo == null)
+                if (project == null)
                 {
-                    _logger.LogWarning($"Failed to process project file '{projectFilePath}'.");
+                    _logger.LogWarning($"Failed to load project file '{projectFilePath}'.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Failed to process project file '{projectFilePath}'.", ex);
+                _logger.LogWarning($"Failed to load project file '{projectFilePath}'.", ex);
                 _eventEmitter.Error(ex, fileName: projectFilePath);
+                project = null;
             }
 
             _eventEmitter.MSBuildProjectDiagnostics(projectFilePath, diagnostics);
 
-            return projectFileInfo;
+            return project;
         }
 
         private void OnProjectChanged(string projectFilePath, bool allowAutoRestore)
         {
-            var newProjectFileInfo = CreateProjectFileInfo(projectFilePath);
-
-            if (newProjectFileInfo != null)
+            lock (_gate)
             {
-                lock (_gate)
+                if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                 {
-                    if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
+                    var diagnostics = new List<MSBuildDiagnosticsMessage>();
+                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+
+                    if (newProjectFileInfo != null)
                     {
                         _projects[projectFilePath] = newProjectFileInfo;
-                        newProjectFileInfo.SetProjectId(oldProjectFileInfo.ProjectId);
 
                         UpdateProject(newProjectFileInfo);
                         CheckForUnresolvedDependences(newProjectFileInfo, oldProjectFileInfo, allowAutoRestore);
                     }
                 }
+
+                ProcessProjects();
             }
         }
 
         private void UpdateProject(ProjectFileInfo projectFileInfo)
         {
-            var project = _workspace.CurrentSolution.GetProject(projectFileInfo.ProjectId);
+            var project = _workspace.CurrentSolution.GetProject(projectFileInfo.Id);
             if (project == null)
             {
-                _logger.LogError($"Could not locate project in workspace: {projectFileInfo.ProjectFilePath}");
+                _logger.LogError($"Could not locate project in workspace: {projectFileInfo.FilePath}");
                 return;
             }
 
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
-            UpdateParseOptions(project, projectFileInfo.SpecifiedLanguageVersion, projectFileInfo.PreprocessorSymbolNames, projectFileInfo.GenerateXmlDocumentation);
+            UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.References);
         }
@@ -392,18 +416,18 @@ namespace OmniSharp.MSBuild
             _workspace.SetParseOptions(project.Id, parseOptions);
         }
 
-        private void UpdateProjectReferences(Project project, IList<string> projectReferences)
+        private void UpdateProjectReferences(Project project, ImmutableArray<string> projectReferencePaths)
         {
             _logger.LogInformation($"Update project: {project.Name}");
 
             var existingProjectReferences = new HashSet<ProjectReference>(project.ProjectReferences);
             var addedProjectReferences = new HashSet<ProjectReference>();
 
-            foreach (var projectReference in projectReferences)
+            foreach (var projectReferencePath in projectReferencePaths)
             {
-                if (_projects.TryGetValue(projectReference, out var projectReferenceInfo))
+                if (_projects.TryGetValue(projectReferencePath, out var projectReferenceInfo))
                 {
-                    var reference = new ProjectReference(projectReferenceInfo.ProjectId);
+                    var reference = new ProjectReference(projectReferenceInfo.Id);
 
                     if (existingProjectReferences.Remove(reference))
                     {
@@ -417,9 +441,24 @@ namespace OmniSharp.MSBuild
                         addedProjectReferences.Add(reference);
                     }
                 }
+                else if (File.Exists(projectReferencePath))
+                {
+                    _logger.LogInformation($"Found referenced project outside root directory: {projectReferencePath}");
+
+                    // We've found a project reference that we didn't know about already, but it exists on disk.
+                    // This is likely a project that is outside of OmniSharp's TargetDirectory.
+                    var projectReference = LoadProject(projectReferencePath);
+                    if (projectReference == null)
+                    {
+                        // Diagnostics reported while loading the project have already been logged.
+                        continue;
+                    }
+
+                    _projectsToProcess.Enqueue(projectReference);
+                }
                 else
                 {
-                    _logger.LogWarning($"Unable to resolve project reference '{projectReference}' for '{project.Name}'.");
+                    _logger.LogWarning($"Unable to resolve project reference '{projectReferencePath}' for '{project.Name}'.");
                 }
             }
 
@@ -429,7 +468,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void UpdateReferences(Project project, IList<string> references)
+        private void UpdateReferences(Project project, ImmutableArray<string> references)
         {
             var existingReferences = new HashSet<MetadataReference>(project.MetadataReferences);
             var addedReferences = new HashSet<MetadataReference>();
@@ -522,7 +561,7 @@ namespace OmniSharp.MSBuild
             {
                 if (allowAutoRestore && _options.EnablePackageAutoRestore)
                 {
-                    _dotNetCliService.RestoreAsync(projectFileInfo.ProjectDirectory, onFailure: () =>
+                    _dotNetCliService.RestoreAsync(projectFileInfo.Directory, onFailure: () =>
                     {
                         FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
                     });
@@ -571,7 +610,7 @@ namespace OmniSharp.MSBuild
             _eventEmitter.Emit(EventTypes.UnresolvedDependencies,
                 new UnresolvedDependenciesMessage()
                 {
-                    FileName = projectFileInfo.ProjectFilePath,
+                    FileName = projectFileInfo.FilePath,
                     UnresolvedDependencies = unresolvedDependencies
                 });
         }
