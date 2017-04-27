@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Models;
+using OmniSharp.MSBuild.Models.Events;
 
 namespace OmniSharp.MSBuild
 {

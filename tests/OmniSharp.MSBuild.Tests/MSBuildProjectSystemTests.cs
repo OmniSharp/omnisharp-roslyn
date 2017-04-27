@@ -11,12 +11,12 @@ namespace OmniSharp.Tests
             var projectPath = @"c:\projects\project1\project.csproj";
             var searchProjectPath =  @"c:\Projects\Project1\Project.csproj";
 
-            var collection = new ProjectFileInfoCollection();
+            var collection = new ProjectFileInfoCollection
+            {
+                new ProjectFileInfo(projectPath)
+            };
 
-            collection.Add(new ProjectFileInfo(projectPath));
-
-            ProjectFileInfo outInfo;
-            Assert.True(collection.TryGetValue(searchProjectPath, out outInfo));
+            Assert.True(collection.TryGetValue(searchProjectPath, out var outInfo));
             Assert.NotNull(outInfo);
         }
     }

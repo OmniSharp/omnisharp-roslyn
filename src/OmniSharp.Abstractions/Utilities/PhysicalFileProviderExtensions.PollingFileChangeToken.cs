@@ -70,12 +70,12 @@ namespace OmniSharp.Utilities
                                 _previousLastWriteTimeUtc = lastWriteTimeUtc;
                                 _hasChanged = true;
 
-                            // Notify callbacks.
-                            if (_callbacks != null)
+                                // Notify callbacks.
+                                if (_callbacks != null)
                                 {
-                                // Once a callback is notified, it is removed from the list. It is up to the callback to
-                                // re-register itself.
-                                var callbacks = _callbacks.ToArray();
+                                    // Once a callback is notified, it is removed from the list. It is up to the callback to
+                                    // re-register itself.
+                                    var callbacks = _callbacks.ToArray();
 
                                     foreach (var kvp in callbacks)
                                     {
