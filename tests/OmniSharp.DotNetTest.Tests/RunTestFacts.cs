@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    internal class RunTestFacts : AbstractRunTestFacts
+    public class RunTestFacts : AbstractRunTestFacts
     {
         public RunTestFacts(ITestOutputHelper testOutput)
             : base(testOutput)
@@ -41,6 +41,28 @@ namespace OmniSharp.DotNetTest.Tests
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "xunit",
                 shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunXunitTestWithDisplayName()
+        {
+            await RunDotNetTestAsync(
+                XunitTestProject,
+                methodName: "Main.Test.MainTest.UsesDisplayName",
+                testFramework: "xunit",
+                shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunXunitTestWithSimilarName()
+        {
+            var response = await RunDotNetTestAsync(
+                XunitTestProject,
+                methodName: "Main.Test.MainTest.TestWithSimilarName",
+                testFramework: "xunit",
+                shouldPass: true);
+
+            Assert.Equal(1, response.Results.Length);
         }
 
         // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108

@@ -30,5 +30,23 @@ namespace Main.Test
         {
             
         }
+
+        [Fact(DisplayName = "My Test Name")]
+        public void UsesDisplayName()
+        {
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestWithSimilarName()
+        {
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestWithSimilarNameFooBar()
+        {
+            Assert.True(true);
+        }
     }
 }

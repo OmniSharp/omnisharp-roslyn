@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    internal class LegacyGetTestStartInfoFacts : AbstractGetTestStartInfoFacts
+    public class LegacyGetTestStartInfoFacts : AbstractGetTestStartInfoFacts
     {
         public LegacyGetTestStartInfoFacts(ITestOutputHelper testOutput) : base(testOutput)
         {
