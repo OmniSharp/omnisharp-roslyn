@@ -627,18 +627,24 @@ Task("OnlyPublish")
 
     foreach (var runtime in buildPlan.TargetRids)
     {
-        var rid = runtime.Equals("default")
-            ? buildPlan.GetDefaultRid()
-            : runtime;
-
-        if (completed.Contains(rid))
+        if (completed.Contains(runtime))
         {
             continue;
         }
 
+        var rid = runtime.Equals("default")
+            ? buildPlan.GetDefaultRid()
+            : runtime;
+
         // Restore the OmniSharp.csproj with this runtime.
         PrintBlankLine();
-        Information($"Restoring packages in {projectName} for {rid}...");
+        var runtimeText = runtime;
+        if (runtimeText.Equals("default"))
+        {
+            runtimeText += " (" + rid + ")";
+        }
+
+        Information($"Restoring packages in {projectName} for {runtimeText}...");
 
         RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
             .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
@@ -677,7 +683,7 @@ Task("OnlyPublish")
             }
         }
 
-        completed.Add(rid);
+        completed.Add(runtime);
     }
 
     CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts);
