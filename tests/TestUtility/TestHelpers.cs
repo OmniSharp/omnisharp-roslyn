@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp;
 using OmniSharp.Services;
+using System.IO;
+using System.Reflection;
 
 namespace TestUtility
 {
@@ -19,10 +21,7 @@ namespace TestUtility
 
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
-            var mscorlib = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(object)).Location);
-            var systemCore = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(Enumerable)).Location);
-            var references = new[] { mscorlib, systemCore };
-
+            var references = GetReferences();
             var parseOptions = new CSharpParseOptions(
                 LanguageVersion.Default,
                 DocumentationMode.Parse,
@@ -54,25 +53,7 @@ namespace TestUtility
         public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
         {
             var versionStamp = VersionStamp.Create();
-
-            // This is a bit messy. Essentially, we need to add all assemblies that type forwarders might point to.
-
-            var assemblies = new[]
-            {
-                AssemblyHelpers.FromType(typeof(object)),
-                AssemblyHelpers.FromType(typeof(Enumerable)),
-                AssemblyHelpers.FromType(typeof(Stack<>)),
-                AssemblyHelpers.FromType(typeof(Lazy<,>)),
-                AssemblyHelpers.FromName("System.Runtime"),
-                AssemblyHelpers.FromName("mscorlib")
-            };
-
-            var references = assemblies
-                .Where(a => a != null)
-                .Select(a => a.Location)
-                .Distinct()
-                .Select(l => MetadataReference.CreateFromFile(l));
-
+            var references = GetReferences();
             frameworks = frameworks ?? new[] { string.Empty };
 
             foreach (var framework in frameworks)
@@ -100,6 +81,28 @@ namespace TestUtility
                     workspace.AddDocument(documentInfo);
                 }
             }
+        }
+
+        private static IEnumerable<PortableExecutableReference> GetReferences()
+        {
+            // This is a bit messy. Essentially, we need to add all assemblies that type forwarders might point to.
+            var assemblies = new[]
+            {
+                AssemblyHelpers.FromType(typeof(object)),
+                AssemblyHelpers.FromType(typeof(Enumerable)),
+                AssemblyHelpers.FromType(typeof(Stack<>)),
+                AssemblyHelpers.FromType(typeof(Lazy<,>)),
+                AssemblyHelpers.FromName("System.Runtime"),
+                AssemblyHelpers.FromName("mscorlib")
+            };
+
+            var references = assemblies
+                .Where(a => a != null)
+                .Select(a => a.Location)
+                .Distinct()
+                .Select(l => MetadataReference.CreateFromFile(l));
+
+            return references;
         }
     }
 }
