@@ -267,11 +267,14 @@ Task("PopulateRuntimes")
             "default", // To allow testing the published artifact
             "ubuntu.14.04-x64",
             "ubuntu.16.04-x64",
+            "ubuntu.16.10-x64",
             "centos.7-x64",
             "rhel.7.2-x64",
             "debian.8-x64",
             "fedora.23-x64",
-            "opensuse.13.2-x64");
+            "fedora.24-x64",
+            "opensuse.13.2-x64",
+            "opensuse.42.1-x64");
     }
     else
     {
