@@ -1,6 +1,6 @@
 ﻿using NuGet.Frameworks;
 
-namespace OmniSharp.Models
+namespace OmniSharp.MSBuild.Models
 {
     public class TargetFramework
     {

@@ -35,11 +35,11 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProejct.Directory, this._logger);
 
                 Assert.NotNull(projectFileInfo);
-                Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
-                Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
+                Assert.Equal(projectFilePath, projectFileInfo.FilePath);
+                Assert.Equal(1, projectFileInfo.TargetFrameworks.Length);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
-                Assert.Equal(1, projectFileInfo.SourceFiles.Count);
+                Assert.Equal(1, projectFileInfo.SourceFiles.Length);
             }
         }
 
@@ -53,11 +53,11 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
 
                 Assert.NotNull(projectFileInfo);
-                Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
-                Assert.Equal(1, projectFileInfo.TargetFrameworks.Count);
+                Assert.Equal(projectFilePath, projectFileInfo.FilePath);
+                Assert.Equal(1, projectFileInfo.TargetFrameworks.Length);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
-                Assert.Equal(1, projectFileInfo.SourceFiles.Count);
+                Assert.Equal(1, projectFileInfo.SourceFiles.Length);
             }
         }
 
@@ -71,12 +71,12 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
 
                 Assert.NotNull(projectFileInfo);
-                Assert.Equal(projectFilePath, projectFileInfo.ProjectFilePath);
-                Assert.Equal(2, projectFileInfo.TargetFrameworks.Count);
+                Assert.Equal(projectFilePath, projectFileInfo.FilePath);
+                Assert.Equal(2, projectFileInfo.TargetFrameworks.Length);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
                 Assert.Equal(@"bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
-                Assert.Equal(1, projectFileInfo.SourceFiles.Count);
+                Assert.Equal(1, projectFileInfo.SourceFiles.Length);
             }
         }
     }
