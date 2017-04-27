@@ -65,10 +65,7 @@ namespace OmniSharp.DotNetTest.Tests
             Assert.Equal(1, response.Results.Length);
         }
 
-        // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
-        // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
-
-        //[Fact]
+        [Fact]
         public async Task RunNunitTest()
         {
             await RunDotNetTestAsync(
@@ -78,7 +75,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitDataDriveTest1()
         {
             await RunDotNetTestAsync(
@@ -88,7 +85,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: false);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitDataDriveTest2()
         {
             await RunDotNetTestAsync(
@@ -98,7 +95,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitSourceDataDrivenTest()
         {
             await RunDotNetTestAsync(
