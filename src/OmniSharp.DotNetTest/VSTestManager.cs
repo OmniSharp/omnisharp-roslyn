@@ -20,6 +20,8 @@ namespace OmniSharp.DotNetTest
 {
     internal class VSTestManager : TestManager
     {
+        private const string DefaultRunSettings = "<RunSettings />";
+
         public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
@@ -27,7 +29,7 @@ namespace OmniSharp.DotNetTest
 
         protected override string GetCliTestArguments(int port, int parentProcessId)
         {
-            return $"vstest  --Port:{port} --ParentProcessId:{parentProcessId}";
+            return $"vstest --Port:{port} --ParentProcessId:{parentProcessId}";
         }
 
         protected override void VersionCheck()
@@ -86,7 +88,8 @@ namespace OmniSharp.DotNetTest
                 new
                 {
                     TestCases = testCases,
-                    DebuggingEnabled = true
+                    DebuggingEnabled = true,
+                    RunSettings = DefaultRunSettings
                 });
 
             var message = ReadMessage();
@@ -110,7 +113,8 @@ namespace OmniSharp.DotNetTest
                 new
                 {
                     TestCases = testCases,
-                    DebuggingEnabled = true
+                    DebuggingEnabled = true,
+                    RunSettings = DefaultRunSettings
                 });
 
             var message = await ReadMessageAsync(cancellationToken);
@@ -170,7 +174,8 @@ namespace OmniSharp.DotNetTest
                 SendMessage(MessageType.TestRunSelectedTestCasesDefaultHost,
                     new
                     {
-                        TestCases = testCases
+                        TestCases = testCases,
+                        RunSettings = DefaultRunSettings
                     });
 
                 var done = false;
@@ -224,7 +229,8 @@ namespace OmniSharp.DotNetTest
                     Sources = new[]
                     {
                         Project.OutputFilePath
-                    }
+                    },
+                    RunSettings = DefaultRunSettings
                 });
 
             var testCases = new List<TestCase>();
