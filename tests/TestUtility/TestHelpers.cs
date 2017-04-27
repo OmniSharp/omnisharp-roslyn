@@ -5,8 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp;
 using OmniSharp.Services;
-using System.IO;
-using System.Reflection;
 
 namespace TestUtility
 {
