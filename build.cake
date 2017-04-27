@@ -267,11 +267,14 @@ Task("PopulateRuntimes")
             "default", // To allow testing the published artifact
             "ubuntu.14.04-x64",
             "ubuntu.16.04-x64",
+            "ubuntu.16.10-x64",
             "centos.7-x64",
             "rhel.7.2-x64",
             "debian.8-x64",
             "fedora.23-x64",
-            "opensuse.13.2-x64");
+            "fedora.24-x64",
+            "opensuse.13.2-x64",
+            "opensuse.42.1-x64");
     }
     else
     {
@@ -627,18 +630,24 @@ Task("OnlyPublish")
 
     foreach (var runtime in buildPlan.TargetRids)
     {
-        var rid = runtime.Equals("default")
-            ? buildPlan.GetDefaultRid()
-            : runtime;
-
-        if (completed.Contains(rid))
+        if (completed.Contains(runtime))
         {
             continue;
         }
 
+        var rid = runtime.Equals("default")
+            ? buildPlan.GetDefaultRid()
+            : runtime;
+
         // Restore the OmniSharp.csproj with this runtime.
         PrintBlankLine();
-        Information($"Restoring packages in {projectName} for {rid}...");
+        var runtimeText = runtime;
+        if (runtimeText.Equals("default"))
+        {
+            runtimeText += " (" + rid + ")";
+        }
+
+        Information($"Restoring packages in {projectName} for {runtimeText}...");
 
         RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
             .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
@@ -677,7 +686,7 @@ Task("OnlyPublish")
             }
         }
 
-        completed.Add(rid);
+        completed.Add(runtime);
     }
 
     CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts);

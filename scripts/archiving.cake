@@ -20,19 +20,14 @@ string GetBuildIdentifier(string runtime, string framework)
     }
     else
     {
-        // Remove version number. Note: because there are separate versions for Ubuntu 14 and 16,
-        // we treat Ubuntu as a special case.
-        if (runtime.StartsWith("ubuntu.14"))
+        // Remove version number for Windows and OSX.
+        if (runtime.StartsWith("win") || runtime.StartsWith("osx"))
         {
-            runtimeShort = "ubuntu14-x64";
-        }
-        else if (runtime.StartsWith("ubuntu.16"))
-        {
-            runtimeShort = "ubuntu16-x64";
+            runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
         }
         else
         {
-            runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            runtimeShort = runtime;
         }
     }
 
