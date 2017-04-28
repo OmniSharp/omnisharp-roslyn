@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using Microsoft.CodeAnalysis;using TestUtility;
+using Microsoft.CodeAnalysis;
+using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
