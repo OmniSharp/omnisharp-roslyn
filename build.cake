@@ -740,7 +740,7 @@ Task("TestPublished")
     {
         var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
         var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                    new RunOptions(timeOut: 10000))
+                                    new RunOptions(timeOut: 30000))
                                 .DidTimeOut;
         if (!didNotExitWithError)
         {

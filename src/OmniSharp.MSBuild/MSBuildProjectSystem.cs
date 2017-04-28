@@ -147,18 +147,23 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
+                // Solution files are assumed to contain relative paths to project files with Windows-style slashes.
+                var projectFilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
+                projectFilePath = Path.Combine(_environment.TargetDirectory, projectFilePath);
+                projectFilePath = Path.GetFullPath(projectFilePath);
+
                 // Have we seen this project? If so, move on.
-                if (processedProjects.Contains(project.AbsolutePath))
+                if (processedProjects.Contains(projectFilePath))
                 {
                     continue;
                 }
 
-                if (Path.GetExtension(project.AbsolutePath) == ".csproj")
+                if (Path.GetExtension(projectFilePath) == ".csproj")
                 {
-                    result.Add(project.AbsolutePath);
+                    result.Add(projectFilePath);
                 }
 
-                processedProjects.Add(project.AbsolutePath);
+                processedProjects.Add(projectFilePath);
             }
 
             return result;
