@@ -16,17 +16,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.Metadata;
 
-        [Fact]
-        public async Task ReturnsSource_ForSpecialType()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsSource_ForSpecialType(string filename)
         {
             var assemblyName = AssemblyHelpers.CorLibName;
             var typeName = "System.String";
 
-            await TestMetadataAsync(assemblyName, typeName);
+            await TestMetadataAsync(filename, assemblyName, typeName);
         }
 
-        [Fact]
-        public async Task ReturnsSource_ForNormalType()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsSource_ForNormalType(string filename)
         {
 #if NETCOREAPP1_1
             var assemblyName = "System.Linq";
@@ -36,21 +40,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var typeName = "System.Linq.Enumerable";
 
-            await TestMetadataAsync(assemblyName, typeName);
+            await TestMetadataAsync(filename, assemblyName, typeName);
         }
 
-        [Fact]
-        public async Task ReturnsSource_ForGenericType()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsSource_ForGenericType(string filename)
         {
             var assemblyName = AssemblyHelpers.CorLibName;
             var typeName = "System.Collections.Generic.List`1";
 
-            await TestMetadataAsync(assemblyName, typeName);
+            await TestMetadataAsync(filename, assemblyName, typeName);
         }
 
-        private async Task TestMetadataAsync(string assemblyName, string typeName)
+        private async Task TestMetadataAsync(string filename, string assemblyName, string typeName)
         {
-            var testFile = new TestFile("dummy.cs", "class C {}");
+            var testFile = new TestFile(filename, "class C {}");
 
             using (var host = CreateOmniSharpHost(testFile))
             {

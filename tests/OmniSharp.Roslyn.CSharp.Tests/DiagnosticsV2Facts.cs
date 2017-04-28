@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Services;
 using OmniSharp.Workers.Diagnostics;
 using TestUtility;
 using Xunit;
@@ -18,10 +17,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        [Fact]
-        public async Task CodeCheckSpecifiedFileOnly()
+        [Theory]
+        [InlineData("a.cs")]
+        [InlineData("a.csx")]
+        public async Task CodeCheckSpecifiedFileOnly(string filename)
         {
-            var testFile = new TestFile("a.cs", "class C { int n = true; }");
+            var testFile = new TestFile(filename, "class C { int n = true; }");
 
             using (var host = CreateOmniSharpHost(testFile))
             {
@@ -33,7 +34,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 };
 
                 var service = new CSharpDiagnosticService(host.Workspace, forwarder, this.LoggerFactory);
-                service.QueueDiagnostics("a.cs");
+                service.QueueDiagnostics(filename);
 
                 await emitter.Emitted;
 
@@ -42,15 +43,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.Equal(1, message.Results.Count());
                 var result = message.Results.First();
                 Assert.Equal(1, result.QuickFixes.Count());
-                Assert.Equal("a.cs", result.FileName);
+                Assert.Equal(filename, result.FileName);
             }
         }
 
-        [Fact]
-        public async Task CheckAllFiles()
+        [Theory]
+        [InlineData("a.cs", "b.cs")]
+        [InlineData("a.csx", "b.csx")]
+        public async Task CheckAllFiles(string filename1, string filename2)
         {
-            var testFile1 = new TestFile("a.cs", "class C1 { int n = true; }");
-            var testFile2 = new TestFile("b.cs", "class C2 { int n = true; }");
+            var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
+            var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
 
             using (var host = CreateOmniSharpHost(testFile1, testFile2))
             {
@@ -68,21 +71,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var message = messages.First();
                 Assert.Equal(2, message.Results.Count());
 
-                var a = message.Results.First(x => x.FileName == "a.cs");
+                var a = message.Results.First(x => x.FileName == filename1);
                 Assert.Equal(1, a.QuickFixes.Count());
-                Assert.Equal("a.cs", a.FileName);
+                Assert.Equal(filename1, a.FileName);
 
-                var b = message.Results.First(x => x.FileName == "b.cs");
+                var b = message.Results.First(x => x.FileName == filename2);
                 Assert.Equal(1, b.QuickFixes.Count());
-                Assert.Equal("b.cs", b.FileName);
+                Assert.Equal(filename2, b.FileName);
             }
         }
 
-        [Fact]
-        public async Task EnablesWhenEndPointIsHit()
+        [Theory]
+        [InlineData("a.cs", "b.cs")]
+        [InlineData("a.csx", "b.csx")]
+        public async Task EnablesWhenEndPointIsHit(string filename1, string filename2)
         {
-            var testFile1 = new TestFile("a.cs", "class C1 { int n = true; }");
-            var testFile2 = new TestFile("b.cs", "class C2 { int n = true; }");
+            var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
+            var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
 
             using (var host = CreateOmniSharpHost(testFile1, testFile2))
             {
