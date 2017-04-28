@@ -83,17 +83,4 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         }
 
     }
-
-    public partial class MyClass
-    {
-        partial void Method();
-    }
-
-    public partial class MyClass
-    {
-        partial void Method()
-        {
-            Console.WriteLine("foo");
-        }
-    }
 }
