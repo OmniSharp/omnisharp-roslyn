@@ -1,30 +1,62 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 
-namespace OmniSharp
+namespace OmniSharp.Utilities
 {
     public static class ProcessExtensions
     {
-        private static object _syncLock = new object();
-        private static Thread _backgroundWatcher;
-        private static List<Tuple<Process, Action>> _processes = new List<Tuple<Process, Action>>();
+        private static Thread s_backgroundWatcher;
+        private static List<(Process process, Action action)> s_watchedProcesses;
 
         public static void OnExit(this Process process, Action action)
         {
+            var gate = new object();
+
+            void CleanUpProcesses()
+            {
+                lock (gate)
+                {
+                    for (int i = s_watchedProcesses.Count - 1; i >= 0; --i)
+                    {
+                        var (p, a) = s_watchedProcesses[i];
+                        if (p.HasExited)
+                        {
+                            s_watchedProcesses.RemoveAt(i);
+                            a();
+                        }
+                    }
+                }
+            }
+
+            void Watcher()
+            {
+                while (true)
+                {
+                    CleanUpProcesses();
+
+                    // REVIEW: Configurable?
+                    Thread.Sleep(2000);
+                }
+            }
+
             if (PlatformHelper.IsMono)
             {
                 // In mono 3.10, the Exited event fires immediately, we're going to poll instead
-                lock (_syncLock)
+                lock (gate)
                 {
-                    _processes.Add(Tuple.Create(process, action));
-
-                    if (_backgroundWatcher == null)
+                    if (s_watchedProcesses == null)
                     {
-                        _backgroundWatcher = new Thread(WatchProcesses) { IsBackground = true };
-                        _backgroundWatcher.Start();
+                        s_watchedProcesses = new List<(Process process, Action action)>();
+                    }
+
+                    s_watchedProcesses.Add((process, action));
+
+                    if (s_backgroundWatcher == null)
+                    {
+                        s_backgroundWatcher = new Thread(Watcher) { IsBackground = true };
+                        s_backgroundWatcher.Start();
                     }
                 }
             }
@@ -37,27 +69,33 @@ namespace OmniSharp
             }
         }
 
-        public static void KillAll(this Process process)
+        public static void KillChildrenAndThis(this Process process)
         {
             if (PlatformHelper.IsMono)
             {
-                foreach (var pe in GetChildren(process.Id))
+                foreach (var childProcess in GetChildProcesses(process.Id))
                 {
-                    Process.GetProcessById(pe.ProcessId).Kill();
+                    childProcess.Kill();
                 }
             }
 
             process.Kill();
         }
 
-        private static IEnumerable<ProcessEntry> GetChildren(int processId)
+        private static IEnumerable<Process> GetChildProcesses(int processId)
         {
-            return GetProcesses().Where(pe => pe.ParentProcessId == processId);
+            foreach (var entry in GetAllProcessIds())
+            {
+                if (entry.parentId == processId)
+                {
+                    yield return Process.GetProcessById(entry.id);
+                }
+            }
         }
 
-        private static IEnumerable<ProcessEntry> GetProcesses()
+        private static IEnumerable<(int id, int parentId)> GetAllProcessIds()
         {
-            var si = new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = "ps",
                 Arguments = string.Format("-o \"ppid, pid\" -ax"),
@@ -67,9 +105,9 @@ namespace OmniSharp
                 RedirectStandardError = true
             };
 
-            var processEntries = new List<ProcessEntry>();
+            var entries = new List<(int processId, int parentProcessId)>();
 
-            var ps = Process.Start(si);
+            var ps = Process.Start(startInfo);
             ps.BeginOutputReadLine();
             ps.OutputDataReceived += (sender, e) =>
             {
@@ -79,51 +117,16 @@ namespace OmniSharp
                 }
 
                 var parts = e.Data.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                int ppid;
-                int pid;
-                if (Int32.TryParse(parts[0], out ppid) &&
-                   Int32.TryParse(parts[1], out pid))
+                if (Int32.TryParse(parts[0], out var ppid) &&
+                    Int32.TryParse(parts[1], out var pid))
                 {
-                    processEntries.Add(new ProcessEntry
-                    {
-                        ProcessId = pid,
-                        ParentProcessId = ppid
-                    });
+                    entries.Add((pid, ppid));
                 }
-
             };
 
             ps.WaitForExit();
 
-            return processEntries;
-        }
-
-        private static void WatchProcesses()
-        {
-            while (true)
-            {
-                lock (_processes)
-                {
-                    for (int i = _processes.Count - 1; i >= 0; --i)
-                    {
-                        var pair = _processes[i];
-                        if (pair.Item1.HasExited)
-                        {
-                            _processes.RemoveAt(i);
-                            pair.Item2();
-                        }
-                    }
-                }
-
-                // REVIEW: Configurable?
-                Thread.Sleep(2000);
-            }
-        }
-
-        private class ProcessEntry
-        {
-            public int ProcessId { get; set; }
-            public int ParentProcessId { get; set; }
+            return entries;
         }
     }
 }

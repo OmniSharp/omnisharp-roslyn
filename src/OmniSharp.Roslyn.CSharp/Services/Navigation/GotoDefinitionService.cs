@@ -9,17 +9,19 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
-    public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
+    public class GotoDefinitionService : IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
         private readonly MetadataHelper _metadataHelper;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoDefinitionService(OmnisharpWorkspace workspace, MetadataHelper metadataHelper)
+        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;

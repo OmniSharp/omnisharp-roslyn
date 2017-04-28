@@ -1,32 +1,32 @@
 {
-  "UseSystemDotNetPath": "false",
-  "DotNetFolder": ".dotnet",
-  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0-preview2/scripts/obtain",
+  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
   "DotNetChannel": "preview",
-  "DotNetVersion": "1.0.0-preview2-003121",
-  "BuildToolsFolder": ".tools",
-  "ArtifactsFolder": "artifacts",
-  "TestProjects": {
-    "OmniSharp.MSBuild.Tests": [
-      "netcoreapp1.0"
-    ],
-    "OmniSharp.Roslyn.CSharp.Tests": [
-      "netcoreapp1.0"
-    ],
-    "OmniSharp.Stdio.Tests": [
-      "netcoreapp1.0",
-      "net451"
-    ],
-    "OmniSharp.DotNet.Tests": [
-      "netcoreapp1.0"
-    ],
-    "OmniSharp.DotNetTest.Tests": [
-      "netcoreapp1.0"
-    ]
-  },
+  "DotNetVersion": "1.0.1",
+  "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
+  "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
+  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha3.zip",
+  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha3.zip",
   "Frameworks": [
-    "net451",
-    "netcoreapp1.0"
+    "net46",
+    "netcoreapp1.1"
   ],
-  "MainProject": "OmniSharp"
+  "MainProject": "OmniSharp",
+  "TestProjects": [
+    "OmniSharp.MSBuild.Tests",
+    "OmniSharp.Roslyn.CSharp.Tests",
+    "OmniSharp.Stdio.Tests",
+    "OmniSharp.DotNet.Tests",
+    "OmniSharp.DotNetTest.Tests",
+    "OmniSharp.Tests"
+  ],
+  "TestAssets": [
+    "NUnitTestProject",
+    "XunitTestProject"
+  ],
+  "LegacyTestAssets": [
+    "BasicTestProjectSample01",
+    "BasicTestProjectSample02",
+    "LegacyNunitTestProject",
+    "LegacyXunitTestProject"
+  ]
 }

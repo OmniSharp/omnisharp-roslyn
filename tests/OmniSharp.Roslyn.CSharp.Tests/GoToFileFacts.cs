@@ -1,41 +1,53 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoFile;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class GoToFileFacts
+    public class GoToFileFacts : AbstractSingleRequestHandlerTestFixture<GotoFileService>
     {
+        public GoToFileFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
+        protected override string EndpointName => OmniSharpEndpoints.GotoFile;
+
         [Fact]
         public async Task ReturnsAListOfAllWorkspaceFiles()
         {
-            var source1 = @"class Foo {}";
-            var source2 = @"class Bar {}";
+            var testFile1 = new TestFile("foo.cs", @"class Foo {}");
+            var testFile2 = new TestFile("bar.cs", @"class Bar {}");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string> {
-                { "foo.cs", source1 }, { "bar.cs", source2}
-            });
-            var controller = new GotoFileService(workspace);
-            var response = await controller.Handle(new GotoFileRequest());
+            var files = await GetFilesAsync(testFile1, testFile2);
 
-            Assert.Equal(2, response.QuickFixes.Count());
-            Assert.Equal("foo.cs", response.QuickFixes.ElementAt(0).FileName);
-            Assert.Equal("bar.cs", response.QuickFixes.ElementAt(1).FileName);
+            Assert.Equal(2, files.Length);
+            Assert.Equal("foo.cs", files[0].FileName);
+            Assert.Equal("bar.cs", files[1].FileName);
         }
 
         [Fact]
         public async Task ReturnsEmptyResponseForEmptyWorskpace()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>());
-            var controller = new GotoFileService(workspace);
-            var response = await controller.Handle(new GotoFileRequest());
+            var files = await GetFilesAsync();
 
-            Assert.Equal(0, response.QuickFixes.Count());
+            Assert.Equal(0, files.Length);
+        }
+
+        private async Task<QuickFix[]> GetFilesAsync(params TestFile[] testFiles)
+        {
+            using (var host = CreateOmniSharpHost(testFiles))
+            {
+                var requestHandler = GetRequestHandler(host);
+                var response = await requestHandler.Handle(new GotoFileRequest());
+
+               return response.QuickFixes.ToArray();
+            }
         }
     }
 }

@@ -1,56 +1,72 @@
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.SignatureHelp;
 using OmniSharp.Roslyn.CSharp.Services.Signatures;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class SignatureHelpFacts
+    public class SignatureHelpFacts : AbstractSingleRequestHandlerTestFixture<SignatureHelpService>
     {
-        [Fact]
-        public async Task NoInvocationNoHelp()
+        public SignatureHelpFacts(ITestOutputHelper output)
+            : base(output)
         {
-            var source =
+        }
+
+        protected override string EndpointName => OmniSharpEndpoints.SignatureHelp;
+
+        [Fact]
+        public async Task NoInvocationNoHelp1()
+        {
+            const string source =
 @"class Program
 {
-    public static void Ma$in(){
+    public static void Ma$$in(){
         System.Guid.NoSuchMethod();
     }
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Null(actual);
+        }
 
-            source =
+        [Fact]
+        public async Task NoInvocationNoHelp2()
+        {
+            const string source =
 @"class Program
 {
     public static void Main(){
-        System.Gu$id.NoSuchMethod();
+        System.Gu$$id.NoSuchMethod();
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Null(actual);
+        }
 
-            source =
+        [Fact]
+        public async Task NoInvocationNoHelp3()
+        {
+            const string source =
 @"class Program
 {
     public static void Main(){
-        System.Guid.NoSuchMethod()$;
+        System.Guid.NoSuchMethod()$$;
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Null(actual);
         }
 
         [Fact]
         public async Task NoTypeNoHelp()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        System.Guid.Foo$Bar();
+        System.Guid.Foo$$Bar();
     }
 }";
             var actual = await GetSignatureHelp(source);
@@ -60,11 +76,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task NoMethodNoHelp()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        System.Gu$id;
+        System.Gu$$id;
     }
 }";
             var actual = await GetSignatureHelp(source);
@@ -74,11 +90,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task SimpleSignatureHelp()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        System.Guid.NewGuid($);
+        System.Guid.NewGuid($$);
     }
 }";
 
@@ -93,11 +109,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task TestForParameterLabels()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        Foo($);
+        Foo($$);
     }
     pubic static Foo(bool b, int n = 1234)
     {
@@ -117,14 +133,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task ActiveParameterIsBasedOnComma()
+        public async Task ActiveParameterIsBasedOnComma1()
         {
             // 1st position, a
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(1$2,
+        new Program().Foo(1$$2,
     }
     /// foo1
     private int Foo(int one, int two, int three)
@@ -134,13 +150,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(0, actual.ActiveParameter);
+        }
 
+        [Fact]
+        public async Task ActiveParameterIsBasedOnComma2()
+        {
             // 1st position, b
-            source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12 $)
+        new Program().Foo(12 $$)
     }
     /// foo1
     private int Foo(int one, int two, int three)
@@ -148,15 +168,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return 3;
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Equal(0, actual.ActiveParameter);
+        }
 
+        [Fact]
+        public async Task ActiveParameterIsBasedOnComma3()
+        {
             // 2nd position, a
-            source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, $
+        new Program().Foo(12, $$
     }
     /// foo1
     private int Foo(int one, int two, int three)
@@ -164,15 +188,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return 3;
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Equal(1, actual.ActiveParameter);
+        }
 
+        [Fact]
+        public async Task ActiveParameterIsBasedOnComma4()
+        {
             // 2nd position, b
-            source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, 1$
+        new Program().Foo(12, 1$$
     }
     /// foo1
     private int Foo(int one, int two, int three)
@@ -180,15 +208,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return 3;
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Equal(1, actual.ActiveParameter);
+        }
 
+        [Fact]
+        public async Task ActiveParameterIsBasedOnComma5()
+        {
             // 3rd position, a
-            source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, 1, $
+        new Program().Foo(12, 1, $$
     }
     /// foo1
     private int Foo(int one, int two, int three)
@@ -196,18 +228,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return 3;
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Equal(2, actual.ActiveParameter);
         }
 
         [Fact]
-        public async Task ActiveSignatureIsBasedOnTypes()
+        public async Task ActiveSignatureIsBasedOnTypes1()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(12, $
+        new Program().Foo(12, $$
     }
     /// foo1
     private int Foo()
@@ -228,12 +260,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo2"));
+        }
 
-            source =
+        [Fact]
+        public async Task ActiveSignatureIsBasedOnTypes2()
+        {
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo(""d"", $
+        new Program().Foo(""d"", $$
     }
     /// foo1
     private int Foo()
@@ -251,15 +287,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return Foo(m.length, n);
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo3"));
+        }
 
-            source =
+        [Fact]
+        public async Task ActiveSignatureIsBasedOnTypes3()
+        {
+            const string source =
 @"class Program
 {
     public static void Main(){
-        new Program().Foo($)
+        new Program().Foo($$)
     }
     /// foo1
     private int Foo()
@@ -277,7 +317,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return Foo(m.length, n);
     }
 }";
-            actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo1"));
         }
@@ -285,12 +325,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task SigantureHelpForCtor()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main()
     {
-        new Program($)
+        new Program($$)
     }
     public Program()
     {
@@ -310,12 +350,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task SigantureHelpForCtorWithOverloads()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main()
     {
-        new Program(true, 12$3)
+        new Program(true, 12$$3)
     }
     public Program()
     {
@@ -338,12 +378,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task SkipReceiverOfExtensionMethods()
         {
-            var source =
+            const string source =
 @"class Program
 {
     public static void Main()
     {
-        new Program().B($);
+        new Program().B($$);
     }
     public Program()
     {
@@ -360,22 +400,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("n", actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.ElementAt(0).Name);
         }
 
-        private async Task<SignatureHelp> GetSignatureHelp(string source)
+        private async Task<SignatureHelpResponse> GetSignatureHelp(string source)
         {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            source = source.Replace("$", string.Empty);
-
-            var request = new SignatureHelpRequest()
+            var testFile = new TestFile("dummy.cs", source);
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                FileName = "dummy.cs",
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                Buffer = source
-            };
+                var point = testFile.Content.GetPointFromPosition();
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new SignatureHelpService(workspace);
-            return await controller.Handle(request);
+                var request = new SignatureHelpRequest()
+                {
+                    FileName = testFile.FileName,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Buffer = testFile.Content.Code
+                };
+
+                var requestHandler = GetRequestHandler(host);
+
+                return await requestHandler.Handle(request);
+            }
         }
     }
 }

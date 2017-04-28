@@ -7,15 +7,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Highlight;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Highlight, LanguageNames.CSharp)]
-    public class HighlightingService : RequestHandler<HighlightRequest, HighlightResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Highlight, LanguageNames.CSharp)]
+    public class HighlightingService : IRequestHandler<HighlightRequest, HighlightResponse>
     {
         [ImportingConstructor]
-        public HighlightingService(OmnisharpWorkspace workspace)
+        public HighlightingService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -82,8 +82,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
             {
                 Highlights = results
                     .GroupBy(result => result.Span.TextSpan.ToString())
-                    .Select(grouping => HighlightSpan.FromClassifiedSpan(grouping.First().Span, grouping.First().Lines, grouping.Select(z => z.Project)))
+                    .Select(grouping => CreateHighlightSpan(grouping.First().Span, grouping.First().Lines, grouping.Select(z => z.Project)))
                     .ToArray()
+            };
+        }
+
+        public static HighlightSpan CreateHighlightSpan(ClassifiedSpan span, TextLineCollection lines, IEnumerable<string> projects)
+        {
+            var linePos = lines.GetLinePositionSpan(span.TextSpan);
+
+            return new HighlightSpan
+            {
+                StartLine = linePos.Start.Line,
+                EndLine = linePos.End.Line,
+                StartColumn = linePos.Start.Character,
+                EndColumn = linePos.End.Character,
+                Kind = span.ClassificationType,
+                Projects = projects
             };
         }
 
@@ -95,7 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Highlighting
         }
 
         private HighlightClassification[] AllClassifications = Enum.GetValues(typeof(HighlightClassification)).Cast<HighlightClassification>().ToArray();
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         private IEnumerable<ClassifiedSpan> FilterSpans(HighlightClassification[] classifications, IEnumerable<ClassifiedSpan> spans)
         {

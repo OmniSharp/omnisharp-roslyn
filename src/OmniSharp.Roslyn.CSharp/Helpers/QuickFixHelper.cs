@@ -9,7 +9,7 @@ namespace OmniSharp.Helpers
 {
     public static class QuickFixHelper
     {
-        public static async Task<QuickFix> GetQuickFix(OmnisharpWorkspace workspace, Location location)
+        public static async Task<QuickFix> GetQuickFix(OmniSharpWorkspace workspace, Location location)
         {
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
@@ -33,7 +33,7 @@ namespace OmniSharp.Helpers
             };
         }
 
-        public static async Task AddQuickFix(ICollection<QuickFix> quickFixes, OmnisharpWorkspace workspace, Location location)
+        public static async Task AddQuickFix(ICollection<QuickFix> quickFixes, OmniSharpWorkspace workspace, Location location)
         {
             if (location.IsInSource)
             {

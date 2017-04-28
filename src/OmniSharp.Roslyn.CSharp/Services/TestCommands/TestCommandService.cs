@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Composition;
-using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,17 +9,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.TestCommand;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
 {
-    [OmniSharpHandler(OmnisharpEndpoints.TestCommand, LanguageNames.CSharp)]
-    public class TestCommandService : RequestHandler<TestCommandRequest, GetTestCommandResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.TestCommand, LanguageNames.CSharp)]
+    public class TestCommandService : IRequestHandler<TestCommandRequest, GetTestCommandResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
         private IEnumerable<ITestCommandProvider> _testCommandProviders;
 
         [ImportingConstructor]
-        public TestCommandService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ITestCommandProvider> testCommandProviders)
+        public TestCommandService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ITestCommandProvider> testCommandProviders)
         {
             _workspace = workspace;
             _testCommandProviders = testCommandProviders;

@@ -1,17 +1,17 @@
 using System;
 using System.Composition;
 using System.IO;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using OmniSharp.Roslyn;
 
 namespace OmniSharp.Services
 {
-    [Export(typeof(IMetadataFileReferenceCache))]
-    public class MetadataFileReferenceCache : IMetadataFileReferenceCache
+    [Export, Shared]
+    public class MetadataFileReferenceCache
     {
         private static readonly string _cacheKeyPrefix = nameof(MetadataFileReferenceCache);
 
@@ -25,35 +25,36 @@ namespace OmniSharp.Services
             _logger = loggerFactory.CreateLogger<MetadataFileReferenceCache>();
         }
 
-        public MetadataReference GetMetadataReference(string path)
+        public MetadataReference GetMetadataReference(string filePath)
         {
-            var cacheKey = _cacheKeyPrefix + path.ToLowerInvariant();
+            var cacheKey = _cacheKeyPrefix + filePath.ToLowerInvariant();
 
-            var metadata = _cache.Get<AssemblyMetadata>(cacheKey);
-            
-            if (metadata == null)
+            var assemblyMetadata = _cache.Get<AssemblyMetadata>(cacheKey);
+            if (assemblyMetadata == null)
             {
-                _logger.LogDebug(string.Format("Cache miss {0}", path));
+                _logger.LogDebug(string.Format("Cache miss {0}", filePath));
 
-                using (var stream = File.OpenRead(path))
+                using (var stream = File.OpenRead(filePath))
                 {
                     var moduleMetadata = ModuleMetadata.CreateFromStream(stream, PEStreamOptions.PrefetchMetadata);
-                    metadata = AssemblyMetadata.Create(moduleMetadata);
+                    assemblyMetadata = AssemblyMetadata.Create(moduleMetadata);
 
                     var options = new MemoryCacheEntryOptions();
-                    options.ExpirationTokens.Add(new FileWriteTimeTrigger(path));
+                    options.ExpirationTokens.Add(new FileWriteTimeTrigger(filePath));
 
-                    _cache.Set(cacheKey, metadata, options);
+                    _cache.Set(cacheKey, assemblyMetadata, options);
                 }
             }
 
-            var documentationFile = Path.ChangeExtension(path, ".xml");
-            if (File.Exists(documentationFile))
-            {
-                return metadata.GetReference(new XmlDocumentationProvider(documentationFile));
-            }
+            var displayText = assemblyMetadata.GetModules().FirstOrDefault()?.Name;
 
-            return metadata.GetReference();
+            var documentationFile = Path.ChangeExtension(filePath, ".xml");
+            var documentationProvider = File.Exists(documentationFile)
+                ? XmlDocumentationProvider.CreateFromFile(documentationFile)
+                : null;
+
+            return assemblyMetadata.GetReference(
+                documentationProvider, filePath: filePath, display: displayText);
         }
 
         private class FileWriteTimeTrigger : IChangeToken

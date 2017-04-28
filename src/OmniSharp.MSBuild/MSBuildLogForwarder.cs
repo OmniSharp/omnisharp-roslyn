@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Models;
+using OmniSharp.MSBuild.Models.Events;
 
 namespace OmniSharp.MSBuild
 {
@@ -41,34 +41,37 @@ namespace OmniSharp.MSBuild
             }
         }
 
+        private void AddDiagnostic(string logLevel, string fileName, string message, int lineNumber, int columnNumber, int endLineNumber, int endColumnNumber)
+        {
+            if (_diagnostics == null)
+            {
+                return;
+            }
+
+            _diagnostics.Add(new MSBuildDiagnosticsMessage()
+            {
+                LogLevel = logLevel,
+                FileName = fileName,
+                Text = message,
+                StartLine = lineNumber,
+                StartColumn = columnNumber,
+                EndLine = endLineNumber,
+                EndColumn = endColumnNumber
+            });
+        }
+
         private void OnError(object sender, Microsoft.Build.Framework.BuildErrorEventArgs args)
         {
             _logger.LogError(args.Message);
-            _diagnostics.Add(new MSBuildDiagnosticsMessage()
-            {
-                LogLevel = "Error",
-                FileName = args.File,
-                Text = args.Message,
-                StartLine = args.LineNumber,
-                StartColumn = args.ColumnNumber,
-                EndLine = args.EndLineNumber,
-                EndColumn = args.EndColumnNumber
-            });
+
+            AddDiagnostic("Error", args.File, args.Message, args.LineNumber, args.ColumnNumber, args.EndLineNumber, args.EndColumnNumber);
         }
 
         private void OnWarning(object sender, Microsoft.Build.Framework.BuildWarningEventArgs args)
         {
             _logger.LogWarning(args.Message);
-            _diagnostics.Add(new MSBuildDiagnosticsMessage()
-            {
-                LogLevel = "Warning",
-                FileName = args.File,
-                Text = args.Message,
-                StartLine = args.LineNumber,
-                StartColumn = args.ColumnNumber,
-                EndLine = args.EndLineNumber,
-                EndColumn = args.EndColumnNumber
-            });
+
+            AddDiagnostic("Warning", args.File, args.Message, args.LineNumber, args.ColumnNumber, args.EndLineNumber, args.EndColumnNumber);
         }
     }
 }

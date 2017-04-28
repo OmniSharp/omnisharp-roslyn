@@ -2,23 +2,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Models.FindImplementations;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindImplementationFacts
+    public class FindImplementationFacts : AbstractSingleRequestHandlerTestFixture<FindImplementationsService>
     {
+        public FindImplementationFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
+        protected override string EndpointName => OmniSharpEndpoints.FindImplementations;
+
         [Fact]
         public async Task CanFindInterfaceTypeImplementation()
         {
-            var source = @"
-                public interface Som$eInterface {}
+            const string code = @"
+                public interface Som$$eInterface {}
                 public class SomeClass : SomeInterface {}";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
@@ -27,14 +38,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindInterfaceMethodImplementation()
         {
-            var source = @"
-                public interface SomeInterface { void Some$Method(); }
+            const string code = @"
+                public interface SomeInterface { void Some$$Method(); }
                 public class SomeClass : SomeInterface {
                     public void SomeMethod() {}
                 }";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code);
             var implementation = implementations.First();
+
             Assert.Equal("SomeMethod", implementation.Name);
             Assert.Equal("SomeClass", implementation.ContainingType.Name);
         }
@@ -42,14 +54,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindOverride()
         {
-            var source = @"
-                public class BaseClass { public abstract Some$Method() {} }
+            const string code = @"
+                public class BaseClass { public abstract Some$$Method() {} }
                 public class SomeClass : BaseClass
                 {
                     public override SomeMethod() {}
                 }";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code);
             var implementation = implementations.First();
 
             Assert.Equal("SomeMethod", implementation.Name);
@@ -59,38 +71,53 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CanFindSubclass()
         {
-            var source = @"
+            const string code = @"
                 public class BaseClass {}
-                public class SomeClass : Base$Class {}";
+                public class SomeClass : Base$$Class {}";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        private async Task<IEnumerable<ISymbol>> FindImplementations(string source)
+        private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code)
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(source);
-            var controller = new FindImplementationsService(workspace);
-            var request = CreateRequest(source);
+            var testFile = new TestFile("dummy.cs", code);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var point = testFile.Content.GetPointFromPosition();
+                var requestHandler = GetRequestHandler(host);
 
-            await workspace.BufferManager.UpdateBuffer(request);
+                var request = new FindImplementationsRequest
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = testFile.FileName,
+                    Buffer = testFile.Content.Code
+                };
 
-            var implementations = await controller.Handle(request);
-            return await TestHelpers.SymbolsFromQuickFixes(workspace, implementations.QuickFixes);
+                var implementations = await requestHandler.Handle(request);
+
+                return await SymbolsFromQuickFixesAsync(host.Workspace, implementations.QuickFixes);
+            }
         }
 
-        private FindImplementationsRequest CreateRequest(string source, string fileName = "dummy.cs")
+        private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmniSharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
         {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-            return new FindImplementationsRequest {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", "")
-            };
-        }
+            var symbols = new List<ISymbol>();
+            foreach (var quickfix in quickFixes)
+            {
+                var document = workspace.GetDocument(quickfix.FileName);
+                var sourceText = await document.GetTextAsync();
+                var position = sourceText.Lines.GetPosition(new LinePosition(quickfix.Line, quickfix.Column));
+                var semanticModel = await document.GetSemanticModelAsync();
+                var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, workspace);
 
+                symbols.Add(symbol);
+            }
+
+            return symbols;
+        }
     }
 }

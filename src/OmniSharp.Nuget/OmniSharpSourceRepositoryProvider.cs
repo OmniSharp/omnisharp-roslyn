@@ -1,17 +1,14 @@
+#if NET46
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis;
-#if NET451
 using NuGet.Protocol.Core.Types;
 using NuGet.Configuration;
 using NuGet.Protocol.Core.v2;
 using NuGet.Protocol.Core.v3;
-#endif
 
 namespace OmniSharp.NuGet
 {
-#if NET451
     public class OmniSharpSourceRepositoryProvider : ISourceRepositoryProvider
     {
         private static PackageSource[] DefaultPrimarySources = {
@@ -83,5 +80,5 @@ namespace OmniSharp.NuGet
             }
         }
     }
-#endif
 }
+#endif

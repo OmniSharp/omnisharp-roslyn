@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpHandler(OmnisharpEndpoints.CodeCheck, LanguageNames.CSharp)]
-    public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.CodeCheck, LanguageNames.CSharp)]
+    public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CodeCheckService(OmnisharpWorkspace workspace)
+        public CodeCheckService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -32,13 +33,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 var semanticModel = await document.GetSemanticModelAsync();
                 IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
-
-                //script files can have custom directives such as #load which will be deemed invalid by Roslyn
-                //we suppress the CS1024 diagnostic for script files for this reason. Roslyn will fix it later too, so this is temporary.
-                if (document.SourceCodeKind != SourceCodeKind.Regular)
-                {
-                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS1024");
-                }
 
                 foreach (var quickFix in diagnostics.Select(MakeQuickFix))
                 {

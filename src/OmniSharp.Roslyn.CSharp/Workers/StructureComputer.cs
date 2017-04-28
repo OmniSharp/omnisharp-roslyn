@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OmniSharp.Abstractions.Services;
 using OmniSharp.Models;
+using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp
 {
@@ -61,12 +62,14 @@ namespace OmniSharp
             ret.Projects = new List<string>();
             ret.ChildNodes = new List<FileMemberElement>();
             ret.Kind = node.Kind().ToString();
-            ret.Location = new QuickFix();
-            ret.Location.Text = text;
-            ret.Location.Line = lineSpan.StartLinePosition.Line;
-            ret.Location.Column = lineSpan.StartLinePosition.Character;
-            ret.Location.EndLine = lineSpan.EndLinePosition.Line;
-            ret.Location.EndColumn = lineSpan.EndLinePosition.Character;
+            ret.Location = new QuickFix()
+            {
+                Text = text,
+                Line = lineSpan.StartLinePosition.Line,
+                Column = lineSpan.StartLinePosition.Character,
+                EndLine = lineSpan.EndLinePosition.Line,
+                EndColumn = lineSpan.EndLinePosition.Character
+            };
 
             foreach (var featureDiscover in _featureDiscovers)
             {

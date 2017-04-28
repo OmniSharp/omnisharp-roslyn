@@ -7,21 +7,22 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.SignatureHelp;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
-    [OmniSharpHandler(OmnisharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
-    public class SignatureHelpService : RequestHandler<SignatureHelpRequest, SignatureHelp>
+    [OmniSharpHandler(OmniSharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
+    public class SignatureHelpService : IRequestHandler<SignatureHelpRequest, SignatureHelpResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public SignatureHelpService(OmnisharpWorkspace workspace)
+        public SignatureHelpService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
 
-        public async Task<SignatureHelp> Handle(SignatureHelpRequest request)
+        public async Task<SignatureHelpResponse> Handle(SignatureHelpRequest request)
         {
             var invocations = new List<InvocationContext>();
             foreach (var document in _workspace.GetDocuments(request.FileName))
@@ -38,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 return null;
             }
 
-            var response = new SignatureHelp();
+            var response = new SignatureHelpResponse();
 
             // define active parameter by position
             foreach (var comma in invocations.First().ArgumentList.Arguments.GetSeparators())
@@ -172,20 +173,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             return score;
         }
 
-        private SignatureHelpItem BuildSignature(IMethodSymbol symbol)
+        private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)
         {
             var signature = new SignatureHelpItem();
             signature.Documentation = symbol.GetDocumentationCommentXml();
-            if (symbol.MethodKind == MethodKind.Constructor)
-            {
-                signature.Name = symbol.ContainingType.Name;
-                signature.Label = symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-            }
-            else
-            {
-                signature.Name = symbol.Name;
-                signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-            }
+            signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
+            signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
             signature.Parameters = GetParameters(symbol).Select(parameter =>
             {
@@ -196,6 +189,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                     Documentation = parameter.GetDocumentationCommentXml()
                 };
             });
+
             return signature;
         }
 

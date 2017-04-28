@@ -4,5 +4,6 @@ namespace OmniSharp.DotNetTest.Models
     {
         public string Executable { get; set; }
         public string Argument { get; set; }
+        public string WorkingDirectory { get; set; }
     }
 }

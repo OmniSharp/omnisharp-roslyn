@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using Xunit;
 
@@ -42,6 +41,20 @@ This sample shows how to call the TestNamespace.TestClass.GetZero method.
         }
     }
     ";
+            Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void Has_correct_spacing_around_paramref()
+        {
+            var documentation = @"
+<summary>DoWork is a method in the TestClass class.
+The <paramref name=""arg""/> parameter takes a number and <paramref name=""arg2""/> takes a string.
+</summary>";
+            var plainText = DocumentationConverter.ConvertDocumentation(documentation, "\n");
+            var expected =
+@"DoWork is a method in the TestClass class.
+The arg parameter takes a number and arg2 takes a string.";
             Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
         }
     }

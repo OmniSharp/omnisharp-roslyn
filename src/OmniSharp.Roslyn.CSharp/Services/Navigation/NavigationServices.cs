@@ -1,21 +1,19 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Navigate;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.NavigateUp, LanguageNames.CSharp)]
-    public class NavigateUpService : RequestHandler<NavigateUpRequest, NavigateResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.NavigateUp, LanguageNames.CSharp)]
+    public class NavigateUpService : IRequestHandler<NavigateUpRequest, NavigateResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public NavigateUpService(OmnisharpWorkspace workspace)
+        public NavigateUpService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -26,13 +24,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         }
     }
 
-    [OmniSharpHandler(OmnisharpEndpoints.NavigateDown, LanguageNames.CSharp)]
-    public class NavigateDownService : RequestHandler<NavigateDownRequest, NavigateResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.NavigateDown, LanguageNames.CSharp)]
+    public class NavigateDownService : IRequestHandler<NavigateDownRequest, NavigateResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public NavigateDownService(OmnisharpWorkspace workspace)
+        public NavigateDownService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

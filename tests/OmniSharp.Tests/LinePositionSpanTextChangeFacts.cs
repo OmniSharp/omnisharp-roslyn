@@ -1,45 +1,62 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Models;
+using OmniSharp.Roslyn.Utilities;
+using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Tests
 {
-    public class LinePositionSpanTextChangeFacts
+    public class LinePositionSpanTextChangeFacts : AbstractTestFixture
     {
+        public LinePositionSpanTextChangeFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
         [Fact]
         public async Task ExtendsTextChangeAtStart()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace("class {\r\n }");
-            var document = workspace.GetDocument("dummy.cs");
+            var testFile = new TestFile("dummy.cs", "class {\r\n }");
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var document = host.Workspace.GetDocument(testFile.FileName);
+                var text = await document.GetTextAsync();
 
-            var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {
-                new TextChange(TextSpan.FromBounds(8, 11), "\n}")
-            });
+                var textChange = new TextChange(TextSpan.FromBounds(8, 11), "\n}");
 
-            Assert.Equal("\r\n}", lineChanges.ElementAt(0).NewText);
-            Assert.Equal(1, lineChanges.ElementAt(0).StartLine);
-            Assert.Equal(8, lineChanges.ElementAt(0).StartColumn);
-            Assert.Equal(2, lineChanges.ElementAt(0).EndLine);
-            Assert.Equal(3, lineChanges.ElementAt(0).EndColumn);
+                var adjustedTextChanges = TextChanges.Convert(text, textChange);
+
+                var adjustedTextChange = adjustedTextChanges.First();
+                Assert.Equal("\r\n}", adjustedTextChange.NewText);
+                Assert.Equal(0, adjustedTextChange.StartLine);
+                Assert.Equal(7, adjustedTextChange.StartColumn);
+                Assert.Equal(1, adjustedTextChange.EndLine);
+                Assert.Equal(2, adjustedTextChange.EndColumn);
+            }
         }
 
         [Fact]
         public async Task ExtendsTextChangeAtEnd()
         {
-            var workspace = await TestHelpers.CreateSimpleWorkspace("class {\n}");
-            var document = workspace.GetDocument("dummy.cs");
+            var testFile = new TestFile("dummy.cs", "class {\n}");
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var document = host.Workspace.GetDocument(testFile.FileName);
+                var text = await document.GetTextAsync();
 
-            var lineChanges = await LinePositionSpanTextChange.Convert(document, new TextChange[] {
-                new TextChange(TextSpan.FromBounds(5, 7), "\r\n {\r")
-            });
+                var textChange = new TextChange(TextSpan.FromBounds(5, 7), "\r\n {\r");
 
-            Assert.Equal("\r\n {\r\n", lineChanges.ElementAt(0).NewText);
-            Assert.Equal(1, lineChanges.ElementAt(0).StartLine);
-            Assert.Equal(6, lineChanges.ElementAt(0).StartColumn);
-            Assert.Equal(2, lineChanges.ElementAt(0).EndLine);
-            Assert.Equal(1, lineChanges.ElementAt(0).EndColumn);
+                var adjustedTextChanges = TextChanges.Convert(text, textChange);
+
+                var adjustedTextChange = adjustedTextChanges.First();
+                Assert.Equal("\r\n {\r\n", adjustedTextChange.NewText);
+                Assert.Equal(0, adjustedTextChange.StartLine);
+                Assert.Equal(5, adjustedTextChange.StartColumn);
+                Assert.Equal(1, adjustedTextChange.EndLine);
+                Assert.Equal(0, adjustedTextChange.EndColumn);
+            }
         }
     }
 }

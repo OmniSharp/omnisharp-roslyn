@@ -6,29 +6,30 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Models.ChangeBuffer;
+using OmniSharp.Models.UpdateBuffer;
 
 namespace OmniSharp.Roslyn
 {
     public class BufferManager
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IDictionary<string, IEnumerable<DocumentId>> _transientDocuments = new Dictionary<string, IEnumerable<DocumentId>>(StringComparer.OrdinalIgnoreCase);
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
 
-        public BufferManager(OmnisharpWorkspace workspace)
+        public BufferManager(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
 
-        public async Task UpdateBuffer(Request request)
+        public async Task UpdateBufferAsync(Request request)
         {
             var buffer = request.Buffer;
             var changes = request.Changes;
 
-            var updateRequest = request as UpdateBufferRequest;
-            if (updateRequest != null && updateRequest.FromDisk)
+            if (request is UpdateBufferRequest updateRequest && updateRequest.FromDisk)
             {
                 buffer = File.ReadAllText(updateRequest.FileName);
             }
@@ -69,13 +70,13 @@ namespace OmniSharp.Roslyn
                     }
                 }
             }
-            else if(buffer != null)
+            else if (buffer != null)
             {
                 TryAddTransientDocument(request.FileName, buffer);
             }
         }
 
-        public async Task UpdateBuffer(ChangeBufferRequest request)
+        public async Task UpdateBufferAsync(ChangeBufferRequest request)
         {
             if (request.FileName == null)
             {
@@ -114,39 +115,43 @@ namespace OmniSharp.Roslyn
             }
 
             var projects = FindProjectsByFileName(fileName);
-            if (projects.Count() == 0)
+            if (!projects.Any())
             {
                 return false;
             }
 
             var sourceText = SourceText.From(fileContent);
-            var documents = new List<DocumentInfo>();
+            var documentInfos = new List<DocumentInfo>();
             foreach (var project in projects)
             {
                 var id = DocumentId.CreateNewId(project.Id);
                 var version = VersionStamp.Create();
-                var document = DocumentInfo.Create(id, fileName, filePath: fileName, loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
+                var documentInfo = DocumentInfo.Create(
+                    id, fileName, filePath: fileName,
+                    loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
 
-                documents.Add(document);
+                documentInfos.Add(documentInfo);
             }
 
             lock (_lock)
             {
-                var documentIds = documents.Select(document => document.Id);
+                var documentIds = documentInfos.Select(document => document.Id);
                 _transientDocuments.Add(fileName, documentIds);
                 _transientDocumentIds.UnionWith(documentIds);
             }
 
-            foreach (var document in documents)
+            foreach (var documentInfo in documentInfos)
             {
-                _workspace.AddDocument(document);
+                _workspace.AddDocument(documentInfo);
             }
+
             return true;
         }
 
         private IEnumerable<Project> FindProjectsByFileName(string fileName)
         {
-            var dirInfo = new FileInfo(fileName).Directory;
+            var fileInfo = new FileInfo(fileName);
+            var dirInfo = fileInfo.Directory;
             var candidates = _workspace.CurrentSolution.Projects
                 .GroupBy(project => new FileInfo(project.FilePath).Directory.FullName)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
@@ -162,7 +167,7 @@ namespace OmniSharp.Roslyn
                 dirInfo = dirInfo.Parent;
             }
 
-            return Enumerable.Empty<Project>();
+            return Array.Empty<Project>();
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)
@@ -189,8 +194,7 @@ namespace OmniSharp.Roslyn
                     return;
                 }
 
-                IEnumerable<DocumentId> documentIds;
-                if (!_transientDocuments.TryGetValue(fileName, out documentIds))
+                if (!_transientDocuments.TryGetValue(fileName, out var documentIds))
                 {
                     return;
                 }

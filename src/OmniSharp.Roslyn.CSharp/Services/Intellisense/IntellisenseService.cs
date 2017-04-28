@@ -8,20 +8,20 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.AutoComplete;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
-    [OmniSharpHandler(OmnisharpEndpoints.AutoComplete, LanguageNames.CSharp)]
-    public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
+    [OmniSharpHandler(OmniSharpEndpoints.AutoComplete, LanguageNames.CSharp)]
+    public class IntellisenseService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly FormattingOptions _formattingOptions;
 
         [ImportingConstructor]
-        public IntellisenseService(OmnisharpWorkspace workspace, FormattingOptions formattingOptions)
+        public IntellisenseService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;
@@ -44,24 +44,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 // Add keywords from the completion list. We'll use the recommender service to get symbols
                 // to create snippets from.
 
-                foreach (var item in completionList.Items)
+                if (completionList != null)
                 {
-                    if (item.Tags.Contains(CompletionTags.Keyword))
+                    foreach (var item in completionList.Items)
                     {
-                        // Note: For keywords, we'll just assume that the completion text is the same
-                        // as the display text.
-                        var keyword = item.DisplayText;
-                        if (keyword.IsValidCompletionFor(wordToComplete))
+                        if (item.Tags.Contains(CompletionTags.Keyword))
                         {
-                            var response = new AutoCompleteResponse()
+                            // Note: For keywords, we'll just assume that the completion text is the same
+                            // as the display text.
+                            var keyword = item.DisplayText;
+                            if (keyword.IsValidCompletionFor(wordToComplete))
                             {
-                                CompletionText = item.DisplayText,
-                                DisplayText = item.DisplayText,
-                                Snippet = item.DisplayText,
-                                Kind = request.WantKind ? "Keyword" : null
-                            };
+                                var response = new AutoCompleteResponse()
+                                {
+                                    CompletionText = item.DisplayText,
+                                    DisplayText = item.DisplayText,
+                                    Snippet = item.DisplayText,
+                                    Kind = request.WantKind ? "Keyword" : null
+                                };
 
-                            completions.Add(response);
+                                completions.Add(response);
+                            }
                         }
                     }
                 }
