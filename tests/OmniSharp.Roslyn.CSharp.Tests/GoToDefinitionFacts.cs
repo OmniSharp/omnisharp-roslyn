@@ -28,6 +28,33 @@ class {|def:Foo|} {
             await TestGoToSourceAsync(testFile);
         }
 
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsPartialMethodDefinitionWithBody(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+    public partial class MyClass 
+    {
+        public MyClass()
+        {
+            Met$$hod();
+        }
+        
+        partial void {|def:Method|}()
+        {
+            //do stuff
+        }
+    }
+
+    public partial class MyClass
+    {
+        partial void {|def:Method|}();
+    }");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
         [Fact]
         public async Task ReturnsDefinitionInDifferentFile()
         {

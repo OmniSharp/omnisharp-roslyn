@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using Microsoft.CodeAnalysis;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -163,6 +164,30 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindSymbolsAsync(code);
             var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
             Assert.Equal("Delegate", symbols.First());
+        }
+
+        [Fact]
+        public async Task Finds_partial_method_with_body()
+        {
+            const string code = @"
+public partial class MyClass  
+{
+    partial void Method();
+}
+
+public partial class MyClass 
+{
+    partial void Method()
+    {
+       // do stuff
+    }
+}";
+
+            var usages = await FindSymbolsAsync(code);
+            var methodSymbol = usages.QuickFixes.Cast<SymbolLocation>().First(x => x.Kind == SymbolKind.Method.ToString());
+
+            // should find the occurrance with body
+            Assert.Equal(8, methodSymbol.Line);
         }
 
         [Fact]
