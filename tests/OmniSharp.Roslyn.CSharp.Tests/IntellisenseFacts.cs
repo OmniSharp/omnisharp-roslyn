@@ -202,6 +202,47 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsCompletions(completions.Select(c => c.CompletionText), Array.Empty<string>());
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_attribute_without_attribute_suffix(string filename)
+        {
+            const string source =
+                @"using System;
+
+                    public class BarAttribute : Attribute {}
+
+                    [B$$
+                    public class Foo {}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "Bar");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_members_in_object_initializer_context(string filename)
+        {
+            const string source =
+                @"public class MyClass1 {
+                        public string Foo {get; set;}
+                  }
+
+                    public class MyClass2 {
+
+                        public MyClass2()
+                        {
+                            var c = new MyClass1 {
+                             F$$
+                        }
+                    }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), "Foo");
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))
