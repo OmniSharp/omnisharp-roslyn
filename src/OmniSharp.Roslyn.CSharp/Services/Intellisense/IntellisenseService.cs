@@ -14,21 +14,6 @@ using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
-    internal static class CompletionItemExtensions
-    {
-        public static IEnumerable<ISymbol> GetCompletionSymbols(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols)
-        {
-            // for SymbolCompletionProvider, use the logic of extracting information from recommended symbols
-            if (completionItem.Properties.ContainsKey("Provider") && completionItem.Properties["Provider"] == "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider")
-            {
-                var symbols = recommendedSymbols.Where(x => x.Name == completionItem.Properties["SymbolName"] && (int)x.Kind == int.Parse(completionItem.Properties["SymbolKind"])).Distinct();
-                return symbols ?? Enumerable.Empty<ISymbol>();
-            }
-
-            return Enumerable.Empty<ISymbol>();
-        }
-    }
-
     [OmniSharpHandler(OmniSharpEndpoints.AutoComplete, LanguageNames.CSharp)]
     public class IntellisenseService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
@@ -66,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                         var completionText = item.DisplayText;
                         if (completionText.IsValidCompletionFor(wordToComplete))
                         {
-                            var symbols = item.GetCompletionSymbols(recommendedSymbols);
+                            var symbols = await item.GetCompletionSymbols(recommendedSymbols, document);
                             if (symbols.Any())
                             {
                                 foreach (var symbol in symbols)
@@ -75,14 +60,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                                     {
                                         if (request.WantSnippet)
                                         {
-                                            foreach (var completion in MakeSnippetedResponses(request, symbol))
+                                            foreach (var completion in MakeSnippetedResponses(request, symbol, item.DisplayText))
                                             {
                                                 completions.Add(completion);
                                             }
                                         }
                                         else
                                         {
-                                            completions.Add(MakeAutoCompleteResponse(request, symbol));
+                                            completions.Add(MakeAutoCompleteResponse(request, symbol, item.DisplayText));
                                         }
                                     }
                                 }
@@ -117,7 +102,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenBy(c => c.CompletionText);
         }
 
-        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string displayName)
         {
             var completions = new List<AutoCompleteResponse>();
 
@@ -126,10 +111,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             {
                 if (methodSymbol.Parameters.Any(p => p.IsOptional))
                 {
-                    completions.Add(MakeAutoCompleteResponse(request, symbol, false));
+                    completions.Add(MakeAutoCompleteResponse(request, symbol, displayName, false));
                 }
 
-                completions.Add(MakeAutoCompleteResponse(request, symbol));
+                completions.Add(MakeAutoCompleteResponse(request, symbol, displayName));
 
                 return completions;
             }
@@ -137,30 +122,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             var typeSymbol = symbol as INamedTypeSymbol;
             if (typeSymbol != null)
             {
-                completions.Add(MakeAutoCompleteResponse(request, symbol));
+                completions.Add(MakeAutoCompleteResponse(request, symbol, displayName));
 
                 if (typeSymbol.TypeKind != TypeKind.Enum)
                 {
                     foreach (var ctor in typeSymbol.InstanceConstructors)
                     {
-                        completions.Add(MakeAutoCompleteResponse(request, ctor));
+                        completions.Add(MakeAutoCompleteResponse(request, ctor, displayName));
                     }
                 }
 
                 return completions;
             }
 
-            return new[] { MakeAutoCompleteResponse(request, symbol) };
+            return new[] { MakeAutoCompleteResponse(request, symbol, displayName) };
         }
 
-        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, bool includeOptionalParams = true)
+        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, string displayName, bool includeOptionalParams = true)
         {
             var displayNameGenerator = new SnippetGenerator();
             displayNameGenerator.IncludeMarkers = false;
             displayNameGenerator.IncludeOptionalParameters = includeOptionalParams;
 
             var response = new AutoCompleteResponse();
-            response.CompletionText = symbol.Name;
+            response.CompletionText = displayName;
 
             // TODO: Do something more intelligent here
             response.DisplayText = displayNameGenerator.Generate(symbol);
