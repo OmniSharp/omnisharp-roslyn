@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
@@ -20,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             _getSymbolsAsync = symbolCompletionItemType.GetMethod("GetSymbolsAsync", BindingFlags.Public | BindingFlags.Static);
         }
 
-        public static async Task<IEnumerable<ISymbol>> GetCompletionSymbols(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
+        public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
             // for SymbolCompletionProvider, use the logic of extracting information from recommended symbols
             if (completionItem.Properties.ContainsKey("Provider") && completionItem.Properties["Provider"] == "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider")
@@ -34,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             {
                 // the API to decode symbols is not public at the moment
                 // http://source.roslyn.io/#Microsoft.CodeAnalysis.Features/Completion/Providers/SymbolCompletionItem.cs,93
-                var decodedSymbolsTask = _getSymbolsAsync.Invoke(null, new object[] { completionItem, document, default(CancellationToken) }) as Task<ImmutableArray<ISymbol>>;
+                var decodedSymbolsTask = _getSymbolsAsync.InvokeStatic<Task<ImmutableArray<ISymbol>>>(new object[] { completionItem, document, default(CancellationToken) });
                 if (decodedSymbolsTask != null)
                 {
                     return await decodedSymbolsTask;

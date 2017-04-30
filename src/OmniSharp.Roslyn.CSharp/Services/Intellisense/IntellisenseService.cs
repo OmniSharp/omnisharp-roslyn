@@ -37,13 +37,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             {
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-                var semanticModel = await document.GetSemanticModelAsync();
                 var service = CompletionService.GetService(document);
                 var completionList = await service.GetCompletionsAsync(document, position);
 
                 if (completionList != null)
                 {
                     // get recommened symbols to match them up later with SymbolCompletionProvider
+                    var semanticModel = await document.GetSemanticModelAsync();
                     var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
 
                     foreach (var item in completionList.Items)
@@ -51,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                         var completionText = item.DisplayText;
                         if (completionText.IsValidCompletionFor(wordToComplete))
                         {
-                            var symbols = await item.GetCompletionSymbols(recommendedSymbols, document);
+                            var symbols = await item.GetCompletionSymbolsAsync(recommendedSymbols, document);
                             if (symbols.Any())
                             {
                                 foreach (var symbol in symbols)
