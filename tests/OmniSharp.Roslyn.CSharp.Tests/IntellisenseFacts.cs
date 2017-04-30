@@ -243,6 +243,69 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsCompletions(completions.Select(c => c.CompletionText), "Foo");
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_parameter_name_inside_a_method(string filename)
+        {
+            const string source =
+                @"public class MyClass1 {
+                        public void SayHi(string text) {}
+                  }
+
+                    public class MyClass2 {
+
+                        public MyClass2()
+                        {
+                            var c = new MyClass1();
+                            c.SayHi(te$$
+                        }
+                    }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "text:");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_override_signatures(string filename)
+        {
+            const string source =
+                @"class Foo
+                    {
+                       public virtual void Test(string text) {}
+                       public virtual void Test(string text, string moreText) {}
+                    }
+
+                    class FooChild : Foo 
+                    {
+                      override $$
+                    }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_cref_completion(string filename)
+        {
+            const string source =
+                @"  /// <summary>
+                    /// A comment. <see cref=""My$$"" /> for more details
+                    /// </summary>
+                  public class MyClass1 {
+                  }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "MyClass1");
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))
