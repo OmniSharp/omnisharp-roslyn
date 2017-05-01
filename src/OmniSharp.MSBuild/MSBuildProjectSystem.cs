@@ -5,7 +5,6 @@ using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Build.Construction;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +17,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -140,15 +140,15 @@ namespace OmniSharp.MSBuild
             var processedProjects = new HashSet<string>();
             var result = new List<string>();
 
-            foreach (var project in solutionFile.ProjectsInOrder)
+            foreach (var project in solutionFile.ProjectBlocks)
             {
-                if (project.ProjectType == SolutionProjectType.SolutionFolder)
+                if (project.Kind == ProjectKind.SolutionFolder)
                 {
                     continue;
                 }
 
                 // Solution files are assumed to contain relative paths to project files with Windows-style slashes.
-                var projectFilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
+                var projectFilePath = project.ProjectPath.Replace('\\', Path.DirectorySeparatorChar);
                 projectFilePath = Path.Combine(_environment.TargetDirectory, projectFilePath);
                 projectFilePath = Path.GetFullPath(projectFilePath);
 
@@ -158,7 +158,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                if (Path.GetExtension(projectFilePath) == ".csproj")
+                if (project.Kind == ProjectKind.CSharpProject)
                 {
                     result.Add(projectFilePath);
                 }
