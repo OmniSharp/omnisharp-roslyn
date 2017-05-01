@@ -186,7 +186,10 @@ namespace OmniSharp.MSBuild.ProjectFile
         {
             return References.Any(filePath =>
             {
-                return string.Equals(Path.GetFileName(filePath), "UnityEngine.dll", StringComparison.OrdinalIgnoreCase);
+                var fileName = Path.GetFileName(filePath);
+
+                return string.Equals(fileName, "UnityEngine.dll", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fileName, "UnityEditor.dll", StringComparison.OrdinalIgnoreCase);
             });
         }
 
