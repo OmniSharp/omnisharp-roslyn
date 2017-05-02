@@ -20,17 +20,15 @@ namespace TestUtility
 
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
-            var references = GetReferences();
-            var project = ScriptHelper.CreateProject(testFile.FileName, references);
-
+            var project = ScriptHelper.CreateProject(testFile.FileName, GetReferences());
             workspace.AddProject(project);
+
             var documentInfo = DocumentInfo.Create(
                 id: DocumentId.CreateNewId(project.Id),
                 name: testFile.FileName,
                 sourceCodeKind: SourceCodeKind.Script,
                 loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, VersionStamp.Create())),
                 filePath: testFile.FileName);
-
             workspace.AddDocument(documentInfo);
         }
 
