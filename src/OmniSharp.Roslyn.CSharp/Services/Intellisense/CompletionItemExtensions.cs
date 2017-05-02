@@ -26,8 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             // for SymbolCompletionProvider, use the logic of extracting information from recommended symbols
             if (completionItem.Properties.ContainsKey("Provider") && completionItem.Properties["Provider"] == "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider")
             {
-                var symbols = recommendedSymbols.Where(x => x.Name == completionItem.Properties["SymbolName"] && (int)x.Kind == int.Parse(completionItem.Properties["SymbolKind"])).Distinct();
-                return symbols ?? Enumerable.Empty<ISymbol>();
+                return recommendedSymbols.Where(x => x.Name == completionItem.Properties["SymbolName"] && (int)x.Kind == int.Parse(completionItem.Properties["SymbolKind"])).Distinct();
             }
 
             // if the completion provider encoded symbols into Properties, we can return them
