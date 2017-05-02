@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp;
+using OmniSharp.Script;
 using OmniSharp.Services;
 
 namespace TestUtility
@@ -20,22 +21,7 @@ namespace TestUtility
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
             var references = GetReferences();
-            var parseOptions = new CSharpParseOptions(
-                LanguageVersion.Default,
-                DocumentationMode.Parse,
-                SourceCodeKind.Script);
-
-            var project = ProjectInfo.Create(
-                id: ProjectId.CreateNewId(),
-                version: VersionStamp.Create(),
-                name: testFile.FileName,
-                assemblyName: $"{testFile.FileName}.dll",
-                language: LanguageNames.CSharp,
-                filePath: testFile.FileName,
-                compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary),
-                metadataReferences: references,
-                parseOptions: parseOptions,
-                isSubmission: true);
+            var project = ScriptHelper.CreateProject(testFile.FileName, references);
 
             workspace.AddProject(project);
             var documentInfo = DocumentInfo.Create(
