@@ -185,7 +185,7 @@ namespace OmniSharp.Script
                         metadataReferences: commonReferences,
                         parseOptions: ParseOptions,
                         isSubmission: true,
-                        hostObjectType: typeof(InteractiveScriptGlobals));
+                        hostObjectType: typeof(CommandLineScriptGlobals));
 
                     // add CSX project to workspace
                     _workspace.AddProject(project);
