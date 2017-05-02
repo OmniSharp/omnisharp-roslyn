@@ -310,7 +310,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Returns_host_object_members_in_csx()
         {
             const string source =
-                "Pri$$";
+                "Prin$$";
 
             var completions = await FindCompletionsAsync("dummy.csx", source);
             ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "Print", "PrintOptions" }); 

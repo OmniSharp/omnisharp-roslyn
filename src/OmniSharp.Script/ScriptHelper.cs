@@ -59,7 +59,7 @@ namespace OmniSharp.Script
             return compilationOptions;
         });
 
-        public static ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references)
+        public static ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
         {
             var project = ProjectInfo.Create(
                 id: ProjectId.CreateNewId(),
@@ -67,7 +67,7 @@ namespace OmniSharp.Script
                 name: csxFileName,
                 assemblyName: $"{csxFileName}.dll",
                 language: LanguageNames.CSharp,
-                compilationOptions: CompilationOptions.Value,
+                compilationOptions: namespaces == null ? CompilationOptions.Value : CompilationOptions.Value.WithUsings(namespaces),
                 metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,

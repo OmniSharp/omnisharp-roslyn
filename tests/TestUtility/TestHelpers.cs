@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using OmniSharp;
+using Microsoft.CodeAnalysis.Scripting.Hosting;using OmniSharp;
 using OmniSharp.Script;
 using OmniSharp.Services;
+
+
 
 namespace TestUtility
 {
@@ -20,7 +22,8 @@ namespace TestUtility
 
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
-            var project = ScriptHelper.CreateProject(testFile.FileName, GetReferences());
+            var references = GetReferences();
+            var project = ScriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), Enumerable.Empty<string>());
             workspace.AddProject(project);
 
             var documentInfo = DocumentInfo.Create(
