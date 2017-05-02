@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
@@ -99,7 +100,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsCamelCaseMatch(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsSubsequenceMatch(wordToComplete))
-                .ThenBy(c => c.CompletionText);
+                .ThenBy(c => c.DisplayText, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(c => c.CompletionText, StringComparer.OrdinalIgnoreCase);
         }
 
         private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string displayName)
