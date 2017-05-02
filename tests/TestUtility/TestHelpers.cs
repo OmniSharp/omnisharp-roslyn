@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Scripting.Hosting;using OmniSharp;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
+using OmniSharp;
 using OmniSharp.Script;
 using OmniSharp.Services;
-
-
 
 namespace TestUtility
 {
