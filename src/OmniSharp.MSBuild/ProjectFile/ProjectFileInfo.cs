@@ -70,7 +70,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
 
         public static ProjectFileInfo Create(
-            string filePath, string solutionDirectory, ILogger logger,
+            string filePath, string solutionDirectory, string sdksPath, ILogger logger,
             MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(filePath))
@@ -78,7 +78,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return null;
             }
 
-            var projectInstance = LoadProject(filePath, solutionDirectory, logger, options, diagnostics, out var targetFrameworks);
+            var projectInstance = LoadProject(filePath, solutionDirectory, sdksPath, logger, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
@@ -91,12 +91,12 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
 
         private static ProjectInstance LoadProject(
-            string filePath, string solutionDirectory, ILogger logger,
+            string filePath, string solutionDirectory, string sdksPath, ILogger logger,
             MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
         {
             options = options ?? new MSBuildOptions();
 
-            var globalProperties = GetGlobalProperties(options, solutionDirectory, logger);
+            var globalProperties = GetGlobalProperties(options, solutionDirectory, sdksPath, logger);
 
             var collection = new ProjectCollection(globalProperties);
 
@@ -168,10 +168,10 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
 
         public ProjectFileInfo Reload(
-            string solutionDirectory, ILogger logger,
+            string solutionDirectory, string sdksPath, ILogger logger,
             MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
-            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, options, diagnostics, out var targetFrameworks);
+            var projectInstance = LoadProject(FilePath, solutionDirectory, sdksPath, logger, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
@@ -193,7 +193,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             });
         }
 
-        private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, ILogger logger)
+        private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, string sdksPath, ILogger logger)
         {
             var globalProperties = new Dictionary<string, string>
             {
@@ -211,7 +211,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             globalProperties.AddPropertyIfNeeded(
                 PropertyNames.MSBuildSDKsPath,
                 userOptionValue: options.MSBuildSDKsPath,
-                environmentValue: MSBuildEnvironment.MSBuildSDKsPath);
+                environmentValue: sdksPath);
 
             globalProperties.AddPropertyIfNeeded(
                 PropertyNames.VisualStudioVersion,

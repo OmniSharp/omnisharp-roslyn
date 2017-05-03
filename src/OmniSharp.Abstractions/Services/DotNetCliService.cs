@@ -39,7 +39,6 @@ namespace OmniSharp.Services
             // the .NET CLI is not launched with the wrong values.
             environment.Remove("MSBUILD_EXE_PATH");
             environment.Remove("MSBuildExtensionsPath");
-            environment.Remove("MSBuildSDKsPath");
         }
 
         public void SetDotNetPath(string path)
