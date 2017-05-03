@@ -98,38 +98,52 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var globalProperties = GetGlobalProperties(options, solutionDirectory, sdksPath, logger);
 
-            var collection = new ProjectCollection(globalProperties);
-
-            // Evaluate the MSBuild project
-            var project = string.IsNullOrEmpty(options.ToolsVersion)
-                ? collection.LoadProject(filePath)
-                : collection.LoadProject(filePath, options.ToolsVersion);
-
-            var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
-            targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
-
-            // If the project supports multiple target frameworks and specific framework isn't
-            // selected, we must pick one before execution. Otherwise, the ResolveReferences
-            // target might not be available to us.
-            if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length > 0)
+            const string MSBuildSDKsPath = "MSBuildSDKsPath";
+            var oldSdksPathValue = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
+            try
             {
-                // For now, we'll just pick the first target framework. Eventually, we'll need to
-                // do better and potentially allow OmniSharp hosts to select a target framework.
-                targetFramework = targetFrameworks[0];
-                project.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                if (globalProperties.TryGetValue(MSBuildSDKsPath, out var sdksPathValue))
+                {
+                    Environment.SetEnvironmentVariable(MSBuildSDKsPath, sdksPathValue);
+                }
+
+                var collection = new ProjectCollection(globalProperties);
+
+                // Evaluate the MSBuild project
+                var project = string.IsNullOrEmpty(options.ToolsVersion)
+                    ? collection.LoadProject(filePath)
+                    : collection.LoadProject(filePath, options.ToolsVersion);
+
+                var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
+                targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+
+                // If the project supports multiple target frameworks and specific framework isn't
+                // selected, we must pick one before execution. Otherwise, the ResolveReferences
+                // target might not be available to us.
+                if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length > 0)
+                {
+                    // For now, we'll just pick the first target framework. Eventually, we'll need to
+                    // do better and potentially allow OmniSharp hosts to select a target framework.
+                    targetFramework = targetFrameworks[0];
+                    project.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                }
+                else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
+                {
+                    targetFrameworks = ImmutableArray.Create(targetFramework);
+                }
+
+                var projectInstance = project.CreateProjectInstance();
+                var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
+                    new[] { new MSBuildLogForwarder(logger, diagnostics) });
+
+                return buildResult
+                    ? projectInstance
+                    : null;
             }
-            else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
+            finally
             {
-                targetFrameworks = ImmutableArray.Create(targetFramework);
+                Environment.SetEnvironmentVariable(MSBuildSDKsPath, oldSdksPathValue);
             }
-
-            var projectInstance = project.CreateProjectInstance();
-            var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
-                new[] { new MSBuildLogForwarder(logger, diagnostics) });
-
-            return buildResult
-                ? projectInstance
-                : null;
         }
 
         private static ProjectData CreateProjectData(ProjectInstance projectInstance, ImmutableArray<string> targetFrameworks)
