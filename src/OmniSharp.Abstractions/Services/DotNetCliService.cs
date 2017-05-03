@@ -120,6 +120,34 @@ namespace OmniSharp.Services
             return SemanticVersion.Parse(output);
         }
 
+        public DotNetInfo GetInfo(string workingDirectory = null)
+        {
+            Process process;
+            try
+            {
+                process = Start("--info", workingDirectory);
+            }
+            catch
+            {
+                return DotNetInfo.Empty;
+            }
+
+            var lines = new List<string>();
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                {
+                    lines.Add(e.Data);
+                }
+            };
+
+            process.BeginOutputReadLine();
+
+            process.WaitForExit();
+
+            return DotNetInfo.Parse(lines);
+        }
+
         /// <summary>
         /// Checks to see if this is a "legacy" .NET CLI. If true, this .NET CLI supports project.json
         /// development; otherwise, it supports .csproj development.
