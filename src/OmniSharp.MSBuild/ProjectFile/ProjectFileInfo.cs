@@ -204,16 +204,19 @@ namespace OmniSharp.MSBuild.ProjectFile
             };
 
             globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.MSBuildExtensionsPath,
                 userOptionValue: options.MSBuildExtensionsPath,
                 environmentValue: MSBuildEnvironment.MSBuildExtensionsPath);
 
             globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.MSBuildSDKsPath,
                 userOptionValue: options.MSBuildSDKsPath,
                 environmentValue: sdksPath);
 
             globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.VisualStudioVersion,
                 userOptionValue: options.VisualStudioVersion,
                 environmentValue: null);
