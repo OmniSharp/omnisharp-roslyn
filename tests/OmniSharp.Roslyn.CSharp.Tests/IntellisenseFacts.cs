@@ -306,6 +306,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "MyClass1");
         }
 
+        [Fact]
+        public async Task Returns_host_object_members_in_csx()
+        {
+            const string source =
+                "Prin$$";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "Print", "PrintOptions" }); 
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))

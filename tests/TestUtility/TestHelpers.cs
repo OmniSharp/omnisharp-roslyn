@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp;
+using OmniSharp.Script;
 using OmniSharp.Services;
 
 namespace TestUtility
@@ -20,31 +22,15 @@ namespace TestUtility
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
             var references = GetReferences();
-            var parseOptions = new CSharpParseOptions(
-                LanguageVersion.Default,
-                DocumentationMode.Parse,
-                SourceCodeKind.Script);
-
-            var project = ProjectInfo.Create(
-                id: ProjectId.CreateNewId(),
-                version: VersionStamp.Create(),
-                name: testFile.FileName,
-                assemblyName: $"{testFile.FileName}.dll",
-                language: LanguageNames.CSharp,
-                filePath: testFile.FileName,
-                compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary),
-                metadataReferences: references,
-                parseOptions: parseOptions,
-                isSubmission: true);
-
+            var project = ScriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), Enumerable.Empty<string>());
             workspace.AddProject(project);
+
             var documentInfo = DocumentInfo.Create(
                 id: DocumentId.CreateNewId(project.Id),
                 name: testFile.FileName,
                 sourceCodeKind: SourceCodeKind.Script,
                 loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, VersionStamp.Create())),
                 filePath: testFile.FileName);
-
             workspace.AddDocument(documentInfo);
         }
 
