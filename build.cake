@@ -179,59 +179,6 @@ Task("SetupMSBuild")
 
     CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
 
-    var sdks = new []
-    {
-        "Microsoft.NET.Sdk",
-        "Microsoft.NET.Sdk.Publish",
-        "Microsoft.NET.Sdk.Web",
-        "Microsoft.NET.Sdk.Web.ProjectSystem",
-        "NuGet.Build.Tasks.Pack"
-    };
-
-    var net46SdkFolder = CombinePaths(msbuildNet46Folder, "Sdks");
-    var netCoreAppSdkFolder = CombinePaths(msbuildNetCoreAppFolder, "Sdks");
-
-    foreach (var sdk in sdks)
-    {
-        var sdkInstallFolder = CombinePaths(env.Folders.Tools, sdk);
-        var net46SdkTargetFolder = CombinePaths(net46SdkFolder, sdk);
-        var netCoreAppSdkTargetFolder = CombinePaths(netCoreAppSdkFolder, sdk);
-
-        CopyDirectory(sdkInstallFolder, net46SdkTargetFolder);
-        CopyDirectory(sdkInstallFolder, netCoreAppSdkTargetFolder);
-
-        // Ensure that we don't leave the .nupkg unnecessarily hanging around.
-        DeleteFiles(CombinePaths(net46SdkTargetFolder, "*.nupkg"));
-        DeleteFiles(CombinePaths(netCoreAppSdkTargetFolder, "*.nupkg"));
-    }
-
-    // Copy NuGet ImportAfter targets
-    var nugetImportAfterTargetsName = "Microsoft.NuGet.ImportAfter.targets";
-    var nugetImportAfterTargetsFolder = CombinePaths("15.0", "Microsoft.Common.targets", "ImportAfter");
-    var nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
-
-    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
-    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
-
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
-
-    nugetImportAfterTargetsFolder = CombinePaths("15.0", "SolutionFile", "ImportAfter");
-    nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
-
-    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
-    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
-
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
-
-    // Copy NuGet.targets from NuGet.Build.Tasks
-    var nugetTargetsName = "NuGet.targets";
-    var nugetTargetsPath = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
-
-    CopyFile(nugetTargetsPath, CombinePaths(msbuildNet46Folder, nugetTargetsName));
-    CopyFile(nugetTargetsPath, CombinePaths(msbuildNetCoreAppFolder, nugetTargetsName));
-
     // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
     var csharpTargetsName = "Microsoft.CSharp.Core.targets";
     var csharpTargetsPath = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools", csharpTargetsName);

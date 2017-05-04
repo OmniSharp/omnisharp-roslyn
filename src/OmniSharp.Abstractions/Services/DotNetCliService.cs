@@ -39,7 +39,6 @@ namespace OmniSharp.Services
             // the .NET CLI is not launched with the wrong values.
             environment.Remove("MSBUILD_EXE_PATH");
             environment.Remove("MSBuildExtensionsPath");
-            environment.Remove("MSBuildSDKsPath");
         }
 
         public void SetDotNetPath(string path)
@@ -118,6 +117,34 @@ namespace OmniSharp.Services
             var output = ProcessHelper.RunAndCaptureOutput(_dotnetPath, "--version", workingDirectory);
 
             return SemanticVersion.Parse(output);
+        }
+
+        public DotNetInfo GetInfo(string workingDirectory = null)
+        {
+            Process process;
+            try
+            {
+                process = Start("--info", workingDirectory);
+            }
+            catch
+            {
+                return DotNetInfo.Empty;
+            }
+
+            var lines = new List<string>();
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                {
+                    lines.Add(e.Data);
+                }
+            };
+
+            process.BeginOutputReadLine();
+
+            process.WaitForExit();
+
+            return DotNetInfo.Parse(lines);
         }
 
         /// <summary>

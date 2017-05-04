@@ -8,7 +8,6 @@ namespace OmniSharp.MSBuild
     {
         public const string MSBuildExePathName = "MSBUILD_EXE_PATH";
         public const string MSBuildExtensionsPathName = "MSBuildExtensionsPath";
-        public const string MSBuildSDKsPathName = "MSBuildSDKsPath";
 
         private static bool s_isInitialized;
 
@@ -16,7 +15,6 @@ namespace OmniSharp.MSBuild
 
         private static string s_msbuildExePath;
         private static string s_msbuildExtensionsPath;
-        private static string s_msbuildSDKsPath;
 
         public static bool IsInitialized => s_isInitialized;
 
@@ -47,15 +45,6 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        public static string MSBuildSDKsPath
-        {
-            get
-            {
-                ThrowIfNotInitialized();
-                return s_msbuildSDKsPath;
-            }
-        }
-
         private static void ThrowIfNotInitialized()
         {
             if (!s_isInitialized)
@@ -79,12 +68,11 @@ namespace OmniSharp.MSBuild
                 s_usingVisualStudio = true;
                 s_isInitialized = true;
             }
-            else if (TryWithLocalMSBuild(logger, out var msbuildExePath, out var msbuildExtensionsPath, out var msbuildSDKsPath))
+            else if (TryWithLocalMSBuild(logger, out var msbuildExePath, out var msbuildExtensionsPath))
             {
                 logger.LogInformation("MSBuild will use local OmniSharp installation.");
                 s_msbuildExePath = msbuildExePath;
                 s_msbuildExtensionsPath = msbuildExtensionsPath;
-                s_msbuildSDKsPath = msbuildSDKsPath;
                 s_isInitialized = true;
             }
 
@@ -94,11 +82,10 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private static bool TryWithLocalMSBuild(ILogger logger, out string msbuildExePath, out string msbuildExtensionsPath, out string msbuildSDKsPath)
+        private static bool TryWithLocalMSBuild(ILogger logger, out string msbuildExePath, out string msbuildExtensionsPath)
         {
             msbuildExePath = null;
             msbuildExtensionsPath = null;
-            msbuildSDKsPath = null;
 
             var msbuildDirectory = FindMSBuildDirectory(logger);
             if (msbuildDirectory == null)
@@ -118,22 +105,11 @@ namespace OmniSharp.MSBuild
             // Set the MSBuildExtensionsPath environment variable to the local msbuild directory.
             msbuildExtensionsPath = msbuildDirectory;
 
-            // Set the MSBuildSDKsPath environment variable to the location of the SDKs.
-            msbuildSDKsPath = FindMSBuildSDKsPath(msbuildDirectory);
-            if (msbuildSDKsPath == null)
-            {
-                logger.LogError("Could not locate MSBuild Sdks path");
-                return false;
-            }
-
             Environment.SetEnvironmentVariable(MSBuildExePathName, msbuildExePath);
             logger.LogInformation($"{MSBuildExePathName} environment variable set to {msbuildExePath}");
 
             Environment.SetEnvironmentVariable(MSBuildExtensionsPathName, msbuildExtensionsPath);
             logger.LogInformation($"{MSBuildExtensionsPathName} environment variable set to {msbuildExtensionsPath}");
-
-            Environment.SetEnvironmentVariable(MSBuildSDKsPathName, msbuildSDKsPath);
-            logger.LogInformation($"{MSBuildSDKsPathName} environment variable set to {msbuildSDKsPath}");
 
             return true;
         }
@@ -200,15 +176,6 @@ namespace OmniSharp.MSBuild
             }
 
             return null;
-        }
-
-        private static string FindMSBuildSDKsPath(string directory)
-        {
-            var msbuildSDKsPath = Path.Combine(directory, "Sdks");
-
-            return Directory.Exists(msbuildSDKsPath)
-                ? msbuildSDKsPath
-                : null;
         }
     }
 }

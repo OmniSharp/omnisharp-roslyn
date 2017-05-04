@@ -28,7 +28,7 @@ namespace OmniSharp.MSBuild
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly DotNetCliService _dotNetCliService;
+        private readonly DotNetCliService _dotNetCli;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -58,7 +58,7 @@ namespace OmniSharp.MSBuild
         {
             _environment = environment;
             _workspace = workspace;
-            _dotNetCliService = dotNetCliService;
+            _dotNetCli = dotNetCliService;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
@@ -304,6 +304,22 @@ namespace OmniSharp.MSBuild
             return result.FilePath;
         }
 
+        private string GetSdksPath(string projectFilePath)
+        {
+            var info = _dotNetCli.GetInfo(Path.GetDirectoryName(projectFilePath));
+
+            if (info.IsEmpty && !string.IsNullOrWhiteSpace(info.BasePath))
+            {
+                return null;
+            }
+
+            var result = Path.Combine(info.BasePath, "Sdks");
+
+            return Directory.Exists(result)
+                ? result
+                : null;
+        }
+
         private ProjectFileInfo LoadProject(string projectFilePath)
         {
             _logger.LogInformation($"Loading project: {projectFilePath}");
@@ -313,7 +329,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, GetSdksPath(projectFilePath), _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
 
                 if (project == null)
                 {
@@ -339,7 +355,7 @@ namespace OmniSharp.MSBuild
                 if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                 {
                     var diagnostics = new List<MSBuildDiagnosticsMessage>();
-                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, GetSdksPath(projectFilePath), _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
 
                     if (newProjectFileInfo != null)
                     {
@@ -574,7 +590,7 @@ namespace OmniSharp.MSBuild
             {
                 if (allowAutoRestore && _options.EnablePackageAutoRestore)
                 {
-                    _dotNetCliService.RestoreAsync(projectFileInfo.Directory, onFailure: () =>
+                    _dotNetCli.RestoreAsync(projectFileInfo.Directory, onFailure: () =>
                     {
                         FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
                     });
