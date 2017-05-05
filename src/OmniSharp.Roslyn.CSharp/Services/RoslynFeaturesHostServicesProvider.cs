@@ -23,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             builder.AddRange(loader.Load(Features, CSharpFeatures));
 
-            var codeActionLocations = options?.CodeActions.GetLocations(env);
+            var codeActionLocations = options.CodeActions.GetLocations(env);
             if (codeActionLocations != null && codeActionLocations.Any())
             {
                 foreach (var codeActionLocation in codeActionLocations)
