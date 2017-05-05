@@ -3,6 +3,7 @@ using System.Composition;
 using System.Reflection;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using System.Linq;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
@@ -13,7 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public RoslynFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options)
+        public RoslynFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options, IOmniSharpEnvironment env)
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 
@@ -22,9 +23,13 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             builder.AddRange(loader.Load(Features, CSharpFeatures));
 
-            if (options?.CodeActions.LocationPath != null)
+            var codeActionLocations = options?.CodeActions.GetLocations(env);
+            if (codeActionLocations != null && codeActionLocations.Any())
             {
-                builder.AddRange(loader.LoadAll(options.CodeActions.LocationPath));
+                foreach (var codeActionLocation in codeActionLocations)
+                {
+                    builder.AddRange(loader.LoadAll(codeActionLocation));
+                }
             }
 
             this.Assemblies = builder.ToImmutable();
