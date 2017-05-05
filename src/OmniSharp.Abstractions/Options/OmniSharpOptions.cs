@@ -4,6 +4,8 @@ namespace OmniSharp.Options
 {
     public class OmniSharpOptions
     {
+        public CodeActionOptions CodeActions { get; set; }
+
         public FormattingOptions FormattingOptions { get; }
 
         public OmniSharpOptions() : this(new FormattingOptions()) { }
