@@ -40,13 +40,14 @@ http://cakebuild.net
 
 [CmdletBinding()]
 Param(
-    [string]$Script = "build.cake",
+    [parameter(position=0)]
     [string]$Target = "Default",
+    [string]$Script = "build.cake",
     [ValidateSet("Release", "Debug")]
     [string]$Configuration = "Release",
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
     [string]$Verbosity = "Verbose",
-    [switch]$Experimental,
+    [switch]$Experimental = $true,
     [Alias("DryRun","Noop")]
     [switch]$WhatIf,
     [switch]$Mono,

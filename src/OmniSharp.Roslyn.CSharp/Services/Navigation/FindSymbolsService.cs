@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,11 +37,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         {
             var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
 
-            var quickFixes = (from symbol in symbols
-                              from location in symbol.Locations
-                              select ConvertSymbol(symbol, location)).Distinct();
+            var symbolLocations = new List<QuickFix>();
+            foreach(var symbol in symbols)
+            {
+                // for partial methods, pick the one with body
+                var s = symbol;
+                if (s is IMethodSymbol method)
+                {
+                    s = method.PartialImplementationPart ?? symbol;
+                }
 
-            return new QuickFixResponse(quickFixes);
+                foreach (var location in s.Locations)
+                {
+                    symbolLocations.Add(ConvertSymbol(symbol, location));
+                }
+            }
+
+            return new QuickFixResponse(symbolLocations.Distinct());
         }
 
         private QuickFix ConvertSymbol(ISymbol symbol, Location location)

@@ -1,12 +1,14 @@
-// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
+// This is a modified copy originally taken from https://github.com/dotnet/roslyn/blob/0a2f70279c4d0125a51a5751dadff345268ece58/src/Workspaces/Core/Desktop/Workspace/MSBuild/SolutionFile/SectionBlock.cs
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
 
-namespace Microsoft.CodeAnalysis.MSBuild
+namespace OmniSharp.MSBuild.SolutionParsing
 {
     /// <summary>
     /// Represents a SectionBlock in a .sln file. Section blocks are of the form:
@@ -16,57 +18,34 @@ namespace Microsoft.CodeAnalysis.MSBuild
     ///     [more keys/values]
     /// EndType
     /// </summary>
-    public class SectionBlock
+    internal sealed partial class SectionBlock
     {
-        private readonly string type;
-        private readonly string parenthesizedName;
-        private readonly string value;
-        private readonly IEnumerable<KeyValuePair<string, string>> keyValuePairs;
+        public string Type { get; }
+        public string ParenthesizedName { get; }
+        public string Value { get; }
+        public ReadOnlyCollection<KeyValuePair<string, string>> KeyValuePairs { get; }
 
-        public SectionBlock(string type, string parenthesizedName, string value, IEnumerable<KeyValuePair<string, string>> keyValuePairs)
+        private SectionBlock(string type, string parenthesizedName, string value, ReadOnlyCollection<KeyValuePair<string, string>> keyValuePairs)
         {
             if (string.IsNullOrEmpty(type))
             {
-                //throw new ArgumentException(string.Format(WorkspacesResources.StringIsNullOrEmpty, "type"));
-                throw new ArgumentException();
+                throw new ArgumentException(string.Format(Constants._0_must_be_a_non_null_and_non_empty_string, "type"));
             }
 
             if (string.IsNullOrEmpty(parenthesizedName))
             {
-                //throw new ArgumentException(string.Format(WorkspacesResources.StringIsNullOrEmpty, "parenthesizedName"));
-                throw new ArgumentException();
+                throw new ArgumentException(string.Format(Constants._0_must_be_a_non_null_and_non_empty_string, "parenthesizedName"));
             }
 
             if (string.IsNullOrEmpty(value))
             {
-                //throw new ArgumentException(string.Format(WorkspacesResources.StringIsNullOrEmpty, "value"));
-                throw new ArgumentException();
+                throw new ArgumentException(string.Format(Constants._0_must_be_a_non_null_and_non_empty_string, "value"));
             }
 
-            this.type = type;
-            this.parenthesizedName = parenthesizedName;
-            this.value = value;
-            this.keyValuePairs = keyValuePairs.ToList();
-        }
-
-        public string Type
-        {
-            get { return type; }
-        }
-
-        public string ParenthesizedName
-        {
-            get { return parenthesizedName; }
-        }
-
-        public string Value
-        {
-            get { return value; }
-        }
-
-        public IEnumerable<KeyValuePair<string, string>> KeyValuePairs
-        {
-            get { return keyValuePairs; }
+            Type = type;
+            ParenthesizedName = parenthesizedName;
+            Value = value;
+            KeyValuePairs = keyValuePairs;
         }
 
         internal string GetText(int indent)
@@ -134,7 +113,7 @@ namespace Microsoft.CodeAnalysis.MSBuild
                 keyValuePairs.Add(new KeyValuePair<string, string>(key, value));
             }
 
-            return new SectionBlock(type, parenthesizedName, sectionValue, keyValuePairs);
+            return new SectionBlock(type, parenthesizedName, sectionValue, keyValuePairs.AsReadOnly());
         }
     }
 }

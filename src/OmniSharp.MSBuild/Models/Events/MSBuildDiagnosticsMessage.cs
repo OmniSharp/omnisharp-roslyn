@@ -1,4 +1,4 @@
-namespace OmniSharp.Models
+namespace OmniSharp.MSBuild.Models.Events
 {
     public class MSBuildDiagnosticsMessage
     {

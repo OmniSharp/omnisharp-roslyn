@@ -19,8 +19,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             this._logger = this.LoggerFactory.CreateLogger<SnippetFacts>();
         }
 
-        [Fact]
-        public async Task Can_template_generic_type_argument()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_template_generic_type_argument(string filename)
         {
             const string source =
                 @"public class Class1 {
@@ -30,12 +32,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("List<${1:T}>()$0", completions);
         }
 
-        [Fact]
-        public async Task Can_return_method_type_arguments_snippets()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_return_method_type_arguments_snippets(string filename)
         {
             const string source =
                 @"using System.Collections.Generic;
@@ -53,12 +57,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                          }
                      }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("Get<${1:SomeType}>()$0 : string", completions);
         }
 
-        [Fact]
-        public async Task Does_not_include_tsource_argument_type()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Does_not_include_tsource_argument_type(string filename)
         {
             const string source =
                 @"using System.Collections.Generic;
@@ -71,13 +77,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("First()$0 : string", completions);
             ContainsSnippet("FirstOrDefault(${1:Func<string, bool> predicate})$0 : string", completions);
         }
 
-        [Fact]
-        public async Task Does_not_include_tresult_argument_type()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Does_not_include_tresult_argument_type(string filename)
         {
             const string source =
                 @"using System.Collections.Generic;
@@ -90,12 +98,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                          }
                      }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("Select(${1:Func<KeyValuePair<string, object>, TResult> selector})$0 : IEnumerable<TResult>", completions);
         }
 
-        [Fact]
-        public async Task Can_template_field()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_template_field(string filename)
         {
             const string source =
                 @"using System.Collections.Generic;
@@ -108,12 +118,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                      }
                  }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("someField$0 : int", completions);
         }
 
-        [Fact]
-        public async Task Can_return_all_constructors()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_return_all_constructors(string filename)
         {
             const string source =
                 @"public class MyClass {
@@ -129,15 +141,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("MyClass()$0", completions);
             ContainsSnippet("MyClass(${1:int param})$0", completions);
             ContainsSnippet("MyClass(${1:int param}, ${2:string param})$0", completions);
         }
 
 
-        [Fact]
-        public async Task Can_template_generic_type_arguments()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_template_generic_type_arguments(string filename)
         {
             const string source =
                 @"using System.Collections.Generic;
@@ -148,12 +162,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                       }
                   }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("Dictionary<${1:TKey}, ${2:TValue}>()$0", completions);
         }
 
-        [Fact]
-        public async Task Can_template_parameter()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_template_parameter(string filename)
         {
             const string source =
                 @"using System.Collections.Generic;
@@ -164,22 +180,26 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                       }
                   }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("List<${1:T}>(${2:IEnumerable<T> collection})$0", completions);
 
         }
 
-        [Fact]
-        public async Task Can_complete_namespace()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_complete_namespace(string filename)
         {
             const string source = "using Sys$$";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("System$0", completions);
         }
 
-        [Fact]
-        public async Task Can_complete_variable()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_complete_variable(string filename)
         {
             const string source = @"
                 public class Class1
@@ -192,12 +212,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("aVariable$0 : int", completions);
         }
 
-        [Fact]
-        public async Task Void_methods_end_with_semicolons()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Void_methods_end_with_semicolons(string filename)
         {
             const string source = @"
                 using System;
@@ -210,12 +232,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("Sort(${1:Array array});$0 : void", completions);
         }
 
-        [Fact]
-        public async Task Fuzzy_matches_are_returned_when_first_letters_match()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Fuzzy_matches_are_returned_when_first_letters_match(string filename)
         {
             const string source = @"
                 using System;
@@ -228,12 +252,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("NewGuid()$0 : Guid", completions);
         }
 
-        [Fact]
-        public async Task Fuzzy_matches_are_not_returned_when_first_letters_do_not_match()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Fuzzy_matches_are_not_returned_when_first_letters_do_not_match(string filename)
         {
             const string source = @"
                 using System;
@@ -246,13 +272,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             var snippetTexts = GetSnippetTexts(completions);
             Assert.DoesNotContain("WriteLine();$0 : void", snippetTexts);
         }
 
-        [Fact]
-        public async Task Can_complete_parameter()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_complete_parameter(string filename)
         {
             const string source = @"
                 public class Class1
@@ -267,21 +295,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("class1$0 : Class1", completions);
         }
 
-        [Fact]
-        public async Task Can_return_keywords()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Can_return_keywords(string filename)
         {
             const string source = "usin$$";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("using", completions);
         }
 
-        [Fact]
-        public async Task Returns_enums()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_enums(string filename)
         {
             const string source =
                 @"public enum Colors { Red, Blue }
@@ -294,13 +326,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                       }
                   }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             Assert.Equal(1, completions.Count());
             ContainsSnippet("Colors$0", completions);
         }
 
-        [Fact]
-        public async Task Returns_event_without_event_keyword()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_event_without_event_keyword(string filename)
         {
             const string source =
                 @"
@@ -313,13 +347,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             Assert.Equal(1, completions.Count());
             ContainsSnippet("TickChanged$0 : TickHandler", completions);
         }
 
-        [Fact]
-        public async Task Returns_method_without_optional_params()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_method_without_optional_params(string filename)
         {
             const string source = @"
                 public class Class1
@@ -334,9 +370,38 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
             ";
 
-            var completions = await FindCompletionsAsync(source, wantSnippet: true);
+            var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
             ContainsSnippet("OptionalParam(${1:int i});$0 : void", completions);
             ContainsSnippet("OptionalParam(${1:int i}, ${2:string s = null});$0 : void", completions);
+        }
+
+        [Fact]
+        public async Task Can_complete_global_variable_in_CSX()
+        {
+            const string source = @"
+                        var aVariable = 1;
+                        av$$
+            ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source, wantSnippet: true);
+            ContainsSnippet("aVariable$0 : int", completions);
+        }
+
+        [Fact]
+        public async Task Can_return_global_method_type_arguments_snippets_in_CSX()
+        {
+            const string source =
+                @"using System.Collections.Generic;
+
+                         public string Get<SomeType>()
+                         {
+                         }
+
+                         G$$
+                 ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source, wantSnippet: true);
+            ContainsSnippet("Get<${1:SomeType}>()$0 : string", completions);
         }
 
         private static IEnumerable<string> GetSnippetTexts(IEnumerable<AutoCompleteResponse> responses)

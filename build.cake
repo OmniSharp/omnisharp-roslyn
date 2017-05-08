@@ -107,10 +107,7 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
-    .IsDependentOn("SetupMSBuild")
-    .Does(() =>
-{
-});
+    .IsDependentOn("SetupMSBuild");
 
 /// <summary>
 /// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
@@ -179,59 +176,6 @@ Task("SetupMSBuild")
 
     CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
 
-    var sdks = new []
-    {
-        "Microsoft.NET.Sdk",
-        "Microsoft.NET.Sdk.Publish",
-        "Microsoft.NET.Sdk.Web",
-        "Microsoft.NET.Sdk.Web.ProjectSystem",
-        "NuGet.Build.Tasks.Pack"
-    };
-
-    var net46SdkFolder = CombinePaths(msbuildNet46Folder, "Sdks");
-    var netCoreAppSdkFolder = CombinePaths(msbuildNetCoreAppFolder, "Sdks");
-
-    foreach (var sdk in sdks)
-    {
-        var sdkInstallFolder = CombinePaths(env.Folders.Tools, sdk);
-        var net46SdkTargetFolder = CombinePaths(net46SdkFolder, sdk);
-        var netCoreAppSdkTargetFolder = CombinePaths(netCoreAppSdkFolder, sdk);
-
-        CopyDirectory(sdkInstallFolder, net46SdkTargetFolder);
-        CopyDirectory(sdkInstallFolder, netCoreAppSdkTargetFolder);
-
-        // Ensure that we don't leave the .nupkg unnecessarily hanging around.
-        DeleteFiles(CombinePaths(net46SdkTargetFolder, "*.nupkg"));
-        DeleteFiles(CombinePaths(netCoreAppSdkTargetFolder, "*.nupkg"));
-    }
-
-    // Copy NuGet ImportAfter targets
-    var nugetImportAfterTargetsName = "Microsoft.NuGet.ImportAfter.targets";
-    var nugetImportAfterTargetsFolder = CombinePaths("15.0", "Microsoft.Common.targets", "ImportAfter");
-    var nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
-
-    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
-    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
-
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
-
-    nugetImportAfterTargetsFolder = CombinePaths("15.0", "SolutionFile", "ImportAfter");
-    nugetImportAfterTargetsPath = CombinePaths(nugetImportAfterTargetsFolder, nugetImportAfterTargetsName);
-
-    CreateDirectory(CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsFolder));
-    CreateDirectory(CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsFolder));
-
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNet46Folder, nugetImportAfterTargetsPath));
-    CopyFile(CombinePaths(env.Folders.MSBuild, nugetImportAfterTargetsPath), CombinePaths(msbuildNetCoreAppFolder, nugetImportAfterTargetsPath));
-
-    // Copy NuGet.targets from NuGet.Build.Tasks
-    var nugetTargetsName = "NuGet.targets";
-    var nugetTargetsPath = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks", "runtimes", "any", "native", nugetTargetsName);
-
-    CopyFile(nugetTargetsPath, CombinePaths(msbuildNet46Folder, nugetTargetsName));
-    CopyFile(nugetTargetsPath, CombinePaths(msbuildNetCoreAppFolder, nugetTargetsName));
-
     // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
     var csharpTargetsName = "Microsoft.CSharp.Core.targets";
     var csharpTargetsPath = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
@@ -267,11 +211,14 @@ Task("PopulateRuntimes")
             "default", // To allow testing the published artifact
             "ubuntu.14.04-x64",
             "ubuntu.16.04-x64",
+            "ubuntu.16.10-x64",
             "centos.7-x64",
             "rhel.7.2-x64",
             "debian.8-x64",
             "fedora.23-x64",
-            "opensuse.13.2-x64");
+            "fedora.24-x64",
+            "opensuse.13.2-x64",
+            "opensuse.42.1-x64");
     }
     else
     {
@@ -446,7 +393,7 @@ Task("PrepareTestAssets")
 
         RunTool(env.LegacyDotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
- 
+
         Information($"Building {folder}...");
 
         RunTool(env.LegacyDotNetCommand, $"build", folder)
@@ -514,8 +461,7 @@ Task("TestAll")
 /// </summary>
 Task("TravisTestAll")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("TestAll")
-    .Does(() =>{});
+    .IsDependentOn("TestAll");
 
 /// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
@@ -587,7 +533,7 @@ bool IsNetFrameworkOnUnix(string framework)
 string GetPublishArguments(string projectFileName, string rid, string framework, string configuration, string outputFolder)
 {
     var argList = new List<string>();
-    
+
     if (IsNetFrameworkOnUnix(framework))
     {
         argList.Add($"\"{projectFileName}\"");
@@ -627,18 +573,24 @@ Task("OnlyPublish")
 
     foreach (var runtime in buildPlan.TargetRids)
     {
-        var rid = runtime.Equals("default")
-            ? buildPlan.GetDefaultRid()
-            : runtime;
-
-        if (completed.Contains(rid))
+        if (completed.Contains(runtime))
         {
             continue;
         }
 
+        var rid = runtime.Equals("default")
+            ? buildPlan.GetDefaultRid()
+            : runtime;
+
         // Restore the OmniSharp.csproj with this runtime.
         PrintBlankLine();
-        Information($"Restoring packages in {projectName} for {rid}...");
+        var runtimeText = runtime;
+        if (runtimeText.Equals("default"))
+        {
+            runtimeText += " (" + rid + ")";
+        }
+
+        Information($"Restoring packages in {projectName} for {runtimeText}...");
 
         RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
             .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
@@ -658,7 +610,7 @@ Task("OnlyPublish")
                 : args;
 
             Information($"Publishing {projectName} for {framework}/{rid}...");
-            
+
             RunTool(command, args, env.WorkingDirectory)
                 .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
 
@@ -677,7 +629,7 @@ Task("OnlyPublish")
             }
         }
 
-        completed.Add(rid);
+        completed.Add(runtime);
     }
 
     CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts);
@@ -711,10 +663,7 @@ Task("RestrictToLocalRuntime")
 Task("LocalPublish")
     .IsDependentOn("Restore")
     .IsDependentOn("RestrictToLocalRuntime")
-    .IsDependentOn("OnlyPublish")
-    .Does(() =>
-{
-});
+    .IsDependentOn("OnlyPublish");
 
 /// <summary>
 ///  Test the published binaries if they start up without errors.
@@ -731,7 +680,7 @@ Task("TestPublished")
     {
         var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
         var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                    new RunOptions(timeOut: 10000))
+                                    new RunOptions(timeOut: 30000))
                                 .DidTimeOut;
         if (!didNotExitWithError)
         {
@@ -759,10 +708,7 @@ Task("CleanupInstall")
 /// </summary>
 Task("Quick")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("LocalPublish")
-    .Does(() =>
-{
-});
+    .IsDependentOn("LocalPublish");
 
 /// <summary>
 ///  Quick build + install.
@@ -796,10 +742,7 @@ Task("All")
     .IsDependentOn("Restore")
     .IsDependentOn("TestAll")
     .IsDependentOn("AllPublish")
-    .IsDependentOn("TestPublished")
-    .Does(() =>
-{
-});
+    .IsDependentOn("TestPublished");
 
 /// <summary>
 ///  Full build targeting local RID.
@@ -809,10 +752,7 @@ Task("Local")
     .IsDependentOn("Restore")
     .IsDependentOn("TestAll")
     .IsDependentOn("LocalPublish")
-    .IsDependentOn("TestPublished")
-    .Does(() =>
-{
-});
+    .IsDependentOn("TestPublished");
 
 /// <summary>
 ///  Build centered around producing the final artifacts for Travis
@@ -823,19 +763,13 @@ Task("Travis")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
     .IsDependentOn("AllPublish")
-    .IsDependentOn("TestPublished")
-    .Does(() =>
-{
-});
+    .IsDependentOn("TestPublished");
 
 /// <summary>
 ///  Default Task aliases to Local.
 /// </summary>
 Task("Default")
-    .IsDependentOn("Local")
-    .Does(() =>
-{
-});
+    .IsDependentOn("Local");
 
 /// <summary>
 ///  Default to Local.

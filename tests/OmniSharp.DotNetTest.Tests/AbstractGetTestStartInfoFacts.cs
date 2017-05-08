@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    internal abstract class AbstractGetTestStartInfoFacts : AbstractSingleRequestHandlerTestFixture<GetTestStartInfoService>
+    public abstract class AbstractGetTestStartInfoFacts : AbstractTestFixture
     {
         protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
         protected const string LegacyNunitTestProject = "LegacyNunitTestProject";
@@ -21,7 +21,11 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        protected override string EndpointName { get; } = OmniSharpEndpoints.V2.GetTestStartInfo;
+        internal GetTestStartInfoService GetRequestHandler(OmniSharpTestHost host)
+        {
+            return host.GetRequestHandler<GetTestStartInfoService>(OmniSharpEndpoints.V2.GetTestStartInfo);
+        }
+
 
         public abstract bool UseLegacyDotNetCli { get; }
 
@@ -46,6 +50,5 @@ namespace OmniSharp.DotNetTest.Tests
                 Assert.Equal(dotNetCli.DotNetPath, response.Executable);
             }
         }
-
     }
 }

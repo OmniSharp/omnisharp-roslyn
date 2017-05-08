@@ -16,9 +16,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.AutoComplete;
 
-        protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, bool wantSnippet = false)
+        protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string filename, string source, bool wantSnippet = false)
         {
-            var testFile = new TestFile("dummy.cs", source);
+            var testFile = new TestFile(filename, source);
             using (var host = CreateOmniSharpHost(testFile))
             {
                 var point = testFile.Content.GetPointFromPosition();

@@ -35,13 +35,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                 throw new ArgumentNullException(nameof(fileInfo));
             }
 
-            if (_itemMap.ContainsKey(fileInfo.ProjectFilePath))
+            if (_itemMap.ContainsKey(fileInfo.FilePath))
             {
-                throw new ArgumentException($"Project file already exists: {fileInfo.ProjectFilePath}", nameof(fileInfo));
+                throw new ArgumentException($"Project file already exists: {fileInfo.FilePath}", nameof(fileInfo));
             }
 
             _items.Add(fileInfo);
-            _itemMap.Add(fileInfo.ProjectFilePath, fileInfo);
+            _itemMap.Add(fileInfo.FilePath, fileInfo);
         }
 
         public bool ContainsKey(string filePath)

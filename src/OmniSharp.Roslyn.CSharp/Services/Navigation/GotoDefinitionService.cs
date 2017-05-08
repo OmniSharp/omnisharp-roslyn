@@ -43,6 +43,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                 if (symbol != null)
                 {
+                    // for partial methods, pick the one with body
+                    if (symbol is IMethodSymbol method)
+                    {
+                        symbol = method.PartialImplementationPart ?? symbol;
+                    }
+
                     var location = symbol.Locations.First();
 
                     if (location.IsInSource)

@@ -10,8 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using OmniSharp.DotNetTest.Models;
-using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
@@ -20,6 +20,8 @@ namespace OmniSharp.DotNetTest
 {
     internal class VSTestManager : TestManager
     {
+        private const string DefaultRunSettings = "<RunSettings />";
+
         public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
@@ -27,7 +29,7 @@ namespace OmniSharp.DotNetTest
 
         protected override string GetCliTestArguments(int port, int parentProcessId)
         {
-            return $"vstest  --Port:{port} --ParentProcessId:{parentProcessId}";
+            return $"vstest --Port:{port} --ParentProcessId:{parentProcessId}";
         }
 
         protected override void VersionCheck()
@@ -47,9 +49,24 @@ namespace OmniSharp.DotNetTest
         {
             // The project must be built before we can test.
             var process = DotNetCli.Start("build", WorkingDirectory);
+
+            process.OutputDataReceived += (_, e) =>
+            {
+                EmitTestMessage(TestMessageLevel.Informational, e.Data ?? string.Empty);
+            };
+
+            process.ErrorDataReceived += (_, e) =>
+            {
+                EmitTestMessage(TestMessageLevel.Error, e.Data ?? string.Empty);
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
             process.WaitForExit();
 
-            return File.Exists(Project.OutputFilePath);
+            return process.ExitCode == 0
+                && File.Exists(Project.OutputFilePath);
         }
 
         private static void VerifyTestFramework(string testFrameworkName)
@@ -71,7 +88,8 @@ namespace OmniSharp.DotNetTest
                 new
                 {
                     TestCases = testCases,
-                    DebuggingEnabled = true
+                    DebuggingEnabled = true,
+                    RunSettings = DefaultRunSettings
                 });
 
             var message = ReadMessage();
@@ -95,7 +113,8 @@ namespace OmniSharp.DotNetTest
                 new
                 {
                     TestCases = testCases,
-                    DebuggingEnabled = true
+                    DebuggingEnabled = true,
+                    RunSettings = DefaultRunSettings
                 });
 
             var message = await ReadMessageAsync(cancellationToken);
@@ -131,14 +150,7 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
-                        var testMessage = message.DeserializePayload<TestMessagePayload>();
-                        EventEmitter.Emit(TestMessageEvent.Id,
-                            new TestMessageEvent
-                            {
-                                MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
-                                Message = testMessage.Message
-                            });
-
+                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
                         break;
 
                     case MessageType.ExecutionComplete:
@@ -162,7 +174,8 @@ namespace OmniSharp.DotNetTest
                 SendMessage(MessageType.TestRunSelectedTestCasesDefaultHost,
                     new
                     {
-                        TestCases = testCases
+                        TestCases = testCases,
+                        RunSettings = DefaultRunSettings
                     });
 
                 var done = false;
@@ -174,14 +187,7 @@ namespace OmniSharp.DotNetTest
                     switch (message.MessageType)
                     {
                         case MessageType.TestMessage:
-                            var testMessage = message.DeserializePayload<TestMessagePayload>();
-                            EventEmitter.Emit(TestMessageEvent.Id,
-                                new TestMessageEvent
-                                {
-                                    MessageLevel = testMessage.MessageLevel.ToString().ToLowerInvariant(),
-                                    Message = testMessage.Message
-                                });
-
+                            EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
                             break;
 
                         case MessageType.TestRunStatsChange:
@@ -223,7 +229,8 @@ namespace OmniSharp.DotNetTest
                     Sources = new[]
                     {
                         Project.OutputFilePath
-                    }
+                    },
+                    RunSettings = DefaultRunSettings
                 });
 
             var testCases = new List<TestCase>();
@@ -240,12 +247,23 @@ namespace OmniSharp.DotNetTest
                 switch (message.MessageType)
                 {
                     case MessageType.TestMessage:
+                        EmitTestMessage(message.DeserializePayload<TestMessagePayload>());
                         break;
 
                     case MessageType.TestCasesFound:
                         foreach (var testCase in message.DeserializePayload<TestCase[]>())
                         {
-                            if (testCase.DisplayName.StartsWith(methodName))
+                            var testName = testCase.FullyQualifiedName;
+
+                            var testNameEnd = testName.IndexOf('(');
+                            if (testNameEnd >= 0)
+                            {
+                                testName = testName.Substring(0, testNameEnd);
+                            }
+
+                            testName = testName.Trim();
+
+                            if (testName.Equals(methodName, StringComparison.Ordinal))
                             {
                                 testCases.Add(testCase);
                             }

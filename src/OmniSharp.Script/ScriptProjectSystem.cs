@@ -8,9 +8,6 @@ using System.Threading.Tasks;
 using Dotnet.Script.NuGetMetadataResolver;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.Scripting.Hosting;
-using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
@@ -23,63 +20,8 @@ namespace OmniSharp.Script
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
-        // aligned with CSI.exe
-        // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
-        internal static readonly IEnumerable<string> DefaultNamespaces = new[]
-        {
-            "System",
-            "System.IO",
-            "System.Collections.Generic",
-            "System.Console",
-            "System.Diagnostics",
-            "System.Dynamic",
-            "System.Linq",
-            "System.Linq.Expressions",
-            "System.Text",
-            "System.Threading.Tasks"
-        };
-
         private const string CsxExtension = ".csx";
-        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
-        private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
-        private CSharpCompilationOptions CreateCompilation()
-        {                      
-            var resolver = new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default);
-
-            var compilationOptions = new CSharpCompilationOptions(
-                    OutputKind.DynamicallyLinkedLibrary,
-                    usings: DefaultNamespaces,
-                    allowUnsafe: true,
-                    metadataReferenceResolver: new CachingScriptMetadataResolver(resolver),                    
-                    sourceReferenceResolver: ScriptSourceResolver.Default,
-                    assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
-                WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
-                {
-                    // ensure that specific warnings about assembly references are always suppressed
-                    // https://github.com/dotnet/roslyn/issues/5501
-                    {"CS1701", ReportDiagnostic.Suppress},
-                    {"CS1702", ReportDiagnostic.Suppress},
-                    {"CS1705", ReportDiagnostic.Suppress}
-                });
-
-            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType =
-                typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
-
-            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes",
-                BindingFlags.Static | BindingFlags.Public);
-            var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
-            if (ignoreCorLibraryDuplicatedTypesValue != null)
-            {
-                topLevelBinderFlagsProperty?.SetValue(compilationOptions, ignoreCorLibraryDuplicatedTypesValue);
-            }
-
-            return compilationOptions;
-        }
-
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
-
 
         // used for tracking purposes only
         private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
@@ -188,17 +130,7 @@ namespace OmniSharp.Script
                 try
                 {
                     var csxFileName = Path.GetFileName(csxPath);
-                    var project = ProjectInfo.Create(
-                        id: ProjectId.CreateNewId(),
-                        version: VersionStamp.Create(),
-                        name: csxFileName,
-                        assemblyName: $"{csxFileName}.dll",
-                        language: LanguageNames.CSharp,
-                        compilationOptions: _compilationOptions.Value,
-                        metadataReferences: commonReferences,
-                        parseOptions: ParseOptions,
-                        isSubmission: true,
-                        hostObjectType: typeof(InteractiveScriptGlobals));
+                    var project = ScriptHelper.CreateProject(csxFileName, commonReferences);
 
                     // add CSX project to workspace
                     _workspace.AddProject(project);

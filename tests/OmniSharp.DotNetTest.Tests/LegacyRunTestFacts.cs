@@ -7,7 +7,7 @@ namespace OmniSharp.DotNetTest.Tests
     /// <summary>
     /// Tests for legacy 'dotnet test' support for project.json support.
     /// </summary>
-    internal class LegacyRunTestFacts : AbstractRunTestFacts
+    public class LegacyRunTestFacts : AbstractRunTestFacts
     {
         public LegacyRunTestFacts(ITestOutputHelper output)
             : base(output)

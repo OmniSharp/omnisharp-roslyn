@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.DotNetTest.Tests
 {
-    internal class RunTestFacts : AbstractRunTestFacts
+    public class RunTestFacts : AbstractRunTestFacts
     {
         public RunTestFacts(ITestOutputHelper testOutput)
             : base(testOutput)
@@ -43,44 +43,63 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
-        // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
+        [Fact]
+        public async Task RunXunitTestWithDisplayName()
+        {
+            await RunDotNetTestAsync(
+                XunitTestProject,
+                methodName: "Main.Test.MainTest.UsesDisplayName",
+                testFramework: "xunit",
+                shouldPass: true);
+        }
 
-        //[Fact]
+        [Fact]
+        public async Task RunXunitTestWithSimilarName()
+        {
+            var response = await RunDotNetTestAsync(
+                XunitTestProject,
+                methodName: "Main.Test.MainTest.TestWithSimilarName",
+                testFramework: "xunit",
+                shouldPass: true);
+
+            Assert.Equal(1, response.Results.Length);
+        }
+
+        [Fact]
         public async Task RunNunitTest()
         {
             await RunDotNetTestAsync(
-                NunitTestProject,
+                NUnitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit",
                 shouldPass: true);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitDataDriveTest1()
         {
             await RunDotNetTestAsync(
-                NunitTestProject,
+                NUnitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest1",
                 testFramework: "nunit",
                 shouldPass: false);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitDataDriveTest2()
         {
             await RunDotNetTestAsync(
-                NunitTestProject,
+                NUnitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "nunit",
                 shouldPass: true);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitSourceDataDrivenTest()
         {
             await RunDotNetTestAsync(
-                NunitTestProject,
+                NUnitTestProject,
                 methodName: "Main.Test.MainTest.SourceDataDrivenTest",
                 testFramework: "nunit",
                 shouldPass: true);

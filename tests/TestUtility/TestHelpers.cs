@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp;
+using OmniSharp.Script;
 using OmniSharp.Services;
 
 namespace TestUtility
@@ -19,60 +21,23 @@ namespace TestUtility
 
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
-            var mscorlib = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(object)).Location);
-            var systemCore = MetadataReference.CreateFromFile(AssemblyHelpers.FromType(typeof(Enumerable)).Location);
-            var references = new[] { mscorlib, systemCore };
-
-            var parseOptions = new CSharpParseOptions(
-                LanguageVersion.Default,
-                DocumentationMode.Parse,
-                SourceCodeKind.Script);
-
-            var project = ProjectInfo.Create(
-                id: ProjectId.CreateNewId(),
-                version: VersionStamp.Create(),
-                name: testFile.FileName,
-                assemblyName: $"{testFile.FileName}.dll",
-                language: LanguageNames.CSharp,
-                filePath: testFile.FileName,
-                compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary),
-                metadataReferences: references,
-                parseOptions: parseOptions,
-                isSubmission: true);
-
+            var references = GetReferences();
+            var project = ScriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), Enumerable.Empty<string>());
             workspace.AddProject(project);
+
             var documentInfo = DocumentInfo.Create(
                 id: DocumentId.CreateNewId(project.Id),
                 name: testFile.FileName,
                 sourceCodeKind: SourceCodeKind.Script,
                 loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, VersionStamp.Create())),
                 filePath: testFile.FileName);
-
             workspace.AddDocument(documentInfo);
         }
 
         public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
         {
             var versionStamp = VersionStamp.Create();
-
-            // This is a bit messy. Essentially, we need to add all assemblies that type forwarders might point to.
-
-            var assemblies = new[]
-            {
-                AssemblyHelpers.FromType(typeof(object)),
-                AssemblyHelpers.FromType(typeof(Enumerable)),
-                AssemblyHelpers.FromType(typeof(Stack<>)),
-                AssemblyHelpers.FromType(typeof(Lazy<,>)),
-                AssemblyHelpers.FromName("System.Runtime"),
-                AssemblyHelpers.FromName("mscorlib")
-            };
-
-            var references = assemblies
-                .Where(a => a != null)
-                .Select(a => a.Location)
-                .Distinct()
-                .Select(l => MetadataReference.CreateFromFile(l));
-
+            var references = GetReferences();
             frameworks = frameworks ?? new[] { string.Empty };
 
             foreach (var framework in frameworks)
@@ -100,6 +65,28 @@ namespace TestUtility
                     workspace.AddDocument(documentInfo);
                 }
             }
+        }
+
+        private static IEnumerable<PortableExecutableReference> GetReferences()
+        {
+            // This is a bit messy. Essentially, we need to add all assemblies that type forwarders might point to.
+            var assemblies = new[]
+            {
+                AssemblyHelpers.FromType(typeof(object)),
+                AssemblyHelpers.FromType(typeof(Enumerable)),
+                AssemblyHelpers.FromType(typeof(Stack<>)),
+                AssemblyHelpers.FromType(typeof(Lazy<,>)),
+                AssemblyHelpers.FromName("System.Runtime"),
+                AssemblyHelpers.FromName("mscorlib")
+            };
+
+            var references = assemblies
+                .Where(a => a != null)
+                .Select(a => a.Location)
+                .Distinct()
+                .Select(l => MetadataReference.CreateFromFile(l));
+
+            return references;
         }
     }
 }
