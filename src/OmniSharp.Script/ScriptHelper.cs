@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.Scripting.Hosting;
 
 namespace OmniSharp.Script
 {
+    using Dotnet.Script.NuGetMetadataResolver;
+
     public static class ScriptHelper
     {
         // aligned with CSI.exe
@@ -34,7 +36,7 @@ namespace OmniSharp.Script
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
                 allowUnsafe: true,
-                metadataReferenceResolver: new CachingScriptMetadataResolver(),
+                metadataReferenceResolver: new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
                 assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
                 WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
