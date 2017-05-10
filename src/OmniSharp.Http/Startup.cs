@@ -34,45 +34,15 @@ namespace OmniSharp
         public OmniSharpWorkspace Workspace { get; private set; }
         public CompositionHost PluginHost { get; private set; }
 
-        public Startup(IOmniSharpEnvironment env)
+        public Startup(IOmniSharpEnvironment env, IConfiguration configuration)
         {
             _env = env;
-
-            var configBuilder = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile(Constants.ConfigFile, optional: true)
-                .AddEnvironmentVariables();
-
-            if (env.AdditionalArguments?.Length > 0)
-            {
-                configBuilder.AddCommandLine(env.AdditionalArguments);
-            }
-
-            // Use the global omnisharp config if there's any in the shared path
-            configBuilder.CreateAndAddGlobalOptionsFile(env);
-
-            // Use the local omnisharp config if there's any in the root path
-            configBuilder.AddJsonFile(
-                new PhysicalFileProvider(env.TargetDirectory).WrapForPolling(),
-                Constants.OptionsFile,
-                optional: true,
-                reloadOnChange: true);
-
-            Configuration = configBuilder.Build();
+            Configuration = configuration;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add the omnisharp workspace to the container
-            services.AddSingleton(typeof(OmniSharpWorkspace), _ => Workspace);
-            services.AddSingleton(typeof(CompositionHost), _ => PluginHost);
-
-            // Caching
-            services.AddSingleton<IMemoryCache, MemoryCache>();
-            services.AddOptions();
-
-            // Setup the options from configuration
-            services.Configure<OmniSharpOptions>(Configuration);
+            var mefBuilder = new OmniSharpMefBuilder();
         }
 
         public static CompositionHost CreateCompositionHost(IServiceProvider serviceProvider, OmniSharpOptions options, IEnumerable<Assembly> assemblies)
@@ -216,48 +186,6 @@ namespace OmniSharp
             });
 
             logger.LogInformation("Configuration finished.");
-        }
-
-        private static List<Assembly> DiscoverOmniSharpAssemblies(IAssemblyLoader loader, ILogger logger)
-        {
-            // Iterate through all runtime libraries in the dependency context and
-            // load them if they depend on OmniSharp.
-
-            var assemblies = new List<Assembly>();
-            var dependencyContext = DependencyContext.Default;
-
-            foreach (var runtimeLibrary in dependencyContext.RuntimeLibraries)
-            {
-                if (DependsOnOmniSharp(runtimeLibrary))
-                {
-                    foreach (var name in runtimeLibrary.GetDefaultAssemblyNames(dependencyContext))
-                    {
-                        var assembly = loader.Load(name);
-                        if (assembly != null)
-                        {
-                            assemblies.Add(assembly);
-
-                            logger.LogDebug($"Loaded {assembly.FullName}");
-                        }
-                    }
-                }
-            }
-
-            return assemblies;
-        }
-
-        private static bool DependsOnOmniSharp(RuntimeLibrary runtimeLibrary)
-        {
-            foreach (var dependency in runtimeLibrary.Dependencies)
-            {
-                if (dependency.Name == "OmniSharp.Abstractions" ||
-                    dependency.Name == "OmniSharp.Roslyn")
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
