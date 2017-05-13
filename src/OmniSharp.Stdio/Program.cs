@@ -63,7 +63,7 @@ namespace OmniSharp.Stdio
         private readonly CancellationTokenSource _cancellation;
         private HashSet<string> _endpoints;
 
-        private Program(
+        public Program(
             TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment, IConfiguration configuration,
             IServiceProvider serviceProvider, CompositionHost compositionHost, ILoggerFactory loggerFactory)
         {

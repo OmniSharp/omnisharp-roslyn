@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -18,6 +22,11 @@ namespace TestUtility
         public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter, OmniSharpOptions options)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
+
+            _services[typeof(IOptionsMonitor<OmniSharpOptions>)] = new OptionsMonitor<OmniSharpOptions>(
+                Enumerable.Empty<IConfigureOptions<OmniSharpOptions>>(),
+                Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>()
+            );
 
             _services[typeof(OmniSharpOptions)] = options;
             _services[typeof(ILoggerFactory)] = loggerFactory;

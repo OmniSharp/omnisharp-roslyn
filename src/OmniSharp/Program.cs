@@ -18,6 +18,6 @@ public class Program
             }
         }
 
-        return OmniSharp.Program.Main(argsList.ToArray());
+        return OmniSharp.Stdio.Program.Main(argsList.ToArray());
     }
 }

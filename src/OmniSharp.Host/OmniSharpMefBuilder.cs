@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Mef;
@@ -37,17 +38,22 @@ namespace OmniSharp
             _eventEmitter = eventEmitter;
         }
 
-        public CompositionHost Build(params Assembly[] assemblies)
+        public CompositionHost Build()
         {
-            var logger = _serviceProvider.GetRequiredService<Logger<OmniSharpMefBuilder>>();
-            var options = _serviceProvider.GetRequiredService<OmniSharpOptions>();
+            var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
+            var logger = _serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(OmniSharpMefBuilder));
+            return Build(DiscoverOmniSharpAssemblies(assemblyLoader, logger));
+        }
+
+        public CompositionHost Build(IEnumerable<Assembly> assemblies)
+        {
+            var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
             var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
             var config = new ContainerConfiguration();
 
-            foreach (var assembly in DiscoverOmniSharpAssemblies(assemblyLoader, logger)
-                .Concat(assemblies)
+            foreach (var assembly in assemblies
                 .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
                 .Distinct())
             {
@@ -64,8 +70,8 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(_environment))
                 .WithProvider(MefValueProvider.From(_writer))
-                .WithProvider(MefValueProvider.From(options))
-                .WithProvider(MefValueProvider.From(options.FormattingOptions))
+                .WithProvider(MefValueProvider.From(options.CurrentValue))
+                .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
@@ -90,7 +96,7 @@ namespace OmniSharp
             return services.BuildServiceProvider();
         }
 
-        private static List<Assembly> DiscoverOmniSharpAssemblies(IAssemblyLoader loader, ILogger logger)
+        public static List<Assembly> DiscoverOmniSharpAssemblies(IAssemblyLoader loader, ILogger logger)
         {
             // Iterate through all runtime libraries in the dependency context and
             // load them if they depend on OmniSharp.
