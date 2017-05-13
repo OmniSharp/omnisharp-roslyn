@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.Middleware
+namespace OmniSharp.Http.Middleware
 {
     public class LoggingMiddleware
     {

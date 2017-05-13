@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
-namespace OmniSharp
+namespace OmniSharp.Http.Middleware
 {
     public class StopServerMiddleware
     {

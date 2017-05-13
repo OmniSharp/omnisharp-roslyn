@@ -4,12 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Host.Internal;
-using OmniSharp.Host.Loader;
+using OmniSharp.Eventing;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
 using OmniSharp.Stdio;
@@ -20,7 +18,7 @@ namespace OmniSharp.Http
 {
     public class Program
     {
-        public static int Main(string[] args)
+        public static int Main(string[] args) => OmniSharp.Start(() =>
         {
             var application = new OmniSharpHttpCommandLineApplication();
             application.OnExecute(() =>
@@ -35,7 +33,7 @@ namespace OmniSharp.Http
                 return 0;
             });
             return application.Execute(args);
-        }
+        });
 
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _sharedTextWriter;
@@ -69,7 +67,9 @@ namespace OmniSharp.Http
                 {
                     serviceCollection.AddSingleton(_environment);
                     serviceCollection.AddSingleton(_sharedTextWriter);
+                    serviceCollection.AddSingleton(NullEventEmitter.Instance);
                     serviceCollection.AddSingleton(_pluginAssemblies);
+                    serviceCollection.AddSingleton(new OmniSharpHttpEnvironment { Port = _serverPort });
                 })
                 .UseStartup(typeof(Startup))
                 .UseKestrel();
@@ -107,19 +107,8 @@ namespace OmniSharp.Http
         }
     }
 
-    public class OmniSharpHttpCommandLineApplication : OmniSharpCommandLineApplication
+    public class OmniSharpHttpEnvironment
     {
-        private readonly CommandOption _serverInterface;
-        private readonly CommandOption _port;
-
-        public OmniSharpHttpCommandLineApplication() : base()
-        {
-            _port = Application.Option("-p | --_port", "OmniSharp _port (defaults to 2000).", CommandOptionType.SingleValue);
-            _serverInterface = Application.Option("-i | --interface", "Server interface address (defaults to 'localhost').", CommandOptionType.SingleValue);
-        }
-
-
-        public int Port => _port.GetValueOrDefault(2000);
-        public string Interface => _serverInterface.GetValueOrDefault("localhost");
+        public int Port { get; set; }
     }
 }

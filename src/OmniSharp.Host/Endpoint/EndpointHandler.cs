@@ -5,31 +5,26 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OmniSharp.Endpoint.Exports;
 using OmniSharp.Mef;
-using OmniSharp.Middleware.Endpoint.Exports;
 using OmniSharp.Models;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
+using OmniSharp.Stdio.Protocol;
 
-namespace OmniSharp.Middleware.Endpoint
+namespace OmniSharp.Endpoint
 {
-    class LanguageModel
+    public abstract class EndpointHandler
     {
-        public string Language { get; set; }
-        public string FileName { get; set; }
-    }
-
-    abstract class EndpointHandler
-    {
-        public abstract Task<object> Handle(HttpContext context);
+        public abstract Task<object> Handle(RequestPacket context);
 
         public static EndpointHandler Create<TRequest, TResponse>(IPredicateHandler languagePredicateHandler, CompositionHost host,
-            ILogger logger, OmniSharpEndpointMetadata item,
+            ILogger logger,
+            OmniSharpEndpointMetadata item,
             IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> handlers,
             Lazy<EndpointHandler<UpdateBufferRequest, object>> updateBufferHandler,
             IEnumerable<Plugin> plugins)
@@ -38,7 +33,8 @@ namespace OmniSharp.Middleware.Endpoint
         }
 
         public static EndpointHandler Factory(IPredicateHandler languagePredicateHandler, CompositionHost host,
-            ILogger logger, OmniSharpEndpointMetadata item,
+            ILogger logger,
+            OmniSharpEndpointMetadata item,
             IEnumerable<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> handlers,
             Lazy<EndpointHandler<UpdateBufferRequest, object>> updateBufferHandler,
             IEnumerable<Plugin> plugins)
@@ -48,7 +44,7 @@ namespace OmniSharp.Middleware.Endpoint
         }
     }
 
-    class EndpointHandler<TRequest, TResponse> : EndpointHandler
+    public class EndpointHandler<TRequest, TResponse> : EndpointHandler
     {
         private readonly CompositionHost _host;
         private readonly IPredicateHandler _languagePredicateHandler;
@@ -95,15 +91,15 @@ namespace OmniSharp.Middleware.Endpoint
 
         public string EndpointName { get; }
 
-        public override Task<object> Handle(HttpContext context)
+        public override Task<object> Handle(RequestPacket context)
         {
-            var requestObject = DeserializeRequestObject(context.Request.Body);
+            var requestObject = DeserializeRequestObject(context.ArgumentsStream);
             var model = GetLanguageModel(requestObject);
 
             return Process(context, model, requestObject);
         }
 
-        public async Task<object> Process(HttpContext context, LanguageModel model, JToken requestObject)
+        public async Task<object> Process(RequestPacket context, LanguageModel model, JToken requestObject)
         {
             var request = requestObject.ToObject<TRequest>();
             if (request is Request && _updateBufferHandler.Value != null)
@@ -142,7 +138,7 @@ namespace OmniSharp.Middleware.Endpoint
             return await HandleAllRequest(request, context);
         }
 
-        private Task<object> HandleLanguageRequest(string language, TRequest request, HttpContext context)
+        private Task<object> HandleLanguageRequest(string language, TRequest request, RequestPacket context)
         {
             if (!string.IsNullOrEmpty(language))
             {
@@ -152,7 +148,7 @@ namespace OmniSharp.Middleware.Endpoint
             return HandleAllRequest(request, context);
         }
 
-        private async Task<object> HandleSingleRequest(string language, TRequest request, HttpContext context)
+        private async Task<object> HandleSingleRequest(string language, TRequest request, RequestPacket context)
         {
             var exports = await _exports.Value;
             if (exports.TryGetValue(language, out var handler))
@@ -163,7 +159,7 @@ namespace OmniSharp.Middleware.Endpoint
             throw new NotSupportedException($"{language} does not support {EndpointName}");
         }
 
-        private async Task<object> HandleAllRequest(TRequest request, HttpContext context)
+        private async Task<object> HandleAllRequest(TRequest request, RequestPacket context)
         {
             if (!_canBeAggregated)
             {

@@ -1,6 +1,6 @@
-namespace OmniSharp.Middleware.Endpoint
+namespace OmniSharp.Endpoint
 {
-    class StaticLanguagePredicateHandler : IPredicateHandler
+    public class StaticLanguagePredicateHandler : IPredicateHandler
     {
         private readonly string _language;
 

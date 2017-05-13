@@ -1,6 +1,6 @@
-namespace OmniSharp.Middleware.Endpoint
+namespace OmniSharp.Endpoint
 {
-    interface IPredicateHandler
+    public interface IPredicateHandler
     {
         string GetLanguageForFilePath(string filePath);
     }

@@ -1,9 +1,10 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.Stdio.Services
+namespace OmniSharp.Services
 {
     public class SharedTextWriter : DisposableObject, ISharedTextWriter
     {

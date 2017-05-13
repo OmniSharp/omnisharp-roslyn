@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace OmniSharp.Host.Internal
+namespace OmniSharp.Internal
 {
     public static class CommandOptionExtensions
     {

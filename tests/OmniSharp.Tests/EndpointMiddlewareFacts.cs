@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using OmniSharp.Eventing;
+using OmniSharp.Http;
+using OmniSharp.Http.Middleware;
 using OmniSharp.Mef;
-using OmniSharp.Middleware;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
 using OmniSharp.Models.GotoDefinition;
@@ -118,11 +120,9 @@ namespace OmniSharp.Tests
         {
             var environment = new OmniSharpEnvironment();
             var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
-            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter);
-            var compositionHost = Startup.CreateCompositionHost(
-                serviceProvider: serviceProvider,
-                options: new OmniSharpOptions(),
-                assemblies: assemblies);
+            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new OmniSharpOptions());
+            var compositionHost = new OmniSharpMefBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
+                .Build(assemblies);
 
             return new PlugInHost(serviceProvider, compositionHost);
         }

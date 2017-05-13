@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
+using OmniSharp.Http;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -26,7 +28,7 @@ namespace TestUtility
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
             typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
-            typeof(Startup).GetTypeInfo().Assembly, // OmniSharp.Host
+            typeof(OmniSharp.OmniSharp).GetTypeInfo().Assembly, // OmniSharp.Host
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
@@ -93,13 +95,11 @@ namespace TestUtility
             var environment = new OmniSharpEnvironment(path);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter);
-
             var omnisharpOptions = new OmniSharpOptions();
-            var compositionHost = Startup.CreateCompositionHost(
-                serviceProvider,
-                options: omnisharpOptions,
-                assemblies: s_lazyAssemblies.Value);
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, omnisharpOptions);
+
+            var compositionHost = new OmniSharpMefBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
+                .Build(s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
@@ -107,7 +107,7 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
-            Startup.InitializeWorkspace(workspace, compositionHost, configuration, logger, omnisharpOptions);
+            new OmniSharpWorkspaceInitializer(serviceProvider, compositionHost, configuration, logger).Initialize();
 
             return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }

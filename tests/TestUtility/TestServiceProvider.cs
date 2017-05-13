@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
-using OmniSharp.Host.Loader;
+using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
@@ -15,10 +15,11 @@ namespace TestUtility
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
 
-        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter)
+        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter, OmniSharpOptions options)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
 
+            _services[typeof(OmniSharpOptions)] = options;
             _services[typeof(ILoggerFactory)] = loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = environment;
             _services[typeof(IAssemblyLoader)] = new AssemblyLoader(loggerFactory);

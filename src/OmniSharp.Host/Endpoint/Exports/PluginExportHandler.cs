@@ -1,8 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using OmniSharp.Plugins;
 
-namespace OmniSharp.Middleware.Endpoint.Exports
+namespace OmniSharp.Endpoint.Exports
 {
     class PluginExportHandler<TRequest, TResponse> : ExportHandler<TRequest, TResponse>
     {

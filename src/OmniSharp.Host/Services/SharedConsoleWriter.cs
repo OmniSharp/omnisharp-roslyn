@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OmniSharp.Stdio.Services
+namespace OmniSharp.Services
 {
     public class SharedConsoleWriter : SharedTextWriter
     {

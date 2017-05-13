@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
-using OmniSharp.Host.Loader;
 using OmniSharp.Mef;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
@@ -21,69 +20,61 @@ namespace OmniSharp
 {
     public class OmniSharpMefBuilder
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _writer;
-        private readonly IAssemblyLoader _assemblyLoader;
-        private readonly IConfiguration _configuration;
+        private readonly IEventEmitter _eventEmitter;
 
         public OmniSharpMefBuilder(
+            IServiceProvider serviceProvider,
             IOmniSharpEnvironment environment,
             ISharedTextWriter writer,
-            IAssemblyLoader assemblyLoader,
-            IConfiguration configuration)
+            IEventEmitter eventEmitter)
         {
+            _serviceProvider = serviceProvider;
             _environment = environment;
             _writer = writer;
-            _assemblyLoader = assemblyLoader;
-            _configuration = configuration;
+            _eventEmitter = eventEmitter;
         }
 
-        public (IServiceProvider serviceProvider, CompositionHost compositionHost) Build()
+        public CompositionHost Build(params Assembly[] assemblies)
         {
-            var serviceProvider = GetServiceProvider();
-            var logger = ServiceProviderServiceExtensions.GetRequiredService<Logger<OmniSharpMefBuilder>>(serviceProvider);
-            var options = ServiceProviderServiceExtensions.GetRequiredService<OmniSharpOptions>(serviceProvider);
-            var memoryCache = ServiceProviderServiceExtensions.GetRequiredService<IMemoryCache>(serviceProvider);
-            var loggerFactory = ServiceProviderServiceExtensions.GetRequiredService<ILoggerFactory>(serviceProvider);
-
+            var logger = _serviceProvider.GetRequiredService<Logger<OmniSharpMefBuilder>>();
+            var options = _serviceProvider.GetRequiredService<OmniSharpOptions>();
+            var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
+            var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+            var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
             var config = new ContainerConfiguration();
 
-            foreach (var assembly in Enumerable.Concat(DiscoverOmniSharpAssemblies(_assemblyLoader, logger), new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+            foreach (var assembly in DiscoverOmniSharpAssemblies(assemblyLoader, logger)
+                .Concat(assemblies)
+                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
                 .Distinct())
             {
                 config = config.WithAssembly(assembly);
             }
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
-            var metadataHelper = new MetadataHelper(_assemblyLoader);
+            var metadataHelper = new MetadataHelper(assemblyLoader);
 
             config = config
-                .WithProvider(MefValueProvider.From<IServiceProvider>(serviceProvider))
+                .WithProvider(MefValueProvider.From(_serviceProvider))
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
-                .WithProvider(MefValueProvider.From<IOmniSharpEnvironment>(_environment))
-                .WithProvider(MefValueProvider.From<ISharedTextWriter>(_writer))
+                .WithProvider(MefValueProvider.From(_environment))
+                .WithProvider(MefValueProvider.From(_writer))
                 .WithProvider(MefValueProvider.From(options))
                 .WithProvider(MefValueProvider.From(options.FormattingOptions))
-                .WithProvider(MefValueProvider.From<IAssemblyLoader>(_assemblyLoader))
-                .WithProvider(MefValueProvider.From(metadataHelper));
+                .WithProvider(MefValueProvider.From(assemblyLoader))
+                .WithProvider(MefValueProvider.From(metadataHelper))
+                .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
+            //config = config.WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(_writer)));
 
-            if (_environment.TransportType == TransportType.Stdio)
-            {
-                config = config
-                    .WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(_writer)));
-            }
-            else
-            {
-                config = config
-                    .WithProvider(MefValueProvider.From(NullEventEmitter.Instance));
-            }
-
-            return (serviceProvider, config.CreateContainer());
+            return config.CreateContainer();
         }
 
-        private IServiceProvider GetServiceProvider()
+        public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration)
         {
             IServiceCollection services = new ServiceCollection();
 
@@ -93,7 +84,7 @@ namespace OmniSharp
             services.AddOptions();
 
             // Setup the options from configuration
-            OptionsConfigurationServiceCollectionExtensions.Configure<OmniSharpOptions>(services, _configuration);
+            services.Configure<OmniSharpOptions>(configuration);
             services.AddLogging();
 
             return services.BuildServiceProvider();

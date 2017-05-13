@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace OmniSharp.Middleware.Endpoint.Exports
+namespace OmniSharp.Endpoint.Exports
 {
     abstract class ExportHandler<TRequest, TResponse>
     {

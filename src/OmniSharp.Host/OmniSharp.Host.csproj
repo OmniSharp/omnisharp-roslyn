@@ -4,6 +4,7 @@
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
     <WarningsAsErrors>true</WarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <RootNamespace>OmniSharp</RootNamespace>
 
     <!-- Needed for Microsoft.Composition -->
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dotnet5.4;portable-net45+win8</PackageTargetFallback>
@@ -15,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
-    <ProjectReference Include="..\OmniSharp.Stdio\OmniSharp.Stdio.csproj" />
     <ProjectReference Include="..\OmniSharp.Plugins\OmniSharp.Plugins.csproj" />
     <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
   </ItemGroup>

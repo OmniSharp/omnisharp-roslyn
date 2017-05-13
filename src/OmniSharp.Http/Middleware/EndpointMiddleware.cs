@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Endpoint;
 using OmniSharp.Mef;
-using OmniSharp.Middleware.Endpoint;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
+using OmniSharp.Stdio.Protocol;
 
-namespace OmniSharp.Middleware
+namespace OmniSharp.Http.Middleware
 {
     public class EndpointMiddleware
     {
@@ -85,10 +86,13 @@ namespace OmniSharp.Middleware
                 var endpoint = httpContext.Request.Path.Value;
                 if (_endpoints.Contains(endpoint))
                 {
-                    Lazy<EndpointHandler> handler;
-                    if (_endpointHandlers.TryGetValue(endpoint, out handler))
+                    if (_endpointHandlers.TryGetValue(endpoint, out var handler))
                     {
-                        var response = await handler.Value.Handle(httpContext);
+                        var response = await handler.Value.Handle(new RequestPacket()
+                        {
+                            Command = endpoint,
+                            ArgumentsStream = httpContext.Request.Body
+                        });
                         MiddlewareHelpers.WriteTo(httpContext.Response, response);
                         return;
                     }

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using OmniSharp.Services;
 
-namespace OmniSharp.Middleware.Endpoint
+namespace OmniSharp.Endpoint
 {
-    class LanguagePredicateHandler : IPredicateHandler
+    public class LanguagePredicateHandler : IPredicateHandler
     {
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 

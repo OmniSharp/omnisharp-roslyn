@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
-namespace OmniSharp.Middleware
+namespace OmniSharp.Http.Middleware
 {
     public static class MiddlewareHelpers
     {

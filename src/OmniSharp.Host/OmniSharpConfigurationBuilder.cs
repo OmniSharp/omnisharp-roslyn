@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
-using OmniSharp.Host.Internal;
+using OmniSharp.Internal;
 using OmniSharp.Utilities;
 
 namespace OmniSharp

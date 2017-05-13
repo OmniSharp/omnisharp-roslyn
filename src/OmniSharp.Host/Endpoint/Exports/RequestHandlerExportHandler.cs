@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using OmniSharp.Mef;
 
-namespace OmniSharp.Middleware.Endpoint.Exports
+namespace OmniSharp.Endpoint.Exports
 {
     class RequestHandlerExportHandler<TRequest, TResponse> : ExportHandler<TRequest, TResponse>
     {
