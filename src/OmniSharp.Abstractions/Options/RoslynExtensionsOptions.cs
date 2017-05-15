@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace OmniSharp.Options
 {
-    public class CodeActionOptions
+    public class RoslynExtensionsOptions
     {
         public string[] LocationPaths { get; set; }
 

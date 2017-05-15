@@ -4,7 +4,7 @@ namespace OmniSharp.Options
 {
     public class OmniSharpOptions
     {
-        public CodeActionOptions CodeActions { get; } = new CodeActionOptions();
+        public RoslynExtensionsOptions RoslynExtensionsOptions { get; } = new RoslynExtensionsOptions();
 
         public FormattingOptions FormattingOptions { get; } = new FormattingOptions();
     }

@@ -19,12 +19,12 @@ namespace OmniSharp.Roslyn.CSharp.Services
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 
-            var codeActionLocations = options.CodeActions.GetNormalizedLocationPaths(env);
-            if (codeActionLocations?.Any() == true)
+            var roslynExtensionsLocations = options.RoslynExtensionsOptions.GetNormalizedLocationPaths(env);
+            if (roslynExtensionsLocations?.Any() == true)
             {
-                foreach (var codeActionLocation in codeActionLocations)
+                foreach (var roslynExtensionsLocation in roslynExtensionsLocations)
                 {
-                    builder.AddRange(loader.LoadAllFrom(codeActionLocation));
+                    builder.AddRange(loader.LoadAllFrom(roslynExtensionsLocation));
                 }
             }
 
