@@ -2,6 +2,7 @@
 using Xunit;
 using Xunit.Abstractions;
 
+
 namespace OmniSharp.DotNetTest.Tests
 {
     /// <summary>
@@ -84,6 +85,38 @@ namespace OmniSharp.DotNetTest.Tests
                 methodName: "Main.Test.MainTest.SourceDataDrivenTest",
                 testFramework: "nunit",
                 shouldPass: true);
+        }
+
+        // These legacy tests currently do not work for MSTest based tests because
+        // for some reason in design mode, we end up returning results for all tests in a source.
+        //[Fact]
+        public async Task RunMSTest()
+        {
+            await RunDotNetTestAsync(
+                LegacyMSTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "mstest",
+                shouldPass: true);
+        }
+
+        //[Fact]
+        public async Task RunMSTestDataDriveTest1()
+        {
+            await RunDotNetTestAsync(
+                LegacyMSTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest1",
+                testFramework: "mstest",
+                shouldPass: false);
+        }
+
+        //[Fact]
+        public async Task RunMSTestDataDriveTest2()
+        {
+            await RunDotNetTestAsync(
+                LegacyMSTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest2",
+                testFramework: "mstest",
+                shouldPass: false);
         }
     }
 }

@@ -8,8 +8,7 @@
 
         protected override bool IsTestAttributeName(string typeName)
         {
-            return typeName == "Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute"
-                || typeName == "Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute";
+            return typeName == "Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute";
         }
     }
 }
