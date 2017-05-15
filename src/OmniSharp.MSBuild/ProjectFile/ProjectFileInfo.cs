@@ -235,6 +235,18 @@ namespace OmniSharp.MSBuild.ProjectFile
                 userOptionValue: options.VisualStudioVersion,
                 environmentValue: null);
 
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.Configuration,
+                userOptionValue: options.Configuration,
+                environmentValue: null);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.Platform,
+                userOptionValue: options.Platform,
+                environmentValue: null);
+
             if (PlatformHelper.IsMono)
             {
                 var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
