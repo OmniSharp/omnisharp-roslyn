@@ -34,9 +34,9 @@ namespace OmniSharp.Host.Loader
             return result;
         }
 
-        public IEnumerable<Assembly> LoadAll(string folderPath)
+        public IReadOnlyList<Assembly> LoadAllFrom(string folderPath)
         {
-            if (folderPath == null) return Enumerable.Empty<Assembly>();
+            if (string.IsNullOrWhiteSpace(folderPath)) return new Assembly[0];
 
             var assemblies = new List<Assembly>();
             foreach (var filePath in Directory.EnumerateFiles(folderPath, "*.dll"))

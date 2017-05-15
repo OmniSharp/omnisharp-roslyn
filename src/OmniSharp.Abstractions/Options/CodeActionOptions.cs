@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -8,21 +9,23 @@ namespace OmniSharp.Options
     {
         public string[] LocationPaths { get; set; }
 
-        public IEnumerable<string> GetLocations(IOmniSharpEnvironment env)
+        public IEnumerable<string> GetNormalizedLocationPaths(IOmniSharpEnvironment env)
         {
-            if (LocationPaths == null) return Enumerable.Empty<string>();
+            if (LocationPaths == null || LocationPaths.Length == 0) return Enumerable.Empty<string>();
 
-            var normalizePaths = new HashSet<string>();
+            var normalizePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var locationPath in LocationPaths)
             {
                 if (Path.IsPathRooted(locationPath))
                 {
                     normalizePaths.Add(locationPath);
                 }
-
-                normalizePaths.Add(Path.Combine(env.TargetDirectory, locationPath));
+                else
+                {
+                    normalizePaths.Add(Path.Combine(env.TargetDirectory, locationPath));
+                }
             }
-
+            
             return normalizePaths;
         }
     }

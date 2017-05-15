@@ -9,12 +9,13 @@ namespace OmniSharp.Roslyn.CSharp.Services
 {
     [Export(typeof(IHostServicesProvider))]
     [Export(typeof(RoslynFeaturesHostServicesProvider))]
+    [Shared]
     public class RoslynFeaturesHostServicesProvider : IHostServicesProvider
     {
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public RoslynFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options, IOmniSharpEnvironment env)
+        public RoslynFeaturesHostServicesProvider(IAssemblyLoader loader)
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 
@@ -23,16 +24,8 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             builder.AddRange(loader.Load(Features, CSharpFeatures));
 
-            var codeActionLocations = options.CodeActions.GetLocations(env);
-            if (codeActionLocations != null && codeActionLocations.Any())
-            {
-                foreach (var codeActionLocation in codeActionLocations)
-                {
-                    builder.AddRange(loader.LoadAll(codeActionLocation));
-                }
-            }
 
-            this.Assemblies = builder.ToImmutable();
+            Assemblies = builder.ToImmutable();
         }
     }
 }
