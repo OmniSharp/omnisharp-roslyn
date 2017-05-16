@@ -86,10 +86,8 @@ namespace OmniSharp.DotNetTest.Tests
                 testFramework: "nunit",
                 shouldPass: true);
         }
-
-        // These legacy tests currently do not work for MSTest based tests because
-        // for some reason in design mode, we end up returning results for all tests in a source.
-        //[Fact]
+        
+        [Fact]
         public async Task RunMSTest()
         {
             await RunDotNetTestAsync(
@@ -99,7 +97,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunMSTestDataDriveTest1()
         {
             await RunDotNetTestAsync(
@@ -109,14 +107,14 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: false);
         }
 
-        //[Fact]
+        [Fact]
         public async Task RunMSTestDataDriveTest2()
         {
             await RunDotNetTestAsync(
                 LegacyMSTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "mstest",
-                shouldPass: false);
+                shouldPass: true);
         }
     }
 }
