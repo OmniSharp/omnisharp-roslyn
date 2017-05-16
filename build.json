@@ -21,12 +21,14 @@
   ],
   "TestAssets": [
     "NUnitTestProject",
-    "XunitTestProject"
+    "XunitTestProject",
+    "MSTestProject"
   ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",
     "BasicTestProjectSample02",
     "LegacyNunitTestProject",
-    "LegacyXunitTestProject"
+    "LegacyXunitTestProject",
+    "LegacyMSTestProject"
   ]
 }
