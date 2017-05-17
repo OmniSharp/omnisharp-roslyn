@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using NuGet.ProjectModel;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.Events;
@@ -17,6 +16,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.MSBuild.Resolution;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -34,6 +34,7 @@ namespace OmniSharp.MSBuild
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+        private readonly PackageDependencyResolver _packageDepedencyResolver;
 
         private readonly object _gate = new object();
         private readonly Queue<ProjectFileInfo> _projectsToProcess;
@@ -67,6 +68,7 @@ namespace OmniSharp.MSBuild
             _projects = new ProjectFileInfoCollection();
             _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<MSBuildProjectSystem>();
+            _packageDepedencyResolver = new PackageDependencyResolver(loggerFactory);
         }
 
         public void Initalize(IConfiguration configuration)
@@ -362,7 +364,7 @@ namespace OmniSharp.MSBuild
                         _projects[projectFilePath] = newProjectFileInfo;
 
                         UpdateProject(newProjectFileInfo);
-                        CheckForUnresolvedDependences(newProjectFileInfo, oldProjectFileInfo, allowAutoRestore);
+                        CheckForUnresolvedDependences(newProjectFileInfo, allowAutoRestore);
                     }
                 }
 
@@ -532,154 +534,35 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, ProjectFileInfo previousProjectFileInfo = null, bool allowAutoRestore = false)
+        private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, bool allowAutoRestore)
         {
-            List<PackageDependency> unresolvedDependencies;
-
-            if (!File.Exists(projectFileInfo.ProjectAssetsFile))
+            var unresolvedPackageReferences = _packageDepedencyResolver.FindUnresolvedPackageReferences(projectFileInfo);
+            if (unresolvedPackageReferences.IsEmpty)
             {
-                // Simplest case: If there's no lock file and the project file has package references,
-                // there are certainly unresolved dependencies.
-                unresolvedDependencies = CreatePackageDependencies(projectFileInfo.PackageReferences);
-            }
-            else
-            {
-                // Note: This is a bit of misnmomer. It's entirely possible that a package reference has been removed
-                // and a restore needs to happen in order to update project.assets.json file. Otherwise, the MSBuild targets
-                // will still resolve the removed reference as a reference in the user's project. In that case, the package
-                // reference isn't so much "unresolved" as "incorrectly resolved".
-                IEnumerable<PackageReference> unresolvedPackageReferences;
-
-                // Did the project file change? Diff the package references and see if there are unresolved dependencies.
-                if (previousProjectFileInfo != null)
-                {
-                    var remainingPackageReferences = new HashSet<PackageReference>(previousProjectFileInfo.PackageReferences);
-                    var packageReferencesToAdd = new HashSet<PackageReference>();
-
-                    foreach (var packageReference in projectFileInfo.PackageReferences)
-                    {
-                        if (remainingPackageReferences.Contains(packageReference))
-                        {
-                            remainingPackageReferences.Remove(packageReference);
-                        }
-                        else
-                        {
-                            packageReferencesToAdd.Add(packageReference);
-                        }
-                    }
-
-                    unresolvedPackageReferences = packageReferencesToAdd.Concat(remainingPackageReferences);
-                }
-                else
-                {
-                    // Finally, if the project.assets.json file exists but there's no old project to compare against,
-                    // we'll just check to ensure that all of the project's package references can be found in the
-                    // current project.assets.json file.
-
-                    var lockFileFormat = new LockFileFormat();
-                    var lockFile = lockFileFormat.Read(projectFileInfo.ProjectAssetsFile);
-
-                    unresolvedPackageReferences = FindUnresolvedPackageReferencesInLockFile(projectFileInfo, lockFile);
-                }
-
-                unresolvedDependencies = CreatePackageDependencies(unresolvedPackageReferences);
+                return;
             }
 
-            if (unresolvedDependencies.Count > 0)
-            {
-                if (allowAutoRestore && _options.EnablePackageAutoRestore)
-                {
-                    _dotNetCli.RestoreAsync(projectFileInfo.Directory, onFailure: () =>
-                    {
-                        FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
-                    });
-                }
-                else
-                {
-                    FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
-                }
-            }
-        }
-
-        private List<PackageDependency> CreatePackageDependencies(IEnumerable<PackageReference> packageReferences)
-        {
-            var list = new List<PackageDependency>();
-
-            foreach (var packageReference in packageReferences)
-            {
-                var dependency = new PackageDependency
+            var unresolvedDependencies = unresolvedPackageReferences.Select(packageReference =>
+                new PackageDependency
                 {
                     Name = packageReference.Dependency.Id,
                     Version = packageReference.Dependency.VersionRange.ToNormalizedString()
-                };
+                });
 
-                list.Add(dependency);
+            if (allowAutoRestore && _options.EnablePackageAutoRestore)
+            {
+                _dotNetCli.RestoreAsync(projectFileInfo.Directory, onFailure: () =>
+                {
+                    FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+                });
             }
-
-            return list;
+            else
+            {
+                FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+            }
         }
 
-        private ImmutableArray<PackageReference> FindUnresolvedPackageReferencesInLockFile(ProjectFileInfo projectFileInfo, LockFile lockFile)
-        {
-            if (projectFileInfo.PackageReferences.Length == 0)
-            {
-                return ImmutableArray<PackageReference>.Empty;
-            }
-
-            // Create map of all libraries in the lock file by their name.
-            // Note that the map's key is case-insensitive.
-
-            var libraryMap = new Dictionary<string, List<LockFileLibrary>>(
-                capacity: lockFile.Libraries.Count,
-                comparer: StringComparer.OrdinalIgnoreCase);
-
-            foreach (var library in lockFile.Libraries)
-            {
-                if (!libraryMap.TryGetValue(library.Name, out var libraries))
-                {
-                    libraries = new List<LockFileLibrary>();
-                    libraryMap.Add(library.Name, libraries);
-                }
-
-                libraries.Add(library);
-            }
-
-            var unresolved = ImmutableArray.CreateBuilder<PackageReference>();
-
-            // Iterate through each package reference and see if we can find a library with the same name
-            // that satisfies the reference's version range in the lock file.
-
-            foreach (var reference in projectFileInfo.PackageReferences)
-            {
-                if (!libraryMap.TryGetValue(reference.Dependency.Id, out var libraries))
-                {
-                    _logger.LogWarning($"{projectFileInfo.Name}: Did not find '{reference.Dependency.Id}' in lock file.");
-                    unresolved.Add(reference);
-                }
-                else
-                {
-                    var found = false;
-                    foreach (var library in libraries)
-                    {
-                        if (reference.Dependency.VersionRange.Satisfies(library.Version))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        _logger.LogDebug($"{projectFileInfo.Name}: Found '{reference.Dependency.Id}' in lock file, but none of the versions satisfy {reference.Dependency.VersionRange}");
-                        unresolved.Add(reference);
-                    }
-                }
-            }
-
-            return unresolved.ToImmutable();
-        }
-
-        private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, List<PackageDependency> unresolvedDependencies)
+        private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, IEnumerable<PackageDependency> unresolvedDependencies)
         {
             _eventEmitter.Emit(EventTypes.UnresolvedDependencies,
                 new UnresolvedDependenciesMessage()
