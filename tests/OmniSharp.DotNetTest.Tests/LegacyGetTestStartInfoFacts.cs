@@ -29,5 +29,14 @@ namespace OmniSharp.DotNetTest.Tests
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit");
         }
+
+        [Fact]
+        public async Task RunMSTestTest()
+        {
+            await GetDotNetTestStartInfoAsync(
+                LegacyMSTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "mstest");
+        }
     }
 }

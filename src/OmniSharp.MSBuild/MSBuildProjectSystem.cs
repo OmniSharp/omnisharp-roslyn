@@ -624,7 +624,7 @@ namespace OmniSharp.MSBuild
         {
             foreach (var library in lockFile.Libraries)
             {
-                if (string.Equals(library.Name, reference.Dependency.Id) &&
+                if (string.Equals(library.Name, reference.Dependency.Id, StringComparison.OrdinalIgnoreCase) &&
                     reference.Dependency.VersionRange.Satisfies(library.Version))
                 {
                     return true;
