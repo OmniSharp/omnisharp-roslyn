@@ -308,7 +308,7 @@ namespace OmniSharp.MSBuild
         {
             var info = _dotNetCli.GetInfo(Path.GetDirectoryName(projectFilePath));
 
-            if (info.IsEmpty && !string.IsNullOrWhiteSpace(info.BasePath))
+            if (info.IsEmpty || string.IsNullOrWhiteSpace(info.BasePath))
             {
                 return null;
             }
