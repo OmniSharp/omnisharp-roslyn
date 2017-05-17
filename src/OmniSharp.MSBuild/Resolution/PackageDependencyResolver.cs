@@ -66,7 +66,7 @@ namespace OmniSharp.MSBuild.Resolution
 
                     if (!found)
                     {
-                        _logger.LogDebug($"{projectFile.Name}: Found '{reference.Dependency.Id}' in lock file, but none of the versions satisfy {reference.Dependency.VersionRange}");
+                        _logger.LogWarning($"{projectFile.Name}: Found '{reference.Dependency.Id}' in lock file, but none of the versions satisfy {reference.Dependency.VersionRange}");
                         unresolved.Add(reference);
                     }
                 }
