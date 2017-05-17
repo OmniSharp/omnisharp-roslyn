@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using OmniSharp.Models.Events;
 
 namespace OmniSharp.Eventing
@@ -27,6 +28,17 @@ namespace OmniSharp.Eventing
                 {
                     FileName = projectPath,
                     Succeeded = succeeded
+                });
+        }
+
+        public static void UnresolvedDepdendencies(this IEventEmitter emitter, string projectFilePath, IEnumerable<PackageDependency> unresolvedDependencies)
+        {
+            emitter.Emit(
+                EventTypes.UnresolvedDependencies,
+                new UnresolvedDependenciesMessage
+                {
+                    FileName = projectFilePath,
+                    UnresolvedDependencies = unresolvedDependencies
                 });
         }
     }
