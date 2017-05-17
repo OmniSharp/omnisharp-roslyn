@@ -579,8 +579,7 @@ namespace OmniSharp.MSBuild
                     var lockFileFormat = new LockFileFormat();
                     var lockFile = lockFileFormat.Read(projectFileInfo.ProjectAssetsFile);
 
-                    unresolvedPackageReferences = projectFileInfo.PackageReferences
-                        .Where(pr => !ContainsPackageReference(lockFile, pr));
+                    unresolvedPackageReferences = FindUnresolvedPackageReferencesInLockFile(projectFileInfo, lockFile);
                 }
 
                 unresolvedDependencies = CreatePackageDependencies(unresolvedPackageReferences);
@@ -620,18 +619,64 @@ namespace OmniSharp.MSBuild
             return list;
         }
 
-        private static bool ContainsPackageReference(LockFile lockFile, PackageReference reference)
+        private ImmutableArray<PackageReference> FindUnresolvedPackageReferencesInLockFile(ProjectFileInfo projectFileInfo, LockFile lockFile)
         {
+            if (projectFileInfo.PackageReferences.Length == 0)
+            {
+                return ImmutableArray<PackageReference>.Empty;
+            }
+
+            // Create map of all libraries in the lock file by their name.
+            // Note that the map's key is case-insensitive.
+
+            var libraryMap = new Dictionary<string, List<LockFileLibrary>>(
+                capacity: lockFile.Libraries.Count,
+                comparer: StringComparer.OrdinalIgnoreCase);
+
             foreach (var library in lockFile.Libraries)
             {
-                if (string.Equals(library.Name, reference.Dependency.Id, StringComparison.OrdinalIgnoreCase) &&
-                    reference.Dependency.VersionRange.Satisfies(library.Version))
+                if (!libraryMap.TryGetValue(library.Name, out var libraries))
                 {
-                    return true;
+                    libraries = new List<LockFileLibrary>();
+                    libraryMap.Add(library.Name, libraries);
+                }
+
+                libraries.Add(library);
+            }
+
+            var unresolved = ImmutableArray.CreateBuilder<PackageReference>();
+
+            // Iterate through each package reference and see if we can find a library with the same name
+            // that satisfies the reference's version range in the lock file.
+
+            foreach (var reference in projectFileInfo.PackageReferences)
+            {
+                if (!libraryMap.TryGetValue(reference.Dependency.Id, out var libraries))
+                {
+                    _logger.LogWarning($"{projectFileInfo.Name}: Did not find '{reference.Dependency.Id}' in lock file.");
+                    unresolved.Add(reference);
+                }
+                else
+                {
+                    var found = false;
+                    foreach (var library in libraries)
+                    {
+                        if (reference.Dependency.VersionRange.Satisfies(library.Version))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        _logger.LogDebug($"{projectFileInfo.Name}: Found '{reference.Dependency.Id}' in lock file, but none of the versions satisfy {reference.Dependency.VersionRange}");
+                        unresolved.Add(reference);
+                    }
                 }
             }
 
-            return false;
+            return unresolved.ToImmutable();
         }
 
         private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, List<PackageDependency> unresolvedDependencies)
