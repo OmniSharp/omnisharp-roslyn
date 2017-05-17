@@ -534,9 +534,9 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void CheckForUnresolvedDependences(ProjectFileInfo projectFileInfo, bool allowAutoRestore)
+        private void CheckForUnresolvedDependences(ProjectFileInfo projectFile, bool allowAutoRestore)
         {
-            var unresolvedPackageReferences = _packageDepedencyResolver.FindUnresolvedPackageReferences(projectFileInfo);
+            var unresolvedPackageReferences = _packageDepedencyResolver.FindUnresolvedPackageReferences(projectFile);
             if (unresolvedPackageReferences.IsEmpty)
             {
                 return;
@@ -551,25 +551,15 @@ namespace OmniSharp.MSBuild
 
             if (allowAutoRestore && _options.EnablePackageAutoRestore)
             {
-                _dotNetCli.RestoreAsync(projectFileInfo.Directory, onFailure: () =>
+                _dotNetCli.RestoreAsync(projectFile.Directory, onFailure: () =>
                 {
-                    FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+                    _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
                 });
             }
             else
             {
-                FireUnresolvedDependenciesEvent(projectFileInfo, unresolvedDependencies);
+                _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
             }
-        }
-
-        private void FireUnresolvedDependenciesEvent(ProjectFileInfo projectFileInfo, IEnumerable<PackageDependency> unresolvedDependencies)
-        {
-            _eventEmitter.Emit(EventTypes.UnresolvedDependencies,
-                new UnresolvedDependenciesMessage()
-                {
-                    FileName = projectFileInfo.FilePath,
-                    UnresolvedDependencies = unresolvedDependencies
-                });
         }
 
         private ProjectFileInfo GetProjectFileInfo(string path)
