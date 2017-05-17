@@ -1,9 +1,9 @@
 ﻿using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 using System.Reflection;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using System.Linq;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {

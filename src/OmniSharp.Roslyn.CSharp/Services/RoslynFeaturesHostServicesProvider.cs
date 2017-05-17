@@ -3,7 +3,6 @@ using System.Composition;
 using System.Reflection;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using System.Linq;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
