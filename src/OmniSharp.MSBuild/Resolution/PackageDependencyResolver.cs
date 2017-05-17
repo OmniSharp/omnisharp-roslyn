@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
 using OmniSharp.MSBuild.ProjectFile;
@@ -66,7 +67,13 @@ namespace OmniSharp.MSBuild.Resolution
 
                     if (!found)
                     {
-                        _logger.LogWarning($"{projectFile.Name}: Found '{reference.Dependency.Id}' in lock file, but none of the versions satisfy {reference.Dependency.VersionRange}");
+                        var referenceText = reference.IsImplicitlyDefined
+                            ? "implicit package reference"
+                            : "package reference";
+
+                        var versions = string.Join(", ", libraries.Select(l => '"' + l.Version.ToString() + '"'));
+
+                        _logger.LogWarning($"{projectFile.Name}: Found {referenceText} '{reference.Dependency.Id}', but none of the versions in the lock file ({versions}) satisfy {reference.Dependency.VersionRange}");
                         unresolved.Add(reference);
                     }
                 }
