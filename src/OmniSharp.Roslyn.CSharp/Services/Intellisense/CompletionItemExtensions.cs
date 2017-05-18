@@ -12,15 +12,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
     internal static class CompletionItemExtensions
     {
-        private const string GetSymbolsAsync = "GetSymbolsAsync";
+        private const string GetSymbolsAsync = nameof(GetSymbolsAsync);
+        private const string InsertionText = nameof(InsertionText);
+        private const string NamedParameterCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.NamedParameterCompletionProvider";
         private const string OverrideCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.OverrideCompletionProvider";
         private const string ParitalMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
-        private const string Provider = "Provider";
+        private const string Provider = nameof(Provider);
         private const string SymbolCompletionItem = "Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem";
         private const string SymbolCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider";
-        private const string SymbolKind = "SymbolKind";
-        private const string SymbolName = "SymbolName";
-        private const string Symbols = "Symbols";
+        private const string SymbolKind = nameof(SymbolKind);
+        private const string SymbolName = nameof(SymbolName);
+        private const string Symbols = nameof(Symbols);
 
         private static MethodInfo _getSymbolsAsync;
 
@@ -58,7 +60,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         public static bool UseDisplayTextAsCompletionText(this CompletionItem completionItem)
         {
             return completionItem.Properties.TryGetValue(Provider, out var provider)
-                && (provider == OverrideCompletionProvider || provider == ParitalMethodCompletionProvider);
+                && (provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == ParitalMethodCompletionProvider);
+        }
+
+        public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
+        {
+            return completionItem.Properties.TryGetValue(InsertionText, out insertionText);
         }
     }
 }

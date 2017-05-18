@@ -57,9 +57,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                             {
                                 foreach (var symbol in symbols)
                                 {
-                                    completionText = item.UseDisplayTextAsCompletionText()
-                                        ? item.DisplayText
-                                        : symbol.Name;
+                                    if (item.UseDisplayTextAsCompletionText())
+                                    {
+                                        completionText = item.DisplayText;
+                                    }
+                                    else if (item.TryGetInsertionText(out var insertionText))
+                                    {
+                                        completionText = insertionText;
+                                    }
+                                    else
+                                    {
+                                        completionText = symbol.Name;
+                                    }
 
                                     if (symbol != null)
                                     {
