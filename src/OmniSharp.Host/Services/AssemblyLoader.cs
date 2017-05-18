@@ -38,23 +38,26 @@ namespace OmniSharp.Host.Loader
         {
             if (string.IsNullOrWhiteSpace(folderPath)) return Array.Empty<Assembly>();
 
-            if (!Directory.Exists(folderPath))
+            try
             {
-                _logger.LogWarning($"Attempted to load assemblies from '{folderPath}' but that path doesn't exist.");
+                var assemblies = new List<Assembly>();
+
+                foreach (var filePath in Directory.EnumerateFiles(folderPath, "*.dll"))
+                {
+                    var assembly = LoadFromPath(filePath);
+                    if (assembly != null)
+                    {
+                        assemblies.Add(assembly);
+                    }
+                }
+
+                return assemblies;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occurred when attempting to access '{folderPath}'.");
                 return Array.Empty<Assembly>();
             }
-
-            var assemblies = new List<Assembly>();
-            foreach (var filePath in Directory.EnumerateFiles(folderPath, "*.dll"))
-            {
-                var assembly = LoadFromPath(filePath);
-                if (assembly != null)
-                {
-                    assemblies.Add(assembly);
-                }
-            }
-
-            return assemblies;
         }
 
         private Assembly LoadFromPath(string assemblyPath)
