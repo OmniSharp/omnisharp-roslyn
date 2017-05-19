@@ -57,18 +57,31 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                             {
                                 foreach (var symbol in symbols)
                                 {
+                                    if (item.UseDisplayTextAsCompletionText())
+                                    {
+                                        completionText = item.DisplayText;
+                                    }
+                                    else if (item.TryGetInsertionText(out var insertionText))
+                                    {
+                                        completionText = insertionText;
+                                    }
+                                    else
+                                    {
+                                        completionText = symbol.Name;
+                                    }
+
                                     if (symbol != null)
                                     {
                                         if (request.WantSnippet)
                                         {
-                                            foreach (var completion in MakeSnippetedResponses(request, symbol, item.DisplayText))
+                                            foreach (var completion in MakeSnippetedResponses(request, symbol, completionText))
                                             {
                                                 completions.Add(completion);
                                             }
                                         }
                                         else
                                         {
-                                            completions.Add(MakeAutoCompleteResponse(request, symbol, item.DisplayText));
+                                            completions.Add(MakeAutoCompleteResponse(request, symbol, completionText));
                                         }
                                     }
                                 }
@@ -104,50 +117,60 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenBy(c => c.CompletionText, StringComparer.OrdinalIgnoreCase);
         }
 
-        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string displayName)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string completionText)
+        {
+            switch (symbol)
+            {
+                case IMethodSymbol methodSymbol:
+                    return MakeSnippetedResponses(request, methodSymbol, completionText);
+                case INamedTypeSymbol typeSymbol:
+                    return MakeSnippetedResponses(request, typeSymbol, completionText);
+
+                default:
+                    return new[] { MakeAutoCompleteResponse(request, symbol, completionText) };
+            }
+        }
+
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, IMethodSymbol methodSymbol, string completionText)
         {
             var completions = new List<AutoCompleteResponse>();
 
-            var methodSymbol = symbol as IMethodSymbol;
-            if (methodSymbol != null)
+            if (methodSymbol.Parameters.Any(p => p.IsOptional))
             {
-                if (methodSymbol.Parameters.Any(p => p.IsOptional))
-                {
-                    completions.Add(MakeAutoCompleteResponse(request, symbol, displayName, false));
-                }
-
-                completions.Add(MakeAutoCompleteResponse(request, symbol, displayName));
-
-                return completions;
+                completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText, includeOptionalParams: false));
             }
 
-            var typeSymbol = symbol as INamedTypeSymbol;
-            if (typeSymbol != null)
-            {
-                completions.Add(MakeAutoCompleteResponse(request, symbol, displayName));
+            completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText));
 
-                if (typeSymbol.TypeKind != TypeKind.Enum)
-                {
-                    foreach (var ctor in typeSymbol.InstanceConstructors)
-                    {
-                        completions.Add(MakeAutoCompleteResponse(request, ctor, displayName));
-                    }
-                }
-
-                return completions;
-            }
-
-            return new[] { MakeAutoCompleteResponse(request, symbol, displayName) };
+            return completions;
         }
 
-        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, string displayName, bool includeOptionalParams = true)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, INamedTypeSymbol typeSymbol, string completionText)
+        {
+            var completions = new List<AutoCompleteResponse>
+            {
+                MakeAutoCompleteResponse(request, typeSymbol, completionText)
+            };
+
+            if (typeSymbol.TypeKind != TypeKind.Enum)
+            {
+                foreach (var ctor in typeSymbol.InstanceConstructors)
+                {
+                    completions.Add(MakeAutoCompleteResponse(request, ctor, completionText));
+                }
+            }
+
+            return completions;
+        }
+
+        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, string completionText, bool includeOptionalParams = true)
         {
             var displayNameGenerator = new SnippetGenerator();
             displayNameGenerator.IncludeMarkers = false;
             displayNameGenerator.IncludeOptionalParameters = includeOptionalParams;
 
             var response = new AutoCompleteResponse();
-            response.CompletionText = displayName;
+            response.CompletionText = completionText;
 
             // TODO: Do something more intelligent here
             response.DisplayText = displayNameGenerator.Generate(symbol);
