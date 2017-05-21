@@ -61,7 +61,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                 var quickFixes = locations.Distinct().Select(l => l.GetQuickFix(_workspace));
 
-                //var quickFixes = await Task.WhenAll(quickFixTasks);
                 response = new QuickFixResponse(quickFixes.Distinct()
                                                 .OrderBy(q => q.FileName)
                                                 .ThenBy(q => q.Line)
