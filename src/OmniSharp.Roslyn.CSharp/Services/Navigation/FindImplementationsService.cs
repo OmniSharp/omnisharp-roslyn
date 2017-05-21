@@ -39,11 +39,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
                 await AddQuickFixes(quickFixes, implementations);
+
                 var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
                 await AddQuickFixes(quickFixes, overrides);
 
-                var derivedTypes = await GetDerivedTypes(symbol);
-                await AddQuickFixes(quickFixes, derivedTypes);
+                if (symbol is INamedTypeSymbol)
+                {
+                    var derivedTypes = await SymbolFinder.FindDerivedClassesAsync((INamedTypeSymbol)symbol, _workspace.CurrentSolution);
+                    await AddQuickFixes(quickFixes, derivedTypes);
+                }
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
@@ -61,38 +65,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 {
                     await QuickFixHelper.AddQuickFix(quickFixes, _workspace, location);
                 }
-            }
-        }
-
-        private async Task<IEnumerable<ISymbol>> GetDerivedTypes(ISymbol typeSymbol)
-        {
-            var derivedTypes = new List<INamedTypeSymbol>();
-            if (typeSymbol is INamedTypeSymbol)
-            {
-                var projects = _workspace.CurrentSolution.Projects;
-                foreach (var project in projects)
-                {
-                    var compilation = await project.GetCompilationAsync();
-                    var types = compilation.GlobalNamespace.GetTypeMembers();
-                    foreach (var type in types)
-                    {
-                        if (GetBaseTypes(type).Contains(typeSymbol))
-                        {
-                            derivedTypes.Add(type);
-                        }
-                    }
-                }
-            }
-            return derivedTypes;
-        }
-
-        private IEnumerable<INamedTypeSymbol> GetBaseTypes(ITypeSymbol type)
-        {
-            var current = type.BaseType;
-            while (current != null)
-            {
-                yield return current;
-                current = current.BaseType;
             }
         }
     }
