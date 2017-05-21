@@ -6,9 +6,9 @@ using OmniSharp.Models;
 
 namespace OmniSharp.Helpers
 {
-    public static class QuickFixHelper
+    public static class LocationExtensions
     {
-        public static async Task<QuickFix> GetQuickFix(OmniSharpWorkspace workspace, Location location)
+        public static QuickFix GetQuickFix(this Location location, OmniSharpWorkspace workspace)
         {
             if (!location.IsInSource)
                 throw new Exception("Location is not in the source tree");
@@ -17,8 +17,7 @@ namespace OmniSharp.Helpers
             var path = lineSpan.Path;
             var documents = workspace.GetDocuments(path);
             var line = lineSpan.StartLinePosition.Line;
-            var syntaxTree = await documents.First().GetSyntaxTreeAsync();
-            var text = syntaxTree.GetText().Lines[line].ToString();
+            var text = location.SourceTree.GetText().Lines[line].ToString();
 
             return new QuickFix
             {

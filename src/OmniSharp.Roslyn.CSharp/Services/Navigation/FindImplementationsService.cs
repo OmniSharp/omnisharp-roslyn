@@ -38,15 +38,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var quickFixes = new List<QuickFix>();
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
-                await quickFixes.AddQuickFixes(_workspace, implementations);
+                quickFixes.AddRange(implementations, _workspace);
 
                 var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
-                await quickFixes.AddQuickFixes(_workspace, overrides);
+                quickFixes.AddRange(overrides, _workspace);
 
                 if (symbol is INamedTypeSymbol namedTypeSymbol)
                 {
                     var derivedTypes = await SymbolFinder.FindDerivedClassesAsync(namedTypeSymbol, _workspace.CurrentSolution);
-                    await quickFixes.AddQuickFixes(_workspace, derivedTypes);
+                    quickFixes.AddRange(derivedTypes, _workspace);
                 }
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)

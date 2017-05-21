@@ -7,23 +7,23 @@ namespace OmniSharp.Helpers
 {
     internal static class QuickFixExtensions
     {
-        internal static async Task AddQuickFix(this ICollection<QuickFix> quickFixes, OmniSharpWorkspace workspace, Location location)
-        {
-            if (location.IsInSource)
-            {
-                var quickFix = await QuickFixHelper.GetQuickFix(workspace, location);
-                quickFixes.Add(quickFix);
-            }
-        }
-
-        internal static async Task AddQuickFixes(this ICollection<QuickFix> quickFixes, OmniSharpWorkspace workspace, IEnumerable<ISymbol> symbols)
+        internal static void AddRange(this ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols, OmniSharpWorkspace workspace)
         {
             foreach (var symbol in symbols)
             {
                 foreach (var location in symbol.Locations)
                 {
-                    await AddQuickFix(quickFixes, workspace, location);
+                    quickFixes.Add(location, workspace);
                 }
+            }
+        }
+
+        internal static void Add(this ICollection<QuickFix> quickFixes, Location location, OmniSharpWorkspace workspace)
+        {
+            if (location.IsInSource)
+            {
+                var quickFix = location.GetQuickFix(workspace);
+                quickFixes.Add(quickFix);
             }
         }
     }
