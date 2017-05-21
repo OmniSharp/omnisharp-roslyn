@@ -38,15 +38,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var quickFixes = new List<QuickFix>();
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
-                await AddQuickFixes(quickFixes, implementations);
+                await quickFixes.AddQuickFixes(_workspace, implementations);
 
                 var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
-                await AddQuickFixes(quickFixes, overrides);
+                await quickFixes.AddQuickFixes(_workspace, overrides);
 
-                if (symbol is INamedTypeSymbol)
+                if (symbol is INamedTypeSymbol namedTypeSymbol)
                 {
-                    var derivedTypes = await SymbolFinder.FindDerivedClassesAsync((INamedTypeSymbol)symbol, _workspace.CurrentSolution);
-                    await AddQuickFixes(quickFixes, derivedTypes);
+                    var derivedTypes = await SymbolFinder.FindDerivedClassesAsync(namedTypeSymbol, _workspace.CurrentSolution);
+                    await quickFixes.AddQuickFixes(_workspace, derivedTypes);
                 }
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
@@ -55,17 +55,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             }
 
             return response;
-        }
-
-        private async Task AddQuickFixes(ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                foreach (var location in symbol.Locations)
-                {
-                    await QuickFixHelper.AddQuickFix(quickFixes, _workspace, location);
-                }
-            }
         }
     }
 }

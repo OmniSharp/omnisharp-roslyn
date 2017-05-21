@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -31,15 +30,6 @@ namespace OmniSharp.Helpers
                 EndColumn = lineSpan.EndLinePosition.Character,
                 Projects = documents.Select(document => document.Project.Name).ToArray()
             };
-        }
-
-        public static async Task AddQuickFix(ICollection<QuickFix> quickFixes, OmniSharpWorkspace workspace, Location location)
-        {
-            if (location.IsInSource)
-            {
-                var quickFix = await GetQuickFix(workspace, location);
-                quickFixes.Add(quickFix);
-            }
         }
     }
 }
