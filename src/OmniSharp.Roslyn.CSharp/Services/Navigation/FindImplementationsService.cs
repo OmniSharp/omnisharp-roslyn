@@ -49,7 +49,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     quickFixes.AddRange(derivedTypes, _workspace);
                 }
 
-                // also include the original definition of the symbol
+                // also include the original declaration of the symbol
                 if (!symbol.IsAbstract)
                 {
                     // for partial methods, pick the one with body

@@ -92,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task CanFindOriginalTypeSymbol(string filename)
+        public async Task CanFindTypeDeclaration(string filename)
         {
             const string code = @"
                 public class MyClass 
@@ -113,7 +113,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task CanFindOriginalMethodSymbol(string filename)
+        public async Task CanFindMethodDeclaration(string filename)
         {
             const string code = @"
                 public class MyClass 
