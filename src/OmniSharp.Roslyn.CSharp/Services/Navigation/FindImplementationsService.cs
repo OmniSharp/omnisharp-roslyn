@@ -49,6 +49,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     quickFixes.AddRange(derivedTypes, _workspace);
                 }
 
+                // also include the original definition of the symbol
+                if (!symbol.IsAbstract)
+                {
+                    // for partial methods, pick the one with body
+                    if (symbol is IMethodSymbol method)
+                    {
+                        symbol = method.PartialImplementationPart ?? symbol;
+                    }
+
+                    var location = symbol.Locations.First();
+                    quickFixes.Add(location, _workspace);
+                }
+
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
                                                             .ThenBy(q => q.Column));

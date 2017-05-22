@@ -80,13 +80,55 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindSubclass(string filename)
         {
             const string code = @"
-                public class BaseClass {}
+                public abstract class BaseClass {}
                 public class SomeClass : Base$$Class {}";
 
             var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindOriginalTypeSymbol(string filename)
+        {
+            const string code = @"
+                public class MyClass 
+                { 
+                    public MyClass() { var other = new Other$$Class(); }
+                }
+
+                public class OtherClass 
+                { 
+                }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+            var implementation = implementations.First();
+
+            Assert.Equal("OtherClass", implementation.Name);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindOriginalMethodSymbol(string filename)
+        {
+            const string code = @"
+                public class MyClass 
+                { 
+                    public MyClass() { Fo$$o(); }
+
+                    public void Foo() {}
+                }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+            var implementation = implementations.First();
+
+            Assert.Equal("Foo", implementation.Name);
+            Assert.Equal("MyClass", implementation.ContainingType.Name);
+            Assert.Equal(SymbolKind.Method, implementation.Kind);
         }
 
         private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)
