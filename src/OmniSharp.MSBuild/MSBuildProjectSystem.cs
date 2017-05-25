@@ -161,7 +161,7 @@ namespace OmniSharp.MSBuild
                 }
 
                 if (project.Kind == ProjectKind.CSharpProject ||
-                    Path.GetExtension(projectFilePath) == ".csproj")
+                    string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
                     result.Add(projectFilePath);
                 }
