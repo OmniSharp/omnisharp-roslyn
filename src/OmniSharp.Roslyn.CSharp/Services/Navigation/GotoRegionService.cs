@@ -38,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                 foreach (var regionTrivia in regionTrivias.Distinct())
                 {
-                    regions.Add(await QuickFixHelper.GetQuickFix(_workspace, regionTrivia.GetLocation()));
+                    regions.Add(regionTrivia.GetLocation().GetQuickFix(_workspace));
                 }
             }
             return new QuickFixResponse(regions);
