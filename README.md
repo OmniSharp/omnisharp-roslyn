@@ -46,6 +46,16 @@ Add the following setting to your [User Settings or Workspace Settings](https://
 }
 ```
 
+In order to be able to attach a debugger, add the following setting:
+
+```JSON
+{
+  "omnisharp.waitForDebugger": true
+}
+```
+
+This will print the OmniSharp process ID in the VS Code OmniSharp output panel and pause the start of the server until a debugger is attached to this process. This is equivalent to launching OmniSharp from a command line with the `--debug` flag.
+
 ## Help wanted!
 
 We have slack room as well. [Get yourself invited](https://omnisharp.herokuapp.com/): [here](https://omnisharp.herokuapp.com/)
