@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
@@ -13,13 +15,13 @@ namespace OmniSharp
     {
         protected readonly CommandLineApplication Application;
         private readonly CommandOption _hostPid;
-        private readonly CommandOption _stdio;
         private readonly CommandOption _zeroBasedIndices;
         private readonly CommandOption _encoding;
         private readonly CommandOption _plugin;
         private readonly CommandOption _verbose;
         private readonly CommandOption _logLevel;
         private readonly CommandOption _applicationRoot;
+        private readonly CommandOption _debug;
 
         public OmniSharpCommandLineApplication()
         {
@@ -30,11 +32,10 @@ namespace OmniSharp
             _logLevel = Application.Option("-l | --loglevel", "Level of logging (defaults to 'Information').", CommandOptionType.SingleValue);
             _verbose = Application.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
             _hostPid = Application.Option("-hpid | --hostPID", "Host process ID.", CommandOptionType.SingleValue);
-            _stdio = Application.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp commincation protocol.", CommandOptionType.NoValue);
-            _stdio = Application.Option("-lsp | --lsp", "Use Language Server Protocol.", CommandOptionType.NoValue);
             _zeroBasedIndices = Application.Option("-z | --zero-based-indices", "Use zero based indices in request/responses (defaults to 'false').", CommandOptionType.NoValue);
             _encoding = Application.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
             _plugin = Application.Option("-pl | --plugin", "Plugin name(s).", CommandOptionType.MultipleValue);
+            _debug = Application.Option("-d | --debug", "Wait for debugger to attach", CommandOptionType.NoValue);
         }
 
         public int Execute(IEnumerable<string> args)
@@ -42,27 +43,30 @@ namespace OmniSharp
             // omnisharp.json arguments should not be parsed by the CLI args parser
             // they will contain "=" so we should filter them out
             OtherArgs = args.Where(x => x.Contains("="));
-
             return Application.Execute(args.Except(OtherArgs).ToArray());
         }
 
         public void OnExecute(Func<Task<int>> func)
         {
-            Application.OnExecute(func);
+            Application.OnExecute(() =>
+            {
+                DebugAttach();
+                return func();
+            });
         }
 
         public void OnExecute(Func<int> func)
         {
-            Application.OnExecute(func);
+            Application.OnExecute(() =>
+            {
+                DebugAttach();
+                return func();
+            });
         }
 
         public IEnumerable<string> OtherArgs { get; private set; }
 
         public int HostPid => CommandOptionExtensions.GetValueOrDefault(_hostPid, -1);
-
-        public bool Stdio => _stdio.HasValue();
-
-        public bool Lsp => _stdio.HasValue();
 
         public bool ZeroBasedIndices => _zeroBasedIndices.HasValue();
 
@@ -73,5 +77,19 @@ namespace OmniSharp
         public LogLevel LogLevel => _verbose.HasValue() ? LogLevel.Debug : CommandOptionExtensions.GetValueOrDefault(_logLevel, LogLevel.Information);
 
         public string ApplicationRoot => CommandOptionExtensions.GetValueOrDefault(_applicationRoot, Directory.GetCurrentDirectory());
+
+        public bool Debug => _debug.HasValue();
+
+        private void DebugAttach()
+        {
+            if (Debug)
+            {
+                Console.WriteLine($"Attach debugger to process {Process.GetCurrentProcess().Id} to continue...");
+                while (!Debugger.IsAttached)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+        }
     }
 }

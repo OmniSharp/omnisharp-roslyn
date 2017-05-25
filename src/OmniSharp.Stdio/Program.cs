@@ -30,7 +30,7 @@ namespace OmniSharp.Stdio
     {
         public static int Main(string[] args) => OmniSharp.Start(() =>
         {
-            var application = new OmniSharpCommandLineApplication();
+            var application = new OmniSharpStdioCommandLineApplication();
             application.OnExecute(() =>
             {
                 var environment = application.CreateEnvironment();

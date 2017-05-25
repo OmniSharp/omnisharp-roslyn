@@ -11,7 +11,6 @@ using OmniSharp;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
-using OmniSharp.Http;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;

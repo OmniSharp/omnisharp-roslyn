@@ -7,17 +7,6 @@ public class Program
 {
     public static int Main(string[] args)
     {
-        var argsList = new List<string>(args);
-        if (argsList.Contains("--debug"))
-        {
-            argsList.Remove("--debug");
-            Console.WriteLine($"Attach debugger to process {Process.GetCurrentProcess().Id} to continue...");
-            while (!Debugger.IsAttached)
-            {
-                Thread.Sleep(100);
-            }
-        }
-
-        return OmniSharp.Stdio.Program.Main(argsList.ToArray());
+        return OmniSharp.Stdio.Program.Main(args);
     }
 }

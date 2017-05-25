@@ -10,7 +10,10 @@
     "net46",
     "netcoreapp1.1"
   ],
-  "MainProject": "OmniSharp",
+  "HostProjects": [
+      "OmniSharp",
+      "OmniSharp.Http"
+    ],
   "TestProjects": [
     "OmniSharp.MSBuild.Tests",
     "OmniSharp.Roslyn.CSharp.Tests",

@@ -4,13 +4,13 @@
 ///  Generate the scripts which target the OmniSharp binaries.
 /// </summary>
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
-void CreateRunScript(string outputRoot, string scriptFolder)
+void CreateRunScript(string outputRoot, string scriptFolder, string name)
 {
     if (IsRunningOnWindows())
     {
-        var desktopScript =  System.IO.Path.Combine(scriptFolder, "OmniSharp.cmd");
-        var coreScript = System.IO.Path.Combine(scriptFolder, "OmniSharp.Core.cmd");
-        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", "OmniSharp");
+        var desktopScript =  System.IO.Path.Combine(scriptFolder, $"{name}.cmd");
+        var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core.cmd");
+        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", name);
         var content = new string[] {
                 "SETLOCAL",
                 "",
@@ -31,9 +31,9 @@ void CreateRunScript(string outputRoot, string scriptFolder)
     }
     else
     {
-        var desktopScript = System.IO.Path.Combine(scriptFolder, "OmniSharp");
-        var coreScript = System.IO.Path.Combine(scriptFolder, "OmniSharp.Core");
-        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{1}", "OmniSharp");
+        var desktopScript = System.IO.Path.Combine(scriptFolder, $"{name}");
+        var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core");
+        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{1}", name);
         var content = new string[] {
                 "#!/bin/bash",
                 "",

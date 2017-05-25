@@ -34,7 +34,7 @@ public class BuildPlan
     public string MSBuildRuntimeForMono { get; set; }
     public string MSBuildLibForMono { get; set; }
     public string[] Frameworks { get; set; }
-    public string MainProject { get; set; }
+    public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
     public string[] LegacyTestAssets { get; set; }
@@ -424,10 +424,13 @@ Task("BuildMain")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-    var projectName = buildPlan.MainProject + ".csproj";
-    var projectFilePath = CombinePaths(env.Folders.Source, buildPlan.MainProject, projectName);
+    foreach (var project in buildPlan.HostProjects)
+    {
+        var projectName = project + ".csproj";
+        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
 
-    BuildProject(env, projectName, projectFilePath, configuration);
+        BuildProject(env, projectName, projectFilePath, configuration);
+    }
 });
 
 /// <summary>
@@ -565,74 +568,76 @@ Task("OnlyPublish")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    var project = buildPlan.MainProject;
-    var projectName = project + ".csproj";
-    var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-
-    var completed = new HashSet<string>();
-
-    foreach (var runtime in buildPlan.TargetRids)
+    foreach (var project in buildPlan.HostProjects)
     {
-        if (completed.Contains(runtime))
+        var projectName = project + ".csproj";
+        var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
+
+        var completed = new HashSet<string>();
+
+        foreach (var runtime in buildPlan.TargetRids)
         {
-            continue;
-        }
-
-        var rid = runtime.Equals("default")
-            ? buildPlan.GetDefaultRid()
-            : runtime;
-
-        // Restore the OmniSharp.csproj with this runtime.
-        PrintBlankLine();
-        var runtimeText = runtime;
-        if (runtimeText.Equals("default"))
-        {
-            runtimeText += " (" + rid + ")";
-        }
-
-        Information($"Restoring packages in {projectName} for {runtimeText}...");
-
-        RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
-            .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
-
-        foreach (var framework in buildPlan.Frameworks)
-        {
-            var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
-
-            var command = IsNetFrameworkOnUnix(framework)
-                ? env.ShellCommand
-                : env.DotNetCommand;
-
-            var args = GetPublishArguments(projectFileName, rid, framework, configuration, outputFolder);
-
-            args = IsNetFrameworkOnUnix(framework)
-                ? $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}"
-                : args;
-
-            Information($"Publishing {projectName} for {framework}/{rid}...");
-
-            RunTool(command, args, env.WorkingDirectory)
-                .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
-
-            // Copy MSBuild and SDKs to output
-            CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
-
-            // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
-            if (!IsRunningOnWindows() && framework == "net46")
+            if (completed.Contains(runtime))
             {
-                CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+                continue;
             }
 
-            if (requireArchive)
+            var rid = runtime.Equals("default")
+                ? buildPlan.GetDefaultRid()
+                : runtime;
+
+            // Restore the OmniSharp.csproj with this runtime.
+            PrintBlankLine();
+            var runtimeText = runtime;
+            if (runtimeText.Equals("default"))
             {
-                Package(runtime, framework, outputFolder, env.Folders.ArtifactsPackage, buildPlan.MainProject.ToLower());
+                runtimeText += " (" + rid + ")";
             }
+
+            Information($"Restoring packages in {projectName} for {runtimeText}...");
+
+            RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
+                .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
+
+            foreach (var framework in buildPlan.Frameworks)
+            {
+                var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
+
+                var command = IsNetFrameworkOnUnix(framework)
+                    ? env.ShellCommand
+                    : env.DotNetCommand;
+
+                var args = GetPublishArguments(projectFileName, rid, framework, configuration, outputFolder);
+
+                args = IsNetFrameworkOnUnix(framework)
+                    ? $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}"
+                    : args;
+
+                Information($"Publishing {projectName} for {framework}/{rid}...");
+
+                RunTool(command, args, env.WorkingDirectory)
+                    .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
+
+                // Copy MSBuild and SDKs to output
+                CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
+
+                // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
+                if (!IsRunningOnWindows() && framework == "net46")
+                {
+                    CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+                }
+
+                if (requireArchive)
+                {
+                    Package(runtime, framework, outputFolder, env.Folders.ArtifactsPackage, project.ToLower());
+                }
+            }
+
+            completed.Add(runtime);
         }
 
-        completed.Add(runtime);
+        CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts, project);
     }
-
-    CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts);
 });
 
 /// <summary>
@@ -673,18 +678,20 @@ Task("TestPublished")
     .IsDependentOn("Setup")
     .Does(() =>
 {
-    var project = buildPlan.MainProject;
-    var projectFolder = CombinePaths(env.Folders.Source, project);
-    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
-    foreach (var script in scriptsToTest)
+    foreach (var project in buildPlan.HostProjects)
     {
-        var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
-        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                    new RunOptions(timeOut: 30000))
-                                .DidTimeOut;
-        if (!didNotExitWithError)
+        var projectFolder = CombinePaths(env.Folders.Source, project);
+        var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+        foreach (var script in scriptsToTest)
         {
-            throw new Exception($"Failed to run {script}");
+            var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
+            var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
+                                        new RunOptions(timeOut: 30000))
+                                    .DidTimeOut;
+            if (!didNotExitWithError)
+            {
+                throw new Exception($"Failed to run {script}");
+            }
         }
     }
 });
@@ -719,19 +726,21 @@ Task("Install")
     .IsDependentOn("CleanupInstall")
     .Does(() =>
 {
-    var project = buildPlan.MainProject;
-    foreach (var framework in buildPlan.Frameworks)
+    foreach (var project in buildPlan.HostProjects)
     {
-        var outputFolder = System.IO.Path.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, "default", framework));
-        var targetFolder = System.IO.Path.GetFullPath(CombinePaths(installFolder, framework));
-        // Copy all the folders
-        foreach (var directory in System.IO.Directory.GetDirectories(outputFolder, "*", SearchOption.AllDirectories))
-            System.IO.Directory.CreateDirectory(CombinePaths(targetFolder, directory.Substring(outputFolder.Length + 1)));
-        //Copy all the files
-        foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
-            System.IO.File.Copy(file, CombinePaths(targetFolder, file.Substring(outputFolder.Length + 1)), true);
+        foreach (var framework in buildPlan.Frameworks)
+        {
+            var outputFolder = System.IO.Path.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, "default", framework));
+            var targetFolder = System.IO.Path.GetFullPath(CombinePaths(installFolder, framework));
+            // Copy all the folders
+            foreach (var directory in System.IO.Directory.GetDirectories(outputFolder, "*", SearchOption.AllDirectories))
+                System.IO.Directory.CreateDirectory(CombinePaths(targetFolder, directory.Substring(outputFolder.Length + 1)));
+            //Copy all the files
+            foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
+                System.IO.File.Copy(file, CombinePaths(targetFolder, file.Substring(outputFolder.Length + 1)), true);
+        }
+        CreateRunScript(installFolder, env.Folders.ArtifactsScripts, project);
     }
-    CreateRunScript(installFolder, env.Folders.ArtifactsScripts);
 });
 
 /// <summary>

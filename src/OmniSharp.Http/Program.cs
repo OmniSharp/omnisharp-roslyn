@@ -4,9 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel;
+using Microsoft.AspNetCore.Server.Kestrel.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
@@ -62,7 +65,6 @@ namespace OmniSharp.Http
 
             var builder = new WebHostBuilder()
                 .UseConfiguration(config.Build())
-                .UseEnvironment("OmniSharp")
                 .ConfigureServices(serviceCollection =>
                 {
                     serviceCollection.AddSingleton(_environment);
@@ -70,7 +72,10 @@ namespace OmniSharp.Http
                     serviceCollection.AddSingleton(NullEventEmitter.Instance);
                     serviceCollection.AddSingleton(_pluginAssemblies);
                     serviceCollection.AddSingleton(new OmniSharpHttpEnvironment { Port = _serverPort });
+                    // serviceCollection.AddTransient<IConfigureOptions<KestrelServerOptions>, KestrelServerOptionsSetup>();
+                    // serviceCollection.AddSingleton<Microsoft.AspNetCore.Hosting.Server.IServer, KestrelServer>();
                 })
+                .UseEnvironment("OmniSharp")
                 .UseStartup(typeof(Startup))
                 .UseKestrel();
 
