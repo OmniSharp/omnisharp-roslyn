@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using OmniSharp.Extensions;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -21,6 +23,7 @@ namespace OmniSharp.Roslyn
         private readonly Lazy<Type> _symbolKey;
         private readonly Lazy<Type> _metadataAsSourceHelper;
         private readonly Lazy<MethodInfo> _getLocationInGeneratedSourceAsync;
+        private Dictionary<string, Document> _metadataDocumentCache = new Dictionary<string, Document>();
 
         private const string CSharpMetadataAsSourceService = "Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService";
         private const string SymbolKey = "Microsoft.CodeAnalysis.SymbolKey";
@@ -28,6 +31,7 @@ namespace OmniSharp.Roslyn
         private const string GetLocationInGeneratedSourceAsync = "GetLocationInGeneratedSourceAsync";
         private const string AddSourceToAsync = "AddSourceToAsync";
         private const string Create = "Create";
+        private const string MetadataKey = "$Metadata$";
 
         public MetadataHelper(IAssemblyLoader loader)
         {
@@ -43,36 +47,62 @@ namespace OmniSharp.Roslyn
             _getLocationInGeneratedSourceAsync = _metadataAsSourceHelper.LazyGetMethod(GetLocationInGeneratedSourceAsync);
         }
 
+        public Document FindDocumentInMetadataCache(string fileName)
+        {
+            if (_metadataDocumentCache.TryGetValue(fileName, out var metadataDocument))
+            {
+                return metadataDocument;
+            }
+
+            return null;
+        }
+
         public string GetSymbolName(ISymbol symbol)
         {
-            var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
+            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
             return GetTypeDisplayString(topLevelSymbol);
         }
 
-        public string GetFilePathForSymbol(Project project, ISymbol symbol)
+        public async Task<MetadataDocumentResult> GetAndAddDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
-            var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
-            return $"metadata/Project/{Folderize(project.Name)}/Assembly/{Folderize(topLevelSymbol.ContainingAssembly.Name)}/Symbol/{Folderize(GetTypeDisplayString(topLevelSymbol))}.cs".Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-        }
+            var fileName = GetFilePathForSymbol(project, symbol);
 
-        public Task<Document> GetDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
-        {
-            var filePath = GetFilePathForSymbol(project, symbol);
-            var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
+            Project metadataProject = null;
 
             // since submission projects cannot have new documents added to it
-            // we will use temporary project to hold metadata documents
-            var metadataProject = project.IsSubmission 
-                ? project.Solution.AddProject("metadataTemp", "metadataTemp.dll", LanguageNames.CSharp)
+            // we will use a separate project to hold metadata documents
+            if (project.IsSubmission)
+            {
+                metadataProject = project.Solution.Projects.FirstOrDefault(x => x.Name == MetadataKey);
+                if (metadataProject == null)
+                {
+                    metadataProject = project.Solution.AddProject(MetadataKey, $"{MetadataKey}.dll", LanguageNames.CSharp)
                     .WithCompilationOptions(project.CompilationOptions)
-                    .WithMetadataReferences(project.MetadataReferences)
-                : project;
+                    .WithMetadataReferences(project.MetadataReferences);
+                }
+            }
+            else
+            {
+                // for regular projects we will use current project to store metadata
+                metadataProject = project;
+            }
 
-            var temporaryDocument = metadataProject.AddDocument(filePath, string.Empty);
-            var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
-            var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
+            Document metadataDocument = null;
+            if (!_metadataDocumentCache.TryGetValue(fileName, out metadataDocument))
+            {
+                var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
-            return method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, topLevelSymbol, cancellationToken });
+                var temporaryDocument = metadataProject.AddDocument(fileName, string.Empty);
+                var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
+                var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
+
+                var documentTask = method.Invoke<Task<Document>>(service, new object[] { temporaryDocument, topLevelSymbol, default(CancellationToken) });
+                metadataDocument = await documentTask;
+
+                _metadataDocumentCache[fileName] = metadataDocument;
+            }
+
+            return new MetadataDocumentResult(metadataDocument, fileName);
         }
 
         public async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
@@ -83,7 +113,7 @@ namespace OmniSharp.Roslyn
             return await _getLocationInGeneratedSourceAsync.InvokeStatic<Task<Location>>(new object[] { symboldId, metadataDocument, cancellationToken });
         }
 
-        private string GetTypeDisplayString(INamedTypeSymbol symbol)
+        private static string GetTypeDisplayString(INamedTypeSymbol symbol)
         {
             if (symbol.SpecialType != SpecialType.None)
             {
@@ -116,22 +146,12 @@ namespace OmniSharp.Roslyn
             return symbol.ToDisplayString();
         }
 
-        private string Folderize(string path)
+        private static string GetFilePathForSymbol(Project project, ISymbol symbol)
         {
-            return string.Join("/", path.Split('.'));
+            var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
+            return $"$metadata$/Project/{Folderize(project.Name)}/Assembly/{Folderize(topLevelSymbol.ContainingAssembly.Name)}/Symbol/{Folderize(GetTypeDisplayString(topLevelSymbol))}.cs".Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         }
 
-        private INamedTypeSymbol GetTopLevelContainingNamedType(ISymbol symbol)
-        {
-            // Traverse up until we find a named type that is parented by the namespace
-            var topLevelNamedType = symbol;
-            while (topLevelNamedType.ContainingSymbol != symbol.ContainingNamespace ||
-                topLevelNamedType.Kind != SymbolKind.NamedType)
-            {
-                topLevelNamedType = topLevelNamedType.ContainingSymbol;
-            }
-
-            return (INamedTypeSymbol)topLevelNamedType;
-        }
+        private static string Folderize(string path) => string.Join("/", path.Split('.'));
     }
 }

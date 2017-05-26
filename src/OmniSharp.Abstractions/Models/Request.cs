@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
@@ -24,6 +25,11 @@ namespace OmniSharp.Models
             {
                 _fileName = value;
             }
+        }
+
+        public bool IsMetadataFile()
+        {
+            return FileName != null && FileName.StartsWith("$metadata$", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

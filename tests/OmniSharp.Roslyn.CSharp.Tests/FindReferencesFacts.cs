@@ -6,6 +6,8 @@ using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -226,6 +228,62 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: true);
             Assert.Equal(1, usages.QuickFixes.Count());
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+        }
+
+        [Fact]
+        public async Task CanFindReferencesFromMetadata()
+        {
+            const string code = @"
+                using System;
+                public class Foo
+                {
+                    public Gu$$id Id {get;set;}
+                }
+            ";
+
+            var file = new TestFile("a.cs", code);
+
+            using (var host = CreateOmniSharpHost(file))
+            {
+                var point = file.Content.GetPointFromPosition();
+
+                var goToDefinionRequest = new GotoDefinitionRequest
+                {
+                    FileName = file.FileName,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Timeout = 60000,
+                    WantMetadata = true
+                };
+
+                var goToDefinitionHandler = host.GetRequestHandler<GotoDefinitionService>(OmniSharpEndpoints.GotoDefinition);
+                var goToDefinionResponse = await goToDefinitionHandler.Handle(goToDefinionRequest);
+
+                var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
+                var metadataResponse = await metadataRequestHandler.Handle(new MetadataRequest
+                {
+                    AssemblyName = goToDefinionResponse.MetadataSource.AssemblyName,
+                    TypeName = goToDefinionResponse.MetadataSource.TypeName,
+                    ProjectName = goToDefinionResponse.MetadataSource.ProjectName,
+                    Language = goToDefinionResponse.MetadataSource.Language
+                });
+
+                var requestHandler = GetRequestHandler(host);
+
+                var request = new FindUsagesRequest
+                {
+                    Line = goToDefinionResponse.Line,
+                    Column = goToDefinionResponse.Column,
+                    FileName = metadataResponse.SourceName,
+                    OnlyThisFile = false,
+                    ExcludeDefinition = true
+                };
+
+                var usages = await requestHandler.Handle(request);
+
+                Assert.Equal(1, usages.QuickFixes.Count());
+                Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
+            }
         }
 
         private Task<QuickFixResponse> FindUsagesAsync(string code, bool excludeDefinition = false)

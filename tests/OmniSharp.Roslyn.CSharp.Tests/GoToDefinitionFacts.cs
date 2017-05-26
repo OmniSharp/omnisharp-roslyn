@@ -1,10 +1,13 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models.GotoDefinition;
-using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -157,6 +160,77 @@ class Bar {
             await TestGoToMetadataAsync(testFile,
                 expectedAssemblyName: AssemblyHelpers.CorLibName,
                 expectedTypeName: "System.String");
+        }
+
+        [Theory]
+        [InlineData("bar.cs")]
+        [InlineData("bar.csx")]
+        public async Task ReturnsDefinitionInMetadata_FromMetadata_WhenSymbolIsType(string filename)
+        {
+            var testFile = new TestFile(filename, @"
+using System;
+class Bar {
+    public void Baz() {
+        var number = in$$t.MaxValue;
+    }
+}");
+
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var point = testFile.Content.GetPointFromPosition();
+
+                // 1. start by asking for definition of "int"
+                var request = new GotoDefinitionRequest
+                {
+                    FileName = testFile.FileName,
+                    Line = point.Line,
+                    Column = point.Offset,
+                    Timeout = 60000,
+                    WantMetadata = true
+                };
+                var requestHandler = GetRequestHandler(host);
+                var response = await requestHandler.Handle(request);
+
+                // 2. now, based on the response information
+                // go to the metadata endpoint, and ask for "int" specific metadata
+                var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
+                var metadataResponse = await metadataRequestHandler.Handle(new MetadataRequest
+                {
+                    AssemblyName = response.MetadataSource.AssemblyName,
+                    TypeName = response.MetadataSource.TypeName,
+                    ProjectName = response.MetadataSource.ProjectName,
+                    Language = response.MetadataSource.Language
+                });
+
+                // 3. the metadata response contains SourceName (metadata "file") and SourceText (syntax tree)
+                // use the source to locate "IComparable" which is an interface implemented by Int32 struct
+                var metadataTree = CSharpSyntaxTree.ParseText(metadataResponse.Source);
+                var iComparable = metadataTree.GetCompilationUnitRoot().DescendantNodesAndSelf().OfType<BaseTypeDeclarationSyntax>().
+                    First().BaseList.Types.FirstOrDefault(x => x.Type.ToString() == "IComparable");
+
+
+                // 4. now ask for the definition of "IComparable"
+                // pass in the SourceName (metadata "file") as FileName - since it's not a regular file in our workspace
+                var relevantLineSpan = iComparable.GetLocation().GetLineSpan();
+                var metadataNavigationRequest = new GotoDefinitionRequest
+                {
+                    FileName = metadataResponse.SourceName,
+                    Line = relevantLineSpan.StartLinePosition.Line,
+                    Column = relevantLineSpan.StartLinePosition.Character,
+                    Timeout = 60000,
+                    WantMetadata = true
+                };
+
+                var metadataNavigationResponse = await requestHandler.Handle(metadataNavigationRequest);
+
+                // 5. validate the response to be matching the expected IComparable meta info
+                Assert.NotNull(metadataNavigationResponse.MetadataSource);
+                Assert.Equal(AssemblyHelpers.CorLibName, metadataNavigationResponse.MetadataSource.AssemblyName);
+                Assert.Equal("System.IComparable", metadataNavigationResponse.MetadataSource.TypeName);
+
+                Assert.NotEqual(0, metadataNavigationResponse.Line);
+                Assert.NotEqual(0, metadataNavigationResponse.Column);
+            }
         }
 
         private async Task TestGoToSourceAsync(params TestFile[] testFiles)

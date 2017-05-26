@@ -26,5 +26,18 @@ namespace OmniSharp.Extensions
 
             return Enum.GetName(symbol.Kind.GetType(), symbol.Kind);
         }
+
+        internal static INamedTypeSymbol GetTopLevelContainingNamedType(this ISymbol symbol)
+        {
+            // Traverse up until we find a named type that is parented by the namespace
+            var topLevelNamedType = symbol;
+            while (topLevelNamedType.ContainingSymbol != symbol.ContainingNamespace ||
+                topLevelNamedType.Kind != SymbolKind.NamedType)
+            {
+                topLevelNamedType = topLevelNamedType.ContainingSymbol;
+            }
+
+            return (INamedTypeSymbol)topLevelNamedType;
+        }
     }
 }
