@@ -297,7 +297,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
     argList.Add("-InstallDir");
     argList.Add(installFolder);
 
-    Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
+    Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
 /// <summary>
