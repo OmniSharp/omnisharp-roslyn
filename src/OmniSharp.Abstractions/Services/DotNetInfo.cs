@@ -26,7 +26,10 @@ namespace OmniSharp.Services
         {
             IsEmpty = false;
 
-            Version = SemanticVersion.Parse(version);
+            Version = SemanticVersion.TryParse(version, out var value)
+                ? value
+                : null;
+
             OSName = osName;
             OSVersion = osVersion;
             OSPlatform = osPlatform;
@@ -36,6 +39,11 @@ namespace OmniSharp.Services
 
         public static DotNetInfo Parse(List<string> lines)
         {
+            if (lines == null || lines.Count == 0)
+            {
+                return Empty;
+            }
+
             var version = string.Empty;
             var osName = string.Empty;
             var osVersion = string.Empty;
@@ -76,6 +84,16 @@ namespace OmniSharp.Services
                         basePath = value;
                     }
                 }
+            }
+
+            if (string.IsNullOrWhiteSpace(version) &&
+                string.IsNullOrWhiteSpace(osName) &&
+                string.IsNullOrWhiteSpace(osVersion) &&
+                string.IsNullOrWhiteSpace(osPlatform) &&
+                string.IsNullOrWhiteSpace(rid) &&
+                string.IsNullOrWhiteSpace(basePath))
+            {
+                return Empty;
             }
 
             return new DotNetInfo(version, osName, osVersion, osPlatform, rid, basePath);

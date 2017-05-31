@@ -131,6 +131,11 @@ namespace OmniSharp.Services
                 return DotNetInfo.Empty;
             }
 
+            if (process.HasExited)
+            {
+                return DotNetInfo.Empty;
+            }
+
             var lines = new List<string>();
             process.OutputDataReceived += (_, e) =>
             {
