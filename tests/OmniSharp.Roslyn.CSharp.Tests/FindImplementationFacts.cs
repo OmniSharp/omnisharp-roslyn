@@ -22,21 +22,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.FindImplementations;
 
-        [Fact]
-        public async Task CanFindInterfaceTypeImplementation()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindInterfaceTypeImplementation(string filename)
         {
             const string code = @"
                 public interface Som$$eInterface {}
                 public class SomeClass : SomeInterface {}";
 
-            var implementations = await FindImplementationsAsync(code);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        [Fact]
-        public async Task CanFindInterfaceMethodImplementation()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindInterfaceMethodImplementation(string filename)
         {
             const string code = @"
                 public interface SomeInterface { void Some$$Method(); }
@@ -44,15 +48,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public void SomeMethod() {}
                 }";
 
-            var implementations = await FindImplementationsAsync(code);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeMethod", implementation.Name);
             Assert.Equal("SomeClass", implementation.ContainingType.Name);
         }
 
-        [Fact]
-        public async Task CanFindOverride()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindOverride(string filename)
         {
             const string code = @"
                 public class BaseClass { public abstract Some$$Method() {} }
@@ -61,29 +67,73 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public override SomeMethod() {}
                 }";
 
-            var implementations = await FindImplementationsAsync(code);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeMethod", implementation.Name);
             Assert.Equal("SomeClass", implementation.ContainingType.Name);
         }
 
-        [Fact]
-        public async Task CanFindSubclass()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindSubclass(string filename)
         {
             const string code = @"
-                public class BaseClass {}
+                public abstract class BaseClass {}
                 public class SomeClass : Base$$Class {}";
 
-            var implementations = await FindImplementationsAsync(code);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code)
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindTypeDeclaration(string filename)
         {
-            var testFile = new TestFile("dummy.cs", code);
+            const string code = @"
+                public class MyClass 
+                { 
+                    public MyClass() { var other = new Other$$Class(); }
+                }
+
+                public class OtherClass 
+                { 
+                }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+            var implementation = implementations.First();
+
+            Assert.Equal("OtherClass", implementation.Name);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindMethodDeclaration(string filename)
+        {
+            const string code = @"
+                public class MyClass 
+                { 
+                    public MyClass() { Fo$$o(); }
+
+                    public void Foo() {}
+                }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+            var implementation = implementations.First();
+
+            Assert.Equal("Foo", implementation.Name);
+            Assert.Equal("MyClass", implementation.ContainingType.Name);
+            Assert.Equal(SymbolKind.Method, implementation.Kind);
+        }
+
+        private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)
+        {
+            var testFile = new TestFile(filename, code);
             using (var host = CreateOmniSharpHost(testFile))
             {
                 var point = testFile.Content.GetPointFromPosition();

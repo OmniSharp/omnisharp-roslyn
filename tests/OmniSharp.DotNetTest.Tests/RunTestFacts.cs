@@ -104,5 +104,35 @@ namespace OmniSharp.DotNetTest.Tests
                 testFramework: "nunit",
                 shouldPass: true);
         }
+
+        [Fact]
+        public async Task RunMSTestTest()
+        {
+            await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "mstest",
+                shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunMSTestDataDriveTest1()
+        {
+            await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest1",
+                testFramework: "mstest",
+                shouldPass: false);
+        }
+
+        [Fact]
+        public async Task RunMSTestDataDriveTest2()
+        {
+            await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.DataDrivenTest2",
+                testFramework: "mstest",
+                shouldPass: true);
+        }
     }
 }

@@ -67,7 +67,9 @@ namespace OmniSharp.DotNetTest.Legacy
             var testStartInfo = testStartInfoMessage.DeserializePayload<TestStartInfo>();
 
             var fileName = testStartInfo.FileName;
-            var arguments = $"{testStartInfo.Arguments} {testFramework.MethodArgument} {methodName}";
+            // We pass in the tests as a list. So trimming out the wait-command that expects the tests to be sent as a separate message.
+            var startInfoArguments = testStartInfo.Arguments.Replace("--wait-command", "");
+            var arguments = $"{startInfoArguments} {testFramework.MethodArgument} {methodName}";
 
             var startInfo = new ProcessStartInfo(fileName, arguments)
             {
@@ -162,7 +164,7 @@ namespace OmniSharp.DotNetTest.Legacy
             {
                 arguments = arguments.Substring(0, endIndex).TrimEnd();
             }
-
+            
             if (!string.IsNullOrEmpty(methodName))
             {
                 arguments = $"{arguments} {testFramework.MethodArgument} {methodName}";

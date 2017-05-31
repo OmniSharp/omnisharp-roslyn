@@ -107,10 +107,7 @@ Task("Cleanup")
 Task("Setup")
     .IsDependentOn("BuildEnvironment")
     .IsDependentOn("PopulateRuntimes")
-    .IsDependentOn("SetupMSBuild")
-    .Does(() =>
-{
-});
+    .IsDependentOn("SetupMSBuild");
 
 /// <summary>
 /// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
@@ -300,7 +297,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
     argList.Add("-InstallDir");
     argList.Add(installFolder);
 
-    Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}");
+    Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
 /// <summary>
@@ -396,7 +393,7 @@ Task("PrepareTestAssets")
 
         RunTool(env.LegacyDotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
- 
+
         Information($"Building {folder}...");
 
         RunTool(env.LegacyDotNetCommand, $"build", folder)
@@ -464,8 +461,7 @@ Task("TestAll")
 /// </summary>
 Task("TravisTestAll")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("TestAll")
-    .Does(() =>{});
+    .IsDependentOn("TestAll");
 
 /// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
@@ -537,7 +533,7 @@ bool IsNetFrameworkOnUnix(string framework)
 string GetPublishArguments(string projectFileName, string rid, string framework, string configuration, string outputFolder)
 {
     var argList = new List<string>();
-    
+
     if (IsNetFrameworkOnUnix(framework))
     {
         argList.Add($"\"{projectFileName}\"");
@@ -614,7 +610,7 @@ Task("OnlyPublish")
                 : args;
 
             Information($"Publishing {projectName} for {framework}/{rid}...");
-            
+
             RunTool(command, args, env.WorkingDirectory)
                 .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
 
@@ -667,10 +663,7 @@ Task("RestrictToLocalRuntime")
 Task("LocalPublish")
     .IsDependentOn("Restore")
     .IsDependentOn("RestrictToLocalRuntime")
-    .IsDependentOn("OnlyPublish")
-    .Does(() =>
-{
-});
+    .IsDependentOn("OnlyPublish");
 
 /// <summary>
 ///  Test the published binaries if they start up without errors.
@@ -715,10 +708,7 @@ Task("CleanupInstall")
 /// </summary>
 Task("Quick")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("LocalPublish")
-    .Does(() =>
-{
-});
+    .IsDependentOn("LocalPublish");
 
 /// <summary>
 ///  Quick build + install.
@@ -752,10 +742,7 @@ Task("All")
     .IsDependentOn("Restore")
     .IsDependentOn("TestAll")
     .IsDependentOn("AllPublish")
-    .IsDependentOn("TestPublished")
-    .Does(() =>
-{
-});
+    .IsDependentOn("TestPublished");
 
 /// <summary>
 ///  Full build targeting local RID.
@@ -765,10 +752,7 @@ Task("Local")
     .IsDependentOn("Restore")
     .IsDependentOn("TestAll")
     .IsDependentOn("LocalPublish")
-    .IsDependentOn("TestPublished")
-    .Does(() =>
-{
-});
+    .IsDependentOn("TestPublished");
 
 /// <summary>
 ///  Build centered around producing the final artifacts for Travis
@@ -779,19 +763,13 @@ Task("Travis")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
     .IsDependentOn("AllPublish")
-    .IsDependentOn("TestPublished")
-    .Does(() =>
-{
-});
+    .IsDependentOn("TestPublished");
 
 /// <summary>
 ///  Default Task aliases to Local.
 /// </summary>
 Task("Default")
-    .IsDependentOn("Local")
-    .Does(() =>
-{
-});
+    .IsDependentOn("Local");
 
 /// <summary>
 ///  Default to Local.
