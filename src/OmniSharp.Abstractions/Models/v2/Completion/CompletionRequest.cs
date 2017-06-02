@@ -3,13 +3,8 @@
 namespace OmniSharp.Models.V2.Completion
 {
     [OmniSharpEndpoint(OmniSharpEndpoints.V2.Completion, typeof(CompletionRequest), typeof(CompletionResponse))]
-    public class CompletionRequest : IRequest
+    public class CompletionRequest : FileBasedRequest
     {
-        /// <summary>
-        /// The name of the file in which completion is requested.
-        /// </summary>
-        public string FileName { get; set; }
-
         /// <summary>
         /// The zero-based position in the file where completion is requested.
         /// </summary>
