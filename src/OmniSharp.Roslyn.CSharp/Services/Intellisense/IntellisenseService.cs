@@ -47,6 +47,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                     var semanticModel = await document.GetSemanticModelAsync();
                     var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
 
+                    var isSuggestionMode = completionList.SuggestionModeItem != null;
+
                     foreach (var item in completionList.Items)
                     {
                         var completionText = item.DisplayText;
@@ -74,14 +76,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                                     {
                                         if (request.WantSnippet)
                                         {
-                                            foreach (var completion in MakeSnippetedResponses(request, symbol, completionText))
+                                            foreach (var completion in MakeSnippetedResponses(request, symbol, completionText, isSuggestionMode))
                                             {
                                                 completions.Add(completion);
                                             }
                                         }
                                         else
                                         {
-                                            completions.Add(MakeAutoCompleteResponse(request, symbol, completionText));
+                                            completions.Add(MakeAutoCompleteResponse(request, symbol, completionText, isSuggestionMode));
                                         }
                                     }
                                 }
@@ -99,7 +101,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                                 CompletionText = item.DisplayText,
                                 DisplayText = item.DisplayText,
                                 Snippet = item.DisplayText,
-                                Kind = request.WantKind ? item.Tags.First() : null
+                                Kind = request.WantKind ? item.Tags.First() : null,
+                                IsSuggestionMode = isSuggestionMode
                             };
 
                             completions.Add(response);
@@ -117,53 +120,53 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenBy(c => c.CompletionText, StringComparer.OrdinalIgnoreCase);
         }
 
-        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string completionText)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string completionText, bool isSuggestionMode)
         {
             switch (symbol)
             {
                 case IMethodSymbol methodSymbol:
-                    return MakeSnippetedResponses(request, methodSymbol, completionText);
+                    return MakeSnippetedResponses(request, methodSymbol, completionText, isSuggestionMode);
                 case INamedTypeSymbol typeSymbol:
-                    return MakeSnippetedResponses(request, typeSymbol, completionText);
+                    return MakeSnippetedResponses(request, typeSymbol, completionText, isSuggestionMode);
 
                 default:
-                    return new[] { MakeAutoCompleteResponse(request, symbol, completionText) };
+                    return new[] { MakeAutoCompleteResponse(request, symbol, completionText, isSuggestionMode) };
             }
         }
 
-        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, IMethodSymbol methodSymbol, string completionText)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, IMethodSymbol methodSymbol, string completionText, bool isSuggestionMode)
         {
             var completions = new List<AutoCompleteResponse>();
 
             if (methodSymbol.Parameters.Any(p => p.IsOptional))
             {
-                completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText, includeOptionalParams: false));
+                completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText, isSuggestionMode, includeOptionalParams: false));
             }
 
-            completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText));
+            completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText, isSuggestionMode));
 
             return completions;
         }
 
-        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, INamedTypeSymbol typeSymbol, string completionText)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, INamedTypeSymbol typeSymbol, string completionText, bool isSuggestionMode)
         {
             var completions = new List<AutoCompleteResponse>
             {
-                MakeAutoCompleteResponse(request, typeSymbol, completionText)
+                MakeAutoCompleteResponse(request, typeSymbol, completionText, isSuggestionMode)
             };
 
             if (typeSymbol.TypeKind != TypeKind.Enum)
             {
                 foreach (var ctor in typeSymbol.InstanceConstructors)
                 {
-                    completions.Add(MakeAutoCompleteResponse(request, ctor, completionText));
+                    completions.Add(MakeAutoCompleteResponse(request, ctor, completionText, isSuggestionMode));
                 }
             }
 
             return completions;
         }
 
-        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, string completionText, bool includeOptionalParams = true)
+        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, string completionText, bool isSuggestionMode, bool includeOptionalParams = true)
         {
             var displayNameGenerator = new SnippetGenerator();
             displayNameGenerator.IncludeMarkers = false;
@@ -174,6 +177,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
             // TODO: Do something more intelligent here
             response.DisplayText = displayNameGenerator.Generate(symbol);
+
+            response.IsSuggestionMode = isSuggestionMode;
 
             if (request.WantDocumentationForEveryCompletionResult)
             {
