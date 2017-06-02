@@ -45,6 +45,8 @@ namespace OmniSharp
 
         public static class V2
         {
+            public const string Completion = "/v2/completion";
+
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
 
