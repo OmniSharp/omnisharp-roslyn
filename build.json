@@ -4,8 +4,8 @@
   "DotNetVersion": "1.0.1",
   "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
   "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
-  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha3.zip",
-  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha3.zip",
+  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha4.zip",
+  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha4.zip",
   "Frameworks": [
     "net46",
     "netcoreapp1.1"
@@ -21,12 +21,14 @@
   ],
   "TestAssets": [
     "NUnitTestProject",
-    "XunitTestProject"
+    "XunitTestProject",
+    "MSTestProject"
   ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",
     "BasicTestProjectSample02",
     "LegacyNunitTestProject",
-    "LegacyXunitTestProject"
+    "LegacyXunitTestProject",
+    "LegacyMSTestProject"
   ]
 }

@@ -1,12 +1,14 @@
 ﻿using System.Collections.Immutable;
 using System.Composition;
 using System.Reflection;
+using OmniSharp.Options;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
     [Export(typeof(IHostServicesProvider))]
     [Export(typeof(RoslynFeaturesHostServicesProvider))]
+    [Shared]
     public class RoslynFeaturesHostServicesProvider : IHostServicesProvider
     {
         public ImmutableArray<Assembly> Assemblies { get; }
@@ -21,7 +23,8 @@ namespace OmniSharp.Roslyn.CSharp.Services
 
             builder.AddRange(loader.Load(Features, CSharpFeatures));
 
-            this.Assemblies = builder.ToImmutable();
+
+            Assemblies = builder.ToImmutable();
         }
     }
 }
