@@ -36,7 +36,8 @@ namespace OmniSharp.Script
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
                 allowUnsafe: true,
-                metadataReferenceResolver: new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)),
+                metadataReferenceResolver: 
+                new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
                 assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
                 WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>

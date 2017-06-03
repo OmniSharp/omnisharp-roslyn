@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dotnet.Script.NuGetMetadataResolver;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.ProjectModel;
@@ -15,9 +16,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
-{
-    using Dotnet.Script.NuGetMetadataResolver;
-
+{   
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
@@ -31,7 +30,7 @@ namespace OmniSharp.Script
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
-        private IScriptProjectProvider _scriptProjectProvider;
+        private readonly IScriptProjectProvider _scriptProjectProvider;
         private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
 
         [ImportingConstructor]
