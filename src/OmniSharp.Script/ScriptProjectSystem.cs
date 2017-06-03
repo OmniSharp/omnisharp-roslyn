@@ -74,8 +74,13 @@ namespace OmniSharp.Script
             var runtimeContexts = File.Exists(Path.Combine(_env.TargetDirectory, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.TargetDirectory) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
+            
+            if (!bool.TryParse(configuration["enableScriptNuGetReferences"], out var enableScriptNuGetReferences))
+            {
+                enableScriptNuGetReferences = false;
+            }
 
-            if (runtimeContexts == null || runtimeContexts.Any() == false)
+            if (enableScriptNuGetReferences && (runtimeContexts == null || runtimeContexts.Any() == false))
             {
                 runtimeContexts = TryCreateRuntimeContextsFromScriptFiles();
             }
