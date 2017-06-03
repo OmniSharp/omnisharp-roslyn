@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
@@ -67,12 +69,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2
                     DisplayText = item.DisplayText,
                     Kind = item.GetKind(),
                     FilterText = item.FilterText,
-                    SortText = item.SortText
+                    SortText = item.SortText,
+                    CommitCharacterRules = GetCommitCharacterRulesModels(item.Rules.CommitCharacterRules)
                 };
             }
 
             var response = new CompletionModels.CompletionResponse
             {
+                DefaultCommitCharacters = completionList.Rules.DefaultCommitCharacters.ToArray(),
                 IsSuggestionMode = isSuggestionMode,
                 Items = items
             };
@@ -80,6 +84,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2
             _lastResponse = (fileName, completionList);
 
             return response;
+        }
+
+        private static CompletionModels.CharacterSetModificationRule[] GetCommitCharacterRulesModels(ImmutableArray<CharacterSetModificationRule> commitCharacterRules)
+        {
+            var result = commitCharacterRules.Length > 0
+                ? new CompletionModels.CharacterSetModificationRule[commitCharacterRules.Length]
+                : Array.Empty<CompletionModels.CharacterSetModificationRule>();
+
+            for (int i = 0; i < commitCharacterRules.Length; i++)
+            {
+                var rule = commitCharacterRules[i];
+                result[i] = new CompletionModels.CharacterSetModificationRule
+                {
+                    Characters = rule.Characters.ToArray(),
+                    Kind = (CompletionModels.CharacterSetModificationRuleKind)rule.Kind
+                };
+            }
+
+            return result;
         }
 
         private static CSharpCompletionService GetService(Document document)
@@ -167,6 +190,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2
                     Kind = previousItem.GetKind(),
                     FilterText = previousItem.FilterText,
                     SortText = previousItem.SortText,
+                    CommitCharacterRules = GetCommitCharacterRulesModels(previousItem.Rules.CommitCharacterRules),
                     Description = description.Text,
                     TextEdit = new Models.TextEdit
                     {

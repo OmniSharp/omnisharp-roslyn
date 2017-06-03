@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.Models.V2.Completion;
 using OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2;
 using TestUtility;
@@ -273,6 +274,29 @@ class C
 
             var (_, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
             Assert.False(isSuggestionMode);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Special_commit_characters_for_using_directives(string fileName)
+        {
+            const string markup = @"using $$";
+
+            var (items, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            Assert.False(isSuggestionMode);
+
+            // In this position, only the '.' and ';' characters commit to make it easier to type
+            // namespace aliases, such as: 'using S = System;'
+
+            var item = items.Single(i => i.DisplayText == "System");
+            Assert.Equal(1, item.CommitCharacterRules.Length);
+
+            var rule = item.CommitCharacterRules[0];
+            Assert.Equal(CharacterSetModificationRuleKind.Replace, rule.Kind);
+            Assert.Equal(2, rule.Characters.Length);
+            Assert.Contains('.', rule.Characters);
+            Assert.Contains(';', rule.Characters);
         }
 
         private async Task AssertItemDescriptionAsync(string fileName, string markup, string displayText, string expectedDescription)

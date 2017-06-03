@@ -7,6 +7,11 @@
         public static CompletionResponse Empty => new CompletionResponse();
 
         /// <summary>
+        /// The default set of typed characters that cause a completion item to be committed.
+        /// </summary>
+        public char[] DefaultCommitCharacters { get; set; }
+
+        /// <summary>
         /// Returns true if the completion list is "suggestion mode", meaning that it should not
         /// commit aggressively on characters like ' '.
         /// </summary>

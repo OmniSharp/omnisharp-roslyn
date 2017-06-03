@@ -2,8 +2,8 @@
 {
     public enum CompletionTriggerKind
     {
-        Invoke = 0,
-        Insertion = 1,
-        Deletion = 2
+        Invoke,
+        Insertion,
+        Deletion
     }
 }
