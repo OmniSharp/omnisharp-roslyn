@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2
     [Shared]
     [OmniSharpHandler(OmniSharpEndpoints.V2.Completion, LanguageNames.CSharp)]
     [OmniSharpHandler(OmniSharpEndpoints.V2.CompletionItemResolve, LanguageNames.CSharp)]
-    internal class CompletionService :
+    public class CompletionService :
         IRequestHandler<CompletionModels.CompletionRequest, CompletionModels.CompletionResponse>,
         IRequestHandler<CompletionModels.CompletionItemResolveRequest, CompletionModels.CompletionItemResolveResponse>
     {
@@ -46,11 +46,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2
             }
 
             var service = GetService(document);
-
-            if (!service.ShouldTriggerCompletion(text, position, trigger))
-            {
-                return CompletionModels.CompletionResponse.Empty;
-            }
 
             var completionList = await service.GetCompletionsAsync(document, position, trigger);
             if (completionList == null)
