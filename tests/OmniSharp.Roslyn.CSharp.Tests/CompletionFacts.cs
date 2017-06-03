@@ -23,9 +23,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string markup = @"$$";
 
-            var (items, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
 
-            Assert.False(isSuggestionMode);
             Assert.Contains(items, item =>
             {
                 return item.DisplayText == "class"
@@ -44,14 +43,124 @@ class SuperAttribute : System.Attribute { }
 [S$$]
 class C
 {
+}";
+
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
+
+            Assert.Contains(items, item => item.DisplayText == "Super");
+            Assert.DoesNotContain(items, item => item.DisplayText == "SuperAttribute");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_members_in_object_initializer_context(string fileName)
+        {
+            const string markup = @"
+class B
+{
+    public string Foo { get; set; }
+}
+
+class C
+{
+    void M()
+    {
+        var c = new B
+        {
+            $$
+        }
+    }
+}";
+
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
+            Assert.Contains(items, item => item.DisplayText == "Foo");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_named_parameter_inside_a_method_call(string fileName)
+        {
+            const string markup = @"
+class Greeter
+{
+    public void SayHi(string text) { }
+}
+
+class C
+{
+    void M()
+    {
+        var greeter = new Greeter();
+        greeter.SayHi($$
+    }
+}";
+
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
+            Assert.Contains(items, item => item.DisplayText == "text:");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_override_signatures(string fileName)
+        {
+            const string markup = @"
+class B
+{
+    public virtual void Test(string text) { }
+    public virtual void Test(string text, string moreText) { }
+}
+
+class C : B
+{
+    override $$
+}";
+
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
+
+            Assert.Contains(items, item => item.DisplayText == "Equals(object obj)");
+            Assert.Contains(items, item => item.DisplayText == "GetHashCode()");
+            Assert.Contains(items, item => item.DisplayText == "Test(string text)");
+            Assert.Contains(items, item => item.DisplayText == "Test(string text, string moreText)");
+            Assert.Contains(items, item => item.DisplayText == "ToString()");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_cref_completion(string fileName)
+        {
+            const string markup = @"
+/// <summary>
+/// A comment. <see cref=""My$$"" /> for more details
+/// </summary>
+public class MyClass
+{
 }
 ";
 
-            var (items, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
+            Assert.Contains(items, item => item.DisplayText == "MyClass");
+        }
 
-            Assert.False(isSuggestionMode);
-            Assert.Contains(items, item => item.DisplayText == "Super");
-            Assert.DoesNotContain(items, item => item.DisplayText == "SuperAttribute");
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_cref_completion_for_generic(string fileName)
+        {
+            const string markup = @"
+/// <summary>
+/// A comment. <see cref=""System.Collections.Generic.$$"" /> for more details
+/// </summary>
+public class MyClass
+{
+}
+";
+
+            var (items, _) = await RequestCompletionAsync(fileName, markup);
+            Assert.Contains(items, item => item.DisplayText == "List{T}");
         }
 
         [Theory]
@@ -71,13 +180,99 @@ class C
     {
         new B$$
     }
-}
-";
-
+}";
 
             await AssertItemDescriptionAsync(fileName, markup,
                 displayText: "B", expectedDescription:
                 "class B\r\nMy Crefs are StringBuilder and System.IO.Path.");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_true_for_lambda_expression_position1(string fileName)
+        {
+            const string markup = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M(Func<int, int> a) { }
+
+    void M()
+    {
+        M(c$$
+    }
+}";
+
+            var (_, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            Assert.True(isSuggestionMode);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_true_for_lambda_expression_position2(string fileName)
+        {
+            const string markup = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M()
+    {
+        Func<int, int> a = c$$
+    }
+}";
+
+            var (_, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            Assert.True(isSuggestionMode);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_false_for_normal_position1(string fileName)
+        {
+            const string markup = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M(int a) { }
+
+    void M()
+    {
+        M(c$$
+    }
+}";
+
+            var (_, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            Assert.False(isSuggestionMode);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_false_for_normal_position2(string fileName)
+        {
+            const string markup = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M()
+    {
+        int a = c$$
+    }
+}";
+
+            var (_, isSuggestionMode) = await RequestCompletionAsync(fileName, markup);
+            Assert.False(isSuggestionMode);
         }
 
         private async Task AssertItemDescriptionAsync(string fileName, string markup, string displayText, string expectedDescription)
@@ -87,7 +282,6 @@ class C
             using (var host = CreateOmniSharpHost(testFile))
             {
                 var (items, _) = await RequestCompletionAsync(testFile, host);
-
                 var item = await ResolveCompletionItemAsync(displayText, items, testFile, host);
 
                 Assert.Equal(expectedDescription, item.Description);
