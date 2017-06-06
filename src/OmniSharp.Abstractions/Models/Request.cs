@@ -26,10 +26,5 @@ namespace OmniSharp.Models
                 _fileName = value;
             }
         }
-
-        public bool IsMetadataFile()
-        {
-            return FileName != null && FileName.StartsWith("$metadata$", StringComparison.OrdinalIgnoreCase);
-        }
     }
 }

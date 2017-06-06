@@ -31,8 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         {
             var quickFixes = new List<QuickFix>();
 
-            var document = request.IsMetadataFile() ? 
-                _metadataHelper.FindDocumentInMetadataCache(request.FileName) : 
+            var document = _metadataHelper.FindDocumentInMetadataCache(request.FileName) ??
                 _workspace.GetDocument(request.FileName);
 
             var response = new GotoDefinitionResponse();
@@ -68,12 +67,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     else if (location.IsInMetadata && request.WantMetadata)
                     {
                         var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                        var metadataDocumentResult = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
-                        if (metadataDocumentResult.Document != null)
+                        var (metadataDocument, _) = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+                        if (metadataDocument != null)
                         {
                             cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
 
-                            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocumentResult.Document, cancellationSource.Token);
+                            var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
                             var lineSpan = metadataLocation.GetMappedLineSpan();
 
                             response = new GotoDefinitionResponse

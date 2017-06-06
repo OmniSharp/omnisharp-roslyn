@@ -2,12 +2,12 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using TestUtility;
-using Xunit;
-using Xunit.Abstractions;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Models.Metadata;
+using TestUtility;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -193,25 +193,25 @@ class Bar {
 
                 // 2. now, based on the response information
                 // go to the metadata endpoint, and ask for "int" specific metadata
-                var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
-                var metadataResponse = await metadataRequestHandler.Handle(new MetadataRequest
+                var metadataRequest = new MetadataRequest
                 {
                     AssemblyName = response.MetadataSource.AssemblyName,
                     TypeName = response.MetadataSource.TypeName,
                     ProjectName = response.MetadataSource.ProjectName,
                     Language = response.MetadataSource.Language
-                });
+                };
+                var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
+                var metadataResponse = await metadataRequestHandler.Handle(metadataRequest);
 
                 // 3. the metadata response contains SourceName (metadata "file") and SourceText (syntax tree)
                 // use the source to locate "IComparable" which is an interface implemented by Int32 struct
                 var metadataTree = CSharpSyntaxTree.ParseText(metadataResponse.Source);
                 var iComparable = metadataTree.GetCompilationUnitRoot().DescendantNodesAndSelf().OfType<BaseTypeDeclarationSyntax>().
                     First().BaseList.Types.FirstOrDefault(x => x.Type.ToString() == "IComparable");
-
+                var relevantLineSpan = iComparable.GetLocation().GetLineSpan();
 
                 // 4. now ask for the definition of "IComparable"
                 // pass in the SourceName (metadata "file") as FileName - since it's not a regular file in our workspace
-                var relevantLineSpan = iComparable.GetLocation().GetLineSpan();
                 var metadataNavigationRequest = new GotoDefinitionRequest
                 {
                     FileName = metadataResponse.SourceName,
@@ -220,7 +220,6 @@ class Bar {
                     Timeout = 60000,
                     WantMetadata = true
                 };
-
                 var metadataNavigationResponse = await requestHandler.Handle(metadataNavigationRequest);
 
                 // 5. validate the response to be matching the expected IComparable meta info

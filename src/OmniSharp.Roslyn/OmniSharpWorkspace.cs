@@ -127,7 +127,7 @@ namespace OmniSharp
 
         public Document GetDocument(string filePath)
         {
-            if (filePath == null) return null;
+            if (string.IsNullOrWhiteSpace(filePath)) return null;
 
             var documentId = GetDocumentId(filePath);
             if (documentId == null)

@@ -63,11 +63,11 @@ namespace OmniSharp.Roslyn
             return GetTypeDisplayString(topLevelSymbol);
         }
 
-        public async Task<MetadataDocumentResult> GetAndAddDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<(Document metadataDocument, string documentPath)> GetAndAddDocumentFromMetadata(Project project, ISymbol symbol, CancellationToken cancellationToken = new CancellationToken())
         {
             var fileName = GetFilePathForSymbol(project, symbol);
 
-            Project metadataProject = null;
+            Project metadataProject;
 
             // since submission projects cannot have new documents added to it
             // we will use a separate project to hold metadata documents
@@ -77,8 +77,8 @@ namespace OmniSharp.Roslyn
                 if (metadataProject == null)
                 {
                     metadataProject = project.Solution.AddProject(MetadataKey, $"{MetadataKey}.dll", LanguageNames.CSharp)
-                    .WithCompilationOptions(project.CompilationOptions)
-                    .WithMetadataReferences(project.MetadataReferences);
+                        .WithCompilationOptions(project.CompilationOptions)
+                        .WithMetadataReferences(project.MetadataReferences);
                 }
             }
             else
@@ -87,8 +87,7 @@ namespace OmniSharp.Roslyn
                 metadataProject = project;
             }
 
-            Document metadataDocument = null;
-            if (!_metadataDocumentCache.TryGetValue(fileName, out metadataDocument))
+            if (!_metadataDocumentCache.TryGetValue(fileName, out var metadataDocument))
             {
                 var topLevelSymbol = symbol.GetTopLevelContainingNamedType();
 
@@ -102,7 +101,7 @@ namespace OmniSharp.Roslyn
                 _metadataDocumentCache[fileName] = metadataDocument;
             }
 
-            return new MetadataDocumentResult(metadataDocument, fileName);
+            return (metadataDocument, fileName);
         }
 
         public async Task<Location> GetSymbolLocationFromMetadata(ISymbol symbol, Document metadataDocument, CancellationToken cancellationToken = new CancellationToken())
