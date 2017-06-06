@@ -180,25 +180,24 @@ class Bar {
                 var point = testFile.Content.GetPointFromPosition();
 
                 // 1. start by asking for definition of "int"
-                var request = new GotoDefinitionRequest
+                var gotoDefinitionRequest = new GotoDefinitionRequest
                 {
                     FileName = testFile.FileName,
                     Line = point.Line,
                     Column = point.Offset,
-                    Timeout = 60000,
                     WantMetadata = true
                 };
-                var requestHandler = GetRequestHandler(host);
-                var response = await requestHandler.Handle(request);
+                var gotoDefinitionRequestHandler = GetRequestHandler(host);
+                var gotoDefinitionResponse = await gotoDefinitionRequestHandler.Handle(gotoDefinitionRequest);
 
                 // 2. now, based on the response information
                 // go to the metadata endpoint, and ask for "int" specific metadata
                 var metadataRequest = new MetadataRequest
                 {
-                    AssemblyName = response.MetadataSource.AssemblyName,
-                    TypeName = response.MetadataSource.TypeName,
-                    ProjectName = response.MetadataSource.ProjectName,
-                    Language = response.MetadataSource.Language
+                    AssemblyName = gotoDefinitionResponse.MetadataSource.AssemblyName,
+                    TypeName = gotoDefinitionResponse.MetadataSource.TypeName,
+                    ProjectName = gotoDefinitionResponse.MetadataSource.ProjectName,
+                    Language = gotoDefinitionResponse.MetadataSource.Language
                 };
                 var metadataRequestHandler = host.GetRequestHandler<MetadataService>(OmniSharpEndpoints.Metadata);
                 var metadataResponse = await metadataRequestHandler.Handle(metadataRequest);
@@ -206,8 +205,10 @@ class Bar {
                 // 3. the metadata response contains SourceName (metadata "file") and SourceText (syntax tree)
                 // use the source to locate "IComparable" which is an interface implemented by Int32 struct
                 var metadataTree = CSharpSyntaxTree.ParseText(metadataResponse.Source);
-                var iComparable = metadataTree.GetCompilationUnitRoot().DescendantNodesAndSelf().OfType<BaseTypeDeclarationSyntax>().
-                    First().BaseList.Types.FirstOrDefault(x => x.Type.ToString() == "IComparable");
+                var iComparable = metadataTree.GetCompilationUnitRoot().
+                    DescendantNodesAndSelf().
+                    OfType<BaseTypeDeclarationSyntax>().First().
+                    BaseList.Types.FirstOrDefault(x => x.Type.ToString() == "IComparable");
                 var relevantLineSpan = iComparable.GetLocation().GetLineSpan();
 
                 // 4. now ask for the definition of "IComparable"
@@ -217,10 +218,9 @@ class Bar {
                     FileName = metadataResponse.SourceName,
                     Line = relevantLineSpan.StartLinePosition.Line,
                     Column = relevantLineSpan.StartLinePosition.Character,
-                    Timeout = 60000,
                     WantMetadata = true
                 };
-                var metadataNavigationResponse = await requestHandler.Handle(metadataNavigationRequest);
+                var metadataNavigationResponse = await gotoDefinitionRequestHandler.Handle(metadataNavigationRequest);
 
                 // 5. validate the response to be matching the expected IComparable meta info
                 Assert.NotNull(metadataNavigationResponse.MetadataSource);
