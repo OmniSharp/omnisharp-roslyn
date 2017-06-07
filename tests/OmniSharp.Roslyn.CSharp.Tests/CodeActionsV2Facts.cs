@@ -36,6 +36,32 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task Can_get_code_actions_from_external_source()
+        {
+            const string code =
+                @"
+                    using System.Threading.Tasks;
+                    public class Class1
+                    {
+                        public async Task Whatever()
+                        {
+                            awa[||]it FooAsync();
+                        }
+
+                        public Task FooAsync() => return Task.FromResult(0);
+                    }";
+
+            var configuration = new Dictionary<string, string>
+            {
+                { "RoslynExtensionsOptions:LocationPaths:0", TestAssets.Instance.TestBinariesFolder }
+            };
+            var refactorings = await FindRefactoringsAsync(code, configuration);
+
+            Assert.NotEmpty(refactorings);
+            Assert.Contains("Add ConfigureAwait(false)", refactorings.Select(x => x.Name));
+        }
+
+        [Fact]
         public async Task Can_remove_unnecessary_usings()
         {
             const string code =
@@ -128,11 +154,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             return codeActions.Select(a => a.Name);
         }
 
-        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code)
+        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IDictionary<string, string> configurationData = null)
         {
             var testFile = new TestFile(BufferPath, code);
 
-            using (var host = CreateOmniSharpHost(testFile))
+            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData))
             {
                 var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
 
