@@ -9,9 +9,12 @@ using Microsoft.CodeAnalysis.Scripting.Hosting;
 namespace OmniSharp.Script
 {
     using Dotnet.Script.NuGetMetadataResolver;
+    using Microsoft.Extensions.Configuration;
 
-    public static class ScriptHelper
+    public class ScriptHelper
     {
+        private readonly IConfiguration _configuration;
+
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
         internal static readonly IEnumerable<string> DefaultNamespaces = new[]
@@ -30,29 +33,41 @@ namespace OmniSharp.Script
 
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
 
-        private static readonly Lazy<CSharpCompilationOptions> CompilationOptions = new Lazy<CSharpCompilationOptions>(() =>
+        private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
+
+        public ScriptHelper(IConfiguration configuration = null)
+        {
+            this._configuration = configuration;
+            _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
+        }
+
+        private CSharpCompilationOptions CreateCompilationOptions()
         {
             var compilationOptions = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 usings: DefaultNamespaces,
                 allowUnsafe: true,
-                metadataReferenceResolver: 
-                new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)),
+                metadataReferenceResolver:
+                CreateMetadataReferenceResolver(),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
-                WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
+                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).WithSpecificDiagnosticOptions(
+                new Dictionary<string, ReportDiagnostic>
                 {
                     // ensure that specific warnings about assembly references are always suppressed
                     // https://github.com/dotnet/roslyn/issues/5501
-                    { "CS1701", ReportDiagnostic.Suppress },
-                    { "CS1702", ReportDiagnostic.Suppress },
-                    { "CS1705", ReportDiagnostic.Suppress }
-                 });
+                    {"CS1701", ReportDiagnostic.Suppress},
+                    {"CS1702", ReportDiagnostic.Suppress},
+                    {"CS1705", ReportDiagnostic.Suppress}
+                });
 
-            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+            var topLevelBinderFlagsProperty =
+                typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly
+                .GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
 
-            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreCorLibraryDuplicatedTypesMember =
+                binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
             var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
             if (ignoreCorLibraryDuplicatedTypesValue != null)
             {
@@ -60,9 +75,25 @@ namespace OmniSharp.Script
             }
 
             return compilationOptions;
-        });
+        }
 
-        public static ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
+        private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
+        {
+            bool enableScriptNuGetReferences = false;
+
+            if (_configuration != null)
+            {
+                if (!bool.TryParse(_configuration["enableScriptNuGetReferences"], out enableScriptNuGetReferences))
+                {
+                    enableScriptNuGetReferences = false;
+                }
+            }
+            
+            return enableScriptNuGetReferences ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)) 
+                : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default);
+        }
+ 
+        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
         {
             var project = ProjectInfo.Create(
                 id: ProjectId.CreateNewId(),
@@ -70,7 +101,7 @@ namespace OmniSharp.Script
                 name: csxFileName,
                 assemblyName: $"{csxFileName}.dll",
                 language: LanguageNames.CSharp,
-                compilationOptions: namespaces == null ? CompilationOptions.Value : CompilationOptions.Value.WithUsings(namespaces),
+                compilationOptions: namespaces == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(namespaces),
                 metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,

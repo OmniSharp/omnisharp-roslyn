@@ -30,7 +30,7 @@ namespace OmniSharp.Script
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
-        private readonly IScriptProjectProvider _scriptProjectProvider;
+        private readonly IScriptProjectProvider _scriptProjectProvider;        
         private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
 
         [ImportingConstructor]
@@ -50,6 +50,8 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
+            var scriptHelper = new ScriptHelper(configuration);
+
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
@@ -138,7 +140,7 @@ namespace OmniSharp.Script
                 try
                 {
                     var csxFileName = Path.GetFileName(csxPath);
-                    var project = ScriptHelper.CreateProject(csxFileName, commonReferences);
+                    var project = scriptHelper.CreateProject(csxFileName, commonReferences);
 
                     // add CSX project to workspace
                     _workspace.AddProject(project);
