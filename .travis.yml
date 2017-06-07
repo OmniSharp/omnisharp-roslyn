@@ -1,11 +1,10 @@
 language: csharp
+mono: none
 sudo: required
 dist: trusty
 env:
   global:
     secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
-mono:
-  - 4.8.0
 os:
   - linux
   - osx
@@ -18,16 +17,19 @@ before_install:
       sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
       echo "deb http://download.mono-project.com/repo/debian wheezy main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list
       sudo apt-get -qq update
+      sudo apt-get install mono-complete
       sudo apt-get install msbuild
     fi
 
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       brew update
-      brew install jq
-      brew install openssl
+      brew install jq --verbose
+      brew install openssl --verbose
       ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
       ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+      brew install mono --verbose
+      brew install caskroom/cask/mono-mdk --verbose
       brew list
     fi
 
