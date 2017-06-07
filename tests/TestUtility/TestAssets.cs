@@ -12,6 +12,8 @@ namespace TestUtility
         public string OmniSharpSolutionPath { get; }
         public string TestAssetsFolder { get; }
         public string TestProjectsFolder { get; }
+        public string TestBinariesFolder { get; }
+
 
         private TestAssets()
         {
@@ -19,6 +21,7 @@ namespace TestUtility
             OmniSharpSolutionPath = Path.Combine(RootFolder, "OmniSharp.sln");
             TestAssetsFolder = Path.Combine(RootFolder, "test-assets");
             TestProjectsFolder = Path.Combine(TestAssetsFolder, "test-projects");
+            TestBinariesFolder = Path.Combine(TestAssetsFolder, "binaries");
         }
 
         private static string FindRootFolder()
