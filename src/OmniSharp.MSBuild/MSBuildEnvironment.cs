@@ -62,7 +62,7 @@ namespace OmniSharp.MSBuild
 
             // If MSBuild can locate VS 2017 and set up a build environment, we don't need to do anything.
             // MSBuild will take care of itself.
-            if (MSBuildHelpers.TryGetVisualStudioBuildEnvironment())
+            if (MSBuildHelpers.CanInitializeVisualStudioBuildEnvironment())
             {
                 logger.LogInformation("MSBuild will use local Visual Studio installation.");
                 s_usingVisualStudio = true;
