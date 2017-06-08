@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Dotnet.Script.NuGetMetadataResolver;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace OmniSharp.Script
 {
-    using Dotnet.Script.NuGetMetadataResolver;
-    using Microsoft.Extensions.Configuration;
-
     public class ScriptHelper
     {
         private readonly IConfiguration _configuration;
