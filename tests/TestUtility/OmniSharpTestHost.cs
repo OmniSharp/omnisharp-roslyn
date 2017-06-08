@@ -96,6 +96,8 @@ namespace TestUtility
             var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter);
 
             var omnisharpOptions = new OmniSharpOptions();
+            ConfigurationBinder.Bind(configuration, omnisharpOptions);
+
             var compositionHost = Startup.CreateCompositionHost(
                 serviceProvider,
                 options: omnisharpOptions,
