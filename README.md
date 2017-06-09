@@ -8,7 +8,7 @@ omnisharp-roslyn
 
 OmniSharp-Roslyn is a .NET development platform based on [Roslyn](https://github.com/dotnet/roslyn) workspaces. It provides project dependencies and language syntax to various IDE and plugins.
 
-OmniSharp-Roslyn is built with the [.NET Core SDK](https://dot.net/). It targets both __netcoreapp1.1__ and __net46__ targets. The __netcoreapp1.1__ build is self contained, while __net46__ build requires __mono__ (>=4.6.0) if it is run on a platform other than Windows.
+OmniSharp-Roslyn is built with the [.NET Core SDK](https://dot.net/). It targets both __netcoreapp1.1__ and __net46__ target frameworks. The __netcoreapp1.1__ build is self contained, while __net46__ build requires __mono__ (>=4.8.0) if it is run on a platform other than Windows.
 
 In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed.
 
@@ -45,6 +45,16 @@ Add the following setting to your [User Settings or Workspace Settings](https://
   "omnisharp.path": "<Path to the omnisharp executable>"
 }
 ```
+
+In order to be able to attach a debugger, add the following setting:
+
+```JSON
+{
+  "omnisharp.waitForDebugger": true
+}
+```
+
+This will print the OmniSharp process ID in the VS Code OmniSharp output panel and pause the start of the server until a debugger is attached to this process. This is equivalent to launching OmniSharp from a command line with the `--debug` flag.
 
 ## Help wanted!
 

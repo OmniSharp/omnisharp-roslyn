@@ -5,22 +5,55 @@ env:
   global:
     secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
 mono:
-  - 4.6.0
+  - 4.8.0
 os:
   - linux
   - osx
 osx_image: xcode7.3
-# install automaically retries
-install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install jq; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install openssl; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/; ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew list; fi
-  - ./build.sh -target=Restore
+
+# Ensure MSBuild is installed
+before_install:
+  - | 
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+      echo "deb http://download.mono-project.com/repo/debian wheezy main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list
+      sudo apt-get -qq update
+      sudo apt-get install msbuild
+    fi
+
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      brew update
+      brew install jq
+      brew install openssl
+      ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
+      ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+      brew list
+    fi
+
+  - |
+    # This is a temporary fix to workaround a problem where Travis picks up a build of Mono on OSX that
+    # includes a broken version of MSBuild.
+    #
+    # See https://github.com/mono/msbuild/commit/cff4013ba3a69f82dc0ae96b3e15af700d8f74ef
+    # for the fix this is replicating.
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      MSBUILD_BIN=/Library/Frameworks/Mono.framework/Versions/4.8.0/lib/mono/msbuild/15.0/bin
+
+      if [ ! -d $MSBUILD_BIN ] || [ -f $MSBUILD_BIN/System.Reflection.Metadata.dll ]; then
+        echo "WORKAROUND: Time to remove System.Reflection.Metadata.dll workaround"
+      else
+        echo "WORKAROUND: Copying System.Reflection.Metadata.dll to Mono MSBuild"
+        sudo cp $MSBUILD_BIN/Roslyn/System.Reflection.Metadata.dll $MSBUILD_BIN/System.Reflection.Metadata.dll
+      fi
+    fi
+
+  - msbuild /version
+
 script:
-  - travis_retry ./build.sh -target=TravisTestAll
-  - ./build.sh -target=Travis -archive
+  - travis_retry ./build.sh --target TravisTestAll
+  - ./build.sh --target Travis --archive
+
 addons:
   apt:
     packages:
@@ -31,6 +64,7 @@ addons:
       - libunwind8
       - zlib1g
       - curl
+
 notifications:
   slack:
     rooms:
@@ -38,16 +72,18 @@ notifications:
     on_success: change
     on_failure: always
     on_pull_requests: false
+
 deploy:
   provider: releases
   api_key:
-    secure: N9hansErZKHl7G5Ed/hcBgwcvLuRjB7YAskAvSAYB+luacV6rSK7Vlm/4NyjaZCwWv5wOdBphle2S4yZLRDTdMwLrdQWwWYeZI60kE22c1amKJaf6j5ai2u/P3bt55klQ2yO2U/LacwHVoRtJlVdwSAXuDQ3zMd88VbBModQyxE=
+    secure: EsRemh0XwJc3jhIjaxSuAhcm0AGjFwa3HO6oWzJOoupX0l+HV5CxrJqui//sqJ/jK4nnwNcTfMyMFTAz2t6nWCmuwuezTncty/uNTXE0Whe+3WWc/BakfEdBrCfnRhGhwQ5EW2Y6BasuF0f/hpjnucqpNxcKmKOZvThzv93bmSA=
   file_glob: true
   file: artifacts/package/*.tar.gz
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
+
 after_deploy: |
   openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
   chmod 600 ~/.ssh/id_rsa

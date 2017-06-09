@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
+using OmniSharp.Models.MembersTree;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,19 +23,17 @@ namespace OmniSharp.Tests
 
                 }";
 
-            var testFile = new TestFile("d.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
+            var nodes = await GetStructureAsync(source);
 
-            var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
-            Assert.Equal(1, nodes.Count());
-            Assert.Equal("Far", nodes.First().Location.Text);
+            Assert.Equal(1, nodes.Length);
+            Assert.Equal("Far", nodes[0].Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
         }
 
         [Fact]
         public async Task ClassWithMembers()
         {
-            var source =
+            const string source =
                 @"public class Far {
                     private bool _b;
                     private bool B { get; set; }
@@ -42,38 +41,44 @@ namespace OmniSharp.Tests
                     public event Action E;
                 }";
 
-            var testFile = new TestFile("d.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
 
-            var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
-            Assert.Equal(1, nodes.Count());
-            Assert.Equal("Far", nodes.First().Location.Text);
-            Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
+            var nodes = await GetStructureAsync(source);
+            Assert.Equal(1, nodes.Length);
+            Assert.Equal("Far", nodes[0].Location.Text);
+            Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes[0].Kind);
 
             // children
-            var children = nodes.First().ChildNodes;
-            Assert.Equal(4, children.Count());
-            Assert.Equal("_b", children.ElementAt(0).Location.Text);
-            Assert.Equal("B", children.ElementAt(1).Location.Text);
-            Assert.Equal("M", children.ElementAt(2).Location.Text);
-            Assert.Equal("E", children.ElementAt(3).Location.Text);
+            var children = nodes[0].ChildNodes.ToArray();
+            Assert.Equal(4, children.Length);
+            Assert.Equal("_b", children[0].Location.Text);
+            Assert.Equal("B", children[1].Location.Text);
+            Assert.Equal("M", children[2].Location.Text);
+            Assert.Equal("E", children[3].Location.Text);
         }
 
         [Fact]
         public async Task SimpleInterface()
         {
-            var source =
+            const string source =
                 @"public interface Far {
 
                 }";
 
-            var testFile = new TestFile("d.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
+            var nodes = await GetStructureAsync(source);
 
-            var nodes = await StructureComputer.Compute(workspace.GetDocuments(testFile.FileName));
-            Assert.Equal(1, nodes.Count());
-            Assert.Equal("Far", nodes.First().Location.Text);
-            Assert.Equal(SyntaxKind.InterfaceDeclaration.ToString(), nodes.First().Kind);
+            Assert.Equal(1, nodes.Length);
+            Assert.Equal("Far", nodes[0].Location.Text);
+            Assert.Equal(SyntaxKind.InterfaceDeclaration.ToString(), nodes[0].Kind);
+        }
+
+        private async Task<FileMemberElement[]> GetStructureAsync(string source)
+        {
+            var testFile = new TestFile("d.cs", source);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var nodes = await StructureComputer.Compute(host.Workspace.GetDocuments(testFile.FileName));
+                return nodes.ToArray();
+            }
         }
     }
 }

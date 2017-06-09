@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
@@ -58,8 +59,16 @@ namespace OmniSharp.Roslyn
         {
             var filePath = GetFilePathForSymbol(project, symbol);
             var topLevelSymbol = GetTopLevelContainingNamedType(symbol);
-            var temporaryDocument = project.AddDocument(filePath, string.Empty);
 
+            // since submission projects cannot have new documents added to it
+            // we will use temporary project to hold metadata documents
+            var metadataProject = project.IsSubmission 
+                ? project.Solution.AddProject("metadataTemp", "metadataTemp.dll", LanguageNames.CSharp)
+                    .WithCompilationOptions(project.CompilationOptions)
+                    .WithMetadataReferences(project.MetadataReferences)
+                : project;
+
+            var temporaryDocument = metadataProject.AddDocument(filePath, string.Empty);
             var service = _csharpMetadataAsSourceService.CreateInstance(temporaryDocument.Project.LanguageServices);
             var method = _csharpMetadataAsSourceService.GetMethod(AddSourceToAsync);
 

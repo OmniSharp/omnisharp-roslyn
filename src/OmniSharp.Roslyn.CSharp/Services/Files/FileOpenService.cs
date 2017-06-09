@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.FileOpen;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Open, LanguageNames.CSharp)]
-    public class FileOpenService : RequestHandler<FileOpenRequest, FileOpenResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Open, LanguageNames.CSharp)]
+    public class FileOpenService : IRequestHandler<FileOpenRequest, FileOpenResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

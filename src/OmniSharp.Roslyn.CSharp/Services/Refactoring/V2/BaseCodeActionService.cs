@@ -11,13 +11,15 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    public abstract class BaseCodeActionService<TRequest, TResponse> : RequestHandler<TRequest, TResponse>
+    public abstract class BaseCodeActionService<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
     {
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;

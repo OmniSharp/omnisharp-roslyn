@@ -1,30 +1,23 @@
 using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
-using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Options;
-using OmniSharp.Services;
+using OmniSharp.Options;
+using OmniSharp.Roslyn.Options;
+using RoslynFormattingOptions = Microsoft.CodeAnalysis.Formatting.FormattingOptions;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
     [Export(typeof(IWorkspaceOptionsProvider)), Shared]
     public class CSharpWorkspaceOptionsProvider : IWorkspaceOptionsProvider
     {
-        private readonly Options.FormattingOptions _formattingOptions;
-
-        [ImportingConstructor]
-        public CSharpWorkspaceOptionsProvider(Options.FormattingOptions formattingOptions)
-        {
-            _formattingOptions = formattingOptions;
-        }
-
-        private static OptionSet GetOptions(OptionSet optionSet, Options.FormattingOptions formattingOptions)
+        private static OptionSet GetOptions(OptionSet optionSet, FormattingOptions formattingOptions)
         {
             return optionSet
-                .WithChangedOption(FormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)
-                .WithChangedOption(FormattingOptions.UseTabs, LanguageNames.CSharp, formattingOptions.UseTabs)
-                .WithChangedOption(FormattingOptions.TabSize, LanguageNames.CSharp, formattingOptions.TabSize)
-                .WithChangedOption(FormattingOptions.IndentationSize, LanguageNames.CSharp, formattingOptions.IndentationSize)
+                .WithChangedOption(RoslynFormattingOptions.NewLine, LanguageNames.CSharp, formattingOptions.NewLine)
+                .WithChangedOption(RoslynFormattingOptions.UseTabs, LanguageNames.CSharp, formattingOptions.UseTabs)
+                .WithChangedOption(RoslynFormattingOptions.TabSize, LanguageNames.CSharp, formattingOptions.TabSize)
+                .WithChangedOption(RoslynFormattingOptions.IndentationSize, LanguageNames.CSharp, formattingOptions.IndentationSize)
                 .WithChangedOption(CSharpFormattingOptions.SpacingAfterMethodDeclarationName, formattingOptions.SpacingAfterMethodDeclarationName)
                 .WithChangedOption(CSharpFormattingOptions.SpaceWithinMethodDeclarationParenthesis, formattingOptions.SpaceWithinMethodDeclarationParenthesis)
                 .WithChangedOption(CSharpFormattingOptions.SpaceBetweenEmptyMethodDeclarationParentheses, formattingOptions.SpaceBetweenEmptyMethodDeclarationParentheses)
@@ -99,9 +92,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
         }
 
-        public OptionSet Process(OptionSet workOptionSet)
+        public OptionSet Process(OptionSet workOptionSet, FormattingOptions options)
         {
-            return GetOptions(workOptionSet, _formattingOptions);
+            return GetOptions(workOptionSet, options);
         }
     }
 }

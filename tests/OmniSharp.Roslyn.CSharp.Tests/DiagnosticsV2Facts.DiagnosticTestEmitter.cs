@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using OmniSharp.Models;
-using OmniSharp.Services;
+using OmniSharp.Eventing;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -12,7 +12,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             private readonly IList<DiagnosticMessage> _messages;
             private readonly TaskCompletionSource<object> _tcs;
 
-            public Task Emitted { get { return _tcs.Task; } }
+            public Task Emitted => _tcs.Task;
 
             public DiagnosticTestEmitter(IList<DiagnosticMessage> messages)
             {

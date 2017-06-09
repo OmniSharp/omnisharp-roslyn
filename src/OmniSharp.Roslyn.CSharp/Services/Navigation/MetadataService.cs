@@ -4,12 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Metadata, LanguageNames.CSharp)]
-    public class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Metadata, LanguageNames.CSharp)]
+    public class MetadataService : IRequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly MetadataHelper _metadataHelper;
         private readonly OmniSharpWorkspace _workspace;

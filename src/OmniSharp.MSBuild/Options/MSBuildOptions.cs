@@ -4,7 +4,8 @@ namespace OmniSharp.Options
     {
         public string ToolsVersion { get; set; }
         public string VisualStudioVersion { get; set; }
-        public bool WaitForDebugger { get; set; }
+        public string Configuration { get; set; }
+        public string Platform { get; set; }
         public bool EnablePackageAutoRestore { get; set; }
 
         public string MSBuildExtensionsPath { get; set; }

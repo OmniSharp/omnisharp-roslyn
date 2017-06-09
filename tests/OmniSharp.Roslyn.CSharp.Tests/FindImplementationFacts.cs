@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
+using OmniSharp.Models.FindImplementations;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using TestUtility;
 using Xunit;
@@ -12,90 +13,144 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FindImplementationFacts : AbstractTestFixture
+    public class FindImplementationFacts : AbstractSingleRequestHandlerTestFixture<FindImplementationsService>
     {
         public FindImplementationFacts(ITestOutputHelper output)
             : base(output)
         {
         }
 
-        [Fact]
-        public async Task CanFindInterfaceTypeImplementation()
+        protected override string EndpointName => OmniSharpEndpoints.FindImplementations;
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindInterfaceTypeImplementation(string filename)
         {
-            const string source = @"
+            const string code = @"
                 public interface Som$$eInterface {}
                 public class SomeClass : SomeInterface {}";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        [Fact]
-        public async Task CanFindInterfaceMethodImplementation()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindInterfaceMethodImplementation(string filename)
         {
-            const string source = @"
+            const string code = @"
                 public interface SomeInterface { void Some$$Method(); }
                 public class SomeClass : SomeInterface {
                     public void SomeMethod() {}
                 }";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
+
             Assert.Equal("SomeMethod", implementation.Name);
             Assert.Equal("SomeClass", implementation.ContainingType.Name);
         }
 
-        [Fact]
-        public async Task CanFindOverride()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindOverride(string filename)
         {
-            const string source = @"
+            const string code = @"
                 public class BaseClass { public abstract Some$$Method() {} }
                 public class SomeClass : BaseClass
                 {
                     public override SomeMethod() {}
                 }";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeMethod", implementation.Name);
             Assert.Equal("SomeClass", implementation.ContainingType.Name);
         }
 
-        [Fact]
-        public async Task CanFindSubclass()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindSubclass(string filename)
         {
-            const string source = @"
-                public class BaseClass {}
+            const string code = @"
+                public abstract class BaseClass {}
                 public class SomeClass : Base$$Class {}";
 
-            var implementations = await FindImplementations(source);
+            var implementations = await FindImplementationsAsync(code, filename);
             var implementation = implementations.First();
 
             Assert.Equal("SomeClass", implementation.Name);
         }
 
-        private async Task<IEnumerable<ISymbol>> FindImplementations(string input)
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindTypeDeclaration(string filename)
         {
-            var testFile = new TestFile("dummy.cs", input);
-            var point = testFile.Content.GetPointFromPosition();
+            const string code = @"
+                public class MyClass 
+                { 
+                    public MyClass() { var other = new Other$$Class(); }
+                }
 
-            var workspace = await CreateWorkspaceAsync(testFile);
-            var controller = new FindImplementationsService(workspace);
+                public class OtherClass 
+                { 
+                }";
 
-            var request = new FindImplementationsRequest
+            var implementations = await FindImplementationsAsync(code, filename);
+            var implementation = implementations.First();
+
+            Assert.Equal("OtherClass", implementation.Name);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindMethodDeclaration(string filename)
+        {
+            const string code = @"
+                public class MyClass 
+                { 
+                    public MyClass() { Fo$$o(); }
+
+                    public void Foo() {}
+                }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+            var implementation = implementations.First();
+
+            Assert.Equal("Foo", implementation.Name);
+            Assert.Equal("MyClass", implementation.ContainingType.Name);
+            Assert.Equal(SymbolKind.Method, implementation.Kind);
+        }
+
+        private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)
+        {
+            var testFile = new TestFile(filename, code);
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                Line = point.Line,
-                Column = point.Offset,
-                FileName = testFile.FileName,
-                Buffer = testFile.Content.Code
-            };
+                var point = testFile.Content.GetPointFromPosition();
+                var requestHandler = GetRequestHandler(host);
 
-            var implementations = await controller.Handle(request);
+                var request = new FindImplementationsRequest
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = testFile.FileName,
+                    Buffer = testFile.Content.Code
+                };
 
-            return await SymbolsFromQuickFixesAsync(workspace, implementations.QuickFixes);
+                var implementations = await requestHandler.Handle(request);
+
+                return await SymbolsFromQuickFixesAsync(host.Workspace, implementations.QuickFixes);
+            }
         }
 
         private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmniSharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)

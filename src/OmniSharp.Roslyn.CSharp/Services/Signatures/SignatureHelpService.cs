@@ -7,11 +7,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.SignatureHelp;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
-    [OmniSharpHandler(OmnisharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
-    public class SignatureHelpService : RequestHandler<SignatureHelpRequest, SignatureHelp>
+    [OmniSharpHandler(OmniSharpEndpoints.SignatureHelp, LanguageNames.CSharp)]
+    public class SignatureHelpService : IRequestHandler<SignatureHelpRequest, SignatureHelpResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 
@@ -21,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             _workspace = workspace;
         }
 
-        public async Task<SignatureHelp> Handle(SignatureHelpRequest request)
+        public async Task<SignatureHelpResponse> Handle(SignatureHelpRequest request)
         {
             var invocations = new List<InvocationContext>();
             foreach (var document in _workspace.GetDocuments(request.FileName))
@@ -38,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 return null;
             }
 
-            var response = new SignatureHelp();
+            var response = new SignatureHelpResponse();
 
             // define active parameter by position
             foreach (var comma in invocations.First().ArgumentList.Arguments.GetSeparators())

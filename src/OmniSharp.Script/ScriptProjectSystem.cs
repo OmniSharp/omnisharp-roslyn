@@ -7,13 +7,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
@@ -21,33 +19,8 @@ namespace OmniSharp.Script
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
-        // aligned with CSI.exe
-        // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
-        internal static readonly IEnumerable<string> DefaultNamespaces = new[]
-        {
-            "System",
-            "System.IO",
-            "System.Collections.Generic",
-            "System.Console",
-            "System.Diagnostics",
-            "System.Dynamic",
-            "System.Linq",
-            "System.Linq.Expressions",
-            "System.Text",
-            "System.Threading.Tasks"
-        };
-
-        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script);
-
-        private static readonly CSharpCompilationOptions CompilationOptions = new CSharpCompilationOptions(
-                OutputKind.DynamicallyLinkedLibrary,
-                usings: DefaultNamespaces,
-                allowUnsafe: true,
-                metadataReferenceResolver: ScriptMetadataResolver.Default, 
-                sourceReferenceResolver: ScriptSourceResolver.Default, 
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default);
-
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private const string CsxExtension = ".csx";
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
         // used for tracking purposes only
         private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
@@ -58,7 +31,7 @@ namespace OmniSharp.Script
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, IMetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, MetadataFileReferenceCache metadataFileReferenceCache)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
@@ -69,14 +42,14 @@ namespace OmniSharp.Script
 
         public string Key => "Script";
         public string Language => LanguageNames.CSharp;
-        public IEnumerable<string> Extensions => new[] { ".csx" };
+        public IEnumerable<string> Extensions { get; } = new[] { CsxExtension };
 
         public void Initalize(IConfiguration configuration)
         {
-            _logger.LogInformation($"Detecting CSX files in '{_env.Path}'.");
+            _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
-            var allCsxFiles = Directory.GetFiles(_env.Path, "*.csx", SearchOption.AllDirectories);
+            var allCsxFiles = Directory.GetFiles(_env.TargetDirectory, "*.csx", SearchOption.AllDirectories);
             if (allCsxFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any CSX files");
@@ -93,9 +66,10 @@ namespace OmniSharp.Script
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                     x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
-            var runtimeContexts = File.Exists(Path.Combine(_env.Path, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.Path) : null;
+            var runtimeContexts = File.Exists(Path.Combine(_env.TargetDirectory, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.TargetDirectory) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
+
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
             // and add mscorlib
@@ -130,6 +104,7 @@ namespace OmniSharp.Script
                 // for non .NET Core, include System.Runtime
                 if (runtimeContext.TargetFramework.Framework != ".NETCoreApp")
                 {
+
                     inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                             x.Name.ToLowerInvariant().StartsWith("system.runtime")));
                 }
@@ -149,17 +124,7 @@ namespace OmniSharp.Script
                 try
                 {
                     var csxFileName = Path.GetFileName(csxPath);
-                    var project = ProjectInfo.Create(
-                        id: ProjectId.CreateNewId(),
-                        version: VersionStamp.Create(),
-                        name: csxFileName,
-                        assemblyName: $"{csxFileName}.dll",
-                        language: LanguageNames.CSharp,
-                        compilationOptions: CompilationOptions,
-                        metadataReferences: commonReferences,
-                        parseOptions: ParseOptions,
-                        isSubmission: true,
-                        hostObjectType: typeof(InteractiveScriptGlobals));
+                    var project = ScriptHelper.CreateProject(csxFileName, commonReferences);
 
                     // add CSX project to workspace
                     _workspace.AddProject(project);
@@ -196,8 +161,7 @@ namespace OmniSharp.Script
 
         private ProjectInfo GetProjectFileInfo(string path)
         {
-            ProjectInfo projectFileInfo;
-            if (!_projects.TryGetValue(path, out projectFileInfo))
+            if (!_projects.TryGetValue(path, out ProjectInfo projectFileInfo))
             {
                 return null;
             }
@@ -207,6 +171,12 @@ namespace OmniSharp.Script
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
         {
+            // only react to .CSX file paths
+            if (!filePath.EndsWith(CsxExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<object>(null);
+            }
+
             var document = _workspace.GetDocument(filePath);
             var projectFilePath = document != null
                 ? document.Project.FilePath

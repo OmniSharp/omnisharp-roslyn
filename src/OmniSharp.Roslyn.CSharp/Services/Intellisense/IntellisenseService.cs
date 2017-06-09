@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
@@ -8,14 +9,14 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.AutoComplete;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 {
-    [OmniSharpHandler(OmnisharpEndpoints.AutoComplete, LanguageNames.CSharp)]
-    public class IntellisenseService : RequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
+    [OmniSharpHandler(OmniSharpEndpoints.AutoComplete, LanguageNames.CSharp)]
+    public class IntellisenseService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly FormattingOptions _formattingOptions;
@@ -37,53 +38,75 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             {
                 var sourceText = await document.GetTextAsync();
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-
                 var service = CompletionService.GetService(document);
                 var completionList = await service.GetCompletionsAsync(document, position);
 
-                // Add keywords from the completion list. We'll use the recommender service to get symbols
-                // to create snippets from.
-
                 if (completionList != null)
                 {
+                    // get recommened symbols to match them up later with SymbolCompletionProvider
+                    var semanticModel = await document.GetSemanticModelAsync();
+                    var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
+
+                    var isSuggestionMode = completionList.SuggestionModeItem != null;
+
                     foreach (var item in completionList.Items)
                     {
-                        if (item.Tags.Contains(CompletionTags.Keyword))
+                        var completionText = item.DisplayText;
+                        if (completionText.IsValidCompletionFor(wordToComplete))
                         {
-                            // Note: For keywords, we'll just assume that the completion text is the same
-                            // as the display text.
-                            var keyword = item.DisplayText;
-                            if (keyword.IsValidCompletionFor(wordToComplete))
+                            var symbols = await item.GetCompletionSymbolsAsync(recommendedSymbols, document);
+                            if (symbols.Any())
                             {
-                                var response = new AutoCompleteResponse()
+                                foreach (var symbol in symbols)
                                 {
-                                    CompletionText = item.DisplayText,
-                                    DisplayText = item.DisplayText,
-                                    Snippet = item.DisplayText,
-                                    Kind = request.WantKind ? "Keyword" : null
-                                };
+                                    if (item.UseDisplayTextAsCompletionText())
+                                    {
+                                        completionText = item.DisplayText;
+                                    }
+                                    else if (item.TryGetInsertionText(out var insertionText))
+                                    {
+                                        completionText = insertionText;
+                                    }
+                                    else
+                                    {
+                                        completionText = symbol.Name;
+                                    }
 
-                                completions.Add(response);
+                                    if (symbol != null)
+                                    {
+                                        if (request.WantSnippet)
+                                        {
+                                            foreach (var completion in MakeSnippetedResponses(request, symbol, completionText, isSuggestionMode))
+                                            {
+                                                completions.Add(completion);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            completions.Add(MakeAutoCompleteResponse(request, symbol, completionText, isSuggestionMode));
+                                        }
+                                    }
+                                }
+
+                                // if we had any symbols from the completion, we can continue, otherwise it means
+                                // the completion didn't have an associated symbol so we'll add it manually
+                                continue;
                             }
-                        }
-                    }
-                }
 
-                var model = await document.GetSemanticModelAsync();
-                var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(model, position, _workspace);
+                            // for other completions, i.e. keywords, create a simple AutoCompleteResponse
+                            // we'll just assume that the completion text is the same
+                            // as the display text.
+                            var response = new AutoCompleteResponse()
+                            {
+                                CompletionText = item.DisplayText,
+                                DisplayText = item.DisplayText,
+                                Snippet = item.DisplayText,
+                                Kind = request.WantKind ? item.Tags.First() : null,
+                                IsSuggestionMode = isSuggestionMode
+                            };
 
-                foreach (var symbol in symbols.Where(s => s.Name.IsValidCompletionFor(wordToComplete)))
-                {
-                    if (request.WantSnippet)
-                    {
-                        foreach (var completion in MakeSnippetedResponses(request, symbol))
-                        {
-                            completions.Add(completion);
+                            completions.Add(response);
                         }
-                    }
-                    else
-                    {
-                        completions.Add(MakeAutoCompleteResponse(request, symbol));
                     }
                 }
             }
@@ -93,56 +116,69 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 .ThenByDescending(c => c.CompletionText.IsValidCompletionStartsWithIgnoreCase(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsCamelCaseMatch(wordToComplete))
                 .ThenByDescending(c => c.CompletionText.IsSubsequenceMatch(wordToComplete))
-                .ThenBy(c => c.CompletionText);
+                .ThenBy(c => c.DisplayText, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(c => c.CompletionText, StringComparer.OrdinalIgnoreCase);
         }
 
-        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, ISymbol symbol, string completionText, bool isSuggestionMode)
+        {
+            switch (symbol)
+            {
+                case IMethodSymbol methodSymbol:
+                    return MakeSnippetedResponses(request, methodSymbol, completionText, isSuggestionMode);
+                case INamedTypeSymbol typeSymbol:
+                    return MakeSnippetedResponses(request, typeSymbol, completionText, isSuggestionMode);
+
+                default:
+                    return new[] { MakeAutoCompleteResponse(request, symbol, completionText, isSuggestionMode) };
+            }
+        }
+
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, IMethodSymbol methodSymbol, string completionText, bool isSuggestionMode)
         {
             var completions = new List<AutoCompleteResponse>();
 
-            var methodSymbol = symbol as IMethodSymbol;
-            if (methodSymbol != null)
+            if (methodSymbol.Parameters.Any(p => p.IsOptional))
             {
-                if (methodSymbol.Parameters.Any(p => p.IsOptional))
-                {
-                    completions.Add(MakeAutoCompleteResponse(request, symbol, false));
-                }
-
-                completions.Add(MakeAutoCompleteResponse(request, symbol));
-
-                return completions;
+                completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText, isSuggestionMode, includeOptionalParams: false));
             }
 
-            var typeSymbol = symbol as INamedTypeSymbol;
-            if (typeSymbol != null)
-            {
-                completions.Add(MakeAutoCompleteResponse(request, symbol));
+            completions.Add(MakeAutoCompleteResponse(request, methodSymbol, completionText, isSuggestionMode));
 
-                if (typeSymbol.TypeKind != TypeKind.Enum)
-                {
-                    foreach (var ctor in typeSymbol.InstanceConstructors)
-                    {
-                        completions.Add(MakeAutoCompleteResponse(request, ctor));
-                    }
-                }
-
-                return completions;
-            }
-
-            return new[] { MakeAutoCompleteResponse(request, symbol) };
+            return completions;
         }
 
-        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, bool includeOptionalParams = true)
+        private IEnumerable<AutoCompleteResponse> MakeSnippetedResponses(AutoCompleteRequest request, INamedTypeSymbol typeSymbol, string completionText, bool isSuggestionMode)
+        {
+            var completions = new List<AutoCompleteResponse>
+            {
+                MakeAutoCompleteResponse(request, typeSymbol, completionText, isSuggestionMode)
+            };
+
+            if (typeSymbol.TypeKind != TypeKind.Enum)
+            {
+                foreach (var ctor in typeSymbol.InstanceConstructors)
+                {
+                    completions.Add(MakeAutoCompleteResponse(request, ctor, completionText, isSuggestionMode));
+                }
+            }
+
+            return completions;
+        }
+
+        private AutoCompleteResponse MakeAutoCompleteResponse(AutoCompleteRequest request, ISymbol symbol, string completionText, bool isSuggestionMode, bool includeOptionalParams = true)
         {
             var displayNameGenerator = new SnippetGenerator();
             displayNameGenerator.IncludeMarkers = false;
             displayNameGenerator.IncludeOptionalParameters = includeOptionalParams;
 
             var response = new AutoCompleteResponse();
-            response.CompletionText = symbol.Name;
+            response.CompletionText = completionText;
 
             // TODO: Do something more intelligent here
             response.DisplayText = displayNameGenerator.Generate(symbol);
+
+            response.IsSuggestionMode = isSuggestionMode;
 
             if (request.WantDocumentationForEveryCompletionResult)
             {

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -62,7 +61,7 @@ namespace OmniSharp
             var omnisharpApp = new CommandLineApplication(throwOnUnexpectedArg: false);
             omnisharpApp.HelpOption("-? | -h | --help");
 
-            var applicationRootOption = omnisharpApp.Option("-s | --source", "Solution, project file or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
+            var applicationRootOption = omnisharpApp.Option("-s | --source", "Solution or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);
             var portOption = omnisharpApp.Option("-p | --port", "OmniSharp port (defaults to 2000).", CommandOptionType.SingleValue);
             var logLevelOption = omnisharpApp.Option("-l | --loglevel", "Level of logging (defaults to 'Information').", CommandOptionType.SingleValue);
             var verboseOption = omnisharpApp.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
@@ -86,7 +85,7 @@ namespace OmniSharp
                 var otherArgs = omnisharpApp.RemainingArguments.Union(omnisharpJsonArgs).Distinct();
                 Configuration.ZeroBasedIndices = zeroBasedIndicesOption.HasValue();
 
-                var omniSharpEnvironment = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
+                var env = new OmniSharpEnvironment(applicationRoot, serverPort, hostPid, logLevel, transportType, otherArgs.ToArray());
 
                 var config = new ConfigurationBuilder()
                     .AddCommandLine(new[] { "--server.urls", $"http://{serverInterface}:{serverPort}" });
@@ -108,7 +107,7 @@ namespace OmniSharp
                     .UseEnvironment("OmniSharp")
                     .ConfigureServices(serviceCollection =>
                     {
-                        serviceCollection.AddSingleton<IOmniSharpEnvironment>(omniSharpEnvironment);
+                        serviceCollection.AddSingleton<IOmniSharpEnvironment>(env);
                         serviceCollection.AddSingleton<ISharedTextWriter>(writer);
                         serviceCollection.AddSingleton<PluginAssemblies>(new PluginAssemblies(plugins));
                         serviceCollection.AddSingleton<IAssemblyLoader, AssemblyLoader>();

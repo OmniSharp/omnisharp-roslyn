@@ -14,10 +14,11 @@ using OmniSharp.DotNet.Cache;
 using OmniSharp.DotNet.Extensions;
 using OmniSharp.DotNet.Models;
 using OmniSharp.DotNet.Tools;
-using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Eventing;
+using OmniSharp.FileWatching;
+using OmniSharp.Models.Events;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
-using OmniSharp.Services.FileWatching;
 
 namespace OmniSharp.DotNet
 {
@@ -29,7 +30,7 @@ namespace OmniSharp.DotNet
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly DotNetCliService _dotNetCliService;
-        private readonly IMetadataFileReferenceCache _metadataFileReferenceCache;
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILogger _logger;
@@ -43,7 +44,7 @@ namespace OmniSharp.DotNet
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             DotNetCliService dotNetCliService,
-            IMetadataFileReferenceCache metadataFileReferenceCache,
+            MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
             ILoggerFactory loggerFactory)
@@ -83,6 +84,12 @@ namespace OmniSharp.DotNet
                 ? document.Project.FilePath
                 : filePath;
 
+            // Is this a path to the project file? If so, make sure we look for the directory.
+            if (File.Exists(projectFilePath))
+            {
+                projectFilePath = Path.GetDirectoryName(projectFilePath);
+            }
+
             var projectEntry = _projectStates.GetEntry(projectFilePath);
             if (projectEntry == null)
             {
@@ -95,8 +102,7 @@ namespace OmniSharp.DotNet
 
         public void Initalize(IConfiguration configuration)
         {
-            bool enabled;
-            if (!bool.TryParse(configuration["enabled"], out enabled))
+            if (!bool.TryParse(configuration["enabled"], out var enabled))
             {
                 enabled = true;
             }
@@ -107,7 +113,7 @@ namespace OmniSharp.DotNet
                 return;
             }
 
-            _logger.LogInformation($"Initializing in {_environment.Path}");
+            _logger.LogInformation($"Initializing in {_environment.TargetDirectory}");
 
             if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))
             {
@@ -116,7 +122,7 @@ namespace OmniSharp.DotNet
 
             _logger.LogInformation($"Auto package restore: {_enableRestorePackages}");
 
-            _workspaceContext = new DotNetWorkspace(_environment.Path);
+            _workspaceContext = new DotNetWorkspace(_environment.TargetDirectory);
 
             Update(allowRestore: true);
         }
@@ -259,10 +265,17 @@ namespace OmniSharp.DotNet
                 }
 
                 var referencedProjectState = _projectStates.Find(projectPath, description.Framework);
-                projectReferences.Add(new ProjectReference(referencedProjectState.Id));
-                state.ProjectReferences[projectPath] = referencedProjectState.Id;
+                if (referencedProjectState != null)
+                {
+                    projectReferences.Add(new ProjectReference(referencedProjectState.Id));
+                    state.ProjectReferences[projectPath] = referencedProjectState.Id;
 
-                _logger.LogDebug($"    Add project reference {description.Path}");
+                    _logger.LogDebug($"    Add project reference {description.Path}");
+                }
+                else
+                {
+                    _logger.LogError($"    Could not find project reference {description.Path}");
+                }
             }
 
             foreach (var reference in projectReferences)
@@ -289,29 +302,30 @@ namespace OmniSharp.DotNet
         {
             var libraryManager = state.ProjectContext.LibraryManager;
             var allDiagnostics = libraryManager.GetAllDiagnostics();
-            var unresolved = libraryManager.GetLibraries().Where(dep => !dep.Resolved);
-            var needRestore = allDiagnostics.Any(diag => diag.ErrorCode == ErrorCodes.NU1006) || unresolved.Any();
+            var unresolvedLibraries = libraryManager.GetLibraries().Where(dep => !dep.Resolved);
+            var needRestore = allDiagnostics.Any(diag => diag.ErrorCode == ErrorCodes.NU1006) || unresolvedLibraries.Any();
 
             if (needRestore)
             {
+                var unresolvedDependencies = unresolvedLibraries.Select(library =>
+                    new PackageDependency
+                    {
+                        Name = library.Identity.Name,
+                        Version = library.Identity.Version?.ToString()
+                    });
+
+                var projectFile = state.ProjectContext.ProjectFile;
+
                 if (allowRestore && _enableRestorePackages)
                 {
-                    _dotNetCliService.Restore(state.ProjectContext.ProjectFile.ProjectFilePath, onFailure: () =>
+                    _dotNetCliService.RestoreAsync(projectFile.ProjectDirectory, onFailure: () =>
                     {
-                        _eventEmitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
-                        {
-                            FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                            UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version?.ToString() })
-                        });
+                        _eventEmitter.UnresolvedDepdendencies(projectFile.ProjectFilePath, unresolvedDependencies);
                     });
                 }
                 else
                 {
-                    _eventEmitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
-                    {
-                        FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                        UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version?.ToString() })
-                    });
+                    _eventEmitter.UnresolvedDepdendencies(projectFile.ProjectFilePath, unresolvedDependencies);
                 }
             }
         }
@@ -420,8 +434,7 @@ namespace OmniSharp.DotNet
 
         private static Platform ParsePlatfrom(string value)
         {
-            Platform platform;
-            if (!Enum.TryParse(value, ignoreCase: true, result: out platform))
+            if (!Enum.TryParse(value, ignoreCase: true, result: out Platform platform))
             {
                 platform = Platform.AnyCpu;
             }
@@ -431,8 +444,7 @@ namespace OmniSharp.DotNet
 
         private static LanguageVersion ParseLanguageVersion(string value)
         {
-            LanguageVersion languageVersion;
-            if (!Enum.TryParse(value, ignoreCase: true, result: out languageVersion))
+            if (!Enum.TryParse(value, ignoreCase: true, result: out LanguageVersion languageVersion))
             {
                 languageVersion = LanguageVersion.Default;
             }

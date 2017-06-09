@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using Xunit;
 

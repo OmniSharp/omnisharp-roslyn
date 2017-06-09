@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 
 namespace OmniSharp.Services
 {

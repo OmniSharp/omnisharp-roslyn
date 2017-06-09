@@ -1,28 +1,25 @@
-using System.Collections.Concurrent;
+using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Stdio.Services
 {
-    public class SharedTextWriter : ISharedTextWriter
+    public class SharedTextWriter : DisposableObject, ISharedTextWriter
     {
-        private BlockingCollection<object> _queue = new BlockingCollection<object>();
-
         private readonly object _lock = new object();
         private readonly TextWriter _writer;
+        private Task _task = Task.CompletedTask;
 
         public SharedTextWriter(TextWriter writer)
         {
-            _writer = writer;
+            _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        }
 
-            var thread = new Thread(() => { while (true) WriteLine(_queue.Take()); })
-            {
-                Name = $"{nameof(SharedTextWriter)} {nameof(BlockingCollection<object>)}",
-                IsBackground = true
-            };
-
-            thread.Start();
+        protected override void DisposeCore(bool disposing)
+        {
+            // Finish sending queued output to the writer.
+            _task.Wait();
         }
 
         public void WriteLine(object value)
@@ -35,9 +32,14 @@ namespace OmniSharp.Stdio.Services
 
         public Task WriteLineAsync(object value)
         {
-            _queue.Add(value);
-
-            return Task.FromResult(0);
+            lock (_lock)
+            {
+                return _task = _task.ContinueWith(_ =>
+                {
+                    WriteLine(value);
+                },
+                TaskScheduler.Default);
+            }
         }
     }
 }

@@ -1,58 +1,29 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models.V2;
-using OmniSharp.Roslyn.CSharp.Services;
-using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
-using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    /*
-        Test todo list:
-
-        * Sort Using was removed with NRefactory
-            var source =
-                  @"using MyNamespace3;
-                    using MyNamespace4;
-                    using MyNamespace2;
-                    using System;
-                    u$sing MyNamespace1;";
-
-            var expected =
-                  @"using System;
-                    using MyNamespace1;
-                    using MyNamespace2;
-                    using MyNamespace3;
-                    using MyNamespace4;";
-     */
-
-    public class CodingActionsV2Facts : AbstractTestFixture
+    public class CodeActionsV2Facts : AbstractTestFixture
     {
         private readonly string BufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
 
-        public CodingActionsV2Facts(ITestOutputHelper output)
+        public CodeActionsV2Facts(ITestOutputHelper output)
             : base(output)
         {
-        }
-
-        protected override IEnumerable<Assembly> GetHostAssemblies()
-        {
-            yield return GetAssembly<RoslynCodeActionProvider>();
-            yield return GetAssembly<GetCodeActionsService>();
         }
 
         [Fact]
         public async Task Can_get_code_actions_from_roslyn()
         {
-            const string source =
-                  @"public class Class1
+            const string code =
+                @"public class Class1
                     {
                         public void Whatever()
                         {
@@ -60,14 +31,40 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         }
                     }";
 
-            var refactorings = await FindRefactoringNamesAsync(source);
+            var refactorings = await FindRefactoringNamesAsync(code);
             Assert.Contains("using System;", refactorings);
+        }
+
+        [Fact]
+        public async Task Can_get_code_actions_from_external_source()
+        {
+            const string code =
+                @"
+                    using System.Threading.Tasks;
+                    public class Class1
+                    {
+                        public async Task Whatever()
+                        {
+                            awa[||]it FooAsync();
+                        }
+
+                        public Task FooAsync() => return Task.FromResult(0);
+                    }";
+
+            var configuration = new Dictionary<string, string>
+            {
+                { "RoslynExtensionsOptions:LocationPaths:0", TestAssets.Instance.TestBinariesFolder }
+            };
+            var refactorings = await FindRefactoringsAsync(code, configuration);
+
+            Assert.NotEmpty(refactorings);
+            Assert.Contains("Add ConfigureAwait(false)", refactorings.Select(x => x.Name));
         }
 
         [Fact]
         public async Task Can_remove_unnecessary_usings()
         {
-            const string source =
+            const string code =
                 @"using MyNamespace3;
                 using MyNamespace4;
                 using MyNamespace2;
@@ -81,185 +78,132 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 public class c {public c() {Guid.NewGuid();}}";
 
-            var response = await RunRefactoring(source, "Remove Unnecessary Usings");
+            var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings");
             AssertIgnoringIndent(expected, response.Changes.First().Buffer);
         }
 
         [Fact]
         public async Task Can_get_ranged_code_action()
         {
-            const string source =
+            const string code =
                 @"public class Class1
-                  {
-                      public void Whatever()
-                      {
-                          [|Console.Write(""should be using System;"");|]
-                      }
-                  }";
+                {
+                    public void Whatever()
+                    {
+                        [|Console.Write(""should be using System;"");|]
+                    }
+                }";
 
-            var refactorings = await FindRefactoringNamesAsync(source);
+            var refactorings = await FindRefactoringNamesAsync(code);
             Assert.Contains("Extract Method", refactorings);
         }
 
         [Fact]
         public async Task Can_extract_method()
         {
-            const string source =
+            const string code =
                 @"public class Class1
-                  {
-                      public void Whatever()
-                      {
-                          [|Console.Write(""should be using System;"");|]
-                      }
-                  }";
+                {
+                    public void Whatever()
+                    {
+                        [|Console.Write(""should be using System;"");|]
+                    }
+                }";
 
             const string expected =
-                  @"public class Class1
+                @"public class Class1
+                {
+                    public void Whatever()
                     {
-                        public void Whatever()
-                        {
-                            NewMethod();
-                        }
+                        NewMethod();
+                    }
 
-                        private static void NewMethod()
-                        {
-                            Console.Write(""should be using System;"");
-                      }
-                  }";
+                    private static void NewMethod()
+                    {
+                        Console.Write(""should be using System;"");
+                    }
+                }";
 
-            var response = await RunRefactoring(source, "Extract Method");
+            var response = await RunRefactoringAsync(code, "Extract Method");
             AssertIgnoringIndent(expected, response.Changes.First().Buffer);
         }
 
-        [Fact(Skip = "Test is still broken because the removal of NRefactory.")]
-        public async Task Can_create_a_class_with_a_new_method_in_adjacent_file()
-        {
-            var source =
-                @"namespace MyNamespace
-                public class Class1
-                {
-                    public void Whatever()
-                    {
-                        MyNew[||]Class.DoSomething();
-                    }
-                }";
-
-            var response = await RunRefactoring(source, "Generate type", true);
-
-            var change = response.Changes.First();
-            Assert.Equal($"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}MyNewClass.cs", change.FileName);
-            var expected =
-              @"namespace MyNamespace
-              {
-                  internal class MyNewClass
-                  {
-                  }
-              }";
-
-            AssertIgnoringIndent(expected, change.Changes.First().NewText);
-            source =
-                @"namespace MyNamespace
-                public class Class1
-                {
-                    public void Whatever()
-                    {
-                        MyNewClass.DoS$omething();
-                    }
-                }";
-
-            response = await RunRefactoring(source, "Generate method 'MyNewClass.DoSomething'", true);
-            expected =
-              @"internal static void DoSomething()
-                {
-                    throw new NotImplementedException();
-                }
-              ";
-            change = response.Changes.First();
-            AssertIgnoringIndent(expected, change.Changes.First().NewText);
-        }
-
-        private void AssertIgnoringIndent(string expected, string actual)
+        private static void AssertIgnoringIndent(string expected, string actual)
         {
             Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
         }
 
-        private string TrimLines(string source)
+        private static string TrimLines(string source)
         {
             return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
         }
 
-        private async Task<RunCodeActionResponse> RunRefactoring(
-            string source,
-            string refactoringName,
-            bool wantsChanges = false)
+        private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false)
         {
-            IEnumerable<OmniSharpCodeAction> refactorings = await FindRefactoringsAsync(source);
+            var refactorings = await FindRefactoringsAsync(code);
             Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
 
             var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
-            return await RunRefactoringsAsync(source, identifier, wantsChanges);
+            return await RunRefactoringsAsync(code, identifier, wantsChanges);
         }
 
-        private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string source)
+        private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code)
         {
-            var codeActions = await FindRefactoringsAsync(source);
+            var codeActions = await FindRefactoringsAsync(code);
 
             return codeActions.Select(a => a.Name);
         }
 
-        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string source)
+        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IDictionary<string, string> configurationData = null)
         {
-            var testFile = new TestFile(BufferPath, source);
-            var span = testFile.Content.GetSpans().Single();
-            var range = testFile.Content.GetRangeFromSpan(span);
+            var testFile = new TestFile(BufferPath, code);
 
-            var request = new GetCodeActionsRequest
+            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData))
             {
-                Line = range.Start.Line,
-                Column = range.Start.Offset,
-                FileName = BufferPath,
-                Buffer = testFile.Content.Code,
-                Selection = GetSelection(range)
-            };
+                var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
 
-            var workspace = await CreateWorkspaceAsync(testFile);
-            var helper = new CodeActionHelper(this.AssemblyLoader);
-            var providers = CreateCodeActionProviders();
+                var span = testFile.Content.GetSpans().Single();
+                var range = testFile.Content.GetRangeFromSpan(span);
 
-            var controller = new GetCodeActionsService(workspace, helper, providers, this.LoggerFactory);
-            var response = await controller.Handle(request);
+                var request = new GetCodeActionsRequest
+                {
+                    Line = range.Start.Line,
+                    Column = range.Start.Offset,
+                    FileName = BufferPath,
+                    Buffer = testFile.Content.Code,
+                    Selection = GetSelection(range)
+                };
 
-            return response.CodeActions;
+                var response = await requestHandler.Handle(request);
+
+                return response.CodeActions;
+            }
         }
 
-        private async Task<RunCodeActionResponse> RunRefactoringsAsync(
-            string source,
-            string identifier,
-            bool wantsChanges = false)
+        private async Task<RunCodeActionResponse> RunRefactoringsAsync(string code, string identifier, bool wantsChanges = false)
         {
-            var testFile = new TestFile(BufferPath, source);
-            var span = testFile.Content.GetSpans().Single();
-            var range = testFile.Content.GetRangeFromSpan(span);
+            var testFile = new TestFile(BufferPath, code);
 
-            var request = new RunCodeActionRequest
+            using (var host = CreateOmniSharpHost(testFile))
             {
-                Line = range.Start.Line,
-                Column = range.Start.Offset,
-                Selection = GetSelection(range),
-                FileName = BufferPath,
-                Buffer = testFile.Content.Code,
-                Identifier = identifier,
-                WantsTextChanges = wantsChanges
-            };
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
 
-            var workspace = await CreateWorkspaceAsync(testFile);
-            var helper = new CodeActionHelper(this.AssemblyLoader);
-            var providers = CreateCodeActionProviders();
+                var span = testFile.Content.GetSpans().Single();
+                var range = testFile.Content.GetRangeFromSpan(span);
 
-            var controller = new RunCodeActionService(workspace, helper, providers, this.LoggerFactory);
-            var response = await controller.Handle(request);
+                var request = new RunCodeActionRequest
+                {
+                    Line = range.Start.Line,
+                    Column = range.Start.Offset,
+                    Selection = GetSelection(range),
+                    FileName = BufferPath,
+                    Buffer = testFile.Content.Code,
+                    Identifier = identifier,
+                    WantsTextChanges = wantsChanges
+                };
 
-            return response;
+                return await requestHandler.Handle(request);
+            }
         }
 
         private static Range GetSelection(TextRange range)
@@ -274,13 +218,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
                 End = new Point { Line = range.End.Line, Column = range.End.Offset }
             };
-        }
-
-        private IEnumerable<ICodeActionProvider> CreateCodeActionProviders()
-        {
-            var hostServicesProvider = new RoslynFeaturesHostServicesProvider(this.AssemblyLoader);
-
-            yield return new RoslynCodeActionProvider(hostServicesProvider);
         }
     }
 }

@@ -1,33 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using NuGet.Frameworks;
 using NuGet.Versioning;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
     internal static class PropertyConverter
     {
-        public static bool? ToBoolean(string propertyValue)
-        {
-            if (string.IsNullOrWhiteSpace(propertyValue))
-            {
-                return null;
-            }
-
-            try
-            {
-                return Convert.ToBoolean(propertyValue);
-            }
-            catch (FormatException)
-            {
-                return null;
-            }
-        }
-
         public static bool ToBoolean(string propertyValue, bool defaultValue)
         {
             if (string.IsNullOrWhiteSpace(propertyValue))
@@ -67,86 +48,67 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
-        public static IList<string> ToList(string propertyValue, char separator, bool trimValues = true)
+        public static ImmutableArray<string> SplitList(string propertyValue, char separator)
         {
             if (string.IsNullOrWhiteSpace(propertyValue))
             {
-                return new string[0];
+                return ImmutableArray<string>.Empty;
             }
 
-            var result = new List<string>();
-            foreach (var value in propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            var builder = ImmutableArray.CreateBuilder<string>();
+            var values = propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var value in values)
             {
-                result.Add(value.Trim());
+                builder.Add(value.Trim());
             }
 
-            return result;
+            return builder.ToImmutable();
         }
 
-        public static IList<NuGetFramework> ToTargetFrameworks(string propertyValue)
+        public static ImmutableArray<string> ToPreprocessorSymbolNames(string propertyValue)
         {
             if (string.IsNullOrWhiteSpace(propertyValue))
             {
-                return new NuGetFramework[0];
-            }
-
-            var result = new SortedSet<NuGetFramework>();
-            foreach (var value in propertyValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                try
-                {
-                    var framework = NuGetFramework.Parse(value.TrimEnd());
-                    result.Add(framework);
-                }
-                catch
-                {
-                    // If the value can't be parsed, ignore it.
-                }
-            }
-
-            return result.ToArray();
-        }
-
-        public static IList<string> ToDefineConstants(string propertyValue)
-        {
-            if (string.IsNullOrWhiteSpace(propertyValue))
-            {
-                return new string[0];
+                return ImmutableArray<string>.Empty;
             }
 
             var values = propertyValue.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-            return new SortedSet<string>(values).ToArray();
+            return ImmutableArray.CreateRange(values);
         }
 
-        public static IList<string> ToSuppressDiagnostics(string propertyValue)
+        public static ImmutableArray<string> ToSuppressDiagnosticIds(string propertyValue)
         {
             if (string.IsNullOrWhiteSpace(propertyValue))
             {
-                return new string[0];
+                return ImmutableArray<string>.Empty;
             }
+
+            var builder = ImmutableArray.CreateBuilder<string>();
 
             // Remove quotes
             propertyValue = propertyValue.Trim('"');
             var values = propertyValue.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            var result = new SortedSet<string>();
 
             foreach (var id in values)
             {
-                ushort number;
-                if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
+                if (ushort.TryParse(id, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number))
                 {
-                    result.Add("CS" + number.ToString("0000"));
+                    builder.Add("CS" + number.ToString("0000"));
+                }
+                else
+                {
+                    builder.Add(id);
                 }
             }
 
-            return result.ToArray();
+            return builder.ToImmutable();
         }
 
         public static Guid ToGuid(string propertyValue)
         {
-            Guid result;
-            if (!Guid.TryParse(propertyValue, out result))
+            if (!Guid.TryParse(propertyValue, out var result))
             {
                 return Guid.Empty;
             }
@@ -165,10 +127,9 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
-        public static NuGetVersion ToNuGetVersion(string propertyValue)
+        public static VersionRange ToVersionRange(string propertyValue)
         {
-            NuGetVersion version;
-            if (NuGetVersion.TryParse(propertyValue.Trim(), out version))
+            if (VersionRange.TryParse(propertyValue.Trim(), out var version))
             {
                 return version;
             }

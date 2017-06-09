@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpHandler(OmnisharpEndpoints.CodeCheck, LanguageNames.CSharp)]
-    public class CodeCheckService : RequestHandler<CodeCheckRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.CodeCheck, LanguageNames.CSharp)]
+    public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private OmniSharpWorkspace _workspace;
 
@@ -32,13 +33,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 var semanticModel = await document.GetSemanticModelAsync();
                 IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
-
-                if (document.SourceCodeKind != SourceCodeKind.Regular)
-                {
-                    // CS8099 needs to be surpressed so that we can use #load directives in scripts
-                    // additionally, we need to suppress CS1701: https://github.com/dotnet/roslyn/issues/5501
-                    diagnostics = diagnostics.Where(diagnostic => diagnostic.Id != "CS8099" && diagnostic.Id != "CS1701");
-                }
 
                 foreach (var quickFix in diagnostics.Select(MakeQuickFix))
                 {

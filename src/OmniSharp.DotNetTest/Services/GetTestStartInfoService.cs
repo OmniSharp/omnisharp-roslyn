@@ -1,32 +1,25 @@
 using System.Composition;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using OmniSharp.DotNetTest.Helpers;
-using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
 using OmniSharp.Mef;
+using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GetTestStartInfo, LanguageNames.CSharp)]
-    public class GetTestStartInfoService : RequestHandler<GetTestStartInfoRequest, GetTestStartInfoResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.V2.GetTestStartInfo, LanguageNames.CSharp)]
+    internal class GetTestStartInfoService : BaseTestService<GetTestStartInfoRequest, GetTestStartInfoResponse>
     {
-        private readonly ILoggerFactory _loggerFactory;
-
         [ImportingConstructor]
-        public GetTestStartInfoService(ILoggerFactory loggerFactory)
+        public GetTestStartInfoService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
-            _loggerFactory = loggerFactory;
         }
 
-        public Task<GetTestStartInfoResponse> Handle(GetTestStartInfoRequest request)
+        protected override GetTestStartInfoResponse HandleRequest(GetTestStartInfoRequest request, TestManager testManager)
         {
-            var projectPath = ProjectPathResolver.GetProjectPathFromFile(request.FileName);
-            using (var dtm = DotNetTestManager.Start(projectPath, _loggerFactory))
-            {
-                return Task.FromResult(dtm.GetTestStartInfo(request.MethodName, request.TestFrameworkName));
-            }
+            return testManager.GetTestStartInfo(request.MethodName, request.TestFrameworkName);
         }
     }
 }

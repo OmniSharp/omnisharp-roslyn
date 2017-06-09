@@ -6,8 +6,9 @@ using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Logging;
 using NuGet.Frameworks;
 using OmniSharp.DotNet.Models;
-using OmniSharp.Models;
-using OmniSharp.Services;
+using OmniSharp.Eventing;
+using OmniSharp.Models.Events;
+using OmniSharp.Models.ProjectInformation;
 
 namespace OmniSharp.DotNet.Cache
 {
@@ -41,8 +42,7 @@ namespace OmniSharp.DotNet.Cache
         {
             _logger.LogDebug($"Updating project ${projectDirectory}");
 
-            bool added;
-            var entry = GetOrAddEntry(projectDirectory, out added);
+            var entry = GetOrAddEntry(projectDirectory, out bool added);
 
             // remove frameworks which don't exist after update
             var remove = entry.Frameworks.Except(contexts.Select(c => c.TargetFramework));
@@ -76,7 +76,8 @@ namespace OmniSharp.DotNet.Cache
             {
                 EmitProject(EventTypes.ProjectChanged, projectInformation);
             }
-            else {
+            else
+            {
                 EmitProject(EventTypes.ProjectAdded, projectInformation);
             }
         }
@@ -105,8 +106,7 @@ namespace OmniSharp.DotNet.Cache
 
         public IEnumerable<ProjectState> Find(string projectDirectory)
         {
-            ProjectEntry entry;
-            if (_projects.TryGetValue(projectDirectory, out entry))
+            if (_projects.TryGetValue(projectDirectory, out ProjectEntry entry))
             {
                 return entry.ProjectStates;
             }
@@ -118,8 +118,7 @@ namespace OmniSharp.DotNet.Cache
 
         public ProjectState Find(string projectDirectory, NuGetFramework framework)
         {
-            ProjectEntry entry;
-            if (_projects.TryGetValue(projectDirectory, out entry))
+            if (_projects.TryGetValue(projectDirectory, out ProjectEntry entry))
             {
                 return entry.Get(framework);
             }
@@ -129,28 +128,14 @@ namespace OmniSharp.DotNet.Cache
             }
         }
 
-        internal ProjectEntry GetEntry(string filePath)
+        internal ProjectEntry GetEntry(string projectDirectory)
         {
-            ProjectEntry result;
-            if (_projects.TryGetValue(filePath, out result))
+            if (_projects.TryGetValue(projectDirectory, out ProjectEntry result))
             {
                 return result;
             }
 
             return null;
-        }
-
-        internal ProjectEntry GetOrAddEntry(string filePath)
-        {
-            var result = GetEntry(filePath);
-
-            if (result == null)
-            {
-                result = new ProjectEntry(filePath);
-                _projects[filePath] = result;
-            }
-
-            return result;
         }
 
         private ProjectEntry GetOrAddEntry(string filePath, out bool added)

@@ -1,16 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Composition.Hosting;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using OmniSharp;
-using OmniSharp.Host.Loader;
-using OmniSharp.Roslyn.CSharp.Services;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Services;
-using TestUtility.Fake;
 using TestUtility.Logging;
 using Xunit.Abstractions;
 
@@ -18,75 +7,39 @@ namespace TestUtility
 {
     public abstract class AbstractTestFixture
     {
-        private readonly ITestOutputHelper _output;
-
+        protected readonly ITestOutputHelper TestOutput;
         protected readonly ILoggerFactory LoggerFactory;
-        protected readonly IAssemblyLoader AssemblyLoader;
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
-            this._output = output;
+            this.TestOutput = output;
             this.LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
-            this.AssemblyLoader = new AssemblyLoader(this.LoggerFactory);
         }
 
-        protected Assembly GetAssembly<T>()
+        protected OmniSharpTestHost CreateEmptyOmniSharpHost()
         {
-            return typeof(T).GetTypeInfo().Assembly;
+            var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput);
+            host.AddFilesToWorkspace();
+            return host;
         }
 
-        protected virtual IEnumerable<Assembly> GetHostAssemblies()
-        {
-            yield return GetAssembly<CodeCheckService>();
-        }
+        protected OmniSharpTestHost CreateOmniSharpHost(string path = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, bool useLegacyDotNetCli = false) =>
+            OmniSharpTestHost.Create(path, this.TestOutput, configurationData, useLegacyDotNetCli);
 
-        private IEnumerable<Assembly> ComputeHostAssemblies(Assembly[] assemblies)
-        {
-            return assemblies == null || assemblies.Length == 0
-                ? GetHostAssemblies()
-                : assemblies;
-        }
+        protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) => 
+            CreateOmniSharpHost(testFiles, null);
 
-        protected CompositionHost CreatePlugInHost(params Assembly[] assemblies)
+        protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IEnumerable<KeyValuePair<string, string>> configurationData)
         {
-            return Startup.ConfigureMef(
-                serviceProvider: new FakeServiceProvider(this.LoggerFactory),
-                options: new FakeOmniSharpOptions().Value,
-                assemblies: ComputeHostAssemblies(assemblies));
-        }
+            var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput, configurationData: configurationData);
 
-        protected Task<OmniSharpWorkspace> CreateWorkspaceAsync(params TestFile[] testFiles)
-        {
-            var plugInHost = CreatePlugInHost();
-            return CreateWorkspaceAsync(plugInHost, testFiles);
-        }
-
-        protected async Task<OmniSharpWorkspace> CreateWorkspaceAsync(CompositionHost plugInHost, params TestFile[] testFiles)
-        {
-            if (plugInHost == null)
+            if (testFiles.Length > 0)
             {
-                throw new ArgumentNullException(nameof(plugInHost));
+                host.AddFilesToWorkspace(testFiles);
             }
 
-            var workspace = plugInHost.GetExport<OmniSharpWorkspace>();
-
-            // OmniSharp ships only one provider, CSharpWorkspaceOptionsProvider
-            var formattingProvider = plugInHost.GetExports<IWorkspaceOptionsProvider>().Single() as CSharpWorkspaceOptionsProvider;
-
-            if (formattingProvider != null)
-            {
-                workspace.Options = formattingProvider.Process(workspace.Options);
-            }
-
-            await TestHelpers.AddProjectToWorkspaceAsync(
-                workspace,
-                "project.json",
-                new[] { "dnx451", "dnxcore50" },
-                testFiles);
-
-            await Task.Delay(50);
-            return workspace;
+            return host;
         }
     }
 }

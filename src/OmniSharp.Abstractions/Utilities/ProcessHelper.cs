@@ -18,8 +18,10 @@ namespace OmniSharp.Utilities
                 WorkingDirectory = workingDirectory ?? string.Empty,
             };
 
-            var process = new Process();
-            process.StartInfo = startInfo;
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
 
             try
             {
@@ -56,8 +58,10 @@ namespace OmniSharp.Utilities
 
             updateEnvironment(startInfo.Environment);
 
-            var process = new Process();
-            process.StartInfo = startInfo;
+            var process = new Process
+            {
+                StartInfo = startInfo
+            };
 
             try
             {
@@ -83,7 +87,7 @@ namespace OmniSharp.Utilities
                 {
                     if (DateTime.UtcNow - lastSignal > timeout)
                     {
-                        process.KillAll();
+                        process.KillChildrenAndThis();
                     }
 
                     await Task.Delay(delay);

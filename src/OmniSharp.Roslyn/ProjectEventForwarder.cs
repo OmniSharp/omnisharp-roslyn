@@ -2,12 +2,14 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Models;
+using OmniSharp.Eventing;
+using OmniSharp.Models.Events;
+using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn
 {
-    [Export]
+    [Export, Shared]
     public class ProjectEventForwarder
     {
         private readonly OmniSharpWorkspace _workspace;
@@ -17,11 +19,18 @@ namespace OmniSharp.Roslyn
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
-        public ProjectEventForwarder(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems, IEventEmitter emitter)
+        public ProjectEventForwarder(
+            OmniSharpWorkspace workspace,
+            [ImportMany] IEnumerable<IProjectSystem> projectSystems,
+            IEventEmitter emitter)
         {
             _projectSystems = projectSystems;
             _workspace = workspace;
             _emitter = emitter;
+        }
+
+        public void Initialize()
+        {
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
 
@@ -90,8 +99,8 @@ namespace OmniSharp.Roslyn
 
         private class SimpleWorkspaceEvent
         {
-            public string FileName { get; private set; }
-            public string EventType { get; private set; }
+            public string FileName { get; }
+            public string EventType { get; }
 
             public SimpleWorkspaceEvent(string fileName, string eventType)
             {
@@ -102,7 +111,9 @@ namespace OmniSharp.Roslyn
             public override bool Equals(object obj)
             {
                 var other = obj as SimpleWorkspaceEvent;
-                return other != null && EventType == other.EventType && FileName == other.FileName;
+                return other != null
+                    && EventType == other.EventType
+                    && FileName == other.FileName;
             }
 
             public override int GetHashCode()

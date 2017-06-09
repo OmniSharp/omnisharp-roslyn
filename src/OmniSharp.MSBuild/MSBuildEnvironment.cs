@@ -8,21 +8,31 @@ namespace OmniSharp.MSBuild
     {
         public const string MSBuildExePathName = "MSBUILD_EXE_PATH";
         public const string MSBuildExtensionsPathName = "MSBuildExtensionsPath";
-        public const string MSBuildSDKsPathName = "MSBuildSDKsPath";
 
         private static bool s_isInitialized;
-        private static string s_msbuildFolder;
+
+        private static bool s_usingVisualStudio;
+
+        private static string s_msbuildExePath;
         private static string s_msbuildExtensionsPath;
-        private static string s_msbuildSDKsPath;
 
         public static bool IsInitialized => s_isInitialized;
 
-        public static string MSBuildFolder
+        public static bool UsingVisualStudio
         {
             get
             {
-                EnsureInitialized();
-                return s_msbuildFolder;
+                ThrowIfNotInitialized();
+                return s_usingVisualStudio;
+            }
+        }
+
+        public static string MSBuildExePath
+        {
+            get
+            {
+                ThrowIfNotInitialized();
+                return s_msbuildExePath;
             }
         }
 
@@ -30,17 +40,16 @@ namespace OmniSharp.MSBuild
         {
             get
             {
-                EnsureInitialized();
+                ThrowIfNotInitialized();
                 return s_msbuildExtensionsPath;
             }
         }
 
-        public static string MSBuildSDKsPath
+        private static void ThrowIfNotInitialized()
         {
-            get
+            if (!s_isInitialized)
             {
-                EnsureInitialized();
-                return s_msbuildSDKsPath;
+                throw new InvalidOperationException("MSBuild environment has not been initialized.");
             }
         }
 
@@ -48,73 +57,80 @@ namespace OmniSharp.MSBuild
         {
             if (s_isInitialized)
             {
-                throw new InvalidOperationException("MSBuildEnvironment is already initialized");
+                throw new InvalidOperationException("MSBuild environment is already initialized.");
             }
 
-            // If OmniSharp is running normally, MSBuild is located in an 'msbuild' folder beneath OmniSharp.exe.
-            var msbuildFolder = Path.Combine(AppContext.BaseDirectory, "msbuild");
-
-            if (!Directory.Exists(msbuildFolder))
+            // If MSBuild can locate VS 2017 and set up a build environment, we don't need to do anything.
+            // MSBuild will take care of itself.
+            if (MSBuildHelpers.TryGetVisualStudioBuildEnvironment())
             {
-                // If the 'msbuild' folder does not exist beneath OmniSharp.exe, this is likely a development scenario,
-                // such as debugging or running unit tests. In that case, we use one of the .msbuild-* folders at the
-                // solution level.
-                msbuildFolder = FindMSBuildFolderFromSolution(logger);
+                logger.LogInformation("MSBuild will use local Visual Studio installation.");
+                s_usingVisualStudio = true;
+                s_isInitialized = true;
+            }
+            else if (TryWithLocalMSBuild(logger, out var msbuildExePath, out var msbuildExtensionsPath))
+            {
+                logger.LogInformation("MSBuild will use local OmniSharp installation.");
+                s_msbuildExePath = msbuildExePath;
+                s_msbuildExtensionsPath = msbuildExtensionsPath;
+                s_isInitialized = true;
             }
 
-            if (msbuildFolder == null)
+            if (!s_isInitialized)
             {
-                logger.LogError("Could not locate MSBuild path. MSBuildProjectSystem will not function properly.");
-                return;
+                logger.LogError("MSBuild environment could not be initialized.");
+            }
+        }
+
+        private static bool TryWithLocalMSBuild(ILogger logger, out string msbuildExePath, out string msbuildExtensionsPath)
+        {
+            msbuildExePath = null;
+            msbuildExtensionsPath = null;
+
+            var msbuildDirectory = FindMSBuildDirectory(logger);
+            if (msbuildDirectory == null)
+            {
+                logger.LogError("Could not locate MSBuild directory.");
+                return false;
             }
 
             // Set the MSBUILD_EXE_PATH environment variable to the location of MSBuild.exe or MSBuild.dll.
-            var msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.exe");
-            if (!File.Exists(msbuildExePath))
+            msbuildExePath = FindMSBuildExe(msbuildDirectory);
+            if (msbuildExePath == null)
             {
-                msbuildExePath = Path.Combine(msbuildFolder, "MSBuild.dll");
+                logger.LogError("Could not locate MSBuild executable");
+                return false;
             }
 
-            if (!File.Exists(msbuildExePath))
-            {
-                logger.LogError("Could not locate MSBuild to set MSBUILD_EXE_PATH");
-                return;
-            }
+            // Set the MSBuildExtensionsPath environment variable to the local msbuild directory.
+            msbuildExtensionsPath = msbuildDirectory;
 
             Environment.SetEnvironmentVariable(MSBuildExePathName, msbuildExePath);
             logger.LogInformation($"{MSBuildExePathName} environment variable set to {msbuildExePath}");
 
-            // Set the MSBuildExtensionsPath environment variable to the msbuild folder.
-            Environment.SetEnvironmentVariable(MSBuildExtensionsPathName, msbuildFolder);
-            logger.LogInformation($"{MSBuildExtensionsPathName} environment variable set to {msbuildFolder}");
+            Environment.SetEnvironmentVariable(MSBuildExtensionsPathName, msbuildExtensionsPath);
+            logger.LogInformation($"{MSBuildExtensionsPathName} environment variable set to {msbuildExtensionsPath}");
 
-            // Set the MSBuildSDKsPath environment variable to the location of the SDKs.
-            var msbuildSdksFolder = Path.Combine(msbuildFolder, "Sdks");
-            if (Directory.Exists(msbuildSdksFolder))
-            {
-                s_msbuildSDKsPath = msbuildSdksFolder;
-                Environment.SetEnvironmentVariable(MSBuildSDKsPathName, msbuildSdksFolder);
-                logger.LogInformation($"{MSBuildSDKsPathName} environment variable set to {msbuildSdksFolder}");
-            }
-            else
-            {
-                logger.LogError($"Could not locate MSBuild Sdks path to set {MSBuildSDKsPathName}");
-            }
-
-            s_msbuildFolder = msbuildFolder;
-            s_msbuildExtensionsPath = msbuildFolder;
-            s_isInitialized = true;
+            return true;
         }
 
-        private static void EnsureInitialized()
+        private static string FindMSBuildDirectory(ILogger logger)
         {
-            if (!s_isInitialized)
+            // If OmniSharp is running normally, MSBuild is located in an 'msbuild' folder beneath OmniSharp.exe.
+            var msbuildDirectory = Path.Combine(AppContext.BaseDirectory, "msbuild");
+
+            if (!Directory.Exists(msbuildDirectory))
             {
-                throw new InvalidOperationException("MSBuildEnvironment is not initialized");
+                // If the 'msbuild' folder does not exist beneath OmniSharp.exe, this is likely a development scenario,
+                // such as debugging or running unit tests. In that case, we use one of the .msbuild-* folders at the
+                // solution level.
+                msbuildDirectory = FindLocalMSBuildFromSolution(logger);
             }
+
+            return msbuildDirectory;
         }
 
-        private static string FindMSBuildFolderFromSolution(ILogger logger)
+        private static string FindLocalMSBuildFromSolution(ILogger logger)
         {
             // Try to locate the appropriate build-time msbuild folder by searching for
             // the OmniSharp solution relative to the current folder.
@@ -142,6 +158,24 @@ namespace OmniSharp.MSBuild
             return Directory.Exists(result)
                 ? result
                 : null;
+        }
+
+        private static string FindMSBuildExe(string directory)
+        {
+            // We look for either MSBuild.exe or MSBuild.dll.
+            var msbuildExePath = Path.Combine(directory, "MSBuild.exe");
+            if (File.Exists(msbuildExePath))
+            {
+                return msbuildExePath;
+            }
+
+            msbuildExePath = Path.Combine(directory, "MSBuild.dll");
+            if (File.Exists(msbuildExePath))
+            {
+                return msbuildExePath;
+            }
+
+            return null;
         }
     }
 }

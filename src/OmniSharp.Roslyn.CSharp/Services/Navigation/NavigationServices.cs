@@ -1,16 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Navigate;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.NavigateUp, LanguageNames.CSharp)]
-    public class NavigateUpService : RequestHandler<NavigateUpRequest, NavigateResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.NavigateUp, LanguageNames.CSharp)]
+    public class NavigateUpService : IRequestHandler<NavigateUpRequest, NavigateResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 
@@ -26,8 +24,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         }
     }
 
-    [OmniSharpHandler(OmnisharpEndpoints.NavigateDown, LanguageNames.CSharp)]
-    public class NavigateDownService : RequestHandler<NavigateDownRequest, NavigateResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.NavigateDown, LanguageNames.CSharp)]
+    public class NavigateDownService : IRequestHandler<NavigateDownRequest, NavigateResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
 

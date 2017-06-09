@@ -1,36 +1,30 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Options;
+using OmniSharp.Models.FixUsings;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
-using OmniSharp.Services;
 using TestUtility;
-using TestUtility.Fake;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class FixUsingsFacts : AbstractTestFixture
+    public class FixUsingsFacts : AbstractSingleRequestHandlerTestFixture<FixUsingService>
     {
-        private const string fileName = "test.cs";
+        private const string TestFileName = "test.cs";
 
         public FixUsingsFacts(ITestOutputHelper output)
             : base(output)
         {
         }
 
-        protected override IEnumerable<Assembly> GetHostAssemblies()
-        {
-            yield return GetAssembly<FixUsingService>();
-        }
+        protected override string EndpointName => OmniSharpEndpoints.FixUsings;
 
         [Fact]
         public async Task FixUsings_AddsUsingSingle()
         {
-            const string fileContents = @"namespace nsA
+            const string code = @"
+namespace nsA
 {
     public class classX{}
 }
@@ -45,7 +39,9 @@ namespace OmniSharp
         }
     }
 }";
-            string expectedFileContents = @"using nsA;
+
+            const string expectedCode = @"
+using nsA;
 
 namespace nsA
 {
@@ -63,13 +59,14 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_AddsUsingSingleForFrameworkMethod()
         {
-            const string fileContents = @"namespace OmniSharp
+            const string code = @"
+namespace OmniSharp
 {
     public class class1
     {
@@ -79,7 +76,9 @@ namespace OmniSharp
         }
     }
 }";
-            string expectedFileContents = @"using System;
+
+            string expectedCode = @"
+using System;
 
 namespace OmniSharp
 {
@@ -92,13 +91,14 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_AddsUsingSingleForFrameworkClass()
         {
-            const string fileContents = @"namespace OmniSharp
+            const string code = @"
+namespace OmniSharp
 {
     public class class1
     {
@@ -108,7 +108,9 @@ namespace OmniSharp
         }
     }
 }";
-            string expectedFileContents = @"using System.Text;
+
+            const string expectedCode = @"
+using System.Text;
 
 namespace OmniSharp
 {
@@ -121,13 +123,14 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_AddsUsingMultiple()
         {
-            const string fileContents = @"namespace nsA
+            const string code = @"
+namespace nsA
 {
     public class classX{}
 }
@@ -148,7 +151,9 @@ namespace OmniSharp
         }
     }
 }";
-            string expectedFileContents = @"using nsA;
+
+            const string expectedCode = @"
+using nsA;
 using nsB;
 
 namespace nsA
@@ -173,13 +178,14 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_AddsUsingMultipleForFramework()
         {
-            const string fileContents = @"namespace OmniSharp
+            const string code = @"
+namespace OmniSharp
 {
     public class class1
     {
@@ -190,7 +196,9 @@ namespace OmniSharp
         }
     }
 }";
-            string expectedFileContents = @"using System;
+
+            const string expectedCode = @"
+using System;
 using System.Text;
 
 namespace OmniSharp
@@ -205,13 +213,13 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_ReturnsAmbiguousResult()
         {
-            const string fileContents = @"
+            const string code = @"
 namespace nsA
 {
     public class classX{}
@@ -232,28 +240,28 @@ namespace OmniSharp
         }
     }
 }";
+            var content = TestContent.Parse(code);
+            var point = content.GetPointFromPosition();
 
-            var markup = TestContent.Parse(fileContents);
-            var point = markup.GetPointFromPosition();
-
-            var expectedUnresolved = new List<QuickFix>()
+            var expectedUnresolved = new[]
             {
                 new QuickFix()
                 {
                     Line = point.Line,
                     Column = point.Offset,
-                    FileName = fileName,
+                    FileName = TestFileName,
                     Text = "`classX` is ambiguous"
                 }
             };
 
-            await AssertUnresolvedReferences(markup.Code, expectedUnresolved);
+            await AssertUnresolvedReferencesAsync(content.Code, expectedUnresolved);
         }
 
         [Fact]
         public async Task FixUsings_ReturnsNoUsingsForAmbiguousResult()
         {
-            const string fileContents = @"namespace nsA {
+            const string code = @"
+namespace nsA {
     public class classX{}
 }
 
@@ -270,13 +278,15 @@ namespace OmniSharp {
         }
     }
 }";
-            await AssertBufferContents(fileContents, fileContents);
+
+            await AssertBufferContentsAsync(code, expectedCode: code);
         }
 
         [Fact]
         public async Task FixUsings_AddsUsingForExtension()
         {
-            const string fileContents = @"namespace nsA {
+            const string code = @"
+namespace nsA {
     public static class StringExtension {
         public static void Whatever(this string astring) {}
     }
@@ -291,7 +301,9 @@ namespace OmniSharp {
         }
     }
 }";
-            string expectedFileContents = @"using nsA;
+
+            const string expectedCode = @"
+using nsA;
 
 namespace nsA {
     public static class StringExtension {
@@ -309,14 +321,13 @@ namespace OmniSharp {
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
-
 
         [Fact]
         public async Task FixUsings_AddsUsingLinqMethodSyntax()
         {
-            const string fileContents = @"namespace OmniSharp
+            const string code = @"namespace OmniSharp
 {
     public class class1
     {
@@ -327,7 +338,8 @@ namespace OmniSharp {
         }
     }
 }";
-            string expectedFileContents = @"using System.Collections.Generic;
+
+            const string expectedCode = @"using System.Collections.Generic;
 using System.Linq;
 
 namespace OmniSharp
@@ -342,13 +354,13 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_AddsUsingLinqQuerySyntax()
         {
-            const string fileContents = @"namespace OmniSharp
+            const string code = @"namespace OmniSharp
 {
     public class class1
     {
@@ -362,7 +374,8 @@ namespace OmniSharp
         }
      }
 }";
-            string expectedFileContents = @"using System.Linq;
+
+            const string expectedCode = @"using System.Linq;
 namespace OmniSharp
 {
     public class class1
@@ -378,13 +391,14 @@ namespace OmniSharp
      }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_RemoveDuplicateUsing()
         {
-            const string fileContents = @"using System;
+            const string code = @"
+using System;
 using System;
 
 namespace OmniSharp
@@ -398,7 +412,8 @@ namespace OmniSharp
     }
 }";
 
-            const string expectedFileContents = @"using System;
+            const string expectedCode = @"
+using System;
 
 namespace OmniSharp
 {
@@ -411,13 +426,14 @@ namespace OmniSharp
     }
 }";
 
-            await AssertBufferContents(fileContents, expectedFileContents);
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
         [Fact]
         public async Task FixUsings_RemoveUnusedUsing()
         {
-            const string fileContents = @"using System;
+            const string code = @"
+using System;
 using System.Linq;
 
 namespace OmniSharp
@@ -431,7 +447,8 @@ namespace OmniSharp
     }
 }";
 
-            const string expectedFileContents = @"using System;
+            const string expectedCode = @"
+using System;
 
 namespace OmniSharp
 {
@@ -443,52 +460,52 @@ namespace OmniSharp
         }
     }
 }";
-            await AssertBufferContents(fileContents, expectedFileContents);
+
+            await AssertBufferContentsAsync(code, expectedCode);
         }
 
-        private async Task AssertBufferContents(string fileContents, string expectedFileContents)
+        private async Task AssertBufferContentsAsync(string code, string expectedCode)
         {
-            var response = await RunFixUsings(fileContents);
-            Assert.Equal(FlattenNewLines(expectedFileContents), FlattenNewLines(response.Buffer));
+            var response = await RunFixUsingsAsync(code);
+            Assert.Equal(FlattenNewLines(expectedCode), FlattenNewLines(response.Buffer));
         }
 
-        private string FlattenNewLines(string input)
+        private static string FlattenNewLines(string input)
         {
             return input.Replace("\r\n", "\n");
         }
 
-        private async Task AssertUnresolvedReferences(string fileContents, List<QuickFix> expectedUnresolved)
+        private async Task AssertUnresolvedReferencesAsync(string code, QuickFix[] expectedResults)
         {
-            var response = await RunFixUsings(fileContents);
-            var qfList = response.AmbiguousResults.ToList();
-            Assert.Equal(qfList.Count(), expectedUnresolved.Count());
-            var i = 0;
-            foreach (var expectedQuickFix in expectedUnresolved)
+            var response = await RunFixUsingsAsync(code);
+            var results = response.AmbiguousResults.ToArray();
+
+            Assert.Equal(results.Length, expectedResults.Length);
+
+            for (var i = 0; i < results.Length; i++)
             {
-                Assert.Equal(qfList[i].Line, expectedQuickFix.Line);
-                Assert.Equal(qfList[i].Column, expectedQuickFix.Column);
-                Assert.Equal(qfList[i].FileName, expectedQuickFix.FileName);
-                Assert.Equal(qfList[i].Text, expectedQuickFix.Text);
-                i++;
+                var result = results[i];
+                var expectedResult = expectedResults[i];
+
+                Assert.Equal(expectedResult.Line, result.Line);
+                Assert.Equal(expectedResult.Column, result.Column);
+                Assert.Equal(expectedResult.FileName, result.FileName);
+                Assert.Equal(expectedResult.Text, result.Text);
             }
         }
 
-        private async Task<FixUsingsResponse> RunFixUsings(string fileContents)
+        private async Task<FixUsingsResponse> RunFixUsingsAsync(string code)
         {
-            var host = CreatePlugInHost();
-            var workspace = await CreateWorkspaceAsync(host, new TestFile(fileName, fileContents));
-
-            var fakeOptions = new FakeOmniSharpOptions();
-            fakeOptions.Options = new OmniSharpOptions(new FormattingOptions() { NewLine = "\n" });
-            var providers = host.GetExports<ICodeActionProvider>();
-            var controller = new FixUsingService(workspace, this.LoggerFactory, this.AssemblyLoader, providers);
-            var request = new FixUsingsRequest
+            using (var host = CreateOmniSharpHost(new TestFile(TestFileName, code)))
             {
-                FileName = fileName,
-                Buffer = fileContents
-            };
+                var requestHandler = GetRequestHandler(host);
+                var request = new FixUsingsRequest
+                {
+                    FileName = TestFileName
+                };
 
-            return await controller.Handle(request);
+                return await requestHandler.Handle(request);
+            }
         }
     }
 }

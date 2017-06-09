@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using OmniSharp.Models.TypeLookup;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
@@ -8,12 +8,14 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class TypeLookupFacts : AbstractTestFixture
+    public class TypeLookupFacts : AbstractSingleRequestHandlerTestFixture<TypeLookupService>
     {
         public TypeLookupFacts(ITestOutputHelper output)
             : base(output)
         {
         }
+
+        protected override string EndpointName => OmniSharpEndpoints.TypeLookup;
 
         [Fact]
         public async Task OmitsNamespaceForNonRegularCSharpSyntax()
@@ -38,16 +40,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             class Baz {}";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
 
-            var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var requestInNormalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
-            var responseInNormalNamespace = await controller.Handle(requestInNormalNamespace);
-            var requestInGlobalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 3, Column = 19 };
-            var responseInGlobalNamespace = await controller.Handle(requestInGlobalNamespace);
+                var requestInNormalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
+                var responseInNormalNamespace = await requestHandler.Handle(requestInNormalNamespace);
 
-            Assert.Equal("Bar.Foo", responseInNormalNamespace.Type);
-            Assert.Equal("Baz", responseInGlobalNamespace.Type);
+                var requestInGlobalNamespace = new TypeLookupRequest { FileName = testFile.FileName, Line = 3, Column = 19 };
+                var responseInGlobalNamespace = await requestHandler.Handle(requestInGlobalNamespace);
+
+                Assert.Equal("Bar.Foo", responseInNormalNamespace.Type);
+                Assert.Equal("Baz", responseInGlobalNamespace.Type);
+            }
         }
 
         [Fact]
@@ -58,13 +63,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
 
-            var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
-            var response = await controller.Handle(request);
+                var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 1, Column = 19 };
+                var response = await requestHandler.Handle(request);
 
-            Assert.Equal("Bar.Foo", response.Type);
+                Assert.Equal("Bar.Foo", response.Type);
+            }
         }
 
         [Fact]
@@ -77,13 +84,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }";
 
             var testFile = new TestFile("dummy.cs", source);
-            var workspace = await CreateWorkspaceAsync(testFile);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
 
-            var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 2, Column = 27 };
-            var response = await controller.Handle(request);
+                var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 2, Column = 27 };
+                var response = await requestHandler.Handle(request);
 
-            Assert.Equal("Bar.Foo.Xyz", response.Type);
+                Assert.Equal("Bar.Foo.Xyz", response.Type);
+            }
         }
 
         [Fact]
@@ -103,7 +112,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("Foo.Bar", response.Type);
         }
 
-        private static TestFile testFile = new TestFile("dummy.cs",
+        private static TestFile s_testFile = new TestFile("dummy.cs",
             @"using System;
             using Bar2;
             using System.Collections.Generic;
@@ -133,12 +142,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<TypeLookupResponse> GetTypeLookUpResponse(int line, int column)
         {
-            var workspace = await CreateWorkspaceAsync(testFile);
+            using (var host = CreateOmniSharpHost(s_testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
+                var request = new TypeLookupRequest { FileName = s_testFile.FileName, Line = line, Column = column };
 
-            var controller = new TypeLookupService(workspace, new FormattingOptions());
-            var request = new TypeLookupRequest { FileName = testFile.FileName, Line = line, Column = column };
-
-            return await controller.Handle(request);
+                return await requestHandler.Handle(request);
+            }
         }
 
         [Fact]

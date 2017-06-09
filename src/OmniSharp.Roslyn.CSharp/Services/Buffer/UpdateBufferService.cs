@@ -1,14 +1,13 @@
-using System;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.UpdateBuffer;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Buffer
 {
-    [OmniSharpHandler(OmnisharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
-    public class UpdateBufferService : RequestHandler<UpdateBufferRequest, object>
+    [OmniSharpHandler(OmniSharpEndpoints.UpdateBuffer, LanguageNames.CSharp)]
+    public class UpdateBufferService : IRequestHandler<UpdateBufferRequest, object>
     {
         private OmniSharpWorkspace _workspace;
 
@@ -20,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Buffer
 
         public async Task<object> Handle(UpdateBufferRequest request)
         {
-            await _workspace.BufferManager.UpdateBuffer(request);
+            await _workspace.BufferManager.UpdateBufferAsync(request);
             return true;
         }
     }

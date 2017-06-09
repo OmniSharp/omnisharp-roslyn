@@ -8,6 +8,7 @@
             public const string AssemblyName = nameof(AssemblyName);
             public const string AssemblyOriginatorKeyFile = nameof(AssemblyOriginatorKeyFile);
             public const string BuildProjectReferences = nameof(BuildProjectReferences);
+            public const string Configuration = nameof(Configuration);
             public const string DefineConstants = nameof(DefineConstants);
             public const string DesignTimeBuild = nameof(DesignTimeBuild);
             public const string DocumentationFile = nameof(DocumentationFile);
@@ -17,6 +18,7 @@
             public const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
             public const string NoWarn = nameof(NoWarn);
             public const string OutputPath = nameof(OutputPath);
+            public const string Platform = nameof(Platform);
             public const string ProjectAssetsFile = nameof(ProjectAssetsFile);
             public const string ProjectGuid = nameof(ProjectGuid);
             public const string ProjectName = nameof(ProjectName);
@@ -29,6 +31,7 @@
             public const string TargetFrameworks = nameof(TargetFrameworks);
             public const string TargetPath = nameof(TargetPath);
             public const string VisualStudioVersion = nameof(VisualStudioVersion);
+            public const string VsInstallRoot = nameof(VsInstallRoot);
         }
     }
 }
