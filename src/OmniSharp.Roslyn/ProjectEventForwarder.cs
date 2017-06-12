@@ -116,10 +116,8 @@ namespace OmniSharp.Roslyn
                     && FileName == other.FileName;
             }
 
-            public override int GetHashCode()
-            {
-                return EventType?.GetHashCode() * 23 + FileName?.GetHashCode() ?? 0;
-            }
+            public override int GetHashCode() =>
+                EventType?.GetHashCode() * 23 + FileName?.GetHashCode() ?? 0;
         }
     }
 }
