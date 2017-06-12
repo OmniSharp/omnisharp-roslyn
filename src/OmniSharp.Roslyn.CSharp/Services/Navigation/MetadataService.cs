@@ -31,12 +31,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
                     var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                    var document = await _metadataHelper.GetDocumentFromMetadata(project, symbol, cancellationSource.Token);
-                    if (document != null)
+                    var (metadataDocument, documentPath) = await _metadataHelper.GetAndAddDocumentFromMetadata(project, symbol, cancellationSource.Token);
+                    if (metadataDocument != null)
                     {
-                        var source = await document.GetTextAsync();
-                        response.SourceName = _metadataHelper.GetFilePathForSymbol(project, symbol);
+                        var source = await metadataDocument.GetTextAsync();
                         response.Source = source.ToString();
+                        response.SourceName = documentPath;
 
                         return response;
                     }

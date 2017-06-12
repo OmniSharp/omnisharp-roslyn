@@ -16,6 +16,7 @@ namespace OmniSharp.Helpers
             var lineSpan = location.GetLineSpan();
             var path = lineSpan.Path;
             var documents = workspace.GetDocuments(path);
+
             var line = lineSpan.StartLinePosition.Line;
             var text = location.SourceTree.GetText().Lines[line].ToString();
 
