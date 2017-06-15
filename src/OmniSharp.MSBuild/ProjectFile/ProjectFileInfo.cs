@@ -148,7 +148,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                                 Version version;
                                 if (FrameworkReferenceResolver.Default.TryGetAssembly(referenceName, framework, out path, out version))
                                 {
-                                    logger.LogInformation($"Resolved refernce path: {referenceName} => {version} at {path}");
+                                    logger.LogInformation($"Resolved reference path: {referenceName} => {version} at {path}");
                                 }
                                 else
                                 {
