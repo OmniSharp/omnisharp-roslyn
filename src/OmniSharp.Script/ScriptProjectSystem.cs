@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dotnet.Script.NuGetMetadataResolver;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.ProjectModel;
@@ -15,7 +16,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
-{
+{   
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
@@ -29,6 +30,8 @@ namespace OmniSharp.Script
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
+        private readonly IScriptProjectProvider _scriptProjectProvider;        
+        private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, MetadataFileReferenceCache metadataFileReferenceCache)
@@ -38,6 +41,7 @@ namespace OmniSharp.Script
             _env = env;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
+            _scriptProjectProvider = ScriptProjectProvider.Create(loggerFactory);
         }
 
         public string Key => "Script";
@@ -46,6 +50,8 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
+            var scriptHelper = new ScriptHelper(configuration);
+
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
@@ -60,15 +66,25 @@ namespace OmniSharp.Script
 
             // explicitly inherit scripting library references to all global script object (InteractiveScriptGlobals) to be recognized
             var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
-                    x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
+                x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
 
             // explicitly include System.ValueTuple
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                    x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
+                x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
             var runtimeContexts = File.Exists(Path.Combine(_env.TargetDirectory, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.TargetDirectory) : null;
 
             var commonReferences = new HashSet<MetadataReference>();
+            
+            if (!bool.TryParse(configuration["enableScriptNuGetReferences"], out var enableScriptNuGetReferences))
+            {
+                enableScriptNuGetReferences = false;
+            }
+
+            if (enableScriptNuGetReferences && (runtimeContexts == null || runtimeContexts.Any() == false))
+            {
+                runtimeContexts = TryCreateRuntimeContextsFromScriptFiles();
+            }
 
             // if we have no context, then we also have no dependencies
             // we can assume desktop framework
@@ -81,7 +97,7 @@ namespace OmniSharp.Script
                 AddMetadataReference(commonReferences, typeof(Enumerable).GetTypeInfo().Assembly.Location);
 
                 inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+                    x.Name.ToLowerInvariant().StartsWith("system.runtime")));
             }
             // otherwise we will grab dependencies for the script from the runtime context
             else
@@ -106,7 +122,7 @@ namespace OmniSharp.Script
                 {
 
                     inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                            x.Name.ToLowerInvariant().StartsWith("system.runtime")));
+                        x.Name.ToLowerInvariant().StartsWith("system.runtime")));
                 }
             }
 
@@ -124,7 +140,7 @@ namespace OmniSharp.Script
                 try
                 {
                     var csxFileName = Path.GetFileName(csxPath);
-                    var project = ScriptHelper.CreateProject(csxFileName, commonReferences);
+                    var project = scriptHelper.CreateProject(csxFileName, commonReferences);
 
                     // add CSX project to workspace
                     _workspace.AddProject(project);
@@ -137,6 +153,21 @@ namespace OmniSharp.Script
                     _logger.LogError(ex, $"{csxPath} will be ignored due to an following error");
                 }
             }
+        }
+
+        private IEnumerable<ProjectContext> TryCreateRuntimeContextsFromScriptFiles()
+        {
+            _logger.LogInformation($"Attempting to create runtime context from script files. Default target framework {_targetFrameWork.Value}");
+            try
+            {
+                var scriptProjectInfo = _scriptProjectProvider.CreateProject(_env.TargetDirectory, _targetFrameWork.Value);
+                return ProjectContext.CreateContextForEachTarget(Path.GetDirectoryName(scriptProjectInfo.PathToProjectJson));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Unable to create runtime context from script files.");
+            }
+            return null;
         }
 
         private void AddMetadataReference(ISet<MetadataReference> referenceCollection, string fileReference)
@@ -200,6 +231,14 @@ namespace OmniSharp.Script
                 scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value, _assemblyReferences));
             }
             return Task.FromResult<object>(new ScriptContextModelCollection(scriptContextModels));
+        }
+
+        private static string ResolveTargetFramework()
+        {
+            return Assembly.GetEntryAssembly().GetCustomAttributes()
+                .OfType<System.Runtime.Versioning.TargetFrameworkAttribute>()
+                .Select(x => x.FrameworkName)
+                .FirstOrDefault();
         }
     }
 }

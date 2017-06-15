@@ -10,5 +10,8 @@
         "useTabs": false,
         "tabSize": 4,
         "indentationSize": 4
+    },
+    "script": {
+        "enableScriptNuGetReferences" : false
     }
 }

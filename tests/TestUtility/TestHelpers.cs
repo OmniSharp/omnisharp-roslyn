@@ -22,7 +22,8 @@ namespace TestUtility
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
             var references = GetReferences();
-            var project = ScriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), Enumerable.Empty<string>());
+            var scriptHelper = new ScriptHelper();            
+            var project = scriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), Enumerable.Empty<string>());
             workspace.AddProject(project);
 
             var documentInfo = DocumentInfo.Create(
