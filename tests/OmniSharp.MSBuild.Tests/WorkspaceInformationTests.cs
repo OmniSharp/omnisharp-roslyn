@@ -31,6 +31,22 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task ProjectAndSolutionWithProjectSection()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithProjectSection"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(1, workspaceInfo.Projects.Count);
+                Assert.Equal(".NETCoreApp,Version=v1.1", workspaceInfo.Projects[0].TargetFramework);
+                Assert.Equal("netcoreapp1.1", workspaceInfo.Projects[0].TargetFrameworks[0].ShortName);
+            }
+        }
+
         private static async Task<MSBuildWorkspaceInfo> GetWorkspaceInfoAsync(OmniSharpTestHost host)
         {
             var service = host.GetWorkspaceInformationService();
