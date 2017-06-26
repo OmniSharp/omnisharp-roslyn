@@ -22,7 +22,8 @@
   "TestAssets": [
     "NUnitTestProject",
     "XunitTestProject",
-    "MSTestProject"
+    "MSTestProject",
+    "ProjectAndSolution"
   ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",

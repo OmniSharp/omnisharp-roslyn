@@ -20,10 +20,11 @@ namespace OmniSharp.MSBuild.Models
                     }
 
                     return project;
-                });
+                })
+                .ToArray();
         }
 
         public string SolutionPath { get; }
-        public IEnumerable<MSBuildProjectInfo> Projects { get; }
+        public IList<MSBuildProjectInfo> Projects { get; }
     }
 }
