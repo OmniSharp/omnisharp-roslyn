@@ -23,7 +23,8 @@
     "NUnitTestProject",
     "XunitTestProject",
     "MSTestProject",
-    "ProjectAndSolution"
+    "ProjectAndSolution",
+    "ProjectAndSolutionWithProjectSection"
   ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",
