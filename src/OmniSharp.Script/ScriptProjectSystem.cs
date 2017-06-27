@@ -64,7 +64,7 @@ namespace OmniSharp.Script
 
             _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
-            // explicitly inherit scripting library references to all global script object (InteractiveScriptGlobals) to be recognized
+            // explicitly inherit scripting library references to all global script object (CommandLineScriptGlobals) to be recognized
             var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
 
