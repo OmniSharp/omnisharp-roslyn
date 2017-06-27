@@ -30,15 +30,19 @@ namespace OmniSharp.Script
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
+        private readonly IAssemblyLoader _assemblyLoader;
+
         private readonly IScriptProjectProvider _scriptProjectProvider;        
         private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
 
         [ImportingConstructor]
-        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, MetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, 
+            MetadataFileReferenceCache metadataFileReferenceCache, IAssemblyLoader assemblyLoader)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
+            _assemblyLoader = assemblyLoader;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
             _scriptProjectProvider = ScriptProjectProvider.Create(loggerFactory);
@@ -73,10 +77,6 @@ namespace OmniSharp.Script
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
             var runtimeContexts = File.Exists(Path.Combine(_env.TargetDirectory, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.TargetDirectory) : null;
-            var runtimeContext = runtimeContexts?.FirstOrDefault();
-
-            var commonReferences = new HashSet<MetadataReference>();
-            
             if (!bool.TryParse(configuration["enableScriptNuGetReferences"], out var enableScriptNuGetReferences))
             {
                 enableScriptNuGetReferences = false;
@@ -86,6 +86,9 @@ namespace OmniSharp.Script
             {
                 runtimeContexts = TryCreateRuntimeContextsFromScriptFiles();
             }
+
+            var runtimeContext = runtimeContexts?.FirstOrDefault();
+            var commonReferences = new HashSet<MetadataReference>();
 
             // if we have no context, then we also have no dependencies
             // we will assume desktop framework
@@ -153,8 +156,8 @@ namespace OmniSharp.Script
                     typeof(Enumerable).GetTypeInfo().Assembly,
                     typeof(Stack<>).GetTypeInfo().Assembly,
                     typeof(Lazy<,>).GetTypeInfo().Assembly,
-                    FromName("System.Runtime"),
-                    FromName("mscorlib")
+                    _assemblyLoader.Load("System.Runtime"),
+                    _assemblyLoader.Load("mscorlib")
                 };
 
                 var references = assemblies
@@ -166,18 +169,6 @@ namespace OmniSharp.Script
                 foreach (var reference in references)
                 {
                     commonReferences.Add(reference);
-                }
-
-                Assembly FromName(string assemblyName)
-                {
-                    try
-                    {
-                        return Assembly.Load(new AssemblyName(assemblyName));
-                    }
-                    catch
-                    {
-                        return null;
-                    }
                 }
             }
         }
