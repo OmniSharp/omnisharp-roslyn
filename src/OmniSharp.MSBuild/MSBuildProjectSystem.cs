@@ -5,6 +5,7 @@ using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Build.Construction;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +18,6 @@ using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.MSBuild.Resolution;
-using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
 using OmniSharp.Services;
 
@@ -139,18 +139,18 @@ namespace OmniSharp.MSBuild
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
             var solutionFile = SolutionFile.Parse(solutionFilePath);
-            var processedProjects = new HashSet<string>();
+            var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<string>();
 
-            foreach (var project in solutionFile.ProjectBlocks)
+            foreach (var project in solutionFile.ProjectsInOrder)
             {
-                if (project.Kind == ProjectKind.SolutionFolder)
+                if (project.ProjectType == SolutionProjectType.SolutionFolder)
                 {
                     continue;
                 }
 
                 // Solution files are assumed to contain relative paths to project files with Windows-style slashes.
-                var projectFilePath = project.ProjectPath.Replace('\\', Path.DirectorySeparatorChar);
+                var projectFilePath = project.RelativePath.Replace('\\', Path.DirectorySeparatorChar);
                 projectFilePath = Path.Combine(_environment.TargetDirectory, projectFilePath);
                 projectFilePath = Path.GetFullPath(projectFilePath);
 
@@ -160,8 +160,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                if (project.Kind == ProjectKind.CSharpProject ||
-                    string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
                     result.Add(projectFilePath);
                 }

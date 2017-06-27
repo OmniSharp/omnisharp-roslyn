@@ -7,6 +7,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
+    [Shared]
     [OmniSharpHandler(OmniSharpEndpoints.WorkspaceInformation, "Projects")]
     public class WorkspaceInformationService : IRequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>
     {
