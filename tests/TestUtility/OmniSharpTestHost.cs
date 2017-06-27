@@ -119,7 +119,7 @@ namespace TestUtility
             return this._compositionHost.GetExport<T>();
         }
 
-        public THandler GetRequestHandler<THandler>(string name) where THandler : IRequestHandler
+        public THandler GetRequestHandler<THandler>(string name, string languageName = LanguageNames.CSharp) where THandler : IRequestHandler
         {
             if (_handlers == null)
             {
@@ -129,7 +129,12 @@ namespace TestUtility
                     elementSelector: export => export);
             }
 
-            return (THandler)_handlers[(name, LanguageNames.CSharp)].Value;
+            return (THandler)_handlers[(name, languageName)].Value;
+        }
+
+        public WorkspaceInformationService GetWorkspaceInformationService()
+        {
+            return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
         }
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)
