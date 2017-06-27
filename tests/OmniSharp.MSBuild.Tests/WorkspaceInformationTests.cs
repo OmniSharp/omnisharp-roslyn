@@ -47,6 +47,30 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task TwoProjectsWithSolution()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.Equal("TwoProjectsWithSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(2, workspaceInfo.Projects.Count);
+
+                var firstProject = workspaceInfo.Projects[0];
+                Assert.Equal("App.csproj", Path.GetFileName(firstProject.Path));
+                Assert.Equal(".NETCoreApp,Version=v1.1", firstProject.TargetFramework);
+                Assert.Equal("netcoreapp1.1", firstProject.TargetFrameworks[0].ShortName);
+
+                var secondProject = workspaceInfo.Projects[1];
+                Assert.Equal("Lib.csproj", Path.GetFileName(secondProject.Path));
+                Assert.Equal(".NETStandard,Version=v1.3", secondProject.TargetFramework);
+                Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
+          }
+        }
+
         private static async Task<MSBuildWorkspaceInfo> GetWorkspaceInfoAsync(OmniSharpTestHost host)
         {
             var service = host.GetWorkspaceInformationService();
