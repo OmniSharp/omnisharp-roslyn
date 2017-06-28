@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -11,8 +10,8 @@ namespace OmniSharp.Services
     public abstract class AbstractCodeActionProvider : ICodeActionProvider
     {
         public string ProviderName { get; }
-        public ImmutableArray<CodeRefactoringProvider> Refactorings { get; }
-        public ImmutableArray<CodeFixProvider> CodeFixes { get; }
+        public ImmutableArray<CodeRefactoringProvider> CodeRefactoringProviders { get; }
+        public ImmutableArray<CodeFixProvider> CodeFixProviders { get; }
 
         public ImmutableArray<Assembly> Assemblies { get; }
 
@@ -29,13 +28,13 @@ namespace OmniSharp.Services
                                !type.GetTypeInfo().ContainsGenericParameters));
             // TODO: handle providers with generic params
 
-            this.Refactorings = types
+            this.CodeRefactoringProviders = types
                 .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
                 .Select(type => CreateInstance<CodeRefactoringProvider>(type))
                 .Where(instance => instance != null)
                 .ToImmutableArray();
 
-            this.CodeFixes = types
+            this.CodeFixProviders = types
                 .Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
                 .Select(type => CreateInstance<CodeFixProvider>(type))
                 .Where(instance => instance != null)

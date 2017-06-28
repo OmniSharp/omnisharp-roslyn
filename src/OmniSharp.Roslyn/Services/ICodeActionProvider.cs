@@ -7,8 +7,8 @@ namespace OmniSharp.Services
 {
     public interface ICodeActionProvider
     {
-        ImmutableArray<CodeRefactoringProvider> Refactorings { get; }
-        ImmutableArray<CodeFixProvider> CodeFixes { get; }
+        ImmutableArray<CodeRefactoringProvider> CodeRefactoringProviders { get; }
+        ImmutableArray<CodeFixProvider> CodeFixProviders { get; }
         ImmutableArray<Assembly> Assemblies { get; }
     }
 }

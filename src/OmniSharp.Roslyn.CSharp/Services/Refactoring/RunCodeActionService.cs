@@ -93,7 +93,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 foreach (var provider in _codeActionProviders)
                 {
-                    var providers = provider.Refactorings;
+                    var providers = provider.CodeRefactoringProviders;
 
                     foreach (var codeActionProvider in providers)
                     {
