@@ -11,7 +11,7 @@ namespace OmniSharp
         public readonly static string RoslynCSharpFeatures = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.CSharp.Features");
         public readonly static string RoslynWorkspaces = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Workspaces");
 
-        public static string GetRoslynAssemblyFullName(string name)
+        private static string GetRoslynAssemblyFullName(string name)
         {
             return $"{name}, Version={RoslynVersion}, Culture=neutral, PublicKeyToken={RoslynPublicKeyToken}";
         }
