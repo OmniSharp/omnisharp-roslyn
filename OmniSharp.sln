@@ -1,6 +1,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
+<<<<<<< HEAD
 VisualStudioVersion = 15.0.27004.2000
+=======
+VisualStudioVersion = 15.0.26730.3
+>>>>>>> 80646728... Adds OmniSharp.Cake project and Cake project system
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C348365-A9D8-459E-9276-56FC46AAEE31}"
 EndProject
@@ -64,6 +68,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Http.Tests", "tests\OmniSharp.Http.Tests\OmniSharp.Http.Tests.csproj", "{1217C534-E8EB-454D-B6E1-12BD30E72F8E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.DotNet.ProjectModel", "src\OmniSharp.DotNet.ProjectModel\OmniSharp.DotNet.ProjectModel.csproj", "{31580626-6D87-491D-A65E-F6B881164398}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Cake", "src\OmniSharp.Cake\OmniSharp.Cake.csproj", "{BA0713A6-EF63-419D-B60D-7A84B134531F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -327,6 +333,18 @@ Global
 		{31580626-6D87-491D-A65E-F6B881164398}.Release|x64.Build.0 = Release|Any CPU
 		{31580626-6D87-491D-A65E-F6B881164398}.Release|x86.ActiveCfg = Release|Any CPU
 		{31580626-6D87-491D-A65E-F6B881164398}.Release|x86.Build.0 = Release|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Debug|x64.Build.0 = Debug|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Debug|x86.Build.0 = Debug|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Release|x64.ActiveCfg = Release|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Release|x64.Build.0 = Release|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Release|x86.ActiveCfg = Release|Any CPU
+		{BA0713A6-EF63-419D-B60D-7A84B134531F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -353,6 +371,7 @@ Global
 		{0A9BF1CC-2F0D-431C-BAFD-403658E233F1} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{1217C534-E8EB-454D-B6E1-12BD30E72F8E} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 		{31580626-6D87-491D-A65E-F6B881164398} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
+		{BA0713A6-EF63-419D-B60D-7A84B134531F} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4DD725CE-B49A-4151-8B77-BB33FE88E46E}
