@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Cake.Core.Scripting;
 using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
 using Microsoft.CodeAnalysis;
@@ -13,6 +12,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Cake.Polyfill;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
@@ -107,6 +107,8 @@ namespace OmniSharp.Cake
         {
             var name = Path.GetFileName(filePath);
 
+            AssemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
+
             return ProjectInfo.Create(
                 id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
                 version: VersionStamp.Create(),
@@ -120,7 +122,7 @@ namespace OmniSharp.Cake
                 metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference/*, documentation: CreateDocumentationProvider(referencePath))*/)),
                 // TODO: projectReferences?
                 isSubmission: true,
-                hostObjectType: typeof(IScriptHost));
+                hostObjectType: Type.GetType(cakeScript.Host.TypeName));
         }
 
         private CompilationOptions GetCompilationOptions(ISet<string> usings)
