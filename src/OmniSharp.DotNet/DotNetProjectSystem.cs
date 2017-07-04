@@ -102,17 +102,6 @@ namespace OmniSharp.DotNet
 
         public void Initalize(IConfiguration configuration)
         {
-            if (!bool.TryParse(configuration["enabled"], out var enabled))
-            {
-                enabled = true;
-            }
-
-            if (!enabled)
-            {
-                _logger.LogInformation("DotNetProjectSystem is disabled");
-                return;
-            }
-
             _logger.LogInformation($"Initializing in {_environment.TargetDirectory}");
 
             if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))

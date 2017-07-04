@@ -109,7 +109,8 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
-            Startup.InitializeWorkspace(workspace, compositionHost, configuration, logger, omnisharpOptions);
+            var workspaceHelper = new WorkspaceHelper(compositionHost, configuration, omnisharpOptions, loggerFactory);
+            workspaceHelper.Initialize(workspace);
 
             return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }
