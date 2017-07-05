@@ -25,7 +25,8 @@
     "MSTestProject",
     "ProjectAndSolution",
     "ProjectAndSolutionWithProjectSection",
-    "TwoProjectsWithSolution"
+    "TwoProjectsWithSolution",
+    "ProjectWithGeneratedFile"
   ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",
