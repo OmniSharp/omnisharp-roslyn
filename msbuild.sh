@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SDK_DIR="$(cd "$(dirname "$0")"/.dotnet/sdk/1.0.1/ && pwd -P)"
+SDK_DIR="$(cd "$(dirname "$0")"/.dotnet/sdk/1.0.4/ && pwd -P)"
 
 echo $SDK_DIR
 
