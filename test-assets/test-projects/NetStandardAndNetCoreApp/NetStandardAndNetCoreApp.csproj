@@ -6,6 +6,7 @@
     <OutputType>exe</OutputType>
     <DefineConstants>NETCOREAPP;$(DefineConstants)</DefineConstants>
     <PackageTargetFallback>dnxcore50</PackageTargetFallback>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" />
