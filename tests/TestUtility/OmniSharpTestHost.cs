@@ -69,11 +69,22 @@ namespace TestUtility
             this.Workspace.Dispose();
         }
 
-        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, bool useLegacyDotNetCli = false)
+        private static string GetDotNetCliFolderName(DotNetCliVersion dotNetCliVersion)
+        {
+            switch (dotNetCliVersion)
+            {
+                case DotNetCliVersion.Current: return ".dotnet";
+                case DotNetCliVersion.Future: return ".dotnet-future";
+                case DotNetCliVersion.Legacy: return ".dotnet-legacy";
+                default: throw new ArgumentException($"Unknown {nameof(dotNetCliVersion)}: {dotNetCliVersion}", nameof(dotNetCliVersion));
+            }
+        }
+
+        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
         {
             var dotNetPath = Path.Combine(
                 TestAssets.Instance.RootFolder,
-                useLegacyDotNetCli ? ".dotnet-legacy" : ".dotnet",
+                GetDotNetCliFolderName(dotNetCliVersion),
                 "dotnet");
 
             if (!File.Exists(dotNetPath))

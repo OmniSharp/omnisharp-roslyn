@@ -16,6 +16,7 @@ public class Folders
 {
     public string DotNetSdk { get; }
     public string LegacyDotNetSdk { get; }
+    public string FutureDotNetSdk { get; }
     public string Tools { get; }
 
     public string MSBuild { get; }
@@ -33,6 +34,7 @@ public class Folders
     {
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
         this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
+        this.FutureDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-future");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
         this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
@@ -55,6 +57,7 @@ public class BuildEnvironment
 
     public string DotNetCommand { get; }
     public string LegacyDotNetCommand { get; }
+    public string FutureDotNetCommand { get; }
 
     public string ShellCommand { get; }
     public string ShellArgument { get; }
@@ -71,6 +74,7 @@ public class BuildEnvironment
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
+        this.FutureDotNetCommand = PathHelper.Combine(this.Folders.FutureDotNetSdk, "dotnet");
 
         this.ShellCommand = isWindows ? "powershell" : "bash";
         this.ShellArgument = isWindows ? "-NoProfile /Command" : "-C";

@@ -15,7 +15,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void LegacyGetVersion()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: true))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -31,7 +31,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void LegacyGetInfo()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: true))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -47,7 +47,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void GetVersion()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: false))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -63,7 +63,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void GetInfo()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: false))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -73,6 +73,38 @@ namespace OmniSharp.Tests
                 Assert.Equal(0, info.Version.Minor);
                 Assert.Equal(4, info.Version.Patch);
                 Assert.Equal("", info.Version.Release);
+            }
+        }
+
+        [Fact]
+        public void FutureGetVersion()
+        {
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Future))
+            {
+                var dotNetCli = host.GetExport<DotNetCliService>();
+
+                var version = dotNetCli.GetVersion();
+
+                Assert.Equal(2, version.Major);
+                Assert.Equal(0, version.Minor);
+                Assert.Equal(0, version.Patch);
+                Assert.Equal("preview2-006497", version.Release);
+            }
+        }
+
+        [Fact]
+        public void FutureGetInfo()
+        {
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Future))
+            {
+                var dotNetCli = host.GetExport<DotNetCliService>();
+
+                var info = dotNetCli.GetInfo();
+
+                Assert.Equal(2, info.Version.Major);
+                Assert.Equal(0, info.Version.Minor);
+                Assert.Equal(0, info.Version.Patch);
+                Assert.Equal("preview2-006497", info.Version.Release);
             }
         }
     }

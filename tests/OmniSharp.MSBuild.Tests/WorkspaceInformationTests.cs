@@ -70,6 +70,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("netstandard1.3", secondProject.TargetFrameworks[0].ShortName);
             }
         }
+
         [Fact]
         public async Task TwoProjectWithGeneratedFile()
         {
@@ -84,6 +85,23 @@ namespace OmniSharp.MSBuild.Tests
                 var project = workspaceInfo.Projects[0];
                 Assert.Equal("ProjectWithGeneratedFile.csproj", Path.GetFileName(project.Path));
                 Assert.Equal(4, project.SourceFiles.Count);
+            }
+        }
+
+        [Fact]
+        public async Task ProjectWithSdkProperty()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithSdkProperty"))
+            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion.Future))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(1, workspaceInfo.Projects.Count);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal("ProjectWithSdkProperty.csproj", Path.GetFileName(project.Path));
+                Assert.Equal(3, project.SourceFiles.Count);
             }
         }
 

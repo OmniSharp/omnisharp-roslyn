@@ -30,6 +30,7 @@ public class BuildPlan
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string LegacyDotNetVersion { get; set; }
+    public string FutureDotNetVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MSBuildRuntimeForMono { get; set; }
     public string MSBuildLibForMono { get; set; }
@@ -38,6 +39,7 @@ public class BuildPlan
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
     public string[] LegacyTestAssets { get; set; }
+    public string[] FutureTestAssets { get; set; }
 
     private string currentRid;
     private string[] targetRids;
@@ -331,6 +333,12 @@ Task("BuildEnvironment")
         version: buildPlan.LegacyDotNetVersion,
         installFolder: env.Folders.LegacyDotNetSdk);
 
+
+    // Install future .NET Core SDK (used for testing non-stable future SDK projects)
+    InstallDotNetSdk(env, buildPlan,
+        version: buildPlan.FutureDotNetVersion,
+        installFolder: env.Folders.FutureDotNetSdk);
+
     // Capture 'dotnet --info' output and parse out RID.
     var lines = new List<string>();
 
@@ -410,6 +418,22 @@ Task("PrepareTestAssets")
         Information($"Building {folder}...");
 
         RunTool(env.LegacyDotNetCommand, $"build", folder)
+            .ExceptionOnError($"Failed to restore '{folder}'.");
+    }
+
+    // Restore and build future test assets with future .NET Core SDK
+    foreach (var project in buildPlan.FutureTestAssets)
+    {
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+
+        Information($"Restoring packages in {folder}...");
+
+        RunTool(env.FutureDotNetCommand, "restore", folder)
+            .ExceptionOnError($"Failed to restore '{folder}'.");
+
+        Information($"Building {folder}...");
+
+        RunTool(env.FutureDotNetCommand, $"build", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
     }
 });
