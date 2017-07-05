@@ -9,17 +9,19 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoDefinition;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
-    public class GotoDefinitionService : RequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.GotoDefinition, LanguageNames.CSharp)]
+    public class GotoDefinitionService : IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
         private readonly MetadataHelper _metadataHelper;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoDefinitionService(OmnisharpWorkspace workspace, MetadataHelper metadataHelper)
+        public GotoDefinitionService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;
@@ -29,8 +31,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         {
             var quickFixes = new List<QuickFix>();
 
-            var document = _workspace.GetDocument(request.FileName);
+            var document = _metadataHelper.FindDocumentInMetadataCache(request.FileName) ??
+                _workspace.GetDocument(request.FileName);
+
             var response = new GotoDefinitionResponse();
+
             if (document != null)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
@@ -41,6 +46,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                 if (symbol != null)
                 {
+                    // for partial methods, pick the one with body
+                    if (symbol is IMethodSymbol method)
+                    {
+                        symbol = method.PartialImplementationPart ?? symbol;
+                    }
+
                     var location = symbol.Locations.First();
 
                     if (location.IsInSource)
@@ -56,10 +67,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     else if (location.IsInMetadata && request.WantMetadata)
                     {
                         var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                        var metadataDocument = await _metadataHelper.GetDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
+                        var (metadataDocument, _) = await _metadataHelper.GetAndAddDocumentFromMetadata(document.Project, symbol, cancellationSource.Token);
                         if (metadataDocument != null)
                         {
                             cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
+
                             var metadataLocation = await _metadataHelper.GetSymbolLocationFromMetadata(symbol, metadataDocument, cancellationSource.Token);
                             var lineSpan = metadataLocation.GetMappedLineSpan();
 

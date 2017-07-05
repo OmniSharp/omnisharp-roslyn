@@ -3,21 +3,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Services;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Diagnostics, LanguageNames.CSharp)]
-    public class DiagnosticsService : RequestHandler<DiagnosticsRequest, DiagnosticsResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Diagnostics, LanguageNames.CSharp)]
+    public class DiagnosticsService : IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>
     {
         private readonly CSharpDiagnosticService _diagnostics;
         private readonly DiagnosticEventForwarder _forwarder;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public DiagnosticsService(OmnisharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
+        public DiagnosticsService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
         {
             _forwarder = forwarder;
             _workspace = workspace;

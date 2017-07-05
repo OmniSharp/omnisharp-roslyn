@@ -1,341 +1,312 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-#if NET451
-using Microsoft.Build.BuildEngine;
 using Microsoft.Build.Evaluation;
-#else
-using Microsoft.Build.Evaluation;
-#endif
+using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.DotNet.ProjectModel.Resolution;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
-using NuGet.Frameworks;
-using OmniSharp.Models;
+using NuGet.Packaging.Core;
+using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.Options;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
-    public class ProjectFileInfo
+    public partial class ProjectFileInfo
     {
-        public ProjectId WorkspaceId { get; set; }
+        private readonly ProjectData _data;
 
-        public Guid ProjectId { get; private set; }
+        public string FilePath { get; }
+        public string Directory { get; }
 
-        public string Name { get; private set; }
+        public ProjectId Id { get; }
 
-        public string ProjectFilePath { get; private set; }
+        public Guid Guid => _data.Guid;
+        public string Name => _data.Name;
 
-        public FrameworkName TargetFramework { get; private set; }
+        public string AssemblyName => _data.AssemblyName;
+        public string TargetPath => _data.TargetPath;
+        public string OutputPath => _data.OutputPath;
+        public string ProjectAssetsFile => _data.ProjectAssetsFile;
 
-        public LanguageVersion? SpecifiedLanguageVersion { get; private set; }
+        public FrameworkName TargetFramework => _data.TargetFramework;
+        public ImmutableArray<string> TargetFrameworks => _data.TargetFrameworks;
 
-        public string ProjectDirectory => Path.GetDirectoryName(ProjectFilePath);
+        public OutputKind OutputKind => _data.OutputKind;
+        public LanguageVersion LanguageVersion => _data.LanguageVersion;
+        public bool AllowUnsafeCode => _data.AllowUnsafeCode;
+        public string DocumentationFile => _data.DocumentationFile;
+        public IList<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
+        public IList<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
 
-        public string AssemblyName { get; private set; }
+        public bool SignAssembly => _data.SignAssembly;
+        public string AssemblyOriginatorKeyFile => _data.AssemblyName;
 
-        public string TargetPath { get; private set; }
+        public ImmutableArray<string> SourceFiles => _data.SourceFiles;
+        public ImmutableArray<string> References => _data.References;
+        public ImmutableArray<string> ProjectReferences => _data.ProjectReferences;
+        public ImmutableArray<PackageReference> PackageReferences => _data.PackageReferences;
+        public ImmutableArray<string> Analyzers => _data.Analyzers;
 
-        public IList<string> SourceFiles { get; private set; }
+        internal ProjectFileInfo(string filePath)
+        {
+            this.FilePath = filePath;
+        }
 
-        public IList<string> References { get; private set; }
+        private ProjectFileInfo(
+            ProjectId id,
+            string filePath,
+            ProjectData data)
+        {
+            this.Id = id;
+            this.FilePath = filePath;
+            this.Directory = Path.GetDirectoryName(filePath);
 
-        public IList<string> ProjectReferences { get; private set; }
-
-        public IList<string> Analyzers { get; private set; }
-
-        public IList<string> DefineConstants { get; private set; }
-
-        public bool AllowUnsafe { get; private set; }
-
-        public OutputKind OutputKind { get; private set; }
-
-        public bool SignAssembly { get; private set; }
-
-        public string AssemblyOriginatorKeyFile { get; private set; }
-
-        public bool GenerateXmlDocumentation { get; private set; }
+            _data = data;
+        }
 
         public static ProjectFileInfo Create(
-            MSBuildOptions options,
-            ILogger logger,
-            string solutionDirectory,
-            string projectFilePath,
-            ICollection<MSBuildDiagnosticsMessage> diagnostics)
+            string filePath, string solutionDirectory, string sdksPath, ILogger logger,
+            MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
-            var projectFileInfo = new ProjectFileInfo();
-            projectFileInfo.ProjectFilePath = projectFilePath;
-
-            if (!PlatformHelper.IsMono)
+            if (!File.Exists(filePath))
             {
-                var properties = new Dictionary<string, string>
-                {
-                    { "DesignTimeBuild", "true" },
-                    { "BuildProjectReferences", "false" },
-                    { "_ResolveReferenceDependencies", "true" },
-                    { "SolutionDir", solutionDirectory + Path.DirectorySeparatorChar }
-                };
+                return null;
+            }
 
-                if (!string.IsNullOrWhiteSpace(options.VisualStudioVersion))
+            var projectInstance = LoadProject(filePath, solutionDirectory, sdksPath, logger, options, diagnostics, out var targetFrameworks);
+            if (projectInstance == null)
+            {
+                return null;
+            }
+
+            var id = ProjectId.CreateNewId(debugName: filePath);
+            var data = CreateProjectData(projectInstance, targetFrameworks);
+
+            return new ProjectFileInfo(id, filePath, data);
+        }
+
+        private static ProjectInstance LoadProject(
+            string filePath, string solutionDirectory, string sdksPath, ILogger logger,
+            MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
+        {
+            options = options ?? new MSBuildOptions();
+
+            var globalProperties = GetGlobalProperties(options, solutionDirectory, sdksPath, logger);
+
+            const string MSBuildSDKsPath = "MSBuildSDKsPath";
+            var oldSdksPathValue = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
+            try
+            {
+                if (globalProperties.TryGetValue(MSBuildSDKsPath, out var sdksPathValue))
                 {
-                    properties.Add("VisualStudioVersion", options.VisualStudioVersion);
+                    Environment.SetEnvironmentVariable(MSBuildSDKsPath, sdksPathValue);
                 }
 
-                var collection = new ProjectCollection(properties);
+                var collection = new ProjectCollection(globalProperties);
 
-                logger.LogInformation("Using toolset {0} for {1}", options.ToolsVersion ?? collection.DefaultToolsVersion, projectFilePath);
+                // Evaluate the MSBuild project
+                var project = string.IsNullOrEmpty(options.ToolsVersion)
+                    ? collection.LoadProject(filePath)
+                    : collection.LoadProject(filePath, options.ToolsVersion);
 
-                var project = string.IsNullOrEmpty(options.ToolsVersion) ?
-                        collection.LoadProject(projectFilePath) :
-                        collection.LoadProject(projectFilePath, options.ToolsVersion);
+                var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
+                targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+
+                // If the project supports multiple target frameworks and specific framework isn't
+                // selected, we must pick one before execution. Otherwise, the ResolveReferences
+                // target might not be available to us.
+                if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length > 0)
+                {
+                    // For now, we'll just pick the first target framework. Eventually, we'll need to
+                    // do better and potentially allow OmniSharp hosts to select a target framework.
+                    targetFramework = targetFrameworks[0];
+                    project.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                }
+                else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
+                {
+                    targetFrameworks = ImmutableArray.Create(targetFramework);
+                }
 
                 var projectInstance = project.CreateProjectInstance();
-                var buildResult = projectInstance.Build("ResolveReferences", new Microsoft.Build.Framework.ILogger[] { new MSBuildLogForwarder(logger, diagnostics) });
+                var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
+                    new[] { new MSBuildLogForwarder(logger, diagnostics) });
 
-                if (!buildResult)
-                {
-                    return null;
-                }
-
-                projectFileInfo.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
-                projectFileInfo.Name = projectInstance.GetPropertyValue("ProjectName");
-                projectFileInfo.TargetFramework = new FrameworkName(projectInstance.GetPropertyValue("TargetFrameworkMoniker"));
-                projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(projectInstance.GetPropertyValue("LangVersion"));
-                projectFileInfo.ProjectId = new Guid(projectInstance.GetPropertyValue("ProjectGuid").TrimStart('{').TrimEnd('}'));
-                projectFileInfo.TargetPath = projectInstance.GetPropertyValue("TargetPath");
-                var outputType = projectInstance.GetPropertyValue("OutputType");
-                switch (outputType)
-                {
-                    case "Library":
-                        projectFileInfo.OutputKind = OutputKind.DynamicallyLinkedLibrary;
-                        break;
-                    case "WinExe":
-                        projectFileInfo.OutputKind = OutputKind.WindowsApplication;
-                        break;
-                    default:
-                    case "Exe":
-                        projectFileInfo.OutputKind = OutputKind.ConsoleApplication;
-                        break;
-                }
-
-                projectFileInfo.SourceFiles =
-                    projectInstance.GetItems("Compile")
-                                   .Select(p => p.GetMetadataValue("FullPath"))
-                                   .ToList();
-
-
-                if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-                {
-                    var framework = new NuGetFramework(projectFileInfo.TargetFramework.Identifier,
-                                                       projectFileInfo.TargetFramework.Version,
-                                                       projectFileInfo.TargetFramework.Profile);
-
-                    // CoreCLR MSBuild won't be able to resolve framework assemblies from mono now.
-                    projectFileInfo.References = projectInstance
-                        .GetItems("ReferencePath")
-                        .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
-                        .Select(p =>
-                        {
-                            var fullpath = p.GetMetadataValue("FullPath");
-                            if (!File.Exists(fullpath))
-                            {
-                                string referenceName = Path.GetFileNameWithoutExtension(fullpath);
-                                string path;
-                                Version version;
-                                if (FrameworkReferenceResolver.Default.TryGetAssembly(referenceName, framework, out path, out version))
-                                {
-                                    logger.LogInformation($"Resolved refernce path: {referenceName} => {version} at {path}");
-                                }
-                                else
-                                {
-                                    logger.LogError($"Fail to resolve reference path for {referenceName}");
-                                }
-
-                                return path;
-                            }
-                            else
-                            {
-                                logger.LogInformation($"Resolved reference path {fullpath} by MSBuild.");
-                                return fullpath;
-                            }
-
-                        }).ToList();
-                }
-                else
-                {
-                    projectFileInfo.References =
-                        projectInstance.GetItems("ReferencePath")
-                                       .Where(p => !string.Equals("ProjectReference", p.GetMetadataValue("ReferenceSourceTarget"), StringComparison.OrdinalIgnoreCase))
-                                       .Select(p => p.GetMetadataValue("FullPath"))
-                                       .ToList();
-                }
-
-                projectFileInfo.ProjectReferences =
-                    projectInstance.GetItems("ProjectReference")
-                                   .Select(p => p.GetMetadataValue("FullPath"))
-                                   .ToList();
-
-                projectFileInfo.Analyzers =
-                    projectInstance.GetItems("Analyzer")
-                                   .Select(p => p.GetMetadataValue("FullPath"))
-                                   .ToList();
-
-                var allowUnsafe = projectInstance.GetPropertyValue("AllowUnsafeBlocks");
-                if (!string.IsNullOrWhiteSpace(allowUnsafe))
-                {
-                    projectFileInfo.AllowUnsafe = Convert.ToBoolean(allowUnsafe);
-                }
-
-                var defineConstants = projectInstance.GetPropertyValue("DefineConstants");
-                if (!string.IsNullOrWhiteSpace(defineConstants))
-                {
-                    projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
-                }
-
-                var signAssembly = projectInstance.GetPropertyValue("SignAssembly");
-                if (!string.IsNullOrWhiteSpace(signAssembly))
-                {
-                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
-                }
-
-                projectFileInfo.AssemblyOriginatorKeyFile = projectInstance.GetPropertyValue("AssemblyOriginatorKeyFile");
-
-                var documentationFile = projectInstance.GetPropertyValue("DocumentationFile");
-                if (!string.IsNullOrWhiteSpace(documentationFile))
-                {
-                    projectFileInfo.GenerateXmlDocumentation = true;
-                }
+                return buildResult
+                    ? projectInstance
+                    : null;
             }
-            else
+            finally
             {
-#if NET451
-                // On mono we need to use this API since the ProjectCollection
-                // isn't fully implemented
-#pragma warning disable CS0618
-                var engine = Engine.GlobalEngine;
-                engine.DefaultToolsVersion = "4.0";
-#pragma warning restore CS0618
-                // engine.RegisterLogger(new ConsoleLogger());
-                engine.RegisterLogger(new MSBuildLogForwarder(logger, diagnostics));
-
-                var propertyGroup = new BuildPropertyGroup();
-                propertyGroup.SetProperty("DesignTimeBuild", "true");
-                propertyGroup.SetProperty("BuildProjectReferences", "false");
-                // Dump entire assembly reference closure
-                propertyGroup.SetProperty("_ResolveReferenceDependencies", "true");
-                propertyGroup.SetProperty("SolutionDir", solutionDirectory + Path.DirectorySeparatorChar);
-
-                // propertyGroup.SetProperty("MSBUILDENABLEALLPROPERTYFUNCTIONS", "1");
-
-                engine.GlobalProperties = propertyGroup;
-
-                var project = engine.CreateNewProject();
-                project.Load(projectFilePath);
-                var buildResult = engine.BuildProjectFile(projectFilePath, new[] { "ResolveReferences" }, propertyGroup, null, BuildSettings.None, null);
-
-                if (!buildResult)
-                {
-                    return null;
-                }
-
-                var itemsLookup = project.EvaluatedItems.OfType<BuildItem>()
-                                                        .ToLookup(g => g.Name);
-
-                var properties = project.EvaluatedProperties.OfType<BuildProperty>()
-                                                            .ToDictionary(p => p.Name);
-
-                projectFileInfo.AssemblyName = properties["AssemblyName"].FinalValue;
-                projectFileInfo.Name = Path.GetFileNameWithoutExtension(projectFilePath);
-                projectFileInfo.TargetFramework = new FrameworkName(properties["TargetFrameworkMoniker"].FinalValue);
-                if (properties.ContainsKey("LangVersion"))
-                {
-                    projectFileInfo.SpecifiedLanguageVersion = ToLanguageVersion(properties["LangVersion"].FinalValue);
-                }
-                projectFileInfo.ProjectId = new Guid(properties["ProjectGuid"].FinalValue.TrimStart('{').TrimEnd('}'));
-                projectFileInfo.TargetPath = properties["TargetPath"].FinalValue;
-
-                // REVIEW: FullPath here returns the wrong physical path, we need to figure out
-                // why. We must be setting up something incorrectly
-                projectFileInfo.SourceFiles = itemsLookup["Compile"]
-                    .Select(b => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, b.FinalItemSpec)))
-                    .ToList();
-
-                projectFileInfo.References = itemsLookup["ReferencePath"]
-                    .Where(p => !p.HasMetadata("Project"))
-                    .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
-                    .ToList();
-
-                projectFileInfo.ProjectReferences = itemsLookup["ProjectReference"]
-                    .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
-                    .ToList();
-
-                projectFileInfo.Analyzers = itemsLookup["Analyzer"]
-                    .Select(p => Path.GetFullPath(Path.Combine(projectFileInfo.ProjectDirectory, p.FinalItemSpec)))
-                    .ToList();
-
-                var allowUnsafe = properties.GetPropertyValue("AllowUnsafeBlocks");
-                if (!string.IsNullOrWhiteSpace(allowUnsafe))
-                {
-                    projectFileInfo.AllowUnsafe = Convert.ToBoolean(allowUnsafe);
-                }
-
-                var defineConstants = properties.GetPropertyValue("DefineConstants");
-                if (!string.IsNullOrWhiteSpace(defineConstants))
-                {
-                    projectFileInfo.DefineConstants = defineConstants.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();
-                }
-
-                var signAssembly = properties["SignAssembly"].FinalValue;
-                if (!string.IsNullOrWhiteSpace(signAssembly))
-                {
-                    projectFileInfo.SignAssembly = Convert.ToBoolean(signAssembly);
-                }
-
-                projectFileInfo.AssemblyOriginatorKeyFile = properties["AssemblyOriginatorKeyFile"].FinalValue;
-
-                var documentationFile = properties["DocumentationFile"].FinalValue;
-                if (!string.IsNullOrWhiteSpace(documentationFile))
-                {
-                    projectFileInfo.GenerateXmlDocumentation = true;
-                }
-#endif
+                Environment.SetEnvironmentVariable(MSBuildSDKsPath, oldSdksPathValue);
             }
-
-            return projectFileInfo;
         }
 
-        private static LanguageVersion? ToLanguageVersion(string langVersionPropertyValue)
+        private static ProjectData CreateProjectData(ProjectInstance projectInstance, ImmutableArray<string> targetFrameworks)
         {
-            if (!(string.IsNullOrWhiteSpace(langVersionPropertyValue) || langVersionPropertyValue.Equals("Default", StringComparison.OrdinalIgnoreCase)))
+            var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
+            var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
+            var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
+            var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
+            var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
+            var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
+
+            var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
+
+            var languageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
+            var allowUnsafeCode = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
+            var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
+            var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
+            var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
+            var suppressDiagnosticIds = PropertyConverter.ToSuppressDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
+            var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
+            var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
+
+            var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
+            var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
+            var references = GetFullPaths(
+                projectInstance.GetItems(ItemNames.ReferencePath).Where(ReferenceSourceTargetIsNotProjectReference));
+            var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
+            var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
+
+            return new ProjectData(guid, name,
+                assemblyName, targetPath, outputPath, projectAssetsFile,
+                targetFramework, targetFrameworks,
+                outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressDiagnosticIds,
+                signAssembly, assemblyOriginatorKeyFile,
+                sourceFiles, projectReferences, references, packageReferences, analyzers);
+        }
+
+        public ProjectFileInfo Reload(
+            string solutionDirectory, string sdksPath, ILogger logger,
+            MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+        {
+            var projectInstance = LoadProject(FilePath, solutionDirectory, sdksPath, logger, options, diagnostics, out var targetFrameworks);
+            if (projectInstance == null)
             {
-                // ISO-1, ISO-2, 3, 4, 5, 6 or Default
-                switch (langVersionPropertyValue.ToLower())
+                return null;
+            }
+
+            var data = CreateProjectData(projectInstance, targetFrameworks);
+
+            return new ProjectFileInfo(Id, FilePath, data);
+        }
+
+        public bool IsUnityProject()
+        {
+            return References.Any(filePath =>
+            {
+                var fileName = Path.GetFileName(filePath);
+
+                return string.Equals(fileName, "UnityEngine.dll", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fileName, "UnityEditor.dll", StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
+        private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, string sdksPath, ILogger logger)
+        {
+            var globalProperties = new Dictionary<string, string>
+            {
+                { PropertyNames.DesignTimeBuild, "true" },
+                { PropertyNames.BuildProjectReferences, "false" },
+                { PropertyNames._ResolveReferenceDependencies, "true" },
+                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
+            };
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.MSBuildExtensionsPath,
+                userOptionValue: options.MSBuildExtensionsPath,
+                environmentValue: MSBuildEnvironment.MSBuildExtensionsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.MSBuildSDKsPath,
+                userOptionValue: options.MSBuildSDKsPath,
+                environmentValue: sdksPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.VisualStudioVersion,
+                userOptionValue: options.VisualStudioVersion,
+                environmentValue: null);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.Configuration,
+                userOptionValue: options.Configuration,
+                environmentValue: null);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.Platform,
+                userOptionValue: options.Platform,
+                environmentValue: null);
+
+            if (PlatformHelper.IsMono)
+            {
+                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
+                if (monoXBuildFrameworksDirPath != null)
                 {
-                    case "iso-1": return LanguageVersion.CSharp1;
-                    case "iso-2": return LanguageVersion.CSharp2;
-                    case "3": return LanguageVersion.CSharp3;
-                    case "4": return LanguageVersion.CSharp4;
-                    case "5": return LanguageVersion.CSharp5;
-                    case "6": return LanguageVersion.CSharp6;
+                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
+                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
                 }
             }
-            return null;
+
+            return globalProperties;
+        }
+
+        private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
+        {
+            return item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
+        }
+
+        private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items)
+        {
+            var builder = ImmutableArray.CreateBuilder<string>();
+            var addedSet = new HashSet<string>();
+
+            foreach (var item in items)
+            {
+                var fullPath = item.GetMetadataValue(MetadataNames.FullPath);
+
+                if (addedSet.Add(fullPath))
+                {
+                    builder.Add(fullPath);
+                }
+            }
+
+            return builder.ToImmutable();
+        }
+
+        private static ImmutableArray<PackageReference> GetPackageReferences(ICollection<ProjectItemInstance> items)
+        {
+            var builder = ImmutableArray.CreateBuilder<PackageReference>(items.Count);
+            var addedSet = new HashSet<PackageReference>();
+
+            foreach (var item in items)
+            {
+                var name = item.EvaluatedInclude;
+                var versionValue = item.GetMetadataValue(MetadataNames.Version);
+                var versionRange = PropertyConverter.ToVersionRange(versionValue);
+                var dependency = new PackageDependency(name, versionRange);
+
+                var isImplicitlyDefinedValue = item.GetMetadataValue(MetadataNames.IsImplicitlyDefined);
+                var isImplicitlyDefined = PropertyConverter.ToBoolean(isImplicitlyDefinedValue, defaultValue: false);
+
+                var packageReference = new PackageReference(dependency, isImplicitlyDefined);
+
+                if (addedSet.Add(packageReference))
+                {
+                    builder.Add(packageReference);
+                }
+            }
+
+            return builder.ToImmutable();
         }
     }
-
-#if NET451
-    static class DictionaryExt
-    {
-        public static string GetPropertyValue(this Dictionary<string, BuildProperty> dict, string key)
-        {
-            return dict.ContainsKey(key)
-                ? dict[key].FinalValue
-                : null;
-        }
-    }
-#endif
 }

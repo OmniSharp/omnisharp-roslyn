@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,16 +8,17 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FindSymbols;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FindSymbols, LanguageNames.CSharp)]
-    public class FindSymbolsService : RequestHandler<FindSymbolsRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.FindSymbols, LanguageNames.CSharp)]
+    public class FindSymbolsService : IRequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
-        private OmnisharpWorkspace _workspace;
+        private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FindSymbolsService(OmnisharpWorkspace workspace)
+        public FindSymbolsService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -35,11 +37,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         {
             var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
 
-            var quickFixes = (from symbol in symbols
-                              from location in symbol.Locations
-                              select ConvertSymbol(symbol, location)).Distinct();
+            var symbolLocations = new List<QuickFix>();
+            foreach(var symbol in symbols)
+            {
+                // for partial methods, pick the one with body
+                var s = symbol;
+                if (s is IMethodSymbol method)
+                {
+                    s = method.PartialImplementationPart ?? symbol;
+                }
 
-            return new QuickFixResponse(quickFixes);
+                foreach (var location in s.Locations)
+                {
+                    symbolLocations.Add(ConvertSymbol(symbol, location));
+                }
+            }
+
+            return new QuickFixResponse(symbolLocations.Distinct());
         }
 
         private QuickFix ConvertSymbol(ISymbol symbol, Location location)

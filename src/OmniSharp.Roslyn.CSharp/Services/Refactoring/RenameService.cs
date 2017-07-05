@@ -9,16 +9,18 @@ using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.Rename;
+using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Rename, LanguageNames.CSharp)]
-    public class RenameService : RequestHandler<RenameRequest, RenameResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Rename, LanguageNames.CSharp)]
+    public class RenameService : IRequestHandler<RenameRequest, RenameResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public RenameService(OmnisharpWorkspace workspace)
+        public RenameService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -57,8 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                     {
                         var changedDocument = solution.GetDocument(changedDocumentId);
 
-                        ModifiedFileResponse modifiedFileResponse;
-                        if (!changes.TryGetValue(changedDocument.FilePath, out modifiedFileResponse))
+                        if (!changes.TryGetValue(changedDocument.FilePath, out var modifiedFileResponse))
                         {
                             modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
                             changes[changedDocument.FilePath] = modifiedFileResponse;
@@ -72,8 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         else
                         {
                             var originalDocument = _workspace.CurrentSolution.GetDocument(changedDocumentId);
-                            var textChanges = await changedDocument.GetTextChangesAsync(originalDocument);
-                            var linePositionSpanTextChanges = await LinePositionSpanTextChange.Convert(originalDocument, textChanges);
+                            var linePositionSpanTextChanges = await TextChanges.GetAsync(changedDocument, originalDocument);
 
                             modifiedFileResponse.Changes = modifiedFileResponse.Changes != null
                                 ? modifiedFileResponse.Changes.Union(linePositionSpanTextChanges)

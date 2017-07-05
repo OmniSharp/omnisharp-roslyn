@@ -4,16 +4,18 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.MembersFlat;
+using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [OmniSharpHandler(OmnisharpEndpoints.MembersFlat, LanguageNames.CSharp)]
-    public class MembersAsFlatService : RequestHandler<MembersFlatRequest, IEnumerable<QuickFix>>
+    [OmniSharpHandler(OmniSharpEndpoints.MembersFlat, LanguageNames.CSharp)]
+    public class MembersAsFlatService : IRequestHandler<MembersFlatRequest, IEnumerable<QuickFix>>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public MembersAsFlatService(OmnisharpWorkspace workspace)
+        public MembersAsFlatService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

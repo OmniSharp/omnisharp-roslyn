@@ -4,18 +4,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.Metadata;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Metadata, LanguageNames.CSharp)]
-    public class MetadataService : RequestHandler<MetadataRequest, MetadataResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Metadata, LanguageNames.CSharp)]
+    public class MetadataService : IRequestHandler<MetadataRequest, MetadataResponse>
     {
         private readonly MetadataHelper _metadataHelper;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public MetadataService(OmnisharpWorkspace workspace, MetadataHelper metadataHelper)
+        public MetadataService(OmniSharpWorkspace workspace, MetadataHelper metadataHelper)
         {
             _workspace = workspace;
             _metadataHelper = metadataHelper;
@@ -31,12 +31,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 if (symbol != null && symbol.ContainingAssembly.Name == request.AssemblyName)
                 {
                     var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(request.Timeout));
-                    var document = await _metadataHelper.GetDocumentFromMetadata(project, symbol, cancellationSource.Token);
-                    if (document != null)
+                    var (metadataDocument, documentPath) = await _metadataHelper.GetAndAddDocumentFromMetadata(project, symbol, cancellationSource.Token);
+                    if (metadataDocument != null)
                     {
-                        var source = await document.GetTextAsync();
-                        response.SourceName = _metadataHelper.GetFilePathForSymbol(project, symbol);
+                        var source = await metadataDocument.GetTextAsync();
                         response.Source = source.ToString();
+                        response.SourceName = documentPath;
 
                         return response;
                     }

@@ -8,19 +8,20 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.CodeAction;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
-    public class RunCodeActionsService : RequestHandler<RunCodeActionRequest, RunCodeActionResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.RunCodeAction, LanguageNames.CSharp)]
+    public class RunCodeActionsService : IRequestHandler<RunCodeActionRequest, RunCodeActionResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
         [ImportingConstructor]
-        public RunCodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
+        public RunCodeActionsService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
@@ -46,19 +47,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 o.Apply(_workspace, CancellationToken.None);
             }
 
-            var originalDocument = context.Value.Document;
+            var oldDocument = context.Value.Document;
+            var newDocument = _workspace.CurrentSolution.GetDocument(oldDocument.Id);
+
             var response = new RunCodeActionResponse();
+
             if (!request.WantsTextChanges)
             {
-                // return the new document
-                var sourceText = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextAsync();
-                response.Text = sourceText.ToString();
+                // return the text of the new document
+                var newText = await newDocument.GetTextAsync();
+                response.Text = newText.ToString();
             }
             else
             {
                 // return the text changes
-                var changes = await _workspace.CurrentSolution.GetDocument(originalDocument.Id).GetTextChangesAsync(originalDocument);
-                response.Changes = await LinePositionSpanTextChange.Convert(originalDocument, changes);
+                response.Changes = await TextChanges.GetAsync(newDocument, oldDocument);
             }
 
             return response;
@@ -90,7 +93,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 foreach (var provider in _codeActionProviders)
                 {
-                    var providers = provider.Refactorings;
+                    var providers = provider.CodeRefactoringProviders;
 
                     foreach (var codeActionProvider in providers)
                     {

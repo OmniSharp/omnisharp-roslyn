@@ -8,19 +8,19 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.CodeAction;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GetCodeAction, LanguageNames.CSharp)]
-    public class GetCodeActionsService : RequestHandler<GetCodeActionRequest, GetCodeActionsResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.GetCodeAction, LanguageNames.CSharp)]
+    public class GetCodeActionsService : IRequestHandler<GetCodeActionRequest, GetCodeActionsResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
 
         [ImportingConstructor]
-        public GetCodeActionsService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
+        public GetCodeActionsService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _workspace = workspace;
             _codeActionProviders = providers;
@@ -60,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             {
                 foreach (var provider in _codeActionProviders)
                 {
-                    var providers = provider.Refactorings;
+                    var providers = provider.CodeRefactoringProviders;
 
                     foreach (var codeActionProvider in providers)
                     {

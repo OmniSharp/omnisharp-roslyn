@@ -4,18 +4,18 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Abstractions.Services;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [OmniSharpHandler(OmnisharpEndpoints.MembersTree, LanguageNames.CSharp)]
-    public class MembersAsTreeService : RequestHandler<MembersTreeRequest, FileMemberTree>
+    [OmniSharpHandler(OmniSharpEndpoints.MembersTree, LanguageNames.CSharp)]
+    public class MembersAsTreeService : IRequestHandler<MembersTreeRequest, FileMemberTree>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ISyntaxFeaturesDiscover> _discovers;
 
         [ImportingConstructor]
-        public MembersAsTreeService(OmnisharpWorkspace workspace, [ImportMany] IEnumerable<ISyntaxFeaturesDiscover> featureDiscovers)
+        public MembersAsTreeService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ISyntaxFeaturesDiscover> featureDiscovers)
         {
             _workspace = workspace;
             _discovers = featureDiscovers;

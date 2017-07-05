@@ -1,16 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using OmniSharp.FileWatching;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using OmniSharp.Services;
+using OmniSharp.Models.FilesChanged;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FilesChanged, LanguageNames.CSharp)]
-    public class OnFilesChangedService : RequestHandler<IEnumerable<Request> ,FilesChangedResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.FilesChanged, LanguageNames.CSharp)]
+    public class OnFilesChangedService : IRequestHandler<IEnumerable<Request>, FilesChangedResponse>
     {
         private readonly IFileSystemWatcher _watcher;
 

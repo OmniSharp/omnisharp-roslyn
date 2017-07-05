@@ -20,36 +20,31 @@ string GetBuildIdentifier(string runtime, string framework)
     }
     else
     {
-        // Remove version number. Note: because there are separate versions for Ubuntu 14 and 16,
-        // we treat Ubuntu as a special case.
-        if (runtime.StartsWith("ubuntu.14"))
+        // Remove version number for Windows and OSX.
+        if (runtime.StartsWith("win") || runtime.StartsWith("osx"))
         {
-            runtimeShort = "ubuntu14-x64";
-        }
-        else if (runtime.StartsWith("ubuntu.16"))
-        {
-            runtimeShort = "ubuntu16-x64";
+            runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
         }
         else
         {
-            runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
+            runtimeShort = runtime;
         }
     }
 
     // Rename/restrict some archive names on CI
     var travisOSName = Environment.GetEnvironmentVariable("TRAVIS_OS_NAME");
-    // Travis/Linux + default + net451 is renamed to Mono
-    if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && framework.Equals("net451"))
+    // Travis/Linux + default + net46 is renamed to Mono
+    if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && framework.Equals("net46"))
     {
         return "mono";
     }
-    // No need to archive other Travis + net451 combinations
-    else if (travisOSName != null && framework.Equals("net451"))
+    // No need to archive other Travis + net46 combinations
+    else if (travisOSName != null && framework.Equals("net46"))
     {
         return null;
     }
-    // No need to archive Travis/Linux + default + not(net451) (expect all runtimes to be explicitely named)
-    else if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && !framework.Equals("net451"))
+    // No need to archive Travis/Linux + default + not(net46) (expect all runtimes to be explicitely named)
+    else if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && !framework.Equals("net46"))
     {
         return null;
     }

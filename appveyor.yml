@@ -3,7 +3,7 @@ init:
   - git config --global core.autocrlf true
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
-  - ps: .\build.ps1 -target=All -archive
+  - ps: .\build.ps1 All -archive
 artifacts:
   - path: artifacts/package/*.zip
 deploy:
@@ -18,4 +18,4 @@ notifications:
   - provider: Slack
     auth_token:
       secure: OU7mWtP+JWLRV2Ofq3/QMQbudeN632xLgWb4zMJtOssi2v5HER4qe0GFoj/rnIYOBXd3d/5+glfKG3ijvCU3bA==
-    channel: '#general'
+    channel: '#integrations'

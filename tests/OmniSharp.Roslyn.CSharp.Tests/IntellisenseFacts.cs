@@ -1,248 +1,443 @@
 using System;
 using System.Collections.Generic;
-using System.Composition.Hosting;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading.Tasks;
-using OmniSharp.Models;
-using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
-using OmniSharp.Tests;
+using Microsoft.Extensions.Logging;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class IntellisenseFacts
+    public class IntellisenseFacts : AbstractAutoCompleteTestFixture
     {
-        private CompositionHost _plugInHost;
+        private readonly ILogger _logger;
 
-        public IntellisenseFacts()
+        public IntellisenseFacts(ITestOutputHelper output)
+            : base(output)
         {
-            _plugInHost = TestHelpers.CreatePluginHost(new[] { typeof(IntellisenseService).GetTypeInfo().Assembly });
+            this._logger = this.LoggerFactory.CreateLogger<IntellisenseFacts>();
         }
 
-        [Fact]
-        public async Task DisplayText_is_correct_for_property()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task DisplayText_is_correct_for_property(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public int Foo { get; set; }
                     public Class1()
                         {
-                            Foo$
+                            Foo$$
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: true);
-            var completions = await FindCompletionsAsync(source, request);
-
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo");
         }
 
-        [Fact]
-        public async Task DisplayText_is_correct_for_variable()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task DisplayText_is_correct_for_variable(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
                             var foo = 1;
-                            foo$
+                            foo$$
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: true);
-            var completions = await FindCompletionsAsync(source, request);
-
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "foo");
         }
 
-        [Fact]
-        public async Task DisplayText_matches_snippet_for_snippet_response()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task DisplayText_matches_snippet_for_snippet_response(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            Foo$
+                            Foo$$
                         }
                     public void Foo(int bar = 1)
                         {
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: true);
-            var completions = await FindCompletionsAsync(source, request);
-
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(2), "Foo()", "Foo(int bar = 1)");
         }
 
-        [Fact]
-        public async Task DisplayText_matches_snippet_for_non_snippet_response()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task DisplayText_matches_snippet_for_non_snippet_response(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            Foo$
+                            Foo$$
                         }
                     public void Foo(int bar = 1)
                         {
                         }
                     }";
 
-            var request = CreateRequest(source, wantSnippet: false);
-            var completions = await FindCompletionsAsync(source, request);
-
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: false);
             ContainsCompletions(completions.Select(c => c.DisplayText).Take(1), "Foo(int bar = 1)");
         }
 
-        [Fact]
-        public async Task Returns_camel_case_completions()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_camel_case_completions(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Guid.tp$
+                            System.Guid.tp$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
-
+            var completions = await FindCompletionsAsync(filename, input);
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "TryParse");
         }
 
-        [Fact]
-        public async Task Returns_sub_sequence_completions()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_sub_sequence_completions(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Guid.ng$
+                            System.Guid.ng$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
-
+            var completions = await FindCompletionsAsync(filename, input);
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
         }
 
-        [Fact]
-        public async Task Returns_method_header()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_method_header(string filename)
         {
-            var source =
+            const string input =
                 @"public class Class1 {
                     public Class1()
                         {
-                            System.Guid.ng$
+                            System.Guid.ng$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
-
+            var completions = await FindCompletionsAsync(filename, input);
             ContainsCompletions(completions.Select(c => c.MethodHeader).Take(1), "NewGuid()");
         }
 
-        [Fact]
-        public async Task Returns_variable_before_class()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_variable_before_class(string filename)
         {
-            var source =
+            const string input =
                 @"public class MyClass1 {
 
                     public MyClass1()
                         {
                             var myvar = 1;
-                            my$
+                            my$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
-
+            var completions = await FindCompletionsAsync(filename, input);
             ContainsCompletions(completions.Select(c => c.CompletionText), "myvar", "MyClass1");
         }
 
-        [Fact]
-        public async Task Returns_class_before_variable()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_class_before_variable(string filename)
         {
-            var source =
+            const string input =
                 @"public class MyClass1 {
 
                     public MyClass1()
                         {
                             var myvar = 1;
-                            My$
+                            My$$
                         }
                     }";
 
-            var completions = await FindCompletionsAsync(source);
-
+            var completions = await FindCompletionsAsync(filename, input);
             ContainsCompletions(completions.Select(c => c.CompletionText), "MyClass1", "myvar");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_empty_sequence_in_invalid_context(string filename)
+        {
+            const string source =
+                @"public class MyClass1 {
+
+                    public MyClass1()
+                        {
+                            var x$$
+                        }
+                    }";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), Array.Empty<string>());
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_attribute_without_attribute_suffix(string filename)
+        {
+            const string source =
+                @"using System;
+
+                    public class BarAttribute : Attribute {}
+
+                    [B$$
+                    public class Foo {}";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "Bar");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_members_in_object_initializer_context(string filename)
+        {
+            const string source =
+                @"public class MyClass1 {
+                        public string Foo {get; set;}
+                  }
+
+                    public class MyClass2 {
+
+                        public MyClass2()
+                        {
+                            var c = new MyClass1 {
+                             F$$
+                        }
+                    }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), "Foo");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_parameter_name_inside_a_method(string filename)
+        {
+            const string source =
+                @"public class MyClass1 {
+                        public void SayHi(string text) {}
+                  }
+
+                    public class MyClass2 {
+
+                        public MyClass2()
+                        {
+                            var c = new MyClass1();
+                            c.SayHi(te$$
+                        }
+                    }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "text:");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_override_signatures(string filename)
+        {
+            const string source =
+                @"class Foo
+                    {
+                       public virtual void Test(string text) {}
+                       public virtual void Test(string text, string moreText) {}
+                    }
+
+                    class FooChild : Foo 
+                    {
+                      override $$
+                    }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), "Equals(object obj)", "GetHashCode()", "Test(string text)", "Test(string text, string moreText)", "ToString()");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_cref_completion(string filename)
+        {
+            const string source =
+                @"  /// <summary>
+                    /// A comment. <see cref=""My$$"" /> for more details
+                    /// </summary>
+                  public class MyClass1 {
+                  }
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "MyClass1");
+        }
+
+        [Fact]
+        public async Task Returns_host_object_members_in_csx()
+        {
+            const string source =
+                "Prin$$";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "Print", "PrintOptions" }); 
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_true_for_lambda_expression_position1(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M(Func<int, int> a) { }
+
+    void M()
+    {
+        M(c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => c.IsSuggestionMode));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_true_for_lambda_expression_position2(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M()
+    {
+        Func<int, int> a = c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => c.IsSuggestionMode));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_false_for_normal_position1(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M(int a) { }
+
+    void M()
+    {
+        M(c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => !c.IsSuggestionMode));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_false_for_normal_position2(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M()
+    {
+        int a = c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => !c.IsSuggestionMode));
         }
 
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))
             {
-                Console.Error.WriteLine("Expected");
-                Console.Error.WriteLine("--------");
+                var builder = new StringBuilder();
+                builder.AppendLine("Expected");
+                builder.AppendLine("--------");
 
                 foreach (var completion in expected)
                 {
-                    Console.WriteLine(completion);
+                    builder.AppendLine(completion);
                 }
 
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("Found");
-                Console.Error.WriteLine("-----");
+                builder.AppendLine();
+                builder.AppendLine("Found");
+                builder.AppendLine("-----");
 
                 foreach (var completion in completions)
                 {
-                    Console.WriteLine(completion);
+                    builder.AppendLine(completion);
                 }
+
+                this._logger.LogError(builder.ToString());
             }
 
             Assert.Equal(expected, completions.ToArray());
-        }
-
-        private async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string source, AutoCompleteRequest request = null)
-        {
-            var workspace = await TestHelpers.CreateSimpleWorkspace(_plugInHost, source);
-            var controller = new IntellisenseService(workspace, new FormattingOptions());
-
-            if (request == null)
-            {
-                request = CreateRequest(source);
-            }
-
-            var response = await controller.Handle(request);
-            var completions = response as IEnumerable<AutoCompleteResponse>;
-
-            return completions;
-        }
-
-        private AutoCompleteRequest CreateRequest(string source, string fileName = "dummy.cs", bool wantSnippet = false)
-        {
-            var lineColumn = TestHelpers.GetLineAndColumnFromDollar(source);
-
-            return new AutoCompleteRequest
-            {
-                Line = lineColumn.Line,
-                Column = lineColumn.Column,
-                FileName = fileName,
-                Buffer = source.Replace("$", ""),
-                WordToComplete = GetPartialWord(source),
-                WantMethodHeader = true,
-                WantSnippet = wantSnippet
-            };
-        }
-
-        private static string GetPartialWord(string editorText)
-        {
-            MatchCollection matches = Regex.Matches(editorText, @"([a-zA-Z0-9_]*)\$");
-            return matches[0].Groups[1].ToString();
         }
     }
 }

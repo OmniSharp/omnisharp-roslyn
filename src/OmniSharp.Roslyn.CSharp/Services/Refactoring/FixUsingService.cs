@@ -1,61 +1,65 @@
 using System.Collections.Generic;
 using System.Composition;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.FixUsings;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FixUsings, LanguageNames.CSharp)]
-    public class FixUsingService : RequestHandler<FixUsingsRequest, FixUsingsResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.FixUsings, LanguageNames.CSharp)]
+    public class FixUsingService : IRequestHandler<FixUsingsRequest, FixUsingsResponse>
     {
-        private readonly IEnumerable<ICodeActionProvider> _codeActionProviders;
-        private readonly IOmnisharpAssemblyLoader _loader;
+        private readonly OmniSharpWorkspace _workspace;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly IAssemblyLoader _loader;
+        private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
-        public FixUsingService(OmnisharpWorkspace workspace,
-                               ILoggerFactory loggerFactory,
-                               IOmnisharpAssemblyLoader loader,
-                               [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)
+        public FixUsingService(
+            OmniSharpWorkspace workspace,
+            ILoggerFactory loggerFactory,
+            IAssemblyLoader loader,
+            [ImportMany] IEnumerable<ICodeActionProvider> codeActionProviders)
         {
             _workspace = workspace;
             _loggerFactory = loggerFactory;
             _loader = loader;
-            _codeActionProviders = codeActionProviders;
+            _providers = codeActionProviders;
         }
 
         public async Task<FixUsingsResponse> Handle(FixUsingsRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
             var response = new FixUsingsResponse();
 
-            if (document != null)
+            var oldDocument = _workspace.GetDocument(request.FileName);
+            if (oldDocument != null)
             {
-                var fixUsingsResponse = await new FixUsingsWorker(_loggerFactory, _loader).FixUsings(_workspace.CurrentSolution, _codeActionProviders, request.FileName);
+                var fixUsingsResponse = await new FixUsingsWorker(_providers)
+                    .FixUsingsAsync(oldDocument);
+
                 response.AmbiguousResults = fixUsingsResponse.AmbiguousResults;
 
                 if (request.ApplyTextChanges)
                 {
-                    _workspace.TryApplyChanges(fixUsingsResponse.Solution);
+                    _workspace.TryApplyChanges(fixUsingsResponse.Document.Project.Solution);
                 }
+
+                var newDocument = fixUsingsResponse.Document;
 
                 if (!request.WantsTextChanges)
                 {
-                    // return the new document
-                    var docText = await fixUsingsResponse.Solution.GetDocument(document.Id).GetTextAsync();
-                    response.Buffer = docText.ToString();
+                    // return the text of the new document
+                    var newText = await newDocument.GetTextAsync();
+                    response.Buffer = newText.ToString();
                 }
                 else
                 {
                     // return the text changes
-                    var changes = await fixUsingsResponse.Solution.GetDocument(document.Id).GetTextChangesAsync(document);
-                    response.Changes = await LinePositionSpanTextChange.Convert(document, changes);
+                    response.Changes = await TextChanges.GetAsync(newDocument, oldDocument);
                 }
             }
 

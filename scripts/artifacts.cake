@@ -20,13 +20,13 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         {
             System.IO.File.Delete(desktopScript);
         }
-        content[2] = String.Format(content[2], "net451");
+        content[2] = String.Format(content[2], "net46");
         System.IO.File.WriteAllLines(desktopScript, content);
         if (System.IO.File.Exists(coreScript))
         {
             System.IO.File.Delete(coreScript);
         }
-        content[2] = String.Format(content[2], "netcoreapp1.0");
+        content[2] = String.Format(content[2], "netcoreapp1.1");
         System.IO.File.WriteAllLines(coreScript, content);
     }
     else
@@ -43,14 +43,14 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         {
             System.IO.File.Delete(desktopScript);
         }
-        content[2] = String.Format(content[2], "mono", "net451", ".exe");
+        content[2] = String.Format(content[2], "mono", "net46", ".exe");
         System.IO.File.WriteAllLines(desktopScript, content);
         Run("chmod", $"+x \"{desktopScript}\"");
         if (System.IO.File.Exists(coreScript))
         {
             System.IO.File.Delete(coreScript);
         }
-        content[2] = String.Format(content[2], "", "netcoreapp1.0", "");
+        content[2] = String.Format(content[2], "", "netcoreapp1.1", "");
         System.IO.File.WriteAllLines(coreScript, content);
         Run("chmod", $"+x \"{desktopScript}\"");
     }

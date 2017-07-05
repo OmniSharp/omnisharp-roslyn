@@ -1,271 +1,246 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models;
+using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models.Highlight;
 using OmniSharp.Roslyn.CSharp.Services.Highlighting;
-using OmniSharp.Tests;
+using TestUtility;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class HighlightFacts
+    public class HighlightFacts : AbstractSingleRequestHandlerTestFixture<HighlightingService>
     {
+        public HighlightFacts(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
+        protected override string EndpointName => OmniSharpEndpoints.Highlight;
+
         [Fact]
         public async Task HighlightSingleLine()
         {
-            var code = @"
-                namespace N1
-                {
-                    class C1 { int n = true; }
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile, line: 3);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", Lines = new[] { 3 } });
-
-            AssertSyntax(regions.Highlights, code, 3,
-                Token("class", "keyword"),
-                Token("C1", "class name"),
-                Token("{", "punctuation"),
-                Token("int", "keyword"),
-                Token("n", "identifier"),
-                Token("=", "operator"),
-                Token("true", "keyword"),
-                Token(";", "punctuation"),
-                Token("}", "punctuation"));
+            AssertSyntax(highlights, testFile.Content.Code, 3,
+                Keyword("class"),
+                ClassName("C1"),
+                Punctuation("{"),
+                Keyword("int"),
+                Identifier("n"),
+                Operator("="),
+                Keyword("true"),
+                Punctuation(";"),
+                Punctuation("}"));
         }
 
         [Fact]
         public async Task HighlightEntireFile()
         {
-            var code = @"
-                namespace N1
-                {
-                    class C1 { int n = true; }
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
-
-            AssertSyntax(regions.Highlights, code, 0,
-                Token("namespace", "keyword"),
-                Token("N1", "identifier"),
-                Token("{", "punctuation"),
-                Token("class", "keyword"),
-                Token("C1", "class name"),
-                Token("{", "punctuation"),
-                Token("int", "keyword"),
-                Token("n", "identifier"),
-                Token("=", "operator"),
-                Token("true", "keyword"),
-                Token(";", "punctuation"),
-                Token("}", "punctuation"),
-                Token("}", "punctuation"));
+            AssertSyntax(highlights, testFile.Content.Code, 0,
+                Keyword("namespace"),
+                Identifier("N1"),
+                Punctuation("{"),
+                Keyword("class"),
+                ClassName("C1"),
+                Punctuation("{"),
+                Keyword("int"),
+                Identifier("n"),
+                Operator("="),
+                Keyword("true"),
+                Punctuation(";"),
+                Punctuation("}"),
+                Punctuation("}")
+            );
         }
 
         [Fact]
         public async Task HighlightStringInterpolation()
         {
-            var code = @"
-                class C1
-                {
-                    string s = $""{5}"";
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+class C1
+{
+    string s = $""{5}"";
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs" });
-
-            AssertSyntax(regions.Highlights, code, 0,
-                Token("class", "keyword"),
-                Token("C1", "class name"),
-                Token("{", "punctuation"),
-                Token("string", "keyword"),
-                Token("s", "identifier"),
-                Token("=", "operator"),
-                Token("$\"", "string"),
-                Token("{", "punctuation"),
-                Token("5", "number"),
-                Token("}", "punctuation"),
-                Token("\"", "string"),
-                Token(";", "punctuation"),
-                Token("}", "punctuation"));
-        }
-
-        private void AssertSyntax(IEnumerable<HighlightSpan> regions, string code, int startLine, params TokenSpec[] expected)
-        {
-            var arr = regions.ToArray();
-
-            var lineNo = startLine;
-            var lastIndex = 0;
-            var lines = Microsoft.CodeAnalysis.Text.SourceText.From(code).Lines;
-            for (var i = 0; i < arr.Length; i++)
-            {
-                var tokenSpec = expected[i];
-                var region = arr[i];
-                string line;
-                int start, end;
-                do {
-                    line = lines[lineNo].ToString();
-                    start = line.IndexOf(tokenSpec.Text, lastIndex);
-                    if (start == -1)
-                    {
-                        if(++lineNo >= lines.Count)
-                        {
-                            throw new Exception($"Could not find token {tokenSpec.Text} in the code");
-                        }
-
-                        lastIndex = 0;
-                    }
-                } while (start == -1);
-                end = start + tokenSpec.Text.Length;
-                lastIndex = end;
-
-                Assert.Equal(tokenSpec.Kind, region.Kind);
-                Assert.Equal(lineNo, region.StartLine);
-                Assert.Equal(lineNo, region.EndLine);
-                Assert.Equal(start, region.StartColumn);
-                Assert.Equal(end, region.EndColumn);
-            }
-            Assert.Equal(expected.Length, arr.Length);
+            AssertSyntax(highlights, testFile.Content.Code, 0,
+                Keyword("class"),
+                ClassName("C1"),
+                Punctuation("{"),
+                Keyword("string"),
+                Identifier("s"),
+                Operator("="),
+                String("$\""),
+                Punctuation("{"),
+                Number("5"),
+                Punctuation("}"),
+                String("\""),
+                Punctuation(";"),
+                Punctuation("}")
+            );
         }
 
         [Fact]
         public async Task HighlightExcludesUnwantedKeywords()
         {
-            var code = @"
-                namespace N1
-                {
-                    class C1 { int n = true; }
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile, exclude: HighlightClassification.Keyword);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Keyword } });
-
-            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "keyword");
+            Assert.DoesNotContain(highlights, x => x.Kind == "keyword");
         }
 
         [Fact]
         public async Task HighlightExcludesUnwantedPunctuation()
         {
-            var code = @"
-                namespace N1
-                {
-                    class C1 { int n = true; }
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile, exclude: HighlightClassification.Punctuation);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Punctuation } });
-
-            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "punctuation");
+            Assert.DoesNotContain(highlights, x => x.Kind == "punctuation");
         }
 
         [Fact]
         public async Task HighlightExcludesUnwantedOperators()
         {
-            var code = @"
-                namespace N1
-                {
-                    class C1 { int n = true; }
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile, exclude: HighlightClassification.Operator);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Operator } });
-
-            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "operator");
+            Assert.DoesNotContain(highlights, x => x.Kind == "operator");
         }
 
         [Fact]
         public async Task HighlightExcludesUnwantedIdentifiers()
         {
-            var code = @"
-                namespace N1
-                {
-                    class C1 { int n = true; }
-                }
-            ";
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+            var highlights = await GetHighlightsAsync(testFile, exclude: HighlightClassification.Identifier);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Identifier } });
-
-            Assert.DoesNotContain(regions.Highlights, x => x.Kind == "identifier");
+            Assert.DoesNotContain(highlights, x => x.Kind == "identifer");
         }
 
         [Fact]
         public async Task HighlightExcludesUnwantedNames()
         {
-            var code = @"
-                namespace N1
+            var testFile = new TestFile("a.cs", @"
+namespace N1
+{
+    class C1 { int n = true; }
+}
+");
+
+            var highlights = await GetHighlightsAsync(testFile, exclude: HighlightClassification.Name);
+
+            Assert.DoesNotContain(highlights, x => x.Kind.EndsWith("name"));
+        }
+
+        private async Task<HighlightSpan[]> GetHighlightsAsync(TestFile testFile, int? line = null, HighlightClassification? exclude = null)
+        {
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
+                var request = new HighlightRequest
                 {
-                    class C1 { int n = true; }
-                }
-            ";
+                    FileName = testFile.FileName,
+                    Lines = line != null ? new[] { line.Value } : null,
+                    ExcludeClassifications = exclude != null ? new[] { exclude.Value } : null
+                };
 
-            var workspace = await TestHelpers.CreateSimpleWorkspace(new Dictionary<string, string>
-            {
-                { "a.cs", code }
-            });
+                var response = await requestHandler.Handle(request);
 
-            var controller = new HighlightingService(workspace);
-            var regions = await controller.Handle(new HighlightRequest() { FileName = "a.cs", ExcludeClassifications = new [] { HighlightClassification.Name } });
-
-            Assert.DoesNotContain(regions.Highlights, x => x.Kind.EndsWith(" name"));
-        }
-
-        private TokenSpec Token(string text, string kind)
-        {
-            return new TokenSpec(kind, text);
-        }
-        private class TokenSpec
-        {
-            public string Text { get; }
-            public string Kind { get; }
-
-            public TokenSpec(string kind, string text)
-            {
-                Kind = kind;
-                Text = text;
+                return response.Highlights;
             }
         }
+
+        private static void AssertSyntax(HighlightSpan[] highlights, string code, int startLine, params (string kind, string text)[] expectedTokens)
+        {
+            var lineNo = startLine;
+            var lastIndex = 0;
+            var lines = SourceText.From(code).Lines;
+
+            for (var i = 0; i < highlights.Length; i++)
+            {
+                var token = expectedTokens[i];
+                var highlight = highlights[i];
+
+                string line;
+                int start, end;
+                do
+                {
+                    line = lines[lineNo].ToString();
+                    start = line.IndexOf(token.text, lastIndex);
+                    if (start == -1)
+                    {
+                        if (++lineNo >= lines.Count)
+                        {
+                            throw new Exception($"Could not find token {token.text} in the code");
+                        }
+
+                        lastIndex = 0;
+                    }
+                }
+                while (start == -1);
+
+                end = start + token.text.Length;
+                lastIndex = end;
+
+                Assert.Equal(token.kind, highlight.Kind);
+                Assert.Equal(lineNo, highlight.StartLine);
+                Assert.Equal(lineNo, highlight.EndLine);
+                Assert.Equal(start, highlight.StartColumn);
+                Assert.Equal(end, highlight.EndColumn);
+            }
+
+            Assert.Equal(expectedTokens.Length, highlights.Length);
+        }
+
+        private static (string kind, string text) ClassName(string text) => ("class name", text);
+        private static (string kind, string text) Identifier(string text) => ("identifier", text);
+        private static (string kind, string text) Keyword(string text) => ("keyword", text);
+        private static (string kind, string text) Number(string text) => ("number", text);
+        private static (string kind, string text) Operator(string text) => ("operator", text);
+        private static (string kind, string text) Punctuation(string text) => ("punctuation", text);
+        private static (string kind, string text) String(string text) => ("string", text);
     }
 }

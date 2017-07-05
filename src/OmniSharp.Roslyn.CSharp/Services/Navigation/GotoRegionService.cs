@@ -4,21 +4,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.GotoRegion;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.GotoRegion, LanguageNames.CSharp)]
-    public class GotoRegionService : RequestHandler<GotoRegionRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.GotoRegion, LanguageNames.CSharp)]
+    public class GotoRegionService : IRequestHandler<GotoRegionRequest, QuickFixResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public GotoRegionService(OmnisharpWorkspace workspace)
+        public GotoRegionService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -39,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
                 foreach (var regionTrivia in regionTrivias.Distinct())
                 {
-                    regions.Add(await QuickFixHelper.GetQuickFix(_workspace, regionTrivia.GetLocation()));
+                    regions.Add(regionTrivia.GetLocation().GetQuickFix(_workspace));
                 }
             }
             return new QuickFixResponse(regions);

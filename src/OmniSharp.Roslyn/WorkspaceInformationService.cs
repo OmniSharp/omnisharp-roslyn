@@ -1,16 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    [OmniSharpHandler(OmnisharpEndpoints.WorkspaceInformation, "Projects")]
-    public class WorkspaceInformationService : RequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>
+    [Shared]
+    [OmniSharpHandler(OmniSharpEndpoints.WorkspaceInformation, "Projects")]
+    public class WorkspaceInformationService : IRequestHandler<WorkspaceInformationRequest, WorkspaceInformationResponse>
     {
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
@@ -26,8 +25,8 @@ namespace OmniSharp
 
             foreach (var projectSystem in _projectSystems)
             {
-                var informationModel = await projectSystem.GetInformationModel(request);
-                response.Add(projectSystem.Key, informationModel);
+                var workspaceModel = await projectSystem.GetWorkspaceModelAsync(request);
+                response.Add(projectSystem.Key, workspaceModel);
             }
 
             return response;

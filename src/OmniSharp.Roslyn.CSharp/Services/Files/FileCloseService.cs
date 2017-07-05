@@ -1,21 +1,18 @@
-using System;
-using System.Collections.Generic;
 using System.Composition;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
-using OmniSharp.Models;
+using OmniSharp.Models.FileClose;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
-    [OmniSharpHandler(OmnisharpEndpoints.Close, LanguageNames.CSharp)]
-    public class FileCloseService : RequestHandler<FileCloseRequest, FileCloseResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.Close, LanguageNames.CSharp)]
+    public class FileCloseService : IRequestHandler<FileCloseRequest, FileCloseResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FileCloseService(OmnisharpWorkspace workspace)
+        public FileCloseService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }

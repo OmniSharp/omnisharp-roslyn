@@ -5,6 +5,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
+    [Shared]
     [Export(typeof(IHostServicesProvider))]
     [Export(typeof(RoslynFeaturesHostServicesProvider))]
     public class RoslynFeaturesHostServicesProvider : IHostServicesProvider
@@ -12,16 +13,11 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public RoslynFeaturesHostServicesProvider(IOmnisharpAssemblyLoader loader)
+        public RoslynFeaturesHostServicesProvider(IAssemblyLoader loader)
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
-
-            var Features = Configuration.GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Features");
-            var CSharpFeatures = Configuration.GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.CSharp.Features");
-
-            builder.AddRange(loader.Load(Features, CSharpFeatures));
-
-            this.Assemblies = builder.ToImmutable();
+            builder.AddRange(loader.Load(Configuration.RoslynFeatures, Configuration.RoslynCSharpFeatures));
+            Assemblies = builder.ToImmutable();
         }
     }
 }

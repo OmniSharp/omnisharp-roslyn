@@ -65,6 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     break;
                                 case "paramref":
                                     ret.Append(xml["name"]);
+                                    ret.Append(" ");
                                     break;
                                 case "param":
                                     ret.Append(lineEnding);

@@ -1,39 +1,36 @@
 using System.Composition;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using OmniSharp.DotNetTest.Helpers;
-using OmniSharp.DotNetTest.Helpers.DotNetTestManager;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
 using OmniSharp.Mef;
+using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest.Services
 {
-    [OmniSharpHandler(OmnisharpEndpoints.RunDotNetTest, LanguageNames.CSharp)]
-    public class RunTestServices : RequestHandler<RunDotNetTestRequest, RunDotNetTestResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.V2.RunTest, LanguageNames.CSharp)]
+    internal class RunTestService : BaseTestService<RunTestRequest, RunTestResponse>
     {
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
-
         [ImportingConstructor]
-        public RunTestServices(ILoggerFactory loggerFactory)
+        public RunTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<RunTestServices>();
         }
 
-        public Task<RunDotNetTestResponse> Handle(RunDotNetTestRequest request)
+        protected override RunTestResponse HandleRequest(RunTestRequest request, TestManager testManager)
         {
-            return Task.FromResult(GetResponse(request.FileName, request.MethodName));
-        }
-
-        private RunDotNetTestResponse GetResponse(string filepath, string methodName)
-        {
-            var projectFolder = ProjectPathResolver.GetProjectPathFromFile(filepath);
-            using (var dtm = DotNetTestManager.Start(projectFolder, _loggerFactory))
+            if (testManager.IsConnected)
             {
-                return dtm.ExecuteTestMethod(methodName);
+                return testManager.RunTest(request.MethodName, request.TestFrameworkName);
             }
+
+            var response = new RunTestResponse
+            {
+                Failure = "Failed to connect to 'dotnet test' process",
+                Pass = false
+            };
+
+            return response;
         }
     }
 }

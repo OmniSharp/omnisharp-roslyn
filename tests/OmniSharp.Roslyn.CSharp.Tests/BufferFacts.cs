@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Services;
 using Xunit;
@@ -10,36 +11,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class BufferFacts
     {
-        private void CreateSimpleWorkspace(out OmnisharpWorkspace workspace, out ChangeBufferService controller, out DocumentInfo document, string filename, string contents)
+        private (OmniSharpWorkspace, ChangeBufferService, DocumentInfo) CreateSimpleWorkspace(string fileName, string contents)
         {
-            workspace = new OmnisharpWorkspace(
+            var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>()));
 
-            controller = new ChangeBufferService(workspace);
+            var service = new ChangeBufferService(workspace);
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
                 "ProjectNameVal", "AssemblyNameVal", LanguageNames.CSharp);
 
-            document = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), filename,
+            var documentInfo = DocumentInfo.Create(DocumentId.CreateNewId(projectInfo.Id), fileName,
                 null, SourceCodeKind.Regular,
                 TextLoader.From(TextAndVersion.Create(SourceText.From(contents), VersionStamp.Create())),
-                filename);
+                fileName);
 
             workspace.AddProject(projectInfo);
-            workspace.AddDocument(document);
+            workspace.AddDocument(documentInfo);
+
+            return (workspace, service, documentInfo);
         }
 
         [Fact]
         public async Task ChangeBuffer_InsertRemoveChanges()
         {
-            OmnisharpWorkspace workspace;
-            ChangeBufferService controller;
-            DocumentInfo document;
-            CreateSimpleWorkspace(out workspace, out controller, out document, "test.cs", "class C {}");
+            var (workspace, controller, documentInfo) = CreateSimpleWorkspace("test.cs", "class C {}");
 
             // insert edit
-            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
+            await controller.Handle(new ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -48,11 +48,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 NewText = "farboo",
                 FileName = "test.cs"
             });
-            var sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
+
+            var sourceText = await workspace.CurrentSolution.GetDocument(documentInfo.Id).GetTextAsync();
             Assert.Equal("farbooclass C {}", sourceText.ToString());
 
             // remove edit
-            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
+            await controller.Handle(new ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -61,11 +62,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 NewText = "",
                 FileName = "test.cs"
             });
-            sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
+
+            sourceText = await workspace.CurrentSolution.GetDocument(documentInfo.Id).GetTextAsync();
             Assert.Equal("class C {}", sourceText.ToString());
 
             // modification edit
-            await controller.Handle(new OmniSharp.Models.ChangeBufferRequest()
+            await controller.Handle(new ChangeBufferRequest()
             {
                 StartLine = 0,
                 StartColumn = 0,
@@ -74,7 +76,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 NewText = "interface",
                 FileName = "test.cs"
             });
-            sourceText = await workspace.CurrentSolution.GetDocument(document.Id).GetTextAsync();
+
+            sourceText = await workspace.CurrentSolution.GetDocument(documentInfo.Id).GetTextAsync();
             Assert.Equal("interface C {}", sourceText.ToString());
         }
     }

@@ -9,16 +9,17 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
+using OmniSharp.Models.FindImplementations;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
-    [OmniSharpHandler(OmnisharpEndpoints.FindImplementations, LanguageNames.CSharp)]
-    public class FindImplementationsService : RequestHandler<FindImplementationsRequest, QuickFixResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.FindImplementations, LanguageNames.CSharp)]
+    public class FindImplementationsService : IRequestHandler<FindImplementationsRequest, QuickFixResponse>
     {
-        private readonly OmnisharpWorkspace _workspace;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FindImplementationsService(OmnisharpWorkspace workspace)
+        public FindImplementationsService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
         }
@@ -37,12 +38,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var quickFixes = new List<QuickFix>();
 
                 var implementations = await SymbolFinder.FindImplementationsAsync(symbol, _workspace.CurrentSolution);
-                await AddQuickFixes(quickFixes, implementations);
-                var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
-                await AddQuickFixes(quickFixes, overrides);
+                quickFixes.AddRange(implementations, _workspace);
 
-                var derivedTypes = await GetDerivedTypes(symbol);
-                await AddQuickFixes(quickFixes, derivedTypes);
+                var overrides = await SymbolFinder.FindOverridesAsync(symbol, _workspace.CurrentSolution);
+                quickFixes.AddRange(overrides, _workspace);
+
+                if (symbol is INamedTypeSymbol namedTypeSymbol)
+                {
+                    var derivedTypes = await SymbolFinder.FindDerivedClassesAsync(namedTypeSymbol, _workspace.CurrentSolution);
+                    quickFixes.AddRange(derivedTypes, _workspace);
+                }
+
+                // also include the original declaration of the symbol
+                if (!symbol.IsAbstract)
+                {
+                    // for partial methods, pick the one with body
+                    if (symbol is IMethodSymbol method)
+                    {
+                        symbol = method.PartialImplementationPart ?? symbol;
+                    }
+
+                    var location = symbol.Locations.First();
+                    quickFixes.Add(location, _workspace);
+                }
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
                                                             .ThenBy(q => q.Line)
@@ -50,49 +68,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             }
 
             return response;
-        }
-
-        private async Task AddQuickFixes(ICollection<QuickFix> quickFixes, IEnumerable<ISymbol> symbols)
-        {
-            foreach (var symbol in symbols)
-            {
-                foreach (var location in symbol.Locations)
-                {
-                    await QuickFixHelper.AddQuickFix(quickFixes, _workspace, location);
-                }
-            }
-        }
-
-        private async Task<IEnumerable<ISymbol>> GetDerivedTypes(ISymbol typeSymbol)
-        {
-            var derivedTypes = new List<INamedTypeSymbol>();
-            if (typeSymbol is INamedTypeSymbol)
-            {
-                var projects = _workspace.CurrentSolution.Projects;
-                foreach (var project in projects)
-                {
-                    var compilation = await project.GetCompilationAsync();
-                    var types = compilation.GlobalNamespace.GetTypeMembers();
-                    foreach (var type in types)
-                    {
-                        if (GetBaseTypes(type).Contains(typeSymbol))
-                        {
-                            derivedTypes.Add(type);
-                        }
-                    }
-                }
-            }
-            return derivedTypes;
-        }
-
-        private IEnumerable<INamedTypeSymbol> GetBaseTypes(ITypeSymbol type)
-        {
-            var current = type.BaseType;
-            while (current != null)
-            {
-                yield return current;
-                current = current.BaseType;
-            }
         }
     }
 }

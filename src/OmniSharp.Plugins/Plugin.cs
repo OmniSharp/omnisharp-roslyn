@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using OmniSharp.Models.v1;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
@@ -83,13 +83,12 @@ namespace OmniSharp.Plugins
                             return;
                         }
 
-                        Action<string> requestHandler = null;
-                        if (!_requests.TryGetValue(response.Request_seq, out requestHandler))
+                        if (!_requests.TryGetValue(response.Request_seq, out Action<string> requestHandler))
                         {
                             throw new ArgumentException("invalid seq-value");
                         }
 
-                        requestHandler((string)response.BodyJson);
+                        requestHandler(response.BodyJson);
                     }
                     catch (Exception e)
                     {
@@ -113,16 +112,16 @@ namespace OmniSharp.Plugins
             Task.Run(() => Run());
         }
 
-        public Task<object> GetInformationModel(WorkspaceInformationRequest request)
+        public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             // TODO: Call out to process
-            return null;
+            return Task.FromResult<object>(null);
         }
 
-        public Task<object> GetProjectModel(string path)
+        public Task<object> GetProjectModelAsync(string filePath)
         {
             // TODO: Call out to process
-            return null;
+            return Task.FromResult<object>(null);
         }
     }
 }
