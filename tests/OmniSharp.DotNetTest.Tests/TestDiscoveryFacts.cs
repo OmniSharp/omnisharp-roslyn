@@ -33,7 +33,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory, useLegacyDotNetCli: true))
+            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion.Legacy))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
                 var solution = host.Workspace.CurrentSolution;

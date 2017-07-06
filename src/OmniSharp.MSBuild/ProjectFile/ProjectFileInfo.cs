@@ -133,7 +133,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 }
 
                 var projectInstance = project.CreateProjectInstance();
-                var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
+                var buildResult = projectInstance.Build(TargetNames.Compile,
                     new[] { new MSBuildLogForwarder(logger, diagnostics) });
 
                 return buildResult
@@ -214,7 +214,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 { PropertyNames.DesignTimeBuild, "true" },
                 { PropertyNames.BuildProjectReferences, "false" },
                 { PropertyNames._ResolveReferenceDependencies, "true" },
-                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
+                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar },
+
+                // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
+                // See https://github.com/dotnet/roslyn/pull/4604 for details.
+                { PropertyNames.ProvideCommandLineInvocation, "true" },
+                { PropertyNames.SkipCompilerExecution, "true" }
             };
 
             globalProperties.AddPropertyIfNeeded(

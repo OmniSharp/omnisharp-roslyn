@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <XsdFile Include="**\*.xsd">
+      <Generator>MSBuild:CompileGeneratedFiles</Generator>
+    </XsdFile>
+  </ItemGroup> 
+  
+  <Target Name="CompileGeneratedFiles" 
+    BeforeTargets="CoreCompile"
+    DependsOnTargets="UpdateGeneratedFiles" 
+    Condition="'@(XsdFile)' != ''" >
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)%(XsdFile.Filename).g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)%(XsdFile.Filename).g.cs" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="UpdateGeneratedFiles"
+    Inputs="$(MSBuildProjectFile);@(XsdFile)"
+    Outputs="$(IntermediateOutputPath)%(XsdFile.Filename).g.cs">
+    <Message Text="Generating code from @(XsdFile)..."/>
+    <Copy
+      SourceFiles="@(XsdFile)"  
+      DestinationFiles="$(IntermediateOutputPath)%(XsdFile.Filename).g.cs"/>
+  </Target>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+
+</Project>

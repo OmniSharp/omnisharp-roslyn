@@ -20,10 +20,12 @@
             public const string OutputPath = nameof(OutputPath);
             public const string Platform = nameof(Platform);
             public const string ProjectAssetsFile = nameof(ProjectAssetsFile);
+            public const string ProvideCommandLineInvocation = nameof(ProvideCommandLineInvocation);
             public const string ProjectGuid = nameof(ProjectGuid);
             public const string ProjectName = nameof(ProjectName);
             public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
             public const string SignAssembly = nameof(SignAssembly);
+            public const string SkipCompilerExecution = nameof(SkipCompilerExecution);
             public const string SolutionDir = nameof(SolutionDir);
             public const string TargetFramework = nameof(TargetFramework);
             public const string TargetFrameworkMoniker = nameof(TargetFrameworkMoniker);

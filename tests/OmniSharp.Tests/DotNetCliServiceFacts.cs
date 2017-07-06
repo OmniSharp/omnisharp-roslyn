@@ -15,7 +15,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void LegacyGetVersion()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: true))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -31,7 +31,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void LegacyGetInfo()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: true))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -47,7 +47,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void GetVersion()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: false))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -55,7 +55,7 @@ namespace OmniSharp.Tests
 
                 Assert.Equal(1, version.Major);
                 Assert.Equal(0, version.Minor);
-                Assert.Equal(1, version.Patch);
+                Assert.Equal(4, version.Patch);
                 Assert.Equal("", version.Release);
             }
         }
@@ -63,7 +63,7 @@ namespace OmniSharp.Tests
         [Fact]
         public void GetInfo()
         {
-            using (var host = CreateOmniSharpHost(useLegacyDotNetCli: false))
+            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
                 var dotNetCli = host.GetExport<DotNetCliService>();
 
@@ -71,7 +71,7 @@ namespace OmniSharp.Tests
 
                 Assert.Equal(1, info.Version.Major);
                 Assert.Equal(0, info.Version.Minor);
-                Assert.Equal(1, info.Version.Patch);
+                Assert.Equal(4, info.Version.Patch);
                 Assert.Equal("", info.Version.Release);
             }
         }

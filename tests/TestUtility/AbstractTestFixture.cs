@@ -24,8 +24,8 @@ namespace TestUtility
             return host;
         }
 
-        protected OmniSharpTestHost CreateOmniSharpHost(string path = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, bool useLegacyDotNetCli = false) =>
-            OmniSharpTestHost.Create(path, this.TestOutput, configurationData, useLegacyDotNetCli);
+        protected OmniSharpTestHost CreateOmniSharpHost(string path = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current) =>
+            OmniSharpTestHost.Create(path, this.TestOutput, configurationData, dotNetCliVersion);
 
         protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) => 
             CreateOmniSharpHost(testFiles, null);

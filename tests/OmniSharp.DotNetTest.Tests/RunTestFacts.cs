@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -11,7 +12,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        public override bool UseLegacyDotNetCli { get; } = false;
+        public override DotNetCliVersion DotNetCliVersion { get; } = DotNetCliVersion.Current;
 
         [Fact]
         public async Task RunXunitTest()
