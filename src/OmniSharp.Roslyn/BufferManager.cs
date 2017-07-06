@@ -39,22 +39,25 @@ namespace OmniSharp.Roslyn
                 return;
             }
 
-            var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
+            var solution = _workspace.CurrentSolution;
+
+            var documentIds = solution.GetDocumentIdsWithFilePath(request.FileName);
             if (!documentIds.IsEmpty)
             {
                 if (changes == null)
                 {
                     var sourceText = SourceText.From(buffer);
+
                     foreach (var documentId in documentIds)
                     {
-                        _workspace.OnDocumentChanged(documentId, sourceText);
+                        solution = solution.WithDocumentText(documentId, sourceText);
                     }
                 }
                 else
                 {
                     foreach (var documentId in documentIds)
                     {
-                        var document = _workspace.CurrentSolution.GetDocument(documentId);
+                        var document = solution.GetDocument(documentId);
                         var sourceText = await document.GetTextAsync();
 
                         foreach (var change in request.Changes)
@@ -66,9 +69,12 @@ namespace OmniSharp.Roslyn
                                 new TextChange(new TextSpan(startOffset, endOffset - startOffset), change.NewText)
                             });
                         }
-                        _workspace.OnDocumentChanged(documentId, sourceText);
+
+                        solution = solution.WithDocumentText(documentId, sourceText);
                     }
                 }
+
+                _workspace.TryApplyChanges(solution);
             }
             else if (buffer != null)
             {
@@ -83,13 +89,16 @@ namespace OmniSharp.Roslyn
                 return;
             }
 
-            var documentIds = _workspace.CurrentSolution.GetDocumentIdsWithFilePath(request.FileName);
+            var solution = _workspace.CurrentSolution;
+
+            var documentIds = solution.GetDocumentIdsWithFilePath(request.FileName);
             if (!documentIds.IsEmpty)
             {
                 foreach (var documentId in documentIds)
                 {
-                    var document = _workspace.CurrentSolution.GetDocument(documentId);
+                    var document = solution.GetDocument(documentId);
                     var sourceText = await document.GetTextAsync();
+
                     var startOffset = sourceText.Lines.GetPosition(new LinePosition(request.StartLine, request.StartColumn));
                     var endOffset = sourceText.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
 
@@ -97,8 +106,10 @@ namespace OmniSharp.Roslyn
                         new TextChange(new TextSpan(startOffset, endOffset - startOffset), request.NewText)
                     });
 
-                    _workspace.OnDocumentChanged(documentId, sourceText);
+                    solution = solution.WithDocumentText(documentId, sourceText);
                 }
+
+                _workspace.TryApplyChanges(solution);
             }
             else
             {

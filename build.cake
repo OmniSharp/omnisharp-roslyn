@@ -176,18 +176,28 @@ Task("SetupMSBuild")
 
     CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
 
-    // Finally, copy Microsoft.CSharp.Core.targets from Microsoft.Net.Compilers
-    var csharpTargetsName = "Microsoft.CSharp.Core.targets";
-    var csharpTargetsPath = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools", csharpTargetsName);
+    // Finally, copy Microsoft.Net.Compilers
+    var roslynFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
+    var roslynNet46Folder = CombinePaths(msbuildNet46Folder, "Roslyn");
+    var roslynNetCoreAppFolder = CombinePaths(msbuildNetCoreAppFolder, "Roslyn");
 
-    var csharpTargetsNet46Folder = CombinePaths(msbuildNet46Folder, "Roslyn");
-    var csharpTargetsNetCoreAppFolder = CombinePaths(msbuildNetCoreAppFolder, "Roslyn");
+    CreateDirectory(roslynNet46Folder);
+    CreateDirectory(roslynNetCoreAppFolder);
 
-    CreateDirectory(csharpTargetsNet46Folder);
-    CreateDirectory(csharpTargetsNetCoreAppFolder);
+    CopyDirectory(roslynFolder, roslynNet46Folder);
+    CopyDirectory(roslynFolder, roslynNetCoreAppFolder);
 
-    CopyFile(csharpTargetsPath, CombinePaths(csharpTargetsNet46Folder, csharpTargetsName));
-    CopyFile(csharpTargetsPath, CombinePaths(csharpTargetsNetCoreAppFolder,csharpTargetsName));
+    // Delete unnecessary files
+    foreach (var folder in new[] { roslynNet46Folder, roslynNetCoreAppFolder })
+    {
+        DeleteFile(CombinePaths(folder, "Microsoft.CodeAnalysis.VisualBasic.dll"));
+        DeleteFile(CombinePaths(folder, "Microsoft.VisualBasic.Core.targets"));
+        DeleteFile(CombinePaths(folder, "VBCSCompiler.exe"));
+        DeleteFile(CombinePaths(folder, "VBCSCompiler.exe.config"));
+        DeleteFile(CombinePaths(folder, "vbc.exe"));
+        DeleteFile(CombinePaths(folder, "vbc.exe.config"));
+        DeleteFile(CombinePaths(folder, "vbc.rsp"));
+    }
 });
 
 /// <summary>
@@ -317,6 +327,7 @@ Task("BuildEnvironment")
     InstallDotNetSdk(env, buildPlan,
         version: buildPlan.LegacyDotNetVersion,
         installFolder: env.Folders.LegacyDotNetSdk);
+
 
     // Capture 'dotnet --info' output and parse out RID.
     var lines = new List<string>();

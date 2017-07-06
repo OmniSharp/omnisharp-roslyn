@@ -1,7 +1,7 @@
 {
   "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain",
   "DotNetChannel": "preview",
-  "DotNetVersion": "1.0.1",
+  "DotNetVersion": "1.0.4",
   "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
   "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
   "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha4.zip",
@@ -25,7 +25,8 @@
     "MSTestProject",
     "ProjectAndSolution",
     "ProjectAndSolutionWithProjectSection",
-    "TwoProjectsWithSolution"
+    "TwoProjectsWithSolution",
+    "ProjectWithGeneratedFile"
   ],
   "LegacyTestAssets": [
     "BasicTestProjectSample01",

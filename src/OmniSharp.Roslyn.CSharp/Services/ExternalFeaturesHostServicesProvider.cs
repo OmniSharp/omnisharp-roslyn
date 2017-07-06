@@ -7,19 +7,19 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services
 {
+    [Shared]
     [Export(typeof(IHostServicesProvider))]
     [Export(typeof(ExternalFeaturesHostServicesProvider))]
-    [Shared]
     public class ExternalFeaturesHostServicesProvider : IHostServicesProvider
     {
         public ImmutableArray<Assembly> Assemblies { get; }
 
         [ImportingConstructor]
-        public ExternalFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options, IOmniSharpEnvironment env)
+        public ExternalFeaturesHostServicesProvider(IAssemblyLoader loader, OmniSharpOptions options, IOmniSharpEnvironment environment)
         {
             var builder = ImmutableArray.CreateBuilder<Assembly>();
 
-            var roslynExtensionsLocations = options.RoslynExtensionsOptions.GetNormalizedLocationPaths(env);
+            var roslynExtensionsLocations = options.RoslynExtensionsOptions.GetNormalizedLocationPaths(environment);
             if (roslynExtensionsLocations?.Any() == true)
             {
                 foreach (var roslynExtensionsLocation in roslynExtensionsLocations)

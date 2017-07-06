@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
-    <WarningsAsErrors>true</WarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
 
     <!-- Needed for Microsoft.Composition -->
@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.1.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="2.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.3.0-beta2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="2.3.0-beta2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="1.1.0" />
   </ItemGroup>
 

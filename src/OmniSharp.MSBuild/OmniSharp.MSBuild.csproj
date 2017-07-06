@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
-    <WarningsAsErrors>true</WarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
 
     <!-- Needed for Microsoft.Composition -->
@@ -16,10 +16,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Build" Version="15.3.0-preview-000117-01" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.3.0-preview-000117-01" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.3.0-preview-000117-01" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.3.0-preview-000117-01" />
+    <PackageReference Include="Microsoft.Build" Version="15.3.0-preview-000388-01" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.3.0-preview-000388-01" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.3.0-preview-000388-01" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.3.0-preview-000388-01" />
     <PackageReference Include="NuGet.Packaging.Core" Version="4.0.0" />
     <PackageReference Include="NuGet.ProjectModel" Version="4.0.0" />
     <PackageReference Include="NuGet.Versioning" Version="4.0.0" />
