@@ -194,9 +194,6 @@ Task("SetupMSBuild")
         DeleteFile(CombinePaths(folder, "Microsoft.VisualBasic.Core.targets"));
         DeleteFile(CombinePaths(folder, "VBCSCompiler.exe"));
         DeleteFile(CombinePaths(folder, "VBCSCompiler.exe.config"));
-        DeleteFile(CombinePaths(folder, "csi.exe"));
-        DeleteFile(CombinePaths(folder, "csi.exe.config"));
-        DeleteFile(CombinePaths(folder, "csi.rsp"));
         DeleteFile(CombinePaths(folder, "vbc.exe"));
         DeleteFile(CombinePaths(folder, "vbc.exe.config"));
         DeleteFile(CombinePaths(folder, "vbc.rsp"));
