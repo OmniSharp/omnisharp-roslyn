@@ -74,8 +74,8 @@ namespace TestUtility
             switch (dotNetCliVersion)
             {
                 case DotNetCliVersion.Current: return ".dotnet";
-                case DotNetCliVersion.Future: return ".dotnet-future";
                 case DotNetCliVersion.Legacy: return ".dotnet-legacy";
+                case DotNetCliVersion.Future: throw new InvalidOperationException("Test infrastructure does not support a future .NET Core SDK yet.");
                 default: throw new ArgumentException($"Unknown {nameof(dotNetCliVersion)}: {dotNetCliVersion}", nameof(dotNetCliVersion));
             }
         }

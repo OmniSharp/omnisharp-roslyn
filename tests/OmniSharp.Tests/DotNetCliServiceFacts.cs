@@ -75,37 +75,5 @@ namespace OmniSharp.Tests
                 Assert.Equal("", info.Version.Release);
             }
         }
-
-        [Fact]
-        public void FutureGetVersion()
-        {
-            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Future))
-            {
-                var dotNetCli = host.GetExport<DotNetCliService>();
-
-                var version = dotNetCli.GetVersion();
-
-                Assert.Equal(2, version.Major);
-                Assert.Equal(0, version.Minor);
-                Assert.Equal(0, version.Patch);
-                Assert.Equal("preview2-006497", version.Release);
-            }
-        }
-
-        [Fact]
-        public void FutureGetInfo()
-        {
-            using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Future))
-            {
-                var dotNetCli = host.GetExport<DotNetCliService>();
-
-                var info = dotNetCli.GetInfo();
-
-                Assert.Equal(2, info.Version.Major);
-                Assert.Equal(0, info.Version.Minor);
-                Assert.Equal(0, info.Version.Patch);
-                Assert.Equal("preview2-006497", info.Version.Release);
-            }
-        }
     }
 }
