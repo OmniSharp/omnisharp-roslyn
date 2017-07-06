@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
-    <WarningsAsErrors>true</WarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
     
     <!-- Needed for Microsoft.Composition -->
