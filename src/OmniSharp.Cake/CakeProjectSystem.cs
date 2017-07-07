@@ -12,7 +12,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Polyfill;
+using OmniSharp.Cake.Services;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
@@ -23,8 +25,9 @@ namespace OmniSharp.Cake
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _environment;
-        private readonly ILogger<CakeProjectSystem> _logger;
+        private readonly ICakeConfiguration _cakeConfiguration;
         private readonly IScriptGenerationService _generationService;
+        private readonly ILogger<CakeProjectSystem> _logger;
         private readonly Dictionary<string, ProjectInfo> _projects;
 
         public string Key => "Cake";
@@ -35,13 +38,15 @@ namespace OmniSharp.Cake
         public CakeProjectSystem(
             OmniSharpWorkspace workspace,
             IOmniSharpEnvironment environment,
-            ILoggerFactory loggerFactory,
-            IScriptGenerationService generationService)
+            ICakeConfiguration cakeConfiguration,
+            IScriptGenerationService generationService,
+            ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
-            _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _cakeConfiguration = cakeConfiguration ?? throw new ArgumentNullException(nameof(cakeConfiguration));
             _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
+            _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _projects = new Dictionary<string, ProjectInfo>();
         }
@@ -59,6 +64,14 @@ namespace OmniSharp.Cake
             }
 
             _logger.LogInformation($"Found {allCakeFiles.Length} Cake files.");
+
+            // Check that bakery is installed
+            var bakeryPath = CakeGenerationServiceToolResolver.GetServerExecutablePath(_environment.TargetDirectory, _cakeConfiguration);
+            if (!File.Exists(bakeryPath))
+            {
+                _logger.LogError("Cake.Bakery not installed");
+                return;
+            }
 
             foreach (var cakePath in allCakeFiles)
             {

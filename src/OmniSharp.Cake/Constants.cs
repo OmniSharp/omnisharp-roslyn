@@ -6,5 +6,10 @@
         {
             public const string Cake = "Cake";
         }
+
+        public static class Paths
+        {
+            public const string Tools = "Paths_Tools";
+        }
     }
 }

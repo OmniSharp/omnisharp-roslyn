@@ -5,6 +5,7 @@ using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
 using Cake.Scripting.Transport.Tcp.Client;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Cake.Configuration;
 
 namespace OmniSharp.Cake.Services
 {
@@ -14,20 +15,27 @@ namespace OmniSharp.Cake.Services
         private readonly IScriptGenerationService _generationService;
 
         [ImportingConstructor]
-        public CakeGenerationService(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory)
+        public CakeGenerationService(IOmniSharpEnvironment environment, ICakeConfiguration configuration, ILoggerFactory loggerFactory)
         {
             if (environment == null)
             {
                 throw new ArgumentNullException(nameof(environment));
+            }
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
             }
             if (loggerFactory == null)
             {
                 throw new ArgumentNullException(nameof(loggerFactory));
             }
 
-            // TODO: Read from cake configuration, don't assume Bakery is in tools folder
-            var bakeryExe = Path.Combine(environment.TargetDirectory, "tools", "Cake.Bakery", "tools", "Cake.Bakery.exe");
-            _generationService = new ScriptGenerationClient(bakeryExe, environment.TargetDirectory, loggerFactory);
+            var serverExecutablePath = CakeGenerationServiceToolResolver.GetServerExecutablePath(environment.TargetDirectory, configuration);
+
+            if (File.Exists(serverExecutablePath))
+            {
+                _generationService = new ScriptGenerationClient(serverExecutablePath, environment.TargetDirectory, loggerFactory);
+            }
         }
 
         public CakeScript Generate(FileChange fileChange)
