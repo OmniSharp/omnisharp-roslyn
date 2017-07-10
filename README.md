@@ -12,6 +12,10 @@ OmniSharp-Roslyn is built with the [.NET Core SDK](https://dot.net/). It targets
 
 In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed.
 
+## What's new
+
+See our [change log](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/CHANGELOG.md) for all of the updates.
+
 ## Using the latest OmniSharp-Roslyn with VS Code
 
 ### Building
@@ -34,7 +38,7 @@ You can find the output under `artifacts/publish/OmniSharp/<runtime id>/<target 
 
 The executable is either `OmniSharp.exe` or `OmniSharp`.
 
-For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob/dev/BUILD.md).
+For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/BUILD.md).
 
 ### VS Code
 
