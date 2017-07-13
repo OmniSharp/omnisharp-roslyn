@@ -45,16 +45,18 @@ namespace OmniSharp.Utilities
 
         private static string FindMonoPath()
         {
-            if (IsWindows)
-            {
-                throw new PlatformNotSupportedException($"{nameof(FindMonoPath)} can only be called on Unix.");
-            }
-
-            return RealPath("mono");
+            return !IsWindows
+                ? RealPath("mono")
+                : null;
         }
 
         private static string FindMonoXBuildFrameworksDirPath()
         {
+            if (IsWindows)
+            {
+                return null;
+            }
+
             const string defaultXBuildFrameworksDirPath = "/usr/lib/mono/xbuild-frameworks";
             if (Directory.Exists(defaultXBuildFrameworksDirPath))
             {
