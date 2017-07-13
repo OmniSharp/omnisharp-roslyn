@@ -44,7 +44,7 @@ public static class DirectoryHelper
         foreach (var file in files)
         {
             var newFile = PathHelper.Combine(destination, PathHelper.GetFileName(file));
-            FileHelper.Copy(file, newFile);
+            FileHelper.Copy(file, newFile, overwrite: true);
         }
 
         foreach (var subDirectory in subDirectories)
