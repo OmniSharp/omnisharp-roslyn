@@ -4,6 +4,7 @@
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
+#load "scripts/msbuild.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -77,13 +78,6 @@ public class BuildPlan
 
 var buildPlan = BuildPlan.Load(env);
 
-// Folders and tools
-var msbuildBaseFolder = CombinePaths(env.WorkingDirectory, ".msbuild");
-var msbuildNet46Folder = msbuildBaseFolder + "-net46";
-var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
-var msbuildRuntimeForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime.Mono");
-var msbuildLibForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Lib.Mono");
-
 /// <summary>
 ///  Clean artifacts.
 /// </summary>
@@ -116,88 +110,7 @@ Task("SetupMSBuild")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    if (!IsRunningOnWindows())
-    {
-        if (DirectoryExists(msbuildRuntimeForMonoInstallFolder))
-        {
-            DeleteDirectory(msbuildRuntimeForMonoInstallFolder, recursive: true);
-        }
-
-        if (DirectoryExists(msbuildLibForMonoInstallFolder))
-        {
-            DeleteDirectory(msbuildLibForMonoInstallFolder, recursive: true);
-        }
-
-        CreateDirectory(msbuildRuntimeForMonoInstallFolder);
-        CreateDirectory(msbuildLibForMonoInstallFolder);
-
-        var msbuildMonoRuntimeZip = CombinePaths(msbuildRuntimeForMonoInstallFolder, buildPlan.MSBuildRuntimeForMono);
-        var msbuildMonoLibZip = CombinePaths(msbuildLibForMonoInstallFolder, buildPlan.MSBuildLibForMono);
-
-        using (var client = new WebClient())
-        {
-            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildRuntimeForMono}", msbuildMonoRuntimeZip);
-            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildLibForMono}", msbuildMonoLibZip);
-        }
-
-        Unzip(msbuildMonoRuntimeZip, msbuildRuntimeForMonoInstallFolder);
-        Unzip(msbuildMonoLibZip, msbuildLibForMonoInstallFolder);
-
-        DeleteFile(msbuildMonoRuntimeZip);
-        DeleteFile(msbuildMonoLibZip);
-    }
-
-    if (DirectoryExists(msbuildNet46Folder))
-    {
-        DeleteDirectory(msbuildNet46Folder, recursive: true);
-    }
-
-    if (DirectoryExists(msbuildNetCoreAppFolder))
-    {
-        DeleteDirectory(msbuildNetCoreAppFolder, recursive: true);
-    }
-
-    CreateDirectory(msbuildNet46Folder);
-    CreateDirectory(msbuildNetCoreAppFolder);
-
-    // Copy MSBuild runtime to appropriate locations
-    var msbuildInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any");
-    var msbuildNet46InstallFolder = CombinePaths(msbuildInstallFolder, "net46");
-    var msbuildNetCoreAppInstallFolder = CombinePaths(msbuildInstallFolder, "netcoreapp1.0");
-
-    if (IsRunningOnWindows())
-    {
-        CopyDirectory(msbuildNet46InstallFolder, msbuildNet46Folder);
-    }
-    else
-    {
-        CopyDirectory(msbuildRuntimeForMonoInstallFolder, msbuildNet46Folder);
-    }
-
-    CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
-
-    // Finally, copy Microsoft.Net.Compilers
-    var roslynFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
-    var roslynNet46Folder = CombinePaths(msbuildNet46Folder, "Roslyn");
-    var roslynNetCoreAppFolder = CombinePaths(msbuildNetCoreAppFolder, "Roslyn");
-
-    CreateDirectory(roslynNet46Folder);
-    CreateDirectory(roslynNetCoreAppFolder);
-
-    CopyDirectory(roslynFolder, roslynNet46Folder);
-    CopyDirectory(roslynFolder, roslynNetCoreAppFolder);
-
-    // Delete unnecessary files
-    foreach (var folder in new[] { roslynNet46Folder, roslynNetCoreAppFolder })
-    {
-        DeleteFile(CombinePaths(folder, "Microsoft.CodeAnalysis.VisualBasic.dll"));
-        DeleteFile(CombinePaths(folder, "Microsoft.VisualBasic.Core.targets"));
-        DeleteFile(CombinePaths(folder, "VBCSCompiler.exe"));
-        DeleteFile(CombinePaths(folder, "VBCSCompiler.exe.config"));
-        DeleteFile(CombinePaths(folder, "vbc.exe"));
-        DeleteFile(CombinePaths(folder, "vbc.exe.config"));
-        DeleteFile(CombinePaths(folder, "vbc.rsp"));
-    }
+    SetupMSBuild(env);
 });
 
 /// <summary>
@@ -526,7 +439,7 @@ Task("Test")
         else
         {
             // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-            CopyDirectory($"{msbuildLibForMonoInstallFolder}", instanceFolder);
+            CopyDirectory($"{env.Folders.MonoMSBuildLib}", instanceFolder);
 
             Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                 .ExceptionOnError($"Test {testProject} failed for net46");
@@ -626,12 +539,12 @@ Task("OnlyPublish")
                 .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
 
             // Copy MSBuild and SDKs to output
-            CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
+            CopyDirectory($"{env.Folders.MSBuildBase}-{framework}", CombinePaths(outputFolder, "msbuild"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
             if (!IsRunningOnWindows() && framework == "net46")
             {
-                CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+                CopyDirectory($"{env.Folders.MonoMSBuildLib}", outputFolder);
             }
 
             if (requireArchive)

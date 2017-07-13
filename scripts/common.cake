@@ -29,12 +29,17 @@ public class Folders
     public string ArtifactsPackage { get; }
     public string ArtifactsScripts { get; }
 
+    public string MonoMSBuildLib { get; }
+    public string MonoMSBuildRuntime { get; }
+    public string MSBuildBase { get; }
+
     public Folders(string workingDirectory)
     {
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
         this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
+        this.MSBuildBase = PathHelper.Combine(workingDirectory, ".msbuild");
         this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
@@ -45,6 +50,9 @@ public class Folders
         this.ArtifactsLogs = PathHelper.Combine(this.Artifacts, "logs");
         this.ArtifactsPackage = PathHelper.Combine(this.Artifacts, "package");
         this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
+
+        this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
+        this.MonoMSBuildRuntime = PathHelper.Combine(this.Tools, "Microsoft.Build.Runtime.Mono");
     }
 }
 
