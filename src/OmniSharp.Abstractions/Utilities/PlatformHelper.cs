@@ -16,13 +16,19 @@ namespace OmniSharp.Utilities
 
         public static bool IsWindows => Path.DirectorySeparatorChar == '\\';
 
+        // http://man7.org/linux/man-pages/man3/realpath.3.html
         // CharSet.Ansi is UTF8 on Unix
         [DllImport("libc", EntryPoint = "realpath", CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr Unix_realpath(string path, IntPtr buffer);
 
+        // http://man7.org/linux/man-pages/man3/free.3.html
         [DllImport("libc", EntryPoint = "free", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         private static extern void Unix_free(IntPtr ptr);
 
+        /// <summary>
+        /// Returns the conanicalized absolute path from a given path, expanding symbolic links and resolving
+        /// references to /./, /../ and extra '/' path characters.
+        /// </summary>
         private static string RealPath(string path)
         {
             if (IsWindows)
