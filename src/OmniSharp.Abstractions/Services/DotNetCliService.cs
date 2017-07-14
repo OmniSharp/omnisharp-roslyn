@@ -121,35 +121,49 @@ namespace OmniSharp.Services
 
         public DotNetInfo GetInfo(string workingDirectory = null)
         {
-            Process process;
+            const string DOTNET_CLI_UI_LANGUAGE = nameof(DOTNET_CLI_UI_LANGUAGE);
+
+            // Ensure that we set the DOTNET_CLI_UI_LANGUAGE environment variable to "en-US" before
+            // running 'dotnet --info'. Otherwise, we may get localized results.
+            var originalValue = Environment.GetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE);
+            Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, "en-US");
+
             try
             {
-                process = Start("--info", workingDirectory);
-            }
-            catch
-            {
-                return DotNetInfo.Empty;
-            }
-
-            if (process.HasExited)
-            {
-                return DotNetInfo.Empty;
-            }
-
-            var lines = new List<string>();
-            process.OutputDataReceived += (_, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data))
+                Process process;
+                try
                 {
-                    lines.Add(e.Data);
+                    process = Start("--info", workingDirectory);
                 }
-            };
+                catch
+                {
+                    return DotNetInfo.Empty;
+                }
 
-            process.BeginOutputReadLine();
+                if (process.HasExited)
+                {
+                    return DotNetInfo.Empty;
+                }
 
-            process.WaitForExit();
+                var lines = new List<string>();
+                process.OutputDataReceived += (_, e) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        lines.Add(e.Data);
+                    }
+                };
 
-            return DotNetInfo.Parse(lines);
+                process.BeginOutputReadLine();
+
+                process.WaitForExit();
+
+                return DotNetInfo.Parse(lines);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, originalValue);
+            }
         }
 
         /// <summary>
