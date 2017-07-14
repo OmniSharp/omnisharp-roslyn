@@ -108,15 +108,43 @@ namespace OmniSharp.Cake
 
         public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
-            throw new NotImplementedException();
+            var scriptContextModels = new List<CakeContextModel>();
+            foreach (var project in _projects)
+            {
+                scriptContextModels.Add(new CakeContextModel(project.Key));
+            }
+            return Task.FromResult<object>(new CakeContextModelCollection(scriptContextModels));
         }
 
         public Task<object> GetProjectModelAsync(string filePath)
         {
-            throw new NotImplementedException();
+            // only react to .cake file paths
+            if (!filePath.EndsWith(".cake", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<object>(null);
+            }
+
+            var document = _workspace.GetDocument(filePath);
+            var projectFilePath = document != null
+                ? document.Project.FilePath
+                : filePath;
+
+            var projectInfo = GetProjectFileInfo(projectFilePath);
+            if (projectInfo == null)
+            {
+                _logger.LogDebug($"Could not locate project for '{projectFilePath}'");
+                return Task.FromResult<object>(null);
+            }
+
+            return Task.FromResult<object>(new CakeContextModel(filePath));
         }
 
-        private ProjectInfo GetProject(CakeScript cakeScript, string filePath)
+        private ProjectInfo GetProjectFileInfo(string path)
+        {
+            return !_projects.TryGetValue(path, out ProjectInfo projectFileInfo) ? null : projectFileInfo;
+        }
+
+        private static ProjectInfo GetProject(CakeScript cakeScript, string filePath)
         {
             var name = Path.GetFileName(filePath);
 
