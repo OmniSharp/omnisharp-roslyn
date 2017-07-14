@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace OmniSharp.Utilities
 {
@@ -16,33 +16,47 @@ namespace OmniSharp.Utilities
 
         public static bool IsWindows => Path.DirectorySeparatorChar == '\\';
 
+        // http://man7.org/linux/man-pages/man3/realpath.3.html
+        // CharSet.Ansi is UTF8 on Unix
+        [DllImport("libc", EntryPoint = "realpath", CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr Unix_realpath(string path, IntPtr buffer);
+
+        // http://man7.org/linux/man-pages/man3/free.3.html
+        [DllImport("libc", EntryPoint = "free", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void Unix_free(IntPtr ptr);
+
+        /// <summary>
+        /// Returns the conanicalized absolute path from a given path, expanding symbolic links and resolving
+        /// references to /./, /../ and extra '/' path characters.
+        /// </summary>
+        private static string RealPath(string path)
+        {
+            if (IsWindows)
+            {
+                throw new PlatformNotSupportedException($"{nameof(RealPath)} can only be called on Unix.");
+            }
+
+            var ptr = Unix_realpath(path, IntPtr.Zero);
+            var result = Marshal.PtrToStringAnsi(ptr); // uses UTF8 on Unix
+            Unix_free(ptr);
+
+            return result;
+        }
+
         private static string FindMonoPath()
         {
-            // To locate Mono on unix, we use the 'which' command (https://en.wikipedia.org/wiki/Which_(Unix))
-            var monoFilePath = RunOnBashAndCaptureOutput("which", "mono");
-
-            if (string.IsNullOrEmpty(monoFilePath))
-            {
-                return null;
-            }
-
-            Console.WriteLine($"Discovered Mono file path: {monoFilePath}");
-
-            // 'mono' is likely a symbolic link. Try to resolve it.
-            var resolvedMonoFilePath = ResolveSymbolicLink(monoFilePath);
-
-            if (StringComparer.OrdinalIgnoreCase.Compare(monoFilePath, resolvedMonoFilePath) == 0)
-            {
-                return monoFilePath;
-            }
-
-            Console.WriteLine($"Resolved symbolic link for Mono file path: {resolvedMonoFilePath}");
-
-            return resolvedMonoFilePath;
+            return !IsWindows
+                ? RealPath("mono")
+                : null;
         }
 
         private static string FindMonoXBuildFrameworksDirPath()
         {
+            if (IsWindows)
+            {
+                return null;
+            }
+
             const string defaultXBuildFrameworksDirPath = "/usr/lib/mono/xbuild-frameworks";
             if (Directory.Exists(defaultXBuildFrameworksDirPath))
             {
@@ -71,87 +85,6 @@ namespace OmniSharp.Utilities
             return Directory.Exists(monoXBuildFrameworksDirPath)
                 ? monoXBuildFrameworksDirPath
                 : null;
-        }
-
-        private static string ResolveSymbolicLink(string path)
-        {
-            var result = ResolveSymbolicLink(new List<string> { path });
-
-            return CanonicalizePath(result);
-        }
-
-        private static string ResolveSymbolicLink(List<string> paths)
-        {
-            while (!HasCycle(paths))
-            {
-                // We use 'readlink' to resolve symbolic links on unix. Note that OSX does not
-                // support the -f flag for recursively resolving symbolic links and canonicalzing
-                // the final path.
-
-                var originalPath = paths[paths.Count - 1];
-                var newPath = RunOnBashAndCaptureOutput("readlink", $"{originalPath}");
-
-                if (string.IsNullOrEmpty(newPath) ||
-                    string.CompareOrdinal(originalPath, newPath) == 0)
-                {
-                    return originalPath;
-                }
-
-                if (!newPath.StartsWith("/"))
-                {
-                    var dir = File.Exists(originalPath)
-                        ? Path.GetDirectoryName(originalPath)
-                        : originalPath;
-
-                    newPath = Path.Combine(dir, newPath);
-                    newPath = Path.GetFullPath(newPath);
-                }
-
-                paths.Add(newPath);
-            }
-
-            return null;
-        }
-
-        private static bool HasCycle(List<string> paths)
-        {
-            var target = paths[0];
-            for (var i = 1; i < paths.Count; i++)
-            {
-                var path = paths[i];
-
-                if (string.CompareOrdinal(target, path) == 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static string CanonicalizePath(string path)
-        {
-            if (File.Exists(path))
-            {
-                return Path.Combine(
-                    CanonicalizeDirectory(Path.GetDirectoryName(path)),
-                    Path.GetFileName(path));
-            }
-            else
-            {
-                return CanonicalizeDirectory(path);
-            }
-        }
-
-        private static string CanonicalizeDirectory(string directoryName)
-        {
-            // Use "pwd -P" to get the directory name with all symbolic links on Unix.
-            return RunOnBashAndCaptureOutput("pwd", "-P", directoryName);
-        }
-
-        private static string RunOnBashAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)
-        {
-            return ProcessHelper.RunAndCaptureOutput("/bin/bash", $"-c '{fileName} {arguments}'", workingDirectory);
         }
     }
 }
