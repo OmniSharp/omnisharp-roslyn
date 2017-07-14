@@ -66,7 +66,7 @@ namespace OmniSharp.Cake
             _logger.LogInformation($"Found {allCakeFiles.Length} Cake files.");
 
             // Check that bakery is installed
-            var bakeryPath = CakeGenerationServiceToolResolver.GetServerExecutablePath(_environment.TargetDirectory, _cakeConfiguration);
+            var bakeryPath = CakeGenerationToolResolver.GetServerExecutablePath(_environment.TargetDirectory, _cakeConfiguration);
             if (!File.Exists(bakeryPath))
             {
                 _logger.LogError("Cake.Bakery not installed");
@@ -138,7 +138,7 @@ namespace OmniSharp.Cake
                 hostObjectType: Type.GetType(cakeScript.Host.TypeName));
         }
 
-        private CompilationOptions GetCompilationOptions(ISet<string> usings)
+        private static CompilationOptions GetCompilationOptions(IEnumerable<string> usings)
         {
             var compilationOptions = new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,

@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using OmniSharp.Cake.Configuration;
 
-namespace OmniSharp.Cake.Services
+namespace OmniSharp.Cake.Tools
 {
-    internal static class CakeGenerationServiceToolResolver
+    internal static class CakeGenerationToolResolver
     {
         public static string GetServerExecutablePath(string rootPath, ICakeConfiguration configuration)
         {

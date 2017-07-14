@@ -7,15 +7,15 @@ using Cake.Scripting.Transport.Tcp.Client;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 
-namespace OmniSharp.Cake.Services
+namespace OmniSharp.Cake.Tools
 {
     [Export(typeof(IScriptGenerationService)), Shared]
-    public class CakeGenerationService : IScriptGenerationService
+    public class CakeGenerationTool : IScriptGenerationService
     {
         private readonly IScriptGenerationService _generationService;
 
         [ImportingConstructor]
-        public CakeGenerationService(IOmniSharpEnvironment environment, ICakeConfiguration configuration, ILoggerFactory loggerFactory)
+        public CakeGenerationTool(IOmniSharpEnvironment environment, ICakeConfiguration configuration, ILoggerFactory loggerFactory)
         {
             if (environment == null)
             {
@@ -30,7 +30,8 @@ namespace OmniSharp.Cake.Services
                 throw new ArgumentNullException(nameof(loggerFactory));
             }
 
-            var serverExecutablePath = CakeGenerationServiceToolResolver.GetServerExecutablePath(environment.TargetDirectory, configuration);
+            // TODO: Not like this... I think...
+            var serverExecutablePath = CakeGenerationToolResolver.GetServerExecutablePath(environment.TargetDirectory, configuration);
 
             if (File.Exists(serverExecutablePath))
             {
