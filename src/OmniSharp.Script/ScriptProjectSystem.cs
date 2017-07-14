@@ -30,19 +30,17 @@ namespace OmniSharp.Script
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
-        private readonly IAssemblyLoader _assemblyLoader;
 
         private readonly IScriptProjectProvider _scriptProjectProvider;        
         private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, 
-            MetadataFileReferenceCache metadataFileReferenceCache, IAssemblyLoader assemblyLoader)
+            MetadataFileReferenceCache metadataFileReferenceCache)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
-            _assemblyLoader = assemblyLoader;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
             _scriptProjectProvider = ScriptProjectProvider.Create(loggerFactory);
@@ -156,8 +154,8 @@ namespace OmniSharp.Script
                     typeof(Enumerable).GetTypeInfo().Assembly,
                     typeof(Stack<>).GetTypeInfo().Assembly,
                     typeof(Lazy<,>).GetTypeInfo().Assembly,
-                    _assemblyLoader.Load("System.Runtime"),
-                    _assemblyLoader.Load("mscorlib")
+                    FromName("System.Runtime"),
+                    FromName("mscorlib")
                 };
 
                 var references = assemblies
@@ -169,6 +167,18 @@ namespace OmniSharp.Script
                 foreach (var reference in references)
                 {
                     commonReferences.Add(reference);
+                }
+            }
+
+            Assembly FromName(string assemblyName)
+            {
+                try
+                {
+                    return Assembly.Load(new AssemblyName(assemblyName));
+                }
+                catch
+                {
+                    return null;
                 }
             }
         }

@@ -3,7 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [Unreleased]
 
-* None
+* Fixed a Script project system regression introduced as part of [#898](https://github.com/OmniSharp/omnisharp-roslyn/pull/898), that caused CSX support to break for Desktop CLR scripts on Windows (PR: [#913](https://github.com/OmniSharp/omnisharp-roslyn/pull/913))
 
 ## [1.22.0] - 2017-07-07
 
