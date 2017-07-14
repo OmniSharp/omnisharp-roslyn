@@ -9,19 +9,19 @@ namespace OmniSharp.Cake
     {
         private static readonly Dictionary<string, ImmutableArray<PortableExecutableReference>> DirectReferenceCache = new Dictionary<string, ImmutableArray<PortableExecutableReference>>();
         private static readonly Dictionary<string, PortableExecutableReference> MissingReferenceCache = new Dictionary<string, PortableExecutableReference>();
-        private static readonly MetadataReferenceResolver _defaultRuntimeResolver = ScriptMetadataResolver.Default;
+        private static readonly MetadataReferenceResolver DefaultRuntimeResolver = ScriptMetadataResolver.Default;
 
         public override bool Equals(object other)
         {
-            return _defaultRuntimeResolver.Equals(other);
+            return DefaultRuntimeResolver.Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return _defaultRuntimeResolver.GetHashCode();
+            return DefaultRuntimeResolver.GetHashCode();
         }
 
-        public override bool ResolveMissingAssemblies => _defaultRuntimeResolver.ResolveMissingAssemblies;
+        public override bool ResolveMissingAssemblies => DefaultRuntimeResolver.ResolveMissingAssemblies;
 
         public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
         {
@@ -30,7 +30,7 @@ namespace OmniSharp.Cake
                 return MissingReferenceCache[referenceIdentity.Name];
             }
 
-            var result = _defaultRuntimeResolver.ResolveMissingAssembly(definition, referenceIdentity);
+            var result = DefaultRuntimeResolver.ResolveMissingAssembly(definition, referenceIdentity);
             if (result != null)
             {
                 MissingReferenceCache[referenceIdentity.Name] = result;
@@ -47,7 +47,7 @@ namespace OmniSharp.Cake
                 return DirectReferenceCache[key];
             }
 
-            var result = _defaultRuntimeResolver.ResolveReference(reference, baseFilePath, properties);
+            var result = DefaultRuntimeResolver.ResolveReference(reference, baseFilePath, properties);
             if (result.Length > 0)
             {
                 DirectReferenceCache[key] = result;

@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Polyfill;
-using OmniSharp.Cake.Services;
+using OmniSharp.Cake.Tools;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 

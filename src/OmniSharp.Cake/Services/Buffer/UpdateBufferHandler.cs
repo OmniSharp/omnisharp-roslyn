@@ -1,11 +1,6 @@
 using System.Composition;
-using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp;
-using Cake.OmniSharp.IO;
-using Cake.OmniSharp.Scripting;
 using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
 using OmniSharp.Models.UpdateBuffer;

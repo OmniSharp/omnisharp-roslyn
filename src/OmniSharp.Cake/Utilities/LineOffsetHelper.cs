@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp;
 
 namespace OmniSharp.Cake.Utilities
 {
