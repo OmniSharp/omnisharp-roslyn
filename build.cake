@@ -1,14 +1,11 @@
-#addin "Newtonsoft.Json"
-
 #load "scripts/common.cake"
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
+#load "scripts/msbuild.cake"
 
 using System.ComponentModel;
 using System.Net;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 // Arguments
 var target = Argument("target", "Default");
@@ -19,70 +16,10 @@ var installFolder = Argument("install-path",
 var requireArchive = HasArgument("archive");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
+Log.Context = Context;
+
 var env = new BuildEnvironment(IsRunningOnWindows(), useGlobalDotNetSdk);
-
-/// <summary>
-///  Class representing build.json
-/// </summary>
-public class BuildPlan
-{
-    public string DotNetInstallScriptURL { get; set; }
-    public string DotNetChannel { get; set; }
-    public string DotNetVersion { get; set; }
-    public string LegacyDotNetVersion { get; set; }
-    public string DownloadURL { get; set; }
-    public string MSBuildRuntimeForMono { get; set; }
-    public string MSBuildLibForMono { get; set; }
-    public string[] Frameworks { get; set; }
-    public string MainProject { get; set; }
-    public string[] TestProjects { get; set; }
-    public string[] TestAssets { get; set; }
-    public string[] LegacyTestAssets { get; set; }
-
-    private string currentRid;
-    private string[] targetRids;
-
-    public void SetCurrentRid(string currentRid)
-    {
-        this.currentRid = currentRid;
-    }
-
-    public string CurrentRid => currentRid;
-    public string[] TargetRids => targetRids;
-
-    public void SetTargetRids(params string[] targetRids)
-    {
-        this.targetRids = targetRids;
-    }
-
-    public string GetDefaultRid()
-    {
-        if (currentRid.StartsWith("win"))
-        {
-            return currentRid.EndsWith("-x86")
-                ? "win7-x86"
-                : "win7-x64";
-        }
-
-        return currentRid;
-    }
-
-    public static BuildPlan Load(BuildEnvironment env)
-    {
-        var buildJsonPath = PathHelper.Combine(env.WorkingDirectory, "build.json");
-        return JsonConvert.DeserializeObject<BuildPlan>(
-            System.IO.File.ReadAllText(buildJsonPath));
-    }
-}
-
 var buildPlan = BuildPlan.Load(env);
-
-// Folders and tools
-var msbuildBaseFolder = CombinePaths(env.WorkingDirectory, ".msbuild");
-var msbuildNet46Folder = msbuildBaseFolder + "-net46";
-var msbuildNetCoreAppFolder = msbuildBaseFolder + "-netcoreapp1.1";
-var msbuildRuntimeForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime.Mono");
-var msbuildLibForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Lib.Mono");
 
 /// <summary>
 ///  Clean artifacts.
@@ -90,15 +27,15 @@ var msbuildLibForMonoInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.
 Task("Cleanup")
     .Does(() =>
 {
-    if (DirectoryExists(env.Folders.Artifacts))
+    if (DirectoryHelper.Exists(env.Folders.Artifacts))
     {
-        DeleteDirectory(env.Folders.Artifacts, recursive: true);
+        DirectoryHelper.Delete(env.Folders.Artifacts, recursive: true);
     }
 
-    CreateDirectory(env.Folders.Artifacts);
-    CreateDirectory(env.Folders.ArtifactsLogs);
-    CreateDirectory(env.Folders.ArtifactsPackage);
-    CreateDirectory(env.Folders.ArtifactsScripts);
+    DirectoryHelper.Create(env.Folders.Artifacts);
+    DirectoryHelper.Create(env.Folders.ArtifactsLogs);
+    DirectoryHelper.Create(env.Folders.ArtifactsPackage);
+    DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
 /// <summary>
@@ -116,88 +53,7 @@ Task("SetupMSBuild")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    if (!IsRunningOnWindows())
-    {
-        if (DirectoryExists(msbuildRuntimeForMonoInstallFolder))
-        {
-            DeleteDirectory(msbuildRuntimeForMonoInstallFolder, recursive: true);
-        }
-
-        if (DirectoryExists(msbuildLibForMonoInstallFolder))
-        {
-            DeleteDirectory(msbuildLibForMonoInstallFolder, recursive: true);
-        }
-
-        CreateDirectory(msbuildRuntimeForMonoInstallFolder);
-        CreateDirectory(msbuildLibForMonoInstallFolder);
-
-        var msbuildMonoRuntimeZip = CombinePaths(msbuildRuntimeForMonoInstallFolder, buildPlan.MSBuildRuntimeForMono);
-        var msbuildMonoLibZip = CombinePaths(msbuildLibForMonoInstallFolder, buildPlan.MSBuildLibForMono);
-
-        using (var client = new WebClient())
-        {
-            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildRuntimeForMono}", msbuildMonoRuntimeZip);
-            client.DownloadFile($"{buildPlan.DownloadURL}/{buildPlan.MSBuildLibForMono}", msbuildMonoLibZip);
-        }
-
-        Unzip(msbuildMonoRuntimeZip, msbuildRuntimeForMonoInstallFolder);
-        Unzip(msbuildMonoLibZip, msbuildLibForMonoInstallFolder);
-
-        DeleteFile(msbuildMonoRuntimeZip);
-        DeleteFile(msbuildMonoLibZip);
-    }
-
-    if (DirectoryExists(msbuildNet46Folder))
-    {
-        DeleteDirectory(msbuildNet46Folder, recursive: true);
-    }
-
-    if (DirectoryExists(msbuildNetCoreAppFolder))
-    {
-        DeleteDirectory(msbuildNetCoreAppFolder, recursive: true);
-    }
-
-    CreateDirectory(msbuildNet46Folder);
-    CreateDirectory(msbuildNetCoreAppFolder);
-
-    // Copy MSBuild runtime to appropriate locations
-    var msbuildInstallFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any");
-    var msbuildNet46InstallFolder = CombinePaths(msbuildInstallFolder, "net46");
-    var msbuildNetCoreAppInstallFolder = CombinePaths(msbuildInstallFolder, "netcoreapp1.0");
-
-    if (IsRunningOnWindows())
-    {
-        CopyDirectory(msbuildNet46InstallFolder, msbuildNet46Folder);
-    }
-    else
-    {
-        CopyDirectory(msbuildRuntimeForMonoInstallFolder, msbuildNet46Folder);
-    }
-
-    CopyDirectory(msbuildNetCoreAppInstallFolder, msbuildNetCoreAppFolder);
-
-    // Finally, copy Microsoft.Net.Compilers
-    var roslynFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
-    var roslynNet46Folder = CombinePaths(msbuildNet46Folder, "Roslyn");
-    var roslynNetCoreAppFolder = CombinePaths(msbuildNetCoreAppFolder, "Roslyn");
-
-    CreateDirectory(roslynNet46Folder);
-    CreateDirectory(roslynNetCoreAppFolder);
-
-    CopyDirectory(roslynFolder, roslynNet46Folder);
-    CopyDirectory(roslynFolder, roslynNetCoreAppFolder);
-
-    // Delete unnecessary files
-    foreach (var folder in new[] { roslynNet46Folder, roslynNetCoreAppFolder })
-    {
-        DeleteFile(CombinePaths(folder, "Microsoft.CodeAnalysis.VisualBasic.dll"));
-        DeleteFile(CombinePaths(folder, "Microsoft.VisualBasic.Core.targets"));
-        DeleteFile(CombinePaths(folder, "VBCSCompiler.exe"));
-        DeleteFile(CombinePaths(folder, "VBCSCompiler.exe.config"));
-        DeleteFile(CombinePaths(folder, "vbc.exe"));
-        DeleteFile(CombinePaths(folder, "vbc.exe.config"));
-        DeleteFile(CombinePaths(folder, "vbc.rsp"));
-    }
+    SetupMSBuild(env, buildPlan);
 });
 
 /// <summary>
@@ -382,14 +238,12 @@ Task("PrepareTestAssets")
     // Restore and build test assets
     foreach (var project in buildPlan.TestAssets)
     {
-        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+        Information("Restoring and building: {0}...", project);
 
-        Information($"Restoring packages in {folder}...");
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
         RunTool(env.DotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
-
-        Information($"Building {folder}...");
 
         RunTool(env.DotNetCommand, "build", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
@@ -398,14 +252,12 @@ Task("PrepareTestAssets")
     // Restore and build legacy test assets with legacy .NET Core SDK
     foreach (var project in buildPlan.LegacyTestAssets)
     {
-        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+        Information("Restoring and building project.json: {0}...", project);
 
-        Information($"Restoring project.json packages in {folder}...");
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
         RunTool(env.LegacyDotNetCommand, "restore", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
-
-        Information($"Building {folder}...");
 
         RunTool(env.LegacyDotNetCommand, $"build", folder)
             .ExceptionOnError($"Failed to restore '{folder}'.");
@@ -424,7 +276,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
 
     var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
 
-    Information($"Building {projectName}...");
+    Information("Building {0}...", projectName);
 
     RunTool(command, arguments, env.WorkingDirectory, logFileName)
         .ExceptionOnError($"Building {projectName} failed.");
@@ -512,8 +364,8 @@ Task("Test")
         // Copy xunit executable to test folder to solve path errors
         var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools");
         var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
-        System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, true);
-        System.IO.File.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), true);
+        FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
+        FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
         var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
         var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
         var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
@@ -526,7 +378,7 @@ Task("Test")
         else
         {
             // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-            CopyDirectory($"{msbuildLibForMonoInstallFolder}", instanceFolder);
+            DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
 
             Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
                 .ExceptionOnError($"Test {testProject} failed for net46");
@@ -620,18 +472,18 @@ Task("OnlyPublish")
                 ? $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}"
                 : args;
 
-            Information($"Publishing {projectName} for {framework}/{rid}...");
+            Information("Publishing {0} for {1}/{2}...", projectName, framework, rid);
 
             RunTool(command, args, env.WorkingDirectory)
                 .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
 
             // Copy MSBuild and SDKs to output
-            CopyDirectory($"{msbuildBaseFolder}-{framework}", CombinePaths(outputFolder, "msbuild"));
+            DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-{framework}", CombinePaths(outputFolder, "msbuild"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
             if (!IsRunningOnWindows() && framework == "net46")
             {
-                CopyDirectory($"{msbuildLibForMonoInstallFolder}", outputFolder);
+                DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
             }
 
             if (requireArchive)
@@ -706,12 +558,7 @@ Task("TestPublished")
 Task("CleanupInstall")
     .Does(() =>
 {
-    if (System.IO.Directory.Exists(installFolder))
-    {
-        System.IO.Directory.Delete(installFolder, true);
-    }
-
-    System.IO.Directory.CreateDirectory(installFolder);
+    DirectoryHelper.ForceCreate(installFolder);
 });
 
 /// <summary>
