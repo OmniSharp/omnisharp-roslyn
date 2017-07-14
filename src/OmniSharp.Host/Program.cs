@@ -66,7 +66,7 @@ namespace OmniSharp
             var logLevelOption = omnisharpApp.Option("-l | --loglevel", "Level of logging (defaults to 'Information').", CommandOptionType.SingleValue);
             var verboseOption = omnisharpApp.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
             var hostPidOption = omnisharpApp.Option("-hpid | --hostPID", "Host process ID.", CommandOptionType.SingleValue);
-            var stdioOption = omnisharpApp.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp commincation protocol.", CommandOptionType.NoValue);
+            var stdioOption = omnisharpApp.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp communication protocol.", CommandOptionType.NoValue);
             var zeroBasedIndicesOption = omnisharpApp.Option("-z | --zero-based-indices", "Use zero based indices in request/responses (defaults to 'false').", CommandOptionType.NoValue);
             var serverInterfaceOption = omnisharpApp.Option("-i | --interface", "Server interface address (defaults to 'localhost').", CommandOptionType.SingleValue);
             var encodingOption = omnisharpApp.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
