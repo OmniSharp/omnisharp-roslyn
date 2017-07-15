@@ -148,7 +148,12 @@ namespace OmniSharp.Cake
         {
             var name = Path.GetFileName(filePath);
 
-            AssemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
+            var assembly = AssemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
+#if NET46
+            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => assembly, null, true);
+#else
+            var hostObjectType = Type.GetType(cakeScript.Host.TypeName);
+#endif
 
             return ProjectInfo.Create(
                 id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
@@ -163,7 +168,7 @@ namespace OmniSharp.Cake
                 metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference/*, documentation: CreateDocumentationProvider(referencePath))*/)),
                 // TODO: projectReferences?
                 isSubmission: true,
-                hostObjectType: Type.GetType(cakeScript.Host.TypeName));
+                hostObjectType: hostObjectType);
         }
 
         private static CompilationOptions GetCompilationOptions(IEnumerable<string> usings)
