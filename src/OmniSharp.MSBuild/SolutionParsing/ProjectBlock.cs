@@ -7,6 +7,8 @@ namespace OmniSharp.MSBuild.SolutionParsing
 {
     internal class ProjectBlock
     {
+        private const string SolutionFolderGuid = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
+
         // An example of a project line looks like this:
         //  Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{DEBCE986-61B9-435E-8018-44B9EF751655}"
         private static readonly Lazy<Regex> s_lazyProjectHeader = new Lazy<Regex>(
@@ -29,6 +31,8 @@ namespace OmniSharp.MSBuild.SolutionParsing
         public string RelativePath { get; }
         public string ProjectGuid { get; }
         public ImmutableArray<SectionBlock> Sections { get; }
+
+        public bool IsSolutionFolder => ProjectTypeGuid.Equals(SolutionFolderGuid, StringComparison.OrdinalIgnoreCase);
 
         private ProjectBlock(string projectTypeGuid, string projectName, string relativePath, string projectGuid, ImmutableArray<SectionBlock> sections)
         {
