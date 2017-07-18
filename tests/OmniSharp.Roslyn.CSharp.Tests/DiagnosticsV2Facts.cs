@@ -99,7 +99,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var controller = new DiagnosticsService(host.Workspace, forwarder, service);
                 var response = await controller.Handle(new DiagnosticsRequest());
 
-                Assert.Equal(true, forwarder.IsEnabled);
+                Assert.True(forwarder.IsEnabled);
             }
         }
     }

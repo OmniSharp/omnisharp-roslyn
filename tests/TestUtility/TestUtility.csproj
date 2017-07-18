@@ -23,7 +23,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.3.0-beta2" />
     <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="1.0.0-rc3-1-003177" />
     <PackageReference Include="Microsoft.DotNet.ProjectModel.Workspaces" Version="1.0.0-preview2-1-003177" />
-    <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="xunit" Version="2.3.0-beta4-build3722" />
   </ItemGroup>
 
 </Project>
