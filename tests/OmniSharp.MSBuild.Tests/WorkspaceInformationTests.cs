@@ -88,7 +88,7 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
-        [Fact(Skip = "We're mot ready to run .NET Core SDK tests yet.")]
+        [Fact(Skip = "We're not ready to run .NET Core SDK tests yet.")]
         public async Task ProjectWithSdkProperty()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithSdkProperty"))
