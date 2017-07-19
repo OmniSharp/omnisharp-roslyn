@@ -15,7 +15,7 @@ namespace OmniSharp.DotNetTest.Tests
         protected const string LegacyNunitTestProject = "LegacyNunitTestProject";
         protected const string LegacyMSTestProject = "LegacyMSTestProject";
         protected const string XunitTestProject = "XunitTestProject";
-        protected const string NunitTestProject = "NunitTestProject";
+        protected const string NunitTestProject = "NUnitTestProject";
         protected const string MSTestProject = "MSTestProject";
 
         protected AbstractGetTestStartInfoFacts(ITestOutputHelper output)
