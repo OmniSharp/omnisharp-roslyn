@@ -1,20 +1,42 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace OmniSharp.Utilities
 {
     public static class PlatformHelper
     {
-        private static Lazy<bool> _isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
-        private static Lazy<string> _monoPath = new Lazy<string>(FindMonoPath);
-        private static Lazy<string> _monoXBuildFrameworksDirPath = new Lazy<string>(FindMonoXBuildFrameworksDirPath);
+        private static Lazy<bool> s_isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
+        private static Lazy<string> s_monoRuntimePath = new Lazy<string>(FindMonoRuntimePath);
+        private static Lazy<string> s_monoXBuildFrameworksDirPath = new Lazy<string>(FindMonoXBuildFrameworksDirPath);
 
-        public static bool IsMono => _isMono.Value;
-        public static string MonoFilePath => _monoPath.Value;
-        public static string MonoXBuildFrameworksDirPath => _monoXBuildFrameworksDirPath.Value;
+        public static bool IsMono => s_isMono.Value;
+        public static string MonoRuntimePath => s_monoRuntimePath.Value;
+        public static string MonoXBuildFrameworksDirPath => s_monoXBuildFrameworksDirPath.Value;
 
         public static bool IsWindows => Path.DirectorySeparatorChar == '\\';
+
+        private static IEnumerable<string> s_searchPaths;
+
+        public static IEnumerable<string> GetSearchPaths()
+        {
+            if (s_searchPaths == null)
+            {
+                var path = Environment.GetEnvironmentVariable("PATH");
+                if (path == null)
+                {
+                    return Array.Empty<string>();
+                }
+
+                s_searchPaths = path
+                    .Split(Path.PathSeparator)
+                    .Select(p => p.Trim('"'));
+            }
+
+            return s_searchPaths;
+        }
 
         // http://man7.org/linux/man-pages/man3/realpath.3.html
         // CharSet.Ansi is UTF8 on Unix
@@ -43,11 +65,23 @@ namespace OmniSharp.Utilities
             return result;
         }
 
-        private static string FindMonoPath()
+        private static string FindMonoRuntimePath()
         {
-            return !IsWindows
-                ? RealPath("mono")
-                : null;
+            if (IsWindows)
+            {
+                return null;
+            }
+
+            var monoPath = GetSearchPaths()
+                .Select(p => Path.Combine(p, "mono"))
+                .FirstOrDefault(File.Exists);
+
+            if (monoPath == null)
+            {
+                return null;
+            }
+
+            return RealPath(monoPath);
         }
 
         private static string FindMonoXBuildFrameworksDirPath()
@@ -65,21 +99,21 @@ namespace OmniSharp.Utilities
 
             // The normal Unix path doesn't exist, so we'll fallback to finding Mono using the
             // runtime location. This is the likely situation on macOS.
-            var monoFilePath = MonoFilePath;
-            if (string.IsNullOrEmpty(monoFilePath))
+            var monoRuntimePath = MonoRuntimePath;
+            if (string.IsNullOrEmpty(monoRuntimePath))
             {
                 return null;
             }
 
             // mono should be located within a directory that is a sibling to the lib directory.
-            var monoDirPath = Path.GetDirectoryName(monoFilePath);
+            var monoDirPath = Path.GetDirectoryName(monoRuntimePath);
 
             // The base directory is one folder up
             var monoBaseDirPath = Path.Combine(monoDirPath, "..");
             monoBaseDirPath = Path.GetFullPath(monoBaseDirPath);
 
             // We expect the xbuild-frameworks to be in /Versions/Current/lib/mono/xbuild-frameworks.
-            var monoXBuildFrameworksDirPath = Path.Combine(monoBaseDirPath, "lib/mono/xbuild-frameworks");
+            var monoXBuildFrameworksDirPath = Path.Combine(monoBaseDirPath, "lib", "mono", "xbuild-frameworks");
             monoXBuildFrameworksDirPath = Path.GetFullPath(monoXBuildFrameworksDirPath);
 
             return Directory.Exists(monoXBuildFrameworksDirPath)
