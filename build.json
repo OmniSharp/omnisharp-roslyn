@@ -3,6 +3,7 @@
   "DotNetChannel": "preview",
   "DotNetVersion": "1.0.4",
   "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
+  "RequiredMonoVersion": "5.2.0.196",
   "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
   "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha4.zip",
   "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha4.zip",

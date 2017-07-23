@@ -4,6 +4,7 @@
 #load "scripts/artifacts.cake"
 #load "scripts/msbuild.cake"
 #load "scripts/platform.cake"
+#load "scripts/validation.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -170,10 +171,20 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
     Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
+Task("ValidateEnvironment")
+    .Does(() =>
+{
+    if (!platform.IsWindows)
+    {
+        ValidateMonoVersion(env, buildPlan);
+    }
+});
+
 /// <summary>
 ///  Install/update build environment.
 /// </summary>
 Task("BuildEnvironment")
+    .IsDependentOn("ValidateEnvironment")
     .Does(() =>
 {
     if (!useGlobalDotNetSdk)

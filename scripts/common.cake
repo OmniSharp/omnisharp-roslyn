@@ -189,6 +189,7 @@ public class BuildPlan
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string LegacyDotNetVersion { get; set; }
+    public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MSBuildRuntimeForMono { get; set; }
     public string MSBuildLibForMono { get; set; }
