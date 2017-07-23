@@ -1,5 +1,7 @@
 #addin "Newtonsoft.Json"
 
+#load "platform.cake"
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -146,6 +148,8 @@ public class Folders
 
 public class BuildEnvironment
 {
+    public Platform Platform { get; }
+
     public string WorkingDirectory { get; }
     public Folders Folders { get; }
 
@@ -156,8 +160,10 @@ public class BuildEnvironment
     public string ShellArgument { get; }
     public string ShellScriptFileExtension { get; }
 
-    public BuildEnvironment(bool isWindows, bool useGlobalDotNetSdk)
+    public BuildEnvironment(Platform platform, bool useGlobalDotNetSdk)
     {
+        this.Platform = platform;
+
         this.WorkingDirectory = PathHelper.GetFullPath(
             System.IO.Directory.GetCurrentDirectory());
         this.Folders = new Folders(this.WorkingDirectory);
@@ -168,9 +174,9 @@ public class BuildEnvironment
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
 
-        this.ShellCommand = isWindows ? "powershell" : "bash";
-        this.ShellArgument = isWindows ? "-NoProfile /Command" : "-C";
-        this.ShellScriptFileExtension = isWindows ? "ps1" : "sh";
+        this.ShellCommand = platform.IsWindows ? "powershell" : "bash";
+        this.ShellArgument = platform.IsWindows ? "-NoProfile /Command" : "-C";
+        this.ShellScriptFileExtension = platform.IsWindows ? "ps1" : "sh";
     }
 }
 

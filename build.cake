@@ -3,6 +3,7 @@
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
 #load "scripts/msbuild.cake"
+#load "scripts/platform.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -18,8 +19,11 @@ var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 Log.Context = Context;
 
-var env = new BuildEnvironment(IsRunningOnWindows(), useGlobalDotNetSdk);
+var platform = GetCurrentPlatform();
+var env = new BuildEnvironment(platform, useGlobalDotNetSdk);
 var buildPlan = BuildPlan.Load(env);
+
+Information("Current platform: {0}", platform);
 
 /// <summary>
 ///  Clean artifacts.
