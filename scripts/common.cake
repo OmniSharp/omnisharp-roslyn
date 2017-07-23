@@ -29,6 +29,12 @@ public static class FileHelper
         Log.Debug(Verbosity.Diagnostic, "Delete file: {0}.", path);
         System.IO.File.Delete(path);
     }
+
+    public static bool Exists(string path) =>
+        System.IO.File.Exists(path);
+
+    public static void WriteAllLines(string path, string[] contents) =>
+        System.IO.File.WriteAllLines(path, contents);
 }
 
 public static class DirectoryHelper
