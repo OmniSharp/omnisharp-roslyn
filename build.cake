@@ -418,7 +418,7 @@ Task("Test")
             // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
             DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
 
-            Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+            Run("mono", $"--assembly-loader=strict \"{xunitInstancePath}\" {arguments}", instanceFolder)
                 .ExceptionOnError($"Test {testProject} failed for net46");
         }
     }

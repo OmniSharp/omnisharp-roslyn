@@ -43,7 +43,7 @@ void CreateRunScript(string outputRoot, string scriptFolder)
         {
             System.IO.File.Delete(desktopScript);
         }
-        content[2] = String.Format(content[2], "mono", "net46", ".exe");
+        content[2] = String.Format(content[2], "mono --assembly-loader=strict", "net46", ".exe");
         System.IO.File.WriteAllLines(desktopScript, content);
         Run("chmod", $"+x \"{desktopScript}\"");
         if (System.IO.File.Exists(coreScript))
