@@ -287,7 +287,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
 
     var arguments = IsRunningOnWindows()
         ? $"build \"{projectFilePath}\" --configuration {configuration} /v:d"
-        : $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
+        : $"{env.ShellArgument} msbuild \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
 
     var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
 
@@ -484,7 +484,7 @@ Task("OnlyPublish")
             var args = GetPublishArguments(projectFileName, rid, framework, configuration, outputFolder);
 
             args = IsNetFrameworkOnUnix(framework)
-                ? $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}"
+                ? $"{env.ShellArgument} msbuild {args}"
                 : args;
 
             Information("Publishing {0} for {1}/{2}...", projectName, framework, rid);
