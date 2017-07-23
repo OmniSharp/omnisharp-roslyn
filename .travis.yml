@@ -12,8 +12,7 @@ os:
 osx_image: xcode7.3
 
 script:
-  - travis_retry ./build.sh --target TravisTestAll
-  - ./build.sh --target Travis --archive
+  - ./build.sh --target All --archive
 
 addons:
   apt:

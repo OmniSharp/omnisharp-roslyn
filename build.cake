@@ -358,13 +358,6 @@ Task("TestAll")
     .Does(() =>{});
 
 /// <summary>
-///  Run all tests for Travis CI .NET Desktop and .NET Core
-/// </summary>
-Task("TravisTestAll")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("TestAll");
-
-/// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
 /// </summary>
 Task("TestCore")
@@ -648,17 +641,6 @@ Task("Local")
     .IsDependentOn("Restore")
     .IsDependentOn("TestAll")
     .IsDependentOn("LocalPublish")
-    .IsDependentOn("TestPublished");
-
-/// <summary>
-///  Build centered around producing the final artifacts for Travis
-///
-///  The tests are run as a different task "TestAll"
-/// </summary>
-Task("Travis")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("Restore")
-    .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished");
 
 /// <summary>
