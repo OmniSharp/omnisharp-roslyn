@@ -94,7 +94,7 @@ public static class PathHelper
         System.IO.Path.GetFileName(path);
 
     public static string GetFullPath(string path) =>
-        System.IO.Path.Combine(path);
+        System.IO.Path.GetFullPath(path);
 }
 
 string CombinePaths(params string[] paths)
