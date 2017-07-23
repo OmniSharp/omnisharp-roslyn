@@ -186,6 +186,9 @@ Task("InstallDotNetCoreSdk")
         version: buildPlan.LegacyDotNetVersion,
         installFolder: env.Folders.LegacyDotNetSdk);
 
+    string DOTNET_CLI_UI_LANGUAGE = "DOTNET_CLI_UI_LANGUAGE";
+    var originalUILanguageValue = Environment.GetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE);
+    Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, "en-US");
 
     // Capture 'dotnet --info' output and parse out RID.
     var lines = new List<string>();
@@ -197,6 +200,10 @@ Task("InstallDotNetCoreSdk")
     catch (Win32Exception)
     {
         throw new Exception("Failed to run 'dotnet --info'");
+    }
+    finally
+    {
+        Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, originalUILanguageValue);
     }
 
     string version, rid, basePath;
