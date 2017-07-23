@@ -6,7 +6,7 @@ In order to build OmniSharp, the [.NET 4.6 targeting pack](http://go.microsoft.c
 
 ## macOS
 
-**Mono 4.8.0** or greater is required. You can install this using the latest [.pkg](http://www.mono-project.com/download/#download-mac) or install it view [Homebrew](https://brew.sh/):
+**Mono 5.2.0** or greater is required. You can install this using the latest [.pkg](http://www.mono-project.com/download/#download-mac) or install it view [Homebrew](https://brew.sh/):
 
 ```
 brew update
@@ -18,13 +18,7 @@ brew install caskroom/cask/mono-mdk
 
 Because OmniSharp uses the .NET Core SDK as part of the build, not all Linux distros are supported. A good rule of thumb is to check the list [here](https://www.microsoft.com/net/download/linux) to see if your particular distro is supported.
 
-**Mono 4.8.0** or greater is required. Each distro or derivative has it's own set of instructions for installing Mono which you can find [here](http://www.mono-project.com/download/#download-lin).
-
-In addition, the `msbuild` package must be installed. On Debian, Ubuntu, and derivatives, this can be achieved by first adding the Mono Project GPG signing key and package repository using the instructions [here](http://www.mono-project.com/docs/getting-started/install/linux/#debian-ubuntu-and-derivatives). Then, install msbuild via apt-get.
-
-```
-sudo apt-get install msbuild
-```
+**Mono 5.2.0** or greater is required. Each distro or derivative has it's own set of instructions for installing Mono which you can find [here](http://www.mono-project.com/download/#download-lin).
 
 # Usage
 
