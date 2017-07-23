@@ -100,34 +100,44 @@ Task("PopulateRuntimes")
 
 void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out string rid, out string basePath)
 {
-    var keyValueMap = new Dictionary<string, string>();
+    version = null;
+    rid = null;
+    basePath = null;
+
     foreach (var line in lines)
     {
-        var index = line.IndexOf(":");
-        if (index >= 0)
+        var colonIndex = line.IndexOf(':');
+        if (colonIndex >= 0)
         {
-            var key = line.Substring(0, index).Trim();
-            var value = line.Substring(index + 1).Trim();
+            var name = line.Substring(0, colonIndex).Trim();
+            var value = line.Substring(colonIndex + 1).Trim();
 
-            if (!string.IsNullOrEmpty(key) &&
-                !string.IsNullOrEmpty(value))
+            if (string.IsNullOrWhiteSpace(version) && name.Equals("Version", StringComparison.OrdinalIgnoreCase))
             {
-                keyValueMap.Add(key, value);
+                version = value;
+            }
+            else if (string.IsNullOrWhiteSpace(rid) && name.Equals("RID", StringComparison.OrdinalIgnoreCase))
+            {
+                rid = value;
+            }
+            else if (string.IsNullOrWhiteSpace(basePath) && name.Equals("Base Path", StringComparison.OrdinalIgnoreCase))
+            {
+                basePath = value;
             }
         }
     }
 
-    if (!keyValueMap.TryGetValue("Version", out version))
+    if (string.IsNullOrWhiteSpace(version))
     {
         throw new Exception("Could not locate Version in 'dotnet --info' output.");
     }
 
-    if (!keyValueMap.TryGetValue("RID", out rid))
+    if (string.IsNullOrWhiteSpace(rid))
     {
         throw new Exception("Could not locate RID in 'dotnet --info' output.");
     }
 
-    if (!keyValueMap.TryGetValue("Base Path", out basePath))
+    if (string.IsNullOrWhiteSpace(basePath))
     {
         throw new Exception("Could not locate Base Path in 'dotnet --info' output.");
     }
