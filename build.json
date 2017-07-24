@@ -5,8 +5,8 @@
   "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
   "RequiredMonoVersion": "5.2.0.196",
   "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
-  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha4.zip",
-  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha4.zip",
+  "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha5.zip",
+  "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha5.zip",
   "Frameworks": [
     "net46",
     "netcoreapp1.1"
