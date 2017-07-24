@@ -3,6 +3,8 @@
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
 #load "scripts/msbuild.cake"
+#load "scripts/platform.cake"
+#load "scripts/validation.cake"
 
 using System.ComponentModel;
 using System.Net;
@@ -12,14 +14,16 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
-    CombinePaths(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
+    CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 Log.Context = Context;
 
-var env = new BuildEnvironment(IsRunningOnWindows(), useGlobalDotNetSdk);
+var env = new BuildEnvironment(useGlobalDotNetSdk);
 var buildPlan = BuildPlan.Load(env);
+
+Information("Current platform: {0}", Platform.Current);
 
 /// <summary>
 ///  Clean artifacts.
@@ -64,7 +68,7 @@ Task("PopulateRuntimes")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    if (IsRunningOnWindows() && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
+    if (Platform.Current.IsWindows && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
     {
         buildPlan.SetTargetRids(
             "default", // To allow testing the published artifact
@@ -95,34 +99,44 @@ Task("PopulateRuntimes")
 
 void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out string rid, out string basePath)
 {
-    var keyValueMap = new Dictionary<string, string>();
+    version = null;
+    rid = null;
+    basePath = null;
+
     foreach (var line in lines)
     {
-        var index = line.IndexOf(":");
-        if (index >= 0)
+        var colonIndex = line.IndexOf(':');
+        if (colonIndex >= 0)
         {
-            var key = line.Substring(0, index).Trim();
-            var value = line.Substring(index + 1).Trim();
+            var name = line.Substring(0, colonIndex).Trim();
+            var value = line.Substring(colonIndex + 1).Trim();
 
-            if (!string.IsNullOrEmpty(key) &&
-                !string.IsNullOrEmpty(value))
+            if (string.IsNullOrWhiteSpace(version) && name.Equals("Version", StringComparison.OrdinalIgnoreCase))
             {
-                keyValueMap.Add(key, value);
+                version = value;
+            }
+            else if (string.IsNullOrWhiteSpace(rid) && name.Equals("RID", StringComparison.OrdinalIgnoreCase))
+            {
+                rid = value;
+            }
+            else if (string.IsNullOrWhiteSpace(basePath) && name.Equals("Base Path", StringComparison.OrdinalIgnoreCase))
+            {
+                basePath = value;
             }
         }
     }
 
-    if (!keyValueMap.TryGetValue("Version", out version))
+    if (string.IsNullOrWhiteSpace(version))
     {
         throw new Exception("Could not locate Version in 'dotnet --info' output.");
     }
 
-    if (!keyValueMap.TryGetValue("RID", out rid))
+    if (string.IsNullOrWhiteSpace(rid))
     {
         throw new Exception("Could not locate RID in 'dotnet --info' output.");
     }
 
-    if (!keyValueMap.TryGetValue("Base Path", out basePath))
+    if (string.IsNullOrWhiteSpace(basePath))
     {
         throw new Exception("Could not locate Base Path in 'dotnet --info' output.");
     }
@@ -144,7 +158,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
         client.DownloadFile(url, scriptFilePath);
     }
 
-    if (!IsRunningOnWindows())
+    if (!Platform.Current.IsWindows)
     {
         Run("chmod", $"+x '{scriptFilePath}'");
     }
@@ -166,10 +180,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
     Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
-/// <summary>
-///  Install/update build environment.
-/// </summary>
-Task("BuildEnvironment")
+Task("InstallDotNetCoreSdk")
     .Does(() =>
 {
     if (!useGlobalDotNetSdk)
@@ -184,6 +195,9 @@ Task("BuildEnvironment")
         version: buildPlan.LegacyDotNetVersion,
         installFolder: env.Folders.LegacyDotNetSdk);
 
+    string DOTNET_CLI_UI_LANGUAGE = "DOTNET_CLI_UI_LANGUAGE";
+    var originalUILanguageValue = Environment.GetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE);
+    Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, "en-US");
 
     // Capture 'dotnet --info' output and parse out RID.
     var lines = new List<string>();
@@ -195,6 +209,10 @@ Task("BuildEnvironment")
     catch (Win32Exception)
     {
         throw new Exception("Failed to run 'dotnet --info'");
+    }
+    finally
+    {
+        Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, originalUILanguageValue);
     }
 
     string version, rid, basePath;
@@ -212,6 +230,25 @@ Task("BuildEnvironment")
     Information("  Version: {0}", version);
     Information("  RID: {0}", rid);
     Information("  Base Path: {0}", basePath);
+});
+
+Task("ValidateEnvironment")
+    .Does(() =>
+{
+    if (!Platform.Current.IsWindows)
+    {
+        ValidateMonoVersion(buildPlan);
+    }
+});
+
+/// <summary>
+///  Install/update build environment.
+/// </summary>
+Task("BuildEnvironment")
+    .IsDependentOn("ValidateEnvironment")
+    .IsDependentOn("InstallDotNetCoreSdk")
+    .Does(() =>
+{
 });
 
 /// <summary>
@@ -266,13 +303,13 @@ Task("PrepareTestAssets")
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
 {
-    var command = IsRunningOnWindows()
+    var command = Platform.Current.IsWindows
         ? env.DotNetCommand
         : env.ShellCommand;
 
-    var arguments = IsRunningOnWindows()
+    var arguments = Platform.Current.IsWindows
         ? $"build \"{projectFilePath}\" --configuration {configuration} /v:d"
-        : $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
+        : $"{env.ShellArgument} msbuild \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
 
     var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
 
@@ -320,13 +357,6 @@ Task("TestAll")
     .Does(() =>{});
 
 /// <summary>
-///  Run all tests for Travis CI .NET Desktop and .NET Core
-/// </summary>
-Task("TravisTestAll")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("TestAll");
-
-/// <summary>
 ///  Run tests for .NET Core (using .NET CLI).
 /// </summary>
 Task("TestCore")
@@ -370,7 +400,7 @@ Task("Test")
         var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
         var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
 
-        if (IsRunningOnWindows())
+        if (Platform.Current.IsWindows)
         {
             Run(xunitInstancePath, arguments, instanceFolder)
                 .ExceptionOnError($"Test {testProject} failed for net46");
@@ -380,7 +410,7 @@ Task("Test")
             // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
             DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
 
-            Run("mono", $"\"{xunitInstancePath}\" {arguments}", instanceFolder)
+            Run("mono", $"--assembly-loader=strict \"{xunitInstancePath}\" {arguments}", instanceFolder)
                 .ExceptionOnError($"Test {testProject} failed for net46");
         }
     }
@@ -388,7 +418,7 @@ Task("Test")
 
 bool IsNetFrameworkOnUnix(string framework)
 {
-    return !IsRunningOnWindows()
+    return !Platform.Current.IsWindows
         && !framework.StartsWith("netcore")
         && !framework.StartsWith("netstandard");
 }
@@ -469,7 +499,7 @@ Task("OnlyPublish")
             var args = GetPublishArguments(projectFileName, rid, framework, configuration, outputFolder);
 
             args = IsNetFrameworkOnUnix(framework)
-                ? $"{env.ShellArgument} msbuild.{env.ShellScriptFileExtension} {args}"
+                ? $"{env.ShellArgument} msbuild {args}"
                 : args;
 
             Information("Publishing {0} for {1}/{2}...", projectName, framework, rid);
@@ -481,7 +511,7 @@ Task("OnlyPublish")
             DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-{framework}", CombinePaths(outputFolder, "msbuild"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
-            if (!IsRunningOnWindows() && framework == "net46")
+            if (!Platform.Current.IsWindows && framework == "net46")
             {
                 DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
             }
@@ -610,17 +640,6 @@ Task("Local")
     .IsDependentOn("Restore")
     .IsDependentOn("TestAll")
     .IsDependentOn("LocalPublish")
-    .IsDependentOn("TestPublished");
-
-/// <summary>
-///  Build centered around producing the final artifacts for Travis
-///
-///  The tests are run as a different task "TestAll"
-/// </summary>
-Task("Travis")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("Restore")
-    .IsDependentOn("AllPublish")
     .IsDependentOn("TestPublished");
 
 /// <summary>

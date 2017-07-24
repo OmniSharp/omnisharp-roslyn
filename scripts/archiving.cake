@@ -1,3 +1,4 @@
+#load "common.cake"
 #load "runhelpers.cake"
 
 using System.IO.Compression;
@@ -64,7 +65,7 @@ string GetBuildIdentifier(string runtime, string framework)
 void DoArchive(string runtime, string contentFolder, string archiveName)
 {
     // On all platforms use ZIP for Windows runtimes
-    if (runtime.Contains("win") || (runtime.Equals("default") && IsRunningOnWindows()))
+    if (runtime.Contains("win") || (runtime.Equals("default") && Platform.Current.IsWindows))
     {
         var zipFile = $"{archiveName}.zip";
         Zip(contentFolder, zipFile);
@@ -74,7 +75,7 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
     {
         var tarFile = $"{archiveName}.tar.gz";
         // Use 7z to create TAR.GZ on Windows
-        if (IsRunningOnWindows())
+        if (Platform.Current.IsWindows)
         {
             var tempFile = $"{archiveName}.tar";
             try
@@ -85,7 +86,7 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
                     .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
                 System.IO.File.Delete(tempFile);
             }
-            catch(Win32Exception)
+            catch (Win32Exception)
             {
                 Information("Warning: 7z not available on PATH to pack tar.gz results");
             }

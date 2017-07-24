@@ -1,5 +1,8 @@
+#load "platform.cake"
+
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 /// <summary>
 ///  Class encompassing the optional settings for running processes.
@@ -172,6 +175,21 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     }
 }
 
+string RunAndCaptureOutput(string command, string arguments, string workingDirectory = null)
+{
+    var output = new List<string>();
+    Run(command, arguments, new RunOptions(workingDirectory, output))
+        .ExceptionOnError($"Failed to run '{command}' with arguments, '{arguments}'.");
+
+    var builder = new StringBuilder();
+    foreach (var line in output)
+    {
+        builder.AppendLine(line);
+    }
+
+    return builder.ToString().Trim();
+}
+
 /// <summary>
 ///  Run tool with the given arguments
 /// </summary>
@@ -211,7 +229,7 @@ private void KillProcessTree(Process process)
 {
     // Child processes are not killed on Windows by default
     // Use TASKKILL to kill the process hierarchy rooted in the process
-    if (IsRunningOnWindows())
+    if (Platform.Current.IsWindows)
     {
         StartProcess($"TASKKILL",
             new ProcessSettings

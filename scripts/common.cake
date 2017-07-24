@@ -1,5 +1,7 @@
 #addin "Newtonsoft.Json"
 
+#load "platform.cake"
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,6 +29,12 @@ public static class FileHelper
         Log.Debug(Verbosity.Diagnostic, "Delete file: {0}.", path);
         System.IO.File.Delete(path);
     }
+
+    public static bool Exists(string path) =>
+        System.IO.File.Exists(path);
+
+    public static void WriteAllLines(string path, string[] contents) =>
+        System.IO.File.WriteAllLines(path, contents);
 }
 
 public static class DirectoryHelper
@@ -92,7 +100,7 @@ public static class PathHelper
         System.IO.Path.GetFileName(path);
 
     public static string GetFullPath(string path) =>
-        System.IO.Path.Combine(path);
+        System.IO.Path.GetFullPath(path);
 }
 
 string CombinePaths(params string[] paths)
@@ -156,7 +164,7 @@ public class BuildEnvironment
     public string ShellArgument { get; }
     public string ShellScriptFileExtension { get; }
 
-    public BuildEnvironment(bool isWindows, bool useGlobalDotNetSdk)
+    public BuildEnvironment(bool useGlobalDotNetSdk)
     {
         this.WorkingDirectory = PathHelper.GetFullPath(
             System.IO.Directory.GetCurrentDirectory());
@@ -168,9 +176,9 @@ public class BuildEnvironment
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
 
-        this.ShellCommand = isWindows ? "powershell" : "bash";
-        this.ShellArgument = isWindows ? "-NoProfile /Command" : "-C";
-        this.ShellScriptFileExtension = isWindows ? "ps1" : "sh";
+        this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
+        this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
+        this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
     }
 }
 
@@ -183,6 +191,7 @@ public class BuildPlan
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string LegacyDotNetVersion { get; set; }
+    public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MSBuildRuntimeForMono { get; set; }
     public string MSBuildLibForMono { get; set; }
