@@ -11,7 +11,6 @@ void SetupMSBuild(BuildEnvironment env, BuildPlan plan)
     }
 
     SetupMSBuildForFramework(env, "net46");
-    SetupMSBuildForFramework(env, "netcoreapp1.1");
 }
 
 private void AcquireMonoMSBuild(BuildEnvironment env, BuildPlan plan)

@@ -353,28 +353,7 @@ Task("BuildTest")
 /// </summary>
 Task("TestAll")
     .IsDependentOn("Test")
-    .IsDependentOn("TestCore")
     .Does(() =>{});
-
-/// <summary>
-///  Run tests for .NET Core (using .NET CLI).
-/// </summary>
-Task("TestCore")
-    .IsDependentOn("Setup")
-    .IsDependentOn("BuildTest")
-    .IsDependentOn("PrepareTestAssets")
-    .Does(() =>
-{
-    foreach (var testProject in buildPlan.TestProjects)
-    {
-        var logFile = $"{testProject}-core-result.xml";
-        var testProjectName = testProject + ".csproj";
-        var testProjectFileName = CombinePaths(env.Folders.Tests, testProject, testProjectName);
-
-        Run(env.DotNetCommand, $"test {testProjectFileName} --framework netcoreapp1.1 --logger \"trx;LogFileName={logFile}\" --no-build -- RunConfiguration.ResultsDirectory=\"{env.Folders.ArtifactsLogs}\"")
-            .ExceptionOnError($"Test {testProject} failed for .NET Core.");
-    }
-});
 
 /// <summary>
 ///  Run tests for other frameworks (using XUnit2).
@@ -571,7 +550,7 @@ Task("TestPublished")
 {
     var project = buildPlan.MainProject;
     var projectFolder = CombinePaths(env.Folders.Source, project);
-    var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+    var scriptsToTest = new string[] {"OmniSharp"};
     foreach (var script in scriptsToTest)
     {
         var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);

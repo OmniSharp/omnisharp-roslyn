@@ -8,8 +8,7 @@
   "MSBuildRuntimeForMono": "Microsoft.Build.Runtime.Mono-alpha5.zip",
   "MSBuildLibForMono": "Microsoft.Build.Lib.Mono-alpha5.zip",
   "Frameworks": [
-    "net46",
-    "netcoreapp1.1"
+    "net46"
   ],
   "MainProject": "OmniSharp",
   "TestProjects": [

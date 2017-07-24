@@ -10,7 +10,6 @@ using System.Collections.Generic;
 void CreateRunScript(string outputRoot, string scriptFolder)
 {
     CreateScript(outputRoot, scriptFolder, "net46");
-    CreateScript(outputRoot, scriptFolder, "netcoreapp1.1");
 }
 
 private void CreateScript(string outputRoot, string scriptFolder, string framework)
