@@ -252,9 +252,18 @@ namespace OmniSharp.MSBuild.ProjectFile
                 userOptionValue: options.Platform,
                 environmentValue: null);
 
-            if (PlatformHelper.IsMono)
+            // If we're running on Mono and couldn't set up Mono MSBuild, try to
+            // set MSBuildExtensionsPath and TargetFrameworkRootPath to xbuild and xbuild-frameworks.
+            if (PlatformHelper.IsMono && MSBuildEnvironment.Kind == MSBuildEnvironmentKind.StandAlone)
             {
-                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
+                var monoXBuildDirPath = PlatformHelper.GetMonoXBuildDirPath();
+                if (monoXBuildDirPath != null && !globalProperties.ContainsKey(PropertyNames.MSBuildExtensionsPath))
+                {
+                    logger.LogDebug($"Using MSBuildExtensionsPath: {monoXBuildDirPath}");
+                    globalProperties[PropertyNames.MSBuildExtensionsPath] = monoXBuildDirPath;
+                }
+
+                var monoXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
                 if (monoXBuildFrameworksDirPath != null)
                 {
                     logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");

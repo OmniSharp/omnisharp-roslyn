@@ -1,29 +1,36 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild
 {
+    public enum MSBuildEnvironmentKind
+    {
+        VisualStudio,
+        Mono,
+        StandAlone
+    }
+
     public static class MSBuildEnvironment
     {
         public const string MSBuildExePathName = "MSBUILD_EXE_PATH";
         public const string MSBuildExtensionsPathName = "MSBuildExtensionsPath";
 
         private static bool s_isInitialized;
-
-        private static bool s_usingVisualStudio;
+        private static MSBuildEnvironmentKind s_kind;
 
         private static string s_msbuildExePath;
         private static string s_msbuildExtensionsPath;
 
         public static bool IsInitialized => s_isInitialized;
 
-        public static bool UsingVisualStudio
+        public static MSBuildEnvironmentKind Kind
         {
             get
             {
                 ThrowIfNotInitialized();
-                return s_usingVisualStudio;
+                return s_kind;
             }
         }
 
@@ -65,14 +72,25 @@ namespace OmniSharp.MSBuild
             if (MSBuildHelpers.CanInitializeVisualStudioBuildEnvironment())
             {
                 logger.LogInformation("MSBuild will use local Visual Studio installation.");
-                s_usingVisualStudio = true;
+                s_kind = MSBuildEnvironmentKind.VisualStudio;
                 s_isInitialized = true;
             }
-            else if (TryWithLocalMSBuild(logger, out var msbuildExePath, out var msbuildExtensionsPath))
+#if NET46
+            else if (TryWithMonoMSBuild(logger, out var monoMSBuildPath, out var monoMSBuildExtensionsPath))
+            {
+                logger.LogInformation("MSBuild will use Mono installation.");
+                s_kind = MSBuildEnvironmentKind.Mono;
+                s_msbuildExePath = monoMSBuildPath;
+                s_msbuildExtensionsPath = monoMSBuildExtensionsPath;
+                s_isInitialized = true;
+            }
+#endif
+            else if (TryWithLocalMSBuild(logger, out var localMSBuildPath, out var localMSBuildExtensionsPath))
             {
                 logger.LogInformation("MSBuild will use local OmniSharp installation.");
-                s_msbuildExePath = msbuildExePath;
-                s_msbuildExtensionsPath = msbuildExtensionsPath;
+                s_kind = MSBuildEnvironmentKind.StandAlone;
+                s_msbuildExePath = localMSBuildPath;
+                s_msbuildExtensionsPath = localMSBuildExtensionsPath;
                 s_isInitialized = true;
             }
 
@@ -80,6 +98,54 @@ namespace OmniSharp.MSBuild
             {
                 logger.LogError("MSBuild environment could not be initialized.");
             }
+        }
+
+        private static void SetEnvionmentVariables(ILogger logger, string msbuildExePath, string msbuildExtensionsPath)
+        {
+            if (msbuildExePath != null)
+            {
+                Environment.SetEnvironmentVariable(MSBuildExePathName, msbuildExePath);
+                logger.LogInformation($"{MSBuildExePathName} environment variable set to {msbuildExePath}");
+            }
+
+            if (msbuildExtensionsPath != null)
+            {
+                Environment.SetEnvironmentVariable(MSBuildExtensionsPathName, msbuildExtensionsPath);
+                logger.LogInformation($"{MSBuildExtensionsPathName} environment variable set to {msbuildExtensionsPath}");
+            }
+        }
+
+        private static bool TryWithMonoMSBuild(ILogger logger, out string msbuildExePath, out string msbuildExtensionsPath)
+        {
+            msbuildExePath = null;
+            msbuildExtensionsPath = null;
+
+            if (PlatformHelper.IsWindows)
+            {
+                return false;
+            }
+
+            var monoMSBuildDirPath = PlatformHelper.GetMonoMSBuildDirPath();
+            if (monoMSBuildDirPath == null)
+            {
+                // No Mono msbuild folder? If so, use standalone mode.
+                return false;
+            }
+
+            var monoMSBuildBinDirPath = Path.Combine(monoMSBuildDirPath, "15.0", "bin");
+
+            msbuildExePath = Path.Combine(monoMSBuildBinDirPath, "MSBuild.dll");
+            if (!File.Exists(msbuildExePath))
+            {
+                // Could not locate Mono MSBuild.
+                return false;
+            }
+
+            // Note: we intentionally don't set msbuildExtensionsPath. This will be set through MSBuild targets.
+
+            SetEnvionmentVariables(logger, msbuildExePath, msbuildExtensionsPath);
+
+            return true;
         }
 
         private static bool TryWithLocalMSBuild(ILogger logger, out string msbuildExePath, out string msbuildExtensionsPath)
@@ -105,11 +171,7 @@ namespace OmniSharp.MSBuild
             // Set the MSBuildExtensionsPath environment variable to the local msbuild directory.
             msbuildExtensionsPath = msbuildDirectory;
 
-            Environment.SetEnvironmentVariable(MSBuildExePathName, msbuildExePath);
-            logger.LogInformation($"{MSBuildExePathName} environment variable set to {msbuildExePath}");
-
-            Environment.SetEnvironmentVariable(MSBuildExtensionsPathName, msbuildExtensionsPath);
-            logger.LogInformation($"{MSBuildExtensionsPathName} environment variable set to {msbuildExtensionsPath}");
+            SetEnvionmentVariables(logger, msbuildExePath, msbuildExtensionsPath);
 
             return true;
         }
