@@ -1,9 +1,10 @@
-#load "runhelpers.cake"
-
 using System;
+using System.Diagnostics;
 
-public class Platform
+public sealed class Platform
 {
+    public static Platform Current { get; } = GetCurrentPlatform();
+
     private readonly string _os;
     private readonly string _architecture;
 
@@ -14,60 +15,86 @@ public class Platform
     public bool Is32Bit => _architecture == "x86";
     public bool Is64Bit => _architecture == "x64";
 
-    public Platform(string os, string architecture)
+    private Platform(string os, string architecture)
     {
         _os = os;
         _architecture = architecture;
     }
 
     public override string ToString() => $"{_os} ({_architecture})";
-}
 
-Platform GetCurrentPlatform()
-{
-    string os, architecture;
-
-    // Simple check to see if this is Windows.
-    var platformId = (int)Environment.OSVersion.Platform;
-    if (platformId <= 3 || platformId == 5)
+    private static Platform GetCurrentPlatform()
     {
-        os = "Windows";
+        string os, architecture;
 
-        if (Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE") == "x86" &&
-            Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432") == null)
+        // Simple check to see if this is Windows.
+        var platformId = (int)Environment.OSVersion.Platform;
+        if (platformId <= 3 || platformId == 5)
         {
-            architecture = "x86";
+            os = "Windows";
+
+            if (Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE") == "x86" &&
+                Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432") == null)
+            {
+                architecture = "x86";
+            }
+            else
+            {
+                architecture = "x64";
+            }
         }
         else
         {
-            architecture = "x64";
+            // If this is not Windows, run 'uname' to get the OS name and architecture.
+            var output = RunAndCaptureOutput("uname", "-s -m");
+            var values = output.Split(' ');
+            var osName = values[0];
+            var osArch = values[1];
+
+            os = osName.Equals("Darwin", StringComparison.OrdinalIgnoreCase)
+                ? "MacOS"
+                : "Linux";
+
+            if (osArch.Equals("x86", StringComparison.OrdinalIgnoreCase))
+            {
+                architecture = "x86";
+            }
+            else if (osArch.Equals("x86_64", StringComparison.OrdinalIgnoreCase))
+            {
+                architecture = "x64";
+            }
+            else
+            {
+                throw new Exception($"Unexpected architecture: {osArch}");
+            }
         }
+
+        return new Platform(os, architecture);
     }
-    else
+
+    private static string RunAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)
     {
-        // If this is not Windows, run 'uname' to get the OS name and architecture.
-        var output = RunAndCaptureOutput("uname", "-s -m");
-        var values = output.Split(' ');
-        var osName = values[0];
-        var osArch = values[1];
+        var startInfo = new ProcessStartInfo(fileName, arguments)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            WorkingDirectory = workingDirectory ?? string.Empty,
+        };
 
-        os = osName.Equals("Darwin", StringComparison.OrdinalIgnoreCase)
-            ? "MacOS"
-            : "Linux";
+        try
+        {
+            var process = Process.Start(startInfo);
 
-        if (osArch.Equals("x86", StringComparison.OrdinalIgnoreCase))
-        {
-            architecture = "x86";
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            return output.Trim();
         }
-        else if (osArch.Equals("x86_64", StringComparison.OrdinalIgnoreCase))
+        catch (Exception ex)
         {
-            architecture = "x64";
-        }
-        else
-        {
-            throw new Exception($"Unexpected architecture: {osArch}");
+            throw new Exception($"Failed to launch '{fileName}' with args, '{arguments}'", ex);
         }
     }
-
-    return new Platform(os, architecture);
 }

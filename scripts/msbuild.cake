@@ -5,7 +5,7 @@ using System.Net;
 
 void SetupMSBuild(BuildEnvironment env, BuildPlan plan)
 {
-    if (!IsRunningOnWindows())
+    if (!Platform.Current.IsWindows)
     {
         AcquireMonoMSBuild(env, plan);
     }
@@ -46,7 +46,7 @@ private void SetupMSBuildForFramework(BuildEnvironment env, string framework)
         DirectoryHelper.Delete(msbuildFolder, recursive: true);
     }
 
-    if (!IsRunningOnWindows() && framework == "net46")
+    if (!Platform.Current.IsWindows && framework == "net46")
     {
         Information("Copying Mono MSBuild runtime for {0}...", framework);
         DirectoryHelper.Copy(env.Folders.MonoMSBuildRuntime, msbuildFolder);

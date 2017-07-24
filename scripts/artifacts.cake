@@ -26,7 +26,7 @@ private void CreateScript(string outputRoot, string scriptFolder, string framewo
 
     FileHelper.WriteAllLines(scriptPath, content);
 
-    if (!IsRunningOnWindows())
+    if (!Platform.Current.IsWindows)
     {
         Run("chmod", $"+x \"{scriptPath}\"");
     }
@@ -41,7 +41,7 @@ private string GetScriptPath(string scriptFolder, string framework)
         result += ".Core";
     }
 
-    if (IsRunningOnWindows())
+    if (Platform.Current.IsWindows)
     {
         result += ".cmd";
     }
@@ -65,7 +65,7 @@ private string[] GetScriptContent(string omniSharpPath, string framework)
 {
     var lines = new List<string>();
 
-    if (IsRunningOnWindows())
+    if (Platform.Current.IsWindows)
     {
         lines.Add("SETLOCAL");
     }
@@ -76,15 +76,15 @@ private string[] GetScriptContent(string omniSharpPath, string framework)
 
     lines.Add("");
 
-    var arguments = IsRunningOnWindows()
+    var arguments = Platform.Current.IsWindows
         ? "%*"
         : "\"$@\"";
 
-    if (IsCore(framework) || IsRunningOnWindows())
+    if (IsCore(framework) || Platform.Current.IsWindows)
     {
         lines.Add($"\"{omniSharpPath}\" {arguments}");
     }
-    else // !isCore && !IsRunningOnWindows, i.e. Mono
+    else // !isCore && !Platform.Current.IsWindows, i.e. Mono
     {
         lines.Add($"mono --assembly-loader=strict \"{omniSharpPath}\" {arguments}");
     }

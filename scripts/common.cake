@@ -154,8 +154,6 @@ public class Folders
 
 public class BuildEnvironment
 {
-    public Platform Platform { get; }
-
     public string WorkingDirectory { get; }
     public Folders Folders { get; }
 
@@ -166,10 +164,8 @@ public class BuildEnvironment
     public string ShellArgument { get; }
     public string ShellScriptFileExtension { get; }
 
-    public BuildEnvironment(Platform platform, bool useGlobalDotNetSdk)
+    public BuildEnvironment(bool useGlobalDotNetSdk)
     {
-        this.Platform = platform;
-
         this.WorkingDirectory = PathHelper.GetFullPath(
             System.IO.Directory.GetCurrentDirectory());
         this.Folders = new Folders(this.WorkingDirectory);
@@ -180,9 +176,9 @@ public class BuildEnvironment
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
 
-        this.ShellCommand = platform.IsWindows ? "powershell" : "bash";
-        this.ShellArgument = platform.IsWindows ? "-NoProfile /Command" : "-C";
-        this.ShellScriptFileExtension = platform.IsWindows ? "ps1" : "sh";
+        this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
+        this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
+        this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
     }
 }
 

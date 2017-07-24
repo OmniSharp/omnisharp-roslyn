@@ -14,17 +14,16 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
-    CombinePaths(Environment.GetEnvironmentVariable(IsRunningOnWindows() ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
+    CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
 var requireArchive = HasArgument("archive");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 Log.Context = Context;
 
-var platform = GetCurrentPlatform();
-var env = new BuildEnvironment(platform, useGlobalDotNetSdk);
+var env = new BuildEnvironment(useGlobalDotNetSdk);
 var buildPlan = BuildPlan.Load(env);
 
-Information("Current platform: {0}", platform);
+Information("Current platform: {0}", Platform.Current);
 
 /// <summary>
 ///  Clean artifacts.
@@ -69,7 +68,7 @@ Task("PopulateRuntimes")
     .IsDependentOn("BuildEnvironment")
     .Does(() =>
 {
-    if (IsRunningOnWindows() && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
+    if (Platform.Current.IsWindows && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
     {
         buildPlan.SetTargetRids(
             "default", // To allow testing the published artifact
@@ -159,7 +158,7 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
         client.DownloadFile(url, scriptFilePath);
     }
 
-    if (!IsRunningOnWindows())
+    if (!Platform.Current.IsWindows)
     {
         Run("chmod", $"+x '{scriptFilePath}'");
     }
@@ -236,9 +235,9 @@ Task("InstallDotNetCoreSdk")
 Task("ValidateEnvironment")
     .Does(() =>
 {
-    if (!platform.IsWindows)
+    if (!Platform.Current.IsWindows)
     {
-        ValidateMonoVersion(env, buildPlan);
+        ValidateMonoVersion(buildPlan);
     }
 });
 
@@ -304,11 +303,11 @@ Task("PrepareTestAssets")
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
 {
-    var command = IsRunningOnWindows()
+    var command = Platform.Current.IsWindows
         ? env.DotNetCommand
         : env.ShellCommand;
 
-    var arguments = IsRunningOnWindows()
+    var arguments = Platform.Current.IsWindows
         ? $"build \"{projectFilePath}\" --configuration {configuration} /v:d"
         : $"{env.ShellArgument} msbuild \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
 
@@ -401,7 +400,7 @@ Task("Test")
         var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
         var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
 
-        if (IsRunningOnWindows())
+        if (Platform.Current.IsWindows)
         {
             Run(xunitInstancePath, arguments, instanceFolder)
                 .ExceptionOnError($"Test {testProject} failed for net46");
@@ -419,7 +418,7 @@ Task("Test")
 
 bool IsNetFrameworkOnUnix(string framework)
 {
-    return !IsRunningOnWindows()
+    return !Platform.Current.IsWindows
         && !framework.StartsWith("netcore")
         && !framework.StartsWith("netstandard");
 }
@@ -512,7 +511,7 @@ Task("OnlyPublish")
             DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-{framework}", CombinePaths(outputFolder, "msbuild"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
-            if (!IsRunningOnWindows() && framework == "net46")
+            if (!Platform.Current.IsWindows && framework == "net46")
             {
                 DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
             }

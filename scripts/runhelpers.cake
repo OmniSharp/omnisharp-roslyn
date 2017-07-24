@@ -1,3 +1,5 @@
+#load "platform.cake"
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -227,7 +229,7 @@ private void KillProcessTree(Process process)
 {
     // Child processes are not killed on Windows by default
     // Use TASKKILL to kill the process hierarchy rooted in the process
-    if (IsRunningOnWindows())
+    if (Platform.Current.IsWindows)
     {
         StartProcess($"TASKKILL",
             new ProcessSettings

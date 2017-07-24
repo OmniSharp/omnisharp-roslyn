@@ -1,9 +1,9 @@
 #load "common.cake"
 #load "runhelpers.cake"
 
-void ValidateMonoVersion(BuildEnvironment env, BuildPlan plan)
+void ValidateMonoVersion(BuildPlan plan)
 {
-    if (env.Platform.IsWindows)
+    if (Platform.Current.IsWindows)
     {
         return;
     }
