@@ -392,13 +392,13 @@ Task("Test")
         var instanceFolder = CombinePaths(env.Folders.Tests, testProject, "bin", testConfiguration, "net46");
 
         // Copy xunit executable to test folder to solve path errors
-        var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools");
+        var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
         var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
         FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
         FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
         var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
         var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
-        var arguments = $"\"{targetPath}\" -parallel none -xml \"{logFile}\" -notrait category=failing";
+        var arguments = $"\"{targetPath}\" -parallel none -noshadow -xml \"{logFile}\" -notrait category=failing";
 
         if (Platform.Current.IsWindows)
         {
@@ -511,9 +511,12 @@ Task("OnlyPublish")
             DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-{framework}", CombinePaths(outputFolder, "msbuild"));
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
+            // In addition, delete System.Runtime.InteropServices.RuntimeInformation, which is Windows-specific.
             if (!Platform.Current.IsWindows && framework == "net46")
             {
                 DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
+
+                FileHelper.Delete(CombinePaths(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
             }
 
             if (requireArchive)
