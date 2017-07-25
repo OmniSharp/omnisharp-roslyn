@@ -236,6 +236,18 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             globalProperties.AddPropertyIfNeeded(
                 logger,
+                PropertyNames.TargetFrameworkRootPath,
+                userOptionValue: options.TargetFrameworkRootPath,
+                environmentValue: MSBuildEnvironment.TargetFrameworkRootPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.RoslynTargetsPath,
+                userOptionValue: options.RoslynTargetsPath,
+                environmentValue: MSBuildEnvironment.RoslynTargetsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.VisualStudioVersion,
                 userOptionValue: options.VisualStudioVersion,
                 environmentValue: null);
@@ -251,25 +263,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PropertyNames.Platform,
                 userOptionValue: options.Platform,
                 environmentValue: null);
-
-            // If we're running on Mono and couldn't set up Mono MSBuild, try to
-            // set MSBuildExtensionsPath and TargetFrameworkRootPath to xbuild and xbuild-frameworks.
-            if (PlatformHelper.IsMono && MSBuildEnvironment.Kind == MSBuildEnvironmentKind.StandAlone)
-            {
-                var monoXBuildDirPath = PlatformHelper.GetMonoXBuildDirPath();
-                if (monoXBuildDirPath != null && !globalProperties.ContainsKey(PropertyNames.MSBuildExtensionsPath))
-                {
-                    logger.LogDebug($"Using MSBuildExtensionsPath: {monoXBuildDirPath}");
-                    globalProperties[PropertyNames.MSBuildExtensionsPath] = monoXBuildDirPath;
-                }
-
-                var monoXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
-                if (monoXBuildFrameworksDirPath != null)
-                {
-                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
-                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
-                }
-            }
 
             return globalProperties;
         }
