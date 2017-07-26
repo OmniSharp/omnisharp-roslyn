@@ -236,6 +236,18 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             globalProperties.AddPropertyIfNeeded(
                 logger,
+                PropertyNames.TargetFrameworkRootPath,
+                userOptionValue: options.TargetFrameworkRootPath,
+                environmentValue: MSBuildEnvironment.TargetFrameworkRootPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.RoslynTargetsPath,
+                userOptionValue: options.RoslynTargetsPath,
+                environmentValue: MSBuildEnvironment.RoslynTargetsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.VisualStudioVersion,
                 userOptionValue: options.VisualStudioVersion,
                 environmentValue: null);
@@ -251,16 +263,6 @@ namespace OmniSharp.MSBuild.ProjectFile
                 PropertyNames.Platform,
                 userOptionValue: options.Platform,
                 environmentValue: null);
-
-            if (PlatformHelper.IsMono)
-            {
-                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
-                if (monoXBuildFrameworksDirPath != null)
-                {
-                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
-                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
-                }
-            }
 
             return globalProperties;
         }

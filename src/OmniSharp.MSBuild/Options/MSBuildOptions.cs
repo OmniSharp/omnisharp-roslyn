@@ -9,7 +9,9 @@ namespace OmniSharp.Options
         public bool EnablePackageAutoRestore { get; set; }
 
         public string MSBuildExtensionsPath { get; set; }
+        public string TargetFrameworkRootPath { get; set; }
         public string MSBuildSDKsPath { get; set; }
+        public string RoslynTargetsPath { get; set; }
 
         // TODO: Allow loose properties
         // public IConfiguration Properties { get; set; }
