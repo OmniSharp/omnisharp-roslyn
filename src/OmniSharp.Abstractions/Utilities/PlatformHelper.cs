@@ -129,6 +129,10 @@ namespace OmniSharp.Utilities
             }
 
             var monoLibDirPath = GetMonoLibDirPath();
+            if (monoLibDirPath == null)
+            {
+                return null;
+            }
 
             var monoMSBuildDirPath = Path.Combine(monoLibDirPath, "msbuild");
             monoMSBuildDirPath = Path.GetFullPath(monoMSBuildDirPath);
@@ -152,6 +156,10 @@ namespace OmniSharp.Utilities
             }
 
             var monoLibDirPath = GetMonoLibDirPath();
+            if (monoLibDirPath == null)
+            {
+                return null;
+            }
 
             var monoXBuildDirPath = Path.Combine(monoLibDirPath, "xbuild");
             monoXBuildDirPath = Path.GetFullPath(monoXBuildDirPath);
@@ -175,6 +183,10 @@ namespace OmniSharp.Utilities
             }
 
             var monoLibDirPath = GetMonoLibDirPath();
+            if (monoLibDirPath == null)
+            {
+                return null;
+            }
 
             var monoXBuildFrameworksDirPath = Path.Combine(monoLibDirPath, "xbuild-frameworks");
             monoXBuildFrameworksDirPath = Path.GetFullPath(monoXBuildFrameworksDirPath);
