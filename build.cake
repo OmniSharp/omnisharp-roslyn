@@ -253,6 +253,38 @@ Task("InstallMonoAssets")
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoFramework}", env.Folders.MonoFramework);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildRuntime}", env.Folders.MonoMSBuildRuntime);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildLib}", env.Folders.MonoMSBuildLib);
+
+    string runtimeFolder;
+    string runtimeFile;
+    if (Platform.Current.IsMacOS)
+    {
+        runtimeFolder = env.Folders.MonoRuntimeMacOS;
+        runtimeFile = "mono.osx";
+    }
+    else if (Platform.Current.IsLinux && Platform.Current.Is32Bit)
+    {
+        runtimeFolder = env.Folders.MonoRuntimeLinux32;
+        runtimeFile = "mono.linux-x86";
+    }
+    else if (Platform.Current.IsLinux && Platform.Current.Is64Bit)
+    {
+        runtimeFolder = env.Folders.MonoRuntimeLinux64;
+        runtimeFile = "mono.linux-x86_64";
+    }
+    else
+    {
+        throw new Exception($"Unsupported platform: {Platform.Current}");
+    }
+
+    DirectoryHelper.ForceCreate(env.Folders.Mono);
+    DirectoryHelper.Copy(runtimeFolder, env.Folders.Mono);
+
+    var frameworkFolder = CombinePaths(env.Folders.Mono, "framework");
+    DirectoryHelper.ForceCreate(frameworkFolder);
+    DirectoryHelper.Copy(env.Folders.MonoFramework, frameworkFolder);
+
+    Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, runtimeFile)}'");
+    Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
 });
 
 /// <summary>
@@ -404,8 +436,22 @@ Task("Test")
             // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
             DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
 
-            Run("mono", $"--assembly-loader=strict \"{xunitInstancePath}\" {arguments}", instanceFolder)
-                .ExceptionOnError($"Test {testProject} failed for net46");
+            var runScript = CombinePaths(env.Folders.Mono, "run");
+
+            var oldMonoPath = Environment.GetEnvironmentVariable("MONO_PATH");
+            try
+            {
+                Environment.SetEnvironmentVariable("MONO_PATH", $"{instanceFolder}");
+
+                // By default, the run script launches OmniSharp. To launch our Mono runtime
+                // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
+                Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
+                    .ExceptionOnError($"Test {testProject} failed for net46");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("MONO_PATH", oldMonoPath);
+            }
         }
     }
 });

@@ -39,6 +39,7 @@ scripts/Omnisharp*
 .dotnet/
 .dotnet-legacy/
 .dotnet-future/
+.mono/
 tools/*
 !tools/packages.config
 

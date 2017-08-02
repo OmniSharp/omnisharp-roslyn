@@ -9,7 +9,7 @@ public sealed class Platform
     private readonly string _architecture;
 
     public bool IsWindows => _os == "Windows";
-    public bool IsMacOS => _os == "macOS";
+    public bool IsMacOS => _os == "MacOS";
     public bool IsLinux => _os == "Linux";
 
     public bool Is32Bit => _architecture == "x86";
