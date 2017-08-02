@@ -254,36 +254,17 @@ Task("InstallMonoAssets")
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildRuntime}", env.Folders.MonoMSBuildRuntime);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildLib}", env.Folders.MonoMSBuildLib);
 
-    string runtimeFolder;
-    string runtimeFile;
-    if (Platform.Current.IsMacOS)
-    {
-        runtimeFolder = env.Folders.MonoRuntimeMacOS;
-        runtimeFile = "mono.osx";
-    }
-    else if (Platform.Current.IsLinux && Platform.Current.Is32Bit)
-    {
-        runtimeFolder = env.Folders.MonoRuntimeLinux32;
-        runtimeFile = "mono.linux-x86";
-    }
-    else if (Platform.Current.IsLinux && Platform.Current.Is64Bit)
-    {
-        runtimeFolder = env.Folders.MonoRuntimeLinux64;
-        runtimeFile = "mono.linux-x86_64";
-    }
-    else
-    {
-        throw new Exception($"Unsupported platform: {Platform.Current}");
-    }
+    var monoInstallFolder = env.CurrentMonoRuntime.InstallFolder;
+    var monoRuntimeFile = env.CurrentMonoRuntime.RuntimeFile;
 
     DirectoryHelper.ForceCreate(env.Folders.Mono);
-    DirectoryHelper.Copy(runtimeFolder, env.Folders.Mono);
+    DirectoryHelper.Copy(monoInstallFolder, env.Folders.Mono);
 
     var frameworkFolder = CombinePaths(env.Folders.Mono, "framework");
     DirectoryHelper.ForceCreate(frameworkFolder);
     DirectoryHelper.Copy(env.Folders.MonoFramework, frameworkFolder);
 
-    Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, runtimeFile)}'");
+    Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, monoRuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
 });
 
@@ -489,6 +470,67 @@ string GetPublishArguments(string projectFileName, string rid, string framework,
     return string.Join(" ", argList);
 }
 
+void PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration)
+{
+    Information("Publishing Mono build...");
+
+    var project = plan.MainProject;
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
+
+    var buildFolder = CombinePaths(env.Folders.Source, project, "bin", configuration, "net46");
+    DirectoryHelper.Copy(buildFolder, outputFolder, copySubDirectories: false);
+
+    // Copy MSBuild runtime and libraries
+    DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-net46", CombinePaths(outputFolder, "msbuild"));
+    DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
+
+    // Included in Mono
+    FileHelper.Delete(CombinePaths(outputFolder, "System.AppContext.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Numerics.Vectors.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.ComponentModel.Primitives.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.ComponentModel.TypeConverter.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Console.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.IO.FileSystem.Primitives.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.IO.FileSystem.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Security.Cryptography.Encoding.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Security.Cryptography.Primitives.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Security.Cryptography.X509Certificates.dll"));
+    FileHelper.Delete(CombinePaths(outputFolder, "System.Threading.Thread.dll"));
+}
+
+void PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan)
+{
+    Information("Publishing platform-specific Mono build: {0}", monoRuntime.PlatformName);
+
+    var project = plan.MainProject;
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, monoRuntime.PlatformName);
+
+    DirectoryHelper.Copy(monoRuntime.InstallFolder, outputFolder);
+
+    Run("chmod", $"+x '{CombinePaths(outputFolder, monoRuntime.RuntimeFile)}'");
+    Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
+
+    DirectoryHelper.Copy(env.Folders.MonoFramework, CombinePaths(outputFolder, "framework"));
+
+    var sourceFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
+    var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
+    DirectoryHelper.Copy(sourceFolder, omnisharpFolder);
+}
+
+Task("PublishMonoBuilds")
+    .IsDependentOn("Setup")
+    .WithCriteria(() => !Platform.Current.IsWindows)
+    .Does(() =>
+{
+    PublishMonoBuild(env, buildPlan, configuration);
+
+    foreach (var monoRuntime in env.MonoRuntimes)
+    {
+        PublishMonoBuildForPlatform(monoRuntime, env, buildPlan);
+    }
+});
+
 /// <summary>
 ///  Build, publish and package artifacts.
 ///  Targets all RIDs specified in build.json unless restricted by RestrictToLocalRuntime.
@@ -552,7 +594,7 @@ Task("OnlyPublish")
 
             // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
             // In addition, delete System.Runtime.InteropServices.RuntimeInformation, which is Windows-specific.
-            if (!Platform.Current.IsWindows && framework == "net46")
+            if (!Platform.Current.IsWindows)
             {
                 DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
 

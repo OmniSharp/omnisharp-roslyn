@@ -40,7 +40,7 @@ public static class FileHelper
 
 public static class DirectoryHelper
 {
-    public static void Copy(string source, string destination)
+    public static void Copy(string source, string destination, bool copySubDirectories = true)
     {
         var files = System.IO.Directory.GetFiles(source);
         var subDirectories = System.IO.Directory.GetDirectories(source);
@@ -56,10 +56,13 @@ public static class DirectoryHelper
             FileHelper.Copy(file, newFile, overwrite: true);
         }
 
-        foreach (var subDirectory in subDirectories)
+        if (copySubDirectories)
         {
-            var newSubDirectory = PathHelper.Combine(destination, PathHelper.GetFileName(subDirectory));
-            Copy(subDirectory, newSubDirectory);
+            foreach (var subDirectory in subDirectories)
+            {
+                var newSubDirectory = PathHelper.Combine(destination, PathHelper.GetFileName(subDirectory));
+                Copy(subDirectory, newSubDirectory);
+            }
         }
     }
 
@@ -177,6 +180,20 @@ public class Folders
     }
 }
 
+public class MonoRuntime
+{
+    public string PlatformName { get; }
+    public string InstallFolder { get; }
+    public string RuntimeFile { get; }
+
+    public MonoRuntime(string platformName, string installFolder, string runtimeFile)
+    {
+        this.PlatformName = platformName;
+        this.InstallFolder = installFolder;
+        this.RuntimeFile = runtimeFile;
+    }
+}
+
 public class BuildEnvironment
 {
     public string WorkingDirectory { get; }
@@ -188,6 +205,9 @@ public class BuildEnvironment
     public string ShellCommand { get; }
     public string ShellArgument { get; }
     public string ShellScriptFileExtension { get; }
+
+    public MonoRuntime[] MonoRuntimes { get; }
+    public MonoRuntime CurrentMonoRuntime { get; }
 
     public BuildEnvironment(bool useGlobalDotNetSdk)
     {
@@ -204,6 +224,26 @@ public class BuildEnvironment
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
+
+        this.MonoRuntimes = new []
+        {
+            new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono.osx"),
+            new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinux32, "mono.linux-x86"),
+            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinux64, "mono.linux-x86_64")
+        };
+
+        if (Platform.Current.IsMacOS)
+        {
+            this.CurrentMonoRuntime = this.MonoRuntimes[0];
+        }
+        else if (Platform.Current.IsLinux && Platform.Current.Is32Bit)
+        {
+            this.CurrentMonoRuntime = this.MonoRuntimes[1];
+        }
+        else if (Platform.Current.IsLinux && Platform.Current.Is64Bit)
+        {
+            this.CurrentMonoRuntime = this.MonoRuntimes[2];
+        }
     }
 }
 
