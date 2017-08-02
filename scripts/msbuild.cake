@@ -5,35 +5,7 @@ using System.Net;
 
 void SetupMSBuild(BuildEnvironment env, BuildPlan plan)
 {
-    if (!Platform.Current.IsWindows)
-    {
-        AcquireMonoMSBuild(env, plan);
-    }
-
     SetupMSBuildForFramework(env, "net46");
-}
-
-private void AcquireMonoMSBuild(BuildEnvironment env, BuildPlan plan)
-{
-    Information("Acquiring Mono MSBuild...");
-
-    DirectoryHelper.ForceCreate(env.Folders.MonoMSBuildRuntime);
-    DirectoryHelper.ForceCreate(env.Folders.MonoMSBuildLib);
-
-    var msbuildMonoRuntimeZip = CombinePaths(env.Folders.MonoMSBuildRuntime, plan.MSBuildRuntimeForMono);
-    var msbuildMonoLibZip = CombinePaths(env.Folders.MonoMSBuildLib, plan.MSBuildLibForMono);
-
-    using (var client = new WebClient())
-    {
-        client.DownloadFile($"{plan.DownloadURL}/{plan.MSBuildRuntimeForMono}", msbuildMonoRuntimeZip);
-        client.DownloadFile($"{plan.DownloadURL}/{plan.MSBuildLibForMono}", msbuildMonoLibZip);
-    }
-
-    Unzip(msbuildMonoRuntimeZip, env.Folders.MonoMSBuildRuntime);
-    Unzip(msbuildMonoLibZip, env.Folders.MonoMSBuildLib);
-
-    FileHelper.Delete(msbuildMonoRuntimeZip);
-    FileHelper.Delete(msbuildMonoLibZip);
 }
 
 private void SetupMSBuildForFramework(BuildEnvironment env, string framework)

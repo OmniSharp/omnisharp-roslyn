@@ -144,9 +144,9 @@ void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out st
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder)
 {
-    if (!DirectoryExists(installFolder))
+    if (!DirectoryHelper.Exists(installFolder))
     {
-        CreateDirectory(installFolder);
+        DirectoryHelper.Create(installFolder);
     }
 
     var scriptFileName = $"dotnet-install.{env.ShellScriptFileExtension}";
@@ -241,12 +241,27 @@ Task("ValidateEnvironment")
     }
 });
 
+Task("InstallMonoAssets")
+    .WithCriteria(() => !Platform.Current.IsWindows)
+    .Does(() =>
+{
+    Information("Acquiring Mono runtimes and framework...");
+
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoFramework}", env.Folders.MonoFramework);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildRuntime}", env.Folders.MonoMSBuildRuntime);
+    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildLib}", env.Folders.MonoMSBuildLib);
+});
+
 /// <summary>
 ///  Install/update build environment.
 /// </summary>
 Task("BuildEnvironment")
     .IsDependentOn("ValidateEnvironment")
     .IsDependentOn("InstallDotNetCoreSdk")
+    .IsDependentOn("InstallMonoAssets")
     .Does(() =>
 {
 });

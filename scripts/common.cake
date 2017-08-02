@@ -4,6 +4,7 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Net;
 
 public static class Log
 {
@@ -108,13 +109,30 @@ string CombinePaths(params string[] paths)
     return PathHelper.Combine(paths);
 }
 
+void DownloadFileAndUnzip(string url, string folder)
+{
+    DirectoryHelper.ForceCreate(folder);
+    var zipFileName = CombinePaths(folder, "temp.zip");
+
+    Information("Downloading {0}", url);
+
+    using (var client = new WebClient())
+    {
+        client.DownloadFile(url, zipFileName);
+    }
+
+    Unzip(zipFileName, folder);
+    FileHelper.Delete(zipFileName);
+}
+
 public class Folders
 {
     public string DotNetSdk { get; }
     public string LegacyDotNetSdk { get; }
+    public string Mono { get; }
+    public string MSBuildBase { get; }
     public string Tools { get; }
 
-    public string MSBuild { get; }
     public string Source { get; }
     public string Tests { get; }
     public string TestAssets { get; }
@@ -125,18 +143,21 @@ public class Folders
     public string ArtifactsPackage { get; }
     public string ArtifactsScripts { get; }
 
-    public string MonoMSBuildLib { get; }
+    public string MonoRuntimeMacOS { get; }
+    public string MonoRuntimeLinux32 { get; }
+    public string MonoRuntimeLinux64 { get; }
+    public string MonoFramework { get; }
     public string MonoMSBuildRuntime { get; }
-    public string MSBuildBase { get; }
+    public string MonoMSBuildLib { get; }
 
     public Folders(string workingDirectory)
     {
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
         this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
+        this.Mono = PathHelper.Combine(workingDirectory, ".mono");
+        this.MSBuildBase = PathHelper.Combine(workingDirectory, ".msbuild");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
-        this.MSBuildBase = PathHelper.Combine(workingDirectory, ".msbuild");
-        this.MSBuild = PathHelper.Combine(workingDirectory, "msbuild");
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
         this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
@@ -147,8 +168,12 @@ public class Folders
         this.ArtifactsPackage = PathHelper.Combine(this.Artifacts, "package");
         this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
 
-        this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
+        this.MonoRuntimeMacOS = PathHelper.Combine(this.Tools, "Mono.Runtime.MacOS");
+        this.MonoRuntimeLinux32 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x86");
+        this.MonoRuntimeLinux64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x64");
+        this.MonoFramework = PathHelper.Combine(this.Tools, "Mono.Framework");
         this.MonoMSBuildRuntime = PathHelper.Combine(this.Tools, "Microsoft.Build.Runtime.Mono");
+        this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
     }
 }
 
@@ -193,8 +218,12 @@ public class BuildPlan
     public string LegacyDotNetVersion { get; set; }
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
-    public string MSBuildRuntimeForMono { get; set; }
-    public string MSBuildLibForMono { get; set; }
+    public string MonoRuntimeMacOS { get; set; }
+    public string MonoRuntimeLinux32 { get; set; }
+    public string MonoRuntimeLinux64 { get; set; }
+    public string MonoFramework { get; set; }
+    public string MonoMSBuildRuntime { get; set; }
+    public string MonoMSBuildLib { get; set; }
     public string[] Frameworks { get; set; }
     public string MainProject { get; set; }
     public string[] TestProjects { get; set; }
