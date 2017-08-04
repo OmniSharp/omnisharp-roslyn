@@ -11,9 +11,6 @@
   "MonoFramework": "framework-5.2.0.213.zip",
   "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-alpha5.zip",
   "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-alpha5.zip",
-  "Frameworks": [
-    "net46"
-  ],
   "MainProject": "OmniSharp",
   "TestProjects": [
     "OmniSharp.MSBuild.Tests",

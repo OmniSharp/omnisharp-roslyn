@@ -2,7 +2,6 @@
 #load "scripts/runhelpers.cake"
 #load "scripts/archiving.cake"
 #load "scripts/artifacts.cake"
-#load "scripts/msbuild.cake"
 #load "scripts/platform.cake"
 #load "scripts/validation.cake"
 
@@ -14,8 +13,9 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
-    CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp", "local"));
+    CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var requireArchive = HasArgument("archive");
+var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 Log.Context = Context;
@@ -46,56 +46,10 @@ Task("Cleanup")
 ///  Pre-build setup tasks.
 /// </summary>
 Task("Setup")
-    .IsDependentOn("BuildEnvironment")
-    .IsDependentOn("PopulateRuntimes")
-    .IsDependentOn("SetupMSBuild");
-
-/// <summary>
-/// Acquire additional NuGet packages included with OmniSharp (such as MSBuild).
-/// </summary>
-Task("SetupMSBuild")
-    .IsDependentOn("BuildEnvironment")
-    .Does(() =>
-{
-    SetupMSBuild(env, buildPlan);
-});
-
-/// <summary>
-///  Populate the RIDs for the specific environment.
-///  Use default RID (+ win7-x86 on Windows) for now.
-/// </summary>
-Task("PopulateRuntimes")
-    .IsDependentOn("BuildEnvironment")
-    .Does(() =>
-{
-    if (Platform.Current.IsWindows && string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True"))
-    {
-        buildPlan.SetTargetRids(
-            "default", // To allow testing the published artifact
-            "win7-x86",
-            "win7-x64");
-    }
-    else if (string.Equals(Environment.GetEnvironmentVariable("TRAVIS_OS_NAME"), "linux"))
-    {
-        buildPlan.SetTargetRids(
-            "default", // To allow testing the published artifact
-            "ubuntu.14.04-x64",
-            "ubuntu.16.04-x64",
-            "ubuntu.16.10-x64",
-            "centos.7-x64",
-            "rhel.7.2-x64",
-            "debian.8-x64",
-            "fedora.23-x64",
-            "fedora.24-x64",
-            "opensuse.13.2-x64",
-            "opensuse.42.1-x64");
-    }
-    else
-    {
-        // In this case, the build is not happening in CI, so just use the default RID.
-        buildPlan.SetTargetRids("default");
-    }
-});
+    .IsDependentOn("ValidateMono")
+    .IsDependentOn("InstallDotNetCoreSdk")
+    .IsDependentOn("InstallMonoAssets")
+    .IsDependentOn("CreateMSBuildFolder");
 
 void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out string rid, out string basePath)
 {
@@ -224,21 +178,17 @@ Task("InstallDotNetCoreSdk")
         Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", rid);
     }
 
-    buildPlan.SetCurrentRid(rid);
-
     Information("Using .NET CLI");
     Information("  Version: {0}", version);
     Information("  RID: {0}", rid);
     Information("  Base Path: {0}", basePath);
 });
 
-Task("ValidateEnvironment")
+Task("ValidateMono")
+    .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    if (!Platform.Current.IsWindows)
-    {
-        ValidateMonoVersion(buildPlan);
-    }
+    ValidateMonoVersion(buildPlan);
 });
 
 Task("InstallMonoAssets")
@@ -269,14 +219,42 @@ Task("InstallMonoAssets")
 });
 
 /// <summary>
-///  Install/update build environment.
+/// Create '.msbuild' folder and copy content to it.
 /// </summary>
-Task("BuildEnvironment")
-    .IsDependentOn("ValidateEnvironment")
-    .IsDependentOn("InstallDotNetCoreSdk")
+Task("CreateMSBuildFolder")
     .IsDependentOn("InstallMonoAssets")
     .Does(() =>
 {
+    DirectoryHelper.ForceCreate(env.Folders.MSBuild);
+
+    if (!Platform.Current.IsWindows)
+    {
+        Information("Copying Mono MSBuild runtime...");
+        DirectoryHelper.Copy(env.Folders.MonoMSBuildRuntime, env.Folders.MSBuild);
+    }
+    else
+    {
+        Information("Copying MSBuild runtime...");
+
+        var msbuildRuntimeFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net46");
+        DirectoryHelper.Copy(msbuildRuntimeFolder, env.Folders.MSBuild);
+    }
+
+    // Copy content of Microsoft.Net.Compilers
+    Information("Copying Microsoft.Net.Compilers...");
+    var compilersFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
+    var msbuildRoslynFolder = CombinePaths(env.Folders.MSBuild, "Roslyn");
+
+    DirectoryHelper.Copy(compilersFolder, msbuildRoslynFolder);
+
+    // Delete unnecessary files
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "Microsoft.CodeAnalysis.VisualBasic.dll"));
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "Microsoft.VisualBasic.Core.targets"));
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "VBCSCompiler.exe"));
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "VBCSCompiler.exe.config"));
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "vbc.exe"));
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "vbc.exe.config"));
+    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "vbc.rsp"));
 });
 
 /// <summary>
@@ -331,13 +309,20 @@ Task("PrepareTestAssets")
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
 {
-    var command = Platform.Current.IsWindows
-        ? env.DotNetCommand
-        : env.ShellCommand;
+    string command, arguments;
 
-    var arguments = Platform.Current.IsWindows
-        ? $"build \"{projectFilePath}\" --configuration {configuration} /v:d"
-        : $"{env.ShellArgument} msbuild \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
+    // On Windows, we build exclusively with the .NET CLI.
+    // On OSX/Linux, we build with the MSBuild installed with Mono.
+    if (Platform.Current.IsWindows)
+    {
+        command = env.DotNetCommand;
+        arguments = $"build \"{projectFilePath}\" --configuration {configuration} /v:d";
+    }
+    else
+    {
+        command = env.ShellCommand;
+        arguments = $"{env.ShellArgument} msbuild \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
+    }
 
     var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
 
@@ -377,14 +362,7 @@ Task("BuildTest")
 });
 
 /// <summary>
-///  Run all tests for .NET Desktop and .NET Core
-/// </summary>
-Task("TestAll")
-    .IsDependentOn("Test")
-    .Does(() =>{});
-
-/// <summary>
-///  Run tests for other frameworks (using XUnit2).
+///  Run all tests.
 /// </summary>
 Task("Test")
     .IsDependentOn("Setup")
@@ -437,45 +415,12 @@ Task("Test")
     }
 });
 
-bool IsNetFrameworkOnUnix(string framework)
-{
-    return !Platform.Current.IsWindows
-        && !framework.StartsWith("netcore")
-        && !framework.StartsWith("netstandard");
-}
-
-string GetPublishArguments(string projectFileName, string rid, string framework, string configuration, string outputFolder)
-{
-    var argList = new List<string>();
-
-    if (IsNetFrameworkOnUnix(framework))
-    {
-        argList.Add($"\"{projectFileName}\"");
-        argList.Add("/t:Publish");
-        argList.Add($"/p:RuntimeIdentifier={rid}");
-        argList.Add($"/p:TargetFramework={framework}");
-        argList.Add($"/p:Configuration={configuration}");
-        argList.Add($"/p:PublishDir={outputFolder}");
-    }
-    else
-    {
-        argList.Add("publish");
-        argList.Add($"\"{projectFileName}\"");
-        argList.Add($"--runtime {rid}");
-        argList.Add($"--framework {framework}");
-        argList.Add($"--configuration {configuration}");
-        argList.Add($"--output \"{outputFolder}\"");
-    }
-
-    return string.Join(" ", argList);
-}
-
 void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
 {
     DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
 
     // Copy MSBuild runtime and libraries
-    DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-net46", CombinePaths(outputFolder, "msbuild"));
+    DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
     DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
 
     // Included in Mono
@@ -493,7 +438,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     FileHelper.Delete(CombinePaths(outputFolder, "System.Threading.Thread.dll"));
 }
 
-void PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
+string PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
 {
     Information("Publishing Mono build...");
 
@@ -508,9 +453,11 @@ void PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration
     {
         Package("mono", outputFolder, env.Folders.ArtifactsPackage);
     }
+
+    return outputFolder;
 }
 
-void PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan, bool archive)
+string PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan, bool archive)
 {
     Information("Publishing platform-specific Mono build: {0}", monoRuntime.PlatformName);
 
@@ -533,6 +480,8 @@ void PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, 
     {
         Package(monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
     }
+
+    return outputFolder;
 }
 
 Task("PublishMonoBuilds")
@@ -540,17 +489,22 @@ Task("PublishMonoBuilds")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    PublishMonoBuild(env, buildPlan, configuration, requireArchive);
+    var outputFolder = PublishMonoBuild(env, buildPlan, configuration, requireArchive);
 
-    foreach (var monoRuntime in env.MonoRuntimes)
+    CreateRunScript(outputFolder, env.Folders.ArtifactsScripts);
+
+    if (publishAll)
     {
-        PublishMonoBuildForPlatform(monoRuntime, env, buildPlan, requireArchive);
+        foreach (var monoRuntime in env.MonoRuntimes)
+        {
+            PublishMonoBuildForPlatform(monoRuntime, env, buildPlan, requireArchive);
+        }
     }
 });
 
-void PublishWindowsBuild(BuildEnvironment env, string configuration, string rid, bool archive)
+string PublishWindowsBuild(BuildEnvironment env, BuildPlan plan, string configuration, string rid, bool archive)
 {
-    var project = buildPlan.MainProject;
+    var project = plan.MainProject;
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
 
@@ -569,12 +523,14 @@ void PublishWindowsBuild(BuildEnvironment env, string configuration, string rid,
         .ExceptionOnError($"Failed to publish {project} for {rid}");
 
     // Copy MSBuild to output
-    DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-net46", CombinePaths(outputFolder, "msbuild"));
+    DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
 
     if (archive)
     {
         Package(rid, outputFolder, env.Folders.ArtifactsPackage);
     }
+
+    return outputFolder;
 }
 
 Task("PublishWindowsBuilds")
@@ -582,8 +538,27 @@ Task("PublishWindowsBuilds")
     .WithCriteria(() => Platform.Current.IsWindows)
     .Does(() =>
 {
-    PublishWindowsBuild(env, configuration, "win7-x86", requireArchive);
-    PublishWindowsBuild(env, configuration, "win7-x64", requireArchive);
+    string outputFolder;
+
+    if (publishAll)
+    {
+        var outputFolder32 = PublishWindowsBuild(env, buildPlan, configuration, "win7-x86", requireArchive);
+        var outputFolder64 = PublishWindowsBuild(env, buildPlan, configuration, "win7-x64", requireArchive);
+
+        outputFolder = Platform.Current.Is32Bit
+            ? outputFolder32
+            : outputFolder64;
+    }
+    else if (Platform.Current.Is32Bit)
+    {
+        outputFolder = PublishWindowsBuild(env, buildPlan, configuration, "win7-x86", requireArchive);
+    }
+    else
+    {
+        outputFolder = PublishWindowsBuild(env, buildPlan, configuration, "win7-x64", requireArchive);
+    }
+
+    CreateRunScript(outputFolder, env.Folders.ArtifactsScripts);
 });
 
 Task("Publish")
@@ -591,135 +566,21 @@ Task("Publish")
     .IsDependentOn("PublishWindowsBuilds");
 
 /// <summary>
-///  Build, publish and package artifacts.
-///  Targets all RIDs specified in build.json unless restricted by RestrictToLocalRuntime.
-///  No dependencies on other tasks to support quick builds.
+///  Execute the run script.
 /// </summary>
-Task("OnlyPublish")
-    .IsDependentOn("Setup")
-    .Does(() =>
-{
-    var project = buildPlan.MainProject;
-    var projectName = project + ".csproj";
-    var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-
-    var completed = new HashSet<string>();
-
-    foreach (var runtime in buildPlan.TargetRids)
-    {
-        if (completed.Contains(runtime))
-        {
-            continue;
-        }
-
-        var rid = runtime.Equals("default")
-            ? buildPlan.GetDefaultRid()
-            : runtime;
-
-        // Restore the OmniSharp.csproj with this runtime.
-        PrintBlankLine();
-        var runtimeText = runtime;
-        if (runtimeText.Equals("default"))
-        {
-            runtimeText += " (" + rid + ")";
-        }
-
-        Information($"Restoring packages in {projectName} for {runtimeText}...");
-
-        RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
-            .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
-
-        foreach (var framework in buildPlan.Frameworks)
-        {
-            var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, runtime, framework);
-
-            var command = IsNetFrameworkOnUnix(framework)
-                ? env.ShellCommand
-                : env.DotNetCommand;
-
-            var args = GetPublishArguments(projectFileName, rid, framework, configuration, outputFolder);
-
-            args = IsNetFrameworkOnUnix(framework)
-                ? $"{env.ShellArgument} msbuild {args}"
-                : args;
-
-            Information("Publishing {0} for {1}/{2}...", projectName, framework, rid);
-
-            RunTool(command, args, env.WorkingDirectory)
-                .ExceptionOnError($"Failed to publish {project} for {framework}/{rid}");
-
-            // Copy MSBuild and SDKs to output
-            DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-{framework}", CombinePaths(outputFolder, "msbuild"));
-
-            // For OSX/Linux net46 builds, copy the MSBuild libraries built for Mono.
-            // In addition, delete System.Runtime.InteropServices.RuntimeInformation, which is Windows-specific.
-            if (!Platform.Current.IsWindows)
-            {
-                DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
-
-                FileHelper.Delete(CombinePaths(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
-            }
-
-            if (requireArchive)
-            {
-                Package(runtime, outputFolder, env.Folders.ArtifactsPackage);
-            }
-        }
-
-        completed.Add(runtime);
-    }
-
-    CreateRunScript(CombinePaths(env.Folders.ArtifactsPublish, project, "default"), env.Folders.ArtifactsScripts);
-});
-
-/// <summary>
-///  Alias for OnlyPublish.
-///  Targets all RIDs as specified in build.json.
-/// </summary>
-Task("AllPublish")
-    .IsDependentOn("Restore")
-    .IsDependentOn("OnlyPublish"));
-
-/// <summary>
-///  Restrict the RIDs for the local default.
-/// </summary>
-Task("RestrictToLocalRuntime")
-    .IsDependentOn("Setup")
-    .Does(() =>
-{
-    buildPlan.SetTargetRids("default");
-});
-
-/// <summary>
-///  Alias for OnlyPublish.
-///  Restricts publishing to local RID.
-/// </summary>
-Task("LocalPublish")
-    .IsDependentOn("Restore")
-    .IsDependentOn("RestrictToLocalRuntime")
-    .IsDependentOn("OnlyPublish");
-
-/// <summary>
-///  Test the published binaries if they start up without errors.
-///  Uses builds corresponding to local RID.
-/// </summary>
-Task("TestPublished")
-    .IsDependentOn("Setup")
+Task("ExecuteRunScript")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
     var projectFolder = CombinePaths(env.Folders.Source, project);
-    var scriptsToTest = new string[] {"OmniSharp"};
-    foreach (var script in scriptsToTest)
+    var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, "OmniSharp");
+    var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument} \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
+                                new RunOptions(timeOut: 30000))
+                            .DidTimeOut;
+                            
+    if (!didNotExitWithError)
     {
-        var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
-        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                    new RunOptions(timeOut: 30000))
-                                .DidTimeOut;
-        if (!didNotExitWithError)
-        {
-            throw new Exception($"Failed to run {script}");
-        }
+        throw new Exception("Failed to run OmniSharp script");
     }
 });
 
@@ -737,59 +598,58 @@ Task("CleanupInstall")
 /// </summary>
 Task("Quick")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("LocalPublish");
+    .IsDependentOn("Publish");
 
 /// <summary>
 ///  Quick build + install.
 /// </summary>
 Task("Install")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("LocalPublish")
+    .IsDependentOn("Publish")
     .IsDependentOn("CleanupInstall")
     .Does(() =>
 {
     var project = buildPlan.MainProject;
-    foreach (var framework in buildPlan.Frameworks)
+
+    string platform;
+    if (Platform.Current.IsWindows)
     {
-        var outputFolder = System.IO.Path.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, "default", framework));
-        var targetFolder = System.IO.Path.GetFullPath(CombinePaths(installFolder, framework));
-        // Copy all the folders
-        foreach (var directory in System.IO.Directory.GetDirectories(outputFolder, "*", SearchOption.AllDirectories))
-            System.IO.Directory.CreateDirectory(CombinePaths(targetFolder, directory.Substring(outputFolder.Length + 1)));
-        //Copy all the files
-        foreach (string file in System.IO.Directory.GetFiles(outputFolder, "*", SearchOption.AllDirectories))
-            System.IO.File.Copy(file, CombinePaths(targetFolder, file.Substring(outputFolder.Length + 1)), true);
+        platform = Platform.Current.Is32Bit
+            ? "win7-x86"
+            : "win7-x64";
     }
+    else
+    {
+        platform = "mono";
+    }
+
+    var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
+    var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
+
+    DirectoryHelper.Copy(outputFolder, targetFolder);
+
     CreateRunScript(installFolder, env.Folders.ArtifactsScripts);
+
+    Information($"OmniSharp is installed locally at {installFolder}");
 });
 
 /// <summary>
-///  Full build targeting all RIDs specified in build.json.
+///  Full build and execute script at the end.
 /// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
     .IsDependentOn("Restore")
-    .IsDependentOn("TestAll")
-    .IsDependentOn("AllPublish")
-    .IsDependentOn("TestPublished");
+    .IsDependentOn("Test")
+    .IsDependentOn("Publish")
+    .IsDependentOn("ExecuteRunScript");
 
 /// <summary>
-///  Full build targeting local RID.
-/// </summary>
-Task("Local")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("Restore")
-    .IsDependentOn("TestAll")
-    .IsDependentOn("LocalPublish")
-    .IsDependentOn("TestPublished");
-
-/// <summary>
-///  Default Task aliases to Local.
+///  Default Task aliases to All.
 /// </summary>
 Task("Default")
-    .IsDependentOn("Local");
+    .IsDependentOn("All");
 
 /// <summary>
-///  Default to Local.
+///  Default to All.
 /// </summary>
 RunTarget(target);

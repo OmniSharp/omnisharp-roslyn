@@ -28,6 +28,8 @@ All build related activites should be encapsulated in this file for cross-platfo
 
 # Arguments
 
+Note: The arguments below should prefixed with a single hyphen on Windows (PowerShell-style) and a double-hyphen on OSX/Linux.
+
   `-target TargetName`: The name of the build task/target to execute (see below for listing and details).
     Defaults to `Default`.
 
@@ -38,7 +40,9 @@ All build related activites should be encapsulated in this file for cross-platfo
     Defaults to `Debug`.
 
   `-install-path Path`: Path used for the **Install** target.
-    Defaults to `(%USERPROFILE%|$HOME)/.omnisharp/local`
+    Defaults to `(%USERPROFILE%|$HOME)/.omnisharp`
+
+  `-all-publish`: Publishes all platforms for the current OS. On Windows, specifying this argument would produce win7-x86 and win7-x64 builds. On OSX/Linux, this argument causes osx, linux-x86, and linux-x64 builds to be published.
 
   `-archive`: Enable the generation of publishable archives after a build.
 
@@ -46,13 +50,9 @@ Note: On macOS/Linux, be sure to pass the arguments above with double slashes! (
 
 # Targets
 
-**Default**: Alias for Local.
+**Default**: Alias for All.
 
-**Local**: Full build including testing for the machine-local runtime.
-
-**All**: Same as local, but targeting all runtimes selected by `PopulateRuntimes` in `build.cake`.
-  Currently configured to also build for a 32-bit Windows runtime on Windows machines.
-  No additional runtimes are currently selected on non-Windows machines.
+**All**: Full build including testing.
 
 **Quick**: Local build which skips all testing.
 
@@ -76,10 +76,9 @@ A number of build-related options, including folder names for different entities
 
 # Artifacts generated
 
-* Binaries of OmniSharp and its libraries built for the local machine in `artifacts/publish/OmniSharp/default/{framework}/`
+* OmniSharp binaries for specified runtimes `artifacts/publish/OmniSharp/{platform}/`
 * Scripts to run OmniSharp at `scripts/OmniSharp(.Core)(.cmd)`
   * These scripts are updated for every build and every install.
   * The scripts point to the installed binary after and install, otherwise just the build folder (reset if a new build occurs without an install).
-* Binaries of OmniSharp and its libraries cross-compiled for other runtimes (if selected in **PopulateRuntimes**) `artifacts/publish/OmniSharp/{runtime}/{framework}/`
 * Test logs in `artifacts/logs`
 * Archived binaries in `artifacts/package` (only if `-archive` used on command line)

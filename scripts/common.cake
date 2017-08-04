@@ -133,7 +133,7 @@ public class Folders
     public string DotNetSdk { get; }
     public string LegacyDotNetSdk { get; }
     public string Mono { get; }
-    public string MSBuildBase { get; }
+    public string MSBuild { get; }
     public string Tools { get; }
 
     public string Source { get; }
@@ -158,7 +158,7 @@ public class Folders
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
         this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
         this.Mono = PathHelper.Combine(workingDirectory, ".mono");
-        this.MSBuildBase = PathHelper.Combine(workingDirectory, ".msbuild");
+        this.MSBuild = PathHelper.Combine(workingDirectory, ".msbuild");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
         this.Source = PathHelper.Combine(workingDirectory, "src");
@@ -264,39 +264,10 @@ public class BuildPlan
     public string MonoFramework { get; set; }
     public string MonoMSBuildRuntime { get; set; }
     public string MonoMSBuildLib { get; set; }
-    public string[] Frameworks { get; set; }
     public string MainProject { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
     public string[] LegacyTestAssets { get; set; }
-
-    private string currentRid;
-    private string[] targetRids;
-
-    public void SetCurrentRid(string currentRid)
-    {
-        this.currentRid = currentRid;
-    }
-
-    public string CurrentRid => currentRid;
-    public string[] TargetRids => targetRids;
-
-    public void SetTargetRids(params string[] targetRids)
-    {
-        this.targetRids = targetRids;
-    }
-
-    public string GetDefaultRid()
-    {
-        if (currentRid.StartsWith("win"))
-        {
-            return currentRid.EndsWith("-x86")
-                ? "win7-x86"
-                : "win7-x64";
-        }
-
-        return currentRid;
-    }
 
     public static BuildPlan Load(BuildEnvironment env)
     {
