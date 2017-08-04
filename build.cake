@@ -470,15 +470,9 @@ string GetPublishArguments(string projectFileName, string rid, string framework,
     return string.Join(" ", argList);
 }
 
-void PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration)
+void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
 {
-    Information("Publishing Mono build...");
-
-    var project = plan.MainProject;
-    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
-
-    var buildFolder = CombinePaths(env.Folders.Source, project, "bin", configuration, "net46");
-    DirectoryHelper.Copy(buildFolder, outputFolder, copySubDirectories: false);
+    DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
 
     // Copy MSBuild runtime and libraries
     DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-net46", CombinePaths(outputFolder, "msbuild"));
@@ -499,7 +493,24 @@ void PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration
     FileHelper.Delete(CombinePaths(outputFolder, "System.Threading.Thread.dll"));
 }
 
-void PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan)
+void PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
+{
+    Information("Publishing Mono build...");
+
+    var project = plan.MainProject;
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
+
+    var buildFolder = CombinePaths(env.Folders.Source, project, "bin", configuration, "net46");
+
+    CopyMonoBuild(env, buildFolder, outputFolder);
+
+    if (archive)
+    {
+        Package("mono", outputFolder, env.Folders.ArtifactsPackage);
+    }
+}
+
+void PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan, bool archive)
 {
     Information("Publishing platform-specific Mono build: {0}", monoRuntime.PlatformName);
 
@@ -515,7 +526,13 @@ void PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, 
 
     var sourceFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
     var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
-    DirectoryHelper.Copy(sourceFolder, omnisharpFolder);
+
+    CopyMonoBuild(env, sourceFolder, omnisharpFolder);
+
+    if (archive)
+    {
+        Package(monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
+    }
 }
 
 Task("PublishMonoBuilds")
@@ -523,15 +540,15 @@ Task("PublishMonoBuilds")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    PublishMonoBuild(env, buildPlan, configuration);
+    PublishMonoBuild(env, buildPlan, configuration, requireArchive);
 
     foreach (var monoRuntime in env.MonoRuntimes)
     {
-        PublishMonoBuildForPlatform(monoRuntime, env, buildPlan);
+        PublishMonoBuildForPlatform(monoRuntime, env, buildPlan, requireArchive);
     }
 });
 
-void PublishWindowsBuild(BuildEnvironment env, string configuration, string rid)
+void PublishWindowsBuild(BuildEnvironment env, string configuration, string rid, bool archive)
 {
     var project = buildPlan.MainProject;
     var projectName = project + ".csproj";
@@ -553,6 +570,11 @@ void PublishWindowsBuild(BuildEnvironment env, string configuration, string rid)
 
     // Copy MSBuild to output
     DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-net46", CombinePaths(outputFolder, "msbuild"));
+
+    if (archive)
+    {
+        Package(rid, outputFolder, env.Folders.ArtifactsPackage);
+    }
 }
 
 Task("PublishWindowsBuilds")
@@ -560,9 +582,13 @@ Task("PublishWindowsBuilds")
     .WithCriteria(() => Platform.Current.IsWindows)
     .Does(() =>
 {
-    PublishWindowsBuild(env, configuration, "win7-x86");
-    PublishWindowsBuild(env, configuration, "win7-x64");
+    PublishWindowsBuild(env, configuration, "win7-x86", requireArchive);
+    PublishWindowsBuild(env, configuration, "win7-x64", requireArchive);
 });
+
+Task("Publish")
+    .IsDependentOn("PublishMonoBuilds")
+    .IsDependentOn("PublishWindowsBuilds");
 
 /// <summary>
 ///  Build, publish and package artifacts.
@@ -636,7 +662,7 @@ Task("OnlyPublish")
 
             if (requireArchive)
             {
-                Package(runtime, framework, outputFolder, env.Folders.ArtifactsPackage, buildPlan.MainProject.ToLower());
+                Package(runtime, outputFolder, env.Folders.ArtifactsPackage);
             }
         }
 
@@ -652,10 +678,7 @@ Task("OnlyPublish")
 /// </summary>
 Task("AllPublish")
     .IsDependentOn("Restore")
-    .IsDependentOn("OnlyPublish")
-    .Does(() =>
-{
-});
+    .IsDependentOn("OnlyPublish"));
 
 /// <summary>
 ///  Restrict the RIDs for the local default.

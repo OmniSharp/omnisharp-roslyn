@@ -2,70 +2,27 @@
 #load "runhelpers.cake"
 
 using System.IO.Compression;
-using System.Text.RegularExpressions;
 
 /// <summary>
-///  Generate the build identifier based on the RID and framework identifier.
-///  Special rules when running on Travis (for publishing purposes).
+///  Package a given output folder using a build identifier generated from the RID and framework identifier.
 /// </summary>
-/// <param name="runtime">The RID</param>
-/// <param name="framework">The framework identifier</param>
-/// <returns>The designated build identifier</returns>
-string GetBuildIdentifier(string runtime, string framework)
-{
-    var runtimeShort = "";
-    // Default RID uses package name set in build script
-    if (runtime.Equals("default"))
-    {
-        runtimeShort = Environment.GetEnvironmentVariable("OMNISHARP_PACKAGE_OSNAME");
-    }
-    else
-    {
-        // Remove version number for Windows and OSX.
-        if (runtime.StartsWith("win") || runtime.StartsWith("osx"))
-        {
-            runtimeShort = Regex.Replace(runtime, "(\\d|\\.)*-", "-");
-        }
-        else
-        {
-            runtimeShort = runtime;
-        }
-    }
-
-    // Rename/restrict some archive names on CI
-    var travisOSName = Environment.GetEnvironmentVariable("TRAVIS_OS_NAME");
-    // Travis/Linux + default + net46 is renamed to Mono
-    if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && framework.Equals("net46"))
-    {
-        return "mono";
-    }
-    // No need to archive other Travis + net46 combinations
-    else if (travisOSName != null && framework.Equals("net46"))
-    {
-        return null;
-    }
-    // No need to archive Travis/Linux + default + not(net46) (expect all runtimes to be explicitely named)
-    else if (string.Equals(travisOSName, "linux") && runtime.Equals("default") && !framework.Equals("net46"))
-    {
-        return null;
-    }
-    
-    return $"{runtimeShort}-{framework}";
-}
-
-/// <summary>
-///  Generate an archive out of the given published folder.
-///  Use ZIP for Windows runtimes.
-///  Use TAR.GZ for non-Windows runtimes.
-///  Use 7z to generate TAR.GZ on Windows if available.
-/// </summary>
-/// <param name="runtime">The RID</param>
+/// <param name="platform">The platform</param>
 /// <param name="contentFolder">The folder containing the files to package</param>
-/// <param name="archiveName">The target archive name (without extension)</param>
-void DoArchive(string runtime, string contentFolder, string archiveName)
+/// <param name="packageFolder">The destination folder for the archive</param>
+/// <param name="projectName">The project name</param>
+void Package(string platform, string contentFolder, string packageFolder)
 {
+    if (!DirectoryHelper.Exists(packageFolder))
+    {
+        DirectoryHelper.Create(packageFolder);
+    }
+
+    var archiveName = $"{packageFolder}/omnisharp-{platform}";
+
+    Information("Packaging {0}...", archiveName);
+
     // On all platforms use ZIP for Windows runtimes
-    if (runtime.Contains("win") || (runtime.Equals("default") && Platform.Current.IsWindows))
+    if (platform.StartsWith("win") || (platform.Equals("default") && Platform.Current.IsWindows))
     {
         var zipFile = $"{archiveName}.zip";
         Zip(contentFolder, zipFile);
@@ -84,7 +41,8 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
                     .ExceptionOnError($"Tar-ing failed for {contentFolder} {archiveName}");
                 Run("7z", $"a \"{tarFile}\" \"{tempFile}\"", contentFolder)
                     .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-                System.IO.File.Delete(tempFile);
+                    
+                FileHelper.Delete(tempFile);
             }
             catch (Win32Exception)
             {
@@ -97,22 +55,5 @@ void DoArchive(string runtime, string contentFolder, string archiveName)
             Run("tar", $"czf \"{tarFile}\" .", contentFolder)
                 .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
         }
-    }
-}
-
-/// <summary>
-///  Package a given output folder using a build identifier generated from the RID and framework identifier.
-/// </summary>
-/// <param name="runtime">The RID</param>
-/// <param name="framework">The framework identifier</param>
-/// <param name="contentFolder">The folder containing the files to package</param>
-/// <param name="packageFolder">The destination folder for the archive</param>
-/// <param name="projectName">The project name</param>
-void Package(string runtime, string framework, string contentFolder, string packageFolder, string projectName)
-{
-    var buildIdentifier = GetBuildIdentifier(runtime, framework);
-    if (buildIdentifier != null)
-    {
-        DoArchive(runtime, contentFolder, $"{packageFolder}/{projectName}-{buildIdentifier}");
     }
 }
