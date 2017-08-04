@@ -1,4 +1,3 @@
-#if NET46
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -84,4 +83,3 @@ namespace OmniSharp
         }
     }
 }
-#endif

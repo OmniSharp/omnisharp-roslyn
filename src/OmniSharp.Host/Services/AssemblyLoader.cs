@@ -66,11 +66,7 @@ namespace OmniSharp.Host.Loader
 
             try
             {
-#if NET46
                 assembly = Assembly.LoadFrom(assemblyPath);
-#else
-                assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
-#endif
             }
             catch (Exception ex)
             {
