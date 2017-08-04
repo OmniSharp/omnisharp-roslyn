@@ -17,12 +17,23 @@ void Package(string platform, string contentFolder, string packageFolder)
         DirectoryHelper.Create(packageFolder);
     }
 
-    var archiveName = $"{packageFolder}/omnisharp-{platform}";
+    var platformId = platform;
+
+    if (platformId.StartsWith("win"))
+    {
+        var dashIndex = platformId.IndexOf("-");
+        if (dashIndex >= 0)
+        {
+            platformId = "win-" + platformId.Substring(dashIndex + 1);
+        }
+    }
+
+    var archiveName = $"{packageFolder}/omnisharp-{platformId}";
 
     Information("Packaging {0}...", archiveName);
 
     // On all platforms use ZIP for Windows runtimes
-    if (platform.StartsWith("win") || (platform.Equals("default") && Platform.Current.IsWindows))
+    if (platformId.StartsWith("win"))
     {
         var zipFile = $"{archiveName}.zip";
         Zip(contentFolder, zipFile);
