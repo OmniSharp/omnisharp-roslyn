@@ -531,6 +531,39 @@ Task("PublishMonoBuilds")
     }
 });
 
+void PublishWindowsBuild(BuildEnvironment env, string configuration, string rid)
+{
+    var project = buildPlan.MainProject;
+    var projectName = project + ".csproj";
+    var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
+
+    Information("Restoring packages in {0} for {1}...", projectName, rid);
+
+    RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
+        .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
+
+    var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid);
+
+    var args = $"publish \"{projectFileName}\" --runtime {rid} --configuration {configuration} --output \"{outputFolder}\"";
+
+    Information("Publishing {0} for {1}...", projectName, rid);
+
+    RunTool(env.DotNetCommand, args, env.WorkingDirectory)
+        .ExceptionOnError($"Failed to publish {project} for {rid}");
+
+    // Copy MSBuild to output
+    DirectoryHelper.Copy($"{env.Folders.MSBuildBase}-net46", CombinePaths(outputFolder, "msbuild"));
+}
+
+Task("PublishWindowsBuilds")
+    .IsDependentOn("Setup")
+    .WithCriteria(() => Platform.Current.IsWindows)
+    .Does(() =>
+{
+    PublishWindowsBuild(env, configuration, "win7-x86");
+    PublishWindowsBuild(env, configuration, "win7-x64");
+});
+
 /// <summary>
 ///  Build, publish and package artifacts.
 ///  Targets all RIDs specified in build.json unless restricted by RestrictToLocalRuntime.
