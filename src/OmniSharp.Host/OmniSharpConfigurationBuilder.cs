@@ -31,7 +31,7 @@ namespace OmniSharp
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile(Constants.ConfigFile, optional: true)
-                .AddEnvironmentVariables();
+                .AddEnvironmentVariables("OMNISHARP_");
 
             if (_environment.AdditionalArguments?.Length > 0)
             {

@@ -89,7 +89,7 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$TOOLS_DIR = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\tools"))
+$TOOLS_DIR = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "tools"))
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"
 $CAKE_EXE = Join-Path $TOOLS_DIR "Cake/Cake.exe"
 $NUGET_URL = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"

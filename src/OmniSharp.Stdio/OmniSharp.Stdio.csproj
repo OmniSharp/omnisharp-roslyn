@@ -1,17 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
+        <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
+        <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
+        <ProjectReference Include="..\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
+        <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
+        <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="1.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-  </ItemGroup>
 </Project>

@@ -9,14 +9,14 @@ using System.Collections.Generic;
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
 void CreateRunScript(string outputRoot, string scriptFolder, string name)
 {
-    CreateScript(outputRoot, scriptFolder, "net46");
-    CreateScript(outputRoot, scriptFolder, "netcoreapp1.1");
+    CreateScript(outputRoot, scriptFolder, "net46", name);
+    CreateScript(outputRoot, scriptFolder, "netcoreapp1.1", name);
 }
 
-private void CreateScript(string outputRoot, string scriptFolder, string framework)
+private void CreateScript(string outputRoot, string scriptFolder, string framework, string name)
 {
-    var scriptPath = GetScriptPath(scriptFolder, framework);
-    var omniSharpPath = GetOmniSharpPath(outputRoot, framework);
+    var scriptPath = GetScriptPath(scriptFolder, framework, name);
+    var omniSharpPath = GetOmniSharpPath(outputRoot, framework, name);
     var content = GetScriptContent(omniSharpPath, framework);
 
     if (FileHelper.Exists(scriptPath))
@@ -32,9 +32,9 @@ private void CreateScript(string outputRoot, string scriptFolder, string framewo
     }
 }
 
-private string GetScriptPath(string scriptFolder, string framework)
+private string GetScriptPath(string scriptFolder, string framework, string name)
 {
-    var result = CombinePaths(scriptFolder, "OmniSharp");
+    var result = CombinePaths(scriptFolder, name);
 
     if (IsCore(framework))
     {
@@ -49,9 +49,9 @@ private string GetScriptPath(string scriptFolder, string framework)
     return result;
 }
 
-private string GetOmniSharpPath(string outputRoot, string framework)
+private string GetOmniSharpPath(string outputRoot, string framework, string name)
 {
-    var result = CombinePaths(PathHelper.GetFullPath(outputRoot), framework, "OmniSharp");
+    var result = CombinePaths(PathHelper.GetFullPath(outputRoot), framework, name);
 
     if (!IsCore(framework))
     {

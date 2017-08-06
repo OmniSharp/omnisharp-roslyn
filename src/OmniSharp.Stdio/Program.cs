@@ -41,10 +41,12 @@ namespace OmniSharp.Stdio
                 var mefBuilder = new OmniSharpMefBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer));
                 var compositionHost = mefBuilder.Build();
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+                var cancellation = new CancellationTokenSource();
 
-                using (var program = new Program(Console.In, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory))
+                using (var program = new Program(Console.In, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory, cancellation))
                 {
                     program.Start();
+                    cancellation.Token.WaitHandle.WaitOne();
                 }
 
                 return 0;
@@ -56,18 +58,17 @@ namespace OmniSharp.Stdio
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IReadOnlyDictionary<string, Lazy<EndpointHandler>> _endpointHandlers;
+        private readonly IDictionary<string, Lazy<EndpointHandler>> _endpointHandlers;
         private readonly CompositionHost _compositionHost;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmniSharpEnvironment _environment;
         private readonly CancellationTokenSource _cancellation;
-        private HashSet<string> _endpoints;
 
         public Program(
             TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment, IConfiguration configuration,
-            IServiceProvider serviceProvider, CompositionHost compositionHost, ILoggerFactory loggerFactory)
+            IServiceProvider serviceProvider, CompositionHost compositionHost, ILoggerFactory loggerFactory, CancellationTokenSource cancellation)
         {
-            _cancellation = new CancellationTokenSource();
+            _cancellation = cancellation;
             _input = input;
             _writer = writer;
             _environment = environment;
@@ -76,12 +77,11 @@ namespace OmniSharp.Stdio
             _compositionHost = compositionHost;
             _loggerFactory = loggerFactory;
 
-            var (endpoints, handlers) = Initialize();
-            _endpoints = endpoints;
+            var handlers = Initialize();
             _endpointHandlers = handlers;
         }
 
-        private (HashSet<string> endpoints, IReadOnlyDictionary<string, Lazy<EndpointHandler>> handlers) Initialize()
+        private IDictionary<string, Lazy<EndpointHandler>> Initialize()
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var projectSystems = _compositionHost.GetExports<IProjectSystem>();
@@ -91,8 +91,6 @@ namespace OmniSharp.Stdio
                 .ToArray();
 
             var handlers = _compositionHost.GetExports<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>>();
-
-            var endpoints = new HashSet<string>(endpointMetadatas.Select(x => x.EndpointName).Distinct(), StringComparer.OrdinalIgnoreCase);
 
             var updateBufferEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(
                 () => (EndpointHandler<UpdateBufferRequest, object>)_endpointHandlers[OmniSharpEndpoints.UpdateBuffer].Value);
@@ -150,7 +148,7 @@ namespace OmniSharp.Stdio
                     }))
             );
 
-            return (endpoints, new ReadOnlyDictionary<string, Lazy<EndpointHandler>>(endpointHandlers));
+            return endpointHandlers;
         }
 
         public void Dispose()
@@ -231,8 +229,6 @@ namespace OmniSharp.Stdio
                     _cancellation.Cancel();
                 }
             }
-
-            _cancellation.Token.WaitHandle.WaitOne();
         }
 
         private async Task HandleRequest(string json)
@@ -247,7 +243,9 @@ namespace OmniSharp.Stdio
                 {
                     var result = await handler.Value.Handle(request);
                     response.Body = result;
+                    return;
                 }
+                throw new NotSupportedException($"Command '{request.Command}' is not supported.");
             }
             catch (Exception e)
             {

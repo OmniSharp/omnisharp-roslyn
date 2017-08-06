@@ -43,7 +43,16 @@ namespace OmniSharp
             {
                 try
                 {
-                    projectSystem.Initalize(_configuration.GetSection(projectSystem.Key));
+                    var projectConfiguration = _configuration.GetSection(projectSystem.Key);
+                    var enabledProjectFlag = projectConfiguration.GetValue<bool>("enabled", defaultValue: true);
+                    if (enabledProjectFlag)
+                    {
+                        projectSystem.Initalize(projectConfiguration);
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Project system '{projectSystem.GetType().FullName}' is disabled in the configuration.");
+                    }
                 }
                 catch (Exception e)
                 {

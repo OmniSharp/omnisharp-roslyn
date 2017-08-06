@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,16 +20,17 @@ namespace TestUtility
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
 
-        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter, OmniSharpOptions options)
+        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter, IConfiguration configuration)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
 
             _services[typeof(IOptionsMonitor<OmniSharpOptions>)] = new OptionsMonitor<OmniSharpOptions>(
-                Enumerable.Empty<IConfigureOptions<OmniSharpOptions>>(),
+                new IConfigureOptions<OmniSharpOptions>[] {
+                    new ConfigureOptions<OmniSharpOptions>(c => ConfigurationBinder.Bind(configuration, c))
+                },
                 Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>()
             );
 
-            _services[typeof(OmniSharpOptions)] = options;
             _services[typeof(ILoggerFactory)] = loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = environment;
             _services[typeof(IAssemblyLoader)] = new AssemblyLoader(loggerFactory);

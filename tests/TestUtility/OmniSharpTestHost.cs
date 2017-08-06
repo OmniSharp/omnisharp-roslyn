@@ -7,6 +7,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
@@ -98,20 +99,18 @@ namespace TestUtility
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
             }
 
-            var builder = new ConfigurationBuilder();
+             var builder = new ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
             var configuration = builder.Build();
 
             var environment = new OmniSharpEnvironment(path);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
-            var omnisharpOptions = new OmniSharpOptions();
-            ConfigurationBinder.Bind(configuration, omnisharpOptions);
 
-            var compositionHost = Startup.CreateCompositionHost(
-                serviceProvider,
-                options: omnisharpOptions,
-                assemblies: s_lazyAssemblies.Value);
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
+
+            var compositionHost = new OmniSharpMefBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
+                .Build(s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
@@ -119,8 +118,7 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
-            var workspaceHelper = new WorkspaceHelper(compositionHost, configuration, omnisharpOptions, loggerFactory);
-            workspaceHelper.Initialize(workspace);
+            new OmniSharpWorkspaceInitializer(serviceProvider, compositionHost, configuration, logger).Initialize();
 
             return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }

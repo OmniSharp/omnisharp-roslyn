@@ -70,7 +70,6 @@ namespace OmniSharp.Http
             app.UseMiddleware<StopServerMiddleware>();
 
             new OmniSharpWorkspaceInitializer(serviceProvider, _compositionHost, _configuration, logger).Initialize();
-            // _workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
 
             logger.LogInformation($"Omnisharp server running on port '{httpEnvironment.Port}' at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
         }

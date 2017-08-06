@@ -120,7 +120,7 @@ namespace OmniSharp.Tests
         {
             var environment = new OmniSharpEnvironment();
             var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
-            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new OmniSharpOptions());
+            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new ConfigurationBuilder().Build());
             var compositionHost = new OmniSharpMefBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
                 .Build(assemblies);
 
