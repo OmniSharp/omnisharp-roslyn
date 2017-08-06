@@ -49,7 +49,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(1, projectFileInfo.TargetFrameworks.Length);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
-                Assert.Equal(1, projectFileInfo.SourceFiles.Length);
+                Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
             }
         }
 
@@ -68,7 +68,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(1, projectFileInfo.TargetFrameworks.Length);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
-                Assert.Equal(1, projectFileInfo.SourceFiles.Length);
+                Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
             }
         }
 
@@ -88,7 +88,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("netstandard1.5", projectFileInfo.TargetFrameworks[1]);
                 Assert.Equal(@"bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
-                Assert.Equal(1, projectFileInfo.SourceFiles.Length);
+                Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
             }
         }
     }

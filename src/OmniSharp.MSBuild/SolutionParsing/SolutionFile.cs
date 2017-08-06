@@ -1,187 +1,127 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-
-// This is a modified copy originally taken from https://github.com/dotnet/roslyn/blob/0a2f70279c4d0125a51a5751dadff345268ece58/src/Workspaces/Core/Desktop/Workspace/MSBuild/SolutionFile/SolutionFile.cs
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace OmniSharp.MSBuild.SolutionParsing
 {
-    internal sealed partial class SolutionFile
+    internal sealed class SolutionFile
     {
-        public ReadOnlyCollection<string> HeaderLines { get; }
-        public string VisualStudioVersionLineOpt { get; }
-        public string MinimumVisualStudioVersionLineOpt { get; }
-        public ReadOnlyCollection<ProjectBlock> ProjectBlocks { get; }
-        public ReadOnlyCollection<SectionBlock> GlobalSectionBlocks { get; }
+        public Version FormatVersion { get; }
+        public Version VisualStudioVersion { get; }
+        public ImmutableArray<ProjectBlock> Projects { get; }
+        public ImmutableArray<GlobalSectionBlock> GlobalSections { get; }
 
         private SolutionFile(
-            ReadOnlyCollection<string> headerLines,
-            string visualStudioVersionLineOpt,
-            string minimumVisualStudioVersionLineOpt,
-            ReadOnlyCollection<ProjectBlock> projectBlocks,
-            ReadOnlyCollection<SectionBlock> globalSectionBlocks)
+            Version formatVersion,
+            Version visualStudioVersion,
+            ImmutableArray<ProjectBlock> projects,
+            ImmutableArray<GlobalSectionBlock> globalSections)
         {
-            HeaderLines = headerLines ?? throw new ArgumentNullException(nameof(headerLines));
-            VisualStudioVersionLineOpt = visualStudioVersionLineOpt;
-            MinimumVisualStudioVersionLineOpt = minimumVisualStudioVersionLineOpt;
-            ProjectBlocks = projectBlocks ?? throw new ArgumentNullException(nameof(projectBlocks));
-            GlobalSectionBlocks = globalSectionBlocks ?? throw new ArgumentNullException(nameof(globalSectionBlocks));
+            FormatVersion = formatVersion;
+            VisualStudioVersion = visualStudioVersion;
+            Projects = projects;
+            GlobalSections = globalSections;
         }
 
-        public string GetText()
+        public static SolutionFile Parse(string text)
         {
-            var builder = new StringBuilder();
-
-            builder.AppendLine();
-
-            foreach (var headerLine in HeaderLines)
+            if (text == null)
             {
-                builder.AppendLine(headerLine);
+                throw new ArgumentNullException(nameof(text));
             }
 
-            foreach (var block in ProjectBlocks)
+            using (var scanner = new Scanner(text))
             {
-                builder.Append(block.GetText());
-            }
+                var formatVersion = ParseHeaderAndVersion(scanner);
 
-            builder.AppendLine("Global");
+                Version visualStudioVersion = null;
 
-            foreach (var block in GlobalSectionBlocks)
-            {
-                builder.Append(block.GetText(indent: 1));
-            }
+                var projects = ImmutableArray.CreateBuilder<ProjectBlock>();
+                var globalSections = ImmutableArray.CreateBuilder<GlobalSectionBlock>();
 
-            builder.AppendLine("EndGlobal");
-
-            return builder.ToString();
-        }
-
-        public static SolutionFile Parse(string solutionFileName)
-        {
-            using (var stream = File.OpenRead(solutionFileName))
-            using (var reader = new StreamReader(stream))
-            {
-                return Parse(reader);
-            }
-        }
-
-        public static SolutionFile Parse(TextReader reader)
-        {
-            var headerLines = new List<string>();
-
-            var headerLine1 = GetNextNonEmptyLine(reader);
-            if (headerLine1 == null || !headerLine1.StartsWith("Microsoft Visual Studio Solution File", StringComparison.Ordinal))
-            {
-                throw new Exception(string.Format(Constants.Expected_header_colon_0, "Microsoft Visual Studio Solution File"));
-            }
-
-            headerLines.Add(headerLine1);
-
-            // skip comment lines and empty lines
-            while (reader.Peek() != -1 && "#\r\n".Contains((char)reader.Peek()))
-            {
-                headerLines.Add(reader.ReadLine());
-            }
-
-            string visualStudioVersionLineOpt = null;
-            if (reader.Peek() == 'V')
-            {
-                visualStudioVersionLineOpt = GetNextNonEmptyLine(reader);
-                if (!visualStudioVersionLineOpt.StartsWith("VisualStudioVersion", StringComparison.Ordinal))
+                string line;
+                while ((line = scanner.NextLine()) != null)
                 {
-                    throw new Exception(string.Format(Constants.Expected_header_colon_0, "VisualStudioVersion"));
+                    if (line.StartsWith("Project(", StringComparison.Ordinal))
+                    {
+                        var project = ProjectBlock.Parse(line, scanner);
+                        if (project != null)
+                        {
+                            projects.Add(project);
+                        }
+                    }
+                    else if (line.StartsWith("GlobalSection(", StringComparison.Ordinal))
+                    {
+                        var globalSection = GlobalSectionBlock.Parse(line, scanner);
+                        if (globalSection != null)
+                        {
+                            globalSections.Add(globalSection);
+                        }
+                    }
+                    else if (line.StartsWith("VisualStudioVersion", StringComparison.Ordinal))
+                    {
+                        visualStudioVersion = ParseVisualStudioVersion(line);
+                    }
+                }
+
+                return new SolutionFile(formatVersion, visualStudioVersion, projects.ToImmutable(), globalSections.ToImmutable());
+            }
+        }
+
+        public static SolutionFile ParseFile(string path)
+        {
+            var text = File.ReadAllText(path);
+            return Parse(text);
+        }
+
+        private static Version ParseHeaderAndVersion(Scanner scanner)
+        {
+            const string HeaderPrefix = "Microsoft Visual Studio Solution File, Format Version ";
+
+            // Read the file header. This can be on either of the first two lines.
+            for (var i = 0; i < 2; i++)
+            {
+                var line = scanner.NextLine();
+                if (line == null)
+                {
+                    break;
+                }
+
+                if (line.StartsWith(HeaderPrefix, StringComparison.Ordinal))
+                {
+                    // Found the header. Now get the version.
+                    var lineEnd = line.Substring(HeaderPrefix.Length);
+
+                    if (Version.TryParse(lineEnd, out var version))
+                    {
+                        return version;
+                    }
+
+                    return null;
                 }
             }
 
-            string minimumVisualStudioVersionLineOpt = null;
-            if (reader.Peek() == 'M')
+            // If we got here, we didn't find the file header on either the first or second line.
+            throw new InvalidSolutionFileException("Solution header should be on first or second line.");
+        }
+
+        private static Version ParseVisualStudioVersion(string line)
+        {
+            // The version line should look like:
+            //
+            // VisualStudioVersion = 15.0.26228.4
+
+            var tokens = line.Split(new[] { ' ', '=' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length >= 2)
             {
-                minimumVisualStudioVersionLineOpt = GetNextNonEmptyLine(reader);
-                if (!minimumVisualStudioVersionLineOpt.StartsWith("MinimumVisualStudioVersion", StringComparison.Ordinal))
+                var versionText = tokens[1];
+                if (Version.TryParse(versionText, out var result))
                 {
-                    throw new Exception(string.Format(Constants.Expected_header_colon_0, "MinimumVisualStudioVersion"));
+                    return result;
                 }
             }
 
-            var projectBlocks = new List<ProjectBlock>();
-
-            // Parse project blocks while we have them
-            while (reader.Peek() == 'P')
-            {
-                projectBlocks.Add(ProjectBlock.Parse(reader));
-                while (reader.Peek() != -1 && "#\r\n".Contains((char)reader.Peek()))
-                {
-                    // Comments and Empty Lines between the Project Blocks are skipped
-                    reader.ReadLine();
-                }
-            }
-
-            // We now have a global block
-            var globalSectionBlocks = ParseGlobal(reader);
-
-            // We should now be at the end of the file
-            if (reader.Peek() != -1)
-            {
-                throw new Exception(Constants.Expected_end_of_file);
-            }
-
-            return new SolutionFile(headerLines.AsReadOnly(), visualStudioVersionLineOpt, minimumVisualStudioVersionLineOpt, projectBlocks.AsReadOnly(), globalSectionBlocks);
-        }
-
-        private static readonly ReadOnlyCollection<SectionBlock> s_EmptySectionBlocks = new ReadOnlyCollection<SectionBlock>(Array.Empty<SectionBlock>());
-
-        [SuppressMessage("", "RS0001")] // TODO: This suppression should be removed once we have rulesets in place for Roslyn.sln
-        private static ReadOnlyCollection<SectionBlock> ParseGlobal(TextReader reader)
-        {
-            if (reader.Peek() == -1)
-            {
-                return s_EmptySectionBlocks;
-            }
-
-            if (GetNextNonEmptyLine(reader) != "Global")
-            {
-                throw new Exception(string.Format(Constants.Expected_0_line, "Global"));
-            }
-
-            var globalSectionBlocks = new List<SectionBlock>();
-
-            // The blocks inside here are indented
-            while (reader.Peek() != -1 && char.IsWhiteSpace((char)reader.Peek()))
-            {
-                globalSectionBlocks.Add(SectionBlock.Parse(reader));
-            }
-
-            if (GetNextNonEmptyLine(reader) != "EndGlobal")
-            {
-                throw new Exception(string.Format(Constants.Expected_0_line, "EndGlobal"));
-            }
-
-            // Consume potential empty lines at the end of the global block
-            while (reader.Peek() != -1 && "\r\n".Contains((char)reader.Peek()))
-            {
-                reader.ReadLine();
-            }
-
-            return globalSectionBlocks.AsReadOnly();
-        }
-
-        private static string GetNextNonEmptyLine(TextReader reader)
-        {
-            string line = null;
-
-            do
-            {
-                line = reader.ReadLine();
-            }
-            while (line != null && line.Trim() == string.Empty);
-
-            return line;
+            return null;
         }
     }
 }

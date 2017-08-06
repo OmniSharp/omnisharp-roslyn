@@ -24,8 +24,8 @@ namespace OmniSharp.Tests
 
             var input = JsonConvert.DeserializeObject<Request>(output);
 
-            Assert.Equal(input.Line, 0);
-            Assert.Equal(input.Column, 0);
+            Assert.Equal(0, input.Line);
+            Assert.Equal(0, input.Column);
         }
 
         [Fact]

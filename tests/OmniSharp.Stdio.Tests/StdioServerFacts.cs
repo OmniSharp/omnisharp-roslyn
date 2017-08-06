@@ -119,8 +119,8 @@ namespace OmniSharp.Stdio.Tests
                     var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
                     Assert.Equal(request.Command, packet.Command);
-                    Assert.Equal(true, packet.Success);
-                    Assert.Equal(true, packet.Running);
+                    Assert.True(packet.Success);
+                    Assert.True(packet.Running);
                     Assert.Null(packet.Message);
                 }
             );
@@ -149,14 +149,14 @@ namespace OmniSharp.Stdio.Tests
                 },
                 value =>
                 {
-                    Assert.True(value.Contains("\"Body\":null"));
+                    Assert.Contains("\"Body\":null", value);
 
                     // Deserialize is too relaxed...
                     var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
                     Assert.Equal(request.Command, packet.Command);
-                    Assert.Equal(true, packet.Success);
-                    Assert.Equal(true, packet.Running);
+                    Assert.True(packet.Success);
+                    Assert.True(packet.Running);
                     Assert.Null(packet.Message);
                     Assert.Null(packet.Body);
                 }
@@ -164,9 +164,36 @@ namespace OmniSharp.Stdio.Tests
 
             using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
             {
-                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
-                Assert.Null(writer.Exception);
-            }
+                Seq = 21,
+                Command = "foo"
+            };
+
+            var writer = new TestTextWriter(
+                value =>
+                {
+                    var packet = JsonConvert.DeserializeObject<EventPacket>(value);
+                    Assert.Equal("started", packet.Event);
+                },
+                value =>
+                {
+                    var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
+                    Assert.Equal(request.Seq, packet.Request_seq);
+                    Assert.Equal(request.Command, packet.Command);
+                    Assert.False(packet.Success);
+                    Assert.True(packet.Running);
+                    Assert.NotNull(packet.Message);
+                }
+            );
+
+            var exceptionApplication = new MockHttpApplication
+            {
+                ProcessAction = _ => { throw new Exception("Boom"); }
+            };
+
+            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer, exceptionApplication);
+
+            Assert.True(writer.Completion.WaitOne(TimeSpan.FromHours(10)), "Timeout");
+            Assert.Null(writer.Exception);
         }
     }
 }

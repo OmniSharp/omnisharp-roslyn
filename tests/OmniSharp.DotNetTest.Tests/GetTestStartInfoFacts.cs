@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -10,7 +11,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        public override bool UseLegacyDotNetCli { get; } = false;
+        public override DotNetCliVersion DotNetCliVersion { get; } = DotNetCliVersion.Current;
 
         [Fact]
         public async Task RunXunitTest()
@@ -24,13 +25,22 @@ namespace OmniSharp.DotNetTest.Tests
         // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
         // When it does, the NUnitTestProject should be updated and the tests below re-enabled.
 
-        //[Fact]
+        [Fact]
         public async Task RunNunitTest()
         {
             await GetDotNetTestStartInfoAsync(
                 NunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit");
+        }
+
+        [Fact]
+        public async Task RunMSTestTest()
+        {
+            await GetDotNetTestStartInfoAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "mstest");
         }
     }
 }

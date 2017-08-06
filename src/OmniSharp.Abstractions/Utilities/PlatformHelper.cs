@@ -1,157 +1,199 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace OmniSharp.Utilities
 {
     public static class PlatformHelper
     {
-        private static Lazy<bool> _isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
-        private static Lazy<string> _monoPath = new Lazy<string>(FindMonoPath);
-        private static Lazy<string> _monoXBuildFrameworksDirPath = new Lazy<string>(FindMonoXBuildFrameworksDirPath);
+        private static IEnumerable<string> s_searchPaths;
+        private static string s_monoRuntimePath;
+        private static string s_monoLibDirPath;
 
-        public static bool IsMono => _isMono.Value;
-        public static string MonoFilePath => _monoPath.Value;
-        public static string MonoXBuildFrameworksDirPath => _monoXBuildFrameworksDirPath.Value;
-
+        public static bool IsMono => Type.GetType("Mono.Runtime") != null;
         public static bool IsWindows => Path.DirectorySeparatorChar == '\\';
 
-        private static string FindMonoPath()
+        public static IEnumerable<string> GetSearchPaths()
         {
-            // To locate Mono on unix, we use the 'which' command (https://en.wikipedia.org/wiki/Which_(Unix))
-            var monoFilePath = RunOnBashAndCaptureOutput("which", "mono");
+            if (s_searchPaths == null)
+            {
+                var path = Environment.GetEnvironmentVariable("PATH");
+                if (path == null)
+                {
+                    return Array.Empty<string>();
+                }
 
-            if (string.IsNullOrEmpty(monoFilePath))
+                s_searchPaths = path
+                    .Split(Path.PathSeparator)
+                    .Select(p => p.Trim('"'));
+            }
+
+            return s_searchPaths;
+        }
+
+        // http://man7.org/linux/man-pages/man3/realpath.3.html
+        // CharSet.Ansi is UTF8 on Unix
+        [DllImport("libc", EntryPoint = "realpath", CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr Unix_realpath(string path, IntPtr buffer);
+
+        // http://man7.org/linux/man-pages/man3/free.3.html
+        [DllImport("libc", EntryPoint = "free", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void Unix_free(IntPtr ptr);
+
+        /// <summary>
+        /// Returns the conanicalized absolute path from a given path, expanding symbolic links and resolving
+        /// references to /./, /../ and extra '/' path characters.
+        /// </summary>
+        private static string RealPath(string path)
+        {
+            if (IsWindows)
+            {
+                throw new PlatformNotSupportedException($"{nameof(RealPath)} can only be called on Unix.");
+            }
+
+            var ptr = Unix_realpath(path, IntPtr.Zero);
+            var result = Marshal.PtrToStringAnsi(ptr); // uses UTF8 on Unix
+            Unix_free(ptr);
+
+            return result;
+        }
+
+        public static string GetMonoRuntimePath()
+        {
+            if (IsWindows)
             {
                 return null;
             }
 
-            Console.WriteLine($"Discovered Mono file path: {monoFilePath}");
-
-            // 'mono' is likely a symbolic link. Try to resolve it.
-            var resolvedMonoFilePath = ResolveSymbolicLink(monoFilePath);
-
-            if (StringComparer.OrdinalIgnoreCase.Compare(monoFilePath, resolvedMonoFilePath) == 0)
+            if (s_monoRuntimePath == null)
             {
-                return monoFilePath;
+                var monoPath = GetSearchPaths()
+                    .Select(p => Path.Combine(p, "mono"))
+                    .FirstOrDefault(File.Exists);
+
+                if (monoPath == null)
+                {
+                    return null;
+                }
+
+                s_monoRuntimePath = RealPath(monoPath);
             }
 
-            Console.WriteLine($"Resolved symbolic link for Mono file path: {resolvedMonoFilePath}");
-
-            return resolvedMonoFilePath;
+            return s_monoRuntimePath;
         }
 
-        private static string FindMonoXBuildFrameworksDirPath()
+        public static string GetMonoLibDirPath()
         {
-            const string defaultXBuildFrameworksDirPath = "/usr/lib/mono/xbuild-frameworks";
-            if (Directory.Exists(defaultXBuildFrameworksDirPath))
+            if (IsWindows)
             {
-                return defaultXBuildFrameworksDirPath;
+                return null;
+            }
+
+            const string DefaultMonoLibPath = "/usr/lib/mono";
+            if (Directory.Exists(DefaultMonoLibPath))
+            {
+                return DefaultMonoLibPath;
             }
 
             // The normal Unix path doesn't exist, so we'll fallback to finding Mono using the
             // runtime location. This is the likely situation on macOS.
-            var monoFilePath = MonoFilePath;
-            if (string.IsNullOrEmpty(monoFilePath))
+
+            if (s_monoLibDirPath == null)
+            {
+                var monoRuntimePath = GetMonoRuntimePath();
+                if (monoRuntimePath == null)
+                {
+                    return null;
+                }
+
+                var monoDirPath = Path.GetDirectoryName(monoRuntimePath);
+
+                var monoLibDirPath = Path.Combine(monoDirPath, "..", "lib", "mono");
+                monoLibDirPath = Path.GetFullPath(monoLibDirPath);
+
+                s_monoLibDirPath = Directory.Exists(monoLibDirPath)
+                    ? monoLibDirPath
+                    : null;
+            }
+
+            return s_monoLibDirPath;
+        }
+
+        public static string GetMonoMSBuildDirPath()
+        {
+            if (IsWindows)
             {
                 return null;
             }
 
-            // mono should be located within a directory that is a sibling to the lib directory.
-            var monoDirPath = Path.GetDirectoryName(monoFilePath);
+            var monoLibDirPath = GetMonoLibDirPath();
+            if (monoLibDirPath == null)
+            {
+                return null;
+            }
 
-            // The base directory is one folder up
-            var monoBaseDirPath = Path.Combine(monoDirPath, "..");
-            monoBaseDirPath = Path.GetFullPath(monoBaseDirPath);
+            var monoMSBuildDirPath = Path.Combine(monoLibDirPath, "msbuild");
+            monoMSBuildDirPath = Path.GetFullPath(monoMSBuildDirPath);
 
-            // We expect the xbuild-frameworks to be in /Versions/Current/lib/mono/xbuild-frameworks.
-            var monoXBuildFrameworksDirPath = Path.Combine(monoBaseDirPath, "lib/mono/xbuild-frameworks");
+            return Directory.Exists(monoMSBuildDirPath)
+                ? monoMSBuildDirPath
+                : null;
+        }
+
+        public static string GetMonoXBuildDirPath()
+        {
+            if (IsWindows)
+            {
+                return null;
+            }
+
+            const string DefaultMonoXBuildDirPath = "/usr/lib/mono/xbuild";
+            if (Directory.Exists(DefaultMonoXBuildDirPath))
+            {
+                return DefaultMonoXBuildDirPath;
+            }
+
+            var monoLibDirPath = GetMonoLibDirPath();
+            if (monoLibDirPath == null)
+            {
+                return null;
+            }
+
+            var monoXBuildDirPath = Path.Combine(monoLibDirPath, "xbuild");
+            monoXBuildDirPath = Path.GetFullPath(monoXBuildDirPath);
+
+            return Directory.Exists(monoXBuildDirPath)
+                ? monoXBuildDirPath
+                : null;
+        }
+
+        public static string GetMonoXBuildFrameworksDirPath()
+        {
+            if (IsWindows)
+            {
+                return null;
+            }
+
+            const string DefaultMonoXBuildFrameworksDirPath = "/usr/lib/mono/xbuild-frameworks";
+            if (Directory.Exists(DefaultMonoXBuildFrameworksDirPath))
+            {
+                return DefaultMonoXBuildFrameworksDirPath;
+            }
+
+            var monoLibDirPath = GetMonoLibDirPath();
+            if (monoLibDirPath == null)
+            {
+                return null;
+            }
+
+            var monoXBuildFrameworksDirPath = Path.Combine(monoLibDirPath, "xbuild-frameworks");
             monoXBuildFrameworksDirPath = Path.GetFullPath(monoXBuildFrameworksDirPath);
 
             return Directory.Exists(monoXBuildFrameworksDirPath)
                 ? monoXBuildFrameworksDirPath
                 : null;
-        }
-
-        private static string ResolveSymbolicLink(string path)
-        {
-            var result = ResolveSymbolicLink(new List<string> { path });
-
-            return CanonicalizePath(result);
-        }
-
-        private static string ResolveSymbolicLink(List<string> paths)
-        {
-            while (!HasCycle(paths))
-            {
-                // We use 'readlink' to resolve symbolic links on unix. Note that OSX does not
-                // support the -f flag for recursively resolving symbolic links and canonicalzing
-                // the final path.
-
-                var originalPath = paths[paths.Count - 1];
-                var newPath = RunOnBashAndCaptureOutput("readlink", $"{originalPath}");
-
-                if (string.IsNullOrEmpty(newPath) ||
-                    string.CompareOrdinal(originalPath, newPath) == 0)
-                {
-                    return originalPath;
-                }
-
-                if (!newPath.StartsWith("/"))
-                {
-                    var dir = File.Exists(originalPath)
-                        ? Path.GetDirectoryName(originalPath)
-                        : originalPath;
-
-                    newPath = Path.Combine(dir, newPath);
-                    newPath = Path.GetFullPath(newPath);
-                }
-
-                paths.Add(newPath);
-            }
-
-            return null;
-        }
-
-        private static bool HasCycle(List<string> paths)
-        {
-            var target = paths[0];
-            for (var i = 1; i < paths.Count; i++)
-            {
-                var path = paths[i];
-
-                if (string.CompareOrdinal(target, path) == 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static string CanonicalizePath(string path)
-        {
-            if (File.Exists(path))
-            {
-                return Path.Combine(
-                    CanonicalizeDirectory(Path.GetDirectoryName(path)),
-                    Path.GetFileName(path));
-            }
-            else
-            {
-                return CanonicalizeDirectory(path);
-            }
-        }
-
-        private static string CanonicalizeDirectory(string directoryName)
-        {
-            // Use "pwd -P" to get the directory name with all symbolic links on Unix.
-            return RunOnBashAndCaptureOutput("pwd", "-P", directoryName);
-        }
-
-        private static string RunOnBashAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)
-        {
-            return ProcessHelper.RunAndCaptureOutput("/bin/bash", $"-c '{fileName} {arguments}'", workingDirectory);
         }
     }
 }

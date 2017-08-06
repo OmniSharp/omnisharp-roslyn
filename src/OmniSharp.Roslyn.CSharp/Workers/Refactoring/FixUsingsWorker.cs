@@ -32,7 +32,7 @@ namespace OmniSharp
         {
             _providers = providers;
 
-            var codeFixProviders = providers.SelectMany(p => p.CodeFixes);
+            var codeFixProviders = providers.SelectMany(p => p.CodeFixProviders);
 
             _addImportProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, CodeActionHelper.AddImportProviderName);
             _removeUnnecessaryUsingsProvider = FindCodeFixProviderByTypeFullName(codeFixProviders, CodeActionHelper.RemoveUnnecessaryUsingsProviderName);

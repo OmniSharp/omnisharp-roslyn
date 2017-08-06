@@ -102,17 +102,6 @@ namespace OmniSharp.DotNet
 
         public void Initalize(IConfiguration configuration)
         {
-            if (!bool.TryParse(configuration["enabled"], out var enabled))
-            {
-                enabled = true;
-            }
-
-            if (!enabled)
-            {
-                _logger.LogInformation("DotNetProjectSystem is disabled");
-                return;
-            }
-
             _logger.LogInformation($"Initializing in {_environment.TargetDirectory}");
 
             if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))
@@ -302,29 +291,30 @@ namespace OmniSharp.DotNet
         {
             var libraryManager = state.ProjectContext.LibraryManager;
             var allDiagnostics = libraryManager.GetAllDiagnostics();
-            var unresolved = libraryManager.GetLibraries().Where(dep => !dep.Resolved);
-            var needRestore = allDiagnostics.Any(diag => diag.ErrorCode == ErrorCodes.NU1006) || unresolved.Any();
+            var unresolvedLibraries = libraryManager.GetLibraries().Where(dep => !dep.Resolved);
+            var needRestore = allDiagnostics.Any(diag => diag.ErrorCode == ErrorCodes.NU1006) || unresolvedLibraries.Any();
 
             if (needRestore)
             {
+                var unresolvedDependencies = unresolvedLibraries.Select(library =>
+                    new PackageDependency
+                    {
+                        Name = library.Identity.Name,
+                        Version = library.Identity.Version?.ToString()
+                    });
+
+                var projectFile = state.ProjectContext.ProjectFile;
+
                 if (allowRestore && _enableRestorePackages)
                 {
-                    _dotNetCliService.RestoreAsync(state.ProjectContext.ProjectFile.ProjectDirectory, onFailure: () =>
+                    _dotNetCliService.RestoreAsync(projectFile.ProjectDirectory, onFailure: () =>
                     {
-                        _eventEmitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
-                        {
-                            FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                            UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version?.ToString() })
-                        });
+                        _eventEmitter.UnresolvedDepdendencies(projectFile.ProjectFilePath, unresolvedDependencies);
                     });
                 }
                 else
                 {
-                    _eventEmitter.Emit(EventTypes.UnresolvedDependencies, new UnresolvedDependenciesMessage()
-                    {
-                        FileName = state.ProjectContext.ProjectFile.ProjectFilePath,
-                        UnresolvedDependencies = unresolved.Select(d => new PackageDependency { Name = d.Identity.Name, Version = d.Identity.Version?.ToString() })
-                    });
+                    _eventEmitter.UnresolvedDepdendencies(projectFile.ProjectFilePath, unresolvedDependencies);
                 }
             }
         }

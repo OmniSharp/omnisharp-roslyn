@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -10,7 +11,7 @@ namespace OmniSharp.DotNetTest.Tests
         {
         }
 
-        public override bool UseLegacyDotNetCli { get; } = true;
+        public override DotNetCliVersion DotNetCliVersion { get; } = DotNetCliVersion.Legacy;
 
         [Fact]
         public async Task RunXunitTest()
@@ -28,6 +29,15 @@ namespace OmniSharp.DotNetTest.Tests
                 LegacyNunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit");
+        }
+
+        [Fact]
+        public async Task RunMSTestTest()
+        {
+            await GetDotNetTestStartInfoAsync(
+                LegacyMSTestProject,
+                methodName: "Main.Test.MainTest.Test",
+                testFramework: "mstest");
         }
     }
 }

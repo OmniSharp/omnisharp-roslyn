@@ -17,6 +17,7 @@ namespace OmniSharp.Models.AutoComplete
         public string ReturnType { get; set; }
         public string Snippet { get; set; }
         public string Kind { get; set; }
+        public bool IsSuggestionMode { get; set; }
 
         public override bool Equals(object other)
         {

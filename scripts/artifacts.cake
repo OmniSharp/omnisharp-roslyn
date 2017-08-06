@@ -1,4 +1,7 @@
+#load "common.cake"
 #load "runhelpers.cake"
+
+using System.Collections.Generic;
 
 /// <summary>
 ///  Generate the scripts which target the OmniSharp binaries.
@@ -6,52 +9,90 @@
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
 void CreateRunScript(string outputRoot, string scriptFolder, string name)
 {
-    if (IsRunningOnWindows())
+    CreateScript(outputRoot, scriptFolder, "net46");
+    CreateScript(outputRoot, scriptFolder, "netcoreapp1.1");
+}
+
+private void CreateScript(string outputRoot, string scriptFolder, string framework)
+{
+    var scriptPath = GetScriptPath(scriptFolder, framework);
+    var omniSharpPath = GetOmniSharpPath(outputRoot, framework);
+    var content = GetScriptContent(omniSharpPath, framework);
+
+    if (FileHelper.Exists(scriptPath))
     {
-        var desktopScript =  System.IO.Path.Combine(scriptFolder, $"{name}.cmd");
-        var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core.cmd");
-        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{0}", name);
-        var content = new string[] {
-                "SETLOCAL",
-                "",
-                $"\"{omniSharpPath}\" %*"
-            };
-        if (System.IO.File.Exists(desktopScript))
-        {
-            System.IO.File.Delete(desktopScript);
-        }
-        content[2] = String.Format(content[2], "net46");
-        System.IO.File.WriteAllLines(desktopScript, content);
-        if (System.IO.File.Exists(coreScript))
-        {
-            System.IO.File.Delete(coreScript);
-        }
-        content[2] = String.Format(content[2], "netcoreapp1.1");
-        System.IO.File.WriteAllLines(coreScript, content);
+        FileHelper.Delete(scriptPath);
+    }
+
+    FileHelper.WriteAllLines(scriptPath, content);
+
+    if (!Platform.Current.IsWindows)
+    {
+        Run("chmod", $"+x \"{scriptPath}\"");
+    }
+}
+
+private string GetScriptPath(string scriptFolder, string framework)
+{
+    var result = CombinePaths(scriptFolder, "OmniSharp");
+
+    if (IsCore(framework))
+    {
+        result += ".Core";
+    }
+
+    if (Platform.Current.IsWindows)
+    {
+        result += ".cmd";
+    }
+
+    return result;
+}
+
+private string GetOmniSharpPath(string outputRoot, string framework)
+{
+    var result = CombinePaths(PathHelper.GetFullPath(outputRoot), framework, "OmniSharp");
+
+    if (!IsCore(framework))
+    {
+        result += ".exe";
+    }
+
+    return result;
+}
+
+private string[] GetScriptContent(string omniSharpPath, string framework)
+{
+    var lines = new List<string>();
+
+    if (Platform.Current.IsWindows)
+    {
+        lines.Add("SETLOCAL");
     }
     else
     {
-        var desktopScript = System.IO.Path.Combine(scriptFolder, $"{name}");
-        var coreScript = System.IO.Path.Combine(scriptFolder, $"{name}.Core");
-        var omniSharpPath = System.IO.Path.Combine(System.IO.Path.GetFullPath(outputRoot), "{1}", name);
-        var content = new string[] {
-                "#!/bin/bash",
-                "",
-                $"{{0}} \"{omniSharpPath}{{2}}\" \"$@\""
-            };
-        if (System.IO.File.Exists(desktopScript))
-        {
-            System.IO.File.Delete(desktopScript);
-        }
-        content[2] = String.Format(content[2], "mono", "net46", ".exe");
-        System.IO.File.WriteAllLines(desktopScript, content);
-        Run("chmod", $"+x \"{desktopScript}\"");
-        if (System.IO.File.Exists(coreScript))
-        {
-            System.IO.File.Delete(coreScript);
-        }
-        content[2] = String.Format(content[2], "", "netcoreapp1.1", "");
-        System.IO.File.WriteAllLines(coreScript, content);
-        Run("chmod", $"+x \"{desktopScript}\"");
+        lines.Add("#!/bin/bash");
     }
+
+    lines.Add("");
+
+    var arguments = Platform.Current.IsWindows
+        ? "%*"
+        : "\"$@\"";
+
+    if (IsCore(framework) || Platform.Current.IsWindows)
+    {
+        lines.Add($"\"{omniSharpPath}\" {arguments}");
+    }
+    else // !isCore && !Platform.Current.IsWindows, i.e. Mono
+    {
+        lines.Add($"mono --assembly-loader=strict \"{omniSharpPath}\" {arguments}");
+    }
+
+    return lines.ToArray();
+}
+
+private bool IsCore(string framework)
+{
+    return framework.StartsWith("netcoreapp");
 }

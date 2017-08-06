@@ -26,8 +26,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly ILogger Logger;
 
         private readonly CodeActionHelper _helper;
-
         private readonly MethodInfo _getNestedCodeActions;
+
+        private static readonly Func<TextSpan, List<Diagnostic>> s_createDiagnosticList = _ => new List<Diagnostic>();
 
         protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger)
         {
@@ -54,148 +55,148 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         protected async Task<IEnumerable<AvailableCodeAction>> GetAvailableCodeActions(ICodeActionRequest request)
         {
-            var originalDocument = this.Workspace.GetDocument(request.FileName);
-            if (originalDocument == null)
+            var document = this.Workspace.GetDocument(request.FileName);
+            if (document == null)
             {
                 return Array.Empty<AvailableCodeAction>();
             }
 
-            var actions = new List<CodeAction>();
+            var codeActions = new List<CodeAction>();
 
-            var codeFixContext = await GetCodeFixContext(originalDocument, request, actions);
-            if (codeFixContext != null)
-            {
-                await CollectCodeFixActions(codeFixContext.Value);
-            }
+            var sourceText = await document.GetTextAsync();
+            var span = GetTextSpan(request, sourceText);
 
-            var refactoringContext = await GetRefactoringContext(originalDocument, request, actions);
-            if (refactoringContext != null)
-            {
-                await CollectRefactoringActions(refactoringContext.Value);
-            }
+            await CollectCodeFixesActions(document, span, codeActions);
+            await CollectRefactoringActions(document, span, codeActions);
 
             // TODO: Determine good way to order code actions.
-            actions.Reverse();
+            codeActions.Reverse();
 
             // Be sure to filter out any code actions that inherit from CodeActionWithOptions.
             // This isn't a great solution and might need changing later, but every Roslyn code action
             // derived from this type tries to display a dialog. For now, this is a reasonable solution.
-            var availableActions = ConvertToAvailableCodeAction(actions)
+            var availableActions = ConvertToAvailableCodeAction(codeActions)
                 .Where(a => !a.CodeAction.GetType().GetTypeInfo().IsSubclassOf(typeof(CodeActionWithOptions)));
 
             return availableActions;
-        }
-
-        private async Task<CodeRefactoringContext?> GetRefactoringContext(Document originalDocument, ICodeActionRequest request, List<CodeAction> actionsDestination)
-        {
-            var sourceText = await originalDocument.GetTextAsync();
-            var location = GetTextSpan(request, sourceText);
-            return new CodeRefactoringContext(originalDocument, location, (a) => actionsDestination.Add(a), CancellationToken.None);
-        }
-
-        private async Task<CodeFixContext?> GetCodeFixContext(Document originalDocument, ICodeActionRequest request, List<CodeAction> actionsDestination)
-        {
-            var sourceText = await originalDocument.GetTextAsync();
-            var semanticModel = await originalDocument.GetSemanticModelAsync();
-            var diagnostics = semanticModel.GetDiagnostics();
-            var span = GetTextSpan(request, sourceText);
-
-            // Try to find exact match
-            var pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(span)).ToImmutableArray();
-            // No exact match found, try approximate match instead
-            if (pointDiagnostics.Length == 0)
-            {
-                var firstMatchingDiagnostic = diagnostics.FirstOrDefault(d => d.Location.SourceSpan.Contains(span));
-                // Try to find other matches with the same exact span as the first approximate match
-                if (firstMatchingDiagnostic != null)
-                {
-                    pointDiagnostics = diagnostics.Where(d => d.Location.SourceSpan.Equals(firstMatchingDiagnostic.Location.SourceSpan)).ToImmutableArray();
-                }
-            }
-            // At this point all pointDiagnostics guaranteed to have the same span
-            if (pointDiagnostics.Length > 0)
-            {
-                return new CodeFixContext(originalDocument, pointDiagnostics[0].Location.SourceSpan, pointDiagnostics, (a, d) => actionsDestination.Add(a), CancellationToken.None);
-            }
-
-            return null;
         }
 
         private TextSpan GetTextSpan(ICodeActionRequest request, SourceText sourceText)
         {
             if (request.Selection != null)
             {
-                var startPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line, request.Selection.Start.Column));
-                var endPosition = sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line, request.Selection.End.Column));
-                return TextSpan.FromBounds(startPosition, endPosition);
+                return TextSpan.FromBounds(
+                    sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line, request.Selection.Start.Column)),
+                    sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line, request.Selection.End.Column)));
             }
 
             var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-            return new TextSpan(position, 1);
+            return new TextSpan(position, length: 0);
         }
 
-        private async Task CollectCodeFixActions(CodeFixContext context)
+        private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnosticIds = context.Diagnostics.Select(d => d.Id).ToArray();
+            Dictionary<TextSpan, List<Diagnostic>> aggregatedDiagnostics = null;
 
+            var semanticModel = await document.GetSemanticModelAsync();
+
+            foreach (var diagnostic in semanticModel.GetDiagnostics())
+            {
+                if (!span.IntersectsWith(diagnostic.Location.SourceSpan))
+                {
+                    continue;
+                }
+
+                aggregatedDiagnostics = aggregatedDiagnostics ?? new Dictionary<TextSpan, List<Diagnostic>>();
+                var list = aggregatedDiagnostics.GetOrAdd(diagnostic.Location.SourceSpan, s_createDiagnosticList);
+                list.Add(diagnostic);
+            }
+
+            if (aggregatedDiagnostics == null)
+            {
+                return;
+            }
+
+            foreach (var kvp in aggregatedDiagnostics)
+            {
+                var diagnosticSpan = kvp.Key;
+                var diagnosticsWithSameSpan = kvp.Value.OrderByDescending(d => d.Severity);
+
+                await AppendFixesAsync(document, diagnosticSpan, diagnosticsWithSameSpan, codeActions);
+            }
+        }
+
+        private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
+        {
             foreach (var provider in this.Providers)
             {
-                foreach (var codeFix in provider.CodeFixes)
+                foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
-                    if (_helper.IsDisallowed(codeFix))
+                    var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
+                    if (fixableDiagnostics.Length > 0)
                     {
-                        continue;
-                    }
+                        var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
 
-                    var typeName = codeFix.GetType().FullName;
-
-                    // TODO: This is a horrible hack! However, remove unnecessary usings only
-                    // responds for diagnostics that are produced by its diagnostic analyzer.
-                    // We need to provide a *real* diagnostic engine to address this.
-                    if (typeName != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
-                    {
-                        if (!diagnosticIds.Any(id => codeFix.FixableDiagnosticIds.Contains(id)))
+                        try
                         {
-                            continue;
+                            await codeFixProvider.RegisterCodeFixesAsync(context);
                         }
-                    }
-
-                    if (typeName == CodeActionHelper.RemoveUnnecessaryUsingsProviderName &&
-                        !diagnosticIds.Contains("CS8019")) // ErrorCode.HDN_UnusedUsingDirective
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        await codeFix.RegisterCodeFixesAsync(context);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger.LogError(ex, $"Error registering code fixes for {typeName}");
+                        catch (Exception ex)
+                        {
+                            this.Logger.LogError(ex, $"Error registering code fixes for {codeFixProvider.GetType().FullName}");
+                        }
                     }
                 }
             }
         }
 
-        private async Task CollectRefactoringActions(CodeRefactoringContext context)
+        private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
+        {
+            var typeName = codeFixProvider.GetType().FullName;
+
+            if (_helper.IsDisallowed(typeName))
+            {
+                return false;
+            }
+
+            // TODO: This is a horrible hack! However, remove unnecessary usings only
+            // responds for diagnostics that are produced by its diagnostic analyzer.
+            // We need to provide a *real* diagnostic engine to address this.
+            if (typeName != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
+            {
+                if (!codeFixProvider.FixableDiagnosticIds.Contains(diagnosticId))
+                {
+                    return false;
+                }
+            }
+            else if (diagnosticId != "CS8019") // ErrorCode.HDN_UnusedUsingDirective
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
             foreach (var provider in this.Providers)
             {
-                foreach (var refactoring in provider.Refactorings)
+                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
-                    if (_helper.IsDisallowed(refactoring))
+                    if (_helper.IsDisallowed(codeRefactoringProvider))
                     {
                         continue;
                     }
 
+                    var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
+
                     try
                     {
-                        await refactoring.ComputeRefactoringsAsync(context);
+                        await codeRefactoringProvider.ComputeRefactoringsAsync(context);
                     }
                     catch (Exception ex)
                     {
-                        this.Logger.LogError(ex, $"Error computing refactorings for {refactoring.GetType().FullName}");
+                        this.Logger.LogError(ex, $"Error computing refactorings for {codeRefactoringProvider.GetType().FullName}");
                     }
                 }
             }

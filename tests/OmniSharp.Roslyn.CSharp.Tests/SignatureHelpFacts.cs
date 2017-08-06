@@ -259,7 +259,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
-            Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo2"));
+            Assert.Contains("foo2", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
         [Fact]
@@ -289,7 +289,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
-            Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo3"));
+            Assert.Contains("foo3", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
         [Fact]
@@ -319,7 +319,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
-            Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("foo1"));
+            Assert.Contains("foo1", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
         [Fact]
@@ -372,7 +372,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Equal(1, actual.ActiveParameter);
-            Assert.True(actual.Signatures.ElementAt(actual.ActiveSignature).Documentation.Contains("ctor2"));
+            Assert.Contains("ctor2", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
         [Fact]

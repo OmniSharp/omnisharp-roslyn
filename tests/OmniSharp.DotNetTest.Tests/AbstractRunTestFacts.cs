@@ -12,8 +12,10 @@ namespace OmniSharp.DotNetTest.Tests
     {
         protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
         protected const string LegacyNunitTestProject = "LegacyNunitTestProject";
+        protected const string LegacyMSTestProject = "LegacyMSTestProject";
         protected const string XunitTestProject = "XunitTestProject";
         protected const string NUnitTestProject = "NUnitTestProject";
+        protected const string MSTestProject = "MSTestProject";
 
         public AbstractRunTestFacts(ITestOutputHelper testOutput)
             : base(testOutput)
@@ -25,12 +27,12 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<RunTestService>(OmniSharpEndpoints.V2.RunTest);
         }
 
-        public abstract bool UseLegacyDotNetCli { get; }
+        public abstract DotNetCliVersion DotNetCliVersion { get; }
 
         protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, bool expectResults = true)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory, useLegacyDotNetCli: UseLegacyDotNetCli))
+            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion))
             {
                 var service = GetRequestHandler(host);
 

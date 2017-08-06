@@ -316,6 +316,102 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "Print", "PrintOptions" }); 
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_true_for_lambda_expression_position1(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M(Func<int, int> a) { }
+
+    void M()
+    {
+        M(c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => c.IsSuggestionMode));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_true_for_lambda_expression_position2(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M()
+    {
+        Func<int, int> a = c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => c.IsSuggestionMode));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_false_for_normal_position1(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M(int a) { }
+
+    void M()
+    {
+        M(c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => !c.IsSuggestionMode));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Is_suggestion_mode_false_for_normal_position2(string filename)
+        {
+            const string source = @"
+using System;
+class C
+{
+    int CallMe(int i) => 42;
+
+    void M()
+    {
+        int a = c$$
+    }
+}
+";
+
+            var completions = await FindCompletionsAsync(filename, source);
+
+            Assert.True(completions.All(c => !c.IsSuggestionMode));
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))

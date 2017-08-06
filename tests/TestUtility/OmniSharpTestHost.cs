@@ -70,11 +70,22 @@ namespace TestUtility
             this.Workspace.Dispose();
         }
 
-        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, bool useLegacyDotNetCli = false)
+        private static string GetDotNetCliFolderName(DotNetCliVersion dotNetCliVersion)
+        {
+            switch (dotNetCliVersion)
+            {
+                case DotNetCliVersion.Current: return ".dotnet";
+                case DotNetCliVersion.Legacy: return ".dotnet-legacy";
+                case DotNetCliVersion.Future: throw new InvalidOperationException("Test infrastructure does not support a future .NET Core SDK yet.");
+                default: throw new ArgumentException($"Unknown {nameof(dotNetCliVersion)}: {dotNetCliVersion}", nameof(dotNetCliVersion));
+            }
+        }
+
+        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
         {
             var dotNetPath = Path.Combine(
                 TestAssets.Instance.RootFolder,
-                useLegacyDotNetCli ? ".dotnet-legacy" : ".dotnet",
+                GetDotNetCliFolderName(dotNetCliVersion),
                 "dotnet");
 
             if (!File.Exists(dotNetPath))
@@ -95,10 +106,12 @@ namespace TestUtility
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
             var omnisharpOptions = new OmniSharpOptions();
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, omnisharpOptions);
+            ConfigurationBinder.Bind(configuration, omnisharpOptions);
 
-            var compositionHost = new OmniSharpMefBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
-                .Build(s_lazyAssemblies.Value);
+            var compositionHost = Startup.CreateCompositionHost(
+                serviceProvider,
+                options: omnisharpOptions,
+                assemblies: s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
@@ -106,7 +119,8 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
-            new OmniSharpWorkspaceInitializer(serviceProvider, compositionHost, configuration, logger).Initialize();
+            var workspaceHelper = new WorkspaceHelper(compositionHost, configuration, omnisharpOptions, loggerFactory);
+            workspaceHelper.Initialize(workspace);
 
             return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }
@@ -116,7 +130,7 @@ namespace TestUtility
             return this._compositionHost.GetExport<T>();
         }
 
-        public THandler GetRequestHandler<THandler>(string name) where THandler : IRequestHandler
+        public THandler GetRequestHandler<THandler>(string name, string languageName = LanguageNames.CSharp) where THandler : IRequestHandler
         {
             if (_handlers == null)
             {
@@ -126,7 +140,12 @@ namespace TestUtility
                     elementSelector: export => export);
             }
 
-            return (THandler)_handlers[(name, LanguageNames.CSharp)].Value;
+            return (THandler)_handlers[(name, languageName)].Value;
+        }
+
+        public WorkspaceInformationService GetWorkspaceInformationService()
+        {
+            return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
         }
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)

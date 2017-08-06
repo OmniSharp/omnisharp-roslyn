@@ -15,9 +15,11 @@ namespace OmniSharp.DotNetTest.TestFrameworks
 
             var nunit = new NUnitTestFramework();
             var xunit = new XunitTestFramework();
+            var mstest = new MSTestFramework();
 
             builder.Add(nunit.Name, nunit);
             builder.Add(xunit.Name, xunit);
+            builder.Add(mstest.Name, mstest);
 
             s_frameworks = builder.ToImmutable();
         }

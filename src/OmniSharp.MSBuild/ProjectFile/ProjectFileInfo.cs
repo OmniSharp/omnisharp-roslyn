@@ -133,7 +133,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 }
 
                 var projectInstance = project.CreateProjectInstance();
-                var buildResult = projectInstance.Build(TargetNames.ResolveReferences,
+                var buildResult = projectInstance.Build(TargetNames.Compile,
                     new[] { new MSBuildLogForwarder(logger, diagnostics) });
 
                 return buildResult
@@ -214,7 +214,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 { PropertyNames.DesignTimeBuild, "true" },
                 { PropertyNames.BuildProjectReferences, "false" },
                 { PropertyNames._ResolveReferenceDependencies, "true" },
-                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar }
+                { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar },
+
+                // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
+                // See https://github.com/dotnet/roslyn/pull/4604 for details.
+                { PropertyNames.ProvideCommandLineInvocation, "true" },
+                { PropertyNames.SkipCompilerExecution, "true" }
             };
 
             globalProperties.AddPropertyIfNeeded(
@@ -231,19 +236,33 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             globalProperties.AddPropertyIfNeeded(
                 logger,
+                PropertyNames.TargetFrameworkRootPath,
+                userOptionValue: options.TargetFrameworkRootPath,
+                environmentValue: MSBuildEnvironment.TargetFrameworkRootPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.RoslynTargetsPath,
+                userOptionValue: options.RoslynTargetsPath,
+                environmentValue: MSBuildEnvironment.RoslynTargetsPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.VisualStudioVersion,
                 userOptionValue: options.VisualStudioVersion,
                 environmentValue: null);
 
-            if (PlatformHelper.IsMono)
-            {
-                var monoXBuildFrameworksDirPath = PlatformHelper.MonoXBuildFrameworksDirPath;
-                if (monoXBuildFrameworksDirPath != null)
-                {
-                    logger.LogDebug($"Using TargetFrameworkRootPath: {monoXBuildFrameworksDirPath}");
-                    globalProperties.Add(PropertyNames.TargetFrameworkRootPath, monoXBuildFrameworksDirPath);
-                }
-            }
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.Configuration,
+                userOptionValue: options.Configuration,
+                environmentValue: null);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
+                PropertyNames.Platform,
+                userOptionValue: options.Platform,
+                environmentValue: null);
 
             return globalProperties;
         }

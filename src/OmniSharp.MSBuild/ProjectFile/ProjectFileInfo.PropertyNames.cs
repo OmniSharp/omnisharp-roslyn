@@ -8,6 +8,7 @@
             public const string AssemblyName = nameof(AssemblyName);
             public const string AssemblyOriginatorKeyFile = nameof(AssemblyOriginatorKeyFile);
             public const string BuildProjectReferences = nameof(BuildProjectReferences);
+            public const string Configuration = nameof(Configuration);
             public const string DefineConstants = nameof(DefineConstants);
             public const string DesignTimeBuild = nameof(DesignTimeBuild);
             public const string DocumentationFile = nameof(DocumentationFile);
@@ -17,11 +18,15 @@
             public const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
             public const string NoWarn = nameof(NoWarn);
             public const string OutputPath = nameof(OutputPath);
+            public const string Platform = nameof(Platform);
             public const string ProjectAssetsFile = nameof(ProjectAssetsFile);
+            public const string ProvideCommandLineInvocation = nameof(ProvideCommandLineInvocation);
             public const string ProjectGuid = nameof(ProjectGuid);
             public const string ProjectName = nameof(ProjectName);
             public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
+            public const string RoslynTargetsPath = nameof(RoslynTargetsPath);
             public const string SignAssembly = nameof(SignAssembly);
+            public const string SkipCompilerExecution = nameof(SkipCompilerExecution);
             public const string SolutionDir = nameof(SolutionDir);
             public const string TargetFramework = nameof(TargetFramework);
             public const string TargetFrameworkMoniker = nameof(TargetFrameworkMoniker);

@@ -3,6 +3,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.CodeActions
 {
+    [Shared]
     [Export(typeof(ICodeActionProvider))]
     public class RoslynCodeActionProvider : AbstractCodeActionProvider
     {
