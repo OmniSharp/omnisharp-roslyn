@@ -24,7 +24,6 @@ namespace OmniSharp
         {
             try
             {
-#if NET46
                 if (PlatformHelper.IsMono)
                 {
                     // Mono uses ThreadPool threads for its async/await implementation.
@@ -39,7 +38,6 @@ namespace OmniSharp
                         System.Threading.ThreadPool.SetMinThreads(MIN_WORKER_THREADS, currentCompletionPortThreads);
                     }
                 }
-#endif
 
                 return Run(args);
             }

@@ -31,6 +31,7 @@ buildlog
 /omnisharp*.tar.gz
 scripts/Omnisharp*
 .msbuild-*/
+.msbuild/
 
 # NuGet
 *.nuget.targets
@@ -39,6 +40,7 @@ scripts/Omnisharp*
 .dotnet/
 .dotnet-legacy/
 .dotnet-future/
+.mono/
 tools/*
 !tools/packages.config
 
