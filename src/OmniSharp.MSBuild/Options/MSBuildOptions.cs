@@ -12,6 +12,7 @@ namespace OmniSharp.Options
         public string TargetFrameworkRootPath { get; set; }
         public string MSBuildSDKsPath { get; set; }
         public string RoslynTargetsPath { get; set; }
+        public string CscToolPath { get; set; }
 
         // TODO: Allow loose properties
         // public IConfiguration Properties { get; set; }
