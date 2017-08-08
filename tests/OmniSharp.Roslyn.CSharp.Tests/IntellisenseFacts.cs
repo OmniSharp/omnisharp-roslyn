@@ -412,6 +412,21 @@ class C
             Assert.True(completions.All(c => !c.IsSuggestionMode));
         }
 
+        [Fact]
+        public async Task Scripting_by_default_returns_completions_for_CSharp7_1()
+        {
+            const string source =
+                @"
+                  var number1 = 1;
+                  var number2 = 2;
+                  var tuple = (number1, number2);
+                  tuple.n$$
+                ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "number1", "number2" });
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))
