@@ -298,6 +298,12 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             globalProperties.AddPropertyIfNeeded(
                 logger,
+                PropertyNames.CscToolPath,
+                userOptionValue: options.CscToolPath,
+                environmentValue: MSBuildEnvironment.CscToolPath);
+
+            globalProperties.AddPropertyIfNeeded(
+                logger,
                 PropertyNames.VisualStudioVersion,
                 userOptionValue: options.VisualStudioVersion,
                 environmentValue: null);
