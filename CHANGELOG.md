@@ -1,6 +1,13 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.23.1] - 2017-08-08
+
+* Fixed two regressions with MSBuild projects:
+  1. .NET Core projects were not properly processed if Mono was installed.
+  2. When Mono is installed, don't set `MSBuildExtensionsPath` to `$mono_prefix/xbuild` unless both `$mono_prefix/msbuild` and `$mono_prefix/xbuild/15.0` also exist.
+* Properly set new language version values to support C# 7.1.
+
 ## [1.23.0] - 2017-08-07
 
 Note: This release now requires the latest release of Mono 5.2.0 or later to build and run. In addition, there are now six flavors built for every release:
