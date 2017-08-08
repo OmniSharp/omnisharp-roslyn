@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.Options;
-using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -109,10 +108,16 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var collection = new ProjectCollection(globalProperties);
 
+                var toolsVersion = options.ToolsVersion;
+                if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
+                {
+                    toolsVersion = collection.DefaultToolsVersion;
+                }
+
+                toolsVersion = GetLegalToolsetVersion(toolsVersion, collection.Toolsets);
+
                 // Evaluate the MSBuild project
-                var project = string.IsNullOrEmpty(options.ToolsVersion)
-                    ? collection.LoadProject(filePath)
-                    : collection.LoadProject(filePath, options.ToolsVersion);
+                var project = collection.LoadProject(filePath, toolsVersion);
 
                 var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
                 targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
@@ -144,6 +149,51 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 Environment.SetEnvironmentVariable(MSBuildSDKsPath, oldSdksPathValue);
             }
+        }
+
+        private static string GetLegalToolsetVersion(string toolsVersion, ICollection<Toolset> toolsets)
+        {
+            // It's entirely possible the the toolset specified does not exist. In that case, we'll try to use
+            // the highest version available.
+            var version = new Version(toolsVersion);
+
+            bool exists = false;
+            Version highestVersion = null;
+
+            var legalToolsets = new SortedList<Version, Toolset>(toolsets.Count);
+            foreach (var toolset in toolsets)
+            {
+                // Only consider this toolset if it has a legal version, we haven't seen it, and its path exists.
+                if (Version.TryParse(toolset.ToolsVersion, out var toolsetVersion) &&
+                    !legalToolsets.ContainsKey(toolsetVersion) &&
+                    System.IO.Directory.Exists(toolset.ToolsPath))
+                {
+                    legalToolsets.Add(toolsetVersion, toolset);
+
+                    if (highestVersion == null ||
+                        toolsetVersion > highestVersion)
+                    {
+                        highestVersion = toolsetVersion;
+                    }
+
+                    if (toolsetVersion == version)
+                    {
+                        exists = true;
+                    }
+                }
+            }
+
+            if (highestVersion == null)
+            {
+                throw new InvalidOperationException("No legal MSBuild toolsets available.");
+            }
+
+            if (!exists)
+            {
+                toolsVersion = legalToolsets[highestVersion].ToolsPath;
+            }
+
+            return toolsVersion;
         }
 
         private static ProjectData CreateProjectData(ProjectInstance projectInstance, ImmutableArray<string> targetFrameworks)
