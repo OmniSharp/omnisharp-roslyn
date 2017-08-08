@@ -184,11 +184,8 @@ namespace OmniSharp.MSBuild
             }
 
             SetMSBuildExePath(msbuildExePath);
-
-            if (!TrySetMonoVariables())
-            {
-                s_msbuildExtensionsPath = monoMSBuildDirPath;
-            }
+            TrySetMSBuildExtensionsPathToXBuild();
+            TrySetTargetFrameworkRootPathToXBuildFrameworks();
 
             // Use our version of the Roslyn compiler and targets.
             var msbuildDirectory = FindMSBuildDirectory();
@@ -204,7 +201,24 @@ namespace OmniSharp.MSBuild
             return true;
         }
 
-        private static bool TrySetMonoVariables()
+        private static bool TrySetTargetFrameworkRootPathToXBuildFrameworks()
+        {
+            if (!PlatformHelper.IsMono)
+            {
+                return false;
+            }
+
+            var monoMSBuildXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
+            if (monoMSBuildXBuildFrameworksDirPath == null)
+            {
+                return false;
+            }
+
+            s_targetFrameworkRootPath = monoMSBuildXBuildFrameworksDirPath;
+            return true;
+        }
+
+        private static bool TrySetMSBuildExtensionsPathToXBuild()
         {
             if (!PlatformHelper.IsMono)
             {
@@ -212,17 +226,12 @@ namespace OmniSharp.MSBuild
             }
 
             var monoMSBuildXBuildDirPath = PlatformHelper.GetMonoXBuildDirPath();
-            var monoMSBuildXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
-
-            if (monoMSBuildXBuildDirPath == null &&
-                monoMSBuildXBuildFrameworksDirPath == null)
+            if (monoMSBuildXBuildDirPath == null)
             {
-                // No Mono xbuild or xbuild-frameworks folders?.
                 return false;
             }
 
             s_msbuildExtensionsPath = monoMSBuildXBuildDirPath;
-            s_targetFrameworkRootPath = monoMSBuildXBuildFrameworksDirPath;
 
             return true;
         }
@@ -243,11 +252,8 @@ namespace OmniSharp.MSBuild
             }
 
             SetMSBuildExePath(msbuildExePath);
-
-            if (!TrySetMonoVariables())
-            {
-                s_msbuildExtensionsPath = msbuildDirectory;
-            }
+            s_msbuildExtensionsPath = msbuildDirectory;
+            TrySetTargetFrameworkRootPathToXBuildFrameworks();
 
             return true;
         }
