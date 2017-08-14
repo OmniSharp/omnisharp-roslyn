@@ -26,6 +26,7 @@ namespace OmniSharp.MSBuild
         private static string s_targetFrameworkRootPath;
         private static string s_roslynTargetsPath;
         private static string s_cscToolPath;
+        private static string s_cscToolExe;
 
         public static bool IsInitialized => s_isInitialized;
 
@@ -80,6 +81,15 @@ namespace OmniSharp.MSBuild
             {
                 ThrowIfNotInitialized();
                 return s_cscToolPath;
+            }
+        }
+
+        public static string CscToolExe
+        {
+            get
+            {
+                ThrowIfNotInitialized();
+                return s_cscToolExe;
             }
         }
 
@@ -201,7 +211,7 @@ namespace OmniSharp.MSBuild
             SetMSBuildExePath(msbuildExePath);
             TrySetMSBuildExtensionsPathToXBuild();
             TrySetTargetFrameworkRootPathToXBuildFrameworks();
-            TrySetRoslynTargetsPathAndCscToolPath();
+            TrySetRoslynTargetsPathAndCscTool();
 
             return true;
         }
@@ -247,7 +257,7 @@ namespace OmniSharp.MSBuild
             return true;
         }
 
-        private static bool TrySetRoslynTargetsPathAndCscToolPath()
+        private static bool TrySetRoslynTargetsPathAndCscTool()
         {
             if (!PlatformHelper.IsMono)
             {
@@ -258,7 +268,7 @@ namespace OmniSharp.MSBuild
             // We do this for a couple of reasons:
             //
             // 1. Mono relocates csc.exe to a different location within Mono.
-            // 2. The Mono targets hardcode CscToolPath to that different location.
+            // 2. The latest Mono targets hardcode CscToolPath to that different location.
             //
             // In order to use the Compile target during MSBuild execution, csc.exe
             // needs to be located successfully.
@@ -271,6 +281,13 @@ namespace OmniSharp.MSBuild
                 {
                     s_roslynTargetsPath = roslynTargetsPath;
                     s_cscToolPath = roslynTargetsPath;
+
+                    // Ensure that CscToolExe is set to "csc.exe", since that's what
+                    // is included in OmniSharp. On older versions of Mono, this would
+                    // be mcs.exe, which will not be able to be located in our "Roslyn"
+                    // directory.
+                    s_cscToolExe = "csc.exe";
+
                     return true;
                 }
             }
@@ -301,7 +318,7 @@ namespace OmniSharp.MSBuild
             }
 
             TrySetTargetFrameworkRootPathToXBuildFrameworks();
-            TrySetRoslynTargetsPathAndCscToolPath();
+            TrySetRoslynTargetsPathAndCscTool();
 
             return true;
         }
