@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.23.2] - 2017-08-14
+
+* Set CscToolExe to 'csc.exe' to address issues with older Mono installations where the MSBuild targets have set it to 'mcs.exe'.
+
 ## [1.23.1] - 2017-08-08
 
 * Fixed two regressions with MSBuild projects:
