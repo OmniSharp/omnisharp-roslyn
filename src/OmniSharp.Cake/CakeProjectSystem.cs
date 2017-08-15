@@ -13,7 +13,6 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
-using OmniSharp.Cake.Polyfill;
 using OmniSharp.Cake.Tools;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
@@ -25,6 +24,7 @@ namespace OmniSharp.Cake
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _environment;
+        private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeConfiguration _cakeConfiguration;
         private readonly IScriptGenerationService _generationService;
         private readonly ILogger<CakeProjectSystem> _logger;
@@ -38,12 +38,14 @@ namespace OmniSharp.Cake
         public CakeProjectSystem(
             OmniSharpWorkspace workspace,
             IOmniSharpEnvironment environment,
+            IAssemblyLoader assemblyLoader,
             ICakeConfiguration cakeConfiguration,
             IScriptGenerationService generationService,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _cakeConfiguration = cakeConfiguration ?? throw new ArgumentNullException(nameof(cakeConfiguration));
             _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -144,11 +146,11 @@ namespace OmniSharp.Cake
             return !_projects.TryGetValue(path, out ProjectInfo projectFileInfo) ? null : projectFileInfo;
         }
 
-        private static ProjectInfo GetProject(CakeScript cakeScript, string filePath)
+        private ProjectInfo GetProject(CakeScript cakeScript, string filePath)
         {
             var name = Path.GetFileName(filePath);
 
-            var assembly = AssemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
+            var assembly = _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
             var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => assembly, null, true);
 
             return ProjectInfo.Create(
