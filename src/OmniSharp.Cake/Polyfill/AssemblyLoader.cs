@@ -6,11 +6,7 @@ namespace OmniSharp.Cake.Polyfill
     {
         public static Assembly LoadFrom(string assemblyPath)
         {
-#if NET46
             return Assembly.LoadFrom(assemblyPath);
-#else
-            return System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
-#endif
         }
     }
 }

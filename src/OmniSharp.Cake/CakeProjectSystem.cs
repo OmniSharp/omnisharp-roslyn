@@ -149,11 +149,7 @@ namespace OmniSharp.Cake
             var name = Path.GetFileName(filePath);
 
             var assembly = AssemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
-#if NET46
             var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => assembly, null, true);
-#else
-            var hostObjectType = Type.GetType(cakeScript.Host.TypeName);
-#endif
 
             return ProjectInfo.Create(
                 id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
