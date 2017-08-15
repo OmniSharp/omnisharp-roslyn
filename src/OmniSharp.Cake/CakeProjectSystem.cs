@@ -162,11 +162,18 @@ namespace OmniSharp.Cake
                 language: LanguageNames.CSharp,
                 compilationOptions: GetCompilationOptions(cakeScript.Usings),
                 parseOptions: new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script),
-                // TODO: Create Documentation for reference also
-                metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference/*, documentation: CreateDocumentationProvider(referencePath))*/)),
+                metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference))),
                 // TODO: projectReferences?
                 isSubmission: true,
                 hostObjectType: hostObjectType);
+        }
+
+        private static DocumentationProvider GetDocumentationProvider(string assemblyPath)
+        {
+            var assemblyDocumentationPath = Path.ChangeExtension(assemblyPath, ".xml");
+            return File.Exists(assemblyDocumentationPath)
+                ? XmlDocumentationProvider.CreateFromFile(assemblyDocumentationPath)
+                : DocumentationProvider.Default;
         }
 
         private static CompilationOptions GetCompilationOptions(IEnumerable<string> usings)
