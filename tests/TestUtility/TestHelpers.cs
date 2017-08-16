@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
+using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.Script;
 using OmniSharp.Services;
@@ -14,7 +15,7 @@ namespace TestUtility
     {
         public static OmniSharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
-            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>()));
+            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
             AddCsxProjectToWorkspace(workspace, testFile);
             return workspace;
         }

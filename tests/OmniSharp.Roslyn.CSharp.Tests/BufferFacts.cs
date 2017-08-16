@@ -6,6 +6,7 @@ using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Services;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -15,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
 
             var service = new ChangeBufferService(workspace);
 

@@ -8,6 +8,7 @@ using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Tests
 {
@@ -95,7 +96,7 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo.csproj"),
@@ -161,7 +162,7 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "project.json"),
