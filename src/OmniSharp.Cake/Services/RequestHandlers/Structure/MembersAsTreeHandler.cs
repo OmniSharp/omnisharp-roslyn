@@ -4,7 +4,7 @@ using OmniSharp.Cake.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.MembersTree;
 
-namespace OmniSharp.Cake.Services.Structure
+namespace OmniSharp.Cake.Services.RequestHandlers.Structure
 {
     [OmniSharpHandler(OmniSharpEndpoints.MembersTree, Constants.LanguageNames.Cake), Shared]
     public class MembersAsTreeHandler : CakeRequestHandler<MembersTreeRequest, FileMemberTree>

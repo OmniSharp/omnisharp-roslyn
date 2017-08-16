@@ -1,9 +1,9 @@
-﻿using OmniSharp.Mef;
+﻿using System.Composition;
+using OmniSharp.Mef;
 using OmniSharp.Models;
-using System.Composition;
 using OmniSharp.Models.CodeCheck;
 
-namespace OmniSharp.Cake.Services.Diagnostics
+namespace OmniSharp.Cake.Services.RequestHandlers.Diagnostics
 {
     [OmniSharpHandler(OmniSharpEndpoints.CodeCheck, Constants.LanguageNames.Cake), Shared]
     public class CodeCheckHandler : CakeRequestHandler<CodeCheckRequest, QuickFixResponse>

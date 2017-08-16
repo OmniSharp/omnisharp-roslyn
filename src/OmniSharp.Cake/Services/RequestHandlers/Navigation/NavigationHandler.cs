@@ -4,7 +4,7 @@ using OmniSharp.Cake.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.Navigate;
 
-namespace OmniSharp.Cake.Services.Navigation
+namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
     [OmniSharpHandler(OmniSharpEndpoints.NavigateUp, Constants.LanguageNames.Cake), Shared]
     public class NavigateUpHandler : CakeRequestHandler<NavigateUpRequest, NavigateResponse>

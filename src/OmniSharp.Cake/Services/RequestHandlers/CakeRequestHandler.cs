@@ -9,7 +9,7 @@ using OmniSharp.Cake.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 
-namespace OmniSharp.Cake.Services
+namespace OmniSharp.Cake.Services.RequestHandlers
 {
     public abstract class CakeRequestHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
     {

@@ -5,7 +5,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.GotoRegion;
 
-namespace OmniSharp.Cake.Services.Navigation
+namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
     [OmniSharpHandler(OmniSharpEndpoints.GotoRegion, Constants.LanguageNames.Cake), Shared]
     public class GotoRegionHandler : CakeRequestHandler<GotoRegionRequest, QuickFixResponse>

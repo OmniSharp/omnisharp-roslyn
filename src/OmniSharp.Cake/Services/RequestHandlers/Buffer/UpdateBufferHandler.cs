@@ -1,11 +1,11 @@
 using System.Composition;
 using System.Threading.Tasks;
-using OmniSharp.Mef;
 using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
+using OmniSharp.Mef;
 using OmniSharp.Models.UpdateBuffer;
 
-namespace OmniSharp.Cake.Services.Buffer
+namespace OmniSharp.Cake.Services.RequestHandlers.Buffer
 {
     [OmniSharpHandler(OmniSharpEndpoints.UpdateBuffer, Constants.LanguageNames.Cake)]
     public class UpdateBufferHandler : IRequestHandler<UpdateBufferRequest, object>

@@ -2,7 +2,7 @@
 using OmniSharp.Mef;
 using OmniSharp.Models.TypeLookup;
 
-namespace OmniSharp.Cake.Services.Types
+namespace OmniSharp.Cake.Services.RequestHandlers.Types
 {
     [OmniSharpHandler(OmniSharpEndpoints.TypeLookup, Constants.LanguageNames.Cake), Shared]
     public class TypeLookupHandler : CakeRequestHandler<TypeLookupRequest, TypeLookupResponse>

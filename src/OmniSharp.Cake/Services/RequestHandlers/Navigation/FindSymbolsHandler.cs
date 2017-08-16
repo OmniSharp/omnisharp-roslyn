@@ -1,11 +1,11 @@
 using System.Composition;
 using System.Threading.Tasks;
+using OmniSharp.Cake.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using OmniSharp.Cake.Extensions;
 using OmniSharp.Models.FindSymbols;
 
-namespace OmniSharp.Cake.Services.Navigation
+namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
     [OmniSharpHandler(OmniSharpEndpoints.FindSymbols, Constants.LanguageNames.Cake), Shared]
     public class FindSymbolsHandler : CakeRequestHandler<FindSymbolsRequest, QuickFixResponse>

@@ -1,10 +1,10 @@
 using System.Composition;
 using System.Threading.Tasks;
-using OmniSharp.Mef;
 using OmniSharp.Cake.Extensions;
+using OmniSharp.Mef;
 using OmniSharp.Models.GotoDefinition;
 
-namespace OmniSharp.Cake.Services.Navigation
+namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
     [OmniSharpHandler(OmniSharpEndpoints.GotoDefinition, Constants.LanguageNames.Cake), Shared]
     public class GotoDefinitionHandler : CakeRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
