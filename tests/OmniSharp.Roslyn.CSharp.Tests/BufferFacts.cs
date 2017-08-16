@@ -2,11 +2,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Roslyn.CSharp.Services.Buffer;
 using OmniSharp.Services;
 using Xunit;
-using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {

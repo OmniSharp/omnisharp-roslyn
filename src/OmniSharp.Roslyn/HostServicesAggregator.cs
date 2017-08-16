@@ -1,13 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Host.Mef;
-using OmniSharp.Services;
-using System.Linq;
-using System;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Services;
 
 namespace OmniSharp
 {

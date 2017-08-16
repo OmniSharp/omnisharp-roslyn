@@ -2,13 +2,13 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
-using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Tests
 {
