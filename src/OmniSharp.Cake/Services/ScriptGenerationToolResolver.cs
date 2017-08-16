@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using OmniSharp.Cake.Configuration;
 
-namespace OmniSharp.Cake.Tools
+namespace OmniSharp.Cake.Services
 {
-    internal static class CakeGenerationToolResolver
+    internal static class ScriptGenerationToolResolver
     {
-        public static string GetServerExecutablePath(string rootPath, ICakeConfiguration configuration)
+        public static string GetExecutablePath(string rootPath, ICakeConfiguration configuration)
         {
             var toolPath = GetToolPath(rootPath, configuration);
 

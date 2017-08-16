@@ -1,6 +1,5 @@
 using System.Composition;
 using System.Threading.Tasks;
-using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
 using OmniSharp.Mef;
 using OmniSharp.Models.ChangeBuffer;
@@ -12,15 +11,15 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Buffer
     public class ChangeBufferHandler : IRequestHandler<ChangeBufferRequest, object>
     {
         private readonly OmniSharpWorkspace _workspace;
-        private readonly IScriptGenerationService _generationService;
+        private readonly ICakeScriptService _scriptService;
 
         [ImportingConstructor]
         public ChangeBufferHandler(
             OmniSharpWorkspace workspace,
-            IScriptGenerationService generationService)
+            ICakeScriptService scriptService)
         {
             _workspace = workspace;
-            _generationService = generationService;
+            _scriptService = scriptService;
         }
 
         public async Task<object> Handle(ChangeBufferRequest request)
@@ -30,7 +29,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Buffer
                 return true;
             }
 
-            var script = _generationService.Generate(new FileChange
+            var script = _scriptService.Generate(new FileChange
             {
                 FileName = request.FileName,
                 LineChanges = { new LineChange

@@ -2,19 +2,19 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Cake.Services;
 
 namespace OmniSharp.Cake
 {
     internal class CakeTextLoader : TextLoader
     {
         private readonly string _filePath;
-        private readonly IScriptGenerationService _generationService;
+        private readonly ICakeScriptService _scriptService;
 
-        public CakeTextLoader(string filePath, IScriptGenerationService generationService)
+        public CakeTextLoader(string filePath, ICakeScriptService generationService)
         {
             if (filePath == null)
             {
@@ -27,14 +27,14 @@ namespace OmniSharp.Cake
             }
 
             _filePath = filePath;
-            _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
+            _scriptService = generationService ?? throw new ArgumentNullException(nameof(generationService));
         }
 
         public override Task<TextAndVersion> LoadTextAndVersionAsync(Workspace workspace, DocumentId documentId, CancellationToken cancellationToken)
         {
             var prevLastWriteTime = File.GetLastWriteTimeUtc(_filePath);
 
-            var script = _generationService.Generate(new FileChange
+            var script = _scriptService.Generate(new FileChange
             {
                 FileName = _filePath,
                 FromDisk = true

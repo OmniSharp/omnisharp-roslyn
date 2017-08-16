@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Cake.Scripting.Abstractions;
 using Cake.Scripting.Abstractions.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -13,7 +12,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
-using OmniSharp.Cake.Tools;
+using OmniSharp.Cake.Services;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
@@ -26,7 +25,7 @@ namespace OmniSharp.Cake
         private readonly IOmniSharpEnvironment _environment;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeConfiguration _cakeConfiguration;
-        private readonly IScriptGenerationService _generationService;
+        private readonly ICakeScriptService _scriptService;
         private readonly ILogger<CakeProjectSystem> _logger;
         private readonly Dictionary<string, ProjectInfo> _projects;
 
@@ -40,14 +39,14 @@ namespace OmniSharp.Cake
             IOmniSharpEnvironment environment,
             IAssemblyLoader assemblyLoader,
             ICakeConfiguration cakeConfiguration,
-            IScriptGenerationService generationService,
+            ICakeScriptService scriptService,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _cakeConfiguration = cakeConfiguration ?? throw new ArgumentNullException(nameof(cakeConfiguration));
-            _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
+            _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _projects = new Dictionary<string, ProjectInfo>();
@@ -67,11 +66,10 @@ namespace OmniSharp.Cake
 
             _logger.LogInformation($"Found {allCakeFiles.Length} Cake files.");
 
-            // Check that bakery is installed
-            var bakeryPath = CakeGenerationToolResolver.GetServerExecutablePath(_environment.TargetDirectory, _cakeConfiguration);
-            if (!File.Exists(bakeryPath))
+            // Check that script service is connected
+            if (!_scriptService.IsConnected)
             {
-                _logger.LogError("Cake.Bakery not installed");
+                _logger.LogWarning("Cake script service not connected. Aborting.");
                 return;
             }
 
@@ -79,7 +77,7 @@ namespace OmniSharp.Cake
             {
                 try
                 {
-                    var cakeScript = _generationService.Generate(new FileChange
+                    var cakeScript = _scriptService.Generate(new FileChange
                     {
                         FileName = cakePath,
                         FromDisk = true
@@ -89,7 +87,7 @@ namespace OmniSharp.Cake
                     // add Cake project to workspace
                     _workspace.AddProject(project);
                     var documentId = DocumentId.CreateNewId(project.Id);
-                    var loader = new CakeTextLoader(cakePath, _generationService);
+                    var loader = new CakeTextLoader(cakePath, _scriptService);
                     var documentInfo = DocumentInfo.Create(
                         documentId,
                         cakePath,
@@ -104,6 +102,60 @@ namespace OmniSharp.Cake
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, $"{cakePath} will be ignored due to an following error");
+                }
+            }
+
+            // Hook up Cake script events
+            _scriptService.ReferencesChanged += ScriptReferencesChanged;
+            _scriptService.UsingsChanged += ScriptUsingsChanged;
+        }
+
+        private void ScriptUsingsChanged(object sender, UsingsChangedEventArgs e)
+        {
+            var solution = _workspace.CurrentSolution;
+
+            var documentIds = solution.GetDocumentIdsWithFilePath(e.ScriptPath);
+            if (documentIds.IsEmpty)
+            {
+                return;
+            }
+
+            foreach (var documentId in documentIds)
+            {
+                var document = solution.GetDocument(documentId);
+                var project = document.Project;
+                var compilationOptions = GetCompilationOptions(e.Usings);
+
+                _workspace.SetCompilationOptions(project.Id, compilationOptions);
+            }
+        }
+
+        private void ScriptReferencesChanged(object sender, ReferencesChangedEventArgs e)
+        {
+            var solution = _workspace.CurrentSolution;
+
+            var documentIds = solution.GetDocumentIdsWithFilePath(e.ScriptPath);
+            if (documentIds.IsEmpty)
+            {
+                return;
+            }
+
+            foreach (var documentId in documentIds)
+            {
+                var document = solution.GetDocument(documentId);
+                var project = document.Project;
+
+                var metadataReferences = e.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference)));
+                var fileReferencesToRemove = project.MetadataReferences;
+
+                foreach (var reference in metadataReferences)
+                {
+                    _workspace.AddMetadataReference(project.Id, reference);
+                }
+
+                foreach (var reference in fileReferencesToRemove)
+                {
+                    _workspace.RemoveMetadataReference(project.Id, reference);
                 }
             }
         }
