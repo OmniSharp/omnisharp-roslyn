@@ -17,11 +17,9 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace, Request request)
         {
-            var offsets = new Dictionary<string, int>();
-
             foreach (var quickFix in response.QuickFixes)
             {
-                await quickFix.TranslateAsync(workspace, request, offsets);
+                await quickFix.TranslateAsync(workspace, request);
             }
 
             return response;
@@ -29,7 +27,7 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<GotoDefinitionResponse> TranslateAsync(this GotoDefinitionResponse response, OmniSharpWorkspace workspace)
         {
-            var offset = await GetOffset(response.FileName, workspace);
+            var offset = await LineOffsetHelper.GetOffset(response.FileName, response.Line, workspace);
 
             response.Line -= offset;
 
@@ -38,7 +36,7 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<NavigateResponse> TranslateAsync(this NavigateResponse response, OmniSharpWorkspace workspace, Request request)
         {
-            var offset = await GetOffset(request.FileName, workspace);
+            var offset = await LineOffsetHelper.GetOffset(request.FileName, response.Line, workspace);
 
             response.Line -= offset;
 
@@ -47,29 +45,27 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<FileMemberTree> TranslateAsync(this FileMemberTree response, OmniSharpWorkspace workspace, Request request)
         {
-            var offsets = new Dictionary<string, int>();
-
             foreach (var topLevelTypeDefinition in response.TopLevelTypeDefinitions)
             {
-                await topLevelTypeDefinition.TranslateAsync(workspace, request, offsets);
+                await topLevelTypeDefinition.TranslateAsync(workspace, request);
             }
 
             return response;
         }
 
-        private static async Task<FileMemberElement> TranslateAsync(this FileMemberElement element, OmniSharpWorkspace workspace, Request request, IDictionary<string, int> offsets)
+        private static async Task<FileMemberElement> TranslateAsync(this FileMemberElement element, OmniSharpWorkspace workspace, Request request)
         {
-            element.Location = await element.Location.TranslateAsync(workspace, request, offsets);
+            element.Location = await element.Location.TranslateAsync(workspace, request);
 
             foreach (var childNode in element.ChildNodes)
             {
-                await childNode.TranslateAsync(workspace, request, offsets);
+                await childNode.TranslateAsync(workspace, request);
             }
 
             return element;
         }
 
-        private static async Task<QuickFix> TranslateAsync(this QuickFix quickFix, OmniSharpWorkspace workspace, Request request, IDictionary<string, int> offsets)
+        private static async Task<QuickFix> TranslateAsync(this QuickFix quickFix, OmniSharpWorkspace workspace, Request request)
         {
             var fileName = !string.IsNullOrEmpty(quickFix.FileName) ? quickFix.FileName : request.FileName;
 
@@ -78,20 +74,12 @@ namespace OmniSharp.Cake.Extensions
                 return quickFix;
             }
 
-            if (!offsets.ContainsKey(fileName))
-            {
-                offsets[fileName] = await GetOffset(fileName, workspace);
-            }
+            var offset = await LineOffsetHelper.GetOffset(fileName, quickFix.Line, workspace);
 
-            quickFix.Line -= offsets[fileName];
-            quickFix.EndLine -= offsets[fileName];
+            quickFix.Line -= offset;
+            quickFix.EndLine -= offset;
 
             return quickFix;
-        }
-
-        private static async Task<int> GetOffset(string fileName, OmniSharpWorkspace workspace)
-        {
-            return await LineOffsetHelper.GetOffset(fileName, workspace) + 1;
         }
     }
 }
