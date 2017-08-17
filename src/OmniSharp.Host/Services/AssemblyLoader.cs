@@ -44,7 +44,7 @@ namespace OmniSharp.Host.Loader
 
                 foreach (var filePath in Directory.EnumerateFiles(folderPath, "*.dll"))
                 {
-                    var assembly = LoadFromPath(filePath);
+                    var assembly = LoadFrom(filePath);
                     if (assembly != null)
                     {
                         assemblies.Add(assembly);
@@ -60,8 +60,10 @@ namespace OmniSharp.Host.Loader
             }
         }
 
-        private Assembly LoadFromPath(string assemblyPath)
+        public Assembly LoadFrom(string assemblyPath)
         {
+            if (string.IsNullOrWhiteSpace(assemblyPath)) return null;
+
             Assembly assembly = null;
 
             try
