@@ -43,11 +43,11 @@ namespace OmniSharp
                         builder.Add(assembly);
                         logger.LogTrace("Successfully added {assembly} to host service assemblies.", assembly.FullName);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         // if we can't see exported types, it means that the assembly cannot participate
-                        // in MefHostServices as one or more of its dependencies (typically a Visual Studio or GACed DLL) is missing
-                        logger.LogWarning("Expected to use {assembly} in host services but the assembly cannot be used due to missing dependencies.", assembly.FullName);
+                        // in MefHostServices. Most likely cause is that one or more of its dependencies (typically a Visual Studio or GACed DLL) are missing
+                        logger.LogWarning("Expected to use {assembly} in host services but the assembly cannot be loaded due to an exception: {exceptionMessage}.", assembly.FullName, ex.Message);
                     }
                 }
             }
