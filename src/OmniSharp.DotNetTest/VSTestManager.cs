@@ -43,7 +43,7 @@ namespace OmniSharp.DotNetTest
 
         protected override string GetCliTestArguments(int port, int parentProcessId)
         {
-            return $"vstest --Port:{port} --ParentProcessId:{parentProcessId} --Diag:Foo.txt";
+            return $"vstest --Port:{port} --ParentProcessId:{parentProcessId}";
         }
 
         protected override void VersionCheck()
