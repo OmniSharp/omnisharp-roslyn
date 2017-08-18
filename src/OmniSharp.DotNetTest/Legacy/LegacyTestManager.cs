@@ -52,7 +52,7 @@ namespace OmniSharp.DotNetTest.Legacy
             }
         }
 
-        public override RunTestResponse RunTest(string methodName, string testFrameworkName)
+        public override RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -143,7 +143,7 @@ namespace OmniSharp.DotNetTest.Legacy
             };
         }
 
-        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -178,7 +178,7 @@ namespace OmniSharp.DotNetTest.Legacy
             };
         }
 
-        public override Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken)
+        public override Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

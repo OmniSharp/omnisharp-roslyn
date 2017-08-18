@@ -22,7 +22,7 @@
 
   <!-- New VSTest 'dotnet test' support -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="15.0.0" />
+    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="15.3.0" />
   </ItemGroup>
 
 </Project>
