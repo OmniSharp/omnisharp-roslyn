@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.24.0] - Not released
+
+* Fixed a bug where an external code action DLL with missing dependencies would crash OmniSharp.
+
 ## [1.23.2] - 2017-08-14
 
 * Set CscToolExe to 'csc.exe' to address issues with older Mono installations where the MSBuild targets have set it to 'mcs.exe'.
