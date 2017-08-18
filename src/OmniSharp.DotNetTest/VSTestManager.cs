@@ -34,7 +34,7 @@ namespace OmniSharp.DotNetTest
 <RunSettings>
     <RunConfiguration>
         <TargetFrameworkVersion>.NETCoreApp, Version=2.0</TargetFrameworkVersion>
-    <RunConfiguration>
+    </RunConfiguration>
 </RunSettings>";
             }
 
