@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using NuGet.Versioning;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Eventing;
@@ -20,8 +21,8 @@ namespace OmniSharp.DotNetTest
 {
     internal class VSTestManager : TestManager
     {
-        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
-            : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
+        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, SemanticVersion dotNetCliVersion, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, dotNetCliVersion, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
         }
 
@@ -61,7 +62,16 @@ namespace OmniSharp.DotNetTest
         protected override bool PrepareToConnect()
         {
             // The project must be built before we can test.
-            var process = DotNetCli.Start("build", WorkingDirectory);
+            var arguments = "build";
+
+            // If this is .NET CLI version 2.0.0 or greater, we also specify --no-restore to ensure that
+            // implicit restore on build doesn't slow the build down.
+            if (DotNetCliVersion >= new SemanticVersion(2, 0, 0))
+            {
+                arguments += " --no-restore";
+            }
+
+            var process = DotNetCli.Start(arguments, WorkingDirectory);
 
             process.OutputDataReceived += (_, e) =>
             {
