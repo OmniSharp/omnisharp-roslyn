@@ -33,7 +33,7 @@ namespace OmniSharp.DotNetTest
                 return $@"
 <RunSettings>
     <RunConfiguration>
-        <TargetFrameworkVersion>.NETCoreApp, Version=2.0</TargetFrameworkVersion>
+        <TargetFrameworkVersion>{targetFrameworkVersion}</TargetFrameworkVersion>
     </RunConfiguration>
 </RunSettings>";
             }
