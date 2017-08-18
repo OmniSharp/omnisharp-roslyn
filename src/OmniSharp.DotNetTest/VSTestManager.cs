@@ -229,13 +229,13 @@ namespace OmniSharp.DotNetTest
             }
 
             var results = testResults.Select(testResult =>
-                    new DotNetTestResult
-                    {
-                        MethodName = testResult.TestCase.FullyQualifiedName,
-                        Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
-                        ErrorMessage = testResult.ErrorMessage,
-                        ErrorStackTrace = testResult.ErrorStackTrace
-                    });
+                new DotNetTestResult
+                {
+                    MethodName = testResult.TestCase.FullyQualifiedName,
+                    Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
+                    ErrorMessage = testResult.ErrorMessage,
+                    ErrorStackTrace = testResult.ErrorStackTrace
+                });
 
             return new RunTestResponse
             {
