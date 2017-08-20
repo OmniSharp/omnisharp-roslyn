@@ -8,5 +8,9 @@ namespace OmniSharp.DotNetTest.Models
     {
         public string MethodName { get; set; }
         public string TestFrameworkName { get; set; }
+        /// <summary>
+        /// e.g. .NETCoreApp, Version=2.0
+        /// </summary>
+        public string TargetFrameworkVersion { get; set; }
     }
 }

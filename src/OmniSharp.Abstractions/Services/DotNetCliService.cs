@@ -174,6 +174,15 @@ namespace OmniSharp.Services
         {
             var version = GetVersion(workingDirectory);
 
+            return IsLegacy(version);
+        }
+
+        /// <summary>
+        /// Determines whether the specified version is from a "legacy" .NET CLI.
+        /// If true, this .NET CLI supports project.json development; otherwise, it supports .csproj development.
+        /// </summary>
+        public bool IsLegacy(SemanticVersion version)
+        {
             if (version.Major < 1)
             {
                 return true;

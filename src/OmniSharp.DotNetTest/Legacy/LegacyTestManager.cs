@@ -9,8 +9,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using NuGet.Versioning;
 using OmniSharp.DotNetTest.Models;
-using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.DotNetTest.TestFrameworks;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
@@ -29,8 +29,8 @@ namespace OmniSharp.DotNetTest.Legacy
         private const string TestExecution_GetTestRunnerProcessStartInfo = "TestExecution.GetTestRunnerProcessStartInfo";
         private const string TestExecution_TestResult = "TestExecution.TestResult";
 
-        public LegacyTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
-            : base(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory.CreateLogger<LegacyTestManager>())
+        public LegacyTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, SemanticVersion dotNetCliVersion, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+            : base(project, workingDirectory, dotNetCli, dotNetCliVersion, eventEmitter, loggerFactory.CreateLogger<LegacyTestManager>())
         {
         }
 
@@ -52,7 +52,7 @@ namespace OmniSharp.DotNetTest.Legacy
             }
         }
 
-        public override RunTestResponse RunTest(string methodName, string testFrameworkName)
+        public override RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -143,7 +143,7 @@ namespace OmniSharp.DotNetTest.Legacy
             };
         }
 
-        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName)
+        public override GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion)
         {
             var testFramework = TestFramework.GetFramework(testFrameworkName);
             if (testFramework == null)
@@ -178,7 +178,7 @@ namespace OmniSharp.DotNetTest.Legacy
             };
         }
 
-        public override Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken)
+        public override Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

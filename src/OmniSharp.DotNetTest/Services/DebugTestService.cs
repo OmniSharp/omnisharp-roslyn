@@ -33,7 +33,7 @@ namespace OmniSharp.DotNetTest.Services
             var testManager = CreateTestManager(request.FileName);
             _debugSessionManager.StartSession(testManager);
 
-            return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.TestFrameworkName, CancellationToken.None);
+            return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
         }
 
         public Task<DebugTestLaunchResponse> Handle(DebugTestLaunchRequest request)

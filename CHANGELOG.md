@@ -4,6 +4,8 @@ All changes to the project will be documented in this file.
 ## [1.24.0] - Not released
 
 * Fixed a bug where an external code action DLL with missing dependencies would crash OmniSharp.
+* When running a test via 'dotnet vstest' support, pass "--no-restore" when building with the .NET CLI to ensure that implicit restore does not run, making build a bit faster. ([#942](https://github.com/OmniSharp/omnisharp-roslyn/issues/942))
+* Add support for specifying the 'TargetFrameworkVersion' to the 'dotnet vstest' endpoints. ([#944](https://github.com/OmniSharp/omnisharp-roslyn/issues/944))
 
 ## [1.23.2] - 2017-08-14
 
