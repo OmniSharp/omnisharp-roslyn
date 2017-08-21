@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -14,6 +16,8 @@ namespace OmniSharp.Cake.Services
     public sealed class CakeScriptService : ICakeScriptService
     {
         private readonly IScriptGenerationService _generationService;
+        private readonly IDictionary<string, ISet<string>> _cachedReferences;
+        private readonly IDictionary<string, ISet<string>> _cachedUsings;
 
         [ImportingConstructor]
         public CakeScriptService(IOmniSharpEnvironment environment, ICakeConfiguration configuration, ILoggerFactory loggerFactory)
@@ -39,15 +43,35 @@ namespace OmniSharp.Cake.Services
             }
 
             IsConnected = _generationService != null;
+            _cachedReferences = new Dictionary<string, ISet<string>>();
+            _cachedUsings = new Dictionary<string, ISet<string>>();
         }
 
         public CakeScript Generate(FileChange fileChange)
         {
             var cakeScript = _generationService.Generate(fileChange);
 
-            // TODO: Cache these, don't invoke if nothing changed
-            OnReferencesChanged(new ReferencesChangedEventArgs(fileChange.FileName, cakeScript.References.ToList()));
-            OnUsingsChanged(new UsingsChangedEventArgs(fileChange.FileName, cakeScript.Usings.ToList()));
+            // Check if references changed
+            if (!_cachedReferences.TryGetValue(fileChange.FileName, out var references))
+            {
+                references = new HashSet<string>();
+            }
+            if (!cakeScript.References.SetEquals(references))
+            {
+                _cachedReferences[fileChange.FileName] = cakeScript.References;
+                OnReferencesChanged(new ReferencesChangedEventArgs(fileChange.FileName, cakeScript.References.ToList()));
+            }
+
+            // Check if usings changed
+            if (!_cachedUsings.TryGetValue(fileChange.FileName, out var usings))
+            {
+                usings = new HashSet<string>();
+            }
+            if (!cakeScript.Usings.SetEquals(usings))
+            {
+                _cachedUsings[fileChange.FileName] = cakeScript.Usings;
+                OnUsingsChanged(new UsingsChangedEventArgs(fileChange.FileName, cakeScript.Usings.ToList()));
+            }
 
             return cakeScript;
         }
