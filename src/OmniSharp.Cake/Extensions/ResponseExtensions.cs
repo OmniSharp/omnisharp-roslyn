@@ -17,11 +17,19 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace, Request request)
         {
+            var quickFixes = new List<QuickFix>();
+
             foreach (var quickFix in response.QuickFixes)
             {
                 await quickFix.TranslateAsync(workspace, request);
+
+                if (quickFix.Line >= 0)
+                {
+                    quickFixes.Add(quickFix);
+                }
             }
 
+            response.QuickFixes = quickFixes;
             return response;
         }
 
@@ -45,23 +53,38 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<FileMemberTree> TranslateAsync(this FileMemberTree response, OmniSharpWorkspace workspace, Request request)
         {
+            var topLevelTypeDefinitions = new List<FileMemberElement>();
+
             foreach (var topLevelTypeDefinition in response.TopLevelTypeDefinitions)
             {
                 await topLevelTypeDefinition.TranslateAsync(workspace, request);
+
+                if (topLevelTypeDefinition.Location.Line >= 0)
+                {
+                    topLevelTypeDefinitions.Add(topLevelTypeDefinition);
+                }
             }
 
+            response.TopLevelTypeDefinitions = topLevelTypeDefinitions;
             return response;
         }
 
         private static async Task<FileMemberElement> TranslateAsync(this FileMemberElement element, OmniSharpWorkspace workspace, Request request)
         {
             element.Location = await element.Location.TranslateAsync(workspace, request);
+            var childNodes = new List<FileMemberElement>();
 
             foreach (var childNode in element.ChildNodes)
             {
                 await childNode.TranslateAsync(workspace, request);
+
+                if (childNode.Location.Line >= 0)
+                {
+                    childNodes.Add(childNode);
+                }
             }
 
+            element.ChildNodes = childNodes;
             return element;
         }
 
