@@ -33,30 +33,27 @@ namespace OmniSharp.Cake.Extensions
             return response;
         }
 
-        public static async Task<GotoDefinitionResponse> TranslateAsync(this GotoDefinitionResponse response, OmniSharpWorkspace workspace)
-        {
-            var offset = await LineOffsetHelper.GetOffset(response.FileName, response.Line, workspace);
-
-            response.Line -= offset;
-
-            return response;
-        }
-
         public static async Task<NavigateResponse> TranslateAsync(this NavigateResponse response, OmniSharpWorkspace workspace, Request request)
         {
-            var offset = await LineOffsetHelper.GetOffset(request.FileName, response.Line, workspace);
+            var (line, _) = await LineIndexHelper.TranslateFromGenerated(request.FileName, response.Line, workspace, true);
 
-            response.Line -= offset;
+            response.Line = line;
 
             return response;
         }
 
         public static async Task<FileMemberTree> TranslateAsync(this FileMemberTree response, OmniSharpWorkspace workspace, Request request)
         {
+            var zeroIndex = await LineIndexHelper.TranslateToGenerated(request.FileName, 0, workspace);
             var topLevelTypeDefinitions = new List<FileMemberElement>();
 
             foreach (var topLevelTypeDefinition in response.TopLevelTypeDefinitions)
             {
+                if (topLevelTypeDefinition.Location.Line < zeroIndex)
+                {
+                    continue;
+                }
+
                 await topLevelTypeDefinition.TranslateAsync(workspace, request);
 
                 if (topLevelTypeDefinition.Location.Line >= 0)
@@ -90,17 +87,22 @@ namespace OmniSharp.Cake.Extensions
 
         private static async Task<QuickFix> TranslateAsync(this QuickFix quickFix, OmniSharpWorkspace workspace, Request request)
         {
-            var fileName = !string.IsNullOrEmpty(quickFix.FileName) ? quickFix.FileName : request.FileName;
+            var sameFile = string.IsNullOrEmpty(quickFix.FileName);
+            var fileName = !sameFile ? quickFix.FileName : request.FileName;
 
             if (string.IsNullOrEmpty(fileName))
             {
                 return quickFix;
             }
 
-            var offset = await LineOffsetHelper.GetOffset(fileName, quickFix.Line, workspace);
+            var (line, newFileName) = await LineIndexHelper.TranslateFromGenerated(fileName, quickFix.Line, workspace, sameFile);
 
-            quickFix.Line -= offset;
-            quickFix.EndLine -= offset;
+            quickFix.Line = line;
+            quickFix.FileName = newFileName;
+
+            (line, _) = await LineIndexHelper.TranslateFromGenerated(fileName, quickFix.EndLine, workspace, sameFile);
+
+            quickFix.EndLine = line;
 
             return quickFix;
         }

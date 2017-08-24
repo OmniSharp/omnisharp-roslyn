@@ -9,9 +9,7 @@ namespace OmniSharp.Cake.Extensions
     {
         public static async Task<TRequest> TranslateAsync<TRequest>(this TRequest request, OmniSharpWorkspace workspace) where TRequest : Request
         {
-            var offset = await LineOffsetHelper.GetOffset(request.FileName, request.Line + 1, workspace);
-
-            request.Line += offset;
+            request.Line = await LineIndexHelper.TranslateToGenerated(request.FileName, request.Line, workspace);
 
             return request;
         }

@@ -18,7 +18,8 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 
         protected override Task<GotoDefinitionResponse> TranslateResponse(GotoDefinitionResponse response, GotoDefinitionRequest request)
         {
-            return response.TranslateAsync(Workspace);
+            // TODO: If outside range, it's an alias. Then fetch metadata.
+            return Task.FromResult(response);
         }
     }
 }
