@@ -51,6 +51,9 @@ namespace OmniSharp.Cake.Services
         {
             var cakeScript = _generationService.Generate(fileChange);
 
+            // Set line processor for generated aliases. TODO: Move to Cake.Bakery
+            cakeScript.Source = cakeScript.Source.Insert(0, $"{Constants.Directive.Generated}\n");
+
             // Check if references changed
             if (!_cachedReferences.TryGetValue(fileChange.FileName, out var references))
             {
