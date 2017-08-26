@@ -163,14 +163,6 @@ namespace OmniSharp.Stdio
             var logger = _loggerFactory.CreateLogger<Program>();
             _loggerFactory.AddStdio(_writer, (category, level) => OmniSharp.LogFilter(category, level, _environment));
 
-            /*
-            */
-            //app.UseRequestLogging();
-            //app.UseExceptionHandler("/error");
-            //app.UseMiddleware<EndpointMiddleware>();
-            //app.UseMiddleware<StatusMiddleware>();
-            //app.UseMiddleware<StopServerMiddleware>();
-
             new OmniSharpWorkspaceInitializer(_serviceProvider, _compositionHost, _configuration, logger).Initialize();
 
             Task.Factory.StartNew(async () =>

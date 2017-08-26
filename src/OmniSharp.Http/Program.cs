@@ -38,11 +38,12 @@ namespace OmniSharp.Http
             return application.Execute(args);
         });
 
-        private readonly IOmniSharpEnvironment _environment;
-        private readonly ISharedTextWriter _sharedTextWriter;
-        private readonly PluginAssemblies _pluginAssemblies;
-        private readonly int _serverPort;
-        private readonly string _serverInterface;
+        internal readonly IOmniSharpEnvironment _environment;
+        internal readonly ISharedTextWriter _sharedTextWriter;
+        internal readonly PluginAssemblies _pluginAssemblies;
+        internal readonly int _serverPort;
+        internal readonly string _serverInterface;
+        internal static Program Instance;
 
         public Program(
             IOmniSharpEnvironment environment,
@@ -56,6 +57,7 @@ namespace OmniSharp.Http
             _pluginAssemblies = pluginAssemblies;
             _serverPort = serverPort;
             _serverInterface = serverInterface;
+            Instance = this;
         }
 
         public void Start()
@@ -64,20 +66,10 @@ namespace OmniSharp.Http
                 .AddCommandLine(new[] { "--server.urls", $"http://{_serverInterface}:{_serverPort}" });
 
             var builder = new WebHostBuilder()
+                .UseKestrel()
                 .UseConfiguration(config.Build())
-                .ConfigureServices(serviceCollection =>
-                {
-                    serviceCollection.AddSingleton(_environment);
-                    serviceCollection.AddSingleton(_sharedTextWriter);
-                    serviceCollection.AddSingleton(NullEventEmitter.Instance);
-                    serviceCollection.AddSingleton(_pluginAssemblies);
-                    serviceCollection.AddSingleton(new OmniSharpHttpEnvironment { Port = _serverPort });
-                    // serviceCollection.AddTransient<IConfigureOptions<KestrelServerOptions>, KestrelServerOptionsSetup>();
-                    // serviceCollection.AddSingleton<Microsoft.AspNetCore.Hosting.Server.IServer, KestrelServer>();
-                })
                 .UseEnvironment("OmniSharp")
-                .UseStartup(typeof(Startup))
-                .UseKestrel();
+                .UseStartup(typeof(Startup));
 
             using (var app = builder.Build())
             {

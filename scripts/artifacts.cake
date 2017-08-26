@@ -7,7 +7,7 @@ using System.Collections.Generic;
 ///  Generate the scripts which target the OmniSharp binaries.
 /// </summary>
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
-void CreateRunScript(string outputRoot, string scriptFolder, string name)
+void CreateRunScript(string name, string outputRoot, string scriptFolder)
 {
     CreateScript(outputRoot, scriptFolder, name);
 }

@@ -580,7 +580,7 @@ Task("ExecuteRunScript")
     foreach (var project in buildPlan.HostProjects)
     {
         var projectFolder = CombinePaths(env.Folders.Source, project);
-        var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Core"};
+        var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Http"};
         foreach (var script in scriptsToTest)
         {
             var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
