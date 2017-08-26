@@ -9,6 +9,8 @@
             public const string AssemblyOriginatorKeyFile = nameof(AssemblyOriginatorKeyFile);
             public const string BuildProjectReferences = nameof(BuildProjectReferences);
             public const string Configuration = nameof(Configuration);
+            public const string CscToolExe = nameof(CscToolExe);
+            public const string CscToolPath = nameof(CscToolPath);
             public const string DefineConstants = nameof(DefineConstants);
             public const string DesignTimeBuild = nameof(DesignTimeBuild);
             public const string DocumentationFile = nameof(DocumentationFile);

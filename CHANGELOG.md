@@ -1,9 +1,49 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [Unreleased]
+## [1.24.0] - Not released
 
+* Fixed a bug where an external code action DLL with missing dependencies would crash OmniSharp.
+* When running a test via 'dotnet vstest' support, pass "--no-restore" when building with the .NET CLI to ensure that implicit restore does not run, making build a bit faster. ([#942](https://github.com/OmniSharp/omnisharp-roslyn/issues/942))
+* Add support for specifying the 'TargetFrameworkVersion' to the 'dotnet vstest' endpoints. ([#944](https://github.com/OmniSharp/omnisharp-roslyn/issues/944))
+
+## [1.23.2] - 2017-08-14
+
+* Set CscToolExe to 'csc.exe' to address issues with older Mono installations where the MSBuild targets have set it to 'mcs.exe'.
+
+## [1.23.1] - 2017-08-08
+
+* Fixed two regressions with MSBuild projects:
+  1. .NET Core projects were not properly processed if Mono was installed.
+  2. When Mono is installed, don't set `MSBuildExtensionsPath` to `$mono_prefix/xbuild` unless both `$mono_prefix/msbuild` and `$mono_prefix/xbuild/15.0` also exist.
+* Properly set new language version values to support C# 7.1.
+
+## [1.23.0] - 2017-08-07
+
+Note: This release now requires the latest release of Mono 5.2.0 or later to build and run. In addition, there are now six flavors built for every release:
+
+* Windows builds that run on Desktop CLR.
+    * omnisharp-win-x86.zip
+    * omnisharp-win-x64.zip
+* A *Nix build that be run on Mono 5.2.0 or greater. (Note that the `--assembly-loader=strict` flag must be specified when launch this build with Mono).
+    * omnisharp-mono.tar.gz
+* Standalone builds for OSX and Linux that include the Mono bits necessary to run OmniSharp.
+    * omnisharp-osx.tar.gz
+    * omnisharp-linux-x86.tar.gz
+    * omnisharp-linux-x64.tar.gz
+
+#### Detailed Changes
+
+* Updated detection of Mono path to p/invoke into `real_path` in `libc` to properly resolve symlinks. (PR: [#911](https://github.com/OmniSharp/omnisharp-roslyn/pull/911))
 * Fixed a Script project system regression introduced as part of [#898](https://github.com/OmniSharp/omnisharp-roslyn/pull/898), that caused CSX support to break for Desktop CLR scripts on Windows (PR: [#913](https://github.com/OmniSharp/omnisharp-roslyn/pull/913))
+* Set `DOTNET_UI_LANGUAGE` environment variable while running `dotnet --info` to ensure that the output is not localized. (PR: [#914](https://github.com/OmniSharp/omnisharp-roslyn/pull/914))
+* OmniSharp now targets net46 by default. ([#666](https://github.com/OmniSharp/omnisharp-roslyn/pull/666), PR: ([#915](https://github.com/OmniSharp/omnisharp-roslyn/pull/915)))
+* Fixed typo in help output. (PR: [#916](https://github.com/OmniSharp/omnisharp-roslyn/pull/916))
+* xUnit updated to latest 2.3.0 nightly beta, fixing running of xUnit tests inside VS 2017. (PR: [#917](https://github.com/OmniSharp/omnisharp-roslyn/pull/917))
+* Fix solution parsing (again!) by introducing custom solution parsing API. ([omnisharp-vscode#1645](https://github.com/OmniSharp/omnisharp-vscode/issues/1645), PR: [#918](https://github.com/OmniSharp/omnisharp-roslyn/pull/918))
+* Globally set various MSBuild properties to better support Mono-based projects. ([#892](https://github.com/OmniSharp/omnisharp-roslyn/issues/892), [omnisharp-vscode#1597](https://github.com/OmniSharp/omnisharp-vscode/issues/1597), [omnisharp-vscode#1624](https://github.com/OmniSharp/omnisharp-vscode/issues/1624), [omnisharp-vscode#1396](https://github.com/OmniSharp/omnisharp-vscode/issues/1396), PR: [#923](https://github.com/OmniSharp/omnisharp-roslyn/pull/923))
+* Big changes to the build which improve build performance and move OmniSharp to Mono 5.2.0. (PR: [#924](https://github.com/OmniSharp/omnisharp-roslyn/pull/924))
+* Update to Roslyn 2.3.0 packages. (PRs: [#930](https://github.com/OmniSharp/omnisharp-roslyn/pull/930), [#931](https://github.com/OmniSharp/omnisharp-roslyn/pull/931))
 
 ## [1.22.0] - 2017-07-07
 

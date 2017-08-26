@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
+    <TargetFramework>net46</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
@@ -22,7 +22,7 @@
 
   <!-- New VSTest 'dotnet test' support -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="15.0.0" />
+    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="15.3.0" />
   </ItemGroup>
 
 </Project>

@@ -9,15 +9,14 @@ using System.Collections.Generic;
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
 void CreateRunScript(string outputRoot, string scriptFolder, string name)
 {
-    CreateScript(outputRoot, scriptFolder, "net46", name);
-    CreateScript(outputRoot, scriptFolder, "netcoreapp1.1", name);
+    CreateScript(outputRoot, scriptFolder, name);
 }
 
-private void CreateScript(string outputRoot, string scriptFolder, string framework, string name)
+private void CreateScript(string outputRoot, string scriptFolder, string name)
 {
-    var scriptPath = GetScriptPath(scriptFolder, framework, name);
-    var omniSharpPath = GetOmniSharpPath(outputRoot, framework, name);
-    var content = GetScriptContent(omniSharpPath, framework);
+    var scriptPath = GetScriptPath(scriptFolder, name);
+    var omniSharpPath = GetOmniSharpPath(outputRoot, name);
+    var content = GetScriptContent(omniSharpPath);
 
     if (FileHelper.Exists(scriptPath))
     {
@@ -32,14 +31,9 @@ private void CreateScript(string outputRoot, string scriptFolder, string framewo
     }
 }
 
-private string GetScriptPath(string scriptFolder, string framework, string name)
+private string GetScriptPath(string scriptFolder, string name)
 {
     var result = CombinePaths(scriptFolder, name);
-
-    if (IsCore(framework))
-    {
-        result += ".Core";
-    }
 
     if (Platform.Current.IsWindows)
     {
@@ -49,19 +43,12 @@ private string GetScriptPath(string scriptFolder, string framework, string name)
     return result;
 }
 
-private string GetOmniSharpPath(string outputRoot, string framework, string name)
+private string GetOmniSharpPath(string outputRoot, string name)
 {
-    var result = CombinePaths(PathHelper.GetFullPath(outputRoot), framework, name);
-
-    if (!IsCore(framework))
-    {
-        result += ".exe";
-    }
-
-    return result;
+    return CombinePaths(PathHelper.GetFullPath(outputRoot), name + ".exe");
 }
 
-private string[] GetScriptContent(string omniSharpPath, string framework)
+private string[] GetScriptContent(string omniSharpPath)
 {
     var lines = new List<string>();
 
@@ -80,19 +67,14 @@ private string[] GetScriptContent(string omniSharpPath, string framework)
         ? "%*"
         : "\"$@\"";
 
-    if (IsCore(framework) || Platform.Current.IsWindows)
+    if (Platform.Current.IsWindows)
     {
         lines.Add($"\"{omniSharpPath}\" {arguments}");
     }
-    else // !isCore && !Platform.Current.IsWindows, i.e. Mono
+    else
     {
         lines.Add($"mono --assembly-loader=strict \"{omniSharpPath}\" {arguments}");
     }
 
     return lines.ToArray();
-}
-
-private bool IsCore(string framework)
-{
-    return framework.StartsWith("netcoreapp");
 }

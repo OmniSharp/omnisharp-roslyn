@@ -43,7 +43,7 @@ namespace OmniSharp.Services
 
                 foreach (var filePath in Directory.EnumerateFiles(folderPath, "*.dll"))
                 {
-                    var assembly = LoadFromPath(filePath);
+                    var assembly = LoadFrom(filePath);
                     if (assembly != null)
                     {
                         assemblies.Add(assembly);
@@ -59,17 +59,15 @@ namespace OmniSharp.Services
             }
         }
 
-        private Assembly LoadFromPath(string assemblyPath)
+        public Assembly LoadFrom(string assemblyPath)
         {
+            if (string.IsNullOrWhiteSpace(assemblyPath)) return null;
+
             Assembly assembly = null;
 
             try
             {
-#if NET46
                 assembly = Assembly.LoadFrom(assemblyPath);
-#else
-                assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
-#endif
             }
             catch (Exception ex)
             {

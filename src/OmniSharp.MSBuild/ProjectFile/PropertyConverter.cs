@@ -37,6 +37,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             // ISO-1, ISO-2, 3, 4, 5, 6, 7 or Default
             switch (propertyValue.ToLower())
             {
+                case "latest": return LanguageVersion.Latest;
                 case "iso-1": return LanguageVersion.CSharp1;
                 case "iso-2": return LanguageVersion.CSharp2;
                 case "3": return LanguageVersion.CSharp3;
@@ -44,6 +45,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "5": return LanguageVersion.CSharp5;
                 case "6": return LanguageVersion.CSharp6;
                 case "7": return LanguageVersion.CSharp7;
+                case "7.1": return LanguageVersion.CSharp7_1;
                 default: return LanguageVersion.Default;
             }
         }

@@ -25,6 +25,8 @@ namespace OmniSharp.MSBuild
         private static string s_msbuildExtensionsPath;
         private static string s_targetFrameworkRootPath;
         private static string s_roslynTargetsPath;
+        private static string s_cscToolPath;
+        private static string s_cscToolExe;
 
         public static bool IsInitialized => s_isInitialized;
 
@@ -70,6 +72,24 @@ namespace OmniSharp.MSBuild
             {
                 ThrowIfNotInitialized();
                 return s_roslynTargetsPath;
+            }
+        }
+
+        public static string CscToolPath
+        {
+            get
+            {
+                ThrowIfNotInitialized();
+                return s_cscToolPath;
+            }
+        }
+
+        public static string CscToolExe
+        {
+            get
+            {
+                ThrowIfNotInitialized();
+                return s_cscToolExe;
             }
         }
 
@@ -151,6 +171,11 @@ namespace OmniSharp.MSBuild
                 summary.AppendLine($"    RoslynTargetsPath: {s_roslynTargetsPath}");
             }
 
+            if (s_cscToolPath != null)
+            {
+                summary.AppendLine($"    CscToolPath: {s_cscToolPath}");
+            }
+
             logger.LogInformation(summary.ToString());
         }
 
@@ -184,13 +209,70 @@ namespace OmniSharp.MSBuild
             }
 
             SetMSBuildExePath(msbuildExePath);
+            TrySetMSBuildExtensionsPathToXBuild();
+            TrySetTargetFrameworkRootPathToXBuildFrameworks();
+            TrySetRoslynTargetsPathAndCscTool();
 
-            if (!TrySetMonoVariables())
+            return true;
+        }
+
+        private static bool TrySetTargetFrameworkRootPathToXBuildFrameworks()
+        {
+            if (!PlatformHelper.IsMono)
             {
-                s_msbuildExtensionsPath = monoMSBuildDirPath;
+                return false;
+            }
+
+            var monoMSBuildXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
+            if (monoMSBuildXBuildFrameworksDirPath == null)
+            {
+                return false;
+            }
+
+            s_targetFrameworkRootPath = monoMSBuildXBuildFrameworksDirPath;
+            return true;
+        }
+
+        private static bool TrySetMSBuildExtensionsPathToXBuild()
+        {
+            if (!PlatformHelper.IsMono)
+            {
+                return false;
+            }
+
+            var monoXBuildDirPath = PlatformHelper.GetMonoXBuildDirPath();
+            if (monoXBuildDirPath == null)
+            {
+                return false;
+            }
+
+            var monoXBuild15DirPath = Path.Combine(monoXBuildDirPath, "15.0");
+            if (!Directory.Exists(monoXBuild15DirPath))
+            {
+                return false;
+            }
+
+            s_msbuildExtensionsPath = monoXBuildDirPath;
+
+            return true;
+        }
+
+        private static bool TrySetRoslynTargetsPathAndCscTool()
+        {
+            if (!PlatformHelper.IsMono)
+            {
+                return false;
             }
 
             // Use our version of the Roslyn compiler and targets.
+            // We do this for a couple of reasons:
+            //
+            // 1. Mono relocates csc.exe to a different location within Mono.
+            // 2. The latest Mono targets hardcode CscToolPath to that different location.
+            //
+            // In order to use the Compile target during MSBuild execution, csc.exe
+            // needs to be located successfully.
+
             var msbuildDirectory = FindMSBuildDirectory();
             if (msbuildDirectory != null)
             {
@@ -198,33 +280,19 @@ namespace OmniSharp.MSBuild
                 if (Directory.Exists(roslynTargetsPath))
                 {
                     s_roslynTargetsPath = roslynTargetsPath;
+                    s_cscToolPath = roslynTargetsPath;
+
+                    // Ensure that CscToolExe is set to "csc.exe", since that's what
+                    // is included in OmniSharp. On older versions of Mono, this would
+                    // be mcs.exe, which will not be able to be located in our "Roslyn"
+                    // directory.
+                    s_cscToolExe = "csc.exe";
+
+                    return true;
                 }
             }
 
-            return true;
-        }
-
-        private static bool TrySetMonoVariables()
-        {
-            if (!PlatformHelper.IsMono)
-            {
-                return false;
-            }
-
-            var monoMSBuildXBuildDirPath = PlatformHelper.GetMonoXBuildDirPath();
-            var monoMSBuildXBuildFrameworksDirPath = PlatformHelper.GetMonoXBuildFrameworksDirPath();
-
-            if (monoMSBuildXBuildDirPath == null &&
-                monoMSBuildXBuildFrameworksDirPath == null)
-            {
-                // No Mono xbuild or xbuild-frameworks folders?.
-                return false;
-            }
-
-            s_msbuildExtensionsPath = monoMSBuildXBuildDirPath;
-            s_targetFrameworkRootPath = monoMSBuildXBuildFrameworksDirPath;
-
-            return true;
+            return false;
         }
 
         private static bool TryWithLocalMSBuild()
@@ -244,10 +312,13 @@ namespace OmniSharp.MSBuild
 
             SetMSBuildExePath(msbuildExePath);
 
-            if (!TrySetMonoVariables())
+            if (!TrySetMSBuildExtensionsPathToXBuild())
             {
                 s_msbuildExtensionsPath = msbuildDirectory;
             }
+
+            TrySetTargetFrameworkRootPathToXBuildFrameworks();
+            TrySetRoslynTargetsPathAndCscTool();
 
             return true;
         }
@@ -283,13 +354,7 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-#if NET46
-            var folderName = ".msbuild-net46";
-#else
-            var folderName = ".msbuild-netcoreapp1.1";
-#endif
-
-            var result = Path.Combine(current, folderName);
+            var result = Path.Combine(current, ".msbuild");
 
             return Directory.Exists(result)
                 ? result

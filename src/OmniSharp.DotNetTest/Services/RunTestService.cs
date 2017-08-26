@@ -21,7 +21,7 @@ namespace OmniSharp.DotNetTest.Services
         {
             if (testManager.IsConnected)
             {
-                return testManager.RunTest(request.MethodName, request.TestFrameworkName);
+                return testManager.RunTest(request.MethodName, request.TestFrameworkName, request.TargetFrameworkVersion);
             }
 
             var response = new RunTestResponse

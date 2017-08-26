@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using NuGet.Versioning;
 using OmniSharp.DotNetTest.Legacy;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.Events;
@@ -24,6 +25,7 @@ namespace OmniSharp.DotNetTest
     {
         protected readonly Project Project;
         protected readonly DotNetCliService DotNetCli;
+        protected readonly SemanticVersion DotNetCliVersion;
         protected readonly IEventEmitter EventEmitter;
         protected readonly ILogger Logger;
         protected readonly string WorkingDirectory;
@@ -39,11 +41,12 @@ namespace OmniSharp.DotNetTest
 
         public bool IsConnected => _isConnected;
 
-        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILogger logger)
+        protected TestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, SemanticVersion dotNetCliVersion, IEventEmitter eventEmitter, ILogger logger)
         {
             Project = project ?? throw new ArgumentNullException(nameof(project));
             WorkingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
             DotNetCli = dotNetCli ?? throw new ArgumentNullException(nameof(dotNetCli));
+            DotNetCliVersion = dotNetCliVersion ?? throw new ArgumentNullException(nameof(dotNetCliVersion));
             EventEmitter = eventEmitter ?? throw new ArgumentNullException(nameof(eventEmitter));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -59,18 +62,20 @@ namespace OmniSharp.DotNetTest
         {
             var workingDirectory = Path.GetDirectoryName(project.FilePath);
 
-            return dotNetCli.IsLegacy(workingDirectory)
-                ? new LegacyTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory)
-                : (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, eventEmitter, loggerFactory);
+            var version = dotNetCli.GetVersion(workingDirectory);
+
+            return dotNetCli.IsLegacy(version)
+                ? new LegacyTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory)
+                : (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
         protected abstract void VersionCheck();
 
-        public abstract RunTestResponse RunTest(string methodName, string testFrameworkName);
-        public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName);
+        public abstract RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion);
+        public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion);
 
-        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, CancellationToken cancellationToken);
+        public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
         protected virtual bool PrepareToConnect()

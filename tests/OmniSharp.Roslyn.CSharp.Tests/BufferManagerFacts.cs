@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Services;
@@ -95,7 +96,7 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo.csproj"),
@@ -161,7 +162,7 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "project.json"),
