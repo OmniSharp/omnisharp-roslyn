@@ -12,11 +12,13 @@
   "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-alpha5.zip",
   "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-alpha5.zip",
   "HostProjects": [
-    "OmniSharp.Stdio"
+    "OmniSharp.Stdio",
+    "OmniSharp.Http"
   ],
   "TestProjects": [
     "OmniSharp.MSBuild.Tests",
     "OmniSharp.Roslyn.CSharp.Tests",
+    "OmniSharp.Http.Tests",
     "OmniSharp.Stdio.Tests",
     "OmniSharp.DotNet.Tests",
     "OmniSharp.DotNetTest.Tests",

@@ -307,7 +307,7 @@ Task("PrepareTestAssets")
     }
 });
 
-void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
+void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration, string outputType = null)
 {
     string command, arguments;
 
@@ -328,7 +328,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
 
     Information("Building {0}...", projectName);
 
-    RunTool(command, arguments, env.WorkingDirectory, logFileName)
+    RunTool(command, arguments, env.WorkingDirectory, logFileName, new Dictionary<string, string>() { { "TestOutputType", outputType } })
         .ExceptionOnError($"Building {projectName} failed.");
 }
 
@@ -352,9 +352,14 @@ Task("BuildMain")
 Task("BuildTest")
     .IsDependentOn("Setup")
     .IsDependentOn("Restore")
-    .IsDependentOn("BuildMain")
     .Does(() =>
 {
+    foreach (var project in buildPlan.HostProjects)
+    {
+        var projectName = project + ".csproj";
+        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
+        BuildProject(env, projectName, projectFilePath, configuration, "test");
+    }
     foreach (var testProject in buildPlan.TestProjects)
     {
         var testProjectName = testProject + ".csproj";
@@ -568,6 +573,7 @@ Task("PublishWindowsBuilds")
 });
 
 Task("Publish")
+    .IsDependentOn("BuildMain")
     .IsDependentOn("PublishMonoBuilds")
     .IsDependentOn("PublishWindowsBuilds");
 

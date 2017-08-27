@@ -10,6 +10,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="1.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="1.1.0" />
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
