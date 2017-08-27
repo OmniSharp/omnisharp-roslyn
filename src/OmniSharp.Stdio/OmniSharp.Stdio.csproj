@@ -3,7 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+    <OutputType>Exe</OutputType>
+    <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <AssemblyName>OmniSharp</AssemblyName>
   </PropertyGroup>
 
     <ItemGroup>

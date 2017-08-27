@@ -18,13 +18,13 @@ namespace OmniSharp.Stdio.Tests
 {
     public class StdioServerFacts
     {
-        private Program BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Program> programDelegate = null)
+        private Host BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Host> programDelegate = null)
         {
             var configuration = new ConfigurationBuilder().Build();
             var serviceProvider = OmniSharpMefBuilder.CreateDefaultServiceProvider(configuration);
             var omniSharpEnvironment = new OmniSharpEnvironment();
             var cancelationTokenSource = new CancellationTokenSource();
-            var server = new Program(reader, writer,
+            var server = new Host(reader, writer,
                 omniSharpEnvironment,
                 configuration,
                 serviceProvider,

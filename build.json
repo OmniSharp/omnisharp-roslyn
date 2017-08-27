@@ -12,8 +12,7 @@
   "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-alpha5.zip",
   "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-alpha5.zip",
   "HostProjects": [
-    "OmniSharp",
-    "OmniSharp.Http"
+    "OmniSharp.Stdio"
   ],
   "TestProjects": [
     "OmniSharp.MSBuild.Tests",
