@@ -585,10 +585,10 @@ Task("ExecuteRunScript")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        var projectFolder = CombinePaths(env.Folders.Source, project);
-        var scriptsToTest = new string[] {"OmniSharp", "OmniSharp.Http"};
-        foreach (var script in scriptsToTest)
+        if (project.EndsWith("Stdio"))
         {
+            var projectFolder = CombinePaths(env.Folders.Source, project);
+            var script = project;
             var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
             var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
                                         new RunOptions(timeOut: 30000))

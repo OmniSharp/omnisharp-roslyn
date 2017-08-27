@@ -15,7 +15,7 @@ void CreateRunScript(string name, string outputRoot, string scriptFolder)
 private void CreateScript(string outputRoot, string scriptFolder, string name)
 {
     var scriptPath = GetScriptPath(scriptFolder, name);
-    var omniSharpPath = GetOmniSharpPath(outputRoot, name);
+    var omniSharpPath = GetOmniSharpPath(outputRoot);
     var content = GetScriptContent(omniSharpPath);
 
     if (FileHelper.Exists(scriptPath))
@@ -43,9 +43,9 @@ private string GetScriptPath(string scriptFolder, string name)
     return result;
 }
 
-private string GetOmniSharpPath(string outputRoot, string name)
+private string GetOmniSharpPath(string outputRoot)
 {
-    return CombinePaths(PathHelper.GetFullPath(outputRoot), name + ".exe");
+    return CombinePaths(PathHelper.GetFullPath(outputRoot), "OmniSharp.exe");
 }
 
 private string[] GetScriptContent(string omniSharpPath)
