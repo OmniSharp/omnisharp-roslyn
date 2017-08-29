@@ -2,6 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
+    <DotnetScriptNuGetMetadataResolver>2.0.3</DotnetScriptNuGetMetadataResolver>
     <MicrosoftAspNetCoreDiagnosticsVersion>1.1.0</MicrosoftAspNetCoreDiagnosticsVersion>
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>

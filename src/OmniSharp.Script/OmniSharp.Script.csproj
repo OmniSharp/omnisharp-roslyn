@@ -11,10 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dotnet.Script.NuGetMetadataResolver" Version="2.0.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.3.1" />
-    <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="1.0.0-rc3-1-003177" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
+    <PackageReference Include="Dotnet.Script.NuGetMetadataResolver" Version="$(DotnetScriptNuGetMetadataResolver)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(MicrosoftCodeAnalysisCSharpScriptingVersion)" />
+    <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="$(MicrosoftDotNetProjectModelVersion)" />
+    <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
   </ItemGroup>
 
 </Project>
