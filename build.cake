@@ -382,7 +382,7 @@ Task("Test")
     {
         PrintBlankLine();
 
-        var instanceFolder = CombinePaths(env.Folders.Tests, testProject, "bin", testConfiguration, "net46");
+        var instanceFolder = CombinePaths(env.Folders.Bin, testConfiguration, testProject, "net46");
 
         // Copy xunit executable to test folder to solve path errors
         var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");

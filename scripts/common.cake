@@ -136,6 +136,7 @@ public class Folders
     public string MSBuild { get; }
     public string Tools { get; }
 
+    public string Bin { get; }
     public string Source { get; }
     public string Tests { get; }
     public string TestAssets { get; }
@@ -161,6 +162,7 @@ public class Folders
         this.MSBuild = PathHelper.Combine(workingDirectory, ".msbuild");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
 
+        this.Bin = PathHelper.Combine(workingDirectory, "bin");
         this.Source = PathHelper.Combine(workingDirectory, "src");
         this.Tests = PathHelper.Combine(workingDirectory, "tests");
         this.TestAssets = PathHelper.Combine(workingDirectory, "test-assets");
