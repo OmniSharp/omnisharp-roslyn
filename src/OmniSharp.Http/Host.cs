@@ -10,7 +10,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
 {
-    public class Host
+    class Host
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _sharedTextWriter;
@@ -34,7 +34,7 @@ namespace OmniSharp.Http
 
         public void Start()
         {
-            var config = new ConfigurationBuilder()
+            var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                 .AddCommandLine(new[] { "--server.urls", $"http://{_serverInterface}:{_serverPort}" });
 
             var builder = new WebHostBuilder()
@@ -45,7 +45,7 @@ namespace OmniSharp.Http
                     serviceCollection.AddSingleton(_sharedTextWriter);
                     serviceCollection.AddSingleton(NullEventEmitter.Instance);
                     serviceCollection.AddSingleton(_pluginAssemblies);
-                    serviceCollection.AddSingleton(new OmniSharpHttpEnvironment { Port = _serverPort });
+                    serviceCollection.AddSingleton(new HttpEnvironment { Port = _serverPort });
                 })
                 .UseConfiguration(config.Build())
                 .UseEnvironment("OmniSharp")

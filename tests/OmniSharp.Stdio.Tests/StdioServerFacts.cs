@@ -20,15 +20,15 @@ namespace OmniSharp.Stdio.Tests
     {
         private Host BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Host> programDelegate = null)
         {
-            var configuration = new ConfigurationBuilder().Build();
-            var serviceProvider = OmniSharpMefBuilder.CreateDefaultServiceProvider(configuration);
+            var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+            var serviceProvider = MefBuilder.CreateDefaultServiceProvider(configuration);
             var omniSharpEnvironment = new OmniSharpEnvironment();
             var cancelationTokenSource = new CancellationTokenSource();
             var server = new Host(reader, writer,
                 omniSharpEnvironment,
                 configuration,
                 serviceProvider,
-                new OmniSharpMefBuilder(serviceProvider, omniSharpEnvironment, writer, NullEventEmitter.Instance).Build(Enumerable.Empty<Assembly>()),
+                new MefBuilder(serviceProvider, omniSharpEnvironment, writer, NullEventEmitter.Instance).Build(Enumerable.Empty<Assembly>()),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 cancelationTokenSource);
 

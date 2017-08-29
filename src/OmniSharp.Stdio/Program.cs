@@ -10,19 +10,19 @@ using OmniSharp.Stdio.Logging;
 
 namespace OmniSharp.Stdio
 {
-    public class Program
+    class Program
     {
-        public static int Main(string[] args) => OmniSharp.Start(() =>
+        static int Main(string[] args) => HostHelpers.Start(() =>
         {
-            var application = new OmniSharpStdioCommandLineApplication();
+            var application = new StdioCommandLineApplication();
             application.OnExecute(() =>
             {
                 var environment = application.CreateEnvironment();
                 var writer = new SharedConsoleWriter();
                 var plugins = application.CreatePluginAssemblies();
-                var configuration = new OmniSharpConfigurationBuilder(environment).Build();
-                var serviceProvider = OmniSharpMefBuilder.CreateDefaultServiceProvider(configuration);
-                var mefBuilder = new OmniSharpMefBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer));
+                var configuration = new ConfigurationBuilder(environment).Build();
+                var serviceProvider = MefBuilder.CreateDefaultServiceProvider(configuration);
+                var mefBuilder = new MefBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer));
                 var compositionHost = mefBuilder.Build();
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();

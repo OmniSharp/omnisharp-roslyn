@@ -4,9 +4,9 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    public static class OmniSharpCommandLineApplicationExtensions
+    public static class CommandLineApplicationExtensions
     {
-        public static OmniSharpEnvironment CreateEnvironment(this OmniSharpCommandLineApplication application)
+        public static OmniSharpEnvironment CreateEnvironment(this CommandLineApplication application)
         {
             return new OmniSharpEnvironment(
                 application.ApplicationRoot,
@@ -15,7 +15,7 @@ namespace OmniSharp
                 application.OtherArgs.ToArray<string>());
         }
 
-        public static PluginAssemblies CreatePluginAssemblies(this OmniSharpCommandLineApplication application)
+        public static PluginAssemblies CreatePluginAssemblies(this CommandLineApplication application)
         {
             return new PluginAssemblies(application.Plugin);
         }

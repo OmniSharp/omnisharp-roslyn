@@ -10,11 +10,11 @@ using OmniSharp.Stdio;
 
 namespace OmniSharp.Http
 {
-    public class Program
+    class Program
     {
-        public static int Main(string[] args) => OmniSharp.Start(() =>
+        static int Main(string[] args) => HostHelpers.Start(() =>
         {
-            var application = new OmniSharpHttpCommandLineApplication();
+            var application = new HttpCommandLineApplication();
             application.OnExecute(() =>
             {
                 var environment = application.CreateEnvironment();

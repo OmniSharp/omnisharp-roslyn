@@ -16,7 +16,7 @@ using OmniSharp.Stdio.Protocol;
 
 namespace OmniSharp.Http.Middleware
 {
-    public class EndpointMiddleware
+    class EndpointMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly HashSet<string> _endpoints;

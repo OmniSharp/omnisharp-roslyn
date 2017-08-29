@@ -15,13 +15,12 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Http
 {
-    public class Startup
+    class Startup
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly IEventEmitter _eventEmitter;
         private readonly ISharedTextWriter _writer;
         private readonly IConfigurationRoot _configuration;
-        // private OmniSharpWorkspace _workspace;
         private CompositionHost _compositionHost;
 
         public Startup(IOmniSharpEnvironment environment, IEventEmitter eventEmitter, ISharedTextWriter writer)
@@ -29,13 +28,13 @@ namespace OmniSharp.Http
             _environment = environment;
             _eventEmitter = eventEmitter;
             _writer = writer;
-            _configuration = new OmniSharpConfigurationBuilder(environment).Build();
+            _configuration = new ConfigurationBuilder(environment).Build();
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var serviceProvider = OmniSharpMefBuilder.CreateDefaultServiceProvider(_configuration, services);
-            var mefBuilder = new OmniSharpMefBuilder(serviceProvider, _environment, _writer, _eventEmitter);
+            var serviceProvider = MefBuilder.CreateDefaultServiceProvider(_configuration, services);
+            var mefBuilder = new MefBuilder(serviceProvider, _environment, _writer, _eventEmitter);
             var compositionHost = mefBuilder.Build();
             _compositionHost = compositionHost;
             return serviceProvider;
@@ -47,14 +46,14 @@ namespace OmniSharp.Http
             ILoggerFactory loggerFactory,
             IEventEmitter eventEmitter,
             ISharedTextWriter writer,
-            OmniSharpHttpEnvironment httpEnvironment,
+            HttpEnvironment httpEnvironment,
             IOptionsMonitor<OmniSharpOptions> options)
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<Startup>();
             loggerFactory.AddConsole((category, level) =>
             {
-                if (OmniSharp.LogFilter(category, level, _environment)) return true;
+                if (HostHelpers.LogFilter(category, level, _environment)) return true;
 
                 if (string.Equals(category, typeof(ExceptionHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -70,7 +69,7 @@ namespace OmniSharp.Http
             app.UseMiddleware<StatusMiddleware>(workspace);
             app.UseMiddleware<StopServerMiddleware>();
 
-            new OmniSharpWorkspaceInitializer(serviceProvider, _compositionHost, _configuration, logger).Initialize();
+            WorkspaceInitializer.Initialize(serviceProvider, _compositionHost, _configuration, logger);
 
             logger.LogInformation($"Omnisharp server running on port '{httpEnvironment.Port}' at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
         }

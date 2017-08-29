@@ -11,9 +11,9 @@ using OmniSharp.Internal;
 
 namespace OmniSharp
 {
-    public class OmniSharpCommandLineApplication
+    public class CommandLineApplication
     {
-        protected readonly CommandLineApplication Application;
+        protected readonly Microsoft.Extensions.CommandLineUtils.CommandLineApplication Application;
         private readonly CommandOption _hostPid;
         private readonly CommandOption _zeroBasedIndices;
         private readonly CommandOption _encoding;
@@ -23,9 +23,9 @@ namespace OmniSharp
         private readonly CommandOption _applicationRoot;
         private readonly CommandOption _debug;
 
-        public OmniSharpCommandLineApplication()
+        public CommandLineApplication()
         {
-            Application = new CommandLineApplication(throwOnUnexpectedArg: false);
+            Application = new Microsoft.Extensions.CommandLineUtils.CommandLineApplication(throwOnUnexpectedArg: false);
             Application.HelpOption("-? | -h | --help");
 
             _applicationRoot = Application.Option("-s | --source", "Solution or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);

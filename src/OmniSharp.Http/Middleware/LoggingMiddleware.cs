@@ -8,7 +8,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Http.Middleware
 {
-    public class LoggingMiddleware
+    class LoggingMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;

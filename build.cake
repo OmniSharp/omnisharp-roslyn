@@ -332,7 +332,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
         .ExceptionOnError($"Building {projectName} failed.");
 }
 
-Task("BuildMain")
+Task("BuildHosts")
     .IsDependentOn("Setup")
     .IsDependentOn("Restore")
     .Does(() =>
@@ -573,7 +573,7 @@ Task("PublishWindowsBuilds")
 });
 
 Task("Publish")
-    .IsDependentOn("BuildMain")
+    .IsDependentOn("BuildHosts")
     .IsDependentOn("PublishMonoBuilds")
     .IsDependentOn("PublishWindowsBuilds");
 

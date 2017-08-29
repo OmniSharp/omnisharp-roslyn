@@ -7,15 +7,15 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
-    public class OmniSharpConfigurationBuilder : IConfigurationBuilder
+    public class ConfigurationBuilder : IConfigurationBuilder
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly IConfigurationBuilder _builder;
 
-        public OmniSharpConfigurationBuilder(IOmniSharpEnvironment environment)
+        public ConfigurationBuilder(IOmniSharpEnvironment environment)
         {
             _environment = environment;
-            _builder = new ConfigurationBuilder()
+            _builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile(Constants.ConfigFile, optional: true);
         }
@@ -28,7 +28,7 @@ namespace OmniSharp
 
         public IConfigurationRoot Build()
         {
-            var configBuilder = new ConfigurationBuilder()
+            var configBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile(Constants.ConfigFile, optional: true)
                 .AddEnvironmentVariables("OMNISHARP_");

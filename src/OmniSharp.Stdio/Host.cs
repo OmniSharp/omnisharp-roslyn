@@ -22,7 +22,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Stdio
 {
-    public class Host : IDisposable
+    class Host : IDisposable
     {
         private readonly IConfiguration _configuration;
         private readonly TextReader _input;
@@ -131,9 +131,9 @@ namespace OmniSharp.Stdio
         public void Start()
         {
             var logger = _loggerFactory.CreateLogger<Program>();
-            _loggerFactory.AddStdio(_writer, (category, level) => OmniSharp.LogFilter(category, level, _environment));
+            _loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
 
-            new OmniSharpWorkspaceInitializer(_serviceProvider, _compositionHost, _configuration, logger).Initialize();
+            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
 
             Task.Factory.StartNew(async () =>
             {

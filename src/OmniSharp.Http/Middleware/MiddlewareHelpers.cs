@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace OmniSharp.Http.Middleware
 {
-    public static class MiddlewareHelpers
+    static class MiddlewareHelpers
     {
         private static readonly Encoding _encoding = new System.Text.UTF8Encoding(false);
 

@@ -6,11 +6,11 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio.Logging
 {
-    internal class StdioLogger : BaseLogger
+    class StdioLogger : BaseLogger
     {
         private readonly ISharedTextWriter _writer;
 
-        internal StdioLogger(ISharedTextWriter writer, string categoryName, Func<string, LogLevel, bool> filter)
+        public StdioLogger(ISharedTextWriter writer, string categoryName, Func<string, LogLevel, bool> filter)
             : base(categoryName, filter, addHeader: false)
         {
             _writer = writer;

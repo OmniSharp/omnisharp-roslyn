@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace OmniSharp.Http.Middleware
 {
-    public class StatusMiddleware
+    class StatusMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly OmniSharpWorkspace _workspace;

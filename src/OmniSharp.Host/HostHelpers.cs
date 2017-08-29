@@ -15,7 +15,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
-    public class OmniSharp
+    public class HostHelpers
     {
         public static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
         {

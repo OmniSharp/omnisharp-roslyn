@@ -135,7 +135,7 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Arguments: {0}", arguments);
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  CWD: {0}", workingDirectory);
 
-    var pInfo = new ProcessStartInfo(command, arguments)
+    var startInfo = new ProcessStartInfo(command, arguments)
     {
         WorkingDirectory = workingDirectory,
         UseShellExecute = false,
@@ -145,11 +145,11 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     {
         foreach (var item in runOptions.Environment)
         {
-            pInfo.EnvironmentVariables.Add(item.Key, item.Value);
+            startInfo.EnvironmentVariables.Add(item.Key, item.Value);
         }
     }
 
-    var process = System.Diagnostics.Process.Start(pInfo);
+    var process = System.Diagnostics.Process.Start(startInfo);
 
     if (runOptions.Output != null)
     {

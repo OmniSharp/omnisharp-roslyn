@@ -3,12 +3,12 @@ using OmniSharp.Internal;
 
 namespace OmniSharp.Http
 {
-    public class OmniSharpHttpCommandLineApplication : OmniSharpCommandLineApplication
+    class HttpCommandLineApplication : CommandLineApplication
     {
         private readonly CommandOption _serverInterface;
         private readonly CommandOption _port;
 
-        public OmniSharpHttpCommandLineApplication() : base()
+        public HttpCommandLineApplication() : base()
         {
             _port = Application.Option("-p | --port", "OmniSharp port (defaults to 2000).", CommandOptionType.SingleValue);
             _serverInterface = Application.Option("-i | --interface", "Server interface address (defaults to 'localhost').", CommandOptionType.SingleValue);

@@ -11,39 +11,26 @@ using OmniSharp.Services;
 
 namespace OmniSharp
 {
-    public class OmniSharpWorkspaceInitializer
+    public class WorkspaceInitializer
     {
-        private readonly OmniSharpWorkspace _workspace;
-        private readonly CompositionHost _compositionHost;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger _logger;
-        private readonly IOptionsMonitor<OmniSharpOptions> _options;
-
-        public OmniSharpWorkspaceInitializer(
+        public static void Initialize(
             IServiceProvider serviceProvider,
             CompositionHost compositionHost,
             IConfiguration configuration,
-            ILogger logger
-        )
+            ILogger logger)
         {
-            _workspace = compositionHost.GetExport<OmniSharpWorkspace>();
-            _compositionHost = compositionHost;
-            _configuration = configuration;
-            _logger = logger;
-            _options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
-        }
+            var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
+            var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
 
-        public void Initialize()
-        {
-            var projectEventForwarder = _compositionHost.GetExport<ProjectEventForwarder>();
+            var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
 
             // Initialize all the project systems
-            foreach (var projectSystem in _compositionHost.GetExports<IProjectSystem>())
+            foreach (var projectSystem in compositionHost.GetExports<IProjectSystem>())
             {
                 try
                 {
-                    var projectConfiguration = _configuration.GetSection(projectSystem.Key);
+                    var projectConfiguration = configuration.GetSection((string)projectSystem.Key);
                     var enabledProjectFlag = projectConfiguration.GetValue<bool>("enabled", defaultValue: true);
                     if (enabledProjectFlag)
                     {
@@ -51,48 +38,52 @@ namespace OmniSharp
                     }
                     else
                     {
-                        _logger.LogInformation($"Project system '{projectSystem.GetType().FullName}' is disabled in the configuration.");
+                        logger.LogInformation($"Project system '{projectSystem.GetType().FullName}' is disabled in the configuration.");
                     }
                 }
                 catch (Exception e)
                 {
                     var message = $"The project system '{projectSystem.GetType().FullName}' threw exception during initialization.";
                     // if a project system throws an unhandled exception it should not crash the entire server
-                    LoggerExceptions.LogError(_logger, e, message);
+                    LoggerExceptions.LogError((ILogger)logger, e, message);
                 }
             }
 
-            ProvideWorkspaceOptions();
+            ProvideWorkspaceOptions(compositionHost, workspace, options, logger);
 
             // Mark the workspace as initialized
-            _workspace.Initialized = true;
+            workspace.Initialized = true;
 
             // when configuration options change
             // run workspace options providers automatically
-            _options.OnChange(o =>
+            options.OnChange(o =>
             {
-                ProvideWorkspaceOptions();
+                ProvideWorkspaceOptions(compositionHost, workspace, options, logger);
             });
 
-            LoggerExtensions.LogInformation(_logger, "Configuration finished.");
+            LoggerExtensions.LogInformation((ILogger)logger, "Configuration finished.");
         }
 
-        private void ProvideWorkspaceOptions()
+        private static void ProvideWorkspaceOptions(
+            CompositionHost compositionHost,
+            OmniSharpWorkspace workspace,
+            IOptionsMonitor<OmniSharpOptions> options,
+            ILogger logger)
         {
             // run all workspace options providers
-            foreach (var workspaceOptionsProvider in _compositionHost.GetExports<IWorkspaceOptionsProvider>())
+            foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>())
             {
                 var providerName = workspaceOptionsProvider.GetType().FullName;
 
                 try
                 {
-                    LoggerExtensions.LogInformation(_logger, $"Invoking Workspace Options Provider: {providerName}");
-                    _workspace.Options = workspaceOptionsProvider.Process(_workspace.Options, _options.CurrentValue.FormattingOptions);
+                    LoggerExtensions.LogInformation(logger, $"Invoking Workspace Options Provider: {providerName}");
+                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue.FormattingOptions);
                 }
                 catch (Exception e)
                 {
                     var message = $"The workspace options provider '{providerName}' threw exception during initialization.";
-                    LoggerExceptions.LogError(_logger, e, message);
+                    LoggerExceptions.LogError(logger, e, message);
                 }
             }
         }

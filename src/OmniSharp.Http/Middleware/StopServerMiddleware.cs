@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace OmniSharp.Http.Middleware
 {
-    public class StopServerMiddleware
+    class StopServerMiddleware
     {
         private readonly IApplicationLifetime _lifetime;
 
