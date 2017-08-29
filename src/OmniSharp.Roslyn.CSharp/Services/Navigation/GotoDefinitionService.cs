@@ -44,7 +44,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
                 var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
 
-                if (symbol != null)
+                // go to definition for namespaces is not supported
+                if (symbol != null && !(symbol is INamespaceSymbol))
                 {
                     // for partial methods, pick the one with body
                     if (symbol is IMethodSymbol method)

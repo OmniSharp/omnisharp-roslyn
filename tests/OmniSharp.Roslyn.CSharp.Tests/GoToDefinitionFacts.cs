@@ -232,6 +232,14 @@ class Bar {
             }
         }
 
+        [Fact]
+        public async Task ReturnsNoResultsButDoesNotThrowForNamespaces()
+        {
+            var testFile = new TestFile("foo.cs", "namespace F$$oo {}");
+            var response = await GetResponseAsync(new[] { testFile }, wantMetadata: false);
+            Assert.Null(response.FileName);
+        }
+
         private async Task TestGoToSourceAsync(params TestFile[] testFiles)
         {
             var response = await GetResponseAsync(testFiles, wantMetadata: false);
