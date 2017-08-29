@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
