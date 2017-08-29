@@ -12,17 +12,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.3.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
   </ItemGroup>
 
   <!-- Legacy 'dotnet test' support -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Testing.Abstractions" Version="1.0.0-preview2-1-003177" />
+    <PackageReference Include="Microsoft.Extensions.Testing.Abstractions" Version="$(MicrosoftExtensionsTestingAbstractionsVersion)" />
   </ItemGroup>
 
   <!-- New VSTest 'dotnet test' support -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="15.3.0" />
+    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPlatformTranslationLayerVersion)" />
   </ItemGroup>
 
 </Project>
