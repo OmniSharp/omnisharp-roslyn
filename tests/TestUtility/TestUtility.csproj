@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
@@ -16,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.3.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.3.1" />
-    <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="1.0.0-rc3-1-003177" />
-    <PackageReference Include="Microsoft.DotNet.ProjectModel.Workspaces" Version="1.0.0-preview2-1-003177" />
-    <PackageReference Include="xunit" Version="2.3.0-beta4-build3722" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisCSharpWorkspacesVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(MicrosoftCodeAnalysisCSharpScriptingVersion)" />
+    <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="$(MicrosoftDotNetProjectModelVersion)" />
+    <PackageReference Include="Microsoft.DotNet.ProjectModel.Workspaces" Version="$(MicrosoftDotNetProjectModelWorkspacesVersion)" />
+    <PackageReference Include="xunit" Version="$(XunitVersion)" />
   </ItemGroup>
 
 </Project>
