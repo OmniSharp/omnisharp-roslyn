@@ -585,18 +585,15 @@ Task("ExecuteRunScript")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        if (project.EndsWith("Stdio"))
+        var projectFolder = CombinePaths(env.Folders.Source, project);
+        var script = project;
+        var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
+                                    new RunOptions(timeOut: 30000))
+                                .DidTimeOut;
+        if (!didNotExitWithError)
         {
-            var projectFolder = CombinePaths(env.Folders.Source, project);
-            var script = project;
-            var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
-            var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                        new RunOptions(timeOut: 30000))
-                                    .DidTimeOut;
-            if (!didNotExitWithError)
-            {
-                throw new Exception($"Failed to run {script}");
-            }
+            throw new Exception($"Failed to run {script}");
         }
     }
 });

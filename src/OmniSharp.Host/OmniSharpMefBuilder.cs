@@ -80,9 +80,9 @@ namespace OmniSharp
             return config.CreateContainer();
         }
 
-        public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration)
+        public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration, IServiceCollection services = null)
         {
-            IServiceCollection services = new ServiceCollection();
+            services = services ?? new ServiceCollection();
 
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
