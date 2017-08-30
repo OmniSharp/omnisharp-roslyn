@@ -36,7 +36,7 @@
     <MicrosoftExtensionsPlatformAbstractionsVersion>1.1.0</MicrosoftExtensionsPlatformAbstractionsVersion>
     <MicrosoftExtensionsTestingAbstractionsVersion>1.0.0-preview2-1-003177</MicrosoftExtensionsTestingAbstractionsVersion>
     <MicrosoftNetTestSdkVersion>15.0.0</MicrosoftNetTestSdkVersion>
-    <MicrosoftTestPlatformTranslationLayerVersion>15.0.0</MicrosoftTestPlatformTranslationLayerVersion>
+    <MicrosoftTestPlatformTranslationLayerVersion>15.3.0</MicrosoftTestPlatformTranslationLayerVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetPackagingCoreVersion>4.0.0</NuGetPackagingCoreVersion>
     <NuGetProjectModelVersion>4.0.0</NuGetProjectModelVersion>
