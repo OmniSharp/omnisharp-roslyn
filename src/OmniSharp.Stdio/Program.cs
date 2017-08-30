@@ -27,9 +27,9 @@ namespace OmniSharp.Stdio
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();
 
-                using (var program = new Host(Console.In, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory, cancellation))
+                using (var host = new Host(Console.In, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory, cancellation))
                 {
-                    program.Start();
+                    host.Start();
                     cancellation.Token.WaitHandle.WaitOne();
                 }
 

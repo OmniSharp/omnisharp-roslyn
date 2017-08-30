@@ -24,7 +24,7 @@ namespace OmniSharp.Stdio.Tests
             var serviceProvider = MefBuilder.CreateDefaultServiceProvider(configuration);
             var omniSharpEnvironment = new OmniSharpEnvironment();
             var cancelationTokenSource = new CancellationTokenSource();
-            var server = new Host(reader, writer,
+            var host = new Host(reader, writer,
                 omniSharpEnvironment,
                 configuration,
                 serviceProvider,
@@ -32,11 +32,11 @@ namespace OmniSharp.Stdio.Tests
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 cancelationTokenSource);
 
-            programDelegate?.Invoke(server);
+            programDelegate?.Invoke(host);
 
-            server.Start();
+            host.Start();
 
-            return server;
+            return host;
         }
 
         [Fact]

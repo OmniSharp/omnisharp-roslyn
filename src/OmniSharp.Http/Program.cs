@@ -21,8 +21,8 @@ namespace OmniSharp.Http
                 var writer = new SharedConsoleWriter();
                 var plugins = application.CreatePluginAssemblies();
 
-                var program = new Host(environment, writer, plugins, application.Port, application.Interface);
-                program.Start();
+                var host = new Host(environment, writer, plugins, application.Port, application.Interface);
+                host.Start();
 
                 return 0;
             });

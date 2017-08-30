@@ -20,7 +20,7 @@ namespace OmniSharp.Endpoint
 {
     public abstract class EndpointHandler
     {
-        public abstract Task<object> Handle(RequestPacket context);
+        public abstract Task<object> Handle(RequestPacket packet);
 
         public static EndpointHandler Create<TRequest, TResponse>(IPredicateHandler languagePredicateHandler, CompositionHost host,
             ILogger logger,
@@ -91,15 +91,15 @@ namespace OmniSharp.Endpoint
 
         public string EndpointName { get; }
 
-        public override Task<object> Handle(RequestPacket context)
+        public override Task<object> Handle(RequestPacket packet)
         {
-            var requestObject = DeserializeRequestObject(context.ArgumentsStream);
+            var requestObject = DeserializeRequestObject(packet.ArgumentsStream);
             var model = GetLanguageModel(requestObject);
 
-            return Process(context, model, requestObject);
+            return Process(packet, model, requestObject);
         }
 
-        public async Task<object> Process(RequestPacket context, LanguageModel model, JToken requestObject)
+        public async Task<object> Process(RequestPacket packet, LanguageModel model, JToken requestObject)
         {
             var request = requestObject.ToObject<TRequest>();
             if (request is Request && _updateBufferHandler.Value != null)
@@ -107,7 +107,7 @@ namespace OmniSharp.Endpoint
                 var realRequest = request as Request;
                 if (!string.IsNullOrWhiteSpace(realRequest.FileName) && (realRequest.Buffer != null || realRequest.Changes != null))
                 {
-                    await _updateBufferHandler.Value.Process(context, model, requestObject);
+                    await _updateBufferHandler.Value.Process(packet, model, requestObject);
                 }
             }
 
@@ -119,23 +119,23 @@ namespace OmniSharp.Endpoint
                 {
                     model.Language = LanguageNames.CSharp;
                 }
-                return await HandleLanguageRequest(model.Language, request, context);
+                return await HandleLanguageRequest(model.Language, request, packet);
             }
             else if (_hasFileNameProperty)
             {
                 var language = _languagePredicateHandler.GetLanguageForFilePath(model.FileName ?? string.Empty);
-                return await HandleLanguageRequest(language, request, context);
+                return await HandleLanguageRequest(language, request, packet);
             }
             else
             {
                 var language = _languagePredicateHandler.GetLanguageForFilePath(string.Empty);
                 if (!string.IsNullOrEmpty(language))
                 {
-                    return await HandleLanguageRequest(language, request, context);
+                    return await HandleLanguageRequest(language, request, packet);
                 }
             }
 
-            return await HandleAllRequest(request, context);
+            return await HandleAllRequest(request, packet);
         }
 
         private Task<object> HandleLanguageRequest(string language, TRequest request, RequestPacket packet)
