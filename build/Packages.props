@@ -17,7 +17,6 @@
     <MicrosoftCodeAnalysisCSharpWorkspacesVersion>2.3.1</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
     <MicrosoftCodeAnalysisWorkspacesCommonVersion>2.3.1</MicrosoftCodeAnalysisWorkspacesCommonVersion>
     <MicrosoftDotNetProjectModelVersion>1.0.0-rc3-1-003177</MicrosoftDotNetProjectModelVersion>
-    <MicrosoftDotNetProjectModelWorkspacesVersion>1.0.0-preview2-1-003177</MicrosoftDotNetProjectModelWorkspacesVersion>
     <MicrosoftDotNetInternalAbstractionsVersion>1.0.500-preview2-1-003177</MicrosoftDotNetInternalAbstractionsVersion>
     <MicrosoftExtensionsCachingMemoryVersion>1.1.0</MicrosoftExtensionsCachingMemoryVersion>
     <MicrosoftExtensionsCommandLineUtilsVersion>1.1.0</MicrosoftExtensionsCommandLineUtilsVersion>
