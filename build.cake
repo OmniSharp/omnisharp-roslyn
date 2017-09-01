@@ -448,7 +448,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
 
 string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
 {
-    Information("Publishing Mono build...");
+    Information($"Publishing Mono build for {project}...");
 
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
 

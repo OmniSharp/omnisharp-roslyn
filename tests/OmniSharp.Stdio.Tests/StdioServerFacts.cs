@@ -105,76 +105,75 @@ namespace OmniSharp.Stdio.Tests
             }
         }
 
-        //[Fact( Skip = "unable to send request properly")]
-        //public void ServerRepliesWithResponse()
-        //{
-        //    var request = new RequestPacket()
-        //    {
-        //        Seq = 21,
-        //        Command = "foo"
-        //    };
+        [Fact]
+        public void ServerRepliesWithResponse()
+        {
+            var request = new RequestPacket()
+            {
+                Seq = 21,
+                Command = "foo"
+            };
 
-        //    var writer = new TestTextWriter(
-        //        value =>
-        //        {
-        //            var packet = JsonConvert.DeserializeObject<EventPacket>(value);
-        //            Assert.Equal("started", packet.Event);
-        //        },
-        //        value =>
-        //        {
-        //            var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
-        //            Assert.Equal(request.Seq, packet.Request_seq);
-        //            Assert.Equal(request.Command, packet.Command);
-        //            Assert.True(packet.Success);
-        //            Assert.True(packet.Running);
-        //            Assert.Null(packet.Message);
-        //        }
-        //    );
+            var writer = new TestTextWriter(
+                value =>
+                {
+                    var packet = JsonConvert.DeserializeObject<EventPacket>(value);
+                    Assert.Equal("started", packet.Event);
+                },
+                value =>
+                {
+                    var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
+                    Assert.Equal(request.Seq, packet.Request_seq);
+                    Assert.Equal(request.Command, packet.Command);
+                    Assert.False(packet.Success);
+                    Assert.True(packet.Running);
+                    Assert.Contains(nameof(NotSupportedException), packet.Message.ToString());
+                }
+            );
 
-        //    using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
-        //    {
-        //        Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(1000)), "Timeout");
-        //        Assert.Null(writer.Exception);
-        //    }
-        //}
+            using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(1000)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
+        }
 
-        //[Fact]
-        //public void ServerRepliesWithResponseWhenTaskDoesNotReturnAnything()
-        //{
-        //    var request = new RequestPacket()
-        //    {
-        //        Seq = 21,
-        //        Command = "foo"
-        //    };
+        [Fact]
+        public void ServerRepliesWithResponseWhenTaskDoesNotReturnAnything()
+        {
+            var request = new RequestPacket()
+            {
+                Seq = 21,
+                Command = "foo"
+            };
 
-        //    var writer = new TestTextWriter(
-        //        value =>
-        //        {
-        //            var packet = JsonConvert.DeserializeObject<EventPacket>(value);
-        //            Assert.Equal("started", packet.Event);
-        //        },
-        //        value =>
-        //        {
-        //            Assert.Contains("\"Body\":null", value);
+            var writer = new TestTextWriter(
+                value =>
+                {
+                    var packet = JsonConvert.DeserializeObject<EventPacket>(value);
+                    Assert.Equal("started", packet.Event);
+                },
+                value =>
+                {
+                    Assert.Contains("\"Body\":null", value);
 
-        //            // Deserialize is too relaxed...
-        //            var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
-        //            Assert.Equal(request.Seq, packet.Request_seq);
-        //            Assert.Equal(request.Command, packet.Command);
-        //            Assert.True(packet.Success);
-        //            Assert.True(packet.Running);
-        //            Assert.Null(packet.Message);
-        //            Assert.Null(packet.Body);
-        //        }
-        //    );
+                   // Deserialize is too relaxed...
+                   var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
+                    Assert.Equal(request.Seq, packet.Request_seq);
+                    Assert.Equal(request.Command, packet.Command);
+                    Assert.False(packet.Success);
+                    Assert.True(packet.Running);
+                    Assert.Contains(nameof(NotSupportedException), packet.Message.ToString());
+                    Assert.Null(packet.Body);
+                }
+            );
 
-        //    using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
-        //    {
-        //        Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
-        //        Assert.Null(writer.Exception);
-        //    }
-
-        //}
+            using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
+        }
 
         [Fact]
         public void ServerRepliesWithResponseWhenHandlerFails()

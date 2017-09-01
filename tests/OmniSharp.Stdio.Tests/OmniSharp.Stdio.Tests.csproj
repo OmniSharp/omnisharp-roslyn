@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-      <ProjectReference Include="..\..\src\OmniSharp.Stdio\OmniSharp.Stdio.csproj" />
+    <ProjectReference Include="..\..\src\OmniSharp.Stdio\OmniSharp.Stdio.csproj" />
   </ItemGroup>
 
   <ItemGroup>
