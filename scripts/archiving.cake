@@ -5,7 +5,7 @@ using System.IO.Compression;
 
 string GetPackagePrefix(string project)
 {
-    return project.EndsWith(".Stdio") ? string.Empty : "." + project.Substring(project.IndexOf('.')+1).ToLower();
+    return project.EndsWith(".Stdio") ? string.Empty : project.Substring(project.IndexOf('.')).ToLower();
 }
 
 /// <summary>
