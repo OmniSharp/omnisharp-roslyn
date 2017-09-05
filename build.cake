@@ -452,7 +452,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
 
-    var buildFolder = CombinePaths(env.Folders.Source, project, "bin", configuration, "net46");
+    var buildFolder = CombinePaths(env.Folders.Bin, configuration, project, "net46");
 
     CopyMonoBuild(env, buildFolder, outputFolder);
 
