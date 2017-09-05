@@ -458,7 +458,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     if (archive)
     {
-        Package("mono", outputFolder, env.Folders.ArtifactsPackage);
+        Package(GetPackagePrefix(project), "mono", outputFolder, env.Folders.ArtifactsPackage);
     }
 
     return outputFolder;
@@ -484,7 +484,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     if (archive)
     {
-        Package(monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
+        Package(GetPackagePrefix(project), monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
     }
 
     return outputFolder;
@@ -535,7 +535,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 
     if (archive)
     {
-        Package(rid, outputFolder, env.Folders.ArtifactsPackage);
+        Package(GetPackagePrefix(project), rid, outputFolder, env.Folders.ArtifactsPackage);
     }
 
     return outputFolder;
