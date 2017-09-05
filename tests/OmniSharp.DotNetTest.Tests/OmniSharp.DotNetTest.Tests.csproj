@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="$(MicrosoftDotNetInternalAbstractionsVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNetTestSdkVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XunitRunnerVisualStudioVersion)" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
-    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="$(MicrosoftDotNetInternalAbstractionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>
