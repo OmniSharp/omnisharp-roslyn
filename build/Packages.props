@@ -30,6 +30,7 @@
     <MicrosoftExtensionsDependencyModelVersion>1.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileProvidersPhysicalVersion>1.1.0</MicrosoftExtensionsFileProvidersPhysicalVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>1.1.0</MicrosoftExtensionsFileSystemGlobbingVersion>
+    <MicrosoftExtensionsLoggingVersion>1.1.0</MicrosoftExtensionsLoggingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>1.1.0</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftExtensionsOptionsVersion>1.1.0</MicrosoftExtensionsOptionsVersion>
     <MicrosoftExtensionsOptionsConfigurationExtensionsVersion>1.1.0</MicrosoftExtensionsOptionsConfigurationExtensionsVersion>

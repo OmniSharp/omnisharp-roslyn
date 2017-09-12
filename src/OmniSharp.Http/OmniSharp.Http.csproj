@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <TargetFramework>net46</TargetFramework>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <AssemblyName>OmniSharp</AssemblyName>
         <PreserveCompilationContext>true</PreserveCompilationContext>
@@ -11,16 +10,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="1.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="1.1.0" />
-        <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
-        <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
+        <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
         <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />
+        <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="$(MicrosoftAspNetCoreDiagnosticsVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="$(MicrosoftAspNetCoreServerKestrelVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="$(MicrosoftAspNetCoreHostingVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="$(MicrosoftAspNetCoreHttpFeaturesVersion)" />
     </ItemGroup>
 
 </Project>
