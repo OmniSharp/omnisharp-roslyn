@@ -382,7 +382,7 @@ Task("Test")
     {
         PrintBlankLine();
 
-        var instanceFolder = CombinePaths(env.Folders.Tests, testProject, "bin", testConfiguration, "net46");
+        var instanceFolder = CombinePaths(env.Folders.Bin, testConfiguration, testProject, "net46");
 
         // Copy xunit executable to test folder to solve path errors
         var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
@@ -452,7 +452,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
 
-    var buildFolder = CombinePaths(env.Folders.Source, project, "bin", configuration, "net46");
+    var buildFolder = CombinePaths(env.Folders.Bin, configuration, project, "net46");
 
     CopyMonoBuild(env, buildFolder, outputFolder);
 
