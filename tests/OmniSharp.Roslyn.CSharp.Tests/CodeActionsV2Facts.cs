@@ -158,7 +158,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var testFile = new TestFile(BufferPath, code);
 
-            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData))
+            using (var host = CreateOmniSharpHost(new [] { testFile }, configurationData))
             {
                 var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
 

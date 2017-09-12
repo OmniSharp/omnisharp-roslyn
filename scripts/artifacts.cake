@@ -7,14 +7,14 @@ using System.Collections.Generic;
 ///  Generate the scripts which target the OmniSharp binaries.
 /// </summary>
 /// <param name="outputRoot">The root folder where the publised (or installed) binaries are located</param>
-void CreateRunScript(string outputRoot, string scriptFolder)
+void CreateRunScript(string name, string outputRoot, string scriptFolder)
 {
-    CreateScript(outputRoot, scriptFolder);
+    CreateScript(outputRoot, scriptFolder, name);
 }
 
-private void CreateScript(string outputRoot, string scriptFolder)
+private void CreateScript(string outputRoot, string scriptFolder, string name)
 {
-    var scriptPath = GetScriptPath(scriptFolder);
+    var scriptPath = GetScriptPath(scriptFolder, name);
     var omniSharpPath = GetOmniSharpPath(outputRoot);
     var content = GetScriptContent(omniSharpPath);
 
@@ -31,9 +31,9 @@ private void CreateScript(string outputRoot, string scriptFolder)
     }
 }
 
-private string GetScriptPath(string scriptFolder)
+private string GetScriptPath(string scriptFolder, string name)
 {
-    var result = CombinePaths(scriptFolder, "OmniSharp");
+    var result = CombinePaths(scriptFolder, name);
 
     if (Platform.Current.IsWindows)
     {

@@ -3,7 +3,7 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Eventing
 {
-    internal class StdioEventEmitter : IEventEmitter
+    public class StdioEventEmitter : IEventEmitter
     {
         private readonly ISharedTextWriter _writer;
 

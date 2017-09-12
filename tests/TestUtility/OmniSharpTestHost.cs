@@ -7,9 +7,11 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OmniSharp;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -26,7 +28,7 @@ namespace TestUtility
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
             typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
-            typeof(Startup).GetTypeInfo().Assembly, // OmniSharp.Host
+            typeof(OmniSharp.HostHelpers).GetTypeInfo().Assembly, // OmniSharp.Host
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
@@ -97,22 +99,18 @@ namespace TestUtility
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
             }
 
-            var builder = new ConfigurationBuilder();
+             var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
             var configuration = builder.Build();
 
             var environment = new OmniSharpEnvironment(path);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter);
 
-            var omnisharpOptions = new OmniSharpOptions();
-            ConfigurationBinder.Bind(configuration, omnisharpOptions);
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
 
-            var compositionHost = Startup.CreateCompositionHost(
-                serviceProvider,
-                options: omnisharpOptions,
-                assemblies: s_lazyAssemblies.Value);
+            var compositionHost = new MefBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
+                .Build(s_lazyAssemblies.Value);
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
@@ -120,8 +118,7 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
-            var workspaceHelper = new WorkspaceHelper(compositionHost, configuration, omnisharpOptions, loggerFactory);
-            workspaceHelper.Initialize(workspace);
+            WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
 
             return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
         }

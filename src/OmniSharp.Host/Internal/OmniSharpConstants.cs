@@ -1,4 +1,4 @@
-﻿namespace OmniSharp.Host.Internal
+﻿namespace OmniSharp.Internal
 {
     internal static class Constants
     {

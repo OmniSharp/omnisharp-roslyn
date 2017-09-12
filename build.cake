@@ -307,7 +307,7 @@ Task("PrepareTestAssets")
     }
 });
 
-void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration)
+void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration, string outputType = null)
 {
     string command, arguments;
 
@@ -328,19 +328,22 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
 
     Information("Building {0}...", projectName);
 
-    RunTool(command, arguments, env.WorkingDirectory, logFileName)
+    RunTool(command, arguments, env.WorkingDirectory, logFileName, new Dictionary<string, string>() { { "TestOutputType", outputType } })
         .ExceptionOnError($"Building {projectName} failed.");
 }
 
-Task("BuildMain")
+Task("BuildHosts")
     .IsDependentOn("Setup")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-    var projectName = buildPlan.MainProject + ".csproj";
-    var projectFilePath = CombinePaths(env.Folders.Source, buildPlan.MainProject, projectName);
+    foreach (var project in buildPlan.HostProjects)
+    {
+        var projectName = project + ".csproj";
+        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
 
-    BuildProject(env, projectName, projectFilePath, configuration);
+        BuildProject(env, projectName, projectFilePath, configuration);
+    }
 });
 
 /// <summary>
@@ -349,9 +352,14 @@ Task("BuildMain")
 Task("BuildTest")
     .IsDependentOn("Setup")
     .IsDependentOn("Restore")
-    .IsDependentOn("BuildMain")
     .Does(() =>
 {
+    foreach (var project in buildPlan.HostProjects)
+    {
+        var projectName = project + ".csproj";
+        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
+        BuildProject(env, projectName, projectFilePath, configuration, "test");
+    }
     foreach (var testProject in buildPlan.TestProjects)
     {
         var testProjectName = testProject + ".csproj";
@@ -438,11 +446,10 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     FileHelper.Delete(CombinePaths(outputFolder, "System.Threading.Thread.dll"));
 }
 
-string PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
+string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
 {
-    Information("Publishing Mono build...");
+    Information($"Publishing Mono build for {project}...");
 
-    var project = plan.MainProject;
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
 
     var buildFolder = CombinePaths(env.Folders.Source, project, "bin", configuration, "net46");
@@ -451,17 +458,16 @@ string PublishMonoBuild(BuildEnvironment env, BuildPlan plan, string configurati
 
     if (archive)
     {
-        Package("mono", outputFolder, env.Folders.ArtifactsPackage);
+        Package(GetPackagePrefix(project), "mono", outputFolder, env.Folders.ArtifactsPackage);
     }
 
     return outputFolder;
 }
 
-string PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan, bool archive)
+string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan, bool archive)
 {
     Information("Publishing platform-specific Mono build: {0}", monoRuntime.PlatformName);
 
-    var project = plan.MainProject;
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, monoRuntime.PlatformName);
 
     DirectoryHelper.Copy(monoRuntime.InstallFolder, outputFolder);
@@ -478,7 +484,7 @@ string PublishMonoBuildForPlatform(MonoRuntime monoRuntime, BuildEnvironment env
 
     if (archive)
     {
-        Package(monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
+        Package(GetPackagePrefix(project), monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
     }
 
     return outputFolder;
@@ -489,22 +495,24 @@ Task("PublishMonoBuilds")
     .WithCriteria(() => !Platform.Current.IsWindows)
     .Does(() =>
 {
-    var outputFolder = PublishMonoBuild(env, buildPlan, configuration, requireArchive);
-
-    CreateRunScript(outputFolder, env.Folders.ArtifactsScripts);
-
-    if (publishAll)
+    foreach (var project in buildPlan.HostProjects)
     {
-        foreach (var monoRuntime in env.MonoRuntimes)
+        var outputFolder = PublishMonoBuild(project, env, buildPlan, configuration, requireArchive);
+
+        CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
+
+        if (publishAll)
         {
-            PublishMonoBuildForPlatform(monoRuntime, env, buildPlan, requireArchive);
+            foreach (var monoRuntime in env.MonoRuntimes)
+            {
+                PublishMonoBuildForPlatform(project, monoRuntime, env, buildPlan, requireArchive);
+            }
         }
     }
 });
 
-string PublishWindowsBuild(BuildEnvironment env, BuildPlan plan, string configuration, string rid, bool archive)
+string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, bool archive)
 {
-    var project = plan.MainProject;
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
 
@@ -527,7 +535,7 @@ string PublishWindowsBuild(BuildEnvironment env, BuildPlan plan, string configur
 
     if (archive)
     {
-        Package(rid, outputFolder, env.Folders.ArtifactsPackage);
+        Package(GetPackagePrefix(project), rid, outputFolder, env.Folders.ArtifactsPackage);
     }
 
     return outputFolder;
@@ -538,30 +546,34 @@ Task("PublishWindowsBuilds")
     .WithCriteria(() => Platform.Current.IsWindows)
     .Does(() =>
 {
-    string outputFolder;
-
-    if (publishAll)
+    foreach (var project in buildPlan.HostProjects)
     {
-        var outputFolder32 = PublishWindowsBuild(env, buildPlan, configuration, "win7-x86", requireArchive);
-        var outputFolder64 = PublishWindowsBuild(env, buildPlan, configuration, "win7-x64", requireArchive);
+        string outputFolder;
 
-        outputFolder = Platform.Current.Is32Bit
-            ? outputFolder32
-            : outputFolder64;
-    }
-    else if (Platform.Current.Is32Bit)
-    {
-        outputFolder = PublishWindowsBuild(env, buildPlan, configuration, "win7-x86", requireArchive);
-    }
-    else
-    {
-        outputFolder = PublishWindowsBuild(env, buildPlan, configuration, "win7-x64", requireArchive);
-    }
+        if (publishAll)
+        {
+            var outputFolder32 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86", requireArchive);
+            var outputFolder64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64", requireArchive);
 
-    CreateRunScript(outputFolder, env.Folders.ArtifactsScripts);
+            outputFolder = Platform.Current.Is32Bit
+                ? outputFolder32
+                : outputFolder64;
+        }
+        else if (Platform.Current.Is32Bit)
+        {
+            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86", requireArchive);
+        }
+        else
+        {
+            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64", requireArchive);
+        }
+
+        CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
+    }
 });
 
 Task("Publish")
+    .IsDependentOn("BuildHosts")
     .IsDependentOn("PublishMonoBuilds")
     .IsDependentOn("PublishWindowsBuilds");
 
@@ -571,16 +583,18 @@ Task("Publish")
 Task("ExecuteRunScript")
     .Does(() =>
 {
-    var project = buildPlan.MainProject;
-    var projectFolder = CombinePaths(env.Folders.Source, project);
-    var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, "OmniSharp");
-    var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument} \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                new RunOptions(timeOut: 30000))
-                            .DidTimeOut;
-                            
-    if (!didNotExitWithError)
+    foreach (var project in buildPlan.HostProjects)
     {
-        throw new Exception("Failed to run OmniSharp script");
+        var projectFolder = CombinePaths(env.Folders.Source, project);
+        var script = project;
+        var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
+                                    new RunOptions(timeOut: 30000))
+                                .DidTimeOut;
+        if (!didNotExitWithError)
+        {
+            throw new Exception($"Failed to run {script}");
+        }
     }
 });
 
@@ -609,28 +623,29 @@ Task("Install")
     .IsDependentOn("CleanupInstall")
     .Does(() =>
 {
-    var project = buildPlan.MainProject;
-
-    string platform;
-    if (Platform.Current.IsWindows)
+    foreach (var project in buildPlan.HostProjects)
     {
-        platform = Platform.Current.Is32Bit
-            ? "win7-x86"
-            : "win7-x64";
+        string platform;
+        if (Platform.Current.IsWindows)
+        {
+            platform = Platform.Current.Is32Bit
+                ? "win7-x86"
+                : "win7-x64";
+        }
+        else
+        {
+            platform = "mono";
+        }
+
+        var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
+        var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
+
+        DirectoryHelper.Copy(outputFolder, targetFolder);
+
+        CreateRunScript(project, installFolder, env.Folders.ArtifactsScripts);
+
+        Information($"OmniSharp is installed locally at {installFolder}");
     }
-    else
-    {
-        platform = "mono";
-    }
-
-    var outputFolder = PathHelper.GetFullPath(CombinePaths(env.Folders.ArtifactsPublish, project, platform));
-    var targetFolder = PathHelper.GetFullPath(CombinePaths(installFolder));
-
-    DirectoryHelper.Copy(outputFolder, targetFolder);
-
-    CreateRunScript(installFolder, env.Folders.ArtifactsScripts);
-
-    Information($"OmniSharp is installed locally at {installFolder}");
 });
 
 /// <summary>

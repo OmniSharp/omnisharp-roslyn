@@ -3,6 +3,11 @@
 
 using System.IO.Compression;
 
+string GetPackagePrefix(string project)
+{
+    return project.EndsWith(".Stdio") ? string.Empty : project.Substring(project.IndexOf('.')).ToLower();
+}
+
 /// <summary>
 ///  Package a given output folder using a build identifier generated from the RID and framework identifier.
 /// </summary>
@@ -10,7 +15,7 @@ using System.IO.Compression;
 /// <param name="contentFolder">The folder containing the files to package</param>
 /// <param name="packageFolder">The destination folder for the archive</param>
 /// <param name="projectName">The project name</param>
-void Package(string platform, string contentFolder, string packageFolder)
+void Package(string name, string platform, string contentFolder, string packageFolder)
 {
     if (!DirectoryHelper.Exists(packageFolder))
     {
@@ -28,7 +33,7 @@ void Package(string platform, string contentFolder, string packageFolder)
         }
     }
 
-    var archiveName = $"{packageFolder}/omnisharp-{platformId}";
+    var archiveName = $"{packageFolder}/omnisharp{name}-{platformId}";
 
     Information("Packaging {0}...", archiveName);
 
@@ -52,7 +57,7 @@ void Package(string platform, string contentFolder, string packageFolder)
                     .ExceptionOnError($"Tar-ing failed for {contentFolder} {archiveName}");
                 Run("7z", $"a \"{tarFile}\" \"{tempFile}\"", contentFolder)
                     .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-                    
+
                 FileHelper.Delete(tempFile);
             }
             catch (Win32Exception)

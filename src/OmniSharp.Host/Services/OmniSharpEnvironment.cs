@@ -11,19 +11,15 @@ namespace OmniSharp.Services
 
         public string SolutionFilePath { get; }
 
-        public int Port { get; }
         public int HostProcessId { get; }
         public LogLevel LogLevel { get; }
-        public TransportType TransportType { get; }
 
         public string[] AdditionalArguments { get; }
 
         public OmniSharpEnvironment(
             string path = null,
-            int port = -1,
             int hostPid = -1,
             LogLevel traceType = LogLevel.None,
-            TransportType transportType = TransportType.Stdio,
             string[] additionalArguments = null)
         {
             if (string.IsNullOrEmpty(path))
@@ -45,10 +41,8 @@ namespace OmniSharp.Services
                 throw new ArgumentException("OmniSharp only supports being launched with a directory path or a path to a solution (.sln) file.", nameof(path));
             }
 
-            Port = port;
             HostProcessId = hostPid;
             LogLevel = traceType;
-            TransportType = transportType;
             AdditionalArguments = additionalArguments;
 
             // On Windows: %USERPROFILE%\.omnisharp\omnisharp.json

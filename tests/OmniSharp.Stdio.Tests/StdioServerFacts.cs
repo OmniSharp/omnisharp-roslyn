@@ -1,7 +1,15 @@
 ﻿using System;
 using System.IO;
-using Microsoft.AspNetCore.Hosting.Server;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using OmniSharp.Endpoint;
+using OmniSharp.Eventing;
+using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
 using Xunit;
@@ -10,19 +18,25 @@ namespace OmniSharp.Stdio.Tests
 {
     public class StdioServerFacts
     {
-        private IServer BuildTestServerAndStart(TextReader reader,
-                                                ISharedTextWriter writer,
-                                                IHttpApplication<int> application)
+        private Host BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Host> programDelegate = null)
         {
-            var server = new StdioServer(reader, writer);
-            server.Start(application);
+            var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+            var serviceProvider = MefBuilder.CreateDefaultServiceProvider(configuration);
+            var omniSharpEnvironment = new OmniSharpEnvironment();
+            var cancelationTokenSource = new CancellationTokenSource();
+            var host = new Host(reader, writer,
+                omniSharpEnvironment,
+                configuration,
+                serviceProvider,
+                new MefBuilder(serviceProvider, omniSharpEnvironment, writer, NullEventEmitter.Instance).Build(Enumerable.Empty<Assembly>()),
+                serviceProvider.GetRequiredService<ILoggerFactory>(),
+                cancelationTokenSource);
 
-            return server;
-        }
+            programDelegate?.Invoke(host);
 
-        private IServer BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer)
-        {
-            return BuildTestServerAndStart(reader, writer, new MockHttpApplication());
+            host.Start();
+
+            return host;
         }
 
         [Fact]
@@ -36,10 +50,11 @@ namespace OmniSharp.Stdio.Tests
                 }
             );
 
-            BuildTestServerAndStart(new StringReader(""), writer);
-
-            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
-            Assert.Null(writer.Exception);
+            using (BuildTestServerAndStart(new StringReader(""), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
         }
 
         [Fact]
@@ -59,9 +74,11 @@ namespace OmniSharp.Stdio.Tests
                 }
             );
 
-            BuildTestServerAndStart(new StringReader("notjson\r\n"), writer);
-            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
-            Assert.Null(writer.Exception);
+            using (BuildTestServerAndStart(new StringReader("notjson\r\n"), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
         }
 
         [Fact]
@@ -81,9 +98,11 @@ namespace OmniSharp.Stdio.Tests
                 }
             );
 
-            BuildTestServerAndStart(new StringReader("{}\r\n"), writer);
-            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
-            Assert.Null(writer.Exception);
+            using (BuildTestServerAndStart(new StringReader("{}\r\n"), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
         }
 
         [Fact]
@@ -106,15 +125,17 @@ namespace OmniSharp.Stdio.Tests
                     var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
                     Assert.Equal(request.Command, packet.Command);
-                    Assert.True(packet.Success);
+                    Assert.False(packet.Success);
                     Assert.True(packet.Running);
-                    Assert.Null(packet.Message);
+                    Assert.Contains(nameof(NotSupportedException), packet.Message.ToString());
                 }
             );
 
-            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(1000)), "Timeout");
-            Assert.Null(writer.Exception);
+            using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(1000)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
         }
 
         [Fact]
@@ -136,20 +157,22 @@ namespace OmniSharp.Stdio.Tests
                 {
                     Assert.Contains("\"Body\":null", value);
 
-                    // Deserialize is too relaxed...
-                    var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
+                   // Deserialize is too relaxed...
+                   var packet = JsonConvert.DeserializeObject<ResponsePacket>(value);
                     Assert.Equal(request.Seq, packet.Request_seq);
                     Assert.Equal(request.Command, packet.Command);
-                    Assert.True(packet.Success);
+                    Assert.False(packet.Success);
                     Assert.True(packet.Running);
-                    Assert.Null(packet.Message);
+                    Assert.Contains(nameof(NotSupportedException), packet.Message.ToString());
                     Assert.Null(packet.Body);
                 }
             );
 
-            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
-            Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
-            Assert.Null(writer.Exception);
+            using (BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer))
+            {
+                Assert.True(writer.Completion.WaitOne(TimeSpan.FromSeconds(10)), "Timeout");
+                Assert.Null(writer.Exception);
+            }
         }
 
         [Fact]
@@ -178,12 +201,7 @@ namespace OmniSharp.Stdio.Tests
                 }
             );
 
-            var exceptionApplication = new MockHttpApplication
-            {
-                ProcessAction = _ => { throw new Exception("Boom"); }
-            };
-
-            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer, exceptionApplication);
+            BuildTestServerAndStart(new StringReader(JsonConvert.SerializeObject(request) + "\r\n"), writer);
 
             Assert.True(writer.Completion.WaitOne(TimeSpan.FromHours(10)), "Timeout");
             Assert.Null(writer.Exception);

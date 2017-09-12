@@ -25,6 +25,23 @@ addons:
       - zlib1g
       - curl
 
+install:
+  - | # On Unix, build libuv from source. On OSX, install it via Homebrew.
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      sudo apt-get install make automake libtool
+      curl -sSL https://github.com/libuv/libuv/archive/v1.14.0.tar.gz | sudo tar zxf - -C /usr/local/src
+      pushd /usr/local/src/libuv-1.14.0
+      sudo sh autogen.sh
+      sudo ./configure
+      sudo make
+      sudo make install
+      popd
+      sudo rm -rf /usr/local/src/libuv-1.14.0
+      sudo ldconfig
+    elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      brew install libuv
+    fi
+
 notifications:
   slack:
     rooms:

@@ -264,7 +264,7 @@ public class BuildPlan
     public string MonoFramework { get; set; }
     public string MonoMSBuildRuntime { get; set; }
     public string MonoMSBuildLib { get; set; }
-    public string MainProject { get; set; }
+    public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
     public string[] LegacyTestAssets { get; set; }

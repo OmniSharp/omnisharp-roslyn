@@ -1,22 +1,41 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
-    "command": "./msbuild.sh",
-    "args": [
-        "OmniSharp.sln",
-        // Ask msbuild to generate full paths for file names.
-        "/property:GenerateFullPaths=true"
-    ],
-    "taskSelector": "/t:",
-    "showOutput": "silent",
+    "version": "2.0.0",
+    // "taskSelector": "/t:",
     "tasks": [
         {
             "taskName": "build",
+            "echoCommand": true,
             // Show the output window only if unrecognized errors occur.
-            "showOutput": "silent",
+            "showOutput": "always",
             // Use the standard MS compiler pattern to detect errors, warnings and infos
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "isBuildCommand": true,
+            "command": "msbuild",
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "${workspaceRoot}/.dotnet/dotnet",
+                    "OmniSharp.sln",
+                    // Ask msbuild to generate full paths for file names.
+                    "/property:GenerateFullPaths=true"
+                ]
+            },
+            "linux": {
+                "args": [
+                    "OmniSharp.sln",
+                    // Ask msbuild to generate full paths for file names.
+                    "/property:GenerateFullPaths=true"
+                ]
+            },
+            "osx": {
+                "args": [
+                    "OmniSharp.sln",
+                    // Ask msbuild to generate full paths for file names.
+                    "/property:GenerateFullPaths=true"
+                ]
+            }
         }
     ]
 }

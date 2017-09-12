@@ -4,9 +4,8 @@ using System.Linq;
 using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Services;
 
-namespace OmniSharp.Host.Loader
+namespace OmniSharp.Services
 {
     internal class AssemblyLoader : IAssemblyLoader
     {

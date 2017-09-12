@@ -2,10 +2,9 @@
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
-using OmniSharp.Services;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.Host.Internal
+namespace OmniSharp.Internal
 {
     internal static class ConfigurationBuilderExtensions
     {

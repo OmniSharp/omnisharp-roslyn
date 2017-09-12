@@ -26,11 +26,12 @@ public class RunOptions
 
     public IDictionary<string, string> Environment { get; }
 
-    public RunOptions(string workingDirectory = null, IList<string> output = null, int timeOut = 0)
+    public RunOptions(string workingDirectory = null, IList<string> output = null, int timeOut = 0, IDictionary<string, string> environment = null)
     {
         this.WorkingDirectory = workingDirectory;
         this.Output = output;
         this.TimeOut = timeOut;
+        this.Environment = environment;
     }
 }
 
@@ -134,13 +135,21 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  Arguments: {0}", arguments);
     Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "  CWD: {0}", workingDirectory);
 
-    var process = System.Diagnostics.Process.Start(
-            new ProcessStartInfo(command, arguments)
-            {
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = false,
-                RedirectStandardOutput = runOptions.Output != null
-            });
+    var startInfo = new ProcessStartInfo(command, arguments)
+    {
+        WorkingDirectory = workingDirectory,
+        UseShellExecute = false,
+        RedirectStandardOutput = runOptions.Output != null
+    };
+    if (runOptions.Environment != null)
+    {
+        foreach (var item in runOptions.Environment)
+        {
+            startInfo.EnvironmentVariables.Add(item.Key, item.Value);
+        }
+    }
+
+    var process = System.Diagnostics.Process.Start(startInfo);
 
     if (runOptions.Output != null)
     {
@@ -197,10 +206,11 @@ string RunAndCaptureOutput(string command, string arguments, string workingDirec
 /// <param name="arguments">Arguments</param>
 /// <param name="runOptions">Optional settings</param>
 /// <returns>The exit status for further queries</returns>
-ExitStatus RunTool(string command, string arguments, string workingDirectory, string logFileName = null)
+ExitStatus RunTool(string command, string arguments, string workingDirectory, string logFileName = null, IDictionary<string, string> environmentVariables = null)
 {
     var output = new List<string>();
-    var exitStatus = Run(command, arguments, new RunOptions(workingDirectory, output));
+    var options = new RunOptions(workingDirectory, output, 0, environmentVariables);
+    var exitStatus = Run(command, arguments, options);
 
     var log = string.Join(System.Environment.NewLine, output);
 

@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace OmniSharp.Host.Internal
+namespace OmniSharp.Internal
 {
-    internal static class CommandOptionExtensions
+    public static class CommandOptionExtensions
     {
-        internal static T GetValueOrDefault<T>(this CommandOption opt, T defaultValue)
+        public static T GetValueOrDefault<T>(this CommandOption opt, T defaultValue)
         {
             if (opt.HasValue())
             {
