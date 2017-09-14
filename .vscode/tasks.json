@@ -37,6 +37,32 @@
             },
             // Use the standard MS compiler pattern to detect errors, warnings and infos
             "problemMatcher": "$msCompile"
+        },
+        {
+            "taskName": "restore",
+            "type": "process",
+            "windows": {
+                "command": "${workspaceRoot}\\.dotnet\\dotnet.exe"
+            },
+            "osx": {
+                "command": "${workspaceRoot}/.dotnet/dotnet"
+            },
+            "linux": {
+                "command": "${workspaceRoot}/.dotnet/dotnet"
+            },
+            "args": [
+                "restore",
+                "OmniSharp.sln"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "echo": true,
+                "focus": false,
+                "panel": "shared"
+            },
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile"
         }
     ]
 }
