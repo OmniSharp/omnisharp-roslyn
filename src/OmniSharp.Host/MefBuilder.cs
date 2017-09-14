@@ -75,7 +75,6 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
-            //config = config.WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(_writer)));
 
             return config.CreateContainer();
         }

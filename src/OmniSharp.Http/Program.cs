@@ -1,3 +1,4 @@
+using System;
 using OmniSharp.Services;
 
 namespace OmniSharp.Http
@@ -10,7 +11,7 @@ namespace OmniSharp.Http
             application.OnExecute(() =>
             {
                 var environment = application.CreateEnvironment();
-                var writer = new SharedConsoleWriter();
+                var writer = new SharedTextWriter(Console.Out);
                 var plugins = application.CreatePluginAssemblies();
 
                 var host = new Host(environment, writer, plugins, application.Port, application.Interface);

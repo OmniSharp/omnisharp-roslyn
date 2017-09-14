@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
-using OmniSharp.Stdio.Logging;
 
 namespace OmniSharp.Stdio
 {
@@ -25,8 +24,11 @@ namespace OmniSharp.Stdio
                     Console.OutputEncoding = encoding;
                 }
 
+                var input = Console.In;
+                var output = Console.Out;
+
                 var environment = application.CreateEnvironment();
-                var writer = new SharedConsoleWriter();
+                var writer = new SharedTextWriter(output);
                 var plugins = application.CreatePluginAssemblies();
                 var configuration = new ConfigurationBuilder(environment).Build();
                 var serviceProvider = MefBuilder.CreateDefaultServiceProvider(configuration);
@@ -35,7 +37,7 @@ namespace OmniSharp.Stdio
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();
 
-                using (var host = new Host(Console.In, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory, cancellation))
+                using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory, cancellation))
                 {
                     host.Start();
                     cancellation.Token.WaitHandle.WaitOne();
