@@ -34,7 +34,10 @@ namespace OmniSharp.Http
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, services);
-            _compositionHost = new CompositionHostBuilder(serviceProvider, _environment, _writer, _eventEmitter).Build();
+            _compositionHost = new CompositionHostBuilder(serviceProvider, _environment, _writer, _eventEmitter)
+                .WithOmniSharpAssemblies()
+                .Build();
+
             return serviceProvider;
         }
 

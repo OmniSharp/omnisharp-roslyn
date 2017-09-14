@@ -32,12 +32,12 @@ namespace OmniSharp.Stdio
                 var plugins = application.CreatePluginAssemblies();
                 var configuration = new ConfigurationBuilder(environment).Build();
                 var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration);
-                var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer));
-                var compositionHost = compositionHostBuilder.Build();
+                var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer))
+                    .WithOmniSharpAssemblies();
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();
 
-                using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHost, loggerFactory, cancellation))
+                using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
                 {
                     host.Start();
                     cancellation.Token.WaitHandle.WaitOne();

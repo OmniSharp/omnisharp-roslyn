@@ -1,16 +1,6 @@
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Internal;
-using OmniSharp.Plugins;
 using OmniSharp.Roslyn;
-using OmniSharp.Services;
-using OmniSharp.Stdio;
-using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp

@@ -110,7 +110,8 @@ namespace TestUtility
             var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
 
             var compositionHost = new CompositionHostBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
-                .Build(s_lazyAssemblies.Value);
+                .WithAssemblies(s_lazyAssemblies.Value)
+                .Build();
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();

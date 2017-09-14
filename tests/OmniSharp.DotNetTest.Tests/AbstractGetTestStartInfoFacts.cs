@@ -28,7 +28,6 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<GetTestStartInfoService>(OmniSharpEndpoints.V2.GetTestStartInfo);
         }
 
-
         public abstract DotNetCliVersion DotNetCliVersion { get; }
 
         protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework)

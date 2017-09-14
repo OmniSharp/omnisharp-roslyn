@@ -31,20 +31,21 @@ namespace OmniSharp.Stdio
         private readonly CompositionHost _compositionHost;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmniSharpEnvironment _environment;
-        private readonly CancellationTokenSource _cancellation;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         public Host(
             TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment, IConfiguration configuration,
-            IServiceProvider serviceProvider, CompositionHost compositionHost, ILoggerFactory loggerFactory, CancellationTokenSource cancellation)
+            IServiceProvider serviceProvider, CompositionHostBuilder compositionHostBuilder, ILoggerFactory loggerFactory, CancellationTokenSource cancellationTokenSource)
         {
-            _cancellation = cancellation;
+            _cancellationTokenSource = cancellationTokenSource;
             _input = input;
             _writer = writer;
             _environment = environment;
             _configuration = configuration;
             _serviceProvider = serviceProvider;
-            _compositionHost = compositionHost;
-            _loggerFactory = loggerFactory;
+            _loggerFactory = loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
+
+            _compositionHost = compositionHostBuilder.Build();
 
             var handlers = Initialize();
             _endpointHandlers = handlers;
@@ -112,7 +113,7 @@ namespace OmniSharp.Stdio
                 new Lazy<EndpointHandler>(
                     () => new GenericEndpointHandler(x =>
                     {
-                        _cancellation.Cancel();
+                        _cancellationTokenSource.Cancel();
                         return Task.FromResult<object>(null);
                     }))
             );
@@ -124,13 +125,12 @@ namespace OmniSharp.Stdio
         {
             _compositionHost?.Dispose();
             _loggerFactory?.Dispose();
-            _cancellation?.Dispose();
+            _cancellationTokenSource?.Dispose();
         }
 
         public void Start()
         {
             var logger = _loggerFactory.CreateLogger<Program>();
-            _loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
 
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
 
@@ -141,7 +141,7 @@ namespace OmniSharp.Stdio
                     Event = "started"
                 });
 
-                while (!_cancellation.IsCancellationRequested)
+                while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     var line = await _input.ReadLineAsync();
                     if (line == null)
@@ -171,7 +171,7 @@ namespace OmniSharp.Stdio
 
             Console.CancelKeyPress += (sender, e) =>
             {
-                _cancellation.Cancel();
+                _cancellationTokenSource.Cancel();
                 e.Cancel = true;
             };
 
@@ -181,13 +181,13 @@ namespace OmniSharp.Stdio
                 {
                     var hostProcess = Process.GetProcessById(_environment.HostProcessId);
                     hostProcess.EnableRaisingEvents = true;
-                    hostProcess.OnExit(() => _cancellation.Cancel());
+                    hostProcess.OnExit(() => _cancellationTokenSource.Cancel());
                 }
                 catch
                 {
                     // If the process dies before we get here then request shutdown
                     // immediately
-                    _cancellation.Cancel();
+                    _cancellationTokenSource.Cancel();
                 }
             }
         }
