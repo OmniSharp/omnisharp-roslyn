@@ -16,7 +16,6 @@ namespace OmniSharp
         protected readonly Microsoft.Extensions.CommandLineUtils.CommandLineApplication Application;
         private readonly CommandOption _hostPid;
         private readonly CommandOption _zeroBasedIndices;
-        private readonly CommandOption _encoding;
         private readonly CommandOption _plugin;
         private readonly CommandOption _verbose;
         private readonly CommandOption _logLevel;
@@ -33,7 +32,6 @@ namespace OmniSharp
             _verbose = Application.Option("-v | --verbose", "Explicitly set 'Debug' log level.", CommandOptionType.NoValue);
             _hostPid = Application.Option("-hpid | --hostPID", "Host process ID.", CommandOptionType.SingleValue);
             _zeroBasedIndices = Application.Option("-z | --zero-based-indices", "Use zero based indices in request/responses (defaults to 'false').", CommandOptionType.NoValue);
-            _encoding = Application.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
             _plugin = Application.Option("-pl | --plugin", "Plugin name(s).", CommandOptionType.MultipleValue);
             _debug = Application.Option("-d | --debug", "Wait for debugger to attach", CommandOptionType.NoValue);
         }
@@ -69,8 +67,6 @@ namespace OmniSharp
         public int HostPid => CommandOptionExtensions.GetValueOrDefault(_hostPid, -1);
 
         public bool ZeroBasedIndices => _zeroBasedIndices.HasValue();
-
-        public string Encoding => CommandOptionExtensions.GetValueOrDefault<string>(_encoding, null);
 
         public IEnumerable<string> Plugin => _plugin.Values;
 

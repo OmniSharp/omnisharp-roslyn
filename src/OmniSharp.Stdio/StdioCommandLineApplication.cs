@@ -7,15 +7,19 @@ namespace OmniSharp.Stdio
     {
         private readonly CommandOption _stdio;
         private readonly CommandOption _lsp;
+        private readonly CommandOption _encoding;
 
         public StdioCommandLineApplication() : base()
         {
             _stdio = Application.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp communication protocol.", CommandOptionType.NoValue);
             _lsp = Application.Option("-lsp | --lsp", "Use Language Server Protocol.", CommandOptionType.NoValue);
+            _encoding = Application.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
         }
 
         public bool Stdio => _stdio.GetValueOrDefault(true);
 
         public bool Lsp => _lsp.GetValueOrDefault(false);
+
+        public string Encoding => CommandOptionExtensions.GetValueOrDefault<string>(_encoding, null);
     }
 }

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OmniSharp.Endpoint;
 using OmniSharp.Mef;
 using OmniSharp.Models.UpdateBuffer;
