@@ -19,14 +19,14 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
-    public class MefBuilder
+    public class CompositionHostBuilder
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _writer;
         private readonly IEventEmitter _eventEmitter;
 
-        public MefBuilder(
+        public CompositionHostBuilder(
             IServiceProvider serviceProvider,
             IOmniSharpEnvironment environment,
             ISharedTextWriter writer,
@@ -41,12 +41,15 @@ namespace OmniSharp
         public CompositionHost Build()
         {
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
-            var logger = _serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(MefBuilder));
+            var logger = _serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(CompositionHostBuilder));
+
             return Build(DiscoverOmniSharpAssemblies(assemblyLoader, logger));
         }
 
-        public CompositionHost Build(IEnumerable<Assembly> assemblies)
+        public CompositionHost Build(IEnumerable<Assembly> assemblies = null)
         {
+            assemblies = assemblies ?? Array.Empty<Assembly>();
+
             var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
             var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();

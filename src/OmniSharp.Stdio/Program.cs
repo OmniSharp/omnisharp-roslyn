@@ -31,9 +31,9 @@ namespace OmniSharp.Stdio
                 var writer = new SharedTextWriter(output);
                 var plugins = application.CreatePluginAssemblies();
                 var configuration = new ConfigurationBuilder(environment).Build();
-                var serviceProvider = MefBuilder.CreateDefaultServiceProvider(configuration);
-                var mefBuilder = new MefBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer));
-                var compositionHost = mefBuilder.Build();
+                var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration);
+                var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer));
+                var compositionHost = compositionHostBuilder.Build();
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();
 
