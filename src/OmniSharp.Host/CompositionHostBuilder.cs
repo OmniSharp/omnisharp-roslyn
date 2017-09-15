@@ -19,33 +19,29 @@ using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
-    public class MefBuilder
+    public class CompositionHostBuilder
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _writer;
         private readonly IEventEmitter _eventEmitter;
+        private readonly IEnumerable<Assembly> _assemblies;
 
-        public MefBuilder(
+        public CompositionHostBuilder(
             IServiceProvider serviceProvider,
             IOmniSharpEnvironment environment,
             ISharedTextWriter writer,
-            IEventEmitter eventEmitter)
+            IEventEmitter eventEmitter,
+            IEnumerable<Assembly> assemblies = null)
         {
             _serviceProvider = serviceProvider;
             _environment = environment;
             _writer = writer;
             _eventEmitter = eventEmitter;
+            _assemblies = assemblies ?? Array.Empty<Assembly>();
         }
 
         public CompositionHost Build()
-        {
-            var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
-            var logger = _serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(MefBuilder));
-            return Build(DiscoverOmniSharpAssemblies(assemblyLoader, logger));
-        }
-
-        public CompositionHost Build(IEnumerable<Assembly> assemblies)
         {
             var options = _serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
@@ -53,12 +49,11 @@ namespace OmniSharp
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
             var config = new ContainerConfiguration();
 
-            foreach (var assembly in assemblies
+            var assemblies = _assemblies
                 .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
-                .Distinct())
-            {
-                config = config.WithAssembly(assembly);
-            }
+                .Distinct();
+
+            config = config.WithAssemblies(assemblies);
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
             var metadataHelper = new MetadataHelper(assemblyLoader);
@@ -75,7 +70,6 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
-            //config = config.WithProvider(MefValueProvider.From<IEventEmitter>(new StdioEventEmitter(_writer)));
 
             return config.CreateContainer();
         }
@@ -96,8 +90,27 @@ namespace OmniSharp
             return services.BuildServiceProvider();
         }
 
-        public static List<Assembly> DiscoverOmniSharpAssemblies(IAssemblyLoader loader, ILogger logger)
+        public CompositionHostBuilder WithOmniSharpAssemblies()
         {
+            var assemblies = DiscoverOmniSharpAssemblies();
+
+            return new CompositionHostBuilder(
+                _serviceProvider, _environment, _writer, _eventEmitter, assemblies);
+        }
+
+        public CompositionHostBuilder WithAssemblies(params Assembly[] assemblies)
+        {
+            return new CompositionHostBuilder(
+                _serviceProvider, _environment, _writer, _eventEmitter, assemblies);
+        }
+
+        private List<Assembly> DiscoverOmniSharpAssemblies()
+        {
+            var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
+            var logger = _serviceProvider
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger<CompositionHostBuilder>();
+
             // Iterate through all runtime libraries in the dependency context and
             // load them if they depend on OmniSharp.
 
@@ -110,7 +123,7 @@ namespace OmniSharp
                 {
                     foreach (var name in runtimeLibrary.GetDefaultAssemblyNames(dependencyContext))
                     {
-                        var assembly = loader.Load(name);
+                        var assembly = assemblyLoader.Load(name);
                         if (assembly != null)
                         {
                             assemblies.Add(assembly);

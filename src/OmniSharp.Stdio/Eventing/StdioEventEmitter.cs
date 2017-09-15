@@ -1,7 +1,8 @@
+using OmniSharp.Eventing;
 using OmniSharp.Stdio.Protocol;
 using OmniSharp.Stdio.Services;
 
-namespace OmniSharp.Eventing
+namespace OmniSharp.Stdio.Eventing
 {
     public class StdioEventEmitter : IEventEmitter
     {

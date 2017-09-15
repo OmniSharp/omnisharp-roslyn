@@ -2,40 +2,67 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
-    // "taskSelector": "/t:",
     "tasks": [
         {
             "taskName": "build",
-            "echoCommand": true,
-            // Show the output window only if unrecognized errors occur.
-            "showOutput": "always",
-            // Use the standard MS compiler pattern to detect errors, warnings and infos
-            "problemMatcher": "$msCompile",
-            "isBuildCommand": true,
-            "command": "msbuild",
+            "type": "process",
             "windows": {
-                "command": "powershell",
+                "command": "${workspaceRoot}\\.dotnet\\dotnet.exe",
                 "args": [
-                    "${workspaceRoot}/.dotnet/dotnet",
+                    "build",
                     "OmniSharp.sln",
-                    // Ask msbuild to generate full paths for file names.
-                    "/property:GenerateFullPaths=true"
-                ]
-            },
-            "linux": {
-                "args": [
-                    "OmniSharp.sln",
-                    // Ask msbuild to generate full paths for file names.
-                    "/property:GenerateFullPaths=true"
+                    "/p:GenerateFullPaths=true"
                 ]
             },
             "osx": {
+                "command": "msbuild",
                 "args": [
                     "OmniSharp.sln",
-                    // Ask msbuild to generate full paths for file names.
-                    "/property:GenerateFullPaths=true"
+                    "/p:GenerateFullPaths=true"
                 ]
-            }
+            },
+            "linux": {
+                "command": "msbuild",
+                "args": [
+                    "OmniSharp.sln",
+                    "/p:GenerateFullPaths=true"
+                ]
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "echo": true,
+                "focus": false,
+                "panel": "shared"
+            },
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "taskName": "restore",
+            "type": "process",
+            "windows": {
+                "command": "${workspaceRoot}\\.dotnet\\dotnet.exe"
+            },
+            "osx": {
+                "command": "${workspaceRoot}/.dotnet/dotnet"
+            },
+            "linux": {
+                "command": "${workspaceRoot}/.dotnet/dotnet"
+            },
+            "args": [
+                "restore",
+                "OmniSharp.sln"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "echo": true,
+                "focus": false,
+                "panel": "shared"
+            },
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile"
         }
     ]
 }

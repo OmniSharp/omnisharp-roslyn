@@ -33,10 +33,11 @@ namespace OmniSharp.Http
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var serviceProvider = MefBuilder.CreateDefaultServiceProvider(_configuration, services);
-            var mefBuilder = new MefBuilder(serviceProvider, _environment, _writer, _eventEmitter);
-            var compositionHost = mefBuilder.Build();
-            _compositionHost = compositionHost;
+            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, services);
+            _compositionHost = new CompositionHostBuilder(serviceProvider, _environment, _writer, _eventEmitter)
+                .WithOmniSharpAssemblies()
+                .Build();
+
             return serviceProvider;
         }
 
