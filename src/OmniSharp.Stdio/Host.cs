@@ -32,6 +32,7 @@ namespace OmniSharp.Stdio
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmniSharpEnvironment _environment;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly CachedStringBuilder _cachedStringBuilder;
 
         public Host(
             TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment, IConfiguration configuration,
@@ -46,6 +47,7 @@ namespace OmniSharp.Stdio
             _loggerFactory = loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
 
             _compositionHost = compositionHostBuilder.Build();
+            _cachedStringBuilder = new CachedStringBuilder();
 
             var handlers = Initialize();
             _endpointHandlers = handlers;
@@ -153,7 +155,7 @@ namespace OmniSharp.Stdio
                     {
                         try
                         {
-                            await HandleRequest(line);
+                            await HandleRequest(line, logger);
                         }
                         catch (Exception e)
                         {
@@ -192,9 +194,14 @@ namespace OmniSharp.Stdio
             }
         }
 
-        private async Task HandleRequest(string json)
+        private async Task HandleRequest(string json, ILogger logger)
         {
             var request = RequestPacket.Parse(json);
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                LogRequest(json, logger);
+            }
+
             var response = request.Reply();
 
             try
@@ -217,8 +224,43 @@ namespace OmniSharp.Stdio
             }
             finally
             {
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    LogResponse(response.ToString(), logger);
+                }
+
                 // actually write it
                 _writer.WriteLine(response);
+            }
+        }
+
+        void LogRequest(string json, ILogger logger)
+        {
+            var builder = _cachedStringBuilder.Acquire();
+            try
+            {
+                builder.AppendLine("************ Request ************");
+                builder.Append(json);
+                logger.LogDebug(builder.ToString());
+            }
+            finally
+            {
+                _cachedStringBuilder.Release(builder);
+            }
+        }
+
+        void LogResponse(string json, ILogger logger)
+        {
+            var builder = _cachedStringBuilder.Acquire();
+            try
+            {
+                builder.AppendLine("************  Response ************ ");
+                builder.Append(json);
+                logger.LogDebug(builder.ToString());
+            }
+            finally
+            {
+                _cachedStringBuilder.Release(builder);
             }
         }
     }
