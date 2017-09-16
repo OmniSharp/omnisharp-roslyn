@@ -25,27 +25,25 @@ namespace OmniSharp.Helpers
 
         internal static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(this IEnumerable<Document> documents)
         {
+            if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
+
             var items = new List<DiagnosticLocation>();
-
-            if (documents.Any())
+            foreach (var document in documents)
             {
-                foreach (var document in documents)
-                {
-                    var semanticModel = await document.GetSemanticModelAsync();
-                    IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
+                var semanticModel = await document.GetSemanticModelAsync();
+                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
 
-                    foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
+                foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
+                {
+                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
+                    if (existingQuickFix == null)
                     {
-                        var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
-                        if (existingQuickFix == null)
-                        {
-                            quickFix.Projects.Add(document.Project.Name);
-                            items.Add(quickFix);
-                        }
-                        else
-                        {
-                            existingQuickFix.Projects.Add(document.Project.Name);
-                        }
+                        quickFix.Projects.Add(document.Project.Name);
+                        items.Add(quickFix);
+                    }
+                    else
+                    {
+                        existingQuickFix.Projects.Add(document.Project.Name);
                     }
                 }
             }
