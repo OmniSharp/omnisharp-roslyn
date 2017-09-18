@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
@@ -50,6 +51,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
+                Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
             }
         }
 
