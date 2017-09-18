@@ -68,7 +68,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 TargetFrameworks = targetFrameworks;
 
                 OutputKind = outputKind;
-                LanguageVersion = LanguageVersion;
+                LanguageVersion = languageVersion;
                 AllowUnsafeCode = allowUnsafeCode;
                 DocumentationFile = documentationFile;
                 PreprocessorSymbolNames = preprocessorSymbolNames;
