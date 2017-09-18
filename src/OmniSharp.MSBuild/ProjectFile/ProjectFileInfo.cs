@@ -43,7 +43,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public IList<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
 
         public bool SignAssembly => _data.SignAssembly;
-        public string AssemblyOriginatorKeyFile => _data.AssemblyName;
+        public string AssemblyOriginatorKeyFile => _data.AssemblyOriginatorKeyFile;
 
         public ImmutableArray<string> SourceFiles => _data.SourceFiles;
         public ImmutableArray<string> References => _data.References;
