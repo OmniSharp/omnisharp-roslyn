@@ -4,6 +4,7 @@ All changes to the project will be documented in this file.
 ## [1.25.0] - not released yet
 
 * Fixed a bug where language version was not correctly read from .csproj projects. ([#961](https://github.com/OmniSharp/omnisharp-roslyn/issues/961))
+* Fixed issue where signing key file was not propogated to OmniSharpWorkspace correctly.
 
 ## [1.24.0] - 2017-08-31
 
