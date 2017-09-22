@@ -1,8 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.25.0] - not released yet
+## [1.25.0] - 2017-09-22
 
+* Major refactoring to split OmniSharp into two servers for each supported protocol: one for HTTP, and one for STDIO. (PR: [#854](https://github.com/OmniSharp/omnisharp-roslyn/pull/854))
 * Fixed a bug where language version was not correctly read from .csproj projects. ([#961](https://github.com/OmniSharp/omnisharp-roslyn/issues/961))
 * Fixed issue where signing key file was not propogated to OmniSharpWorkspace correctly.
 
