@@ -57,7 +57,7 @@ namespace OmniSharp.Stdio
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var projectSystems = _compositionHost.GetExports<IProjectSystem>();
-            var logger = _loggerFactory.CreateLogger<Program>();
+            var logger = _loggerFactory.CreateLogger<Host>();
             var endpointMetadatas = _compositionHost.GetExports<Lazy<IRequest, OmniSharpEndpointMetadata>>()
                 .Select(x => x.Metadata)
                 .ToArray();
@@ -132,7 +132,7 @@ namespace OmniSharp.Stdio
 
         public void Start()
         {
-            var logger = _loggerFactory.CreateLogger<Program>();
+            var logger = _loggerFactory.CreateLogger<Host>();
 
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
 

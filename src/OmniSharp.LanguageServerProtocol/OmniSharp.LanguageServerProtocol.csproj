@@ -3,14 +3,14 @@
     <PropertyGroup>
         <TargetFramework>net46</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
-        <AssemblyName>OmniSharp</AssemblyName>
+        <AssemblyName>OmniSharp.LanguageServerProtocol</AssemblyName>
         <PreserveCompilationContext>true</PreserveCompilationContext>
         <OutputType Condition="'$(TestOutputType)'==''">Exe</OutputType>
         <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\OmniSharp.LanguageServerProtocol\OmniSharp.LanguageServerProtocol.csproj" />
+        <PackageReference Include="OmniSharp.Extensions.LanguageServerProtocol" Version="0.1.1" />
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />

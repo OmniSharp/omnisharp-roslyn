@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
+using OmniSharp.LanguageServerProtocol;
 
 namespace OmniSharp.Stdio
 {
@@ -37,10 +38,21 @@ namespace OmniSharp.Stdio
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();
 
-                using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
+                if (application.Lsp)
                 {
-                    host.Start();
-                    cancellation.Token.WaitHandle.WaitOne();
+                    using (var host = new LanguageServerHost(Console.OpenStandardInput(), Console.OpenStandardOutput(), environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
+                    {
+                        host.Start().Wait();
+                        cancellation.Token.WaitHandle.WaitOne();
+                    }
+                }
+                else
+                {
+                    using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
+                    {
+                        host.Start();
+                        cancellation.Token.WaitHandle.WaitOne();
+                    }
                 }
 
                 return 0;
