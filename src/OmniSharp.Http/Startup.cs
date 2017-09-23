@@ -46,7 +46,6 @@ namespace OmniSharp.Http
             IServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             IEventEmitter eventEmitter,
-            ISharedTextWriter writer,
             HttpEnvironment httpEnvironment,
             IOptionsMonitor<OmniSharpOptions> options)
         {

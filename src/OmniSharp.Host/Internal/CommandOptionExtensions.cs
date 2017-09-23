@@ -14,5 +14,10 @@ namespace OmniSharp.Internal
 
             return defaultValue;
         }
+
+        public static bool GetValueOrDefault(this CommandOption opt, bool defaultValue)
+        {
+            return opt.Value() == "on" || defaultValue;
+        }
     }
 }

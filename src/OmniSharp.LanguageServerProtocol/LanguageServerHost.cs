@@ -38,13 +38,11 @@ namespace OmniSharp.LanguageServerProtocol
         private readonly Stream _input;
         private readonly Stream _output;
         private readonly LanguageServer _server;
-        private readonly ISharedTextWriter _writer;
         private readonly IServiceProvider _serviceProvider;
         private readonly CompositionHost _compositionHost;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IOmniSharpEnvironment _environment;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly CachedStringBuilder _cachedStringBuilder;
 
         public LanguageServerHost(
             Stream input, Stream output, IOmniSharpEnvironment environment, IConfiguration configuration,
@@ -55,14 +53,12 @@ namespace OmniSharp.LanguageServerProtocol
             _output = output;
 
             _server = new LanguageServer(_input, _output);
-            // _writer = new SharedTextWriter(output);
             _environment = environment;
             _configuration = configuration;
             _serviceProvider = serviceProvider;
             _loggerFactory = loggerFactory.AddLanguageServer(_server, (category, level) => HostHelpers.LogFilter(category, level, _environment));
 
             _compositionHost = compositionHostBuilder.Build();
-            _cachedStringBuilder = new CachedStringBuilder();
         }
         public void Dispose()
         {
@@ -128,15 +124,13 @@ namespace OmniSharp.LanguageServerProtocol
 
         [ImportingConstructor]
         public TextDocumentSyncHandler(
-            IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
-            IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
-            BufferManager bufferManager,
+            [ImportMany] IEnumerable<IRequestHandler> handlers,
             OmniSharpWorkspace workspace
             )
         {
-            _openHandler = openHandler;
-            _closeHandler = closeHandler;
-            _bufferManager = bufferManager;
+            _openHandler = handlers.OfType<IRequestHandler<FileOpenRequest, FileOpenResponse>>().Single();
+            _closeHandler = handlers.OfType<IRequestHandler<FileCloseRequest, FileCloseResponse>>().Single();
+            _bufferManager = workspace.BufferManager;
             _workspace = workspace;
         }
 

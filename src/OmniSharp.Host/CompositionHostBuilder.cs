@@ -95,13 +95,23 @@ namespace OmniSharp
             var assemblies = DiscoverOmniSharpAssemblies();
 
             return new CompositionHostBuilder(
-                _serviceProvider, _environment, _writer, _eventEmitter, assemblies);
+                _serviceProvider,
+                _environment,
+                _writer,
+                _eventEmitter,
+                _assemblies.Concat(assemblies).Distinct()
+            );
         }
 
         public CompositionHostBuilder WithAssemblies(params Assembly[] assemblies)
         {
             return new CompositionHostBuilder(
-                _serviceProvider, _environment, _writer, _eventEmitter, assemblies);
+                _serviceProvider,
+                _environment,
+                _writer,
+                _eventEmitter,
+                _assemblies.Concat(assemblies).Distinct()
+            );
         }
 
         private List<Assembly> DiscoverOmniSharpAssemblies()

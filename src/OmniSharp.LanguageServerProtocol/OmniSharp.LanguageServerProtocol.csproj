@@ -5,7 +5,6 @@
         <PlatformTarget>AnyCPU</PlatformTarget>
         <AssemblyName>OmniSharp.LanguageServerProtocol</AssemblyName>
         <PreserveCompilationContext>true</PreserveCompilationContext>
-        <OutputType Condition="'$(TestOutputType)'==''">Exe</OutputType>
         <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     </PropertyGroup>
 
