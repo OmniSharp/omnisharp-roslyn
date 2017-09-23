@@ -47,3 +47,6 @@ tools/*
 # VS Code
 /.vscode/settings.json
 /.vscode/launch.json
+
+# VS
+launchSettings.json
