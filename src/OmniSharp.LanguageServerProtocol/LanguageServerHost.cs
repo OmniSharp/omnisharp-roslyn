@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -11,55 +10,48 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Endpoint;
 using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Mef;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
 using OmniSharp.LanguageServerProtocol.Logging;
 using OmniSharp.Utilities;
 using OmniSharp.Stdio.Services;
-using OmniSharp.Extensions.LanguageServer.Protocol.Document;
-using OmniSharp.Extensions.LanguageServer.Abstractions;
-using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
-using OmniSharp.Extensions.LanguageServer.Capabilities.Server;
-using OmniSharp.Extensions.LanguageServer.Models;
-using OmniSharp.Models.FileOpen;
-using OmniSharp.Models.FileClose;
-using OmniSharp.Roslyn;
 using OmniSharp.Models.ChangeBuffer;
-using OmniSharp.Models;
-using System.Composition;
+using OmniSharp.Mef;
+using OmniSharp.Models.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using OmniSharp.LanguageServerProtocol.Eventing;
+using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 
 namespace OmniSharp.LanguageServerProtocol
 {
     class LanguageServerHost : IDisposable
     {
-        private readonly IConfiguration _configuration;
-        private readonly Stream _input;
-        private readonly Stream _output;
         private readonly LanguageServer _server;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly CompositionHost _compositionHost;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly IOmniSharpEnvironment _environment;
+        private CompositionHost _compositionHost;
+        private  ILoggerFactory _loggerFactory;
+        private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private IConfiguration _configuration;
+        private IServiceProvider _serviceProvider;
+        private IEnumerable<IRequestHandler> _handlers;
+        private OmniSharpEnvironment _environment;
 
         public LanguageServerHost(
-            Stream input, Stream output, IOmniSharpEnvironment environment, IConfiguration configuration,
-            IServiceProvider serviceProvider, CompositionHostBuilder compositionHostBuilder, ILoggerFactory loggerFactory, CancellationTokenSource cancellationTokenSource)
+            Stream input,
+            Stream output,
+            CommandLineApplication application,
+            CancellationTokenSource cancellationTokenSource)
         {
+            _server = new LanguageServer(input, output);
+            _server.OnInitialize(Initialize);
+            _application = application;
             _cancellationTokenSource = cancellationTokenSource;
-            _input = input;
-            _output = output;
-
-            _server = new LanguageServer(_input, _output);
-            _environment = environment;
-            _configuration = configuration;
-            _serviceProvider = serviceProvider;
-            _loggerFactory = loggerFactory.AddLanguageServer(_server, (category, level) => HostHelpers.LogFilter(category, level, _environment));
-
-            _compositionHost = compositionHostBuilder.Build();
         }
+
         public void Dispose()
         {
             _compositionHost?.Dispose();
@@ -67,15 +59,108 @@ namespace OmniSharp.LanguageServerProtocol
             _cancellationTokenSource?.Dispose();
         }
 
+        private static LogLevel  GetLogLevel(InitializeTrace initializeTrace)
+        {
+            switch (initializeTrace)
+            {
+                case InitializeTrace.verbose:
+                    return LogLevel.Trace;
+                case InitializeTrace.off:
+                    return LogLevel.Warning;
+                case InitializeTrace.messages:
+                default:
+                    return LogLevel.Information;
+            }
+        }
+
+        private void CreateCompositionHost(InitializeParams initializeParams)
+        {
+            _server.LogMessage(new LogMessageParams()
+            {
+                Message = Helpers.FromUri(initializeParams.RootUri),
+                Type = MessageType.Warning
+            });
+
+            _environment  = new OmniSharpEnvironment(
+                Helpers.FromUri(initializeParams.RootUri),
+                Convert.ToInt32(initializeParams.ProcessId ?? -1L),
+                GetLogLevel(initializeParams.Trace),
+                _application.OtherArgs.ToArray());
+
+            _configuration = new ConfigurationBuilder(_environment).Build();
+            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration);
+            _loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>()
+                .AddLanguageServer(_server, (category, level) => HostHelpers.LogFilter(category, level, _environment));
+
+            var eventEmitter = new LanguageServerEventEmitter(_server);
+            var plugins = _application.CreatePluginAssemblies();
+            var compositionHostBuilder = new CompositionHostBuilder(_serviceProvider, _environment, eventEmitter)
+                .WithOmniSharpAssemblies()
+                .WithAssemblies(typeof(LanguageServerHost).Assembly)
+                .WithAssemblies(plugins.AssemblyNames.Select(Assembly.Load).ToArray());
+
+            _compositionHost = compositionHostBuilder.Build();
+
+            _handlers = _compositionHost.GetExports<IRequestHandler>();
+        }
+
+        private Task Initialize(InitializeParams initializeParams)
+        {
+            CreateCompositionHost(initializeParams);
+
+            // TODO: Will need to be updated for Cake, etc
+            var documentSelector = new DocumentSelector(
+                new DocumentFilter()
+                {
+                    Pattern = "**/*.cs",
+                    Language = "csharp",
+                }
+            );
+
+            // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
+            var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
+
+            _server.AddHandler(new TextDocumentSyncHandler(_handlers, documentSelector, workspace));
+            _server.AddHandler(new DefinitionHandler(_handlers, documentSelector, _loggerFactory.CreateLogger(typeof(DefinitionHandler))));
+
+            _server.LogMessage(new LogMessageParams() {
+                Message = "Added handlers... waiting for initialize...",
+                Type =  MessageType.Log
+            });
+
+            return Task.CompletedTask;
+        }
+
         public async Task Start()
         {
-            _server.AddHandler(_compositionHost.GetExport<TextDocumentSyncHandler>());
+            // TODO: Will need to be updated for Cake, etc
+            var documentSelector = new DocumentSelector(
+                new DocumentFilter()
+                {
+                    Pattern = "**/*.cs",
+                    Language = "csharp",
+                }
+            );
+
+            _server.LogMessage(new LogMessageParams() {
+                Message = "Starting server...",
+                Type =  MessageType.Log
+            });
 
             await _server.Initialize();
 
-            var logger = _loggerFactory.CreateLogger<LanguageServerHost>();
+            _server.LogMessage(new LogMessageParams()
+            {
+                Message = "initialized...",
+                Type = MessageType.Log
+            });
 
+            var logger = _loggerFactory.CreateLogger(typeof(LanguageServerHost));
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
+
+            // Kick on diagnostics
+            var diagnosticHandler = _handlers.OfType<IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>>().Single();
+            await diagnosticHandler.Handle(new DiagnosticsRequest());
 
             logger.LogInformation($"Omnisharp server running using Lsp at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
 
@@ -100,133 +185,6 @@ namespace OmniSharp.LanguageServerProtocol
                     _cancellationTokenSource.Cancel();
                 }
             }
-        }
-    }
-
-    [Shared]
-    [Export(typeof(TextDocumentSyncHandler))]
-    [Export(typeof(ITextDocumentSyncHandler))]
-    class TextDocumentSyncHandler : ITextDocumentSyncHandler
-    {
-        // TODO Make this configurable?
-        private readonly DocumentSelector _documentSelector = new DocumentSelector(
-            new DocumentFilter()
-            {
-                Pattern = "**/*.cs",
-                Language = "csharp",
-            }
-        );
-        private SynchronizationCapability _capability;
-        private readonly IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
-        private readonly IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
-        private readonly BufferManager _bufferManager;
-        private readonly OmniSharpWorkspace _workspace;
-
-        [ImportingConstructor]
-        public TextDocumentSyncHandler(
-            [ImportMany] IEnumerable<IRequestHandler> handlers,
-            OmniSharpWorkspace workspace
-            )
-        {
-            _openHandler = handlers.OfType<IRequestHandler<FileOpenRequest, FileOpenResponse>>().Single();
-            _closeHandler = handlers.OfType<IRequestHandler<FileCloseRequest, FileCloseResponse>>().Single();
-            _bufferManager = workspace.BufferManager;
-            _workspace = workspace;
-        }
-
-        public TextDocumentSyncOptions Options { get; } = new TextDocumentSyncOptions()
-        {
-            Change = TextDocumentSyncKind.Incremental,
-            OpenClose = true,
-            WillSave = false, // Do we need to configure this?
-            WillSaveWaitUntil = false,  // Do we need to configure this?
-            Save = new SaveOptions()
-            {
-                IncludeText = true
-            }
-        };
-
-        public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
-        {
-            var document = _workspace.GetDocument(uri.LocalPath);
-            if (document == null) return new TextDocumentAttributes(uri, "");
-            return new TextDocumentAttributes(uri, "csharp");
-        }
-
-        public Task Handle(DidChangeTextDocumentParams notification)
-        {
-            var changes = notification.ContentChanges
-                .Select(change => new LinePositionSpanTextChange()
-                {
-                    NewText = change.Text,
-                    StartColumn = Convert.ToInt32(change.Range.Start.Character),
-                    StartLine = Convert.ToInt32(change.Range.Start.Line),
-                    EndColumn = Convert.ToInt32(change.Range.End.Character),
-                    EndLine = Convert.ToInt32(change.Range.End.Line),
-                });
-
-            return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
-            {
-                FileName = notification.TextDocument.Uri.LocalPath,
-                Changes = changes
-            });
-        }
-
-        public Task Handle(DidOpenTextDocumentParams notification)
-        {
-            return _openHandler.Handle(new FileOpenRequest()
-            {
-                Buffer = notification.TextDocument.Text,
-                FileName = notification.TextDocument.Uri.LocalPath
-            });
-        }
-
-        public Task Handle(DidCloseTextDocumentParams notification)
-        {
-            return _closeHandler.Handle(new FileCloseRequest()
-            {
-                FileName = notification.TextDocument.Uri.LocalPath
-            });
-        }
-
-        public Task Handle(DidSaveTextDocumentParams notification)
-        {
-            return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
-            {
-                FileName = notification.TextDocument.Uri.LocalPath,
-                Buffer = notification.Text
-            });
-        }
-
-        public void SetCapability(SynchronizationCapability capability)
-        {
-            _capability = capability;
-        }
-
-        TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions()
-        {
-            return new TextDocumentChangeRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-                SyncKind = Options.Change
-            };
-        }
-
-        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-            };
-        }
-
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions()
-        {
-            return new TextDocumentSaveRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector,
-                IncludeText = true
-            };
         }
     }
 }

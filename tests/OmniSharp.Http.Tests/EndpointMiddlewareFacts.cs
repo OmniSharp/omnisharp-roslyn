@@ -119,7 +119,7 @@ namespace OmniSharp.Http.Tests
             var environment = new OmniSharpEnvironment();
             var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
             var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
-            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
+            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, NullEventEmitter.Instance)
                 .WithAssemblies(assemblies)
                 .Build();
 

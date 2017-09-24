@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +9,9 @@ using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
 using OmniSharp.LanguageServerProtocol;
 using OmniSharp.Eventing;
+using OmniSharp.LanguageServerProtocol.Eventing;
+using OmniSharp.Extensions.LanguageServer;
+using System.Threading.Tasks;
 
 namespace OmniSharp.Stdio
 {
@@ -26,21 +31,16 @@ namespace OmniSharp.Stdio
                     Console.OutputEncoding = encoding;
                 }
 
-                var environment = application.CreateEnvironment();
-                var plugins = application.CreatePluginAssemblies();
-                var configuration = new ConfigurationBuilder(environment).Build();
-                var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration);
-                var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var cancellation = new CancellationTokenSource();
 
                 if (application.Lsp)
                 {
-                    // TODO: Figure out how to change this around to use the lsp log messages
-                    var writer = new SharedTextWriter(Console.Out);
-                    var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, writer, NullEventEmitter.Instance)
-                        .WithOmniSharpAssemblies()
-                        .WithAssemblies(typeof(LanguageServerHost).Assembly);
-                    using (var host = new LanguageServerHost(Console.OpenStandardInput(), Console.OpenStandardOutput(), environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
+                    Configuration.ZeroBasedIndices = true;
+                    using (var host = new LanguageServerHost(
+                        Console.OpenStandardInput(),
+                        Console.OpenStandardOutput(),
+                        application,
+                        cancellation))
                     {
                         host.Start().Wait();
                         cancellation.Token.WaitHandle.WaitOne();
@@ -51,8 +51,16 @@ namespace OmniSharp.Stdio
                     var input = Console.In;
                     var output = Console.Out;
 
+                    var environment = application.CreateEnvironment();
+                    var configuration = new ConfigurationBuilder(environment).Build();
+                    var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration);
+                    var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+                    var plugins = application.CreatePluginAssemblies();
+
                     var writer = new SharedTextWriter(output);
-                    var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, writer, new StdioEventEmitter(writer)).WithOmniSharpAssemblies();
+                    var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, new StdioEventEmitter(writer))
+                        .WithOmniSharpAssemblies()
+                        .WithAssemblies(plugins.AssemblyNames.Select(Assembly.Load).ToArray());
                     using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
                     {
                         host.Start();

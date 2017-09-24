@@ -19,7 +19,6 @@ namespace OmniSharp.Http
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly IEventEmitter _eventEmitter;
-        private readonly ISharedTextWriter _writer;
         private readonly IConfigurationRoot _configuration;
         private CompositionHost _compositionHost;
 
@@ -27,14 +26,13 @@ namespace OmniSharp.Http
         {
             _environment = environment;
             _eventEmitter = eventEmitter;
-            _writer = writer;
             _configuration = new ConfigurationBuilder(environment).Build();
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, services);
-            _compositionHost = new CompositionHostBuilder(serviceProvider, _environment, _writer, _eventEmitter)
+            _compositionHost = new CompositionHostBuilder(serviceProvider, _environment, _eventEmitter)
                 .WithOmniSharpAssemblies()
                 .Build();
 

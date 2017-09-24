@@ -14,24 +14,13 @@ namespace OmniSharp.LanguageServerProtocol.Logging
         private readonly LanguageServer _server;
 
         public LanguageServerLogger(LanguageServer server, string categoryName, Func<string, LogLevel, bool> filter)
-            : base(categoryName, filter, addHeader: false)
+            : base(categoryName, filter)
         {
             _server = server;
         }
 
         protected override void WriteMessage(LogLevel logLevel, string message)
         {
-            var packet = new EventPacket()
-            {
-                Event = "log",
-                Body = new
-                {
-                    LogLevel = logLevel.ToString().ToUpperInvariant(),
-                    Name = this.CategoryName,
-                    Message = message
-                }
-            };
-
             var messageType = GetMessageType(logLevel);
             if (messageType.HasValue)
             {

@@ -23,20 +23,17 @@ namespace OmniSharp
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IOmniSharpEnvironment _environment;
-        private readonly ISharedTextWriter _writer;
         private readonly IEventEmitter _eventEmitter;
         private readonly IEnumerable<Assembly> _assemblies;
 
         public CompositionHostBuilder(
             IServiceProvider serviceProvider,
             IOmniSharpEnvironment environment,
-            ISharedTextWriter writer,
             IEventEmitter eventEmitter,
             IEnumerable<Assembly> assemblies = null)
         {
             _serviceProvider = serviceProvider;
             _environment = environment;
-            _writer = writer;
             _eventEmitter = eventEmitter;
             _assemblies = assemblies ?? Array.Empty<Assembly>();
         }
@@ -64,7 +61,6 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
                 .WithProvider(MefValueProvider.From(_environment))
-                .WithProvider(MefValueProvider.From(_writer))
                 .WithProvider(MefValueProvider.From(options.CurrentValue))
                 .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
@@ -97,7 +93,6 @@ namespace OmniSharp
             return new CompositionHostBuilder(
                 _serviceProvider,
                 _environment,
-                _writer,
                 _eventEmitter,
                 _assemblies.Concat(assemblies).Distinct()
             );
@@ -108,7 +103,6 @@ namespace OmniSharp
             return new CompositionHostBuilder(
                 _serviceProvider,
                 _environment,
-                _writer,
                 _eventEmitter,
                 _assemblies.Concat(assemblies).Distinct()
             );
