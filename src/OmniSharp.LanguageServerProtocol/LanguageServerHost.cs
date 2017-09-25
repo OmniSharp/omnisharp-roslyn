@@ -25,6 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.LanguageServerProtocol.Handlers;
 
 namespace OmniSharp.LanguageServerProtocol
 {

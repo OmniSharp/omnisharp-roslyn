@@ -1,91 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using OmniSharp.Mef;
-using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Abstractions;
 using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
 using OmniSharp.Extensions.LanguageServer.Capabilities.Server;
 using OmniSharp.Extensions.LanguageServer.Models;
-using OmniSharp.Models.FileOpen;
-using OmniSharp.Models.FileClose;
-using OmniSharp.Roslyn;
-using OmniSharp.Models;
-using System.Composition;
 using OmniSharp.Extensions.LanguageServer.Protocol;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using OmniSharp.Models.GotoDefinition;
-using static OmniSharp.LanguageServerProtocol.Helpers;
+using OmniSharp.Extensions.LanguageServer.Protocol.Document;
+using OmniSharp.Mef;
+using OmniSharp.Models;
+using OmniSharp.Models.FileClose;
+using OmniSharp.Models.FileOpen;
+using OmniSharp.Roslyn;
 
-namespace OmniSharp.LanguageServerProtocol
+namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    [Shared, Export(typeof(DefinitionHandler))]
-    class DefinitionHandler : IDefinitionHandler
-    {
-        private DefinitionCapability _capability;
-        private readonly IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
-        private readonly ILogger _logger;
-
-        [ImportingConstructor]
-        public DefinitionHandler(IEnumerable<IRequestHandler> handlers, DocumentSelector documentSelector, ILogger logger)
-        {
-            _definitionHandler = handlers.OfType<IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>().Single();
-            _documentSelector = documentSelector;
-            _logger = logger;
-        }
-
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public async Task<LocationOrLocations> Handle(TextDocumentPositionParams request, CancellationToken token)
-        {
-            var omnisharpRequest = new GotoDefinitionRequest()
-            {
-                FileName = FromUri(request.TextDocument.Uri),
-                Column = Convert.ToInt32(request.Position.Character),
-                Line = Convert.ToInt32(request.Position.Line)
-            };
-
-            _logger.LogInformation(JsonConvert.SerializeObject(omnisharpRequest));
-
-            var omnisharpResponse = await _definitionHandler.Handle(omnisharpRequest);
-
-            _logger.LogInformation(JsonConvert.SerializeObject(omnisharpResponse));
-
-            return new LocationOrLocations(new Location()
-            {
-                Uri = ToUri(omnisharpResponse.FileName),
-                Range = new Range()
-                {
-                    Start = new Position()
-                    {
-                        Character = omnisharpResponse.Column,
-                        Line = omnisharpResponse.Line,
-                    },
-                    End = new Position()
-                    {
-                        Character = omnisharpResponse.Column,
-                        Line = omnisharpResponse.Line,
-                    }
-                }
-            });
-        }
-
-        public void SetCapability(DefinitionCapability capability)
-        {
-            _capability = capability;
-        }
-    }
-
     [Shared, Export(typeof(TextDocumentSyncHandler))]
     class TextDocumentSyncHandler : ITextDocumentSyncHandler, IWillSaveTextDocumentHandler, IWillSaveWaitUntilTextDocumentHandler
     {
@@ -121,7 +53,7 @@ namespace OmniSharp.LanguageServerProtocol
 
         public TextDocumentAttributes GetTextDocumentAttributes(Uri uri)
         {
-            var document = _workspace.GetDocument(FromUri(uri));
+            var document = _workspace.GetDocument(Helpers.FromUri(uri));
             if (document == null) return new TextDocumentAttributes(uri, "");
             return new TextDocumentAttributes(uri, "csharp");
         }
@@ -133,7 +65,7 @@ namespace OmniSharp.LanguageServerProtocol
                 var change = notification.ContentChanges.First();
                 return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
                 {
-                    FileName = FromUri(notification.TextDocument.Uri),
+                    FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = change.Text
                 });
             }
@@ -152,7 +84,7 @@ namespace OmniSharp.LanguageServerProtocol
 
                 return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
                 {
-                    FileName = FromUri(notification.TextDocument.Uri),
+                    FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Changes = changes
                 });
             }
@@ -163,7 +95,7 @@ namespace OmniSharp.LanguageServerProtocol
             return _openHandler.Handle(new FileOpenRequest()
             {
                 Buffer = notification.TextDocument.Text,
-                FileName = FromUri(notification.TextDocument.Uri)
+                FileName = Helpers.FromUri(notification.TextDocument.Uri)
             });
         }
 
@@ -171,7 +103,7 @@ namespace OmniSharp.LanguageServerProtocol
         {
             return _closeHandler.Handle(new FileCloseRequest()
             {
-                FileName = FromUri(notification.TextDocument.Uri)
+                FileName = Helpers.FromUri(notification.TextDocument.Uri)
             });
         }
 
@@ -181,7 +113,7 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
                 {
-                    FileName = FromUri(notification.TextDocument.Uri),
+                    FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = notification.Text
                 });
             }
