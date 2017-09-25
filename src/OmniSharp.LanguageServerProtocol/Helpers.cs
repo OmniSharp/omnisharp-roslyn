@@ -40,6 +40,7 @@ namespace OmniSharp.LanguageServerProtocol
 
         internal static Uri ToUri(string fileName)
         {
+            if (!fileName.StartsWith("/")) return new Uri($"file:///{fileName}");
             return new Uri($"file://{fileName}");
         }
 
