@@ -79,5 +79,28 @@ namespace OmniSharp.LanguageServerProtocol
             }
             return uri.LocalPath;
         }
+
+        public static Range ToRange((int column, int line) location)
+        {
+            return new Range()
+            {
+                Start = ToPosition(location),
+                End = ToPosition(location)
+            };
+        }
+
+        public static Position ToPosition((int column, int line) location)
+        {
+            return new Position(location.column, location.line);
+        }
+
+        public static Range ToRange((int column, int line) start, (int column, int line) end)
+        {
+            return new Range()
+            {
+                Start = new Position(start.column, start.line),
+                End = new Position(end.column, end.line)
+            };
+        }
     }
 }

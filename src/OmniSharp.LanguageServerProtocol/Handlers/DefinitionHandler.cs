@@ -11,6 +11,7 @@ using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Mef;
 using OmniSharp.Models.GotoDefinition;
+using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
@@ -20,14 +21,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private DefinitionCapability _capability;
         private readonly IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
-        private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public DefinitionHandler(IEnumerable<IRequestHandler> handlers, DocumentSelector documentSelector, ILogger logger)
+        public DefinitionHandler(IEnumerable<IRequestHandler> handlers, DocumentSelector documentSelector)
         {
             _definitionHandler = handlers.OfType<IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>().Single();
             _documentSelector = documentSelector;
-            _logger = logger;
         }
 
         public TextDocumentRegistrationOptions GetRegistrationOptions()
@@ -47,28 +46,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Line = Convert.ToInt32(request.Position.Line)
             };
 
-            _logger.LogInformation(JsonConvert.SerializeObject(omnisharpRequest));
-
             var omnisharpResponse = await _definitionHandler.Handle(omnisharpRequest);
-
-            _logger.LogInformation(JsonConvert.SerializeObject(omnisharpResponse));
 
             return new LocationOrLocations(new Location()
             {
                 Uri = Helpers.ToUri(omnisharpResponse.FileName),
-                Range = new Range()
-                {
-                    Start = new Position()
-                    {
-                        Character = omnisharpResponse.Column,
-                        Line = omnisharpResponse.Line,
-                    },
-                    End = new Position()
-                    {
-                        Character = omnisharpResponse.Column,
-                        Line = omnisharpResponse.Line,
-                    }
-                }
+                Range = ToRange((omnisharpResponse.Column, omnisharpResponse.Line))
             });
         }
 

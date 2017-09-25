@@ -102,6 +102,9 @@ namespace OmniSharp.LanguageServerProtocol
 
             _compositionHost = compositionHostBuilder.Build();
 
+            // TODO: Get these with metadata so we can attach languages
+            // This will thne let us build up a better document filter, and add handles foreach type of handler
+            // This will mean that we will have a strategy to create handlers from the interface type
             _handlers = _compositionHost.GetExports<IRequestHandler>();
         }
 
@@ -122,7 +125,8 @@ namespace OmniSharp.LanguageServerProtocol
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
 
             _server.AddHandler(new TextDocumentSyncHandler(_handlers, documentSelector, workspace));
-            _server.AddHandler(new DefinitionHandler(_handlers, documentSelector, _loggerFactory.CreateLogger(typeof(DefinitionHandler))));
+            _server.AddHandler(new DefinitionHandler(_handlers, documentSelector));
+            _server.AddHandler(new HoverHandler(_handlers, documentSelector));
 
             _server.LogMessage(new LogMessageParams() {
                 Message = "Added handlers... waiting for initialize...",
