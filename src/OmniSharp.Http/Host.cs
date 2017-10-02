@@ -47,6 +47,7 @@ namespace OmniSharp.Http
                     serviceCollection.AddSingleton(_pluginAssemblies);
                     serviceCollection.AddSingleton(new HttpEnvironment { Port = _serverPort });
                 })
+                .UseUrls($"http://{_serverInterface}:{_serverPort}")
                 .UseConfiguration(config.Build())
                 .UseEnvironment("OmniSharp")
                 .UseStartup(typeof(Startup));
