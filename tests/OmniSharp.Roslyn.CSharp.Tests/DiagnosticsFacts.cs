@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var requestHandler = GetRequestHandler(host);
                 var quickFixes = await requestHandler.Handle(new CodeCheckRequest() { FileName = "a.cs" });
 
-                Assert.Equal(1, quickFixes.QuickFixes.Count());
+                Assert.Single(quickFixes.QuickFixes);
                 Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
             }
         }

@@ -63,7 +63,7 @@ namespace OmniSharp.DotNetTest.Tests
                 testFramework: "xunit",
                 shouldPass: true);
 
-            Assert.Equal(1, response.Results.Length);
+            Assert.Single(response.Results);
         }
 
         [Fact]

@@ -99,11 +99,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
 
             var actual = await GetSignatureHelp(source);
-            Assert.Equal(1, actual.Signatures.Count());
+            Assert.Single(actual.Signatures);
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
             Assert.Equal("NewGuid", actual.Signatures.ElementAt(0).Name);
-            Assert.Equal(0, actual.Signatures.ElementAt(0).Parameters.Count());
+            Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
         }
 
         [Fact]
@@ -120,7 +120,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     }
 }";
             var actual = await GetSignatureHelp(source);
-            Assert.Equal(1, actual.Signatures.Count());
+            Assert.Single(actual.Signatures);
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
 
@@ -395,8 +395,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
 
             var actual = await GetSignatureHelp(source);
-            Assert.Equal(1, actual.Signatures.Count());
-            Assert.Equal(1, actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.Count());
+            Assert.Single(actual.Signatures);
+            Assert.Single(actual.Signatures.ElementAt(actual.ActiveSignature).Parameters);
             Assert.Equal("n", actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.ElementAt(0).Name);
         }
 

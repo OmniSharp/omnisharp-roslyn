@@ -18,7 +18,7 @@ namespace OmniSharp.Tests
             Assert.Throws<InvalidOperationException>(() => { var _ = markupCode.Position; });
 
             var spans = markupCode.GetSpans();
-            Assert.Equal(0, spans.Count);
+            Assert.Empty(spans);
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans();
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(0, 0), spans[0]);
         }
 
@@ -76,7 +76,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans();
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(markupCode.Code.Length, markupCode.Code.Length), spans[0]);
         }
 
@@ -89,7 +89,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans();
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(0, markupCode.Code.Length), spans[0]);
 
             var spanText = markupCode.Code.Substring(spans[0].Start, spans[0].Length);
@@ -105,7 +105,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans();
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(4, 9), spans[0]);
 
             var spanText = markupCode.Code.Substring(spans[0].Start, spans[0].Length);
@@ -121,7 +121,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans("test");
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(0, 0), spans[0]);
         }
 
@@ -134,7 +134,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans("test");
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(markupCode.Code.Length, markupCode.Code.Length), spans[0]);
         }
 
@@ -147,7 +147,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans("test");
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(0, markupCode.Code.Length), spans[0]);
 
             var spanText = markupCode.Code.Substring(spans[0].Start, spans[0].Length);
@@ -163,7 +163,7 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans = markupCode.GetSpans("test");
-            Assert.Equal(1, spans.Count);
+            Assert.Single(spans);
             Assert.Equal(TextSpan.FromBounds(4, 9), spans[0]);
 
             var spanText = markupCode.Code.Substring(spans[0].Start, spans[0].Length);
@@ -219,14 +219,14 @@ namespace OmniSharp.Tests
             Assert.Equal("class C { }", markupCode.Code);
 
             var spans1 = markupCode.GetSpans("test1");
-            Assert.Equal(1, spans1.Count);
+            Assert.Single(spans1);
             Assert.Equal(TextSpan.FromBounds(0, markupCode.Code.Length), spans1[0]);
 
             var spanText1 = markupCode.Code.Substring(spans1[0].Start, spans1[0].Length);
             Assert.Equal("class C { }", spanText1);
 
             var spans2 = markupCode.GetSpans("test2");
-            Assert.Equal(1, spans2.Count);
+            Assert.Single(spans2);
             Assert.Equal(TextSpan.FromBounds(4, 9), spans2[0]);
 
             var spanText2 = markupCode.Code.Substring(spans2[0].Start, spans2[0].Length);
