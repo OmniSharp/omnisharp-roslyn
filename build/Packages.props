@@ -45,8 +45,8 @@
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
-    <XunitRunnerVisualStudioVersion>2.3.0-beta4-build3722</XunitRunnerVisualStudioVersion>
-    <XunitVersion>2.3.0-beta4-build3722</XunitVersion>
+    <XunitRunnerVisualStudioVersion>2.3.0-rc1-build3809</XunitRunnerVisualStudioVersion>
+    <XunitVersion>2.3.0-rc1-build3809</XunitVersion>
   </PropertyGroup>
 
 </Project>
