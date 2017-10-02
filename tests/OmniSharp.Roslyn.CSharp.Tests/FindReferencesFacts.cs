@@ -134,7 +134,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var usages = await FindUsagesAsync(code, excludeDefinition: true);
-            Assert.Equal(1, usages.QuickFixes.Count());
+            Assert.Single(usages.QuickFixes);
         }
 
         [Fact]
@@ -224,7 +224,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             };
 
             var usages = await FindUsagesAsync(testFiles, onlyThisFile: true);
-            Assert.Equal(1, usages.QuickFixes.Count());
+            Assert.Single(usages.QuickFixes);
             Assert.Equal("a.cs", usages.QuickFixes.ElementAt(0).FileName);
         }
 

@@ -25,18 +25,18 @@ namespace OmniSharp.Tests
             using (var host = CreateOmniSharpHost(new TestFile("test.cs", "class C {}")))
             {
                 Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
-                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
-                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents);
+                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { });
                 Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
-                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
-                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents);
+                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "", Buffer = "enum E {}" });
                 Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
-                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents.Count());
-                Assert.Equal(1, host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents.Count());
+                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents);
+                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents);
             }
         }
 
@@ -47,7 +47,7 @@ namespace OmniSharp.Tests
 
             await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
-            Assert.Equal(0, documents.Count());
+            Assert.Empty(documents);
         }
 
         [Fact]
@@ -110,13 +110,13 @@ namespace OmniSharp.Tests
 
             await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("src", "root", "bar.cs"), Buffer = "enum E {}" });
             var documents = workspace.GetDocuments(Path.Combine("src", "root", "bar.cs"));
-            Assert.Equal(1, documents.Count());
+            Assert.Single(documents);
             Assert.Equal(Path.Combine("src", "root", "foo.csproj"), documents.ElementAt(0).Project.FilePath);
             Assert.Equal(2, documents.ElementAt(0).Project.Documents.Count());
 
             await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"), Buffer = "enum E {}" });
             documents = workspace.GetDocuments(Path.Combine("src", "root", "foo", "bar", "nested", "paths", "dance.cs"));
-            Assert.Equal(1, documents.Count());
+            Assert.Single(documents);
             Assert.Equal(Path.Combine("src", "root", "foo", "bar", "insane.csproj"), documents.ElementAt(0).Project.FilePath);
             Assert.Equal(2, documents.ElementAt(0).Project.Documents.Count());
         }
@@ -177,7 +177,7 @@ namespace OmniSharp.Tests
             Assert.Equal(4, workspace.CurrentSolution.Projects.Count());
             foreach (var project in workspace.CurrentSolution.Projects)
             {
-                Assert.Equal(1, project.Documents.Count());
+                Assert.Single(project.Documents);
             }
 
             return workspace;

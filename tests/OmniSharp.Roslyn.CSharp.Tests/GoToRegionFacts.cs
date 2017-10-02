@@ -52,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string source = @"public class Fo$$o{}";
 
             var regions = await GetRegionsAsync(source);
-            Assert.Equal(0, regions.Length);
+            Assert.Empty(regions);
         }
 
         private async Task<QuickFix[]> GetRegionsAsync(string source)

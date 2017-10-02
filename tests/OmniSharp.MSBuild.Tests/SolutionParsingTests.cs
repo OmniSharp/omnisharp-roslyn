@@ -212,7 +212,7 @@ namespace OmniSharp.MSBuild.Tests
 
             Assert.Null(solution.VisualStudioVersion);
 
-            Assert.Equal(1, solution.Projects.Length);
+            Assert.Single(solution.Projects);
 
             Assert.Equal("{ Project GUID}", solution.Projects[0].ProjectTypeGuid);
             Assert.Equal("Project name", solution.Projects[0].ProjectName);
