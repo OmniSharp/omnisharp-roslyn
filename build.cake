@@ -218,7 +218,7 @@ Task("InstallMonoAssets")
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
 });
 
-void CopyDotNetHostResolver(string os, string arch, string hostFileName, string targetFolderBase)
+void CopyDotNetHostResolver(BuildEnvironment env, string os, string arch, string hostFileName, string targetFolderBase)
 {
     var source = CombinePaths(
         env.Folders.Tools,
@@ -271,16 +271,16 @@ Task("CreateMSBuildFolder")
 
     if (Platform.Current.IsWindows)
     {
-        CopyDotNetHostResolver("win", "x86", "hostfxr.dll", msbuildSdkResolverFolder);
-        CopyDotNetHostResolver("win", "x64", "hostfxr.dll", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverFolder);
     }
     else if (Platform.Current.IsMacOS)
     {
-        CopyDotNetHostResolver("osx", "x64", "libhostfxr.dylib", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverFolder);
     }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver("linux", "x64", "libhostfxr.so", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverFolder);
     }
 
     // Copy content of Microsoft.Net.Compilers
