@@ -49,7 +49,8 @@ namespace TestUtility
             TestServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             OmniSharpWorkspace workspace,
-            CompositionHost compositionHost)
+            CompositionHost compositionHost,
+            string oldMSBuildSdksPath)
         {
             this._serviceProvider = serviceProvider;
             this._compositionHost = compositionHost;
@@ -57,20 +58,7 @@ namespace TestUtility
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
 
-            _oldMSBuildSdksPath = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
-            SetMSBuildSdksPath(compositionHost);
-        }
-
-        private static void SetMSBuildSdksPath(CompositionHost compositionHost)
-        {
-            var dotNetCli = compositionHost.GetExport<DotNetCliService>();
-            var info = dotNetCli.GetInfo();
-            var msbuildSdksPath = Path.Combine(info.BasePath, "Sdks");
-
-            if (Directory.Exists(msbuildSdksPath))
-            {
-                Environment.SetEnvironmentVariable(MSBuildSDKsPath, msbuildSdksPath);
-            }
+            _oldMSBuildSdksPath = oldMSBuildSdksPath;
         }
 
         ~OmniSharpTestHost()
@@ -142,9 +130,26 @@ namespace TestUtility
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
 
+            var oldMSBuildSdksPath = SetMSBuildSdksPath(dotNetCli);
+
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
 
-            return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
+            return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost, oldMSBuildSdksPath);
+        }
+
+        private static string SetMSBuildSdksPath(DotNetCliService dotNetCli)
+        {
+            var oldMSBuildSDKsPath = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
+
+            var info = dotNetCli.GetInfo();
+            var msbuildSdksPath = Path.Combine(info.BasePath, "Sdks");
+
+            if (Directory.Exists(msbuildSdksPath))
+            {
+                Environment.SetEnvironmentVariable(MSBuildSDKsPath, msbuildSdksPath);
+            }
+
+            return oldMSBuildSDKsPath;
         }
 
         public T GetExport<T>()
