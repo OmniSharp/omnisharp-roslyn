@@ -306,22 +306,6 @@ namespace OmniSharp.MSBuild
             return result.FilePath;
         }
 
-        private string GetSdksPath(string projectFilePath)
-        {
-            var info = _dotNetCli.GetInfo(Path.GetDirectoryName(projectFilePath));
-
-            if (info.IsEmpty || string.IsNullOrWhiteSpace(info.BasePath))
-            {
-                return null;
-            }
-
-            var result = Path.Combine(info.BasePath, "Sdks");
-
-            return Directory.Exists(result)
-                ? result
-                : null;
-        }
-
         private ProjectFileInfo LoadProject(string projectFilePath)
         {
             _logger.LogInformation($"Loading project: {projectFilePath}");
@@ -331,7 +315,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, GetSdksPath(projectFilePath), _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
 
                 if (project == null)
                 {
@@ -357,7 +341,7 @@ namespace OmniSharp.MSBuild
                 if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                 {
                     var diagnostics = new List<MSBuildDiagnosticsMessage>();
-                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, GetSdksPath(projectFilePath), _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
 
                     if (newProjectFileInfo != null)
                     {

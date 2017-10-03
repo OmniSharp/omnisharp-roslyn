@@ -137,6 +137,40 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
+            LogSummary(logger);
+        }
+
+        internal static void InitializeForTest(ILogger logger)
+        {
+            // For tests, we only initialize in standalone mode.
+
+            if (s_isInitialized)
+            {
+                throw new InvalidOperationException("MSBuild environment is already initialized.");
+            }
+
+            if (TryWithLocalMSBuild())
+            {
+                s_kind = MSBuildEnvironmentKind.StandAlone;
+                s_isInitialized = true;
+            }
+            else
+            {
+                s_kind = MSBuildEnvironmentKind.Unknown;
+                logger.LogError("MSBuild environment could not be initialized.");
+                s_isInitialized = false;
+            }
+
+            if (!s_isInitialized)
+            {
+                return;
+            }
+
+            LogSummary(logger);
+        }
+
+        private static void LogSummary(ILogger logger)
+        {
             var summary = new StringBuilder();
             switch (s_kind)
             {
