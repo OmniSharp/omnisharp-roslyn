@@ -149,7 +149,7 @@ namespace OmniSharp.MSBuild
                 throw new InvalidOperationException("MSBuild environment is already initialized.");
             }
 
-            if (TryWithLocalMSBuild())
+            if (TryWithLocalMSBuild(allowMonoPaths: false))
             {
                 s_kind = MSBuildEnvironmentKind.StandAlone;
                 s_isInitialized = true;
@@ -329,7 +329,7 @@ namespace OmniSharp.MSBuild
             return false;
         }
 
-        private static bool TryWithLocalMSBuild()
+        private static bool TryWithLocalMSBuild(bool allowMonoPaths = true)
         {
             var msbuildDirectory = FindMSBuildDirectory();
             if (msbuildDirectory == null)
@@ -346,12 +346,14 @@ namespace OmniSharp.MSBuild
 
             SetMSBuildExePath(msbuildExePath);
 
-            if (!TrySetMSBuildExtensionsPathToXBuild())
+            s_msbuildExtensionsPath = msbuildDirectory;
+
+            if (allowMonoPaths)
             {
-                s_msbuildExtensionsPath = msbuildDirectory;
+                TrySetMSBuildExtensionsPathToXBuild();
+                TrySetTargetFrameworkRootPathToXBuildFrameworks();
             }
 
-            TrySetTargetFrameworkRootPathToXBuildFrameworks();
             TrySetRoslynTargetsPathAndCscTool();
 
             return true;
