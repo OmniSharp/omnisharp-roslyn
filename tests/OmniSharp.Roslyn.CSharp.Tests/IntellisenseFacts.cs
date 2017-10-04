@@ -454,5 +454,39 @@ class C
 
             Assert.Equal(expected, completions.ToArray());
         }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TriggeredOnSpaceForObjectCreation(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public M()
+    {
+        Class1 c = new $$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true, triggerChar: " ");
+            Assert.NotEmpty(completions);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NotTriggeredOnSpaceWithoutObjectCreation(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public M()
+    {
+        $$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true, triggerChar: " ");
+            Assert.Empty(completions);
+        }
     }
 }
