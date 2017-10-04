@@ -218,7 +218,7 @@ Task("InstallMonoAssets")
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
 });
 
-void CopyDotNetHostResolver(BuildEnvironment env, string os, string arch, string hostFileName, string targetFolderBase)
+void CopyDotNetHostResolver(BuildEnvironment env, string os, string arch, string hostFileName, string targetFolderBase, bool copyToArchSpecificFolder)
 {
     var source = CombinePaths(
         env.Folders.Tools,
@@ -228,9 +228,13 @@ void CopyDotNetHostResolver(BuildEnvironment env, string os, string arch, string
         "native",
         hostFileName);
 
-    var targetFolder = CombinePaths(targetFolderBase, arch);
+    var targetFolder = targetFolderBase;
 
-    DirectoryHelper.ForceCreate(targetFolder);
+    if (copyToArchSpecificFolder)
+    {
+        targetFolder = CombinePaths(targetFolderBase, arch);
+        DirectoryHelper.ForceCreate(targetFolder);
+    }
 
     FileHelper.Copy(source, CombinePaths(targetFolder, hostFileName));
 }
@@ -271,16 +275,16 @@ Task("CreateMSBuildFolder")
 
     if (Platform.Current.IsWindows)
     {
-        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverFolder);
-        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverFolder, copyToArchSpecificFolder: true);
     }
     else if (Platform.Current.IsMacOS)
     {
-        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverFolder, copyToArchSpecificFolder: false);
     }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverFolder);
+        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverFolder, copyToArchSpecificFolder: false);
     }
 
     // Copy content of Microsoft.Net.Compilers
