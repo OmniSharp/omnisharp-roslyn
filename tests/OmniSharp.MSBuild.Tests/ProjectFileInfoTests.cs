@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
 using TestUtility;
@@ -22,6 +23,13 @@ namespace OmniSharp.MSBuild.Tests
             this._logger = this.LoggerFactory.CreateLogger<ProjectFileInfoTests>();
         }
 
+        private ProjectFileInfo CreateProjectFileInfo(OmniSharpTestHost host, ITestProject testProject, string projectFilePath)
+        {
+            var msbuildLocator = host.GetExport<IMSBuildLocator>();
+
+            return ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger, msbuildLocator.RegisteredInstance);
+        }
+
         [Fact]
         public async Task HelloWorld_has_correct_property_values()
         {
@@ -30,7 +38,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var projectFilePath = Path.Combine(testProject.Directory, "HelloWorld.csproj");
 
-                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
 
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
@@ -50,7 +58,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var projectFilePath = Path.Combine(testProject.Directory, "HelloWorldSlim.csproj");
 
-                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
 
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
@@ -69,7 +77,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var projectFilePath = Path.Combine(testProject.Directory, "NetStandardAndNetCoreApp.csproj");
 
-                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
 
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);

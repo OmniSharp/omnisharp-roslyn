@@ -14,6 +14,7 @@ using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -111,16 +112,12 @@ namespace TestUtility
             builder.AddInMemoryCollection(configurationData);
             var configuration = builder.Build();
 
-            var environment = new OmniSharpEnvironment(path);
+            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
+            var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory);
 
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
-
-            if (!MSBuildEnvironment.IsInitialized)
-            {
-                MSBuildEnvironment.InitializeForTest(loggerFactory.CreateLogger<OmniSharpTestHost>());
-            }
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, msbuildLocator, configuration);
 
             var compositionHost = new CompositionHostBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
                 .WithAssemblies(s_lazyAssemblies.Value)

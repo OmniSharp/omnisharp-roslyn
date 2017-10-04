@@ -18,6 +18,7 @@ using OmniSharp.Models.FindSymbols;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility;
@@ -118,7 +119,8 @@ namespace OmniSharp.Http.Tests
         {
             var environment = new OmniSharpEnvironment();
             var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
-            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
+            var msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory);
+            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, msbuildLocator, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
             var compositionHost = new CompositionHostBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
                 .WithAssemblies(assemblies)
                 .Build();
