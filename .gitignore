@@ -50,3 +50,6 @@ tools/*
 
 # VS
 launchSettings.json
+
+# Rider
+.idea/
