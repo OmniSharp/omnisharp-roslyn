@@ -14,6 +14,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
     {
         private const string GetSymbolsAsync = nameof(GetSymbolsAsync);
         private const string InsertionText = nameof(InsertionText);
+        private const string ObjectCreationCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.ObjectCreationCompletionProvider";
         private const string NamedParameterCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.NamedParameterCompletionProvider";
         private const string OverrideCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.OverrideCompletionProvider";
         private const string ParitalMethodCompletionProvider = "Microsoft.CodeAnalysis.CSharp.Completion.Providers.PartialMethodCompletionProvider";
@@ -30,6 +31,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         {
             var symbolCompletionItemType = typeof(CompletionItem).GetTypeInfo().Assembly.GetType(SymbolCompletionItem);
             _getSymbolsAsync = symbolCompletionItemType.GetMethod(GetSymbolsAsync, BindingFlags.Public | BindingFlags.Static);
+        }
+
+        public static bool IsObjectCreationCompletionItem(this CompletionItem item)
+        {
+            var properties = item.Properties;
+            return properties.TryGetValue(Provider, out var provider) && provider == ObjectCreationCompletionProvider;
         }
 
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
