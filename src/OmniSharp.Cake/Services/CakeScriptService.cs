@@ -13,9 +13,9 @@ using OmniSharp.Cake.Configuration;
 namespace OmniSharp.Cake.Services
 {
     [Export(typeof(ICakeScriptService)), Shared]
-    public sealed class CakeScriptService : ICakeScriptService
+    public sealed class CakeScriptService : ICakeScriptService, IDisposable
     {
-        private readonly IScriptGenerationService _generationService;
+        private readonly ScriptGenerationClient _generationService;
         private readonly IDictionary<string, ISet<string>> _cachedReferences;
         private readonly IDictionary<string, ISet<string>> _cachedUsings;
 
@@ -91,6 +91,11 @@ namespace OmniSharp.Cake.Services
         private void OnUsingsChanged(UsingsChangedEventArgs e)
         {
             UsingsChanged?.Invoke(this, e);
+        }
+
+        public void Dispose()
+        {
+            _generationService?.Dispose();
         }
     }
 }
