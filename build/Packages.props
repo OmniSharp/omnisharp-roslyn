@@ -42,6 +42,7 @@
     <NuGetPackagingCoreVersion>4.3.0</NuGetPackagingCoreVersion>
     <NuGetPackagingCoreTypesVersion>4.3.0-beta1-2418</NuGetPackagingCoreTypesVersion>
     <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
+    <NuGetRuntimeModelVersion>4.3.0-beta1-2418</NuGetRuntimeModelVersion>
     <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
