@@ -117,7 +117,7 @@ public sealed class Platform
                     version = new Version(value);
                 }
                 
-                if (distroName != null && key != null)
+                if (distroName != null && version != null)
                 {
                     break;
                 }

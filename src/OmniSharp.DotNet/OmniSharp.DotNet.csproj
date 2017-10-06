@@ -15,6 +15,10 @@
     <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="$(MicrosoftDotNetProjectModelVersion)" />
     <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="$(MicrosoftDotNetInternalAbstractionsVersion)" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="$(MicrosoftExtensionsPlatformAbstractionsVersion)" />
+
+    <!-- Need to keep an old version of this package around to support Microsoft.DotNet.ProjectModel.
+         It was removed in NuGet 4.3.0 (merged into NuGet.Packaging.Core) -->
+    <PackageReference Include="NuGet.Packaging.Core.Types" Version="$(NuGetPackagingCoreTypesVersion)" />
   </ItemGroup>
 
 </Project>

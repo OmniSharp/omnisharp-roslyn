@@ -27,37 +27,6 @@ Information("");
 Information("Current platform: {0}", Platform.Current);
 Information("");
 
-if (!AllowLegacyTests())
-{
-    Information("Legacy project.json tests will not be run");
-}
-
-/// <summary>
-///  Clean artifacts.
-/// </summary>
-Task("Cleanup")
-    .Does(() =>
-{
-    if (DirectoryHelper.Exists(env.Folders.Artifacts))
-    {
-        DirectoryHelper.Delete(env.Folders.Artifacts, recursive: true);
-    }
-
-    DirectoryHelper.Create(env.Folders.Artifacts);
-    DirectoryHelper.Create(env.Folders.ArtifactsLogs);
-    DirectoryHelper.Create(env.Folders.ArtifactsPackage);
-    DirectoryHelper.Create(env.Folders.ArtifactsScripts);
-});
-
-/// <summary>
-///  Pre-build setup tasks.
-/// </summary>
-Task("Setup")
-    .IsDependentOn("ValidateMono")
-    .IsDependentOn("InstallDotNetCoreSdk")
-    .IsDependentOn("InstallMonoAssets")
-    .IsDependentOn("CreateMSBuildFolder");
-
 /// <summary>
 /// Checks the current platform to determine whether we allow legacy tests to run.
 /// </summary>
@@ -96,6 +65,37 @@ bool AllowLegacyTests()
 
     return false;
 }
+
+if (!AllowLegacyTests())
+{
+    Information("Legacy project.json tests will not be run");
+}
+
+/// <summary>
+///  Clean artifacts.
+/// </summary>
+Task("Cleanup")
+    .Does(() =>
+{
+    if (DirectoryHelper.Exists(env.Folders.Artifacts))
+    {
+        DirectoryHelper.Delete(env.Folders.Artifacts, recursive: true);
+    }
+
+    DirectoryHelper.Create(env.Folders.Artifacts);
+    DirectoryHelper.Create(env.Folders.ArtifactsLogs);
+    DirectoryHelper.Create(env.Folders.ArtifactsPackage);
+    DirectoryHelper.Create(env.Folders.ArtifactsScripts);
+});
+
+/// <summary>
+///  Pre-build setup tasks.
+/// </summary>
+Task("Setup")
+    .IsDependentOn("ValidateMono")
+    .IsDependentOn("InstallDotNetCoreSdk")
+    .IsDependentOn("InstallMonoAssets")
+    .IsDependentOn("CreateMSBuildFolder");
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder)
 {
@@ -338,7 +338,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
     if (Platform.Current.IsWindows)
     {
         command = env.DotNetCommand;
-        arguments = $"build \"{projectFilePath}\" --configuration {configuration} --no-restore /v:d";
+        arguments = $"build \"{projectFilePath}\" --configuration {configuration} /v:d";
     }
     else
     {
