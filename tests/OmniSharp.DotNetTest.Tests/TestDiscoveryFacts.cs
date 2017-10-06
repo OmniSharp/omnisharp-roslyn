@@ -20,7 +20,8 @@ namespace OmniSharp.DotNetTest.Tests
             this._testAssets = TestAssets.Instance;
         }
 
-        [Theory]
+        // TODO: Write a .csproj version of this test.
+        [ConditionalTheory(typeof(IsLegacyTest))]
         [InlineData("BasicTestProjectSample01", "TestProgram.cs", 7, 20, true, "XunitTestMethod")]
         [InlineData("BasicTestProjectSample01", "TestProgram.cs", 15, 20, true, "XunitTestMethod")]
         [InlineData("BasicTestProjectSample01", "TestProgram.cs", 23, 20, true, "XunitTestMethod")]

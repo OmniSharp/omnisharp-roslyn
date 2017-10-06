@@ -8,6 +8,9 @@ public sealed class Platform
     private readonly string _os;
     private readonly string _architecture;
 
+    public Version Version { get; }
+    public string DistroName { get; }
+
     public bool IsWindows => _os == "Windows";
     public bool IsMacOS => _os == "MacOS";
     public bool IsLinux => _os == "Linux";
@@ -15,13 +18,15 @@ public sealed class Platform
     public bool Is32Bit => _architecture == "x86";
     public bool Is64Bit => _architecture == "x64";
 
-    private Platform(string os, string architecture)
+    private Platform(string os, string architecture, Version version, string distroName = null)
     {
         _os = os;
         _architecture = architecture;
+        this.Version = version;
+        this.DistroName = distroName;
     }
 
-    public override string ToString() => $"{_os} ({_architecture})";
+    public override string ToString() => $"{DistroName ?? _os} {Version} ({_architecture})";
 
     private static Platform GetCurrentPlatform()
     {
@@ -69,7 +74,55 @@ public sealed class Platform
             }
         }
 
-        return new Platform(os, architecture);
+        switch (os)
+        {
+            case "Windows":
+                return new Platform(os, architecture, Environment.OSVersion.Version);
+            case "MacOS":
+                var versionText = RunAndCaptureOutput("sw_vers", "-productVersion");
+                return new Platform(os, architecture, new Version(versionText));
+            case "Linux":
+                string distroName;
+                Version version;
+                ReadDistroNameAndVersion(out distroName, out version);
+
+                return new Platform(os, architecture, version, distroName);
+            default:
+                throw new ArgumentException(nameof(os));
+        }
+    }
+
+    private static void ReadDistroNameAndVersion(out string distroName, out Version version)
+    {
+        var lines = System.IO.File.ReadAllLines("/etc/os-release");
+
+        distroName = null;
+        version = null;
+
+        foreach (var line in lines)
+        {
+            var equalsIndex = line.IndexOf('=');
+            if (equalsIndex >= 0)
+            {
+                var key = line.Substring(0, equalsIndex).Trim();
+                var value = line.Substring(equalsIndex + 1).Trim();
+                value = value.Trim('"');
+
+                if (key == "ID")
+                {
+                    distroName = value;
+                }
+                else if (key == "VERSION_ID")
+                {
+                    version = new Version(value);
+                }
+                
+                if (distroName != null && key != null)
+                {
+                    break;
+                }
+            }
+        }
     }
 
     private static string RunAndCaptureOutput(string fileName, string arguments, string workingDirectory = null)

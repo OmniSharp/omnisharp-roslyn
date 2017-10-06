@@ -129,6 +129,8 @@ namespace TestUtility
 
             var dotNetCli = compositionHost.GetExport<DotNetCliService>();
             dotNetCli.SetDotNetPath(dotNetPath);
+            var version = dotNetCli.GetVersion();
+            logger.LogInformation($"Using .NET CLI: {version}");
 
             var oldMSBuildSdksPath = SetMSBuildSdksPath(dotNetCli);
 

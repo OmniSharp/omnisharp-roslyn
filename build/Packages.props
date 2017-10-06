@@ -39,9 +39,9 @@
     <MicrosoftNetTestSdkVersion>15.0.0</MicrosoftNetTestSdkVersion>
     <MicrosoftTestPlatformTranslationLayerVersion>15.3.0</MicrosoftTestPlatformTranslationLayerVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <NuGetPackagingCoreVersion>4.0.0</NuGetPackagingCoreVersion>
-    <NuGetProjectModelVersion>4.0.0</NuGetProjectModelVersion>
-    <NuGetVersioningVersion>4.0.0</NuGetVersioningVersion>
+    <NuGetPackagingCoreVersion>4.3.0</NuGetPackagingCoreVersion>
+    <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
+    <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>

@@ -23,7 +23,14 @@ Log.Context = Context;
 var env = new BuildEnvironment(useGlobalDotNetSdk);
 var buildPlan = BuildPlan.Load(env);
 
+Information("");
 Information("Current platform: {0}", Platform.Current);
+Information("");
+
+if (!AllowLegacyTests())
+{
+    Information("Legacy project.json tests will not be run");
+}
 
 /// <summary>
 ///  Clean artifacts.
@@ -51,49 +58,43 @@ Task("Setup")
     .IsDependentOn("InstallMonoAssets")
     .IsDependentOn("CreateMSBuildFolder");
 
-void ParseDotNetInfoValues(IEnumerable<string> lines, out string version, out string rid, out string basePath)
+/// <summary>
+/// Checks the current platform to determine whether we allow legacy tests to run.
+/// </summary>
+bool AllowLegacyTests()
 {
-    version = null;
-    rid = null;
-    basePath = null;
+    var platform = Platform.Current;
 
-    foreach (var line in lines)
+    if (platform.IsWindows)
     {
-        var colonIndex = line.IndexOf(':');
-        if (colonIndex >= 0)
-        {
-            var name = line.Substring(0, colonIndex).Trim();
-            var value = line.Substring(colonIndex + 1).Trim();
+        return true;
+    }
 
-            if (string.IsNullOrWhiteSpace(version) && name.Equals("Version", StringComparison.OrdinalIgnoreCase))
-            {
-                version = value;
-            }
-            else if (string.IsNullOrWhiteSpace(rid) && name.Equals("RID", StringComparison.OrdinalIgnoreCase))
-            {
-                rid = value;
-            }
-            else if (string.IsNullOrWhiteSpace(basePath) && name.Equals("Base Path", StringComparison.OrdinalIgnoreCase))
-            {
-                basePath = value;
-            }
+    // On macOS, only run legacy tests on El Capitan or lower
+    if (platform.IsMacOS)
+    {
+        return platform.Version.Major == 10
+            && platform.Version.Minor <= 11;
+    }
+
+    if (platform.IsLinux)
+    {
+        var version = platform.Version.ToString();
+
+        // Taken from https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh
+        switch (platform.DistroName)
+        {
+            case "alpine":   return version == "3.4.3";
+            case "centos":   return version == "7";
+            case "debian":   return version == "8";
+            case "fedora":   return version == "23" || version == "24";
+            case "opensuse": return version == "13.2" || version == "42.1";
+            case "rhel":     return version == "7";
+            case "ubuntu":   return version == "14.04" || version == "16.04" || version == "16.10";
         }
     }
 
-    if (string.IsNullOrWhiteSpace(version))
-    {
-        throw new Exception("Could not locate Version in 'dotnet --info' output.");
-    }
-
-    if (string.IsNullOrWhiteSpace(rid))
-    {
-        throw new Exception("Could not locate RID in 'dotnet --info' output.");
-    }
-
-    if (string.IsNullOrWhiteSpace(basePath))
-    {
-        throw new Exception("Could not locate Base Path in 'dotnet --info' output.");
-    }
+    return false;
 }
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder)
@@ -144,44 +145,15 @@ Task("InstallDotNetCoreSdk")
             installFolder: env.Folders.DotNetSdk);
     }
 
-    // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
-    InstallDotNetSdk(env, buildPlan,
-        version: buildPlan.LegacyDotNetVersion,
-        installFolder: env.Folders.LegacyDotNetSdk);
-
-    string DOTNET_CLI_UI_LANGUAGE = "DOTNET_CLI_UI_LANGUAGE";
-    var originalUILanguageValue = Environment.GetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE);
-    Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, "en-US");
-
-    // Capture 'dotnet --info' output and parse out RID.
-    var lines = new List<string>();
-
-    try
+    if (AllowLegacyTests())
     {
-        Run(env.DotNetCommand, "--info", new RunOptions(output: lines));
-    }
-    catch (Win32Exception)
-    {
-        throw new Exception("Failed to run 'dotnet --info'");
-    }
-    finally
-    {
-        Environment.SetEnvironmentVariable(DOTNET_CLI_UI_LANGUAGE, originalUILanguageValue);
+        // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
+        InstallDotNetSdk(env, buildPlan,
+            version: buildPlan.LegacyDotNetVersion,
+            installFolder: env.Folders.LegacyDotNetSdk);
     }
 
-    string version, rid, basePath;
-    ParseDotNetInfoValues(lines, out version, out rid, out basePath);
-
-    if (rid == "osx.10.12-x64")
-    {
-        rid = "osx.10.11-x64";
-        Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", rid);
-    }
-
-    Information("Using .NET CLI");
-    Information("  Version: {0}", version);
-    Information("  RID: {0}", rid);
-    Information("  Base Path: {0}", basePath);
+    Run(env.DotNetCommand, "--info");
 });
 
 Task("ValidateMono")
@@ -336,21 +308,24 @@ Task("PrepareTestAssets")
             .ExceptionOnError($"Failed to restore '{folder}'.");
 
         RunTool(env.DotNetCommand, "build", folder)
-            .ExceptionOnError($"Failed to restore '{folder}'.");
+            .ExceptionOnError($"Failed to build '{folder}'.");
     }
 
-    // Restore and build legacy test assets with legacy .NET Core SDK
-    foreach (var project in buildPlan.LegacyTestAssets)
+    if (AllowLegacyTests())
     {
-        Information("Restoring and building project.json: {0}...", project);
+        // Restore and build legacy test assets with legacy .NET Core SDK
+        foreach (var project in buildPlan.LegacyTestAssets)
+        {
+            Information("Restoring and building project.json: {0}...", project);
 
-        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+            var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        RunTool(env.LegacyDotNetCommand, "restore", folder)
-            .ExceptionOnError($"Failed to restore '{folder}'.");
+            RunTool(env.LegacyDotNetCommand, "restore", folder)
+                .ExceptionOnError($"Failed to restore '{folder}'.");
 
-        RunTool(env.LegacyDotNetCommand, $"build", folder)
-            .ExceptionOnError($"Failed to restore '{folder}'.");
+            RunTool(env.LegacyDotNetCommand, $"build", folder)
+                .ExceptionOnError($"Failed to build '{folder}'.");
+        }
     }
 });
 
@@ -363,7 +338,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
     if (Platform.Current.IsWindows)
     {
         command = env.DotNetCommand;
-        arguments = $"build \"{projectFilePath}\" --configuration {configuration} /v:d";
+        arguments = $"build \"{projectFilePath}\" --configuration {configuration} --no-restore /v:d";
     }
     else
     {
@@ -407,6 +382,7 @@ Task("BuildTest")
         var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
         BuildProject(env, projectName, projectFilePath, configuration, "test");
     }
+
     foreach (var testProject in buildPlan.TestProjects)
     {
         var testProjectName = testProject + ".csproj";
@@ -425,48 +401,60 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    foreach (var testProject in buildPlan.TestProjects)
+    if (!AllowLegacyTests())
     {
-        PrintBlankLine();
+        Environment.SetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS", "True");
+    }
 
-        var instanceFolder = CombinePaths(env.Folders.Bin, testConfiguration, testProject, "net46");
-
-        // Copy xunit executable to test folder to solve path errors
-        var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
-        var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
-        FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
-        FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
-        var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
-        var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
-        var arguments = $"\"{targetPath}\" -parallel none -noshadow -xml \"{logFile}\" -notrait category=failing";
-
-        if (Platform.Current.IsWindows)
+    try
+    {
+        foreach (var testProject in buildPlan.TestProjects)
         {
-            Run(xunitInstancePath, arguments, instanceFolder)
-                .ExceptionOnError($"Test {testProject} failed for net46");
-        }
-        else
-        {
-            // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
-            DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
+            PrintBlankLine();
 
-            var runScript = CombinePaths(env.Folders.Mono, "run");
+            var instanceFolder = CombinePaths(env.Folders.Bin, testConfiguration, testProject, "net46");
 
-            var oldMonoPath = Environment.GetEnvironmentVariable("MONO_PATH");
-            try
+            // Copy xunit executable to test folder to solve path errors
+            var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
+            var xunitInstancePath = CombinePaths(instanceFolder, "xunit.console.exe");
+            FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.console.exe"), xunitInstancePath, overwrite: true);
+            FileHelper.Copy(CombinePaths(xunitToolsFolder, "xunit.runner.utility.net452.dll"), CombinePaths(instanceFolder, "xunit.runner.utility.net452.dll"), overwrite: true);
+            var targetPath = CombinePaths(instanceFolder, $"{testProject}.dll");
+            var logFile = CombinePaths(env.Folders.ArtifactsLogs, $"{testProject}-desktop-result.xml");
+            var arguments = $"\"{targetPath}\" -noshadow -parallel none -xml \"{logFile}\" -notrait category=failing";
+
+            if (Platform.Current.IsWindows)
             {
-                Environment.SetEnvironmentVariable("MONO_PATH", $"{instanceFolder}");
-
-                // By default, the run script launches OmniSharp. To launch our Mono runtime
-                // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
-                Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
+                Run(xunitInstancePath, arguments, instanceFolder)
                     .ExceptionOnError($"Test {testProject} failed for net46");
             }
-            finally
+            else
             {
-                Environment.SetEnvironmentVariable("MONO_PATH", oldMonoPath);
+                // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
+
+                var runScript = CombinePaths(env.Folders.Mono, "run");
+
+                var oldMonoPath = Environment.GetEnvironmentVariable("MONO_PATH");
+                try
+                {
+                    Environment.SetEnvironmentVariable("MONO_PATH", $"{instanceFolder}");
+
+                    // By default, the run script launches OmniSharp. To launch our Mono runtime
+                    // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
+                    Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
+                        .ExceptionOnError($"Test {testProject} failed for net46");
+                }
+                finally
+                {
+                    Environment.SetEnvironmentVariable("MONO_PATH", oldMonoPath);
+                }
             }
         }
+    }
+    finally
+    {
+        Environment.SetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS", null);
     }
 });
 

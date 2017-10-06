@@ -22,6 +22,22 @@ namespace TestUtility
         }
     }
 
+    public class ConditionalTheoryAttribute : TheoryAttribute
+    {
+        public ConditionalTheoryAttribute(params Type[] skipConditionTypes)
+        {
+            foreach (var skipConditionType in skipConditionTypes)
+            {
+                var skipCondition = (SkipCondition)Activator.CreateInstance(skipConditionType);
+                if (skipCondition.ShouldSkip)
+                {
+                    Skip = skipCondition.SkipReason;
+                    break;
+                }
+            }
+        }
+    }
+
     public abstract class SkipCondition
     {
         public abstract bool ShouldSkip { get; }
@@ -32,5 +48,12 @@ namespace TestUtility
     {
         public override bool ShouldSkip => string.Equals(Environment.GetEnvironmentVariable("APPVEYOR"), "True");
         public override string SkipReason => "Can't run on AppVeyor";
+    }
+
+    public class IsLegacyTest : SkipCondition
+    {
+        public override bool ShouldSkip => string.Equals(Environment.GetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS"), "True");
+
+        public override string SkipReason => "Can't run legacy test";
     }
 }
