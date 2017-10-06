@@ -59,7 +59,7 @@ bool AllowLegacyTests()
             case "fedora":   return version == "23" || version == "24";
             case "opensuse": return version == "13.2" || version == "42.1";
             case "rhel":     return version == "7";
-            case "ubuntu":   return version == "14.04" || version == "16.04" || version == "16.10";
+            case "ubuntu":   return version == "14.4" || version == "16.4" || version == "16.10";
         }
     }
 
