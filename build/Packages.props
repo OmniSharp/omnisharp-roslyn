@@ -40,9 +40,9 @@
     <MicrosoftTestPlatformTranslationLayerVersion>15.3.0</MicrosoftTestPlatformTranslationLayerVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetPackagingCoreVersion>4.3.0</NuGetPackagingCoreVersion>
-    <NuGetPackagingCoreTypesVersion>4.3.0-beta1-2418</NuGetPackagingCoreTypesVersion>
+    <NuGetPackagingCoreTypesVersion>3.5.0</NuGetPackagingCoreTypesVersion>
     <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
-    <NuGetRuntimeModelVersion>4.3.0-beta1-2418</NuGetRuntimeModelVersion>
+    <NuGetRuntimeModelVersion>3.5.0</NuGetRuntimeModelVersion>
     <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
