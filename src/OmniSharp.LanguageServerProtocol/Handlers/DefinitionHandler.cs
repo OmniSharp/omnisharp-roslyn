@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
 using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
@@ -18,14 +19,23 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     [Shared, Export(typeof(DefinitionHandler))]
     class DefinitionHandler : IDefinitionHandler
     {
+        public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
+        {
+            foreach (var group in handlers)
+            {
+                var handler = group.OfType<Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>().SingleOrDefault();
+                if (handler != null) yield return new DefinitionHandler(handler, group.DocumentSelector);
+            }
+        }
+
         private DefinitionCapability _capability;
-        private readonly IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
+        private readonly Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
 
         [ImportingConstructor]
-        public DefinitionHandler(IEnumerable<IRequestHandler> handlers, DocumentSelector documentSelector)
+        public DefinitionHandler(Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> definitionHandler, DocumentSelector documentSelector)
         {
-            _definitionHandler = handlers.OfType<IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>().Single();
+            _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;
         }
 

@@ -4,6 +4,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
 using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
@@ -15,14 +16,23 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     [Shared, Export(typeof(HoverHandler))]
     class HoverHandler : IHoverHandler
     {
+        public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
+        {
+            foreach (var group in handlers)
+            {
+                var handler = group.OfType<Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse>>().SingleOrDefault();
+                if (handler != null) yield return new HoverHandler(handler, group.DocumentSelector);
+            }
+        }
+
         private HoverCapability _capability;
-        private readonly IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
+        private readonly Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
 
         [ImportingConstructor]
-        public HoverHandler(IEnumerable<IRequestHandler> handlers, DocumentSelector documentSelector)
+        public HoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
         {
-            _definitionHandler = handlers.OfType<IRequestHandler<TypeLookupRequest, TypeLookupResponse>>().Single();
+            _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;
         }
 

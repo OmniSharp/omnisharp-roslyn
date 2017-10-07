@@ -4,6 +4,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Abstractions;
 using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
 using OmniSharp.Extensions.LanguageServer.Capabilities.Server;
@@ -21,19 +22,36 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     [Shared, Export(typeof(TextDocumentSyncHandler))]
     class TextDocumentSyncHandler : ITextDocumentSyncHandler, IWillSaveTextDocumentHandler, IWillSaveWaitUntilTextDocumentHandler
     {
+        public static IEnumerable<IJsonRpcHandler> Enumerate(
+            RequestHandlers handlers,
+            OmniSharpWorkspace workspace)
+        {
+            foreach (var group in handlers)
+            {
+                var openHandler = group.OfType<Mef.IRequestHandler<FileOpenRequest, FileOpenResponse>>().SingleOrDefault();
+                var closeHandler = group.OfType<Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>>().SingleOrDefault();
+
+                yield return new TextDocumentSyncHandler(openHandler, closeHandler, group.DocumentSelector, workspace);
+            }
+        }
+
         // TODO Make this configurable?
         private readonly DocumentSelector _documentSelector;
         private SynchronizationCapability _capability;
-        private readonly IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
-        private readonly IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
+        private readonly Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
+        private readonly Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
         private readonly BufferManager _bufferManager;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public TextDocumentSyncHandler(IEnumerable<IRequestHandler> handlers, DocumentSelector documentSelector, OmniSharpWorkspace workspace)
+        public TextDocumentSyncHandler(
+            Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
+            Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
+            DocumentSelector documentSelector,
+            OmniSharpWorkspace workspace)
         {
-            _openHandler = handlers.OfType<IRequestHandler<FileOpenRequest, FileOpenResponse>>().Single();
-            _closeHandler = handlers.OfType<IRequestHandler<FileCloseRequest, FileCloseResponse>>().Single();
+            _openHandler = openHandler;
+            _closeHandler = closeHandler;
             _bufferManager = workspace.BufferManager;
             _workspace = workspace;
             _documentSelector = documentSelector;
@@ -92,19 +110,19 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public Task Handle(DidOpenTextDocumentParams notification)
         {
-            return _openHandler.Handle(new FileOpenRequest()
+            return _openHandler?.Handle(new FileOpenRequest()
             {
                 Buffer = notification.TextDocument.Text,
                 FileName = Helpers.FromUri(notification.TextDocument.Uri)
-            });
+            }) ?? Task.CompletedTask;
         }
 
         public Task Handle(DidCloseTextDocumentParams notification)
         {
-            return _closeHandler.Handle(new FileCloseRequest()
+            return _closeHandler?.Handle(new FileCloseRequest()
             {
                 FileName = Helpers.FromUri(notification.TextDocument.Uri)
-            });
+            }) ?? Task.CompletedTask;
         }
 
         public Task Handle(DidSaveTextDocumentParams notification)

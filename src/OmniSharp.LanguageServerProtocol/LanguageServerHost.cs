@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
@@ -33,12 +32,12 @@ namespace OmniSharp.LanguageServerProtocol
     {
         private readonly LanguageServer _server;
         private CompositionHost _compositionHost;
-        private  ILoggerFactory _loggerFactory;
+        private ILoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private IConfiguration _configuration;
         private IServiceProvider _serviceProvider;
-        private IEnumerable<IRequestHandler> _handlers;
+        private RequestHandlers _handlers;
         private OmniSharpEnvironment _environment;
 
         public LanguageServerHost(
@@ -60,7 +59,7 @@ namespace OmniSharp.LanguageServerProtocol
             _cancellationTokenSource?.Dispose();
         }
 
-        private static LogLevel  GetLogLevel(InitializeTrace initializeTrace)
+        private static LogLevel GetLogLevel(InitializeTrace initializeTrace)
         {
             switch (initializeTrace)
             {
@@ -82,7 +81,7 @@ namespace OmniSharp.LanguageServerProtocol
                 Type = MessageType.Warning
             });
 
-            _environment  = new OmniSharpEnvironment(
+            _environment = new OmniSharpEnvironment(
                 Helpers.FromUri(initializeParams.RootUri),
                 Convert.ToInt32(initializeParams.ProcessId ?? -1L),
                 GetLogLevel(initializeParams.Trace),
@@ -102,35 +101,45 @@ namespace OmniSharp.LanguageServerProtocol
 
             _compositionHost = compositionHostBuilder.Build();
 
+            var projectSystems = _compositionHost.GetExports<IProjectSystem>();
+
+            var documentSelectors = projectSystems
+                .GroupBy(x => x.Language)
+                .Select(x => (
+                    language: x.Key,
+                    selector: new DocumentSelector(x
+                        .SelectMany(z => z.Extensions)
+                        .Distinct()
+                        .Select(z => new DocumentFilter()
+                        {
+                            Pattern = $"**/*{z}"
+                        }))
+                    ));
+
             // TODO: Get these with metadata so we can attach languages
             // This will thne let us build up a better document filter, and add handles foreach type of handler
             // This will mean that we will have a strategy to create handlers from the interface type
-            _handlers = _compositionHost.GetExports<IRequestHandler>();
+            _handlers = new RequestHandlers(
+                _compositionHost.GetExports<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>>(),
+                documentSelectors
+            );
         }
 
         private Task Initialize(InitializeParams initializeParams)
         {
             CreateCompositionHost(initializeParams);
 
-            // TODO: Will need to be updated for Cake, etc
-            var documentSelector = new DocumentSelector(
-                new DocumentFilter()
-                {
-                    Pattern = "**/*.cs",
-                    Language = "csharp",
-                }
-            );
-
             // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
 
-            _server.AddHandler(new TextDocumentSyncHandler(_handlers, documentSelector, workspace));
-            _server.AddHandler(new DefinitionHandler(_handlers, documentSelector));
-            _server.AddHandler(new HoverHandler(_handlers, documentSelector));
+            _server.AddHandlers(TextDocumentSyncHandler.Enumerate(_handlers, workspace));
+            _server.AddHandlers(DefinitionHandler.Enumerate(_handlers));
+            _server.AddHandlers(HoverHandler.Enumerate(_handlers));
 
-            _server.LogMessage(new LogMessageParams() {
+            _server.LogMessage(new LogMessageParams()
+            {
                 Message = "Added handlers... waiting for initialize...",
-                Type =  MessageType.Log
+                Type = MessageType.Log
             });
 
             return Task.CompletedTask;
@@ -138,18 +147,10 @@ namespace OmniSharp.LanguageServerProtocol
 
         public async Task Start()
         {
-            // TODO: Will need to be updated for Cake, etc
-            var documentSelector = new DocumentSelector(
-                new DocumentFilter()
-                {
-                    Pattern = "**/*.cs",
-                    Language = "csharp",
-                }
-            );
-
-            _server.LogMessage(new LogMessageParams() {
+            _server.LogMessage(new LogMessageParams()
+            {
                 Message = "Starting server...",
-                Type =  MessageType.Log
+                Type = MessageType.Log
             });
 
             await _server.Initialize();
@@ -164,8 +165,11 @@ namespace OmniSharp.LanguageServerProtocol
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
 
             // Kick on diagnostics
-            var diagnosticHandler = _handlers.OfType<IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>>().Single();
-            await diagnosticHandler.Handle(new DiagnosticsRequest());
+            var diagnosticHandler = _handlers.GetAll()
+                .OfType<Mef.IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>>();
+
+            foreach (var handler in diagnosticHandler)
+                await handler.Handle(new DiagnosticsRequest());
 
             logger.LogInformation($"Omnisharp server running using Lsp at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
 
