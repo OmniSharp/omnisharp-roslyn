@@ -326,7 +326,8 @@ Task("PrepareTestAssets")
 
     if (AllowLegacyTests())
     {
-        if (Platform.Current.IsMacOS && Platform.Current.Version.ToString() == "10.12")
+        var platform = Platform.Current;
+        if (platform.IsMacOS && platform.Version.Major == 10 && platform.Version.Minor == 12)
         {
             // Trick to allow older .NET Core SDK to run on Sierra.
             Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", "osx.10.11-x64");
