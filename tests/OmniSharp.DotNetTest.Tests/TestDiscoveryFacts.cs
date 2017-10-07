@@ -20,21 +20,20 @@ namespace OmniSharp.DotNetTest.Tests
             this._testAssets = TestAssets.Instance;
         }
 
-        // TODO: Write a .csproj version of this test.
-        [ConditionalTheory(typeof(IsLegacyTest))]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 7, 20, true, "XunitTestMethod")]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 15, 20, true, "XunitTestMethod")]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 23, 20, true, "XunitTestMethod")]
-        [InlineData("BasicTestProjectSample01", "TestProgram.cs", 28, 20, false, "")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 7, 20, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 14, 20, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 21, 20, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 27, 20, true, "NUnitTestMethod")]
-        [InlineData("BasicTestProjectSample02", "TestProgram.cs", 32, 20, false, "")]
+        [Theory]
+        [InlineData("XunitTestDiscovery", "TestProgram.cs", 7, 20, true, "XunitTestMethod")]
+        [InlineData("XunitTestDiscovery", "TestProgram.cs", 15, 20, true, "XunitTestMethod")]
+        [InlineData("XunitTestDiscovery", "TestProgram.cs", 23, 20, true, "XunitTestMethod")]
+        [InlineData("XunitTestDiscovery", "TestProgram.cs", 28, 20, false, "")]
+        [InlineData("NUnitTestDiscovery", "TestProgram.cs", 7, 20, true, "NUnitTestMethod")]
+        [InlineData("NUnitTestDiscovery", "TestProgram.cs", 14, 20, true, "NUnitTestMethod")]
+        [InlineData("NUnitTestDiscovery", "TestProgram.cs", 21, 20, true, "NUnitTestMethod")]
+        [InlineData("NUnitTestDiscovery", "TestProgram.cs", 27, 20, true, "NUnitTestMethod")]
+        [InlineData("NUnitTestDiscovery", "TestProgram.cs", 32, 20, false, "")]
         public async Task FoundFactsBasedTest(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion.Legacy))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
                 var solution = host.Workspace.CurrentSolution;

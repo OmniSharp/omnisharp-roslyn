@@ -34,11 +34,12 @@
     "ProjectAndSolution",
     "ProjectAndSolutionWithProjectSection",
     "TwoProjectsWithSolution",
-    "ProjectWithGeneratedFile"
+    "ProjectWithGeneratedFile",
+    "NUnitTestDiscovery",
+    "XunitTestDiscovery"
+
   ],
   "LegacyTestAssets": [
-    "BasicTestProjectSample01",
-    "BasicTestProjectSample02",
     "LegacyNunitTestProject",
     "LegacyXunitTestProject",
     "LegacyMSTestProject"
