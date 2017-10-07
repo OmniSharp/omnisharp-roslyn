@@ -18,11 +18,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var group in handlers)
-            {
-                var handler = group.OfType<Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse>>().SingleOrDefault();
-                if (handler != null) yield return new HoverHandler(handler, group.DocumentSelector);
-            }
+            foreach (var (selector, handler) in handlers
+                .OfType<Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse>>())
+                if (handler != null)
+                    yield return new HoverHandler(handler, selector);
         }
 
         private HoverCapability _capability;

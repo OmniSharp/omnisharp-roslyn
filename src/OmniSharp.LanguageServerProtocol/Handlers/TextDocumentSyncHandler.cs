@@ -26,13 +26,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             RequestHandlers handlers,
             OmniSharpWorkspace workspace)
         {
-            foreach (var group in handlers)
-            {
-                var openHandler = group.OfType<Mef.IRequestHandler<FileOpenRequest, FileOpenResponse>>().SingleOrDefault();
-                var closeHandler = group.OfType<Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>>().SingleOrDefault();
-
-                yield return new TextDocumentSyncHandler(openHandler, closeHandler, group.DocumentSelector, workspace);
-            }
+            foreach (var (selector, openHandler, closeHandler) in handlers
+                .OfType<
+                    Mef.IRequestHandler<FileOpenRequest, FileOpenResponse>,
+                    Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>>())
+                yield return new TextDocumentSyncHandler(openHandler, closeHandler, selector, workspace);
         }
 
         // TODO Make this configurable?
@@ -81,31 +79,29 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             if (notification.ContentChanges.Count() == 1 && notification.ContentChanges.First().Range == null)
             {
                 var change = notification.ContentChanges.First();
-                return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
+                return _bufferManager.UpdateBufferAsync(new Request()
                 {
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = change.Text
                 });
             }
-            else
-            {
-                var changes = notification.ContentChanges
-                    .Select(change => new LinePositionSpanTextChange()
-                    {
-                        NewText = change.Text,
-                        StartColumn = Convert.ToInt32(change.Range.Start.Character),
-                        StartLine = Convert.ToInt32(change.Range.Start.Line),
-                        EndColumn = Convert.ToInt32(change.Range.End.Character),
-                        EndLine = Convert.ToInt32(change.Range.End.Line),
-                    })
-                    .ToArray();
 
-                return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
+            var changes = notification.ContentChanges
+                .Select(change => new LinePositionSpanTextChange()
                 {
-                    FileName = Helpers.FromUri(notification.TextDocument.Uri),
-                    Changes = changes
-                });
-            }
+                    NewText = change.Text,
+                    StartColumn = Convert.ToInt32(change.Range.Start.Character),
+                    StartLine = Convert.ToInt32(change.Range.Start.Line),
+                    EndColumn = Convert.ToInt32(change.Range.End.Character),
+                    EndLine = Convert.ToInt32(change.Range.End.Line),
+                })
+                .ToArray();
+
+            return _bufferManager.UpdateBufferAsync(new Request()
+            {
+                FileName = Helpers.FromUri(notification.TextDocument.Uri),
+                Changes = changes
+            });
         }
 
         public Task Handle(DidOpenTextDocumentParams notification)
@@ -129,7 +125,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             if (_capability?.DidSave == true)
             {
-                return _bufferManager.UpdateBufferAsync(new OmniSharp.Models.Request()
+                return _bufferManager.UpdateBufferAsync(new Request()
                 {
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = notification.Text

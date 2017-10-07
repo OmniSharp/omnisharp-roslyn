@@ -21,11 +21,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
-            foreach (var group in handlers)
-            {
-                var handler = group.OfType<Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>().SingleOrDefault();
-                if (handler != null) yield return new DefinitionHandler(handler, group.DocumentSelector);
-            }
+            foreach (var (selector, handler) in handlers.OfType<Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>>())
+                if (handler != null)
+                    yield return new DefinitionHandler(handler, selector);
         }
 
         private DefinitionCapability _capability;
@@ -51,7 +49,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             var omnisharpRequest = new GotoDefinitionRequest()
             {
-                FileName = Helpers.FromUri(request.TextDocument.Uri),
+                FileName = FromUri(request.TextDocument.Uri),
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line)
             };
@@ -60,7 +58,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             return new LocationOrLocations(new Location()
             {
-                Uri = Helpers.ToUri(omnisharpResponse.FileName),
+                Uri = ToUri(omnisharpResponse.FileName),
                 Range = ToRange((omnisharpResponse.Column, omnisharpResponse.Line))
             });
         }

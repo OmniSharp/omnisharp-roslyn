@@ -31,6 +31,66 @@ namespace OmniSharp.LanguageServerProtocol
                 .GetEnumerator();
         }
 
+        public IEnumerable<(DocumentSelector selector, T handler)> OfType<T>()
+            where T : IRequestHandler
+        {
+            foreach (var group in this)
+            {
+                yield return (
+                    group.DocumentSelector,
+                    group.OfType<T>().SingleOrDefault()
+                );
+            }
+        }
+
+        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2)> OfType<T, T2>()
+            where T : IRequestHandler
+            where T2 : IRequestHandler
+        {
+            foreach (var group in this)
+            {
+                yield return (
+                    group.DocumentSelector,
+                    group.OfType<T>().SingleOrDefault(),
+                    group.OfType<T2>().SingleOrDefault()
+                );
+            }
+        }
+
+        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2, T3 handler3)> OfType<T, T2, T3>()
+            where T : IRequestHandler
+            where T2 : IRequestHandler
+            where T3 : IRequestHandler
+        {
+            foreach (var group in this)
+            {
+                yield return (
+                    group.DocumentSelector,
+                    group.OfType<T>().SingleOrDefault(),
+                    group.OfType<T2>().SingleOrDefault(),
+                    group.OfType<T3>().SingleOrDefault()
+                );
+            }
+        }
+
+        public IEnumerable<(DocumentSelector selector, T handler, T2 handler2, T3 handler3, T4 handler4)> OfType<T, T2, T3, T4>()
+            where T : IRequestHandler
+            where T2 : IRequestHandler
+            where T3 : IRequestHandler
+            where T4 : IRequestHandler
+        {
+            foreach (var group in this)
+            {
+                yield return (
+                    group.DocumentSelector,
+                    group.OfType<T>().SingleOrDefault(),
+                    group.OfType<T2>().SingleOrDefault(),
+                    group.OfType<T3>().SingleOrDefault(),
+                    group.OfType<T4>().SingleOrDefault()
+                );
+            }
+        }
+
         public IEnumerable<IRequestHandler> GetAll()
         {
             return _requestHandlers.Select(z => z.Value);
