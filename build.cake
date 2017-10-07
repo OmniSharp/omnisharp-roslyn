@@ -39,11 +39,11 @@ bool AllowLegacyTests()
         return true;
     }
 
-    // On macOS, only run legacy tests on El Capitan or lower
+    // On macOS, only run legacy tests on Sierra or lower
     if (platform.IsMacOS)
     {
         return platform.Version.Major == 10
-            && platform.Version.Minor <= 11;
+            && platform.Version.Minor <= 12;
     }
 
     if (platform.IsLinux)
@@ -326,6 +326,12 @@ Task("PrepareTestAssets")
 
     if (AllowLegacyTests())
     {
+        if (Platform.Current.IsMacOS && Platform.Current.Version.ToString() == "10.12")
+        {
+            // Trick to allow older .NET Core SDK to run on Sierra.
+            Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", "osx.10.11-x64");
+        }
+
         // Restore and build legacy test assets with legacy .NET Core SDK
         foreach (var project in buildPlan.LegacyTestAssets)
         {
