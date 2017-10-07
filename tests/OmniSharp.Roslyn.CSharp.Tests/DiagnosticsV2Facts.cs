@@ -38,11 +38,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await emitter.Emitted;
 
-                Assert.Equal(1, messages.Count);
+                Assert.Single(messages);
                 var message = messages.First();
-                Assert.Equal(1, message.Results.Count());
+                Assert.Single(message.Results);
                 var result = message.Results.First();
-                Assert.Equal(1, result.QuickFixes.Count());
+                Assert.Single(result.QuickFixes);
                 Assert.Equal(filename, result.FileName);
             }
         }
@@ -67,16 +67,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await emitter.Emitted;
 
-                Assert.Equal(1, messages.Count);
+                Assert.Single(messages);
                 var message = messages.First();
                 Assert.Equal(2, message.Results.Count());
 
                 var a = message.Results.First(x => x.FileName == filename1);
-                Assert.Equal(1, a.QuickFixes.Count());
+                Assert.Single(a.QuickFixes);
                 Assert.Equal(filename1, a.FileName);
 
                 var b = message.Results.First(x => x.FileName == filename2);
-                Assert.Equal(1, b.QuickFixes.Count());
+                Assert.Single(b.QuickFixes);
                 Assert.Equal(filename2, b.FileName);
             }
         }

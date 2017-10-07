@@ -16,7 +16,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.AutoComplete;
 
-        protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string filename, string source, bool wantSnippet = false)
+        protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string filename, string source, bool wantSnippet = false, string triggerChar = null)
         {
             var testFile = new TestFile(filename, source);
             using (var host = CreateOmniSharpHost(testFile))
@@ -32,7 +32,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     WordToComplete = GetPartialWord(testFile.Content),
                     WantMethodHeader = true,
                     WantSnippet = wantSnippet,
-                    WantReturnType = true
+                    WantReturnType = true,
+                    TriggerCharacter = triggerChar
                 };
 
                 var requestHandler = GetRequestHandler(host);

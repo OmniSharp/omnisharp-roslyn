@@ -218,6 +218,27 @@ Task("InstallMonoAssets")
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
 });
 
+void CopyDotNetHostResolver(BuildEnvironment env, string os, string arch, string hostFileName, string targetFolderBase, bool copyToArchSpecificFolder)
+{
+    var source = CombinePaths(
+        env.Folders.Tools,
+        $"runtime.{os}-{arch}.Microsoft.NETCore.DotNetHostResolver",
+        "runtimes",
+        $"{os}-{arch}",
+        "native",
+        hostFileName);
+
+    var targetFolder = targetFolderBase;
+
+    if (copyToArchSpecificFolder)
+    {
+        targetFolder = CombinePaths(targetFolderBase, arch);
+        DirectoryHelper.ForceCreate(targetFolder);
+    }
+
+    FileHelper.Copy(source, CombinePaths(targetFolder, hostFileName));
+}
+
 /// <summary>
 /// Create '.msbuild' folder and copy content to it.
 /// </summary>
@@ -227,17 +248,43 @@ Task("CreateMSBuildFolder")
 {
     DirectoryHelper.ForceCreate(env.Folders.MSBuild);
 
-    if (!Platform.Current.IsWindows)
+    string sdkResolverTFM;
+
+    if (Platform.Current.IsWindows)
     {
-        Information("Copying Mono MSBuild runtime...");
-        DirectoryHelper.Copy(env.Folders.MonoMSBuildRuntime, env.Folders.MSBuild);
+        Information("Copying MSBuild runtime...");
+        var msbuildRuntimeFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net46");
+        DirectoryHelper.Copy(msbuildRuntimeFolder, env.Folders.MSBuild);
+        sdkResolverTFM = "net46";
     }
     else
     {
-        Information("Copying MSBuild runtime...");
+        Information("Copying Mono MSBuild runtime...");
+        DirectoryHelper.Copy(env.Folders.MonoMSBuildRuntime, env.Folders.MSBuild);
+        sdkResolverTFM = "netstandard1.5";
+    }
 
-        var msbuildRuntimeFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net46");
-        DirectoryHelper.Copy(msbuildRuntimeFolder, env.Folders.MSBuild);
+    // Copy MSBuild SDK Resolver and DotNetHostResolver
+    Information("Coping MSBuild SDK resolver...");
+    var sdkResolverFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
+    var msbuildSdkResolverFolder = CombinePaths(env.Folders.MSBuild, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
+    DirectoryHelper.ForceCreate(msbuildSdkResolverFolder);
+    FileHelper.Copy(
+        source: CombinePaths(sdkResolverFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
+        destination: CombinePaths(msbuildSdkResolverFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
+
+    if (Platform.Current.IsWindows)
+    {
+        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverFolder, copyToArchSpecificFolder: true);
+    }
+    else if (Platform.Current.IsMacOS)
+    {
+        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverFolder, copyToArchSpecificFolder: false);
+    }
+    else if (Platform.Current.IsLinux)
+    {
+        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverFolder, copyToArchSpecificFolder: false);
     }
 
     // Copy content of Microsoft.Net.Compilers

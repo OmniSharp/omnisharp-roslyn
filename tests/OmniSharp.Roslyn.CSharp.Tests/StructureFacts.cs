@@ -25,7 +25,7 @@ namespace OmniSharp.Tests
 
             var nodes = await GetStructureAsync(source);
 
-            Assert.Equal(1, nodes.Length);
+            Assert.Single(nodes);
             Assert.Equal("Far", nodes[0].Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes.First().Kind);
         }
@@ -43,7 +43,7 @@ namespace OmniSharp.Tests
 
 
             var nodes = await GetStructureAsync(source);
-            Assert.Equal(1, nodes.Length);
+            Assert.Single(nodes);
             Assert.Equal("Far", nodes[0].Location.Text);
             Assert.Equal(SyntaxKind.ClassDeclaration.ToString(), nodes[0].Kind);
 
@@ -66,7 +66,7 @@ namespace OmniSharp.Tests
 
             var nodes = await GetStructureAsync(source);
 
-            Assert.Equal(1, nodes.Length);
+            Assert.Single(nodes);
             Assert.Equal("Far", nodes[0].Location.Text);
             Assert.Equal(SyntaxKind.InterfaceDeclaration.ToString(), nodes[0].Kind);
         }

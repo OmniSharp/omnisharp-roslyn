@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var files = await GetFilesAsync();
 
-            Assert.Equal(0, files.Length);
+            Assert.Empty(files);
         }
 
         private async Task<QuickFix[]> GetFilesAsync(params TestFile[] testFiles)

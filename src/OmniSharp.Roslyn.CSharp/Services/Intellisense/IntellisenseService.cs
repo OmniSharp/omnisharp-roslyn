@@ -43,7 +43,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
                 if (completionList != null)
                 {
-                    // get recommened symbols to match them up later with SymbolCompletionProvider
+                    // Only trigger on space if Roslyn has object creation items
+                    if (request.TriggerCharacter == " " && !completionList.Items.Any(i => i.IsObjectCreationCompletionItem()))
+                    {
+                        return completions;
+                    }
+
+                    // get recommended symbols to match them up later with SymbolCompletionProvider
                     var semanticModel = await document.GetSemanticModelAsync();
                     var recommendedSymbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, position, _workspace);
 

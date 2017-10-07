@@ -169,7 +169,7 @@ public class Bar {
             var changes = result.Changes.ToArray();
 
             Assert.Equal(2, changes.Length);
-            Assert.Equal(1, changes[0].Changes.Count());
+            Assert.Single(changes[0].Changes);
 
             Assert.Null(changes[0].Buffer);
             Assert.Equal("xxx", changes[0].Changes.First().NewText);
@@ -200,7 +200,7 @@ public class Bar {
 
                 var changes = result.Changes.ToArray();
 
-                Assert.Equal(1, changes.Length);
+                Assert.Single(changes);
                 Assert.Equal(testFile.FileName, changes[0].FileName);
             }
         }
@@ -221,7 +221,7 @@ public class Program
             var testFile = new TestFile("test.cs", fileContent);
             var result = await PerformRename(testFile, "foo");
 
-            Assert.Equal(0, result.Changes.Count());
+            Assert.Empty(result.Changes);
             Assert.NotNull(result.ErrorMessage);
         }
 
@@ -243,7 +243,7 @@ public class Program
 
             var changes = result.Changes.ToArray();
 
-            Assert.Equal(1, changes.Length);
+            Assert.Single(changes);
             Assert.Equal(testFile.FileName, changes[0].FileName);
             Assert.Equal(2, changes[0].Changes.Count());
         }
