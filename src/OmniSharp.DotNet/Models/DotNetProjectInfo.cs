@@ -5,9 +5,9 @@ using OmniSharp.DotNet.Cache;
 
 namespace OmniSharp.DotNet.Models
 {
-    public class DotNetProjectInformation
+    public class DotNetProjectInfo
     {
-        public DotNetProjectInformation(ProjectEntry entry, bool includeSourceFiles = false)
+        public DotNetProjectInfo(ProjectEntry entry, bool includeSourceFiles = false)
         {
             this.Path = entry.ProjectDirectory;
 
@@ -34,9 +34,9 @@ namespace OmniSharp.DotNet.Models
 
         public string Path { get; }
         public string Name { get; }
-        public IEnumerable<string> ProjectSearchPaths { get; set; }
-        public IEnumerable<DotNetConfiguration> Configurations { get; set; }
-        public IEnumerable<DotNetFramework> Frameworks { get; set; }
-        public IEnumerable<string> SourceFiles { get; set; }
+        public IList<string> ProjectSearchPaths { get; set; }
+        public IList<DotNetConfiguration> Configurations { get; set; }
+        public IList<DotNetFramework> Frameworks { get; set; }
+        public IList<string> SourceFiles { get; set; }
     }
 }

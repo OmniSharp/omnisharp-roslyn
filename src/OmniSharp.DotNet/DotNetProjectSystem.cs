@@ -69,7 +69,7 @@ namespace OmniSharp.DotNet
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(
-                new DotNetWorkspaceInformation(
+                new DotNetWorkspaceInfo(
                     entries: _projectStates.GetStates,
                     includeSourceFiles: !request.ExcludeSourceFiles));
         }
@@ -97,7 +97,7 @@ namespace OmniSharp.DotNet
             }
 
             return Task.FromResult<object>(
-                new DotNetProjectInformation(projectEntry));
+                new DotNetProjectInfo(projectEntry));
         }
 
         public void Initalize(IConfiguration configuration)

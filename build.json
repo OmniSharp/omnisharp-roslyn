@@ -42,6 +42,7 @@
   "LegacyTestAssets": [
     "LegacyNunitTestProject",
     "LegacyXunitTestProject",
-    "LegacyMSTestProject"
+    "LegacyMSTestProject",
+    "LegacyProjectJsonApp"
   ]
 }

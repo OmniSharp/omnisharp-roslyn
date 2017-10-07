@@ -1,0 +1,56 @@
+﻿using System.Linq;
+using System.Threading.Tasks;
+using OmniSharp.DotNet.Models;
+using OmniSharp.Models.WorkspaceInformation;
+using TestUtility;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace OmniSharp.DotNet.Tests
+{
+    public class WorkspaceInformationTests : AbstractTestFixture
+    {
+        public WorkspaceInformationTests(ITestOutputHelper output)
+            : base(output)
+        {
+        }
+
+        [ConditionalFact(typeof(IsLegacyTest))]
+        public async Task TestSimpleProject()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyProjectJsonApp"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Single(workspaceInfo.Projects);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal("LegacyProjectJsonApp", project.Name);
+                Assert.Equal("netcoreapp1.1", project.Frameworks[0].ShortName);
+
+                Assert.Equal(2, project.Configurations.Count);
+                Assert.Contains(project.Configurations, c => c.Name == "Debug");
+                Assert.Contains(project.Configurations, c => c.Name == "Release");
+                Assert.True(project.Configurations.All(c => c.EmitEntryPoint == true));
+
+                Assert.Single(project.SourceFiles);
+            }
+        }
+
+        private static async Task<DotNetWorkspaceInfo> GetWorkspaceInfoAsync(OmniSharpTestHost host)
+        {
+            var service = host.GetWorkspaceInformationService();
+
+            var request = new WorkspaceInformationRequest
+            {
+                ExcludeSourceFiles = false
+            };
+
+            var response = await service.Handle(request);
+
+            return (DotNetWorkspaceInfo)response["DotNet"];
+        }
+    }
+}
