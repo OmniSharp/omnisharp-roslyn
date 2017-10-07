@@ -56,11 +56,11 @@ namespace OmniSharp.DotNetTest.Tests
         [InlineData("LegacyXunitTestProject", "TestProgram.cs", 15, 20, true, "XunitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
         [InlineData("LegacyXunitTestProject", "TestProgram.cs", 23, 20, true, "XunitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
         [InlineData("LegacyXunitTestProject", "TestProgram.cs", 28, 21, false, "", "")]
-        [InlineData("LegacyNunitTestProject", "TestProgram.cs", 7, 20, true, "NUnitTestMethod", "Main.Test.MainTest.Test")]
-        [InlineData("LegacyNunitTestProject", "TestProgram.cs", 14, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData("LegacyNunitTestProject", "TestProgram.cs", 21, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData("LegacyNunitTestProject", "TestProgram.cs", 27, 20, true, "NUnitTestMethod", "Main.Test.MainTest.SourceDataDrivenTest")]
-        [InlineData("LegacyNunitTestProject", "TestProgram.cs", 32, 20, false, "", "")]
+        [InlineData("LegacyNUnitTestProject", "TestProgram.cs", 7, 20, true, "NUnitTestMethod", "Main.Test.MainTest.Test")]
+        [InlineData("LegacyNUnitTestProject", "TestProgram.cs", 14, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
+        [InlineData("LegacyNUnitTestProject", "TestProgram.cs", 21, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
+        [InlineData("LegacyNUnitTestProject", "TestProgram.cs", 27, 20, true, "NUnitTestMethod", "Main.Test.MainTest.SourceDataDrivenTest")]
+        [InlineData("LegacyNUnitTestProject", "TestProgram.cs", 32, 20, false, "", "")]
         public async Task LegacyFindTestMethods(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
