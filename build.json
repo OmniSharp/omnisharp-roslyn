@@ -1,7 +1,7 @@
 {
   "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/release/2.0.0/scripts/obtain",
   "DotNetChannel": "preview",
-  "DotNetVersion": "1.1.4",
+  "DotNetVersion": "2.0.0",
   "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
   "RequiredMonoVersion": "5.2.0.196",
   "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",

@@ -338,7 +338,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
     if (Platform.Current.IsWindows)
     {
         command = env.DotNetCommand;
-        arguments = $"build \"{projectFilePath}\" --configuration {configuration} /v:d";
+        arguments = $"build \"{projectFilePath}\" --no-restore --configuration {configuration} /v:d";
     }
     else
     {

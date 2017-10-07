@@ -41,7 +41,7 @@
     <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
     <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
-    <SystemReflectionMetadataVersion>1.5.0</SystemReflectionMetadataVersion>
+    <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
     <XunitRunnerVisualStudioVersion>2.3.0-rc1-build3809</XunitRunnerVisualStudioVersion>
