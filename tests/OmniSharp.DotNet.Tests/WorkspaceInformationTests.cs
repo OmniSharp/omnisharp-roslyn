@@ -39,6 +39,75 @@ namespace OmniSharp.DotNet.Tests
             }
         }
 
+        [ConditionalFact(typeof(IsLegacyTest))]
+        public async Task TestMSTestProject()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyMSTestProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Single(workspaceInfo.Projects);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal("LegacyMSTestProject", project.Name);
+                Assert.Equal("netcoreapp1.0", project.Frameworks[0].ShortName);
+
+                Assert.Equal(2, project.Configurations.Count);
+                Assert.Contains(project.Configurations, c => c.Name == "Debug");
+                Assert.Contains(project.Configurations, c => c.Name == "Release");
+
+                Assert.Single(project.SourceFiles);
+            }
+        }
+
+        [ConditionalFact(typeof(IsLegacyTest))]
+        public async Task TestNUnitProject()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyNUnitTestProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Single(workspaceInfo.Projects);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal("LegacyNUnitTestProject", project.Name);
+                Assert.Equal("netcoreapp1.0", project.Frameworks[0].ShortName);
+
+                Assert.Equal(2, project.Configurations.Count);
+                Assert.Contains(project.Configurations, c => c.Name == "Debug");
+                Assert.Contains(project.Configurations, c => c.Name == "Release");
+
+                Assert.Single(project.SourceFiles);
+            }
+        }
+
+        [ConditionalFact(typeof(IsLegacyTest))]
+        public async Task TestXunitProject()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyXunitTestProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Single(workspaceInfo.Projects);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal("LegacyXunitTestProject", project.Name);
+                Assert.Equal("netcoreapp1.0", project.Frameworks[0].ShortName);
+
+                Assert.Equal(2, project.Configurations.Count);
+                Assert.Contains(project.Configurations, c => c.Name == "Debug");
+                Assert.Contains(project.Configurations, c => c.Name == "Release");
+
+                Assert.Single(project.SourceFiles);
+            }
+        }
+
         private static async Task<DotNetWorkspaceInfo> GetWorkspaceInfoAsync(OmniSharpTestHost host)
         {
             var service = host.GetWorkspaceInformationService();
