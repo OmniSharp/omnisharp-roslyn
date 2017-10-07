@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using OmniSharp.Utilities;
 using Xunit;
 
 namespace TestUtility
@@ -52,7 +50,9 @@ namespace TestUtility
 
     public class IsLegacyTest : SkipCondition
     {
-        public override bool ShouldSkip => string.Equals(Environment.GetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS"), "True");
+        public override bool ShouldSkip
+            => !PlatformHelper.IsWindows
+            && string.Equals(Environment.GetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS"), "True", StringComparison.OrdinalIgnoreCase);
 
         public override string SkipReason => "Can't run legacy test";
     }

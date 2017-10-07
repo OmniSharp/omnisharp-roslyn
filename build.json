@@ -34,9 +34,7 @@
     "ProjectAndSolution",
     "ProjectAndSolutionWithProjectSection",
     "TwoProjectsWithSolution",
-    "ProjectWithGeneratedFile",
-    "NUnitTestDiscovery",
-    "XunitTestDiscovery"
+    "ProjectWithGeneratedFile"
 
   ],
   "LegacyTestAssets": [

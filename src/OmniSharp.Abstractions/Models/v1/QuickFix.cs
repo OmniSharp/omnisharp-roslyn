@@ -25,8 +25,7 @@ namespace OmniSharp.Models
                 return false;
             }
 
-            return
-                FileName == quickFix.FileName
+            return FileName == quickFix.FileName
                 && Line == quickFix.Line
                 && Column == quickFix.Column
                 && EndLine == quickFix.EndLine
@@ -47,6 +46,29 @@ namespace OmniSharp.Models
                 hash = hash * 23 + (Text?.GetHashCode()).GetValueOrDefault();
                 return hash;
             }
+        }
+
+        public override string ToString()
+            => $"({Line}:{Column}) - ({EndLine}:{EndColumn})";
+
+        public bool Contains(int line, int column)
+        {
+            if (Line > line || EndLine < line)
+            {
+                return false;
+            }
+
+            if (Line == line && Column > column)
+            {
+                return false;
+            }
+
+            if (EndLine == line && EndColumn < column)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
