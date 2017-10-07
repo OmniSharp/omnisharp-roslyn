@@ -7,19 +7,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+    <ProjectReference Include="..\OmniSharp.DotNet.ProjectModel\OmniSharp.DotNet.ProjectModel.csproj" />
     <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
-    <PackageReference Include="Microsoft.DotNet.ProjectModel" Version="$(MicrosoftDotNetProjectModelVersion)" />
-    <PackageReference Include="Microsoft.DotNet.InternalAbstractions" Version="$(MicrosoftDotNetInternalAbstractionsVersion)" />
-    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="$(MicrosoftExtensionsPlatformAbstractionsVersion)" />
-
-    <!-- Need to keep an old version of these packages around to support Microsoft.DotNet.ProjectModel.
-         They were ultimately removed in NuGet 4.3.0 -->
-    <PackageReference Include="NuGet.Packaging.Core.Types" Version="$(NuGetPackagingCoreTypesVersion)" />
-    <PackageReference Include="NuGet.RuntimeModel" Version="$(NuGetRuntimeModelVersion)" />
   </ItemGroup>
 
 </Project>

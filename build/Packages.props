@@ -7,18 +7,16 @@
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>
     <MicrosoftAspNetCoreServerKestrelVersion>1.1.0</MicrosoftAspNetCoreServerKestrelVersion>
-    <MicrosoftBuildVersion>15.3.0-preview-000388-01</MicrosoftBuildVersion>
-    <MicrosoftBuildFrameworkVersion>15.3.0-preview-000388-01</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildTasksCoreVersion>15.3.0-preview-000388-01</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>15.3.0-preview-000388-01</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisCommonVersion>2.3.1</MicrosoftCodeAnalysisCommonVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>2.3.1</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftCodeAnalysisCSharpFeaturesVersion>2.3.1</MicrosoftCodeAnalysisCSharpFeaturesVersion>
-    <MicrosoftCodeAnalysisCSharpScriptingVersion>2.3.1</MicrosoftCodeAnalysisCSharpScriptingVersion>
-    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>2.3.1</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
-    <MicrosoftCodeAnalysisWorkspacesCommonVersion>2.3.1</MicrosoftCodeAnalysisWorkspacesCommonVersion>
-    <MicrosoftDotNetProjectModelVersion>1.0.0-rc3-1-003177</MicrosoftDotNetProjectModelVersion>
-    <MicrosoftDotNetInternalAbstractionsVersion>1.0.500-preview2-1-003177</MicrosoftDotNetInternalAbstractionsVersion>
+    <MicrosoftBuildVersion>15.3.409</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>15.3.409</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>15.3.409</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.3.409</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisCommonVersion>2.3.2</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>2.3.2</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpFeaturesVersion>2.3.2</MicrosoftCodeAnalysisCSharpFeaturesVersion>
+    <MicrosoftCodeAnalysisCSharpScriptingVersion>2.3.2</MicrosoftCodeAnalysisCSharpScriptingVersion>
+    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>2.3.2</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
+    <MicrosoftCodeAnalysisWorkspacesCommonVersion>2.3.2</MicrosoftCodeAnalysisWorkspacesCommonVersion>
     <MicrosoftExtensionsCachingMemoryVersion>1.1.0</MicrosoftExtensionsCachingMemoryVersion>
     <MicrosoftExtensionsCommandLineUtilsVersion>1.1.0</MicrosoftExtensionsCommandLineUtilsVersion>
     <MicrosoftExtensionsConfigurationVersion>1.1.0</MicrosoftExtensionsConfigurationVersion>
@@ -35,16 +33,15 @@
     <MicrosoftExtensionsOptionsVersion>1.1.0</MicrosoftExtensionsOptionsVersion>
     <MicrosoftExtensionsOptionsConfigurationExtensionsVersion>1.1.0</MicrosoftExtensionsOptionsConfigurationExtensionsVersion>
     <MicrosoftExtensionsPlatformAbstractionsVersion>1.1.0</MicrosoftExtensionsPlatformAbstractionsVersion>
-    <MicrosoftExtensionsTestingAbstractionsVersion>1.0.0-preview2-1-003177</MicrosoftExtensionsTestingAbstractionsVersion>
     <MicrosoftNetTestSdkVersion>15.0.0</MicrosoftNetTestSdkVersion>
     <MicrosoftTestPlatformTranslationLayerVersion>15.3.0</MicrosoftTestPlatformTranslationLayerVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
+    <NuGetPackagingVersion>4.3.0</NuGetPackagingVersion>
     <NuGetPackagingCoreVersion>4.3.0</NuGetPackagingCoreVersion>
-    <NuGetPackagingCoreTypesVersion>3.5.0</NuGetPackagingCoreTypesVersion>
     <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
-    <NuGetRuntimeModelVersion>3.5.0</NuGetRuntimeModelVersion>
     <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
+    <SystemReflectionMetadataVersion>1.5.0</SystemReflectionMetadataVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
     <XunitRunnerVisualStudioVersion>2.3.0-rc1-build3809</XunitRunnerVisualStudioVersion>
