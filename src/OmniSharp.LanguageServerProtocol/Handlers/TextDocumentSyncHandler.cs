@@ -15,6 +15,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FileClose;
 using OmniSharp.Models.FileOpen;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Roslyn;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
@@ -26,11 +27,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             RequestHandlers handlers,
             OmniSharpWorkspace workspace)
         {
-            foreach (var (selector, openHandler, closeHandler) in handlers
+            foreach (var (selector, openHandler, closeHandler, bufferHandler) in handlers
                 .OfType<
                     Mef.IRequestHandler<FileOpenRequest, FileOpenResponse>,
-                    Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>>())
-                yield return new TextDocumentSyncHandler(openHandler, closeHandler, selector, workspace);
+                    Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>,
+                    Mef.IRequestHandler<UpdateBufferRequest, object>>())
+                yield return new TextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, workspace);
         }
 
         // TODO Make this configurable?
@@ -38,24 +40,23 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private SynchronizationCapability _capability;
         private readonly Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> _openHandler;
         private readonly Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> _closeHandler;
-        private readonly BufferManager _bufferManager;
+        private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
         public TextDocumentSyncHandler(
             Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
             Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
+            Mef.IRequestHandler<UpdateBufferRequest, object> bufferHandler,
             DocumentSelector documentSelector,
             OmniSharpWorkspace workspace)
         {
             _openHandler = openHandler;
             _closeHandler = closeHandler;
-            _bufferManager = workspace.BufferManager;
+            _bufferHandler = bufferHandler;
             _workspace = workspace;
             _documentSelector = documentSelector;
         }
-
-        public string Key => (string)_documentSelector;
 
         public TextDocumentSyncOptions Options { get; } = new TextDocumentSyncOptions()
         {
@@ -73,7 +74,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             var document = _workspace.GetDocument(Helpers.FromUri(uri));
             if (document == null) return new TextDocumentAttributes(uri, "");
-            return new TextDocumentAttributes(uri, "csharp");
+            return new TextDocumentAttributes(uri, "");
         }
 
         public Task Handle(DidChangeTextDocumentParams notification)
@@ -81,7 +82,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             if (notification.ContentChanges.Count() == 1 && notification.ContentChanges.First().Range == null)
             {
                 var change = notification.ContentChanges.First();
-                return _bufferManager.UpdateBufferAsync(new Request()
+                return _bufferHandler.Handle(new UpdateBufferRequest()
                 {
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = change.Text
@@ -99,7 +100,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 })
                 .ToArray();
 
-            return _bufferManager.UpdateBufferAsync(new Request()
+            return _bufferHandler.Handle(new UpdateBufferRequest()
             {
                 FileName = Helpers.FromUri(notification.TextDocument.Uri),
                 Changes = changes
@@ -127,7 +128,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             if (_capability?.DidSave == true)
             {
-                return _bufferManager.UpdateBufferAsync(new Request()
+                return _bufferHandler.Handle(new UpdateBufferRequest()
                 {
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
                     Buffer = notification.Text
