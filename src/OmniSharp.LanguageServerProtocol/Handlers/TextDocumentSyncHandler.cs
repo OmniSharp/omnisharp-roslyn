@@ -55,6 +55,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _documentSelector = documentSelector;
         }
 
+        public string Key => (string)_documentSelector;
+
         public TextDocumentSyncOptions Options { get; } = new TextDocumentSyncOptions()
         {
             Change = TextDocumentSyncKind.Incremental,
