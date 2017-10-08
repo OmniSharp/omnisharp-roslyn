@@ -56,6 +56,11 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var omnisharpResponse = await _definitionHandler.Handle(omnisharpRequest);
 
+            if (string.IsNullOrWhiteSpace(omnisharpResponse.FileName))
+            {
+                return new LocationOrLocations();
+            }
+
             return new LocationOrLocations(new Location()
             {
                 Uri = ToUri(omnisharpResponse.FileName),

@@ -38,12 +38,6 @@ namespace OmniSharp.LanguageServerProtocol
             };
         }
 
-        internal static Uri ToUri(string fileName)
-        {
-            if (!fileName.StartsWith("/")) return new Uri($"file:///{fileName}");
-            return new Uri($"file://{fileName}");
-        }
-
         public static DiagnosticSeverity ToDiagnosticSeverity(string logLevel)
         {
             // We stringify this value and pass to clients
@@ -64,6 +58,13 @@ namespace OmniSharp.LanguageServerProtocol
             }
 
             return DiagnosticSeverity.Information;
+        }
+
+        public static Uri ToUri(string fileName)
+        {
+            fileName = fileName.Replace(":", "%3A").Replace("\\", "/");
+            if (!fileName.StartsWith("/")) return new Uri($"file:///{fileName}");
+            return new Uri($"file://{fileName}");
         }
 
         public static string FromUri(Uri uri)
@@ -91,15 +92,15 @@ namespace OmniSharp.LanguageServerProtocol
 
         public static Position ToPosition((int column, int line) location)
         {
-            return new Position(location.column, location.line);
+            return new Position(location.line, location.column);
         }
 
         public static Range ToRange((int column, int line) start, (int column, int line) end)
         {
             return new Range()
             {
-                Start = new Position(start.column, start.line),
-                End = new Position(end.column, end.line)
+                Start = new Position(start.line, start.column),
+                End = new Position(end.line, end.column)
             };
         }
     }
