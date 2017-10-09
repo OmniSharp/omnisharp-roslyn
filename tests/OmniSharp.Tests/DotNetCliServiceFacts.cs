@@ -12,7 +12,7 @@ namespace OmniSharp.Tests
         {
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public void LegacyGetVersion()
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
@@ -28,7 +28,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public void LegacyGetInfo()
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
@@ -53,9 +53,9 @@ namespace OmniSharp.Tests
 
                 var version = dotNetCli.GetVersion();
 
-                Assert.Equal(1, version.Major);
+                Assert.Equal(2, version.Major);
                 Assert.Equal(0, version.Minor);
-                Assert.Equal(4, version.Patch);
+                Assert.Equal(0, version.Patch);
                 Assert.Equal("", version.Release);
             }
         }
@@ -69,9 +69,9 @@ namespace OmniSharp.Tests
 
                 var info = dotNetCli.GetInfo();
 
-                Assert.Equal(1, info.Version.Major);
+                Assert.Equal(2, info.Version.Major);
                 Assert.Equal(0, info.Version.Minor);
-                Assert.Equal(4, info.Version.Patch);
+                Assert.Equal(0, info.Version.Patch);
                 Assert.Equal("", info.Version.Release);
             }
         }

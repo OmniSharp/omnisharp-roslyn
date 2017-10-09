@@ -71,7 +71,7 @@ namespace OmniSharp.DotNet.Cache
                 }
             }
 
-            var projectInformation = new DotNetProjectInformation(entry);
+            var projectInformation = new DotNetProjectInfo(entry);
             if (added)
             {
                 EmitProject(EventTypes.ProjectChanged, projectInformation);
@@ -95,7 +95,7 @@ namespace OmniSharp.DotNet.Cache
             foreach (var key in removeList)
             {
                 var entry = _projects[key];
-                var projectInformation = new DotNetProjectInformation(entry);
+                var projectInformation = new DotNetProjectInfo(entry);
 
                 EmitProject(EventTypes.ProjectRemoved, projectInformation);
                 removeAction(entry);
@@ -153,7 +153,7 @@ namespace OmniSharp.DotNet.Cache
             return result;
         }
 
-        private void EmitProject(string eventType, DotNetProjectInformation information)
+        private void EmitProject(string eventType, DotNetProjectInfo information)
         {
             _emitter.Emit(
                 eventType,

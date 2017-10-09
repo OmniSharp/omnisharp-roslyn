@@ -13,7 +13,7 @@ namespace OmniSharp.DotNetTest.Tests
 
         public override DotNetCliVersion DotNetCliVersion { get; } = DotNetCliVersion.Legacy;
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunXunitTest()
         {
             await GetDotNetTestStartInfoAsync(
@@ -22,7 +22,7 @@ namespace OmniSharp.DotNetTest.Tests
                 testFramework: "xunit");
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunNunitTest()
         {
             await GetDotNetTestStartInfoAsync(
@@ -31,7 +31,7 @@ namespace OmniSharp.DotNetTest.Tests
                 testFramework: "nunit");
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunMSTestTest()
         {
             await GetDotNetTestStartInfoAsync(
