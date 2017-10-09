@@ -24,6 +24,12 @@ addons:
       - zlib1g
       - curl
 
+before_install:
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      rvm install ruby-2.3.3
+    fi
+
 install:
   - | # On Unix, build libuv from source. On OSX, install it via Homebrew.
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
