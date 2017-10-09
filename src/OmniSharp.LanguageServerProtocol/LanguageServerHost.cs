@@ -135,6 +135,7 @@ namespace OmniSharp.LanguageServerProtocol
             _server.AddHandlers(TextDocumentSyncHandler.Enumerate(_handlers, workspace));
             _server.AddHandlers(DefinitionHandler.Enumerate(_handlers));
             _server.AddHandlers(HoverHandler.Enumerate(_handlers));
+            _server.AddHandlers(CompletionHandler.Enumerate(_handlers));
 
             _server.LogMessage(new LogMessageParams()
             {
