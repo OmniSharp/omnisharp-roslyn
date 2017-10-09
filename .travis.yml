@@ -5,7 +5,6 @@ env:
   global:
     secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
 mono: latest
-dotnet: 2.0.0
 os:
   - linux
   - osx
@@ -39,8 +38,11 @@ install:
       sudo rm -rf /usr/local/src/libuv-1.14.0
       sudo ldconfig
     elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      brew update
       brew install libuv
     fi
+
+  - export PATH="$PWD/.dotnet:$PATH"
 
 notifications:
   slack:
