@@ -39,9 +39,17 @@ install:
       sudo ldconfig
     elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
       brew update
+
+      # Need to install openssl for .NET Core SDK 1.0 (legacy tests)
+      brew install openssl
+      mkdir -p /usr/local/lib
+      ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
+      ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+
       brew install libuv
     fi
 
+  - export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
   - export PATH="$PWD/.dotnet:$PATH"
 
 notifications:
