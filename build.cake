@@ -97,7 +97,7 @@ Task("Setup")
     .IsDependentOn("InstallMonoAssets")
     .IsDependentOn("CreateMSBuildFolder");
 
-void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder, bool sharedRuntime = false)
+void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder, bool sharedRuntime = false, bool noPath = false)
 {
     if (!DirectoryHelper.Exists(installFolder))
     {
@@ -137,6 +137,11 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
         argList.Add("-SharedRuntime");
     }
 
+    if (noPath)
+    {
+        argList.Add("-NoPath");
+    }
+
     Run(env.ShellCommand, $"{env.ShellArgument} {scriptFilePath} {string.Join(" ", argList)}").ExceptionOnError($"Failed to Install .NET Core SDK {version}");
 }
 
@@ -163,7 +168,8 @@ Task("InstallDotNetCoreSdk")
         // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
         InstallDotNetSdk(env, buildPlan,
             version: buildPlan.LegacyDotNetVersion,
-            installFolder: env.Folders.LegacyDotNetSdk);
+            installFolder: env.Folders.LegacyDotNetSdk,
+            noPath: true);
     }
 
     Run(env.DotNetCommand, "--info");
