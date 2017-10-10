@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration.Parser;
 
 namespace OmniSharp.Cake.Configuration
@@ -16,7 +17,7 @@ namespace OmniSharp.Cake.Configuration
         private readonly Dictionary<string, string> _lookup;
 
         [ImportingConstructor]
-        public CakeConfiguration(IOmniSharpEnvironment environment)
+        public CakeConfiguration(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory)
         {
             _lookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -24,11 +25,20 @@ namespace OmniSharp.Cake.Configuration
             var configurationPath = Path.Combine(environment.TargetDirectory, "cake.config");
             if (File.Exists(configurationPath))
             {
-                var parser = new ConfigurationParser();
-                var configuration = parser.Read(configurationPath);
-                foreach (var key in configuration.Keys)
+                try
                 {
-                    _lookup[KeyNormalizer.Normalize(key)] = configuration[key];
+                    var parser = new ConfigurationParser();
+                    var configuration = parser.Read(configurationPath);
+                    foreach (var key in configuration.Keys)
+                    {
+                        _lookup[KeyNormalizer.Normalize(key)] = configuration[key];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    loggerFactory
+                        .CreateLogger<CakeConfiguration>()
+                        .LogError(ex, "Error occured while parsing Cake configuration.");
                 }
             }
         }
