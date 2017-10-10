@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -69,7 +70,7 @@ namespace OmniSharp.DotNet
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
             return Task.FromResult<object>(
-                new DotNetWorkspaceInformation(
+                new DotNetWorkspaceInfo(
                     entries: _projectStates.GetStates,
                     includeSourceFiles: !request.ExcludeSourceFiles));
         }
@@ -97,7 +98,7 @@ namespace OmniSharp.DotNet
             }
 
             return Task.FromResult<object>(
-                new DotNetProjectInformation(projectEntry));
+                new DotNetProjectInfo(projectEntry));
         }
 
         public void Initalize(IConfiguration configuration)
@@ -207,6 +208,7 @@ namespace OmniSharp.DotNet
             {
                 if (!File.Exists(fileReference))
                 {
+                    _logger.LogWarning($"    Could not resolve assembly: {fileReference}");
                     continue;
                 }
 

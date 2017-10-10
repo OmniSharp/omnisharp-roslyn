@@ -17,7 +17,7 @@ namespace OmniSharp.DotNetTest.Tests
 
         public override DotNetCliVersion DotNetCliVersion { get; } = DotNetCliVersion.Legacy;
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunXunitTest()
         {
             await RunDotNetTestAsync(
@@ -27,7 +27,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunXunitTheoryWithInlineData1()
         {
             await RunDotNetTestAsync(
@@ -37,7 +37,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: false);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunXunitTheoryWithInlineData2()
         {
             await RunDotNetTestAsync(
@@ -47,7 +47,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunNunitTest()
         {
             await RunDotNetTestAsync(
@@ -57,7 +57,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunNunitDataDriveTest1()
         {
             await RunDotNetTestAsync(
@@ -67,7 +67,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: false);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunNunitDataDriveTest2()
         {
             await RunDotNetTestAsync(
@@ -77,7 +77,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunNunitSourceDataDrivenTest()
         {
             await RunDotNetTestAsync(
@@ -87,7 +87,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
         
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunMSTest()
         {
             await RunDotNetTestAsync(
@@ -97,7 +97,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: true);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunMSTestDataDriveTest1()
         {
             await RunDotNetTestAsync(
@@ -107,7 +107,7 @@ namespace OmniSharp.DotNetTest.Tests
                 shouldPass: false);
         }
 
-        [Fact]
+        [ConditionalFact(typeof(IsLegacyTest))]
         public async Task RunMSTestDataDriveTest2()
         {
             await RunDotNetTestAsync(

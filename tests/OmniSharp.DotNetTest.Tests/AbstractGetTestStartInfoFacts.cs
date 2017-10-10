@@ -12,7 +12,7 @@ namespace OmniSharp.DotNetTest.Tests
     public abstract class AbstractGetTestStartInfoFacts : AbstractTestFixture
     {
         protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
-        protected const string LegacyNunitTestProject = "LegacyNunitTestProject";
+        protected const string LegacyNunitTestProject = "LegacyNUnitTestProject";
         protected const string LegacyMSTestProject = "LegacyMSTestProject";
         protected const string XunitTestProject = "XunitTestProject";
         protected const string NunitTestProject = "NUnitTestProject";
