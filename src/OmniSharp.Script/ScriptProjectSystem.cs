@@ -45,7 +45,7 @@ namespace OmniSharp.Script
             _compilationDependencyResolver = new CompilationDependencyResolver(type =>
             {
                 // Prefix with "OmniSharp" so that we make it through the log filter.
-                var categoryName = $"OmniSharp.{type.FullName}";
+                var categoryName = $"OmniSharp.Script.{type.FullName}";
                 var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
                 return ((level, message) =>
                 {
