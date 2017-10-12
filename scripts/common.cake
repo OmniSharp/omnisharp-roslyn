@@ -257,6 +257,7 @@ public class BuildPlan
     public string DotNetInstallScriptURL { get; set; }
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
+    public string[] DotNetSharedRuntimeVersions { get; set; }
     public string LegacyDotNetVersion { get; set; }
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }

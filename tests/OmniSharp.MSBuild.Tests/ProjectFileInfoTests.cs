@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.Services;
@@ -19,19 +20,6 @@ namespace OmniSharp.MSBuild.Tests
         {
             this._testAssets = TestAssets.Instance;
             this._logger = this.LoggerFactory.CreateLogger<ProjectFileInfoTests>();
-
-            if (!MSBuildEnvironment.IsInitialized)
-            {
-                MSBuildEnvironment.Initialize(this._logger);
-            }
-        }
-
-        private static string GetSdksPath(OmniSharpTestHost host)
-        {
-            var dotNetCli = host.GetExport<DotNetCliService>();
-            var info = dotNetCli.GetInfo();
-
-            return Path.Combine(info.BasePath, "Sdks");
         }
 
         [Fact]
@@ -42,14 +30,15 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var projectFilePath = Path.Combine(testProject.Directory, "HelloWorld.csproj");
 
-                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, GetSdksPath(host), this._logger);
+                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
 
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
-                Assert.Equal(1, projectFileInfo.TargetFrameworks.Length);
+                Assert.Single(projectFileInfo.TargetFrameworks);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
+                Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
             }
         }
 
@@ -61,11 +50,11 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var projectFilePath = Path.Combine(testProject.Directory, "HelloWorldSlim.csproj");
 
-                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, GetSdksPath(host), this._logger);
+                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
 
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
-                Assert.Equal(1, projectFileInfo.TargetFrameworks.Length);
+                Assert.Single(projectFileInfo.TargetFrameworks);
                 Assert.Equal("netcoreapp1.0", projectFileInfo.TargetFrameworks[0]);
                 Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.Replace('\\', '/'));
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
@@ -80,7 +69,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var projectFilePath = Path.Combine(testProject.Directory, "NetStandardAndNetCoreApp.csproj");
 
-                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, GetSdksPath(host), this._logger);
+                var projectFileInfo = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger);
 
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);

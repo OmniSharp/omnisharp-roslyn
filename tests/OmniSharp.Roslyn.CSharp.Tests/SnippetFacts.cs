@@ -327,7 +327,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                   }";
 
             var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
-            Assert.Equal(1, completions.Count());
+            Assert.Single(completions);
             ContainsSnippet("Colors$0", completions);
         }
 
@@ -348,7 +348,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var completions = await FindCompletionsAsync(filename, source, wantSnippet: true);
-            Assert.Equal(1, completions.Count());
+            Assert.Single(completions);
             ContainsSnippet("TickChanged$0 : TickHandler", completions);
         }
 

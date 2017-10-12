@@ -88,11 +88,11 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
-        [Fact(Skip = "We're not ready to run .NET Core SDK tests yet.")]
+        [Fact]
         public async Task ProjectWithSdkProperty()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithSdkProperty"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion.Future))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 

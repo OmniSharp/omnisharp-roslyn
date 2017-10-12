@@ -51,5 +51,7 @@ namespace OmniSharp.Models.AutoComplete
         /// Returns the kind (i.e Method, Property, Field)
         /// </summary>
         public bool WantKind { get; set; }
+
+        public string TriggerCharacter { get; set; }
     }
 }

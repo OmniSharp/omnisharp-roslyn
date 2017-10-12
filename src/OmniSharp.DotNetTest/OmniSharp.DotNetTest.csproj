@@ -14,11 +14,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
   </ItemGroup>
 
-  <!-- Legacy 'dotnet test' support -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Testing.Abstractions" Version="$(MicrosoftExtensionsTestingAbstractionsVersion)" />
-  </ItemGroup>
-
   <!-- New VSTest 'dotnet test' support -->
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPlatformTranslationLayerVersion)" />
