@@ -2,7 +2,8 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <DotnetScriptNuGetMetadataResolver>2.0.3</DotnetScriptNuGetMetadataResolver>
+    <DotnetScriptDependencyModelVersion>0.1.0</DotnetScriptDependencyModelVersion>
+    <DotnetScriptDependencyModelNuGetVersion>0.1.0</DotnetScriptDependencyModelNuGetVersion>    
     <MicrosoftAspNetCoreDiagnosticsVersion>1.1.0</MicrosoftAspNetCoreDiagnosticsVersion>
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>
@@ -25,7 +26,7 @@
     <MicrosoftExtensionsConfigurationEnvironmentVariablesVersion>1.1.0</MicrosoftExtensionsConfigurationEnvironmentVariablesVersion>
     <MicrosoftExtensionsConfigurationJsonVersion>1.1.0</MicrosoftExtensionsConfigurationJsonVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>1.1.0</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDependencyModelVersion>1.1.0</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsDependencyModelVersion>2.0.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileProvidersPhysicalVersion>1.1.0</MicrosoftExtensionsFileProvidersPhysicalVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>1.1.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingVersion>1.1.0</MicrosoftExtensionsLoggingVersion>
