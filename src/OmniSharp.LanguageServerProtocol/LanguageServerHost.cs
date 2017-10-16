@@ -30,9 +30,10 @@ namespace OmniSharp.LanguageServerProtocol
 {
     class LanguageServerHost : IDisposable
     {
+        private readonly ServiceCollection _services;
         private readonly LanguageServer _server;
         private CompositionHost _compositionHost;
-        private ILoggerFactory _loggerFactory;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private IConfiguration _configuration;
@@ -46,7 +47,13 @@ namespace OmniSharp.LanguageServerProtocol
             CommandLineApplication application,
             CancellationTokenSource cancellationTokenSource)
         {
-            _server = new LanguageServer(input, output);
+            _services = new ServiceCollection();
+            _loggerFactory = new ServiceCollection()
+                .AddLogging()
+                .BuildServiceProvider()
+                .GetRequiredService<ILoggerFactory>();
+            _services.AddSingleton(_loggerFactory);
+            _server = new LanguageServer(input, output, _loggerFactory);
             _server.OnInitialize(Initialize);
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
@@ -75,12 +82,6 @@ namespace OmniSharp.LanguageServerProtocol
 
         private void CreateCompositionHost(InitializeParams initializeParams)
         {
-            _server.LogMessage(new LogMessageParams()
-            {
-                Message = Helpers.FromUri(initializeParams.RootUri),
-                Type = MessageType.Warning
-            });
-
             _environment = new OmniSharpEnvironment(
                 Helpers.FromUri(initializeParams.RootUri),
                 Convert.ToInt32(initializeParams.ProcessId ?? -1L),
@@ -88,9 +89,11 @@ namespace OmniSharp.LanguageServerProtocol
                 _application.OtherArgs.ToArray());
 
             _configuration = new ConfigurationBuilder(_environment).Build();
-            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration);
-            _loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>()
-                .AddLanguageServer(_server, (category, level) => HostHelpers.LogFilter(category, level, _environment));
+            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, _services);
+            // TODO: Make this work with logger factory differently
+            // Maybe create a child logger factory?
+            // _loggerFactory
+            //     .AddLanguageServer(_server, (category, level) => HostHelpers.LogFilter(category, level, _environment));
 
             var eventEmitter = new LanguageServerEventEmitter(_server);
             var plugins = _application.CreatePluginAssemblies();
