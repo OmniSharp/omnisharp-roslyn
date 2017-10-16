@@ -7,8 +7,8 @@ namespace OmniSharp.LanguageServerProtocol.Logging
 {
     class LanguageServerLoggerProvider : ILoggerProvider
     {
-        private LanguageServer _server;
-        private Func<string, LogLevel, bool> _filter;
+        internal LanguageServer _server { get; private set; }
+        internal Func<string, LogLevel, bool> _filter { get; private set; }
 
         public LanguageServerLoggerProvider()        {        }
         public void SetProvider(LanguageServer server, Func<string, LogLevel, bool> filter)
@@ -19,7 +19,7 @@ namespace OmniSharp.LanguageServerProtocol.Logging
 
         public ILogger CreateLogger(string name)
         {
-            return new LanguageServerLogger(_server, name, _filter);
+            return new LanguageServerLogger(this, name);
         }
         public void Dispose() { }
     }
