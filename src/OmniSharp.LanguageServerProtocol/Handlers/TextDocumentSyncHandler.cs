@@ -32,7 +32,12 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     Mef.IRequestHandler<FileOpenRequest, FileOpenResponse>,
                     Mef.IRequestHandler<FileCloseRequest, FileCloseResponse>,
                     Mef.IRequestHandler<UpdateBufferRequest, object>>())
-                yield return new TextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, workspace);
+            {
+                // TODO: Fix once cake has working support for incremental
+                var documentSyncKind = TextDocumentSyncKind.Incremental;
+                // if (selector.ToString().IndexOf(".cake") > -1) documentSyncKind = TextDocumentSyncKind.Full;
+                yield return new TextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace);
+            }
         }
 
         // TODO Make this configurable?
@@ -49,6 +54,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
             Mef.IRequestHandler<UpdateBufferRequest, object> bufferHandler,
             DocumentSelector documentSelector,
+            TextDocumentSyncKind documentSyncKind,
             OmniSharpWorkspace workspace)
         {
             _openHandler = openHandler;
@@ -56,6 +62,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _bufferHandler = bufferHandler;
             _workspace = workspace;
             _documentSelector = documentSelector;
+            Options.Change = documentSyncKind;
         }
 
         public TextDocumentSyncOptions Options { get; } = new TextDocumentSyncOptions()

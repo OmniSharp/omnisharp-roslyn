@@ -12,7 +12,6 @@ using OmniSharp.Extensions.LanguageServer;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
-using OmniSharp.LanguageServerProtocol.Logging;
 using OmniSharp.Utilities;
 using OmniSharp.Stdio.Services;
 using OmniSharp.Models.ChangeBuffer;
@@ -33,7 +32,7 @@ namespace OmniSharp.LanguageServerProtocol
         private readonly ServiceCollection _services;
         private readonly LanguageServer _server;
         private CompositionHost _compositionHost;
-        private readonly ILoggerFactory _loggerFactory;
+        private readonly LanguageServerLoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private IConfiguration _configuration;
@@ -48,11 +47,8 @@ namespace OmniSharp.LanguageServerProtocol
             CancellationTokenSource cancellationTokenSource)
         {
             _services = new ServiceCollection();
-            _loggerFactory = new ServiceCollection()
-                .AddLogging()
-                .BuildServiceProvider()
-                .GetRequiredService<ILoggerFactory>();
-            _services.AddSingleton(_loggerFactory);
+            _loggerFactory = new LanguageServerLoggerFactory();
+            _services.AddSingleton<ILoggerFactory>(_loggerFactory);
             _server = new LanguageServer(input, output, _loggerFactory);
             _server.OnInitialize(Initialize);
             _application = application;
@@ -87,6 +83,8 @@ namespace OmniSharp.LanguageServerProtocol
                 Convert.ToInt32(initializeParams.ProcessId ?? -1L),
                 GetLogLevel(initializeParams.Trace),
                 _application.OtherArgs.ToArray());
+
+            _loggerFactory.AddProvider(_server, _environment);
 
             _configuration = new ConfigurationBuilder(_environment).Build();
             _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, _services);
