@@ -11,6 +11,24 @@ namespace OmniSharp.Cake.Extensions
         {
             request.Line = await LineIndexHelper.TranslateToGenerated(request.FileName, request.Line, workspace);
 
+            if (request.Changes == null)
+            {
+                return request;
+            }
+
+            var changes = new List<LinePositionSpanTextChange>();
+            foreach (var change in request.Changes)
+            {
+                var oldStartLine = change.StartLine;
+                change.StartLine = await LineIndexHelper.TranslateToGenerated(request.FileName, change.StartLine, workspace);
+                change.EndLine = oldStartLine == change.EndLine ?
+                    change.StartLine :
+                    await LineIndexHelper.TranslateToGenerated(request.FileName, change.EndLine, workspace);
+
+                changes.Add(change);
+            }
+            request.Changes = changes;
+
             return request;
         }
     }
