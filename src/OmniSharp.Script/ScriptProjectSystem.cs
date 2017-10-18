@@ -5,15 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dotnet.Script.NuGetMetadataResolver;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.DotNet.ProjectModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
+using Dotnet.Script.DependencyModel.Compilation;
+using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
 
 namespace OmniSharp.Script
 {   
@@ -31,8 +30,7 @@ namespace OmniSharp.Script
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
 
-        private readonly IScriptProjectProvider _scriptProjectProvider;        
-        private static readonly Lazy<string> _targetFrameWork = new Lazy<string>(ResolveTargetFramework);
+        private readonly CompilationDependencyResolver _compilationDependencyResolver;
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, 
@@ -43,7 +41,24 @@ namespace OmniSharp.Script
             _env = env;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new Dictionary<string, ProjectInfo>();
-            _scriptProjectProvider = ScriptProjectProvider.Create(loggerFactory);
+
+            _compilationDependencyResolver = new CompilationDependencyResolver(type =>
+            {
+                // Prefix with "OmniSharp" so that we make it through the log filter.
+                var categoryName = $"OmniSharp.Script.{type.FullName}";
+                var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
+                return ((level, message) =>
+                {
+                    if (level == LogLevel.Debug)
+                    {
+                        dependencyResolverLogger.LogDebug(message);
+                    }
+                    if (level == LogLevel.Info)
+                    {
+                        dependencyResolverLogger.LogInformation(message);
+                    }
+                });
+            });
         }
 
         public string Key => "Script";
@@ -73,45 +88,31 @@ namespace OmniSharp.Script
             // explicitly include System.ValueTuple
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
-
-            var runtimeContexts = File.Exists(Path.Combine(_env.TargetDirectory, "project.json")) ? ProjectContext.CreateContextForEachTarget(_env.TargetDirectory) : null;
+            
             if (!bool.TryParse(configuration["enableScriptNuGetReferences"], out var enableScriptNuGetReferences))
             {
                 enableScriptNuGetReferences = false;
             }
 
-            if (enableScriptNuGetReferences && (runtimeContexts == null || runtimeContexts.Any() == false))
-            {
-                runtimeContexts = TryCreateRuntimeContextsFromScriptFiles();
-            }
-
-            var runtimeContext = runtimeContexts?.FirstOrDefault();
             var commonReferences = new HashSet<MetadataReference>();
 
-            // if we have no context, then we also have no dependencies
+            var compilationDependencies = TryGetCompilationDependencies(enableScriptNuGetReferences);
+
+            // if we have no compilation dependencies
             // we will assume desktop framework
             // and add default CLR references
             // same applies for having a context that is not a .NET Core app
-            AddDefaultClrMetadataReferences(runtimeContext, commonReferences);
-            if (runtimeContext == null)
+            if (!compilationDependencies.Any())
             {
-                _logger.LogInformation("Unable to find project context for CSX files. Will default to non-context usage (Destkop CLR scripts).");
+                _logger.LogInformation("Unable to find dependency context for CSX files. Will default to non-context usage (Destkop CLR scripts).");
+                AddDefaultClrMetadataReferences(commonReferences);
             }
-            // otherwise we will grab dependencies for the script from the runtime context
             else
             {
-                // assume the first one
-                _logger.LogInformation($"Found script runtime context '{runtimeContext.TargetFramework.Framework}' for '{runtimeContext.ProjectFile.ProjectFilePath}'.");
-
-                var projectExporter = runtimeContext.CreateExporter("Release");
-                var projectDependencies = projectExporter.GetDependencies();
-
-                // let's inject all compilation assemblies needed
-                var compilationAssemblies = projectDependencies.SelectMany(x => x.CompilationAssemblies);
-                foreach (var compilationAssembly in compilationAssemblies)
+                foreach (var compilationAssembly in compilationDependencies)
                 {
-                    _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly.ResolvedPath);
-                    AddMetadataReference(commonReferences, compilationAssembly.ResolvedPath);
+                    _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly);
+                    AddMetadataReference(commonReferences, compilationAssembly);
                 }
             }
 
@@ -144,30 +145,40 @@ namespace OmniSharp.Script
             }
         }
 
-        private void AddDefaultClrMetadataReferences(ProjectContext projectContext, HashSet<MetadataReference> commonReferences)
+        private string[] TryGetCompilationDependencies(bool enableScriptNuGetReferences)
         {
-            if (projectContext == null || projectContext.TargetFramework?.Framework != ".NETCoreApp")
+            try
             {
-                var assemblies = new[]
-                {
-                    typeof(object).GetTypeInfo().Assembly,
-                    typeof(Enumerable).GetTypeInfo().Assembly,
-                    typeof(Stack<>).GetTypeInfo().Assembly,
-                    typeof(Lazy<,>).GetTypeInfo().Assembly,
-                    FromName("System.Runtime"),
-                    FromName("mscorlib")
-                };
+                return _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, enableScriptNuGetReferences).ToArray();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Failed to resolve compilation dependencies", e);
+                return Array.Empty<string>();
+            }            
+        }
 
-                var references = assemblies
-                    .Where(a => a != null)
-                    .Select(a => a.Location)
-                    .Distinct()
-                    .Select(l => _metadataFileReferenceCache.GetMetadataReference(l));
+        private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences)
+        {
+            var assemblies = new[]
+            {
+                typeof(object).GetTypeInfo().Assembly,
+                typeof(Enumerable).GetTypeInfo().Assembly,
+                typeof(Stack<>).GetTypeInfo().Assembly,
+                typeof(Lazy<,>).GetTypeInfo().Assembly,
+                FromName("System.Runtime"),
+                FromName("mscorlib")
+            };
 
-                foreach (var reference in references)
-                {
-                    commonReferences.Add(reference);
-                }
+            var references = assemblies
+                .Where(a => a != null)
+                .Select(a => a.Location)
+                .Distinct()
+                .Select(l => _metadataFileReferenceCache.GetMetadataReference(l));
+
+            foreach (var reference in references)
+            {
+                commonReferences.Add(reference);
             }
 
             Assembly FromName(string assemblyName)
@@ -181,21 +192,6 @@ namespace OmniSharp.Script
                     return null;
                 }
             }
-        }
-
-        private IEnumerable<ProjectContext> TryCreateRuntimeContextsFromScriptFiles()
-        {
-            _logger.LogInformation($"Attempting to create runtime context from script files. Default target framework {_targetFrameWork.Value}");
-            try
-            {
-                var scriptProjectInfo = _scriptProjectProvider.CreateProject(_env.TargetDirectory, _targetFrameWork.Value);
-                return ProjectContext.CreateContextForEachTarget(Path.GetDirectoryName(scriptProjectInfo.PathToProjectJson));
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Unable to create runtime context from script files.");
-            }
-            return null;
         }
 
         private void AddMetadataReference(ISet<MetadataReference> referenceCollection, string fileReference)
@@ -259,14 +255,6 @@ namespace OmniSharp.Script
                 scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value, _assemblyReferences));
             }
             return Task.FromResult<object>(new ScriptContextModelCollection(scriptContextModels));
-        }
-
-        private static string ResolveTargetFramework()
-        {
-            return Assembly.GetEntryAssembly().GetCustomAttributes()
-                .OfType<System.Runtime.Versioning.TargetFrameworkAttribute>()
-                .Select(x => x.FrameworkName)
-                .FirstOrDefault();
         }
     }
 }

@@ -12,7 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dotnet.Script.NuGetMetadataResolver" Version="$(DotnetScriptNuGetMetadataResolver)" />
+    <PackageReference Include="Dotnet.Script.DependencyModel" Version="$(DotnetScriptDependencyModelVersion)" />
+    <PackageReference Include="Dotnet.Script.DependencyModel.NuGet" Version="$(DotnetScriptDependencyModelNuGetVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(MicrosoftCodeAnalysisCSharpScriptingVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
   </ItemGroup>
