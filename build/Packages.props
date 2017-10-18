@@ -3,9 +3,8 @@
 
   <PropertyGroup>
     <CakeScriptinTransportVersion>0.1.0-unstable0091</CakeScriptinTransportVersion>
-    <DotnetScriptNuGetMetadataResolver>2.0.3</DotnetScriptNuGetMetadataResolver>
     <DotnetScriptDependencyModelVersion>0.1.0</DotnetScriptDependencyModelVersion>
-    <DotnetScriptDependencyModelNuGetVersion>0.1.0</DotnetScriptDependencyModelNuGetVersion>    
+    <DotnetScriptDependencyModelNuGetVersion>0.1.0</DotnetScriptDependencyModelNuGetVersion>
     <MicrosoftAspNetCoreDiagnosticsVersion>1.1.0</MicrosoftAspNetCoreDiagnosticsVersion>
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>

@@ -25,12 +25,12 @@ namespace OmniSharp.Cake
 
         public override PortableExecutableReference ResolveMissingAssembly(MetadataReference definition, AssemblyIdentity referenceIdentity)
         {
-            if (MissingReferenceCache.ContainsKey(referenceIdentity.Name))
+            if (MissingReferenceCache.TryGetValue(referenceIdentity.Name, out var result))
             {
-                return MissingReferenceCache[referenceIdentity.Name];
+                return result;
             }
 
-            var result = DefaultRuntimeResolver.ResolveMissingAssembly(definition, referenceIdentity);
+            result = DefaultRuntimeResolver.ResolveMissingAssembly(definition, referenceIdentity);
             if (result != null)
             {
                 MissingReferenceCache[referenceIdentity.Name] = result;
@@ -42,12 +42,12 @@ namespace OmniSharp.Cake
         public override ImmutableArray<PortableExecutableReference> ResolveReference(string reference, string baseFilePath, MetadataReferenceProperties properties)
         {
             var key = $"{reference}-{baseFilePath}";
-            if (DirectReferenceCache.ContainsKey(key))
+            if (DirectReferenceCache.TryGetValue(key, out var result))
             {
-                return DirectReferenceCache[key];
+                return result;
             }
 
-            var result = DefaultRuntimeResolver.ResolveReference(reference, baseFilePath, properties);
+            result = DefaultRuntimeResolver.ResolveReference(reference, baseFilePath, properties);
             if (result.Length > 0)
             {
                 DirectReferenceCache[key] = result;
