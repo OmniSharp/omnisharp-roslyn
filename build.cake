@@ -161,6 +161,12 @@ Task("InstallDotNetCoreSdk")
                 installFolder: env.Folders.DotNetSdk,
                 sharedRuntime: true);
         }
+
+        // Add non-legacy .NET SDK to PATH
+        var oldPath = Environment.GetEnvironmentVariable("PATH");
+        var newPath = env.Folders.DotNetSdk + (string.IsNullOrEmpty(oldPath) ? "" : System.IO.Path.PathSeparator + oldPath);
+        Environment.SetEnvironmentVariable("PATH", newPath);
+        Information("PATH: {0}", Environment.GetEnvironmentVariable("PATH"));
     }
 
     if (AllowLegacyTests())
