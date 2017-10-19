@@ -9,6 +9,7 @@ using Cake.Scripting.Abstractions.Models;
 using Cake.Scripting.Transport.Tcp.Client;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Services
 {
@@ -39,7 +40,9 @@ namespace OmniSharp.Cake.Services
 
             if (File.Exists(serverExecutablePath))
             {
-                _generationService = new ScriptGenerationClient(serverExecutablePath, environment.TargetDirectory, loggerFactory);
+                _generationService = PlatformHelper.IsMono ?
+                    new ScriptGenerationClient(new MonoScriptGenerationProcess(serverExecutablePath, environment, loggerFactory), environment.TargetDirectory, loggerFactory) :
+                    new ScriptGenerationClient(serverExecutablePath, environment.TargetDirectory, loggerFactory);
             }
 
             IsConnected = _generationService != null;
