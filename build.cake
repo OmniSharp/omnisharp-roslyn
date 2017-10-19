@@ -54,11 +54,11 @@ bool AllowLegacyTests()
         switch (platform.DistroName)
         {
             case "alpine":   return version == "3.4.3";
-            case "centos":   return version == "7";
-            case "debian":   return version == "8";
+            case "centos":   return version == "7.0";
+            case "debian":   return version == "8.0";
             case "fedora":   return version == "23" || version == "24";
             case "opensuse": return version == "13.2" || version == "42.1";
-            case "rhel":     return version == "7";
+            case "rhel":     return version == "7.0";
             case "ubuntu":   return version == "14.4" || version == "16.4" || version == "16.10";
         }
     }
@@ -161,6 +161,12 @@ Task("InstallDotNetCoreSdk")
                 installFolder: env.Folders.DotNetSdk,
                 sharedRuntime: true);
         }
+
+        // Add non-legacy .NET SDK to PATH
+        var oldPath = Environment.GetEnvironmentVariable("PATH");
+        var newPath = env.Folders.DotNetSdk + (string.IsNullOrEmpty(oldPath) ? "" : System.IO.Path.PathSeparator + oldPath);
+        Environment.SetEnvironmentVariable("PATH", newPath);
+        Information("PATH: {0}", Environment.GetEnvironmentVariable("PATH"));
     }
 
     if (AllowLegacyTests())

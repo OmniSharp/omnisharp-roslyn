@@ -114,6 +114,11 @@ public sealed class Platform
                 }
                 else if (key == "VERSION_ID")
                 {
+                    // Normalize any versions to include a Major and Minor version
+                    if (!value.Contains("."))
+                    {
+                        value = value + ".0";
+                    }
                     version = new Version(value);
                 }
                 
