@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using OmniSharp.Cake.Configuration;
 
 namespace OmniSharp.Cake.Services
@@ -33,10 +36,23 @@ namespace OmniSharp.Cake.Services
 
         private static string GetLatestBakeryPath(string toolPath)
         {
-            var directories = Directory.GetDirectories(toolPath, "cake.bakery*", SearchOption.TopDirectoryOnly);
+            var directories = GetBakeryPaths(toolPath);
 
             // TODO: Sort by semantic version?
             return directories.OrderByDescending(x => x).FirstOrDefault();
         }
+
+        private static IEnumerable<string> GetBakeryPaths(string toolPath)
+        {
+            foreach (var directory in Directory.EnumerateDirectories(toolPath))
+            {
+                var topDirectory = directory.Split(Path.DirectorySeparatorChar).Last();
+                if (topDirectory.StartsWith("cake.bakery", StringComparison.OrdinalIgnoreCase))
+                {
+                    yield return topDirectory;
+                }
+            }
+        }
+
     }
 }
