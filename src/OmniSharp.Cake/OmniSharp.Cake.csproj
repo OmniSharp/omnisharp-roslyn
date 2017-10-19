@@ -15,4 +15,5 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(MicrosoftCodeAnalysisCSharpScriptingVersion)" />
     <PackageReference Include="Cake.Scripting.Transport" Version="$(CakeScriptinTransportVersion)" />
   </ItemGroup>
+
 </Project>
