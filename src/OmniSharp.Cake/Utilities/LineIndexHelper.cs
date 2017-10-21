@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Utilities
 {
@@ -19,7 +20,12 @@ namespace OmniSharp.Cake.Utilities
                 return index;
             }
 
-            var fullPath = Path.GetFullPath(fileName).Replace('\\', '/');
+            var fullPath = Path.GetFullPath(fileName);
+            if (PlatformHelper.IsWindows)
+            {
+                // Cake alwyas normalizes dir separators to /
+                fullPath = fullPath.Replace('\\', '/');
+            }
             var sourceText = await document.GetTextAsync();
             for (var i = sourceText.Lines.Count - 1; i >= 0; i--)
             {
@@ -52,7 +58,10 @@ namespace OmniSharp.Cake.Utilities
                 return (-1, fileName);
             }
 
-            fileName = fileName.Replace('/', '\\');
+            if (PlatformHelper.IsWindows)
+            {
+                fileName = fileName.Replace('/', '\\');
+            }
             var document = workspace.GetDocument(fileName);
             if (document == null)
             {
@@ -80,7 +89,11 @@ namespace OmniSharp.Cake.Utilities
                     continue;
                 }
 
-                var newFileName = tokens[2].Trim('"').Replace('/', '\\');
+                var newFileName = tokens[2].Trim('"');
+                if (PlatformHelper.IsWindows)
+                {
+                    newFileName = newFileName.Replace('/', '\\');
+                }
                 if (sameFile && !newFileName.Equals(fileName))
                 {
                     return (-1, fileName);

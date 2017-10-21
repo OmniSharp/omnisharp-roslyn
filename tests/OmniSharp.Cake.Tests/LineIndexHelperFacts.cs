@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Utilities;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 using Xunit;
 
 namespace OmniSharp.Cake.Tests
@@ -17,9 +18,9 @@ namespace OmniSharp.Cake.Tests
         private static Assembly Assembly => typeof(LineIndexHelperFacts).GetTypeInfo().Assembly;
         private static string ResourcePath => "OmniSharp.Cake.Tests.TestAssets";
 
-        private static string SingleCakePath => @"C:\Work\single.cake";
+        private static string SingleCakePath => PlatformHelper.IsWindows ? @"C:\Work\single.cake" : "/work/single.cake";
 
-        private static string MultiCakePath => @"C:\Work\multi.cake";
+        private static string MultiCakePath => PlatformHelper.IsWindows ?  @"C:\Work\multi.cake" : "/work/multi.cake";
 
         private static string GetResourceContent(string resourceName)
         {
@@ -38,7 +39,14 @@ namespace OmniSharp.Cake.Tests
 
         private static string GetGeneratedFileContent(string name)
         {
-            return GetResourceContent($"{ResourcePath}.{Path.GetFileName(name)}.g.txt");
+            var content = GetResourceContent($"{ResourcePath}.{Path.GetFileName(name)}.g.txt");
+
+            if (PlatformHelper.IsWindows)
+            {
+                return content;
+            }
+            // Adjust paths in generated content
+            return content.Replace("C:/Work/", "/work/");
         }
 
         private static string GetFileContent(string name)
