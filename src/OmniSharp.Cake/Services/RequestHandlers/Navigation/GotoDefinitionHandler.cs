@@ -11,6 +11,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.Metadata;
 using OmniSharp.Roslyn;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
@@ -33,6 +34,10 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
             if (string.IsNullOrEmpty(response.FileName) ||
                 !response.FileName.Equals(Constants.Paths.Generated))
             {
+                if (PlatformHelper.IsWindows && !string.IsNullOrEmpty(response.FileName))
+                {
+                    response.FileName = response.FileName.Replace('/', '\\');
+                }
                 return response;
             }
 
