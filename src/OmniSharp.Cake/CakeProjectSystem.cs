@@ -24,7 +24,6 @@ namespace OmniSharp.Cake
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _environment;
         private readonly IAssemblyLoader _assemblyLoader;
-        private readonly ICakeConfiguration _cakeConfiguration;
         private readonly ICakeScriptService _scriptService;
         private readonly ILogger<CakeProjectSystem> _logger;
         private readonly Dictionary<string, ProjectInfo> _projects;
@@ -38,14 +37,12 @@ namespace OmniSharp.Cake
             OmniSharpWorkspace workspace,
             IOmniSharpEnvironment environment,
             IAssemblyLoader assemblyLoader,
-            ICakeConfiguration cakeConfiguration,
             ICakeScriptService scriptService,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
-            _cakeConfiguration = cakeConfiguration ?? throw new ArgumentNullException(nameof(cakeConfiguration));
             _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
