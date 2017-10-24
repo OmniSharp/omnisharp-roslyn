@@ -1,4 +1,4 @@
-﻿using OmniSharp.Models;
+﻿using OmniSharp.Models.FilesChanged;
 using System;
 using System.Collections.Generic;
 using System.IO;
