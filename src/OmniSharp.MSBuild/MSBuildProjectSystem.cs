@@ -421,9 +421,13 @@ namespace OmniSharp.MSBuild
 
             if (changeType == null && File.Exists(path) || changeType.GetValueOrDefault() == FileChangeType.Create)
             {
-                // Use the buffer manager to add the new file to the appropriate projects
-                // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
-                Task.Run(() => _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }));
+                // Only add .cs files to the workspace
+                if (Path.GetExtension(path) == ".cs")
+                {
+                    // Use the buffer manager to add the new file to the appropriate projects
+                    // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
+                    Task.Run(() => _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }));
+                }
             }
         }
 
