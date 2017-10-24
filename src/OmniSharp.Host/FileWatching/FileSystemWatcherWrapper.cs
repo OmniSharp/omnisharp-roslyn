@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniSharp.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,7 +8,7 @@ namespace OmniSharp.FileWatching
     public class FileSystemWatcherWrapper : IFileSystemWatcher
     {
         private readonly FileSystemWatcher _watcher;
-        private readonly Dictionary<string, Action<string>> _callbacks = new Dictionary<string, Action<string>>();
+        private readonly Dictionary<string, Action<string, FileChangeType?>> _callbacks = new Dictionary<string, Action<string, FileChangeType?>>();
 
         public FileSystemWatcherWrapper(IOmniSharpEnvironment env)
         {
@@ -24,28 +25,42 @@ namespace OmniSharp.FileWatching
 
             _watcher.Renamed += (sender, e) =>
             {
-                TriggerChange(e.OldFullPath);
-                TriggerChange(e.FullPath);
+                TriggerChange(e.OldFullPath, FileChangeType.Delete);
+                TriggerChange(e.FullPath, FileChangeType.Create);
             };
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            TriggerChange(e.FullPath);
+            TriggerChange(e.FullPath, Convert(e.ChangeType));
         }
 
-        public void TriggerChange(string path)
+        private FileChangeType? Convert(WatcherChangeTypes change)
         {
-            Action<string> callback;
-            if (_callbacks.TryGetValue(path, out callback))
+            switch (change)
             {
-                callback(path);
+                case WatcherChangeTypes.Created:
+                    return FileChangeType.Create;
+                case WatcherChangeTypes.Deleted:
+                    return FileChangeType.Delete;
+                default:
+                    throw new ArgumentException($"unexpected value {change}");
             }
         }
 
-        public void Watch(string path, Action<string> callback)
+        public void TriggerChange(string path, FileChangeType? verb)
+        {
+            if (_callbacks.TryGetValue(path, out var callback))
+            {
+                callback(path, verb);
+            }
+        }
+
+        public void Watch(string path, Action<string, FileChangeType?> callback)
         {
             _callbacks[path] = callback;
         }
+
+        public void WatchDirectory(string path, Action<string, FileChangeType?> callback) => throw new NotImplementedException();
     }
 }
