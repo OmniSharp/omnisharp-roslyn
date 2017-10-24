@@ -10,7 +10,7 @@ using OmniSharp.Models.FilesChanged;
 namespace OmniSharp.Roslyn.CSharp.Services.Files
 {
     [OmniSharpHandler(OmniSharpEndpoints.FilesChanged, LanguageNames.CSharp)]
-    public class OnFilesChangedService : IRequestHandler<IEnumerable<Request>, FilesChangedResponse>
+    public class OnFilesChangedService : IRequestHandler<IEnumerable<FilesChangedRequest>, FilesChangedResponse>
     {
         private readonly IFileSystemWatcher _watcher;
 
@@ -20,11 +20,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Files
             _watcher = watcher;
         }
 
-        public Task<FilesChangedResponse> Handle(IEnumerable<Request> requests)
+        public Task<FilesChangedResponse> Handle(IEnumerable<FilesChangedRequest> requests)
         {
             foreach (var request in requests)
             {
-                _watcher.TriggerChange(request.FileName);
+                _watcher.TriggerChange(request.FileName, request.FileChangeType);
             }
             return Task.FromResult(new FilesChangedResponse());
         }

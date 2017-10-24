@@ -11,7 +11,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
+using OmniSharp.Models;
+using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Models.Events;
+using OmniSharp.Models.FilesChanged;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Models.Events;
@@ -232,14 +236,14 @@ namespace OmniSharp.MSBuild
         {
             // TODO: This needs some improvement. Currently, it tracks both deletions and changes
             // as "updates". We should properly remove projects that are deleted.
-            _fileSystemWatcher.Watch(project.FilePath, file =>
+            _fileSystemWatcher.Watch(project.FilePath, (file, verb) =>
             {
                 OnProjectChanged(project.FilePath, allowAutoRestore: true);
             });
 
             if (!string.IsNullOrEmpty(project.ProjectAssetsFile))
             {
-                _fileSystemWatcher.Watch(project.ProjectAssetsFile, file =>
+                _fileSystemWatcher.Watch(project.ProjectAssetsFile, (file, verb) =>
                 {
                     OnProjectChanged(project.FilePath, allowAutoRestore: false);
                 });
@@ -378,6 +382,8 @@ namespace OmniSharp.MSBuild
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
             {
+                WatchDirectoryContainingFile(sourceFile);
+
                 // If a document for this source file already exists in the project, carry on.
                 if (currentDocuments.Remove(sourceFile))
                 {
@@ -397,6 +403,27 @@ namespace OmniSharp.MSBuild
             foreach (var currentDocument in currentDocuments)
             {
                 _workspace.RemoveDocument(currentDocument.Value);
+            }
+        }
+
+        private void WatchDirectoryContainingFile(string sourceFile) => _fileSystemWatcher.WatchDirectory(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
+
+        private void OnDirectoryFileChanged(string path, FileChangeType? changeType)
+        {
+            // Hosts may not have passed through a file change type
+            if (changeType == null && !File.Exists(path) || changeType.GetValueOrDefault() == FileChangeType.Delete)
+            {
+                foreach (var documentId in _workspace.CurrentSolution.GetDocumentIdsWithFilePath(path))
+                {
+                    _workspace.RemoveDocument(documentId);
+                }
+            }
+
+            if (changeType == null && File.Exists(path) || changeType.GetValueOrDefault() == FileChangeType.Create)
+            {
+                // Use the buffer manager to add the new file to the appropriate projects
+                // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
+                Task.Run(() => _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }));
             }
         }
 
