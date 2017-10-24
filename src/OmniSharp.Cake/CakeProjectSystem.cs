@@ -27,6 +27,7 @@ namespace OmniSharp.Cake
         private readonly ICakeScriptService _scriptService;
         private readonly ILogger<CakeProjectSystem> _logger;
         private readonly Dictionary<string, ProjectInfo> _projects;
+        private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
 
         public string Key => "Cake";
         public string Language => Constants.LanguageNames.Cake;
@@ -47,6 +48,7 @@ namespace OmniSharp.Cake
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _projects = new Dictionary<string, ProjectInfo>();
+            _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
         }
 
         public void Initalize(IConfiguration configuration)
@@ -117,11 +119,14 @@ namespace OmniSharp.Cake
                 return;
             }
 
+            var compilationOptions = e.Usings == null
+                ? _compilationOptions.Value
+                : _compilationOptions.Value.WithUsings(e.Usings);
+
             foreach (var documentId in documentIds)
             {
                 var document = solution.GetDocument(documentId);
                 var project = document.Project;
-                var compilationOptions = GetCompilationOptions(e.Usings);
 
                 _workspace.SetCompilationOptions(project.Id, compilationOptions);
             }
@@ -209,7 +214,7 @@ namespace OmniSharp.Cake
                 filePath: filePath,
                 assemblyName: $"{name}.dll",
                 language: LanguageNames.CSharp,
-                compilationOptions: GetCompilationOptions(cakeScript.Usings),
+                compilationOptions: cakeScript.Usings == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(cakeScript.Usings),
                 parseOptions: new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script),
                 metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference))),
                 // TODO: projectReferences?
@@ -225,11 +230,10 @@ namespace OmniSharp.Cake
                 : DocumentationProvider.Default;
         }
 
-        private static CompilationOptions GetCompilationOptions(IEnumerable<string> usings)
+        private static CSharpCompilationOptions CreateCompilationOptions()
         {
             var compilationOptions = new CSharpCompilationOptions(
                     OutputKind.DynamicallyLinkedLibrary,
-                    usings: usings,
                     allowUnsafe: true,
                     metadataReferenceResolver: new CachingScriptMetadataResolver(),
                     sourceReferenceResolver: ScriptSourceResolver.Default,
