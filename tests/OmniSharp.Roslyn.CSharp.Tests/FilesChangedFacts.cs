@@ -15,7 +15,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class OnFilesChangedFacts : AbstractSingleRequestHandlerTestFixture<OnFilesChangedService>
     {
-        protected OnFilesChangedFacts(ITestOutputHelper testOutput) : base(testOutput)
+        public OnFilesChangedFacts(ITestOutputHelper testOutput) : base(testOutput)
         {
         }
 
@@ -24,21 +24,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public void TestFileWatcherCalled()
         {
-            var host = CreateEmptyOmniSharpHost();
+            using (var host = CreateEmptyOmniSharpHost())
+            {
+                var watcher = host.GetExport<IFileSystemWatcher>();
 
-            var watcher = host.GetExport<IFileSystemWatcher>();
-
-            string filePath = null;
-            FileChangeType? ct = null;
-            watcher.WatchDirectory("", (path, changeType) => { filePath = path; ct = changeType; });
+                string filePath = null;
+                FileChangeType? ct = null;
+                watcher.WatchDirectory("", (path, changeType) => { filePath = path; ct = changeType; });
 
 
-            var handler = GetRequestHandler(host);
-            handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", FileChangeType = FileChangeType.Create } });
+                var handler = GetRequestHandler(host);
+                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", FileChangeType = FileChangeType.Create } });
 
-            Assert.Equal("FileName.cs", filePath);
-            Assert.Equal(FileChangeType.Create, ct);
-
+                Assert.Equal("FileName.cs", filePath);
+                Assert.Equal(FileChangeType.Create, ct);
+            }
         }
     }
 }
