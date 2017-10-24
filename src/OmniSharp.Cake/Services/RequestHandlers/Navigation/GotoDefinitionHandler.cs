@@ -18,6 +18,8 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
     [OmniSharpHandler(OmniSharpEndpoints.GotoDefinition, Constants.LanguageNames.Cake), Shared]
     public class GotoDefinitionHandler : CakeRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse>
     {
+        private const int MethodLineOffset = 3;
+        private const int PropertyLineOffset = 7;
         private readonly MetadataHelper _metadataHelper;
 
         [ImportingConstructor]
@@ -60,7 +62,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
         {
             var document = Workspace.GetDocument(request.FileName);
             var response = new GotoDefinitionResponse();
-            var lineIndex = request.Line + 3;
+            var lineIndex = request.Line + MethodLineOffset;
             var column = 0;
 
             if (document == null)
@@ -77,7 +79,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
             }
             else
             {
-                lineIndex = request.Line + 7;
+                lineIndex = request.Line + PropertyLineOffset;
                 sourceLine = sourceText.Lines[lineIndex].ToString();
                 if (sourceLine.Contains("(Context"))
                 {
