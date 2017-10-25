@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Composition;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
-using OmniSharp.Models;
-using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.UpdateBuffer;
@@ -24,6 +15,13 @@ using OmniSharp.MSBuild.Resolution;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Composition;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OmniSharp.MSBuild
 {
@@ -236,14 +234,14 @@ namespace OmniSharp.MSBuild
         {
             // TODO: This needs some improvement. Currently, it tracks both deletions and changes
             // as "updates". We should properly remove projects that are deleted.
-            _fileSystemWatcher.Watch(project.FilePath, (file, verb) =>
+            _fileSystemWatcher.Watch(project.FilePath, (file, changeType) =>
             {
                 OnProjectChanged(project.FilePath, allowAutoRestore: true);
             });
 
             if (!string.IsNullOrEmpty(project.ProjectAssetsFile))
             {
-                _fileSystemWatcher.Watch(project.ProjectAssetsFile, (file, verb) =>
+                _fileSystemWatcher.Watch(project.ProjectAssetsFile, (file, changeType) =>
                 {
                     OnProjectChanged(project.FilePath, allowAutoRestore: false);
                 });

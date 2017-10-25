@@ -10,17 +10,17 @@ namespace OmniSharp.FileWatching
         private readonly Dictionary<string, Action<string, FileChangeType?>> _callbacks = new Dictionary<string, Action<string, FileChangeType?>>();
         private readonly Dictionary<string, Action<string, FileChangeType?>> _directoryCallBacks = new Dictionary<string, Action<string, FileChangeType?>>();
 
-        public void TriggerChange(string path, FileChangeType? verb)
+        public void TriggerChange(string path, FileChangeType? changeType)
         {
             if (_callbacks.TryGetValue(path, out var callback))
             {
-                callback(path, verb);
+                callback(path, changeType);
             }
 
             var directoryPath = Path.GetDirectoryName(path);
             if (_directoryCallBacks.TryGetValue(directoryPath, out var fileCallback))
             {
-                fileCallback(path, verb);
+                fileCallback(path, changeType);
             }
         }
 
