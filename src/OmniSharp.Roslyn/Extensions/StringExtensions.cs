@@ -31,7 +31,7 @@ namespace OmniSharp.Extensions
                 return true;
             }
 
-            if (completion.ToLowerInvariant().Contains(partial.ToLowerInvariant()))
+            if (partial.Length > 1 && completion.ToLowerInvariant().Contains(partial.ToLowerInvariant()))
             {
                 return true;
             }
