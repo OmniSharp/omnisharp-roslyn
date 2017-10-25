@@ -1,7 +1,7 @@
-﻿using OmniSharp.Models.FilesChanged;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using OmniSharp.Models.FilesChanged;
 
 namespace OmniSharp.FileWatching
 {
