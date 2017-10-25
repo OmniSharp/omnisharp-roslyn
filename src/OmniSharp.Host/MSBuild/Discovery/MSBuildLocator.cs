@@ -88,7 +88,15 @@ namespace OmniSharp.MSBuild.Discovery
                 }
             }
 
-            _logger.LogInformation($"Registered MSBuild instance: {instance}");
+            var builder = new StringBuilder();
+            builder.Append($"Registered MSBuild instance: {instance}");
+
+            foreach (var kvp in instance.PropertyOverrides)
+            {
+                builder.Append($"{Environment.NewLine}    {kvp.Key} = {kvp.Value}");
+            }
+
+            _logger.LogInformation(builder.ToString());
         }
 
         private Assembly Resolve(object sender, ResolveEventArgs e)
