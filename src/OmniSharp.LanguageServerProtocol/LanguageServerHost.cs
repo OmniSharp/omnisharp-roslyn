@@ -27,7 +27,7 @@ using OmniSharp.LanguageServerProtocol.Handlers;
 
 namespace OmniSharp.LanguageServerProtocol
 {
-    class LanguageServerHost : IDisposable
+    internal class LanguageServerHost : IDisposable
     {
         private readonly ServiceCollection _services;
         private readonly LanguageServer _server;
@@ -68,8 +68,10 @@ namespace OmniSharp.LanguageServerProtocol
             {
                 case InitializeTrace.verbose:
                     return LogLevel.Trace;
+
                 case InitializeTrace.off:
                     return LogLevel.Warning;
+
                 case InitializeTrace.messages:
                 default:
                     return LogLevel.Information;
@@ -137,6 +139,7 @@ namespace OmniSharp.LanguageServerProtocol
             _server.AddHandlers(DefinitionHandler.Enumerate(_handlers));
             _server.AddHandlers(HoverHandler.Enumerate(_handlers));
             _server.AddHandlers(CompletionHandler.Enumerate(_handlers));
+            _server.AddHandlers(SignatureHelpHandler.Enumerate(_handlers));
 
             _server.LogMessage(new LogMessageParams()
             {
