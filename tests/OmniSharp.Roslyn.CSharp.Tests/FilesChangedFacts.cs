@@ -13,6 +13,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
+
     public class OnFilesChangedFacts : AbstractSingleRequestHandlerTestFixture<OnFilesChangedService>
     {
         public OnFilesChangedFacts(ITestOutputHelper testOutput) : base(testOutput)
@@ -34,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
 
                 var handler = GetRequestHandler(host);
-                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", FileChangeType = FileChangeType.Create } });
+                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
 
                 Assert.Equal("FileName.cs", filePath);
                 Assert.Equal(FileChangeType.Create, ct);

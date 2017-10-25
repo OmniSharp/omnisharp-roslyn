@@ -24,7 +24,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Files
         {
             foreach (var request in requests)
             {
-                _watcher.TriggerChange(request.FileName, request.FileChangeType);
+                _watcher.TriggerChange(request.FileName, request.ChangeType);
             }
             return Task.FromResult(new FilesChangedResponse());
         }
