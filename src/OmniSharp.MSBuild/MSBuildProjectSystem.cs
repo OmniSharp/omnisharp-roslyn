@@ -406,10 +406,10 @@ namespace OmniSharp.MSBuild
 
         private void WatchDirectoryContainingFile(string sourceFile) => _fileSystemWatcher.WatchDirectory(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
 
-        private void OnDirectoryFileChanged(string path, FileChangeType? changeType)
+        private void OnDirectoryFileChanged(string path, FileChangeType changeType)
         {
             // Hosts may not have passed through a file change type
-            if (changeType == null && !File.Exists(path) || changeType.GetValueOrDefault() == FileChangeType.Delete)
+            if (changeType == FileChangeType.Unspecified && !File.Exists(path) || changeType == FileChangeType.Delete)
             {
                 foreach (var documentId in _workspace.CurrentSolution.GetDocumentIdsWithFilePath(path))
                 {
@@ -417,10 +417,10 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (changeType == null && File.Exists(path) || changeType.GetValueOrDefault() == FileChangeType.Create)
+            if (changeType == FileChangeType.Unspecified && File.Exists(path) || changeType == FileChangeType.Create)
             {
                 // Only add .cs files to the workspace
-                if (Path.GetExtension(path) == ".cs")
+                if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // Use the buffer manager to add the new file to the appropriate projects
                     // Hosts that don't pass the FileChangeType may wind up updating the buffer twice

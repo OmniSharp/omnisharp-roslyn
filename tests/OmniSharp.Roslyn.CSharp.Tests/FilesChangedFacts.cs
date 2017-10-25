@@ -1,12 +1,6 @@
 ﻿using OmniSharp.FileWatching;
-using OmniSharp.Models;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Roslyn.CSharp.Services.Files;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
