@@ -34,10 +34,11 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            var roslynPath = Path.Combine(toolsPath, "Roslyn");
-            if (Directory.Exists(roslynPath))
+            var localMSBuildPath = FindLocalMSBuildDirectory();
+            if (localMSBuildPath != null)
             {
-                propertyOverrides.Add("CscToolPath", roslynPath);
+                var localRoslynPath = Path.Combine(localMSBuildPath, "Roslyn");
+                propertyOverrides.Add("CscToolPath", localRoslynPath);
                 propertyOverrides.Add("CscToolExe", "csc.exe");
             }
 
