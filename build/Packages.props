@@ -2,8 +2,9 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
+    <CakeScriptinTransportVersion>0.1.0</CakeScriptinTransportVersion>
     <DotnetScriptDependencyModelVersion>0.1.0</DotnetScriptDependencyModelVersion>
-    <DotnetScriptDependencyModelNuGetVersion>0.1.0</DotnetScriptDependencyModelNuGetVersion>    
+    <DotnetScriptDependencyModelNuGetVersion>0.1.0</DotnetScriptDependencyModelNuGetVersion>
     <MicrosoftAspNetCoreDiagnosticsVersion>1.1.0</MicrosoftAspNetCoreDiagnosticsVersion>
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>
