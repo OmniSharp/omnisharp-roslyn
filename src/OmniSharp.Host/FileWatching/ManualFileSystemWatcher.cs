@@ -33,7 +33,7 @@ namespace OmniSharp.FileWatching
         {
             if (_directoryCallBacks.TryGetValue(path, out var existingCallback))
             {
-                _directoryCallBacks[path] = (Action<string, FileChangeType>)Delegate.Combine(callback, existingCallback);
+                _directoryCallBacks[path] = callback + existingCallback;
             }
             else
             {
