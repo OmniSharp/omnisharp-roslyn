@@ -1,4 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Composition;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -15,13 +22,6 @@ using OmniSharp.MSBuild.Resolution;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Composition;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace OmniSharp.MSBuild
 {
@@ -424,7 +424,7 @@ namespace OmniSharp.MSBuild
                 {
                     // Use the buffer manager to add the new file to the appropriate projects
                     // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
-                    Task.Run(() => _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }));
+                    _workspace.BufferManager.UpdateBufferAsync(new UpdateBufferRequest() { FileName = path, FromDisk = true }).Wait();
                 }
             }
         }
