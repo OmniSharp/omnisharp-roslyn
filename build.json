@@ -25,7 +25,8 @@
     "OmniSharp.Stdio.Tests",
     "OmniSharp.DotNet.Tests",
     "OmniSharp.DotNetTest.Tests",
-    "OmniSharp.Tests"
+    "OmniSharp.Tests",
+    "OmniSharp.Cake.Tests"
   ],
   "TestAssets": [
     "NUnitTestProject",
@@ -42,5 +43,8 @@
     "LegacyXunitTestProject",
     "LegacyMSTestProject",
     "LegacyProjectJsonApp"
+  ],
+  "CakeTestAssets": [
+    "CakeProject"
   ]
 }

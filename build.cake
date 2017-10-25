@@ -359,6 +359,24 @@ Task("PrepareTestAssets")
                 .ExceptionOnError($"Failed to build '{folder}'.");
         }
     }
+
+    // Restore Cake test assets with NuGet
+    foreach (var project in buildPlan.CakeTestAssets)
+    {
+        Information("Restoring: {0}...", project);
+
+        var toolsFolder = CombinePaths(env.Folders.TestAssets, "test-projects", project, "tools");
+        var packagesConfig = CombinePaths(toolsFolder, "packages.config");
+
+        NuGetInstallFromConfig(packagesConfig, new NuGetInstallSettings {
+            OutputDirectory = toolsFolder,
+            Prerelease = true,
+            Verbosity = NuGetVerbosity.Quiet,
+            Source = new[] {
+                "https://api.nuget.org/v3/index.json"
+            }
+        });
+    }
 });
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration, string outputType = null)

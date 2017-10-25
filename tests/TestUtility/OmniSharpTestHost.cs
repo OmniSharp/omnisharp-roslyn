@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
+using OmniSharp.Cake;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
@@ -33,7 +34,8 @@ namespace TestUtility
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
-            typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly // OmniSharp.Roslyn.CSharp
+            typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
+            typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
         });
 
         private readonly TestServiceProvider _serviceProvider;
