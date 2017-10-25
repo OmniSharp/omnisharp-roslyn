@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+    <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(MicrosoftCodeAnalysisCSharpScriptingVersion)" />
+    <PackageReference Include="Cake.Scripting.Transport" Version="$(CakeScriptinTransportVersion)" />
+  </ItemGroup>
+
+</Project>

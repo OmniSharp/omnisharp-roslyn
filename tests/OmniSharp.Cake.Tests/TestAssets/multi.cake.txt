@@ -1,0 +1,15 @@
+var target = Argument("target", "Default");
+
+#load single.cake
+
+Task("Default")
+  .Does(() =>
+{
+  Foo
+    .Create()
+    .Bar();
+  
+  Information("Hello World!");
+});
+
+RunTarget(target);

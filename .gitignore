@@ -44,6 +44,16 @@ scripts/Omnisharp*
 tools/*
 !tools/packages.config
 
+# Test assets
+test-assets/**/tools/*
+!test-assets/**/tools/packages.config
+
 # VS Code
 /.vscode/settings.json
 /.vscode/launch.json
+
+# VS
+launchSettings.json
+
+# Rider
+.idea/

@@ -271,6 +271,7 @@ public class BuildPlan
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
     public string[] LegacyTestAssets { get; set; }
+    public string[] CakeTestAssets { get; set; }
 
     public static BuildPlan Load(BuildEnvironment env)
     {
