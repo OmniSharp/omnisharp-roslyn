@@ -31,7 +31,14 @@ namespace OmniSharp.FileWatching
 
         public void WatchDirectory(string path, Action<string, FileChangeType> callback)
         {
-            _directoryCallBacks[path] = callback;
+            if (_directoryCallBacks.TryGetValue(path, out var existingCallback))
+            {
+                _directoryCallBacks[path] = (Action<string, FileChangeType>)Delegate.Combine(callback, existingCallback);
+            }
+            else
+            {
+                _directoryCallBacks[path] = callback;
+            }
         }
     }
 }
