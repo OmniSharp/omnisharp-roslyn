@@ -31,6 +31,11 @@ namespace OmniSharp.Extensions
                 return true;
             }
 
+            if (completion.ToLowerInvariant().Contains(partial.ToLowerInvariant()))
+            {
+                return true;
+            }
+
             // Limit the number of results returned by making sure
             // at least the first characters match.
             // We can get far too many results back otherwise.
