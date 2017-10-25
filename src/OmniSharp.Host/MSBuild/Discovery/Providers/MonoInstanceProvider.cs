@@ -37,7 +37,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var localMSBuildPath = FindLocalMSBuildDirectory();
             if (localMSBuildPath != null)
             {
-                var localRoslynPath = Path.Combine(localMSBuildPath, "Roslyn");
+                var localRoslynPath = Path.Combine(localMSBuildPath, "15.0", "Bin", "Roslyn");
                 propertyOverrides.Add("CscToolPath", localRoslynPath);
                 propertyOverrides.Add("CscToolExe", "csc.exe");
             }
