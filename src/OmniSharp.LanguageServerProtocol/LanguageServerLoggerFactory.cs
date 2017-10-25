@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Services;
-using OmniSharp.LanguageServerProtocol.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.LanguageServerProtocol.Logging;
+using OmniSharp.Services;
 
 namespace OmniSharp.LanguageServerProtocol
 {

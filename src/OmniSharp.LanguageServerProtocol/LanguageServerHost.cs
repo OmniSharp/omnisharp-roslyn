@@ -2,28 +2,22 @@ using System;
 using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using OmniSharp.Endpoint;
-using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Models.UpdateBuffer;
-using OmniSharp.Plugins;
-using OmniSharp.Services;
-using OmniSharp.Utilities;
-using OmniSharp.Stdio.Services;
-using OmniSharp.Models.ChangeBuffer;
-using OmniSharp.Mef;
-using OmniSharp.Models.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using OmniSharp.LanguageServerProtocol.Eventing;
+using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions.LanguageServer;
 using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
+using OmniSharp.Mef;
+using OmniSharp.Models.Diagnostics;
+using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.LanguageServerProtocol
 {

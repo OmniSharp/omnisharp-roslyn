@@ -30,7 +30,6 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
                     if (args is DiagnosticMessage message)
                     {
                         var groups = message.Results
-                            // TODO: Make this is correct
                             .GroupBy(z => Helpers.ToUri(z.FileName), z => z.QuickFixes);
 
                         foreach (var group in groups)
@@ -52,7 +51,7 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
                 case EventTypes.PackageRestoreStarted:
                 case EventTypes.PackageRestoreFinished:
                 case EventTypes.UnresolvedDependencies:
-                    // TODO:
+                    // TODO: As custom notifications
                     break;
             }
         }

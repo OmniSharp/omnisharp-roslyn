@@ -86,9 +86,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public Task Handle(DidChangeTextDocumentParams notification)
         {
-            if (notification.ContentChanges.Count() == 1 && notification.ContentChanges.First().Range == null)
+            var contentChanges = notification.ContentChanges.ToArray();
+            if (contentChanges.Length == 1 && contentChanges[0].Range == null)
             {
-                var change = notification.ContentChanges.First();
+                var change = contentChanges[0];
                 return _bufferHandler.Handle(new UpdateBufferRequest()
                 {
                     FileName = Helpers.FromUri(notification.TextDocument.Uri),
@@ -96,7 +97,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 });
             }
 
-            var changes = notification.ContentChanges
+            var changes = contentChanges
                 .Select(change => new LinePositionSpanTextChange()
                 {
                     NewText = change.Text,
@@ -146,19 +147,15 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
         public Task Handle(WillSaveTextDocumentParams notification)
         {
-            if (_capability?.WillSave == true)
-            {
-
-            }
+            // TODO: Do we have a need for this?
+            if (_capability?.WillSave == true) { }
             return Task.CompletedTask;
         }
 
         public Task Handle(WillSaveTextDocumentParams request, CancellationToken token)
         {
-            if (_capability?.WillSaveWaitUntil == true)
-            {
-
-            }
+            // TODO: Do we have a need for this?
+            if (_capability?.WillSaveWaitUntil == true) { }
             return Task.CompletedTask;
         }
 

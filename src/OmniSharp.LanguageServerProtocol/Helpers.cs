@@ -16,7 +16,7 @@ namespace OmniSharp.LanguageServerProtocol
                 Message = location.Text,
                 Range = location.ToRange(),
                 Severity = ToDiagnosticSeverity(location.LogLevel),
-                // TODO: We need to forward this type though
+                // TODO: We need to forward this type though if we add something like Vb Support
                 Source = "csharp",
             };
         }

@@ -3,15 +3,15 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Eventing;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.LanguageServerProtocol;
+using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
-using OmniSharp.LanguageServerProtocol;
-using OmniSharp.Eventing;
-using OmniSharp.LanguageServerProtocol.Eventing;
-using OmniSharp.Extensions.LanguageServer;
-using System.Threading.Tasks;
 
 namespace OmniSharp.Stdio
 {
