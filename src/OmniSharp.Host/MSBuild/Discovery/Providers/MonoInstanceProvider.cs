@@ -27,11 +27,19 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             }
 
             var toolsPath = Path.Combine(path, "15.0", "bin");
-            var roslynPath = Path.Combine(toolsPath, "Roslyn");
+            if (!Directory.Exists(toolsPath))
+            {
+                return ImmutableArray<MSBuildInstance>.Empty;
+            }
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
-            propertyOverrides.Add("CscToolPath", roslynPath);
-            propertyOverrides.Add("CscToolExe", "csc.exe");
+
+            var roslynPath = Path.Combine(toolsPath, "Roslyn");
+            if (Directory.Exists(roslynPath))
+            {
+                propertyOverrides.Add("CscToolPath", roslynPath);
+                propertyOverrides.Add("CscToolExe", "csc.exe");
+            }
 
             return ImmutableArray.Create(
                 new MSBuildInstance(

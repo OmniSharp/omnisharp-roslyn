@@ -119,7 +119,7 @@ namespace OmniSharp.Http.Tests
         {
             var environment = new OmniSharpEnvironment();
             var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
-            var msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory);
+            var msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, allowMonoPaths: false);
             var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, msbuildLocator, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
             var compositionHost = new CompositionHostBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
                 .WithAssemblies(assemblies)

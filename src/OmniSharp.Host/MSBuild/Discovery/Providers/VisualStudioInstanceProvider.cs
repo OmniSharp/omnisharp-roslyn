@@ -55,12 +55,16 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                     if (state == InstanceState.Complete)
                     {
                         // Note: The code below will likely fail if MSBuild's version increments.
-                        builder.Add(
-                            new MSBuildInstance(
-                                instance.GetDisplayName(),
-                                Path.Combine(instance.GetInstallationPath(), "MSBuild", "15.0", "Bin"),
-                                version,
-                                DiscoveryType.VisualStudioSetup));
+                        var toolsPath = Path.Combine(instance.GetInstallationPath(), "MSBuild", "15.0", "Bin");
+                        if (Directory.Exists(toolsPath))
+                        {
+                            builder.Add(
+                                new MSBuildInstance(
+                                    instance.GetDisplayName(),
+                                    toolsPath,
+                                    version,
+                                    DiscoveryType.VisualStudioSetup));
+                        }
                     }
                 }
                 while (fetched < 0);

@@ -44,12 +44,12 @@ namespace OmniSharp.MSBuild.Discovery
                     new DevConsoleInstanceProvider(loggerFactory),
                     new VisualStudioInstanceProvider(loggerFactory),
                     new MonoInstanceProvider(loggerFactory),
-                    new StandAloneInstanceProvider(loggerFactory)));
+                    new StandAloneInstanceProvider(loggerFactory, allowMonoPaths: true)));
 
-        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory)
+        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, bool allowMonoPaths)
             => new MSBuildLocator(loggerFactory,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
-                    new StandAloneInstanceProvider(loggerFactory)));
+                    new StandAloneInstanceProvider(loggerFactory, allowMonoPaths)));
 
         public void RegisterInstance(MSBuildInstance instance)
         {

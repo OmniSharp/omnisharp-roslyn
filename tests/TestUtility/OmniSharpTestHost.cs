@@ -115,7 +115,7 @@ namespace TestUtility
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
             var sharedTextWriter = new TestSharedTextWriter(testOutput);
-            var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory);
+            var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory, allowMonoPaths: false);
 
             var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, msbuildLocator, configuration);
 

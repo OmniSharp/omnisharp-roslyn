@@ -27,6 +27,12 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return ImmutableArray<MSBuildInstance>.Empty;
             }
 
+            var toolsPath = Path.Combine(path, "MSBuild", "15.0", "Bin");
+            if (!Directory.Exists(toolsPath))
+            {
+                return ImmutableArray<MSBuildInstance>.Empty;
+            }
+
             var versionString = Environment.GetEnvironmentVariable("VSCMD_VER");
             Version.TryParse(versionString, out var version);
 
@@ -39,7 +45,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             return ImmutableArray.Create(
                 new MSBuildInstance(
                     "DEVCONSOLE",
-                    Path.Combine(path, "MSBuild", "15.0", "Bin"),
+                    toolsPath,
                     version,
                     DiscoveryType.DeveloperConsole));
         }
