@@ -1,4 +1,7 @@
-﻿using OmniSharp.FileWatching;
+﻿using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using OmniSharp.FileWatching;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
@@ -7,7 +10,6 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-
     public class OnFilesChangedFacts : AbstractSingleRequestHandlerTestFixture<OnFilesChangedService>
     {
         public OnFilesChangedFacts(ITestOutputHelper testOutput) : base(testOutput)
@@ -17,22 +19,40 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected override string EndpointName => OmniSharpEndpoints.FilesChanged;
 
         [Fact]
-        public void TestFileWatcherCalled()
+        public async Task TestFileAddedToMSBuildWorkspaceOnCreation()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var watcher = host.GetExport<IFileSystemWatcher>();
+
+                var path = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
+                var filePath = Path.Combine(path, "FileName.cs");
+                File.WriteAllText(filePath, "text");
+                var handler = GetRequestHandler(host);
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+            }
+        }
+
+        [Fact]
+        public void TestMultipleDirectoryWatchers()
         {
             using (var host = CreateEmptyOmniSharpHost())
             {
                 var watcher = host.GetExport<IFileSystemWatcher>();
 
-                string filePath = null;
-                FileChangeType? ct = null;
-                watcher.WatchDirectory("", (path, changeType) => { filePath = path; ct = changeType; });
-
+                bool firstWatcherCalled = false;
+                bool secondWatcherCalled = false;
+                watcher.WatchDirectory("", (path, changeType) => { firstWatcherCalled = true; });
+                watcher.WatchDirectory("", (path, changeType) => { secondWatcherCalled = true; });
 
                 var handler = GetRequestHandler(host);
                 handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
 
-                Assert.Equal("FileName.cs", filePath);
-                Assert.Equal(FileChangeType.Create, ct);
+                Assert.True(firstWatcherCalled);
+                Assert.True(secondWatcherCalled);
             }
         }
     }
