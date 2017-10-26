@@ -49,3 +49,5 @@
 *.dbproj text=auto
 *.xproj text=auto
 *.sln text=auto eol=crlf
+
+*.sh text eol=lf
