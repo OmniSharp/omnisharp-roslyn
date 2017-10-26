@@ -417,10 +417,10 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (changeType == FileChangeType.Unspecified && File.Exists(path) || changeType == FileChangeType.Create)
+            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create)
             {
-                // Only add .cs files to the workspace
-                if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase))
+                // Only add cs files. Also, make sure the path is a file, and not a directory name that happens to end in ".cs"
+                if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase) && File.Exists(path))
                 {
                     // Use the buffer manager to add the new file to the appropriate projects
                     // Hosts that don't pass the FileChangeType may wind up updating the buffer twice
