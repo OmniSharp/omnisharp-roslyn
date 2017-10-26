@@ -44,7 +44,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             return ImmutableArray.Create(
                 new MSBuildInstance(
-                    "DEVCONSOLE",
+                    nameof(DiscoveryType.DeveloperConsole),
                     toolsPath,
                     version,
                     DiscoveryType.DeveloperConsole));

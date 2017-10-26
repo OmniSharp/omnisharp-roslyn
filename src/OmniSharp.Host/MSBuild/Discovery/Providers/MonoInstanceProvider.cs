@@ -52,7 +52,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             return ImmutableArray.Create(
                 new MSBuildInstance(
-                    "Mono",
+                    nameof(DiscoveryType.Mono),
                     toolsPath,
                     new Version(15, 0),
                     DiscoveryType.Mono,
