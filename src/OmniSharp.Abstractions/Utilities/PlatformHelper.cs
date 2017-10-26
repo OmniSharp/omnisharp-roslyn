@@ -60,6 +60,32 @@ namespace OmniSharp.Utilities
             return result;
         }
 
+        public static Version GetMonoVersion()
+        {
+            var output = ProcessHelper.RunAndCaptureOutput("mono", "--version");
+            if (output == null)
+            {
+                return null;
+            }
+
+            // The mono --version text contains several lines. We'll just walk through the first line,
+            // word by word, until we find a word that parses as a version number. Normally, this should
+            // be the *fifth* word. E.g. "Mono JIT compiler version 4.8.0"
+
+            var lines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var words = lines[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var word in words)
+            {
+                if (Version.TryParse(word, out var version))
+                {
+                    return version;
+                }
+            }
+
+            return null;
+        }
+
         public static string GetMonoRuntimePath()
         {
             if (IsWindows)
