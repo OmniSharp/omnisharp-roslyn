@@ -154,6 +154,7 @@ namespace OmniSharp.LanguageServerProtocol
             _server.AddHandlers(HoverHandler.Enumerate(_handlers));
             _server.AddHandlers(CompletionHandler.Enumerate(_handlers));
             _server.AddHandlers(SignatureHelpHandler.Enumerate(_handlers));
+            _server.AddHandlers(RenameHandler.Enumerate(_handlers));
 
             _server.LogMessage(new LogMessageParams()
             {
