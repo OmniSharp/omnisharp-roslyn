@@ -1,8 +1,8 @@
 omnisharp-roslyn
 ================
 
-[![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=dev)](https://travis-ci.org/OmniSharp/omnisharp-roslyn)
-[![Windows Build status](https://ci.appveyor.com/api/projects/status/dj36uvllv0qmkljr/branch/dev?svg=true)](https://ci.appveyor.com/project/david-driscoll/omnisharp-roslyn/branch/dev)
+[![Mono Build Status](https://travis-ci.org/OmniSharp/omnisharp-roslyn.svg?branch=master)](https://travis-ci.org/OmniSharp/omnisharp-roslyn)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/dj36uvllv0qmkljr/branch/master?svg=true)](https://ci.appveyor.com/project/david-driscoll/omnisharp-roslyn/branch/master)
 
 ## Introduction
 
@@ -23,14 +23,12 @@ See our [change log](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/C
 **On Windows**:
 
 ```
-> git checkout dev
 > ./build.ps1
 ```
 
 **On Linux / Unix**:
 
 ```
-$ git checkout dev
 $ ./build.sh
 ```
 
