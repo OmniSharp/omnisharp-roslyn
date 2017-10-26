@@ -14,11 +14,11 @@ using OmniSharp.Models.TypeLookup;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    [Shared, Export(typeof(CompletionHandler))]
     class CompletionHandler : ICompletionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
+
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>>())
                 if (handler != null)
@@ -69,7 +69,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return CompletionItemKind.Property;
         }
 
-        [ImportingConstructor]
         public CompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
         {
             _autoCompleteHandler = autoCompleteHandler;
@@ -95,8 +94,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 var completionItem = new CompletionItem {
                     Label = response.CompletionText,
-                    Detail = !string.IsNullOrEmpty(response.ReturnType) ? 
-                            response.DisplayText : 
+                    Detail = !string.IsNullOrEmpty(response.ReturnType) ?
+                            response.DisplayText :
                             $"{response.ReturnType} {response.DisplayText}",
                     Documentation = response.Description,
                     Kind = GetCompletionItemKind(response.Kind),
@@ -121,7 +120,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     // indicate that there is more
                     suggestion.Detail = $"{suggestion.Detail} (+ {overloadCount} overload(s))";
                 }
-                
+
                 result.Add(suggestion);
             }
 

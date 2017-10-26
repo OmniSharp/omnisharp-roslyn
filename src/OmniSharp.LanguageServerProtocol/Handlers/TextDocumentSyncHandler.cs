@@ -20,7 +20,6 @@ using OmniSharp.Roslyn;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    [Shared, Export(typeof(TextDocumentSyncHandler))]
     class TextDocumentSyncHandler : ITextDocumentSyncHandler, IWillSaveTextDocumentHandler, IWillSaveWaitUntilTextDocumentHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
@@ -48,7 +47,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
         private readonly OmniSharpWorkspace _workspace;
 
-        [ImportingConstructor]
         public TextDocumentSyncHandler(
             Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
             Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,

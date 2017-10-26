@@ -16,7 +16,6 @@ using static OmniSharp.LanguageServerProtocol.Helpers;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    [Shared, Export(typeof(DefinitionHandler))]
     class DefinitionHandler : IDefinitionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -30,7 +29,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
 
-        [ImportingConstructor]
         public DefinitionHandler(Mef.IRequestHandler<GotoDefinitionRequest, GotoDefinitionResponse> definitionHandler, DocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;

@@ -33,6 +33,7 @@ namespace OmniSharp.LanguageServerProtocol
         private IServiceProvider _serviceProvider;
         private RequestHandlers _handlers;
         private OmniSharpEnvironment _environment;
+        private ILogger<LanguageServerHost> _logger;
 
         public LanguageServerHost(
             Stream input,
@@ -80,14 +81,13 @@ namespace OmniSharp.LanguageServerProtocol
                 GetLogLevel(initializeParams.Trace),
                 _application.OtherArgs.ToArray());
 
+            // TODO: Make this work with logger factory differently
+            // Maybe create a child logger factory?
             _loggerFactory.AddProvider(_server, _environment);
+            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
 
             _configuration = new ConfigurationBuilder(_environment).Build();
             _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, _services);
-            // TODO: Make this work with logger factory differently
-            // Maybe create a child logger factory?
-            // _loggerFactory
-            //     .AddLanguageServer(_server, (category, level) => HostHelpers.LogFilter(category, level, _environment));
 
             var eventEmitter = new LanguageServerEventEmitter(_server);
             var plugins = _application.CreatePluginAssemblies();
@@ -113,6 +113,11 @@ namespace OmniSharp.LanguageServerProtocol
                         }))
                     ));
 
+            _logger.LogTrace(
+                "Configured Document Selectors {@DocumentSelectors}",
+                documentSelectors.Select(x => new { x.language, x.selector })
+            );
+
             // TODO: Get these with metadata so we can attach languages
             // This will thne let us build up a better document filter, and add handles foreach type of handler
             // This will mean that we will have a strategy to create handlers from the interface type
@@ -120,6 +125,19 @@ namespace OmniSharp.LanguageServerProtocol
                 _compositionHost.GetExports<Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>>(),
                 documentSelectors
             );
+
+            _logger.LogTrace("--- Handler Definitions ---");
+            foreach (var handlerCollection in _handlers) {
+                foreach (var handler in handlerCollection) {
+                    _logger.LogTrace(
+                        "Handler: {Language}:{DocumentSelector}:{Handler}",
+                        handlerCollection.Language,
+                        handlerCollection.DocumentSelector.ToString(),
+                        handler.GetType().FullName
+                    );
+                }
+            }
+            _logger.LogTrace("--- Handler Definitions ---");
         }
 
         private Task Initialize(InitializeParams initializeParams)

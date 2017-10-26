@@ -13,14 +13,12 @@ using OmniSharp.Models.SignatureHelp;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    [Shared, Export(typeof(SignatureHelpHandler))]
     internal class SignatureHelpHandler : ISignatureHelpHandler
     {
         private readonly Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> _signatureHandler;
         private readonly DocumentSelector _documentSelector;
         private SignatureHelpCapability _capability;
 
-        [ImportingConstructor]
         public SignatureHelpHandler(Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> signatureHandler, DocumentSelector documentSelector)
         {
             _signatureHandler = signatureHandler;

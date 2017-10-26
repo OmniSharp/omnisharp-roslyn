@@ -13,7 +13,6 @@ using OmniSharp.Models.TypeLookup;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    [Shared, Export(typeof(HoverHandler))]
     class HoverHandler : IHoverHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -28,7 +27,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
 
-        [ImportingConstructor]
         public HoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
