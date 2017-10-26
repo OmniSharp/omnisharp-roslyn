@@ -8,6 +8,7 @@ namespace OmniSharp.MSBuild.Discovery
     internal abstract class MSBuildInstanceProvider
     {
         protected readonly ILogger Logger;
+        protected static readonly ImmutableArray<MSBuildInstance> NoInstances = ImmutableArray<MSBuildInstance>.Empty;
 
         protected MSBuildInstanceProvider(ILoggerFactory loggerFactory)
         {

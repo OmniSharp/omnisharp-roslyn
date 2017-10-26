@@ -21,7 +21,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var path = FindLocalMSBuildDirectory();
             if (path == null)
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var extensionsPath = path;

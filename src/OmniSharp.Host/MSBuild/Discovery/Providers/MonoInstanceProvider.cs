@@ -17,13 +17,13 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         {
             if (!PlatformHelper.IsMono)
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var path = PlatformHelper.GetMonoMSBuildDirPath();
             if (path == null)
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             // Double-check Mono version. MSBuild support in versions earlier than 5.2.0 is
@@ -31,13 +31,13 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var monoVersion = PlatformHelper.GetMonoVersion();
             if (monoVersion == null || monoVersion < new Version("5.2.0"))
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var toolsPath = Path.Combine(path, "15.0", "bin");
             if (!Directory.Exists(toolsPath))
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);

@@ -17,20 +17,20 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         {
             if (!PlatformHelper.IsWindows)
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var path = Environment.GetEnvironmentVariable("VSINSTALLDIR");
 
             if (string.IsNullOrEmpty(path))
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var toolsPath = Path.Combine(path, "MSBuild", "15.0", "Bin");
             if (!Directory.Exists(toolsPath))
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             var versionString = Environment.GetEnvironmentVariable("VSCMD_VER");

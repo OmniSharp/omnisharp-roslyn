@@ -19,7 +19,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         {
             if (!PlatformHelper.IsWindows)
             {
-                return ImmutableArray<MSBuildInstance>.Empty;
+                return NoInstances;
             }
 
             try
@@ -27,7 +27,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 var configuration = Interop.GetSetupConfiguration();
                 if (configuration == null)
                 {
-                    return ImmutableArray<MSBuildInstance>.Empty;
+                    return NoInstances;
                 }
 
                 var builder = ImmutableArray.CreateBuilder<MSBuildInstance>();
@@ -87,7 +87,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
         {
             Logger.LogDebug(ex, "An exception was thrown while retrieving Visual Studio instances.");
 
-            return ImmutableArray<MSBuildInstance>.Empty;
+            return NoInstances;
         }
     }
 }
