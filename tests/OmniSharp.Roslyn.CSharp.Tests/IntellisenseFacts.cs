@@ -132,6 +132,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task Returns_sub_sequence_completions_without_matching_firstletter(string filename)
+        {
+            const string input =
+                @"public class Class1 {
+                    public Class1()
+                        {
+                            System.Guid.gu$$
+                        }
+                    }";
+            
+            var completions = await FindCompletionsAsync(filename, input);
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task Returns_method_header(string filename)
         {
             const string input =

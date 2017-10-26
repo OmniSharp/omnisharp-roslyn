@@ -221,11 +221,38 @@ public partial class MyClass
             var expected = new[]
             {
                 "Method()",
-                "Method(string param)"
+                "Method(string param)",
+                "NestedMethod()"
             };
 
             Assert.Equal(expected, symbols);
         }
+
+        [Fact]
+        public async Task Can_find_symbols_using_filter_with_subset_match()
+        {
+            const string code = @"
+                namespace Some.Long.Namespace
+                {
+                    public class Options {}
+                    public class Opossum {}
+                    public interface IConfigurationOptions { }
+                    public class ConfigurationOptions : IConfigurationOptions { }
+                }";
+
+            var usages = await FindSymbolsWithFilterAsync(code, "opti");
+            var symbols = usages.QuickFixes.Select(q => q.Text);
+
+            var expected = new[]
+            {
+                "Options",
+                "IConfigurationOptions",
+                "ConfigurationOptions"
+            };
+
+            Assert.Equal(expected, symbols);
+        }
+
 
         private async Task<QuickFixResponse> FindSymbolsAsync(string code)
         {
