@@ -62,6 +62,11 @@ namespace OmniSharp
             {
                 msbuildLocator.RegisterInstance(instance);
             }
+            else
+            {
+                var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
+                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
+            }
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
