@@ -115,7 +115,10 @@ namespace OmniSharp
             services.AddOptions();
 
             // MSBuild
-            services.AddSingleton<IMSBuildLocator>(sp => MSBuildLocator.CreateDefault(sp.GetService<ILoggerFactory>()));
+            services.AddSingleton<IMSBuildLocator>(sp =>
+                MSBuildLocator.CreateDefault(
+                    loggerFactory: sp.GetService<ILoggerFactory>(),
+                    assemblyLoader: sp.GetService<IAssemblyLoader>()));
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);

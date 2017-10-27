@@ -23,7 +23,6 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             ILoggerFactory loggerFactory,
             ISharedTextWriter sharedTextWriter,
-            IMSBuildLocator msbuildLocator,
             IConfiguration configuration)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
@@ -35,10 +34,14 @@ namespace TestUtility
                 Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>()
             );
 
+            var assemblyLoader = new AssemblyLoader(loggerFactory);
+            var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader, allowMonoPaths: false);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+
             _services[typeof(ILoggerFactory)] = loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = environment;
-            _services[typeof(IAssemblyLoader)] = new AssemblyLoader(loggerFactory);
-            _services[typeof(IMemoryCache)] = new MemoryCache(new MemoryCacheOptions());
+            _services[typeof(IAssemblyLoader)] = assemblyLoader;
+            _services[typeof(IMemoryCache)] = memoryCache;
             _services[typeof(ISharedTextWriter)] = sharedTextWriter;
             _services[typeof(IMSBuildLocator)] = msbuildLocator;
         }

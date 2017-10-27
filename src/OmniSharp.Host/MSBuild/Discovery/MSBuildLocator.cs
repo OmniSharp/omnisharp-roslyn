@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery.Providers;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild.Discovery
@@ -18,14 +19,16 @@ namespace OmniSharp.MSBuild.Discovery
             "Microsoft.Build.Utilities.Core");
 
         private readonly ILogger _logger;
+        private readonly IAssemblyLoader _assemblyLoader;
         private readonly ImmutableArray<MSBuildInstanceProvider> _providers;
         private MSBuildInstance _registeredInstance;
 
         public MSBuildInstance RegisteredInstance => _registeredInstance;
 
-        private MSBuildLocator(ILoggerFactory loggerFactory, ImmutableArray<MSBuildInstanceProvider> providers)
+        private MSBuildLocator(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, ImmutableArray<MSBuildInstanceProvider> providers)
         {
             _logger = loggerFactory.CreateLogger<MSBuildLocator>();
+            _assemblyLoader = assemblyLoader;
             _providers = providers;
         }
 
@@ -38,16 +41,16 @@ namespace OmniSharp.MSBuild.Discovery
             }
         }
 
-        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory)
-            => new MSBuildLocator(loggerFactory,
+        public static MSBuildLocator CreateDefault(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader)
+            => new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new DevConsoleInstanceProvider(loggerFactory),
                     new VisualStudioInstanceProvider(loggerFactory),
                     new MonoInstanceProvider(loggerFactory),
                     new StandAloneInstanceProvider(loggerFactory, allowMonoPaths: true)));
 
-        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, bool allowMonoPaths)
-            => new MSBuildLocator(loggerFactory,
+        public static MSBuildLocator CreateStandAlone(ILoggerFactory loggerFactory, IAssemblyLoader assemblyLoader, bool allowMonoPaths)
+            => new MSBuildLocator(loggerFactory, assemblyLoader,
                 ImmutableArray.Create<MSBuildInstanceProvider>(
                     new StandAloneInstanceProvider(loggerFactory, allowMonoPaths)));
 
@@ -109,7 +112,7 @@ namespace OmniSharp.MSBuild.Discovery
             {
                 var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName.Name + ".dll");
                 var result = File.Exists(assemblyPath)
-                    ? Assembly.LoadFrom(assemblyPath)
+                    ? _assemblyLoader.LoadFrom(assemblyPath)
                     : null;
 
                 if (result != null)
