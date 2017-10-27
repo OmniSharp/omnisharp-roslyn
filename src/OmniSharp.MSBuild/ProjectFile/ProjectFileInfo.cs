@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.Options;
 
@@ -70,14 +71,14 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ProjectFileInfo Create(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+            MSBuildInstance msbuildInstance, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(filePath))
             {
                 return null;
             }
 
-            var projectInstance = LoadProject(filePath, solutionDirectory, logger, options, diagnostics, out var targetFrameworks);
+            var projectInstance = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
@@ -91,11 +92,11 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         private static ProjectInstance LoadProject(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
+            MSBuildInstance msbuildInstance, MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
         {
             options = options ?? new MSBuildOptions();
 
-            var globalProperties = GetGlobalProperties(options, solutionDirectory, logger);
+            var globalProperties = GetGlobalProperties(msbuildInstance, options, solutionDirectory, logger);
 
             var collection = new ProjectCollection(globalProperties);
 
@@ -219,9 +220,9 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public ProjectFileInfo Reload(
             string solutionDirectory, ILogger logger,
-            MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+            MSBuildInstance msbuildInstance, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
-            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, options, diagnostics, out var targetFrameworks);
+            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
@@ -243,7 +244,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             });
         }
 
-        private static Dictionary<string, string> GetGlobalProperties(MSBuildOptions options, string solutionDirectory, ILogger logger)
+        private static Dictionary<string, string> GetGlobalProperties(MSBuildInstance msbuildInstance, MSBuildOptions options, string solutionDirectory, ILogger logger)
         {
             var globalProperties = new Dictionary<string, string>
             {
@@ -258,53 +259,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 { PropertyNames.SkipCompilerExecution, "true" }
             };
 
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.MSBuildExtensionsPath,
-                userOptionValue: options.MSBuildExtensionsPath,
-                environmentValue: MSBuildEnvironment.MSBuildExtensionsPath);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.TargetFrameworkRootPath,
-                userOptionValue: options.TargetFrameworkRootPath,
-                environmentValue: MSBuildEnvironment.TargetFrameworkRootPath);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.RoslynTargetsPath,
-                userOptionValue: options.RoslynTargetsPath,
-                environmentValue: MSBuildEnvironment.RoslynTargetsPath);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.CscToolPath,
-                userOptionValue: options.CscToolPath,
-                environmentValue: MSBuildEnvironment.CscToolPath);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.CscToolExe,
-                userOptionValue: options.CscToolExe,
-                environmentValue: MSBuildEnvironment.CscToolExe);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.VisualStudioVersion,
-                userOptionValue: options.VisualStudioVersion,
-                environmentValue: null);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.Configuration,
-                userOptionValue: options.Configuration,
-                environmentValue: null);
-
-            globalProperties.AddPropertyIfNeeded(
-                logger,
-                PropertyNames.Platform,
-                userOptionValue: options.Platform,
-                environmentValue: null);
+            globalProperties.AddPropertyOverride(PropertyNames.MSBuildExtensionsPath, options.MSBuildExtensionsPath, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.TargetFrameworkRootPath, options.TargetFrameworkRootPath, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.RoslynTargetsPath, options.RoslynTargetsPath, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.CscToolPath, options.CscToolPath, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.CscToolExe, options.CscToolExe, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.VisualStudioVersion, options.VisualStudioVersion, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.Configuration, options.Configuration, msbuildInstance.PropertyOverrides, logger);
+            globalProperties.AddPropertyOverride(PropertyNames.Platform, options.Platform, msbuildInstance.PropertyOverrides, logger);
 
             return globalProperties;
         }

@@ -245,60 +245,102 @@ Task("CreateMSBuildFolder")
 {
     DirectoryHelper.ForceCreate(env.Folders.MSBuild);
 
+    var msbuild15TargetFolder = CombinePaths(env.Folders.MSBuild, "15.0");
+    var msbuild15BinTargetFolder = CombinePaths(msbuild15TargetFolder, "Bin");
+
+    var msbuildLibraries = new []
+    {
+        "Microsoft.Build",
+        "Microsoft.Build.Framework",
+        "Microsoft.Build.Tasks.Core",
+        "Microsoft.Build.Utilities.Core"
+    };
+
     string sdkResolverTFM;
 
     if (Platform.Current.IsWindows)
     {
         Information("Copying MSBuild runtime...");
-        var msbuildRuntimeFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net46");
-        DirectoryHelper.Copy(msbuildRuntimeFolder, env.Folders.MSBuild);
+
+        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net46");
+        DirectoryHelper.Copy(msbuildSourceFolder, msbuild15BinTargetFolder, copySubDirectories: false);
+
+        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "15.0");
+        DirectoryHelper.Copy(msbuild15SourceFolder, msbuild15TargetFolder);
+
+        Information("Copying MSBuild libraries...");
+
+        foreach (var library in msbuildLibraries)
+        {
+            var libraryFileName = library + ".dll";
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net46", libraryFileName);
+            var libraryTargetPath = CombinePaths(msbuild15BinTargetFolder, libraryFileName);
+            FileHelper.Copy(librarySourcePath, libraryTargetPath);
+        }
+
         sdkResolverTFM = "net46";
     }
     else
     {
         Information("Copying Mono MSBuild runtime...");
-        DirectoryHelper.Copy(env.Folders.MonoMSBuildRuntime, env.Folders.MSBuild);
+
+        var msbuildSourceFolder = env.Folders.MonoMSBuildRuntime;
+        DirectoryHelper.Copy(msbuildSourceFolder, msbuild15BinTargetFolder, copySubDirectories: false);
+
+        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "15.0");
+        DirectoryHelper.Copy(msbuild15SourceFolder, msbuild15TargetFolder);
+
+        Information("Copying MSBuild libraries...");
+
+        foreach (var library in msbuildLibraries)
+        {
+            var libraryFileName = library + ".dll";
+            var librarySourcePath = CombinePaths(env.Folders.MonoMSBuildLib, libraryFileName);
+            var libraryTargetPath = CombinePaths(msbuild15BinTargetFolder, libraryFileName);
+            FileHelper.Copy(librarySourcePath, libraryTargetPath);
+        }
+
         sdkResolverTFM = "netstandard1.5";
     }
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
     Information("Coping MSBuild SDK resolver...");
-    var sdkResolverFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
-    var msbuildSdkResolverFolder = CombinePaths(env.Folders.MSBuild, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
-    DirectoryHelper.ForceCreate(msbuildSdkResolverFolder);
+    var sdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
+    var sdkResolverTargetFolder = CombinePaths(msbuild15BinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
+    DirectoryHelper.ForceCreate(sdkResolverTargetFolder);
     FileHelper.Copy(
-        source: CombinePaths(sdkResolverFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
-        destination: CombinePaths(msbuildSdkResolverFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
+        source: CombinePaths(sdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
+        destination: CombinePaths(sdkResolverTargetFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"));
 
     if (Platform.Current.IsWindows)
     {
-        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", msbuildSdkResolverFolder, copyToArchSpecificFolder: true);
-        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", msbuildSdkResolverFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "x86", "hostfxr.dll", sdkResolverTargetFolder, copyToArchSpecificFolder: true);
+        CopyDotNetHostResolver(env, "win", "x64", "hostfxr.dll", sdkResolverTargetFolder, copyToArchSpecificFolder: true);
     }
     else if (Platform.Current.IsMacOS)
     {
-        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", msbuildSdkResolverFolder, copyToArchSpecificFolder: false);
+        CopyDotNetHostResolver(env, "osx", "x64", "libhostfxr.dylib", sdkResolverTargetFolder, copyToArchSpecificFolder: false);
     }
     else if (Platform.Current.IsLinux)
     {
-        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", msbuildSdkResolverFolder, copyToArchSpecificFolder: false);
+        CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", sdkResolverTargetFolder, copyToArchSpecificFolder: false);
     }
 
     // Copy content of Microsoft.Net.Compilers
     Information("Copying Microsoft.Net.Compilers...");
-    var compilersFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
-    var msbuildRoslynFolder = CombinePaths(env.Folders.MSBuild, "Roslyn");
+    var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
+    var compilersTargetFolder = CombinePaths(msbuild15BinTargetFolder, "Roslyn");
 
-    DirectoryHelper.Copy(compilersFolder, msbuildRoslynFolder);
+    DirectoryHelper.Copy(compilersSourceFolder, compilersTargetFolder);
 
     // Delete unnecessary files
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "Microsoft.CodeAnalysis.VisualBasic.dll"));
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "Microsoft.VisualBasic.Core.targets"));
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "VBCSCompiler.exe"));
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "VBCSCompiler.exe.config"));
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "vbc.exe"));
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "vbc.exe.config"));
-    FileHelper.Delete(CombinePaths(msbuildRoslynFolder, "vbc.rsp"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "Microsoft.CodeAnalysis.VisualBasic.dll"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "Microsoft.VisualBasic.Core.targets"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "VBCSCompiler.exe"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "VBCSCompiler.exe.config"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.exe"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.exe.config"));
+    FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.rsp"));
 });
 
 /// <summary>
@@ -514,7 +556,6 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
 
     // Copy MSBuild runtime and libraries
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
-    DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", outputFolder);
 
     // Included in Mono
     FileHelper.Delete(CombinePaths(outputFolder, "System.AppContext.dll"));

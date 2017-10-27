@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Services;
@@ -20,7 +19,11 @@ namespace TestUtility
         private readonly ILogger<TestServiceProvider> _logger;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
 
-        public TestServiceProvider(IOmniSharpEnvironment environment, ILoggerFactory loggerFactory, ISharedTextWriter sharedTextWriter, IConfiguration configuration)
+        public TestServiceProvider(
+            IOmniSharpEnvironment environment,
+            ILoggerFactory loggerFactory,
+            ISharedTextWriter sharedTextWriter,
+            IConfiguration configuration)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
 
@@ -31,11 +34,16 @@ namespace TestUtility
                 Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>()
             );
 
+            var assemblyLoader = new AssemblyLoader(loggerFactory);
+            var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader, allowMonoPaths: false);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+
             _services[typeof(ILoggerFactory)] = loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = environment;
-            _services[typeof(IAssemblyLoader)] = new AssemblyLoader(loggerFactory);
-            _services[typeof(IMemoryCache)] = new MemoryCache(new MemoryCacheOptions());
+            _services[typeof(IAssemblyLoader)] = assemblyLoader;
+            _services[typeof(IMemoryCache)] = memoryCache;
             _services[typeof(ISharedTextWriter)] = sharedTextWriter;
+            _services[typeof(IMSBuildLocator)] = msbuildLocator;
         }
 
         ~TestServiceProvider()
