@@ -19,7 +19,7 @@ namespace OmniSharp.Services
         public OmniSharpEnvironment(
             string path = null,
             int hostPid = -1,
-            LogLevel traceType = LogLevel.None,
+            LogLevel logLevel = LogLevel.None,
             string[] additionalArguments = null)
         {
             if (string.IsNullOrEmpty(path))
@@ -42,7 +42,7 @@ namespace OmniSharp.Services
             }
 
             HostProcessId = hostPid;
-            LogLevel = traceType;
+            LogLevel = logLevel;
             AdditionalArguments = additionalArguments;
 
             // On Windows: %USERPROFILE%\.omnisharp\omnisharp.json

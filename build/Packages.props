@@ -37,11 +37,14 @@
     <MicrosoftExtensionsPlatformAbstractionsVersion>1.1.0</MicrosoftExtensionsPlatformAbstractionsVersion>
     <MicrosoftNetTestSdkVersion>15.0.0</MicrosoftNetTestSdkVersion>
     <MicrosoftTestPlatformTranslationLayerVersion>15.3.0</MicrosoftTestPlatformTranslationLayerVersion>
+    <MicrosoftVisualStudioSetupConfigurationInteropVersion>1.14.114</MicrosoftVisualStudioSetupConfigurationInteropVersion>
+    <MicrosoftVisualStudioSDKEmbedInteropTypesVersion>15.0.12</MicrosoftVisualStudioSDKEmbedInteropTypesVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetPackagingVersion>4.3.0</NuGetPackagingVersion>
     <NuGetPackagingCoreVersion>4.3.0</NuGetPackagingCoreVersion>
     <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
     <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
+    <SystemCollectionsImmutableVersion>1.4.0</SystemCollectionsImmutableVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>

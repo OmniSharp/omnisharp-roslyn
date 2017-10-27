@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Mef;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
@@ -46,14 +47,23 @@ namespace OmniSharp
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
             var config = new ContainerConfiguration();
 
-            var assemblies = _assemblies
-                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
-                .Distinct();
-
-            config = config.WithAssemblies(assemblies);
-
             var fileSystemWatcher = new ManualFileSystemWatcher();
             var metadataHelper = new MetadataHelper(assemblyLoader);
+
+            // We must register an MSBuild instance before composing MEF to ensure that
+            // our AssemblyResolve event is hooked up first.
+            var msbuildLocator = _serviceProvider.GetRequiredService<IMSBuildLocator>();
+            var instances = msbuildLocator.GetInstances();
+            var instance = instances.FirstOrDefault();
+            if (instance != null)
+            {
+                msbuildLocator.RegisterInstance(instance);
+            }
+            else
+            {
+                var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
+                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
+            }
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
@@ -65,9 +75,30 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
                 .WithProvider(MefValueProvider.From(metadataHelper))
+                .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
 
+            var parts = _assemblies
+                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                .Distinct()
+                .SelectMany(a => SafeGetTypes(a))
+                .ToArray();
+
+            config = config.WithParts(parts);
+
             return config.CreateContainer();
+        }
+
+        private static IEnumerable<Type> SafeGetTypes(Assembly a)
+        {
+            try
+            {
+                return a.DefinedTypes.Select(t => t.AsType()).ToArray();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types.Where(t => t != null).ToArray();
+            }
         }
 
         public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration, IServiceCollection services = null)
@@ -78,6 +109,12 @@ namespace OmniSharp
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
             services.AddOptions();
+
+            // MSBuild
+            services.AddSingleton<IMSBuildLocator>(sp =>
+                MSBuildLocator.CreateDefault(
+                    loggerFactory: sp.GetService<ILoggerFactory>(),
+                    assemblyLoader: sp.GetService<IAssemblyLoader>()));
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);

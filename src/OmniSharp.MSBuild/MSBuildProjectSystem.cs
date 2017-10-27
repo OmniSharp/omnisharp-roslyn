@@ -15,6 +15,7 @@ using OmniSharp.Models.Events;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
@@ -30,6 +31,7 @@ namespace OmniSharp.MSBuild
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly MSBuildInstance _msbuildInstance;
         private readonly DotNetCliService _dotNetCli;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
@@ -53,6 +55,7 @@ namespace OmniSharp.MSBuild
         public MSBuildProjectSystem(
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
+            IMSBuildLocator msbuildLocator,
             DotNetCliService dotNetCliService,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
@@ -61,6 +64,7 @@ namespace OmniSharp.MSBuild
         {
             _environment = environment;
             _workspace = workspace;
+            _msbuildInstance = msbuildLocator.RegisteredInstance;
             _dotNetCli = dotNetCliService;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
@@ -78,16 +82,10 @@ namespace OmniSharp.MSBuild
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
-            if (!MSBuildEnvironment.IsInitialized)
+            if (_environment.LogLevel < LogLevel.Information)
             {
-                MSBuildEnvironment.Initialize(_logger);
-
-                if (MSBuildEnvironment.IsInitialized &&
-                    _environment.LogLevel < LogLevel.Information)
-                {
-                    var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
-                    _logger.LogDebug($"MSBuild environment: {Environment.NewLine}{buildEnvironmentInfo}");
-                }
+                var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
+                _logger.LogDebug($"MSBuild environment: {Environment.NewLine}{buildEnvironmentInfo}");
             }
 
             var initialProjectPaths = GetInitialProjectPaths();
@@ -317,7 +315,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options, diagnostics);
 
                 if (project == null)
                 {
@@ -343,7 +341,7 @@ namespace OmniSharp.MSBuild
                 if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                 {
                     var diagnostics = new List<MSBuildDiagnosticsMessage>();
-                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _options, diagnostics);
+                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options, diagnostics);
 
                     if (newProjectFileInfo != null)
                     {
