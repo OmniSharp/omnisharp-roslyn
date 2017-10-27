@@ -166,13 +166,13 @@ namespace OmniSharp.DotNet
             _projectStates.Update(projectDirectory, contexts, AddProject, RemoveProject);
 
             var projectFilePath = contexts.First().ProjectFile.ProjectFilePath;
-            _fileSystemWatcher.Watch(projectFilePath, file =>
+            _fileSystemWatcher.Watch(projectFilePath, (file, changeType) =>
             {
                 _logger.LogInformation($"Watcher: {file} updated.");
                 Update(allowRestore: true);
             });
 
-            _fileSystemWatcher.Watch(Path.ChangeExtension(projectFilePath, "lock.json"), file =>
+            _fileSystemWatcher.Watch(Path.ChangeExtension(projectFilePath, "lock.json"), (file, changeType) =>
             {
                 _logger.LogInformation($"Watcher: {file} updated.");
                 Update(allowRestore: false);
