@@ -249,6 +249,32 @@ private void KillProcessTree(Process process)
     }
     else
     {
-        process.Kill();
+        foreach (var pid in GetUnixChildProcessIds(process.Id))
+        {
+            Run("kill", pid.ToString());
+        }
+
+        Run("kill", process.Id.ToString());
     }
+}
+
+int[] GetUnixChildProcessIds(int processId)
+{
+    var output = RunAndCaptureOutput("ps", "-A -o ppid,pid");
+    var lines = output.Split(new[] { System.Environment.NewLine }, System.StringSplitOptions.RemoveEmptyEntries);
+    var childPIDs = new List<int>();
+
+    foreach (var line in lines)
+    {
+        var pairs = line.Trim().Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+        int ppid;
+        if (int.TryParse(pairs[0].Trim(), out ppid) && ppid == processId)
+        {
+            childPIDs.Add(int.Parse(pairs[1].Trim()));
+        }
+
+    }
+
+    return childPIDs.ToArray();
 }
