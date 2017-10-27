@@ -93,7 +93,7 @@ namespace OmniSharp.MSBuild.Discovery
 
             foreach (var kvp in instance.PropertyOverrides)
             {
-                builder.Append($"{Environment.NewLine}    {kvp.Key} = {kvp.Value}");
+                builder.Append($"{Environment.NewLine}            {kvp.Key} = {kvp.Value}");
             }
 
             _logger.LogInformation(builder.ToString());
