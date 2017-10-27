@@ -21,8 +21,15 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            // Don't resolve to MSBuild assemblies under the installed Mono unless OmniSharp
-            // is actually running under the installed Mono.
+            // Don't try to resolve to MSBuild assemblies under the installed Mono path unless OmniSharp
+            // is actually running on the installed Mono runtime. The problem is that, when running standalone
+            // on its own embedded Mono runtime, OmniSharp carries it's own "GAC" of dependencies.
+            // And, loading Microsoft.Build.* assemblies from the installed Mono location might have different
+            // dependencies that aren't included in OmniSharp's GAC. This can result in strange failures during
+            // design-time build that are difficult to diagnose. However, if OmniSharp is actually running on the
+            // installed Mono runtime, Mono's GAC will be used and dependencies will be properly located. So, in
+            // that case we can use the Microsoft.Build.* assemblies located under the installed Mono path.
+
             var monoRuntimePath = PlatformHelper.GetMonoRuntimePath();
             if (monoRuntimePath == null)
             {
