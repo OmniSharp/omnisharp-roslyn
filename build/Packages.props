@@ -3,8 +3,8 @@
 
   <PropertyGroup>
     <CakeScriptinTransportVersion>0.1.0</CakeScriptinTransportVersion>
-    <DotnetScriptDependencyModelVersion>0.1.0</DotnetScriptDependencyModelVersion>
-    <DotnetScriptDependencyModelNuGetVersion>0.1.0</DotnetScriptDependencyModelNuGetVersion>
+    <DotnetScriptDependencyModelVersion>0.2.0</DotnetScriptDependencyModelVersion>
+    <DotnetScriptDependencyModelNuGetVersion>0.2.0</DotnetScriptDependencyModelNuGetVersion>
     <MicrosoftAspNetCoreDiagnosticsVersion>1.1.0</MicrosoftAspNetCoreDiagnosticsVersion>
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>
@@ -13,12 +13,12 @@
     <MicrosoftBuildFrameworkVersion>15.3.409</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>15.3.409</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildUtilitiesCoreVersion>15.3.409</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisCommonVersion>2.3.2</MicrosoftCodeAnalysisCommonVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>2.3.2</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftCodeAnalysisCSharpFeaturesVersion>2.3.2</MicrosoftCodeAnalysisCSharpFeaturesVersion>
-    <MicrosoftCodeAnalysisCSharpScriptingVersion>2.3.2</MicrosoftCodeAnalysisCSharpScriptingVersion>
-    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>2.3.2</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
-    <MicrosoftCodeAnalysisWorkspacesCommonVersion>2.3.2</MicrosoftCodeAnalysisWorkspacesCommonVersion>
+    <MicrosoftCodeAnalysisCommonVersion>2.4.0</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>2.4.0</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpFeaturesVersion>2.4.0</MicrosoftCodeAnalysisCSharpFeaturesVersion>
+    <MicrosoftCodeAnalysisCSharpScriptingVersion>2.4.0</MicrosoftCodeAnalysisCSharpScriptingVersion>
+    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>2.4.0</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
+    <MicrosoftCodeAnalysisWorkspacesCommonVersion>2.4.0</MicrosoftCodeAnalysisWorkspacesCommonVersion>
     <MicrosoftExtensionsCachingMemoryVersion>1.1.0</MicrosoftExtensionsCachingMemoryVersion>
     <MicrosoftExtensionsCommandLineUtilsVersion>1.1.0</MicrosoftExtensionsCommandLineUtilsVersion>
     <MicrosoftExtensionsConfigurationVersion>1.1.0</MicrosoftExtensionsConfigurationVersion>
