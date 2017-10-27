@@ -87,7 +87,8 @@ namespace OmniSharp.MSBuild
 
             var mode = GetPropertyValue("Mode", buildEnvironment, s_BuildEnvironmentType, BindingFlags.NonPublic | BindingFlags.Instance);
 
-            return mode?.ToString() == "VisualStudio";
+            // return mode?.ToString() == "VisualStudio";
+            return false;
         }
     }
 }
