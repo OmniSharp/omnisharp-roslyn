@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.4" />
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Antlr4 Include="Grammar.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>Test</CustomToolNamespace>
+      <Listener>False</Listener>
+      <Visitor>True</Visitor>
+    </Antlr4>
+
+  </ItemGroup>
+</Project>

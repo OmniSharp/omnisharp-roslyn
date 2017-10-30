@@ -105,6 +105,23 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task AntlrGeneratedFiles()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("AntlrGeneratedFiles"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(1, workspaceInfo.Projects.Count);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal(6, project.SourceFiles.Count);
+                Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
+            }
+        }
+
         private static async Task<MSBuildWorkspaceInfo> GetWorkspaceInfoAsync(OmniSharpTestHost host)
         {
             var service = host.GetWorkspaceInformationService();

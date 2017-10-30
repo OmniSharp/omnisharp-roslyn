@@ -35,8 +35,8 @@
     "ProjectAndSolution",
     "ProjectAndSolutionWithProjectSection",
     "TwoProjectsWithSolution",
-    "ProjectWithGeneratedFile"
-
+    "ProjectWithGeneratedFile",
+    "AntlrGeneratedFiles"
   ],
   "LegacyTestAssets": [
     "LegacyNUnitTestProject",
