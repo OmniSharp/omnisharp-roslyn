@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.27.0] - not released yet
+
+* Fixed issue with locating MSBuild when running OmniSharp on Mono on Windows. (PR: [#1001](https://github.com/OmniSharp/omnisharp-roslyn/pull/1001))
+
 ## [1.26.0] - 2017-10-27
 
 * Cake support added! (PR: [#932](https://github.com/OmniSharp/omnisharp-roslyn/pull/932))
