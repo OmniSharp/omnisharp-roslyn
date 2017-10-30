@@ -17,7 +17,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
         public override ImmutableArray<MSBuildInstance> GetInstances()
         {
-            if (!PlatformHelper.IsWindows)
+            if (PlatformHelper.IsMono)
             {
                 return NoInstances;
             }
