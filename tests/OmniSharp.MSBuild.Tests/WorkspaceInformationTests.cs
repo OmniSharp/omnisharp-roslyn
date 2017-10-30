@@ -105,7 +105,7 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
-        [Fact]
+        [ConditionalFact(typeof(WindowsOnly))]
         public async Task AntlrGeneratedFiles()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("AntlrGeneratedFiles"))
