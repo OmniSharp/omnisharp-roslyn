@@ -127,8 +127,10 @@ namespace OmniSharp.LanguageServerProtocol
             );
 
             _logger.LogTrace("--- Handler Definitions ---");
-            foreach (var handlerCollection in _handlers) {
-                foreach (var handler in handlerCollection) {
+            foreach (var handlerCollection in _handlers)
+            {
+                foreach (var handler in handlerCollection)
+                {
                     _logger.LogTrace(
                         "Handler: {Language}:{DocumentSelector}:{Handler}",
                         handlerCollection.Language,
