@@ -510,12 +510,27 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void UpdateReferences(Project project, ImmutableArray<string> references)
+        private class MetadataReferenceComparer : IEqualityComparer<MetadataReference>
         {
-            var existingReferences = new HashSet<MetadataReference>(project.MetadataReferences);
-            var addedReferences = new HashSet<MetadataReference>();
+            public static MetadataReferenceComparer Instance { get; } = new MetadataReferenceComparer();
 
-            foreach (var referencePath in references)
+            public bool Equals(MetadataReference x, MetadataReference y)
+                => x is PortableExecutableReference pe1 && y is PortableExecutableReference pe2
+                    ? StringComparer.OrdinalIgnoreCase.Equals(pe1.FilePath, pe2.FilePath)
+                    : EqualityComparer<MetadataReference>.Default.Equals(x, y);
+
+            public int GetHashCode(MetadataReference obj)
+                => obj is PortableExecutableReference pe
+                    ? StringComparer.OrdinalIgnoreCase.GetHashCode(pe.FilePath)
+                    : EqualityComparer<MetadataReference>.Default.GetHashCode(obj);
+        }
+
+        private void UpdateReferences(Project project, ImmutableArray<string> referencePaths)
+        {
+            var referencesToRemove = new HashSet<MetadataReference>(project.MetadataReferences, MetadataReferenceComparer.Instance);
+            var referencesToAdd = new HashSet<MetadataReference>(MetadataReferenceComparer.Instance);
+
+            foreach (var referencePath in referencePaths)
             {
                 if (!File.Exists(referencePath))
                 {
@@ -523,25 +538,25 @@ namespace OmniSharp.MSBuild
                 }
                 else
                 {
-                    var metadataReference = _metadataFileReferenceCache.GetMetadataReference(referencePath);
+                    var reference = _metadataFileReferenceCache.GetMetadataReference(referencePath);
 
-                    if (existingReferences.Remove(metadataReference))
+                    if (referencesToRemove.Remove(reference))
                     {
                         continue;
                     }
 
-                    if (!addedReferences.Contains(metadataReference))
+                    if (!referencesToAdd.Contains(reference))
                     {
                         _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
-                        _workspace.AddMetadataReference(project.Id, metadataReference);
-                        addedReferences.Add(metadataReference);
+                        _workspace.AddMetadataReference(project.Id, reference);
+                        referencesToAdd.Add(reference);
                     }
                 }
             }
 
-            foreach (var existingReference in existingReferences)
+            foreach (var reference in referencesToRemove)
             {
-                _workspace.RemoveMetadataReference(project.Id, existingReference);
+                _workspace.RemoveMetadataReference(project.Id, reference);
             }
         }
 
