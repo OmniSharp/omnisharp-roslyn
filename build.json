@@ -36,7 +36,6 @@
     "ProjectAndSolutionWithProjectSection",
     "TwoProjectsWithSolution",
     "ProjectWithGeneratedFile"
-
   ],
   "LegacyTestAssets": [
     "LegacyNUnitTestProject",
@@ -46,5 +45,8 @@
   ],
   "CakeTestAssets": [
     "CakeProject"
+  ],
+  "WindowsOnlyTestAssets": [
+    "AntlrGeneratedFiles"
   ]
 }

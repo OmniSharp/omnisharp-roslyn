@@ -130,7 +130,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
 
             var projectInstance = project.CreateProjectInstance();
-            var buildResult = projectInstance.Build(TargetNames.Compile,
+            var buildResult = projectInstance.Build(new string[] { TargetNames.Compile, TargetNames.CoreCompile },
                 new[] { new MSBuildLogForwarder(logger, diagnostics) });
 
             return buildResult
@@ -203,7 +203,8 @@ namespace OmniSharp.MSBuild.ProjectFile
             var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
             var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
 
-            var sourceFiles = GetFullPaths(projectInstance.GetItems(ItemNames.Compile));
+            var sourceFiles = GetFullPaths(
+                projectInstance.GetItems(ItemNames.Compile), filter: FileNameIsNotGenerated);
             var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
             var references = GetFullPaths(
                 projectInstance.GetItems(ItemNames.ReferencePath).Where(ReferenceSourceTargetIsNotProjectReference));
@@ -249,13 +250,14 @@ namespace OmniSharp.MSBuild.ProjectFile
             var globalProperties = new Dictionary<string, string>
             {
                 { PropertyNames.DesignTimeBuild, "true" },
+                { PropertyNames.BuildingInsideVisualStudio, "true" },
                 { PropertyNames.BuildProjectReferences, "false" },
                 { PropertyNames._ResolveReferenceDependencies, "true" },
                 { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar },
 
                 // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
                 // See https://github.com/dotnet/roslyn/pull/4604 for details.
-                { PropertyNames.ProvideCommandLineInvocation, "true" },
+                { PropertyNames.ProvideCommandLineArgs, "true" },
                 { PropertyNames.SkipCompilerExecution, "true" }
             };
 
@@ -272,20 +274,23 @@ namespace OmniSharp.MSBuild.ProjectFile
         }
 
         private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
-        {
-            return item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
-        }
+            => item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
 
-        private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items)
+        private static bool FileNameIsNotGenerated(string filePath)
+            => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_");
+
+        private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items, Func<string, bool> filter = null)
         {
             var builder = ImmutableArray.CreateBuilder<string>();
             var addedSet = new HashSet<string>();
+
+            filter = filter ?? (_ => true);
 
             foreach (var item in items)
             {
                 var fullPath = item.GetMetadataValue(MetadataNames.FullPath);
 
-                if (addedSet.Add(fullPath))
+                if (filter(fullPath) && addedSet.Add(fullPath))
                 {
                     builder.Add(fullPath);
                 }

@@ -48,6 +48,12 @@ namespace TestUtility
         public override string SkipReason => "Can't run on AppVeyor";
     }
 
+    public class WindowsOnly : SkipCondition
+    {
+        public override bool ShouldSkip => !PlatformHelper.IsWindows;
+        public override string SkipReason => "Can only be run on Windows";
+    }
+
     public class IsLegacyTest : SkipCondition
     {
         public override bool ShouldSkip

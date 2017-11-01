@@ -378,9 +378,27 @@ Task("PrepareTestAssets")
             .ExceptionOnError($"Failed to build '{folder}'.");
     }
 
+    var platform = Platform.Current;
+
+    // Restore and build Windows-only test assets
+    if (platform.IsWindows)
+    {
+        foreach (var project in buildPlan.WindowsOnlyTestAssets)
+        {
+            Information("Restoring and building: {0} (windows-only)...", project);
+
+            var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+
+            RunTool(env.DotNetCommand, "restore", folder)
+                .ExceptionOnError($"Failed to restore '{folder}'.");
+
+            RunTool(env.DotNetCommand, "build", folder)
+                .ExceptionOnError($"Failed to build '{folder}'.");
+        }
+    }
+
     if (AllowLegacyTests())
     {
-        var platform = Platform.Current;
         if (platform.IsMacOS && platform.Version.Major == 10 && platform.Version.Minor == 12)
         {
             // Trick to allow older .NET Core SDK to run on Sierra.

@@ -1,6 +1,22 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.27.0] - not released yet
+
+* Fixed issue with locating MSBuild when running OmniSharp on Mono on Windows. (PR: [#1001](https://github.com/OmniSharp/omnisharp-roslyn/pull/1001))
+
+## [1.26.0] - 2017-10-27
+
+* Cake support added! (PR: [#932](https://github.com/OmniSharp/omnisharp-roslyn/pull/932))
+* csproj-based C# scripts are now supported. (PR: [#980](https://github.com/OmniSharp/omnisharp-roslyn/pull/980))
+* Updated to Roslyn 2.4.0 packages. (PR: [#998](https://github.com/OmniSharp/omnisharp-roslyn/pull/998))
+* MSBuild SdkResolvers now ship with OmniSharp, allowing it to correctly locate the .NET Core SDK for a particular project. (PR: [#974](https://github.com/OmniSharp/omnisharp-roslyn/pull/974))
+* Big improvements in OmniSharp's process for located MSBuild 15.0 and MSBuild toolsets on the machine. (PR: [#988](https://github.com/OmniSharp/omnisharp-roslyn/pull/988)
+* Updated `/filesChanged` endpoint to allow the client to describe the type of file change (create, delete or change). If a client provides this extra information, files are properly removed and added to the workspace. (PR: [#987](https://github.com/OmniSharp/omnisharp-roslyn/pull/987))
+* Improved filtering in `/findsymbols` to include substring matches. (PR: [#990](https://github.com/OmniSharp/omnisharp-roslyn/pull/990))
+* `/autocomplete` end point now takes a `TriggerCharacter` property that can be used to trigger completion after a SPACE character. (PR: [#975](https://github.com/OmniSharp/omnisharp-roslyn/pull/975))
+* Fix issue with port number not being used when passed as command line argument. (PR: [#971](https://github.com/OmniSharp/omnisharp-roslyn/pull/971))
+
 ## [1.25.0] - 2017-09-22
 
 * Major refactoring to split OmniSharp into two servers for each supported protocol: one for HTTP, and one for STDIO. (PR: [#854](https://github.com/OmniSharp/omnisharp-roslyn/pull/854))
