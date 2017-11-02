@@ -45,8 +45,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 bool firstWatcherCalled = false;
                 bool secondWatcherCalled = false;
-                watcher.WatchDirectory("", (path, changeType) => { firstWatcherCalled = true; });
-                watcher.WatchDirectory("", (path, changeType) => { secondWatcherCalled = true; });
+                watcher.Watch("", (path, changeType) => { firstWatcherCalled = true; });
+                watcher.Watch("", (path, changeType) => { secondWatcherCalled = true; });
 
                 var handler = GetRequestHandler(host);
                 handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });

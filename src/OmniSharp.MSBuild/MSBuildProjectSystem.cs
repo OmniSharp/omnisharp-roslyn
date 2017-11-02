@@ -402,7 +402,8 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void WatchDirectoryContainingFile(string sourceFile) => _fileSystemWatcher.WatchDirectory(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
+        private void WatchDirectoryContainingFile(string sourceFile)
+            => _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
 
         private void OnDirectoryFileChanged(string path, FileChangeType changeType)
         {

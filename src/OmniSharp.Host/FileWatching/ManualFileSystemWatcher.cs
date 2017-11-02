@@ -5,39 +5,43 @@ using OmniSharp.Models.FilesChanged;
 
 namespace OmniSharp.FileWatching
 {
-    public class ManualFileSystemWatcher : IFileSystemWatcher
+    internal class ManualFileSystemWatcher : IFileSystemWatcher, IFileSystemNotifier
     {
-        private readonly Dictionary<string, Action<string, FileChangeType>> _callbacks = new Dictionary<string, Action<string, FileChangeType>>();
-        private readonly Dictionary<string, Action<string, FileChangeType>> _directoryCallBacks = new Dictionary<string, Action<string, FileChangeType>>();
+        private readonly object _gate = new object();
+        private readonly Dictionary<string, FileSystemNotificationCallback> _callbacks;
 
-        public void TriggerChange(string path, FileChangeType changeType)
+        public ManualFileSystemWatcher()
         {
-            if (_callbacks.TryGetValue(path, out var callback))
-            {
-                callback(path, changeType);
-            }
+            _callbacks = new Dictionary<string, FileSystemNotificationCallback>(StringComparer.OrdinalIgnoreCase);
+        }
 
-            var directoryPath = Path.GetDirectoryName(path);
-            if (_directoryCallBacks.TryGetValue(directoryPath, out var fileCallback))
+        public void Notify(string filePath, FileChangeType changeType = FileChangeType.Unspecified)
+        {
+            lock (_gate)
             {
-                fileCallback(path, changeType);
+                if (_callbacks.TryGetValue(filePath, out var fileCallback))
+                {
+                    fileCallback(filePath, changeType);
+                }
+
+                var directoryPath = Path.GetDirectoryName(filePath);
+                if (_callbacks.TryGetValue(directoryPath, out var directoryCallback))
+                {
+                    directoryCallback(filePath, changeType);
+                }
             }
         }
 
-        public void Watch(string path, Action<string, FileChangeType> callback)
+        public void Watch(string fileOrDirectoryPath, FileSystemNotificationCallback callback)
         {
-            _callbacks[path] = callback;
-        }
+            lock (_gate)
+            {
+                if (_callbacks.TryGetValue(fileOrDirectoryPath, out var existingCallback))
+                {
+                    callback = callback + existingCallback;
+                }
 
-        public void WatchDirectory(string path, Action<string, FileChangeType> callback)
-        {
-            if (_directoryCallBacks.TryGetValue(path, out var existingCallback))
-            {
-                _directoryCallBacks[path] = callback + existingCallback;
-            }
-            else
-            {
-                _directoryCallBacks[path] = callback;
+                _callbacks[fileOrDirectoryPath] = callback;
             }
         }
     }
