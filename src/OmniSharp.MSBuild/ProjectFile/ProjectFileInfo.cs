@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using NuGet.Packaging.Core;
 using OmniSharp.MSBuild.Discovery;
-using OmniSharp.MSBuild.Models.Events;
+using OmniSharp.MSBuild.Logging;
 using OmniSharp.Options;
 
 namespace OmniSharp.MSBuild.ProjectFile
@@ -69,30 +69,30 @@ namespace OmniSharp.MSBuild.ProjectFile
             _data = data;
         }
 
-        public static ProjectFileInfo Create(
-            string filePath, string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+        public static (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Create(
+            string filePath, string solutionDirectory, ILogger logger, MSBuildInstance msbuildInstance, MSBuildOptions options = null)
         {
             if (!File.Exists(filePath))
             {
-                return null;
+                return (null, ImmutableArray<MSBuildDiagnostic>.Empty);
             }
 
-            var projectInstance = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, options, diagnostics, out var targetFrameworks);
+            var (projectInstance, diagnostics) = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, options, out var targetFrameworks);
             if (projectInstance == null)
             {
-                return null;
+                return (null, diagnostics);
             }
 
             var id = ProjectId.CreateNewId(debugName: filePath);
             var data = CreateProjectData(projectInstance, targetFrameworks);
+            var projectFileInfo = new ProjectFileInfo(id, filePath, data);
 
-            return new ProjectFileInfo(id, filePath, data);
+            return (projectFileInfo, diagnostics);
         }
 
-        private static ProjectInstance LoadProject(
+        private static (ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) LoadProject(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
+            MSBuildInstance msbuildInstance, MSBuildOptions options, out ImmutableArray<string> targetFrameworks)
         {
             options = options ?? new MSBuildOptions();
 
@@ -130,12 +130,16 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
 
             var projectInstance = project.CreateProjectInstance();
-            var buildResult = projectInstance.Build(new string[] { TargetNames.Compile, TargetNames.CoreCompile },
-                new[] { new MSBuildLogForwarder(logger, diagnostics) });
+            var msbuildLogger = new MSBuildLogger(logger);
+            var buildResult = projectInstance.Build(
+                targets: new string[] { TargetNames.Compile, TargetNames.CoreCompile },
+                loggers: new[] { msbuildLogger });
+
+            var diagnostics = msbuildLogger.GetDiagnostics();
 
             return buildResult
-                ? projectInstance
-                : null;
+                ? (projectInstance, diagnostics)
+                : (null, diagnostics);
         }
 
         private static string GetLegalToolsetVersion(string toolsVersion, ICollection<Toolset> toolsets)
@@ -219,19 +223,19 @@ namespace OmniSharp.MSBuild.ProjectFile
                 sourceFiles, projectReferences, references, packageReferences, analyzers);
         }
 
-        public ProjectFileInfo Reload(
-            string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+        public (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Reload(
+            string solutionDirectory, ILogger logger, MSBuildInstance msbuildInstance, MSBuildOptions options = null)
         {
-            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, options, diagnostics, out var targetFrameworks);
+            var (projectInstance, diagnostics) = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, options, out var targetFrameworks);
             if (projectInstance == null)
             {
-                return null;
+                return (null, diagnostics);
             }
 
             var data = CreateProjectData(projectInstance, targetFrameworks);
+            var projectFileInfo = new ProjectFileInfo(Id, FilePath, data);
 
-            return new ProjectFileInfo(Id, FilePath, data);
+            return (projectFileInfo, diagnostics);
         }
 
         public bool IsUnityProject()

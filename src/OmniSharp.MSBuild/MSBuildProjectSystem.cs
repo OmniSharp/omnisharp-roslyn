@@ -16,6 +16,7 @@ using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Discovery;
+using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
@@ -311,11 +312,11 @@ namespace OmniSharp.MSBuild
             _logger.LogInformation($"Loading project: {projectFilePath}");
 
             ProjectFileInfo project;
-            var diagnostics = new List<MSBuildDiagnosticsMessage>();
+            ImmutableArray<MSBuildDiagnostic> diagnostics;
 
             try
             {
-                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options, diagnostics);
+                (project, diagnostics) = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options);
 
                 if (project == null)
                 {
@@ -340,8 +341,10 @@ namespace OmniSharp.MSBuild
             {
                 if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                 {
-                    var diagnostics = new List<MSBuildDiagnosticsMessage>();
-                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options, diagnostics);
+                    ProjectFileInfo newProjectFileInfo;
+                    ImmutableArray<MSBuildDiagnostic> diagnostics;
+
+                    (newProjectFileInfo, diagnostics) = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options);
 
                     if (newProjectFileInfo != null)
                     {

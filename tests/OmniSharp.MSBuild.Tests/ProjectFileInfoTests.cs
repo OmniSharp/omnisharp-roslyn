@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
-using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,7 +26,9 @@ namespace OmniSharp.MSBuild.Tests
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
 
-            return ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger, msbuildLocator.RegisteredInstance);
+            var (projectFileInfo, _) = ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger, msbuildLocator.RegisteredInstance);
+
+            return projectFileInfo;
         }
 
         [Fact]
