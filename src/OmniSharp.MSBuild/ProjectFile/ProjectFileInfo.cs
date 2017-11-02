@@ -9,7 +9,6 @@ using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
-using NuGet.Packaging.Core;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.Options;
@@ -77,14 +76,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return (null, ImmutableArray<MSBuildDiagnostic>.Empty);
             }
 
-            var (projectInstance, diagnostics) = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, options, out var targetFrameworks);
+            var (projectInstance, diagnostics) = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, options);
             if (projectInstance == null)
             {
                 return (null, diagnostics);
             }
 
             var id = ProjectId.CreateNewId(debugName: filePath);
-            var data = CreateProjectData(projectInstance, targetFrameworks);
+            var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(id, filePath, data);
 
             return (projectFileInfo, diagnostics);
@@ -92,7 +91,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         private static (ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) LoadProject(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options, out ImmutableArray<string> targetFrameworks)
+            MSBuildInstance msbuildInstance, MSBuildOptions options)
         {
             options = options ?? new MSBuildOptions();
 
@@ -112,7 +111,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var project = collection.LoadProject(filePath, toolsVersion);
 
             var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
-            targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+            var targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
 
             // If the project supports multiple target frameworks and specific framework isn't
             // selected, we must pick one before execution. Otherwise, the ResolveReferences
@@ -187,52 +186,16 @@ namespace OmniSharp.MSBuild.ProjectFile
             return toolsVersion;
         }
 
-        private static ProjectData CreateProjectData(ProjectInstance projectInstance, ImmutableArray<string> targetFrameworks)
-        {
-            var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
-            var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
-            var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
-            var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
-            var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
-            var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
-
-            var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
-
-            var languageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
-            var allowUnsafeCode = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
-            var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
-            var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
-            var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
-            var suppressDiagnosticIds = PropertyConverter.ToSuppressDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
-            var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
-            var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
-
-            var sourceFiles = GetFullPaths(
-                projectInstance.GetItems(ItemNames.Compile), filter: FileNameIsNotGenerated);
-            var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
-            var references = GetFullPaths(
-                projectInstance.GetItems(ItemNames.ReferencePath).Where(ReferenceSourceTargetIsNotProjectReference));
-            var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
-            var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
-
-            return new ProjectData(guid, name,
-                assemblyName, targetPath, outputPath, projectAssetsFile,
-                targetFramework, targetFrameworks,
-                outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressDiagnosticIds,
-                signAssembly, assemblyOriginatorKeyFile,
-                sourceFiles, projectReferences, references, packageReferences, analyzers);
-        }
-
         public (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Reload(
             string solutionDirectory, ILogger logger, MSBuildInstance msbuildInstance, MSBuildOptions options = null)
         {
-            var (projectInstance, diagnostics) = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, options, out var targetFrameworks);
+            var (projectInstance, diagnostics) = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, options);
             if (projectInstance == null)
             {
                 return (null, diagnostics);
             }
 
-            var data = CreateProjectData(projectInstance, targetFrameworks);
+            var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(Id, FilePath, data);
 
             return (projectFileInfo, diagnostics);
@@ -275,58 +238,6 @@ namespace OmniSharp.MSBuild.ProjectFile
             globalProperties.AddPropertyOverride(PropertyNames.Platform, options.Platform, msbuildInstance.PropertyOverrides, logger);
 
             return globalProperties;
-        }
-
-        private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
-            => item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
-
-        private static bool FileNameIsNotGenerated(string filePath)
-            => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_");
-
-        private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items, Func<string, bool> filter = null)
-        {
-            var builder = ImmutableArray.CreateBuilder<string>();
-            var addedSet = new HashSet<string>();
-
-            filter = filter ?? (_ => true);
-
-            foreach (var item in items)
-            {
-                var fullPath = item.GetMetadataValue(MetadataNames.FullPath);
-
-                if (filter(fullPath) && addedSet.Add(fullPath))
-                {
-                    builder.Add(fullPath);
-                }
-            }
-
-            return builder.ToImmutable();
-        }
-
-        private static ImmutableArray<PackageReference> GetPackageReferences(ICollection<ProjectItemInstance> items)
-        {
-            var builder = ImmutableArray.CreateBuilder<PackageReference>(items.Count);
-            var addedSet = new HashSet<PackageReference>();
-
-            foreach (var item in items)
-            {
-                var name = item.EvaluatedInclude;
-                var versionValue = item.GetMetadataValue(MetadataNames.Version);
-                var versionRange = PropertyConverter.ToVersionRange(versionValue);
-                var dependency = new PackageDependency(name, versionRange);
-
-                var isImplicitlyDefinedValue = item.GetMetadataValue(MetadataNames.IsImplicitlyDefined);
-                var isImplicitlyDefined = PropertyConverter.ToBoolean(isImplicitlyDefinedValue, defaultValue: false);
-
-                var packageReference = new PackageReference(dependency, isImplicitlyDefined);
-
-                if (addedSet.Add(packageReference))
-                {
-                    builder.Add(packageReference);
-                }
-            }
-
-            return builder.ToImmutable();
         }
     }
 }
