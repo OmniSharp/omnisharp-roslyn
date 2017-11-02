@@ -1,10 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
-    internal class ProjectFileInfoCollection : IEnumerable<ProjectFileInfo>
+    internal class ProjectFileInfoCollection
     {
         private readonly List<ProjectFileInfo> _items;
         private readonly Dictionary<string, ProjectFileInfo> _itemMap;
@@ -15,18 +14,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             _itemMap = new Dictionary<string, ProjectFileInfo>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public IEnumerator<ProjectFileInfo> GetEnumerator()
-        {
-            foreach (var item in _items)
-            {
-                yield return item;
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        public IEnumerable<ProjectFileInfo> GetItems() => _items.ToArray();
 
         public void Add(ProjectFileInfo fileInfo)
         {
@@ -47,6 +35,18 @@ namespace OmniSharp.MSBuild.ProjectFile
         public bool ContainsKey(string filePath)
         {
             return _itemMap.ContainsKey(filePath);
+        }
+
+        public bool Remove(string filePath)
+        {
+            if (_itemMap.TryGetValue(filePath, out var fileInfo))
+            {
+                _items.Remove(fileInfo);
+                _itemMap.Remove(filePath);
+                return true;
+            }
+
+            return false;
         }
 
         public bool TryGetValue(string filePath, out ProjectFileInfo fileInfo)

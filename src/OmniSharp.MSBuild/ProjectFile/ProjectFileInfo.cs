@@ -46,11 +46,6 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<PackageReference> PackageReferences => _data.PackageReferences;
         public ImmutableArray<string> Analyzers => _data.Analyzers;
 
-        internal ProjectFileInfo(string filePath)
-        {
-            this.FilePath = filePath;
-        }
-
         private ProjectFileInfo(
             ProjectId id,
             string filePath,
@@ -63,7 +58,23 @@ namespace OmniSharp.MSBuild.ProjectFile
             _data = data;
         }
 
-        public static (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Create(string filePath, ProjectLoader loader)
+        internal static ProjectFileInfo CreateEmpty(string filePath)
+        {
+            var id = ProjectId.CreateNewId(debugName: filePath);
+
+            return new ProjectFileInfo(id, filePath, data: null);
+        }
+
+        internal static ProjectFileInfo CreateNoBuild(string filePath, ProjectLoader loader)
+        {
+            var id = ProjectId.CreateNewId(debugName: filePath);
+            var project = loader.EvaluateProjectFile(filePath);
+            var data = ProjectData.Create(project);
+
+            return new ProjectFileInfo(id, filePath, data);
+        }
+
+        public static (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Load(string filePath, ProjectLoader loader)
         {
             if (!File.Exists(filePath))
             {

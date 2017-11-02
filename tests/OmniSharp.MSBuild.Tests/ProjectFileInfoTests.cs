@@ -29,7 +29,7 @@ namespace OmniSharp.MSBuild.Tests
                 propertyOverrides: msbuildLocator.RegisteredInstance.PropertyOverrides,
                 loggerFactory: LoggerFactory);
 
-            var (projectFileInfo, _) = ProjectFileInfo.Create(projectFilePath, loader);
+            var (projectFileInfo, _) = ProjectFileInfo.Load(projectFilePath, loader);
 
             return projectFileInfo;
         }

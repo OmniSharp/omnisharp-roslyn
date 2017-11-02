@@ -80,7 +80,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             return ImmutableArray.CreateRange(values);
         }
 
-        public static ImmutableArray<string> ToSuppressDiagnosticIds(string propertyValue)
+        public static ImmutableArray<string> ToSuppressedDiagnosticIds(string propertyValue)
         {
             if (string.IsNullOrWhiteSpace(propertyValue))
             {

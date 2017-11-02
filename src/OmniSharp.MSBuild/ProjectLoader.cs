@@ -15,24 +15,14 @@ namespace OmniSharp.MSBuild
     {
         private readonly ILogger _logger;
         private readonly Dictionary<string, string> _globalProperties;
-        private readonly MSB.Evaluation.ProjectCollection _projectCollection;
-        private readonly string _toolsVersion;
+        private readonly MSBuildOptions _options;
 
         public ProjectLoader(MSBuildOptions options, string solutionDirectory, ImmutableDictionary<string, string> propertyOverrides, ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<ProjectLoader>();
-            options = options ?? new MSBuildOptions();
+            _options = options ?? new MSBuildOptions();
 
-            _globalProperties = CreateGlobalProperties(options, solutionDirectory, propertyOverrides, _logger);
-            _projectCollection = new MSB.Evaluation.ProjectCollection(_globalProperties);
-
-            var toolsVersion = options.ToolsVersion;
-            if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
-            {
-                toolsVersion = _projectCollection.DefaultToolsVersion;
-            }
-
-            _toolsVersion = GetLegalToolsetVersion(toolsVersion, _projectCollection.Toolsets);
+            _globalProperties = CreateGlobalProperties(_options, solutionDirectory, propertyOverrides, _logger);
         }
 
         private static Dictionary<string, string> CreateGlobalProperties(
@@ -66,8 +56,7 @@ namespace OmniSharp.MSBuild
 
         public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(string filePath)
         {
-            // Evaluate the MSBuild project
-            var evaluatedProject = _projectCollection.LoadProject(filePath, _toolsVersion);
+            var evaluatedProject = EvaluateProjectFile(filePath);
 
             SetTargetFrameworkIfNeeded(evaluatedProject);
 
@@ -82,6 +71,22 @@ namespace OmniSharp.MSBuild
             return buildResult
                 ? (projectInstance, diagnostics)
                 : (null, diagnostics);
+        }
+
+        public MSB.Evaluation.Project EvaluateProjectFile(string filePath)
+        {
+            // Evaluate the MSBuild project
+            var projectCollection = new MSB.Evaluation.ProjectCollection(_globalProperties);
+
+            var toolsVersion = _options.ToolsVersion;
+            if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
+            {
+                toolsVersion = projectCollection.DefaultToolsVersion;
+            }
+
+            toolsVersion = GetLegalToolsetVersion(toolsVersion, projectCollection.Toolsets);
+
+            return projectCollection.LoadProject(filePath, toolsVersion);
         }
 
         private static void SetTargetFrameworkIfNeeded(MSB.Evaluation.Project evaluatedProject)

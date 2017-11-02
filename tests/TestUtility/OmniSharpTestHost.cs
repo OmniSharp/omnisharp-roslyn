@@ -13,6 +13,7 @@ using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.Mef;
+using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Services;
@@ -32,7 +33,7 @@ namespace TestUtility
             typeof(HostHelpers).GetTypeInfo().Assembly, // OmniSharp.Host
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
-            typeof(MSBuildProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
+            typeof(ProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
@@ -133,7 +134,13 @@ namespace TestUtility
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
 
-            return new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost, oldMSBuildSdksPath);
+            var host = new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost, oldMSBuildSdksPath);
+
+            // Force workspace to be updated
+            var service = host.GetWorkspaceInformationService();
+            service.Handle(new WorkspaceInformationRequest()).Wait();
+
+            return host;
         }
 
         private static string SetMSBuildSdksPath(DotNetCliService dotNetCli)

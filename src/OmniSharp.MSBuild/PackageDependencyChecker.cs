@@ -5,17 +5,55 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NuGet.ProjectModel;
+using OmniSharp.Eventing;
+using OmniSharp.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Options;
+using OmniSharp.Services;
 
-namespace OmniSharp.MSBuild.Resolution
+namespace OmniSharp.MSBuild
 {
-    internal class PackageDependencyResolver
+    internal class PackageDependencyChecker
     {
         private readonly ILogger _logger;
+        private readonly IEventEmitter _eventEmitter;
+        private readonly DotNetCliService _dotNetCli;
+        private readonly MSBuildOptions _options;
 
-        public PackageDependencyResolver(ILoggerFactory loggerFactory)
+        public PackageDependencyChecker(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, DotNetCliService dotNetCli, MSBuildOptions options)
         {
-            _logger = loggerFactory.CreateLogger<PackageDependencyResolver>();
+            _logger = loggerFactory.CreateLogger<PackageDependencyChecker>();
+            _eventEmitter = eventEmitter;
+            _dotNetCli = dotNetCli;
+            _options = options;
+        }
+
+        public void CheckForUnresolvedDependences(ProjectFileInfo projectFile, bool allowAutoRestore)
+        {
+            var unresolvedPackageReferences = FindUnresolvedPackageReferences(projectFile);
+            if (unresolvedPackageReferences.IsEmpty)
+            {
+                return;
+            }
+
+            var unresolvedDependencies = unresolvedPackageReferences.Select(packageReference =>
+                new PackageDependency
+                {
+                    Name = packageReference.Dependency.Id,
+                    Version = packageReference.Dependency.VersionRange.ToNormalizedString()
+                });
+
+            if (allowAutoRestore && _options.EnablePackageAutoRestore)
+            {
+                _dotNetCli.RestoreAsync(projectFile.Directory, onFailure: () =>
+                {
+                    _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
+                });
+            }
+            else
+            {
+                _eventEmitter.UnresolvedDepdendencies(projectFile.FilePath, unresolvedDependencies);
+            }
         }
 
         public ImmutableArray<PackageReference> FindUnresolvedPackageReferences(ProjectFileInfo projectFile)

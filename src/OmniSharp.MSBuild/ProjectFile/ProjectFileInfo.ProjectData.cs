@@ -4,10 +4,11 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NuGet.Packaging.Core;
+
+using MSB = Microsoft.Build;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -54,12 +55,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> preprocessorSymbolNames,
                 ImmutableArray<string> suppressedDiagnosticIds,
                 bool signAssembly,
-                string assemblyOriginatorKeyFile,
-                ImmutableArray<string> sourceFiles,
-                ImmutableArray<string> projectReferences,
-                ImmutableArray<string> references,
-                ImmutableArray<PackageReference> packageReferences,
-                ImmutableArray<string> analyzers)
+                string assemblyOriginatorKeyFile)
             {
                 Guid = guid;
                 Name = name;
@@ -81,7 +77,30 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
+            }
 
+            private ProjectData(
+                Guid guid, string name,
+                string assemblyName, string targetPath, string outputPath, string projectAssetsFile,
+                FrameworkName targetFramework,
+                ImmutableArray<string> targetFrameworks,
+                OutputKind outputKind,
+                LanguageVersion languageVersion,
+                bool allowUnsafeCode,
+                string documentationFile,
+                ImmutableArray<string> preprocessorSymbolNames,
+                ImmutableArray<string> suppressedDiagnosticIds,
+                bool signAssembly,
+                string assemblyOriginatorKeyFile,
+                ImmutableArray<string> sourceFiles,
+                ImmutableArray<string> projectReferences,
+                ImmutableArray<string> references,
+                ImmutableArray<PackageReference> packageReferences,
+                ImmutableArray<string> analyzers)
+                : this(guid, name, assemblyName, targetPath, outputPath, projectAssetsFile,
+                      targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
+                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile)
+            {
                 SourceFiles = sourceFiles;
                 ProjectReferences = projectReferences;
                 References = references;
@@ -89,7 +108,41 @@ namespace OmniSharp.MSBuild.ProjectFile
                 Analyzers = analyzers;
             }
 
-            public static ProjectData Create(ProjectInstance projectInstance)
+            public static ProjectData Create(MSB.Evaluation.Project project)
+            {
+                var guid = PropertyConverter.ToGuid(project.GetPropertyValue(PropertyNames.ProjectGuid));
+                var name = project.GetPropertyValue(PropertyNames.ProjectName);
+                var assemblyName = project.GetPropertyValue(PropertyNames.AssemblyName);
+                var targetPath = project.GetPropertyValue(PropertyNames.TargetPath);
+                var outputPath = project.GetPropertyValue(PropertyNames.OutputPath);
+                var projectAssetsFile = project.GetPropertyValue(PropertyNames.ProjectAssetsFile);
+
+                var targetFramework = new FrameworkName(project.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
+
+                var targetFrameworkValue = project.GetPropertyValue(PropertyNames.TargetFramework);
+                var targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+
+                if (!string.IsNullOrWhiteSpace(targetFrameworkValue) && targetFrameworks.Length == 0)
+                {
+                    targetFrameworks = ImmutableArray.Create(targetFrameworkValue);
+                }
+
+                var languageVersion = PropertyConverter.ToLanguageVersion(project.GetPropertyValue(PropertyNames.LangVersion));
+                var allowUnsafeCode = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
+                var outputKind = PropertyConverter.ToOutputKind(project.GetPropertyValue(PropertyNames.OutputType));
+                var documentationFile = project.GetPropertyValue(PropertyNames.DocumentationFile);
+                var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(project.GetPropertyValue(PropertyNames.DefineConstants));
+                var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(project.GetPropertyValue(PropertyNames.NoWarn));
+                var signAssembly = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
+                var assemblyOriginatorKeyFile = project.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
+
+                return new ProjectData(
+                    guid, name, assemblyName, targetPath, outputPath, projectAssetsFile,
+                    targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
+                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile);
+            }
+
+            public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance)
             {
                 var guid = PropertyConverter.ToGuid(projectInstance.GetPropertyValue(PropertyNames.ProjectGuid));
                 var name = projectInstance.GetPropertyValue(PropertyNames.ProjectName);
@@ -113,7 +166,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
                 var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
                 var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
-                var suppressDiagnosticIds = PropertyConverter.ToSuppressDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
+                var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
                 var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
                 var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
 
@@ -128,18 +181,18 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return new ProjectData(guid, name,
                     assemblyName, targetPath, outputPath, projectAssetsFile,
                     targetFramework, targetFrameworks,
-                    outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressDiagnosticIds,
+                    outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
                     sourceFiles, projectReferences, references, packageReferences, analyzers);
             }
 
-            private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
+            private static bool ReferenceSourceTargetIsNotProjectReference(MSB.Execution.ProjectItemInstance item)
                 => item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
 
             private static bool FileNameIsNotGenerated(string filePath)
                 => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_");
 
-            private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items, Func<string, bool> filter = null)
+            private static ImmutableArray<string> GetFullPaths(IEnumerable<MSB.Execution.ProjectItemInstance> items, Func<string, bool> filter = null)
             {
                 var builder = ImmutableArray.CreateBuilder<string>();
                 var addedSet = new HashSet<string>();
@@ -159,7 +212,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return builder.ToImmutable();
             }
 
-            private static ImmutableArray<PackageReference> GetPackageReferences(ICollection<ProjectItemInstance> items)
+            private static ImmutableArray<PackageReference> GetPackageReferences(ICollection<MSB.Execution.ProjectItemInstance> items)
             {
                 var builder = ImmutableArray.CreateBuilder<PackageReference>(items.Count);
                 var addedSet = new HashSet<PackageReference>();
