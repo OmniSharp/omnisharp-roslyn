@@ -11,7 +11,7 @@ using NuGet.Packaging.Core;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
-    public partial class ProjectFileInfo
+    internal partial class ProjectFileInfo
     {
         private class ProjectData
         {

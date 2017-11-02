@@ -6,7 +6,7 @@ namespace OmniSharp.MSBuild.Models
 {
     public class MSBuildWorkspaceInfo
     {
-        public MSBuildWorkspaceInfo(string solutionFilePath, IEnumerable<ProjectFileInfo> projects, bool excludeSourceFiles)
+        internal MSBuildWorkspaceInfo(string solutionFilePath, IEnumerable<ProjectFileInfo> projects, bool excludeSourceFiles)
         {
             SolutionPath = solutionFilePath;
 

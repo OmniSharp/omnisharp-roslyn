@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
-    public class ProjectFileInfoCollection : IEnumerable<ProjectFileInfo>
+    internal class ProjectFileInfoCollection : IEnumerable<ProjectFileInfo>
     {
         private readonly List<ProjectFileInfo> _items;
         private readonly Dictionary<string, ProjectFileInfo> _itemMap;

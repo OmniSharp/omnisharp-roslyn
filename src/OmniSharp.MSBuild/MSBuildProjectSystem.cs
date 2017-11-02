@@ -32,7 +32,7 @@ namespace OmniSharp.MSBuild
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly MSBuildInstance _msbuildInstance;
+        private readonly ImmutableDictionary<string, string> _propertyOverrides;
         private readonly DotNetCliService _dotNetCli;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
@@ -45,6 +45,7 @@ namespace OmniSharp.MSBuild
         private readonly Queue<ProjectFileInfo> _projectsToProcess;
         private readonly ProjectFileInfoCollection _projects;
 
+        private ProjectLoader _loader;
         private MSBuildOptions _options;
         private string _solutionFileOrRootPath;
 
@@ -65,7 +66,7 @@ namespace OmniSharp.MSBuild
         {
             _environment = environment;
             _workspace = workspace;
-            _msbuildInstance = msbuildLocator.RegisteredInstance;
+            _propertyOverrides = msbuildLocator.RegisteredInstance.PropertyOverrides;
             _dotNetCli = dotNetCliService;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
@@ -88,6 +89,8 @@ namespace OmniSharp.MSBuild
                 var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
                 _logger.LogDebug($"MSBuild environment: {Environment.NewLine}{buildEnvironmentInfo}");
             }
+
+            _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory);
 
             var initialProjectPaths = GetInitialProjectPaths();
 
@@ -316,7 +319,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                (project, diagnostics) = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options);
+                (project, diagnostics) = ProjectFileInfo.Create(projectFilePath, _loader);
 
                 if (project == null)
                 {
@@ -344,7 +347,7 @@ namespace OmniSharp.MSBuild
                     ProjectFileInfo newProjectFileInfo;
                     ImmutableArray<MSBuildDiagnostic> diagnostics;
 
-                    (newProjectFileInfo, diagnostics) = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options);
+                    (newProjectFileInfo, diagnostics) = oldProjectFileInfo.Reload(_loader);
 
                     if (newProjectFileInfo != null)
                     {
