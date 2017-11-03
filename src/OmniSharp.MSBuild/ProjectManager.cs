@@ -139,6 +139,9 @@ namespace OmniSharp.MSBuild
 
                     // TODO: Handle removing project
 
+                    projectByFilePathMap.Add(currentProject.FilePath, currentProject);
+                    projectList.Add(currentProject);
+
                     // update or add project
                     if (_projectFiles.TryGetValue(currentProject.FilePath, out var projectFileInfo))
                     {
