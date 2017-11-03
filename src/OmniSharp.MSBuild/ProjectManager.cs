@@ -15,6 +15,7 @@ using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -437,25 +438,10 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private class MetadataReferenceComparer : IEqualityComparer<MetadataReference>
-        {
-            public static MetadataReferenceComparer Instance { get; } = new MetadataReferenceComparer();
-
-            public bool Equals(MetadataReference x, MetadataReference y)
-                => x is PortableExecutableReference pe1 && y is PortableExecutableReference pe2
-                    ? StringComparer.OrdinalIgnoreCase.Equals(pe1.FilePath, pe2.FilePath)
-                    : EqualityComparer<MetadataReference>.Default.Equals(x, y);
-
-            public int GetHashCode(MetadataReference obj)
-                => obj is PortableExecutableReference pe
-                    ? StringComparer.OrdinalIgnoreCase.GetHashCode(pe.FilePath)
-                    : EqualityComparer<MetadataReference>.Default.GetHashCode(obj);
-        }
-
         private void UpdateReferences(Project project, ImmutableArray<string> referencePaths)
         {
-            var referencesToRemove = new HashSet<MetadataReference>(project.MetadataReferences, MetadataReferenceComparer.Instance);
-            var referencesToAdd = new HashSet<MetadataReference>(MetadataReferenceComparer.Instance);
+            var referencesToRemove = new HashSet<MetadataReference>(project.MetadataReferences, MetadataReferenceEqualityComparer.Instance);
+            var referencesToAdd = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
 
             foreach (var referencePath in referencePaths)
             {
