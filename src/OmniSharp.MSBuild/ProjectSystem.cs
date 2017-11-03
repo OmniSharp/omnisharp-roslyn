@@ -94,7 +94,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                _manager.QueueProjectUpdate(projectFilePath);
+                _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true);
             }
         }
 

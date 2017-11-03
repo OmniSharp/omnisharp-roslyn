@@ -22,6 +22,18 @@ namespace OmniSharp.MSBuild
 {
     internal class ProjectManager : DisposableObject
     {
+        private class ProjectToUpdate
+        {
+            public string FilePath { get; }
+            public bool AllowAutoRestore { get; set; }
+
+            public ProjectToUpdate(string filePath, bool allowAutoRestore)
+            {
+                FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+                AllowAutoRestore = allowAutoRestore;
+            }
+        }
+
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -32,7 +44,7 @@ namespace OmniSharp.MSBuild
         private readonly OmniSharpWorkspace _workspace;
 
         private const int LoopDelay = 100; // milliseconds
-        private readonly BufferBlock<string> _queue;
+        private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
         private bool _processingQueue;
@@ -48,7 +60,7 @@ namespace OmniSharp.MSBuild
             _projectLoader = projectLoader;
             _workspace = workspace;
 
-            _queue = new BufferBlock<string>();
+            _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
         }
@@ -67,10 +79,10 @@ namespace OmniSharp.MSBuild
         public IEnumerable<ProjectFileInfo> GetAllProjects() => _projectFiles.GetItems();
         public bool TryGetProject(string projectFilePath, out ProjectFileInfo projectFileInfo) => _projectFiles.TryGetValue(projectFilePath, out projectFileInfo);
 
-        public void QueueProjectUpdate(string projectFilePath)
+        public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore)
         {
             _logger.LogInformation($"Queue project update for '{projectFilePath}'");
-            _queue.Post(projectFilePath);
+            _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore));
         }
 
         public async Task WaitForQueueEmptyAsync()
@@ -95,53 +107,62 @@ namespace OmniSharp.MSBuild
             _processingQueue = true;
             try
             {
-                HashSet<string> processedSet = null;
+                Dictionary<string, ProjectToUpdate> projectByFilePathMap = null;
+                List<ProjectToUpdate> projectList = null;
 
-                while (_queue.TryReceive(out var projectFilePath))
+                while (_queue.TryReceive(out var currentProject))
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
                     }
 
-                    if (processedSet == null)
+                    if (projectByFilePathMap == null)
                     {
-                        processedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        projectByFilePathMap = new Dictionary<string, ProjectToUpdate>(StringComparer.OrdinalIgnoreCase);
+                        projectList = new List<ProjectToUpdate>();
                     }
 
-                    // Ensure that we don't process the same project twice.
-                    if (!processedSet.Add(projectFilePath))
+                    // Ensure that we don't process the same project twice. However, if a project *does*
+                    // appear more than once in the update queue, ensure that AllowAutoRestore is set to true
+                    // if any of the updates requires it.
+                    if (projectByFilePathMap.TryGetValue(currentProject.FilePath, out var trackedProject))
                     {
+                        if (currentProject.AllowAutoRestore && !trackedProject.AllowAutoRestore)
+                        {
+                            trackedProject.AllowAutoRestore = true;
+                        }
+
                         continue;
                     }
 
                     // TODO: Handle removing project
 
                     // update or add project
-                    if (_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
+                    if (_projectFiles.TryGetValue(currentProject.FilePath, out var projectFileInfo))
                     {
                         projectFileInfo = ReloadProject(projectFileInfo);
-                        _projectFiles[projectFilePath] = projectFileInfo;
+                        _projectFiles[currentProject.FilePath] = projectFileInfo;
                     }
                     else
                     {
-                        projectFileInfo = LoadProject(projectFilePath);
+                        projectFileInfo = LoadProject(currentProject.FilePath);
                         AddProject(projectFileInfo);
                     }
                 }
 
-                if (processedSet != null)
+                if (projectByFilePathMap != null)
                 {
-                    foreach (var projectFilePath in processedSet)
+                    foreach (var project in projectList)
                     {
-                        UpdateProject(projectFilePath);
+                        UpdateProject(project.FilePath);
                     }
 
-                    foreach (var projectFilePath in processedSet)
+                    foreach (var project in projectList)
                     {
-                        if (_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
+                        if (_projectFiles.TryGetValue(project.FilePath, out var projectFileInfo))
                         {
-                            _packageDependencyChecker.CheckForUnresolvedDependences(projectFileInfo, allowAutoRestore: true);
+                            _packageDependencyChecker.CheckForUnresolvedDependences(projectFileInfo, project.AllowAutoRestore);
                         }
                     }
                 }
@@ -230,14 +251,14 @@ namespace OmniSharp.MSBuild
             // as "updates". We should properly remove projects that are deleted.
             _fileSystemWatcher.Watch(projectFileInfo.FilePath, (file, changeType) =>
             {
-                QueueProjectUpdate(projectFileInfo.FilePath);
+                QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true);
             });
 
             if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
             {
                 _fileSystemWatcher.Watch(projectFileInfo.ProjectAssetsFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false);
                 });
 
                 var restoreDirectory = Path.GetDirectoryName(projectFileInfo.ProjectAssetsFile);
@@ -248,17 +269,17 @@ namespace OmniSharp.MSBuild
 
                 _fileSystemWatcher.Watch(nugetCacheFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false);
                 });
 
                 _fileSystemWatcher.Watch(nugetPropsFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false);
                 });
 
                 _fileSystemWatcher.Watch(nugetTargetsFile, (file, changeType) =>
                 {
-                    QueueProjectUpdate(projectFileInfo.FilePath);
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false);
                 });
             }
         }
@@ -385,7 +406,7 @@ namespace OmniSharp.MSBuild
                         referencedProject = ProjectFileInfo.CreateNoBuild(projectReferencePath, _projectLoader);
                         AddProject(referencedProject);
 
-                        QueueProjectUpdate(projectReferencePath);
+                        QueueProjectUpdate(projectReferencePath, allowAutoRestore: true);
                     }
                 }
 
