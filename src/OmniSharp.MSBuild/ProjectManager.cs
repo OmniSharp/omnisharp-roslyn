@@ -401,7 +401,8 @@ namespace OmniSharp.MSBuild
             {
                 if (!_projectFiles.TryGetValue(projectReferencePath, out var referencedProject))
                 {
-                    if (File.Exists(projectReferencePath))
+                    if (File.Exists(projectReferencePath) &&
+                        projectReferencePath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                     {
                         _logger.LogInformation($"Found referenced project outside root directory: {projectReferencePath}");
 
