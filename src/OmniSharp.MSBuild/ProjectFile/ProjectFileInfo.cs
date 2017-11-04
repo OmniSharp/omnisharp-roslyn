@@ -205,9 +205,38 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var sourceFiles = GetFullPaths(
                 projectInstance.GetItems(ItemNames.Compile), filter: FileNameIsNotGenerated);
-            var projectReferences = GetFullPaths(projectInstance.GetItems(ItemNames.ProjectReference));
-            var references = GetFullPaths(
-                projectInstance.GetItems(ItemNames.ReferencePath).Where(ReferenceSourceTargetIsNotProjectReference));
+
+            var projectReferences = GetFullPaths(
+                projectInstance.GetItems(ItemNames.ProjectReference), filter: IsCSharpProject);
+
+            var references = ImmutableArray.CreateBuilder<string>();
+            foreach (var referencePathItem in projectInstance.GetItems(ItemNames.ReferencePath))
+            {
+                var referenceSourceTarget = referencePathItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget);
+
+                if (StringComparer.OrdinalIgnoreCase.Equals(referenceSourceTarget, ItemNames.ProjectReference))
+                {
+                    // If the reference was sourced from a project reference, we have two choices:
+                    //
+                    //   1. If the reference is a C# project reference, we shouldn't add it because it'll just duplicate
+                    //      the project reference.
+                    //   2. If the reference is *not* a C# project reference, we should keep this reference because the
+                    //      project reference was already removed.
+
+                    var originalItemSpec = referencePathItem.GetMetadataValue(MetadataNames.OriginalItemSpec);
+                    if (originalItemSpec.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
+                var fullPath = referencePathItem.GetMetadataValue(MetadataNames.FullPath);
+                if (!string.IsNullOrEmpty(fullPath))
+                {
+                    references.Add(fullPath);
+                }
+            }
+
             var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
             var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
 
@@ -216,7 +245,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 targetFramework, targetFrameworks,
                 outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressDiagnosticIds,
                 signAssembly, assemblyOriginatorKeyFile,
-                sourceFiles, projectReferences, references, packageReferences, analyzers);
+                sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers);
         }
 
         public ProjectFileInfo Reload(
@@ -273,11 +302,11 @@ namespace OmniSharp.MSBuild.ProjectFile
             return globalProperties;
         }
 
-        private static bool ReferenceSourceTargetIsNotProjectReference(ProjectItemInstance item)
-            => item.GetMetadataValue(MetadataNames.ReferenceSourceTarget) != ItemNames.ProjectReference;
+        private static bool IsCSharpProject(string filePath)
+            => filePath.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase);
 
         private static bool FileNameIsNotGenerated(string filePath)
-            => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_");
+            => !Path.GetFileName(filePath).StartsWith("TemporaryGeneratedFile_", StringComparison.OrdinalIgnoreCase);
 
         private static ImmutableArray<string> GetFullPaths(IEnumerable<ProjectItemInstance> items, Func<string, bool> filter = null)
         {

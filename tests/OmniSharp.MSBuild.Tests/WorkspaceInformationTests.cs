@@ -105,6 +105,23 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task CSharpAndFSharp()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CSharpAndFSharp"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(1, workspaceInfo.Projects.Count);
+
+                var project = workspaceInfo.Projects[0];
+                Assert.Equal("csharp-console.csproj", Path.GetFileName(project.Path));
+                Assert.Equal(3, project.SourceFiles.Count);
+            }
+        }
+
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task AntlrGeneratedFiles()
         {
