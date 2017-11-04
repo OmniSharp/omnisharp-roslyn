@@ -1,9 +1,11 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.27.0] - not released yet
+## [1.26.1] - 2017-11-04
 
 * Fixed issue with locating MSBuild when running OmniSharp on Mono on Windows. (PR: [#1001](https://github.com/OmniSharp/omnisharp-roslyn/pull/1001))
+* Fixed problem where the Antlr4.CodeGenerator Nuget package would not generate files during OmniSharp design-time build. ([omnisharp-vscode#1822](https://github.com/OmniSharp/omnisharp-vscode/issues/1822), PR: [#1002](https://github.com/OmniSharp/omnisharp-roslyn/pull/1002))
+* Fixed issue where a C# project referencing a non-C# project would cause the referenced project to be loaded (causing OmniSharp to potentially treat it as C#!). ([omnisharp-vscode#371](https://github.com/OmniSharp/omnisharp-vscode/issues/371), [omnisharp-vscode#1829](https://github.com/OmniSharp/omnisharp-vscode/issues/1829), PR: [#1005](https://github.com/OmniSharp/omnisharp-roslyn/pull/1005))
 
 ## [1.26.0] - 2017-10-27
 
