@@ -1,4 +1,4 @@
-﻿namespace OmniSharp.Models.FilesChanged
+﻿namespace OmniSharp.FileWatching
 {
     public enum FileChangeType
     {

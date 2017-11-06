@@ -19,7 +19,7 @@ namespace OmniSharp.MSBuild.Models
         public bool IsExe { get; set; }
         public bool IsUnityProject { get; set; }
 
-        public MSBuildProjectInfo(ProjectFileInfo projectFileInfo)
+        internal MSBuildProjectInfo(ProjectFileInfo projectFileInfo)
         {
             AssemblyName = projectFileInfo.AssemblyName;
             Path = projectFileInfo.FilePath;
