@@ -42,7 +42,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             var response = new SignatureHelpResponse();
 
             // define active parameter by position
-            foreach (var comma in invocations.First().ArgumentList.Arguments.GetSeparators())
+            foreach (var comma in invocations.First().Separators)
             {
                 if (comma.Span.Start > invocations.First().Position)
                 {
@@ -58,8 +58,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             foreach (var invocation in invocations)
             {
-                var types = invocation.ArgumentList.Arguments
-                    .Select(argument => invocation.SemanticModel.GetTypeInfo(argument.Expression));
+                var types = invocation.ArgumentTypes;
+                    
+
 
                 foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
                 {
@@ -96,27 +97,43 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 var invocation = node as InvocationExpressionSyntax;
                 if (invocation != null && invocation.ArgumentList.Span.Contains(position))
                 {
+                    var i = await document.GetSemanticModelAsync();
                     return new InvocationContext()
                     {
                         SemanticModel = await document.GetSemanticModelAsync(),
                         Position = position,
                         Receiver = invocation.Expression,
-                        ArgumentList = invocation.ArgumentList
+                        ArgumentTypes = invocation.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
+                        Separators = invocation.ArgumentList.Arguments.GetSeparators()
                     };
                 }
-
                 var objectCreation = node as ObjectCreationExpressionSyntax;
                 if (objectCreation != null && objectCreation.ArgumentList.Span.Contains(position))
                 {
+                    var i = await document.GetSemanticModelAsync();
                     return new InvocationContext()
                     {
-                        SemanticModel = await document.GetSemanticModelAsync(),
+                        SemanticModel = i,
                         Position = position,
                         Receiver = objectCreation,
-                        ArgumentList = objectCreation.ArgumentList
+                        ArgumentTypes = objectCreation.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
+                        Separators = objectCreation.ArgumentList.Arguments.GetSeparators()
                     };
                 }
 
+                var attributeSyntax = node as AttributeSyntax;
+                if (attributeSyntax != null && attributeSyntax.ArgumentList.Span.Contains(position))
+                {
+                    var i = await document.GetSemanticModelAsync();
+                    return new InvocationContext()
+                    {
+                        SemanticModel = i,
+                        Position = position,
+                        Receiver = attributeSyntax,
+                        ArgumentTypes = attributeSyntax.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
+                        Separators = attributeSyntax.ArgumentList.Arguments.GetSeparators()
+                    };
+                }
                 node = node.Parent;
             }
 

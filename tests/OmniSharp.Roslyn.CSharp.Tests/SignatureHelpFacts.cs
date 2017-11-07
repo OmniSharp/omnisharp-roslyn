@@ -115,7 +115,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public static void Main(){
         Foo($$);
     }
-    pubic static Foo(bool b, int n = 1234)
+    public static Foo(bool b, int n = 1234)
     {
     }
 }";
@@ -150,6 +150,46 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(0, actual.ActiveParameter);
+        }
+
+        [Fact]
+        public async Task AttributeConstructorSignatureHelp()
+        {
+            // 1st position, a
+            const string source =
+                @"using System;
+
+        namespace New_folder
+        {
+            using System;
+        [MyTest($$)]
+        public class TestClass {
+            int value;
+            public static void Main(){
+            }
+            void TestMethod(int value){
+                this.value = value;
+            }
+            public class MyTestAttribute : Attribute {
+            int value;
+            public MyTestAttribute(int value)
+            {
+                this.value =value;
+            }
+           }   
+        }";
+            var actual = await GetSignatureHelp(source);
+            /* Statement that passes in accordance with thye current behaviour 
+            Assert.Null(actual);*/
+
+            /*Statements that should pass and are currently causing failure*/
+            Assert.Equal(0, actual.ActiveParameter);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
+
         }
 
         [Fact]
