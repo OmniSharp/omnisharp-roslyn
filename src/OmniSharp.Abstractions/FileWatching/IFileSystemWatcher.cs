@@ -1,20 +1,16 @@
-﻿using System;
-using OmniSharp.Models.FilesChanged;
+﻿using OmniSharp.Models.FilesChanged;
 
 namespace OmniSharp.FileWatching
 {
-    // TODO: Flesh out this API more
+    public delegate void FileSystemNotificationCallback(string filePath, FileChangeType changeType);
+
     public interface IFileSystemWatcher
     {
-        void Watch(string path, Action<string, FileChangeType> callback);
-
         /// <summary>
-        /// Called when a file is created, changed, or deleted.
+        /// Call to watch a file or directory path for changes.
         /// </summary>
-        /// <param name="path">The path to the file</param>
-        /// <param name="changeType">The type of change. Hosts are not required to pass a change type</param>
-        void TriggerChange(string path, FileChangeType changeType);
-
-        void WatchDirectory(string path, Action<string, FileChangeType> callback);
+        /// <param name="fileOrDirectoryPath">The file or directory path to watch.</param>
+        /// <param name="callback">The callback that will be invoked when a change occurs in the watched file or directory.</param>
+        void Watch(string fileOrDirectoryPath, FileSystemNotificationCallback callback);
     }
 }

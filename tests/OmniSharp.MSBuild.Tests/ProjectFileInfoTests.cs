@@ -1,10 +1,9 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.Extensions.Logging;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
-using OmniSharp.Services;
+using OmniSharp.Options;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -14,20 +13,25 @@ namespace OmniSharp.MSBuild.Tests
     public class ProjectFileInfoTests : AbstractTestFixture
     {
         private readonly TestAssets _testAssets;
-        private readonly ILogger _logger;
 
         public ProjectFileInfoTests(ITestOutputHelper output)
             : base(output)
         {
             this._testAssets = TestAssets.Instance;
-            this._logger = this.LoggerFactory.CreateLogger<ProjectFileInfoTests>();
         }
 
         private ProjectFileInfo CreateProjectFileInfo(OmniSharpTestHost host, ITestProject testProject, string projectFilePath)
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
+            var loader = new ProjectLoader(
+                options: new MSBuildOptions(),
+                solutionDirectory: testProject.Directory,
+                propertyOverrides: msbuildLocator.RegisteredInstance.PropertyOverrides,
+                loggerFactory: LoggerFactory);
 
-            return ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger, msbuildLocator.RegisteredInstance);
+            var (projectFileInfo, _) = ProjectFileInfo.Load(projectFilePath, loader);
+
+            return projectFileInfo;
         }
 
         [Fact]

@@ -67,6 +67,7 @@ namespace OmniSharp
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
+                .WithProvider(MefValueProvider.From<IFileSystemNotifier>(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))

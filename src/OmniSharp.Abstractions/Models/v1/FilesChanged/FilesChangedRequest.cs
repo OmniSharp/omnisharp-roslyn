@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using OmniSharp.FileWatching;
 using OmniSharp.Mef;
 
 namespace OmniSharp.Models.FilesChanged

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Threading.Tasks;
@@ -11,20 +12,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Files
     [OmniSharpHandler(OmniSharpEndpoints.FilesChanged, LanguageNames.CSharp)]
     public class OnFilesChangedService : IRequestHandler<IEnumerable<FilesChangedRequest>, FilesChangedResponse>
     {
-        private readonly IFileSystemWatcher _watcher;
+        private readonly IFileSystemNotifier _notifier;
 
         [ImportingConstructor]
-        public OnFilesChangedService(IFileSystemWatcher watcher)
+        public OnFilesChangedService(IFileSystemNotifier notifier)
         {
-            _watcher = watcher;
+            _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
         }
 
         public Task<FilesChangedResponse> Handle(IEnumerable<FilesChangedRequest> requests)
         {
             foreach (var request in requests)
             {
-                _watcher.TriggerChange(request.FileName, request.ChangeType);
+                _notifier.Notify(request.FileName, request.ChangeType);
             }
+
             return Task.FromResult(new FilesChangedResponse());
         }
     }
