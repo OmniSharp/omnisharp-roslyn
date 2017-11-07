@@ -178,13 +178,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
            }   
         }";
-            var actual = await GetSignatureHelp(source);
-            /* Statement that passes in accordance with thye current behaviour 
-            Assert.Null(actual);*/
-
-            /*Statements that should pass and are currently causing failure*/
+            var actual = await GetSignatureHelp(source);    
             Assert.Equal(0, actual.ActiveParameter);
-
+       
             var signature = actual.Signatures.ElementAt(0);
             Assert.Single(signature.Parameters);
             Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
