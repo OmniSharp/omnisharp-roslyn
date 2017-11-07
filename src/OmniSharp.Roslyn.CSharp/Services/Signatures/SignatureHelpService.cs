@@ -59,9 +59,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             foreach (var invocation in invocations)
             {
                 var types = invocation.ArgumentTypes;
-                    
-
-
                 foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
                 {
                     var signature = BuildSignature(methodOverload);
@@ -75,7 +72,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                     }
                 }
             }
-
             var signaturesList = signaturesSet.ToList();
             response.Signatures = signaturesList;
             response.ActiveSignature = signaturesList.IndexOf(bestScoredItem);
@@ -97,10 +93,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 var invocation = node as InvocationExpressionSyntax;
                 if (invocation != null && invocation.ArgumentList.Span.Contains(position))
                 {
-                    var i = await document.GetSemanticModelAsync();
+                    var semanticModel = await document.GetSemanticModelAsync();
                     return new InvocationContext()
                     {
-                        SemanticModel = await document.GetSemanticModelAsync(),
+                        SemanticModel = semanticModel,
                         Position = position,
                         Receiver = invocation.Expression,
                         ArgumentTypes = invocation.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
@@ -110,24 +106,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 var objectCreation = node as ObjectCreationExpressionSyntax;
                 if (objectCreation != null && objectCreation.ArgumentList.Span.Contains(position))
                 {
-                    var i = await document.GetSemanticModelAsync();
+                    var semanticModel = await document.GetSemanticModelAsync();
                     return new InvocationContext()
                     {
-                        SemanticModel = i,
+                        SemanticModel = semanticModel,
                         Position = position,
                         Receiver = objectCreation,
                         ArgumentTypes = objectCreation.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
                         Separators = objectCreation.ArgumentList.Arguments.GetSeparators()
                     };
                 }
-
                 var attributeSyntax = node as AttributeSyntax;
                 if (attributeSyntax != null && attributeSyntax.ArgumentList.Span.Contains(position))
                 {
-                    var i = await document.GetSemanticModelAsync();
+                    var semanticModel = await document.GetSemanticModelAsync();
                     return new InvocationContext()
                     {
-                        SemanticModel = i,
+                        SemanticModel = semanticModel,
                         Position = position,
                         Receiver = attributeSyntax,
                         ArgumentTypes = attributeSyntax.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),

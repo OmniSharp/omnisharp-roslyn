@@ -153,7 +153,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-     
         private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmniSharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)
         {
             var symbols = new List<ISymbol>();

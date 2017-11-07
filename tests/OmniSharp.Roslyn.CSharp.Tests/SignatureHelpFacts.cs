@@ -157,27 +157,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             // 1st position, a
             const string source =
-                @"using System;
-
-        namespace New_folder
+@"using System;
+namespace New_folder
+{
+    [MyTest($$)]
+    public class TestClass {
+    int value;
+    public static void Main(){
+    }
+    void TestMethod(int value){
+        this.value = value;
+    }
+    public class MyTestAttribute : Attribute {
+        int value;
+        public MyTestAttribute(int value)
         {
-            using System;
-        [MyTest($$)]
-        public class TestClass {
-            int value;
-            public static void Main(){
-            }
-            void TestMethod(int value){
-                this.value = value;
-            }
-            public class MyTestAttribute : Attribute {
-            int value;
-            public MyTestAttribute(int value)
-            {
-                this.value =value;
-            }
-           }   
-        }";
+             this.value = value;
+        }
+    }   
+}";
             var actual = await GetSignatureHelp(source);    
             Assert.Equal(0, actual.ActiveParameter);
        
@@ -185,7 +183,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Single(signature.Parameters);
             Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
             Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
-
         }
 
         [Fact]
