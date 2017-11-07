@@ -99,7 +99,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                         SemanticModel = semanticModel,
                         Position = position,
                         Receiver = invocation.Expression,
-                        ArgumentTypes = invocation.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
+                        ArgumentTypes = invocation.ArgumentList.Arguments.Select(argument => semanticModel.GetTypeInfo(argument.Expression)),
                         Separators = invocation.ArgumentList.Arguments.GetSeparators()
                     };
                 }
@@ -112,7 +112,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                         SemanticModel = semanticModel,
                         Position = position,
                         Receiver = objectCreation,
-                        ArgumentTypes = objectCreation.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
+                        ArgumentTypes = objectCreation.ArgumentList.Arguments.Select(argument => semanticModel.GetTypeInfo(argument.Expression)),
                         Separators = objectCreation.ArgumentList.Arguments.GetSeparators()
                     };
                 }
@@ -125,7 +125,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                         SemanticModel = semanticModel,
                         Position = position,
                         Receiver = attributeSyntax,
-                        ArgumentTypes = attributeSyntax.ArgumentList.Arguments.Select(argument => i.GetTypeInfo(argument.Expression)),
+                        ArgumentTypes = attributeSyntax.ArgumentList.Arguments.Select(argument => semanticModel.GetTypeInfo(argument.Expression)),
                         Separators = attributeSyntax.ArgumentList.Arguments.GetSeparators()
                     };
                 }

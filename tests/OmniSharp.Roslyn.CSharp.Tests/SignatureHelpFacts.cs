@@ -153,28 +153,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task AttributeConstructorSignatureHelp()
+        public async Task SignatureHelpforAttCtorSingleArg()
         {
-            // 1st position, a
             const string source =
 @"using System;
-namespace New_folder
+[MyTest($$)]
+public class TestClass 
 {
-    [MyTest($$)]
-    public class TestClass {
     int value;
-    public static void Main(){
+
+    public static void Main()
+    {
+        var attributes= typeof(TestClass).CustomAttributes;
+        foreach (var attribute in attributes)
+        {
+            Console.WriteLine(attribute);
+        }
     }
-    void TestMethod(int value){
+    void TestMethod(int value)
+    {
         this.value = value;
     }
-    public class MyTestAttribute : Attribute {
-        int value;
-        public MyTestAttribute(int value)
-        {
-             this.value = value;
-        }
-    }   
+}
+public class MyTestAttribute : Attribute 
+{
+    int value;
+    public MyTestAttribute(int value)
+    {
+        this.value = value;
+    }
 }";
             var actual = await GetSignatureHelp(source);    
             Assert.Equal(0, actual.ActiveParameter);
@@ -183,6 +190,39 @@ namespace New_folder
             Assert.Single(signature.Parameters);
             Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
             Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
+        }
+        [Fact]
+        public async Task SignatureHelpforAttCtorMultipleArg()
+        {
+            const string source =
+@"using System;
+[MyTest($$)]
+public class TestClass 
+{
+    public static void Main()
+    {
+    }
+}
+public class MyTestAttribute : Attribute 
+{
+    int value1;
+    double value2;
+    public MyTestAttribute(int value1,double value2)
+    {
+        this.value1 = value1;
+        this.value2 = value2;
+    }
+}
+";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(0, actual.ActiveParameter);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(2, signature.Parameters.Count());
+            Assert.Equal("value1", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int value1", signature.Parameters.ElementAt(0).Label);
+            Assert.Equal("value2", signature.Parameters.ElementAt(1).Name);
+            Assert.Equal("double value2", signature.Parameters.ElementAt(1).Label);
         }
 
         [Fact]
