@@ -178,6 +178,7 @@ public class MyTestAttribute : Attribute
             Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
             Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
         }
+
         [Fact]
         public async Task SignatureHelpforAttributeCtorTestParameterLabels()
         {
@@ -207,6 +208,7 @@ public class MyTestAttribute : Attribute
             Assert.Equal("value2", signature.Parameters.ElementAt(1).Name);
             Assert.Equal("double value2", signature.Parameters.ElementAt(1).Label);
         }
+
         [Fact]
         public async Task SignatureHelpforAttributeCtorActiveParamBasedOnComma()
         {
