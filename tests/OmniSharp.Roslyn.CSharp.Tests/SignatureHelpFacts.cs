@@ -192,7 +192,7 @@ public class MyTestAttribute : Attribute
             Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
         }
         [Fact]
-        public async Task SignatureHelpforAttributeCtorMultipleParam()
+        public async Task SignatureHelpforAttributeCtorTestParameterLabels()
         {
             const string source =
 @"using System;
@@ -223,6 +223,32 @@ public class MyTestAttribute : Attribute
             Assert.Equal("int value1", signature.Parameters.ElementAt(0).Label);
             Assert.Equal("value2", signature.Parameters.ElementAt(1).Name);
             Assert.Equal("double value2", signature.Parameters.ElementAt(1).Label);
+        }
+        [Fact]
+        public async Task SignatureHelpforAttributeCtorActiveParamBasedOnComma()
+        {
+            const string source =
+@"using System;
+[MyTest(2,$$)]
+public class TestClass 
+{
+    public static void Main()
+    {
+    }
+}
+public class MyTestAttribute : Attribute 
+{
+    int value1;
+    double value2;
+    public MyTestAttribute(int value1,double value2)
+    {
+        this.value1 = value1;
+        this.value2 = value2;
+    }
+}
+";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(1, actual.ActiveParameter);
         }
 
         [Fact]
@@ -422,7 +448,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SigantureHelpForCtor()
+        public async Task SignatureHelpForCtor()
         {
             const string source =
 @"class Program
@@ -447,7 +473,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SigantureHelpForCtorWithOverloads()
+        public async Task SignatureHelpForCtorWithOverloads()
         {
             const string source =
 @"class Program
