@@ -8,27 +8,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
     internal class InvocationContext
     {
-        public SemanticModel SemanticModel { get; set; }
-        public int Position { get; set; }
-        public SyntaxNode Receiver { get; set; }
-        public IEnumerable<TypeInfo> ArgumentTypes { get; set; }
-        public IEnumerable<SyntaxToken> Separators { get; set; }
+        public SemanticModel SemanticModel { get; }
+        public int Position { get; }
+        public SyntaxNode Receiver { get; }
+        public IEnumerable<TypeInfo> ArgumentTypes { get;  }
+        public IEnumerable<SyntaxToken> Separators { get; }
 
-        public InvocationContext(SemanticModel SemModel,int Pos,SyntaxNode Rec, ArgumentListSyntax ArgList)
+        public InvocationContext(SemanticModel semModel, int position, SyntaxNode receiver, ArgumentListSyntax argList)
         {
-            SemanticModel = SemModel;
-            Position = Pos;
-            Receiver = Rec;
-            ArgumentTypes = ArgList.Arguments.Select(argument => SemModel.GetTypeInfo(argument.Expression));
-            Separators = ArgList.Arguments.GetSeparators();
+            SemanticModel = semModel;
+            Position = position;
+            Receiver = receiver;
+            ArgumentTypes = argList.Arguments.Select(argument => semModel.GetTypeInfo(argument.Expression));
+            Separators = argList.Arguments.GetSeparators();
         }
-        public InvocationContext(SemanticModel SemModel, int Pos, SyntaxNode Rec, AttributeArgumentListSyntax ArgList)
+        public InvocationContext(SemanticModel semModel, int position, SyntaxNode receiver, AttributeArgumentListSyntax argList)
         {
-            SemanticModel = SemModel;
-            Position = Pos;
-            Receiver = Rec;
-            ArgumentTypes = ArgList.Arguments.Select(argument => SemModel.GetTypeInfo(argument.Expression));
-            Separators = ArgList.Arguments.GetSeparators();
+            SemanticModel = semModel;
+            Position = position;
+            Receiver = receiver;
+            ArgumentTypes = argList.Arguments.Select(argument => semModel.GetTypeInfo(argument.Expression));
+            Separators = argList.Arguments.GetSeparators();
         }
     }  
 }

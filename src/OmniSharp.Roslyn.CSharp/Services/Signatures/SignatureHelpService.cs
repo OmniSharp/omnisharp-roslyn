@@ -110,6 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 }
                 node = node.Parent;
             }
+
             return null;
         }
 

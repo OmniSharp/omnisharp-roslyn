@@ -164,15 +164,6 @@ public class TestClass
 
     public static void Main()
     {
-        var attributes= typeof(TestClass).CustomAttributes;
-        foreach (var attribute in attributes)
-        {
-            Console.WriteLine(attribute);
-        }
-    }
-    void TestMethod(int value)
-    {
-        this.value = value;
     }
 }
 public class MyTestAttribute : Attribute 
@@ -180,7 +171,6 @@ public class MyTestAttribute : Attribute
     int value;
     public MyTestAttribute(int value)
     {
-        this.value = value;
     }
 }";
             var actual = await GetSignatureHelp(source);    
@@ -209,8 +199,6 @@ public class MyTestAttribute : Attribute
     double value2;
     public MyTestAttribute(int value1,double value2)
     {
-        this.value1 = value1;
-        this.value2 = value2;
     }
 }
 ";
@@ -242,8 +230,6 @@ public class MyTestAttribute : Attribute
     double value2;
     public MyTestAttribute(int value1,double value2)
     {
-        this.value1 = value1;
-        this.value2 = value2;
     }
 }
 ";
