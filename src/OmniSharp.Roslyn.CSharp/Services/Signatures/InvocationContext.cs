@@ -11,7 +11,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
         public SemanticModel SemanticModel { get; }
         public int Position { get; }
         public SyntaxNode Receiver { get; }
-        public IEnumerable<TypeInfo> ArgumentTypes { get;  }
+        public IEnumerable<TypeInfo> ArgumentTypes { get; }
         public IEnumerable<SyntaxToken> Separators { get; }
 
         public InvocationContext(SemanticModel semModel, int position, SyntaxNode receiver, ArgumentListSyntax argList)

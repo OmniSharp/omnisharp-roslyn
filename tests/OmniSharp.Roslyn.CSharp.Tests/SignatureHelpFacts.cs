@@ -160,15 +160,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 [MyTest($$)]
 public class TestClass 
 {
-    int value;
-
     public static void Main()
     {
     }
 }
 public class MyTestAttribute : Attribute 
 {
-    int value;
     public MyTestAttribute(int value)
     {
     }
@@ -195,8 +192,6 @@ public class TestClass
 }
 public class MyTestAttribute : Attribute 
 {
-    int value1;
-    double value2;
     public MyTestAttribute(int value1,double value2)
     {
     }
@@ -226,8 +221,6 @@ public class TestClass
 }
 public class MyTestAttribute : Attribute 
 {
-    int value1;
-    double value2;
     public MyTestAttribute(int value1,double value2)
     {
     }
