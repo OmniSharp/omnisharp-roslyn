@@ -91,7 +91,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             // Walk up until we find a node that we're interested in.
             while (node != null)
             {
-   
                 if (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
