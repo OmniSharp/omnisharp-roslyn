@@ -22,6 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             ArgumentTypes = argList.Arguments.Select(argument => semModel.GetTypeInfo(argument.Expression));
             Separators = argList.Arguments.GetSeparators();
         }
+
         public InvocationContext(SemanticModel semModel, int position, SyntaxNode receiver, AttributeArgumentListSyntax argList)
         {
             SemanticModel = semModel;
