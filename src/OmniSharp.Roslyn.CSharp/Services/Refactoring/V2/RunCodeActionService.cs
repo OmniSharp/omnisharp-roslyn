@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -57,6 +58,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     changes.AddRange(fileChanges);
                     solution = applyChangesOperation.ChangedSolution;
                 }
+                else if (IsRenameDocumentOperation(o, out var originalDocumentId, out var newDocumentId, out var newFileName))
+                {
+                    var originalDocument = solution.GetDocument(originalDocumentId);
+                    string newFilePath = GetNewFilePath(newFileName, originalDocument.FilePath);
+                    var text = await originalDocument.GetTextAsync();
+                    var temp = solution.RemoveDocument(originalDocumentId);
+                    solution = temp.AddDocument(newDocumentId, newFileName, text, originalDocument.Folders, newFilePath);
+                    changes.Add(new RenamedFileResponse(originalDocument.FilePath, newFilePath));
+                }
+                else if (o is OpenDocumentOperation openDocumentOperation)
+                {
+                    var document = solution.GetDocument(openDocumentOperation.DocumentId);
+                    changes.Add(new OpenFileResponse(document.FilePath));
+                }
             }
 
             if (request.ApplyTextChanges)
@@ -69,6 +84,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 Changes = changes
             };
+        }
+
+        private static string GetNewFilePath(string newFileName, string currentFilePath)
+        {
+            var directory = Path.GetDirectoryName(currentFilePath);
+            return Path.Combine(directory, newFileName);
+        }
+
+        bool IsRenameDocumentOperation(CodeActionOperation o, out DocumentId oldDocumentId, out DocumentId newDocumentId, out string name)
+        {
+            var type = Type.GetType("Microsoft.CodeAnalysis.CodeActions.RenameDocumentOperation, Microsoft.CodeAnalysis.Workspaces, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+            if (o.GetType() == type)
+            {
+                oldDocumentId = (DocumentId)type.GetField("_oldDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(o);
+                newDocumentId = (DocumentId)type.GetField("_newDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(o);
+                name = (string)type.GetField("_newFileName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(o);
+                return true;
+            }
+
+            oldDocumentId = default(DocumentId);
+            newDocumentId = default(DocumentId);
+            name = null;
+            return false;
         }
 
         private async Task<IEnumerable<ModifiedFileResponse>> GetFileChangesAsync(Solution newSolution, Solution oldSolution, string directory, bool wantTextChanges)
@@ -88,7 +126,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         ? Path.Combine(directory, newDocument.Name)
                         : newDocument.FilePath;
 
-                    var modifiedFileResponse = new ModifiedFileResponse(newFilePath)
+                    var modifiedFileResponse = new ModifiedFileResponse(newFilePath, FileModificationType.Modified)
                     {
                         Changes = new[] {
                             new LinePositionSpanTextChange
@@ -138,7 +176,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                     if (!filePathToResponseMap.TryGetValue(filePath, out var modifiedFileResponse))
                     {
-                        modifiedFileResponse = new ModifiedFileResponse(filePath);
+                        modifiedFileResponse = new ModifiedFileResponse(filePath, FileModificationType.Modified);
                         filePathToResponseMap[filePath] = modifiedFileResponse;
                     }
 

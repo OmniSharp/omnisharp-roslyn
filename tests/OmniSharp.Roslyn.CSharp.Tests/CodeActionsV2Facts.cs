@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Models;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
@@ -126,6 +127,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var response = await RunRefactoringAsync(code, "Extract Method");
             AssertIgnoringIndent(expected, response.Changes.First().Buffer);
+        }
+
+        [Fact]
+        public async Task Can_send_rename_and_fileOpen_responses_when_codeAction_renames_file()
+        {
+            const string code =
+@"public class [||]CCC
+{
+}";
+
+            var response = await RunRefactoringAsync(code, "Rename file to CCC.cs");
+            var changes = response.Changes.ToArray();
+            Assert.Equal(2, changes.Length);
+            Assert.Equal(FileModificationType.Renamed, changes[0].ModificationType);
+            Assert.Contains("CCC.cs", ((RenamedFileResponse)changes[0]).NewFileName);
+            Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
         }
 
         private static void AssertIgnoringIndent(string expected, string actual)

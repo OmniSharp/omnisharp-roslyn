@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -141,6 +144,60 @@ namespace OmniSharp
         public override bool CanApplyChange(ApplyChangesKind feature)
         {
             return true;
+        }
+
+        protected override void ApplyDocumentRemoved(DocumentId documentId)
+        {
+            var document = this.CurrentSolution.GetDocument(documentId);
+            if (document != null)
+            {
+                DeleteDocumentFile(document.Id, document.FilePath);
+                this.OnDocumentRemoved(documentId);
+            }
+        }
+
+        private void DeleteDocumentFile(DocumentId id, string filePath)
+        {
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (IOException) { }
+            catch (NotSupportedException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+
+        protected override void ApplyDocumentAdded(DocumentInfo info, SourceText text)
+        {
+            var project = this.CurrentSolution.GetProject(info.Id.ProjectId);
+            var fullPath = info.FilePath;
+
+            this.OnDocumentAdded(info);
+
+            if (text != null)
+            {
+                this.SaveDocumentText(info.Id, fullPath, text, text.Encoding ?? Encoding.UTF8);
+            }
+        }
+
+        private void SaveDocumentText(DocumentId id, string fullPath, SourceText newText, Encoding encoding)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(fullPath);
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                using (var writer = new StreamWriter(fullPath, append: false, encoding: encoding))
+                {
+                    newText.Write(writer);
+                }
+            }
+            catch (IOException)
+            {
+            }
         }
     }
 }
