@@ -153,7 +153,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task SignatureHelpforAttCtorSingleParam()
+        public async Task SignatureHelpforAttributeCtorSingleParam()
         {
             const string source =
 @"using System;
@@ -192,7 +192,7 @@ public class MyTestAttribute : Attribute
             Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
         }
         [Fact]
-        public async Task SignatureHelpforAttCtorMultipleParam()
+        public async Task SignatureHelpforAttributeCtorMultipleParam()
         {
             const string source =
 @"using System;
@@ -226,7 +226,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttCtorNoParam()
+        public async Task SignatureHelpforAttributeCtorNoParam()
         {
             const string source =
 @"using System;
@@ -239,12 +239,8 @@ public class TestClass
 }
 public class MyTestAttribute : Attribute 
 {
-    int value1;
-    double value2;
     public MyTestAttribute()
     {
-        this.value1 = 1;
-        this.value2 = 2;
     }
 }";
             var actual = await GetSignatureHelp(source);
