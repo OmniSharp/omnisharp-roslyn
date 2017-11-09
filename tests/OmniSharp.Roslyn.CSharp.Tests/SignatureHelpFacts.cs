@@ -115,7 +115,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public static void Main(){
         Foo($$);
     }
-    pubic static Foo(bool b, int n = 1234)
+    public static Foo(bool b, int n = 1234)
     {
     }
 }";
@@ -150,6 +150,112 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(0, actual.ActiveParameter);
+        }
+
+        [Fact]
+        public async Task SignatureHelpforAttributeCtorSingleParam()
+        {
+            const string source =
+@"using System;
+[MyTest($$)]
+public class TestClass 
+{
+    public static void Main()
+    {
+    }
+}
+public class MyTestAttribute : Attribute 
+{
+    public MyTestAttribute(int value)
+    {
+    }
+}";
+            var actual = await GetSignatureHelp(source);    
+            Assert.Equal(0, actual.ActiveParameter);
+       
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
+        }
+
+        [Fact]
+        public async Task SignatureHelpforAttributeCtorTestParameterLabels()
+        {
+            const string source =
+@"using System;
+[MyTest($$)]
+public class TestClass 
+{
+    public static void Main()
+    {
+    }
+}
+public class MyTestAttribute : Attribute 
+{
+    public MyTestAttribute(int value1,double value2)
+    {
+    }
+}
+";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(0, actual.ActiveParameter);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(2, signature.Parameters.Count());
+            Assert.Equal("value1", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int value1", signature.Parameters.ElementAt(0).Label);
+            Assert.Equal("value2", signature.Parameters.ElementAt(1).Name);
+            Assert.Equal("double value2", signature.Parameters.ElementAt(1).Label);
+        }
+
+        [Fact]
+        public async Task SignatureHelpforAttributeCtorActiveParamBasedOnComma()
+        {
+            const string source =
+@"using System;
+[MyTest(2,$$)]
+public class TestClass 
+{
+    public static void Main()
+    {
+    }
+}
+public class MyTestAttribute : Attribute 
+{
+    public MyTestAttribute(int value1,double value2)
+    {
+    }
+}
+";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(1, actual.ActiveParameter);
+        }
+
+        [Fact]
+        public async Task SignatureHelpforAttributeCtorNoParam()
+        {
+            const string source =
+@"using System;
+[MyTest($$)]
+public class TestClass 
+{
+    public static void Main()
+    {
+    }
+}
+public class MyTestAttribute : Attribute 
+{
+    public MyTestAttribute()
+    {
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+            Assert.Equal(0, actual.ActiveParameter);
+            Assert.Equal(0, actual.ActiveSignature);
+            Assert.Equal("MyTestAttribute", actual.Signatures.ElementAt(0).Name);
+            Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
         }
 
         [Fact]
@@ -323,7 +429,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task SigantureHelpForCtor()
+        public async Task SignatureHelpForCtor()
         {
             const string source =
 @"class Program
@@ -348,7 +454,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task SigantureHelpForCtorWithOverloads()
+        public async Task SignatureHelpForCtorWithOverloads()
         {
             const string source =
 @"class Program
