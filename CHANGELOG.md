@@ -1,6 +1,14 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.27.0] - 2017-11-07
+
+* Significant changes made to the MSBuild project system that fix several issues. (PR: [#1003](https://github.com/OmniSharp/omnisharp-roslyn/pull/1003))
+  * Package restores are now better detected. ([omnisharp-vscode#1583](https://github.com/OmniSharp/omnisharp-vscode/issues/1583), [omnisharp-vscode#1661](https://github.com/OmniSharp/omnisharp-vscode/issues/1661), [omnisharp-vscode#1785](https://github.com/OmniSharp/omnisharp-vscode/issues/1785))
+  * Metadata references are properly removed from projects in the OmniSharpWorkspace when necessary.
+  * File watching/notification now handles paths case-insensitively.
+  * MSBuild project system now loads projects asynchronously after OmniSharp has finished initializing.
+
 ## [1.26.1] - 2017-11-04
 
 * Fixed issue with locating MSBuild when running OmniSharp on Mono on Windows. (PR: [#1001](https://github.com/OmniSharp/omnisharp-roslyn/pull/1001))
