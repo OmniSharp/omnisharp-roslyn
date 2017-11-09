@@ -39,6 +39,11 @@ namespace OmniSharp.Utilities
             LinuxDistributionName = linuxDistributionName ?? string.Empty;
         }
 
+        public override string ToString()
+            => !string.IsNullOrEmpty(LinuxDistributionName)
+                ? $"{LinuxDistributionName} {Version} ({Architecture})"
+                : $"{OperatingSystem} {Version} ({Architecture})";
+
         private static Platform GetCurrentPlatform()
         {
             var os = OperatingSystem.Unknown;
