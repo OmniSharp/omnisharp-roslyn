@@ -63,6 +63,11 @@ namespace OmniSharp.MSBuild.Discovery
 
             _registeredInstance = instance ?? throw new ArgumentNullException(nameof(instance));
 
+            foreach (var assemblyName in s_msbuildAssemblies)
+            {
+                LoadMSBuildAssembly(assemblyName);
+            }
+
             AppDomain.CurrentDomain.AssemblyResolve += Resolve;
 
             if (instance.SetMSBuildExePathVariable)
@@ -110,19 +115,25 @@ namespace OmniSharp.MSBuild.Discovery
 
             if (s_msbuildAssemblies.Contains(assemblyName.Name))
             {
-                var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName.Name + ".dll");
-                var result = File.Exists(assemblyPath)
-                    ? _assemblyLoader.LoadFrom(assemblyPath)
-                    : null;
-
-                if (result != null)
-                {
-                    _logger.LogDebug($"Resolved '{assemblyName.Name}' to '{assemblyPath}'");
-                    return result;
-                }
+                return LoadMSBuildAssembly(assemblyName.Name);
             }
 
             return null;
+        }
+
+        private Assembly LoadMSBuildAssembly(string assemblyName)
+        {
+            var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName + ".dll");
+            var result = File.Exists(assemblyPath)
+                ? _assemblyLoader.LoadFrom(assemblyPath)
+                : null;
+
+            if (result != null)
+            {
+                _logger.LogDebug($"Resolved '{assemblyName}' to '{assemblyPath}'");
+            }
+
+            return result;
         }
 
         public ImmutableArray<MSBuildInstance> GetInstances()
