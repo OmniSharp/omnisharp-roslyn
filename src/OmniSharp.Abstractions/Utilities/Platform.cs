@@ -49,7 +49,20 @@ namespace OmniSharp.Utilities
             var os = OperatingSystem.Unknown;
             var architecture = Architecture.Unknown;
 
-            // Simple check to see if this is Windows
+            // Simple check to see if this is Windows. Note: this check is derived from the fact that the
+            // System.PlatformID enum has six values (https://msdn.microsoft.com/en-us/library/3a8hyw88.aspx)
+            //
+            //   * Win32 = 0
+            //   * Win32Windows = 1
+            //   * Win32NT = 2
+            //   * WinCE = 3
+            //   * Unix = 4
+            //   * Xbox = 5
+            //   * MacOSX = 6
+            //
+            // Essentially, we check to see if this is one of the "windows" values or Xbox. The other values
+            // can be a little unreliable, so we'll shell out to 'uname' for Linux and macOS.
+
             var platformId = (int)Environment.OSVersion.Platform;
             if (platformId <= 3 || platformId == 5)
             {
