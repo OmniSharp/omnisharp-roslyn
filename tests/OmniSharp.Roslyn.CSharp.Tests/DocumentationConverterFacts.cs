@@ -1,4 +1,3 @@
-using System;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using Xunit;
 
@@ -27,9 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     </code>
     </example>
 </member>";
-            string lineEnding = Environment.NewLine;
-            //VS Code renders a single new line for two newline sequences in the response, hence two new lines are passed in the lineEnding parameter 
-            var plainText = DocumentationConverter.ConvertDocumentation(documentation,lineEnding+lineEnding);
+            var plainText = DocumentationConverter.ConvertDocumentation(documentation, "\n");
             var expected =
 @"The GetZero method.
 
@@ -44,8 +41,6 @@ This sample shows how to call the TestNamespace.TestClass.GetZero method.
         }
     }
     ";
-            //To remove the extra new lines added for VS Code for comparison, Replace function is being used
-            plainText = plainText.Replace(lineEnding + lineEnding, lineEnding);
             Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
         }
 
@@ -56,12 +51,10 @@ This sample shows how to call the TestNamespace.TestClass.GetZero method.
 <summary>DoWork is a method in the TestClass class.
 The <paramref name=""arg""/> parameter takes a number and <paramref name=""arg2""/> takes a string.
 </summary>";
-            string lineEnding = Environment.NewLine;
-            var plainText = DocumentationConverter.ConvertDocumentation(documentation, lineEnding+lineEnding);
+            var plainText = DocumentationConverter.ConvertDocumentation(documentation, "\n");
             var expected =
 @"DoWork is a method in the TestClass class.
 The arg parameter takes a number and arg2 takes a string.";
-            plainText = plainText.Replace(lineEnding+lineEnding,lineEnding);
             Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
         }
     }
