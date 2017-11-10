@@ -61,7 +61,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
                         if (!changes.TryGetValue(changedDocument.FilePath, out var modifiedFileResponse))
                         {
-                            modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath, FileModificationType.Modified);
+                            modifiedFileResponse = new ModifiedFileResponse(changedDocument.FilePath);
                             changes[changedDocument.FilePath] = modifiedFileResponse;
                         }
 

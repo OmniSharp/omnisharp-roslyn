@@ -46,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var operations = await availableAction.GetOperationsAsync(CancellationToken.None);
 
             var solution = this.Workspace.CurrentSolution;
-            var changes = new List<ModifiedFileResponse>();
+            var changes = new List<FileOperationResponse>();
             var directory = Path.GetDirectoryName(request.FileName);
 
             foreach (var o in operations)
@@ -126,7 +126,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         ? Path.Combine(directory, newDocument.Name)
                         : newDocument.FilePath;
 
-                    var modifiedFileResponse = new ModifiedFileResponse(newFilePath, FileModificationType.Modified)
+                    var modifiedFileResponse = new ModifiedFileResponse(newFilePath)
                     {
                         Changes = new[] {
                             new LinePositionSpanTextChange
@@ -176,7 +176,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                     if (!filePathToResponseMap.TryGetValue(filePath, out var modifiedFileResponse))
                     {
-                        modifiedFileResponse = new ModifiedFileResponse(filePath, FileModificationType.Modified);
+                        modifiedFileResponse = new ModifiedFileResponse(filePath);
                         filePathToResponseMap[filePath] = modifiedFileResponse;
                     }
 

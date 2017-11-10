@@ -80,7 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class c {public c() {Guid.NewGuid();}}";
 
             var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings");
-            AssertIgnoringIndent(expected, response.Changes.First().Buffer);
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -126,7 +126,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var response = await RunRefactoringAsync(code, "Extract Method");
-            AssertIgnoringIndent(expected, response.Changes.First().Buffer);
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
