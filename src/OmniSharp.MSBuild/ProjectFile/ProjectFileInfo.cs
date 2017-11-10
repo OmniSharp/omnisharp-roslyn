@@ -71,14 +71,14 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ProjectFileInfo Create(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+            MSBuildInstance msbuildInstance, SdksPathResolver sdksPathResolver, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
             if (!File.Exists(filePath))
             {
                 return null;
             }
 
-            var projectInstance = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, options, diagnostics, out var targetFrameworks);
+            var projectInstance = LoadProject(filePath, solutionDirectory, logger, msbuildInstance, sdksPathResolver, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
@@ -92,50 +92,53 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         private static ProjectInstance LoadProject(
             string filePath, string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
+            MSBuildInstance msbuildInstance, SdksPathResolver sdksPathResolver, MSBuildOptions options, ICollection<MSBuildDiagnosticsMessage> diagnostics, out ImmutableArray<string> targetFrameworks)
         {
-            options = options ?? new MSBuildOptions();
-
-            var globalProperties = GetGlobalProperties(msbuildInstance, options, solutionDirectory, logger);
-
-            var collection = new ProjectCollection(globalProperties);
-
-            var toolsVersion = options.ToolsVersion;
-            if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
+            using (sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
             {
-                toolsVersion = collection.DefaultToolsVersion;
+                options = options ?? new MSBuildOptions();
+
+                var globalProperties = GetGlobalProperties(msbuildInstance, options, solutionDirectory, logger);
+
+                var collection = new ProjectCollection(globalProperties);
+
+                var toolsVersion = options.ToolsVersion;
+                if (string.IsNullOrEmpty(toolsVersion) || Version.TryParse(toolsVersion, out _))
+                {
+                    toolsVersion = collection.DefaultToolsVersion;
+                }
+
+                toolsVersion = GetLegalToolsetVersion(toolsVersion, collection.Toolsets);
+
+                // Evaluate the MSBuild project
+                var project = collection.LoadProject(filePath, toolsVersion);
+
+                var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
+                targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
+
+                // If the project supports multiple target frameworks and specific framework isn't
+                // selected, we must pick one before execution. Otherwise, the ResolveReferences
+                // target might not be available to us.
+                if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length > 0)
+                {
+                    // For now, we'll just pick the first target framework. Eventually, we'll need to
+                    // do better and potentially allow OmniSharp hosts to select a target framework.
+                    targetFramework = targetFrameworks[0];
+                    project.SetProperty(PropertyNames.TargetFramework, targetFramework);
+                }
+                else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
+                {
+                    targetFrameworks = ImmutableArray.Create(targetFramework);
+                }
+
+                var projectInstance = project.CreateProjectInstance();
+                var buildResult = projectInstance.Build(new string[] { TargetNames.Compile, TargetNames.CoreCompile },
+                    new[] { new MSBuildLogForwarder(logger, diagnostics) });
+
+                return buildResult
+                    ? projectInstance
+                    : null;
             }
-
-            toolsVersion = GetLegalToolsetVersion(toolsVersion, collection.Toolsets);
-
-            // Evaluate the MSBuild project
-            var project = collection.LoadProject(filePath, toolsVersion);
-
-            var targetFramework = project.GetPropertyValue(PropertyNames.TargetFramework);
-            targetFrameworks = PropertyConverter.SplitList(project.GetPropertyValue(PropertyNames.TargetFrameworks), ';');
-
-            // If the project supports multiple target frameworks and specific framework isn't
-            // selected, we must pick one before execution. Otherwise, the ResolveReferences
-            // target might not be available to us.
-            if (string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length > 0)
-            {
-                // For now, we'll just pick the first target framework. Eventually, we'll need to
-                // do better and potentially allow OmniSharp hosts to select a target framework.
-                targetFramework = targetFrameworks[0];
-                project.SetProperty(PropertyNames.TargetFramework, targetFramework);
-            }
-            else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
-            {
-                targetFrameworks = ImmutableArray.Create(targetFramework);
-            }
-
-            var projectInstance = project.CreateProjectInstance();
-            var buildResult = projectInstance.Build(new string[] { TargetNames.Compile, TargetNames.CoreCompile },
-                new[] { new MSBuildLogForwarder(logger, diagnostics) });
-
-            return buildResult
-                ? projectInstance
-                : null;
         }
 
         private static string GetLegalToolsetVersion(string toolsVersion, ICollection<Toolset> toolsets)
@@ -250,9 +253,9 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public ProjectFileInfo Reload(
             string solutionDirectory, ILogger logger,
-            MSBuildInstance msbuildInstance, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
+            MSBuildInstance msbuildInstance, SdksPathResolver sdksPathResolver, MSBuildOptions options = null, ICollection<MSBuildDiagnosticsMessage> diagnostics = null)
         {
-            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, options, diagnostics, out var targetFrameworks);
+            var projectInstance = LoadProject(FilePath, solutionDirectory, logger, msbuildInstance, sdksPathResolver, options, diagnostics, out var targetFrameworks);
             if (projectInstance == null)
             {
                 return null;
