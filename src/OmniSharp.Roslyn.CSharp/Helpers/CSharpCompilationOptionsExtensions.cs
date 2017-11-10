@@ -22,6 +22,8 @@ namespace OmniSharp.Helpers
 
         public static CSharpCompilationOptions WithDefaultSuppressedDiagnosticOptions(this CSharpCompilationOptions compilationOptions, IEnumerable<string> suppressedDiagnosticIds)
         {
+            if (suppressedDiagnosticIds == null || !suppressedDiagnosticIds.Any()) return WithDefaultSuppressedDiagnosticOptions(compilationOptions);
+
             var suppressedDiagnostics = suppressedDiagnosticIds.ToDictionary(d => d, d => ReportDiagnostic.Suppress);
             foreach (var diagnostic in defaultSuppressedDiagnostics)
             {
