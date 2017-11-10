@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using OmniSharp.Models.TypeLookup;
 using OmniSharp.Options;
@@ -241,6 +242,43 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 15, column: 70);
             Assert.Equal("IDictionary<string, IEnumerable<int>> Foo.SomeDict", response.Type);
+        }
+
+        [Fact]
+        public async Task CheckParsedXMLDocumentation()
+        {
+            string source =
+@"using System;
+namespace class1
+{
+    class testissue
+    {
+        ///<summary>
+/// Checks if object is tagged with the tag</summary>
+/// <param name=""gameObject"">The game object.</param> 
+/// <param name=""tagName"">Name of the tag.</param>
+/// <returns>Returns <c> true</c>if object is tagged with tag.</returns>
+        public static bool Compare(int gameObject, string tagName)
+            {
+                return gameObject.TagifyCompareTag(tagName);
+            }
+            ";
+            var testFile = new TestFile("dummy.cs", source);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
+
+                var request = new TypeLookupRequest { FileName = testFile.FileName, Line = 10, Column = 31, IncludeDocumentation=true };
+                var response = await requestHandler.Handle(request);
+                var expected =
+@"Checks if object is tagged with the tag
+gameObject: The game object.
+tagName: Name of the tag.
+Returns: Returns trueif object is tagged with tag.";
+                string lineEnding = Environment.NewLine;
+                //To remove the extra new lines added for VS Code for comparison, Replace function is being used
+                Assert.Equal(expected, response.Documentation.Replace(lineEnding + lineEnding, lineEnding));
+            }
         }
     }
 }
