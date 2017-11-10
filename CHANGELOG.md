@@ -1,6 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.26.3] - 2017-11-10
+
+* Addressed problem with Sdk-style projects not being loaded properly in certain cases. ([omnisharp-vscode#1846](https://github.com/OmniSharp/omnisharp-vscode/issues/1846), [omnisharp-vescode#1849](https://github.com/OmniSharp/omnisharp-vscode/issues/1849), PR: [#1021](https://github.com/OmniSharp/omnisharp-roslyn/pull/1021))
+
 ## [1.26.2] - 2017-11-09
 
 * Fixed issue with discovering MSBuild under Mono even when it is missing. ([#1011](https://github.com/OmniSharp/omnisharp-roslyn/issues/1011))
