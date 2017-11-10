@@ -33,6 +33,7 @@ namespace OmniSharp.MSBuild
         private readonly OmniSharpWorkspace _workspace;
         private readonly MSBuildInstance _msbuildInstance;
         private readonly DotNetCliService _dotNetCli;
+        private readonly SdksPathResolver _sdksPathResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -57,6 +58,7 @@ namespace OmniSharp.MSBuild
             OmniSharpWorkspace workspace,
             IMSBuildLocator msbuildLocator,
             DotNetCliService dotNetCliService,
+            SdksPathResolver sdksPathResolver,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
@@ -66,6 +68,7 @@ namespace OmniSharp.MSBuild
             _workspace = workspace;
             _msbuildInstance = msbuildLocator.RegisteredInstance;
             _dotNetCli = dotNetCliService;
+            _sdksPathResolver = sdksPathResolver;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
@@ -315,7 +318,7 @@ namespace OmniSharp.MSBuild
 
             try
             {
-                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options, diagnostics);
+                project = ProjectFileInfo.Create(projectFilePath, _environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _sdksPathResolver, _options, diagnostics);
 
                 if (project == null)
                 {
@@ -341,7 +344,7 @@ namespace OmniSharp.MSBuild
                 if (_projects.TryGetValue(projectFilePath, out var oldProjectFileInfo))
                 {
                     var diagnostics = new List<MSBuildDiagnosticsMessage>();
-                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _options, diagnostics);
+                    var newProjectFileInfo = oldProjectFileInfo.Reload(_environment.TargetDirectory, _loggerFactory.CreateLogger<ProjectFileInfo>(), _msbuildInstance, _sdksPathResolver, _options, diagnostics);
 
                     if (newProjectFileInfo != null)
                     {

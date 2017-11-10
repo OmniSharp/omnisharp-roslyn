@@ -26,8 +26,9 @@ namespace OmniSharp.MSBuild.Tests
         private ProjectFileInfo CreateProjectFileInfo(OmniSharpTestHost host, ITestProject testProject, string projectFilePath)
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
+            var sdksPathResolver = host.GetExport<SdksPathResolver>();
 
-            return ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger, msbuildLocator.RegisteredInstance);
+            return ProjectFileInfo.Create(projectFilePath, testProject.Directory, this._logger, msbuildLocator.RegisteredInstance, sdksPathResolver);
         }
 
         [Fact]
