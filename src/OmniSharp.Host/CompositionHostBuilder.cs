@@ -53,20 +53,13 @@ namespace OmniSharp
             var fileSystemWatcher = new ManualFileSystemWatcher();
             var metadataHelper = new MetadataHelper(assemblyLoader);
 
+            var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
+
             // We must register an MSBuild instance before composing MEF to ensure that
             // our AssemblyResolve event is hooked up first.
             var msbuildLocator = _serviceProvider.GetRequiredService<IMSBuildLocator>();
-            var instances = msbuildLocator.GetInstances();
-            var instance = instances.FirstOrDefault();
-            if (instance != null)
-            {
-                msbuildLocator.RegisterInstance(instance);
-            }
-            else
-            {
-                var logger = loggerFactory.CreateLogger<CompositionHostBuilder>();
-                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
-            }
+
+            RegisterMSBuildInstance(msbuildLocator, logger);
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
@@ -92,6 +85,43 @@ namespace OmniSharp
             config = config.WithParts(parts);
 
             return config.CreateContainer();
+        }
+
+        private static void RegisterMSBuildInstance(IMSBuildLocator msbuildLocator, ILogger logger)
+        {
+            MSBuildInstance instanceToRegister = null;
+            var invalidVSFound = false;
+
+            foreach (var instance in msbuildLocator.GetInstances())
+            {
+                if (instance.IsInvalidVisualStudio())
+                {
+                    invalidVSFound = true;
+                }
+                else
+                {
+                    instanceToRegister = instance;
+                    break;
+                }
+            }
+
+
+            if (instanceToRegister != null)
+            {
+                // Did we end up choosing the standalone MSBuild because there was an invalid Visual Studio?
+                // If so, provide a helpful message to the user.
+                if (invalidVSFound && instanceToRegister.DiscoveryType == DiscoveryType.StandAlone)
+                {
+                    logger.LogWarning(@"It looks like you have Visual Studio 2017 RTM installed.
+Try updating Visual Studio 2017 to the most recent release to enable better MSBuild support.");
+                }
+
+                msbuildLocator.RegisterInstance(instanceToRegister);
+            }
+            else
+            {
+                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
+            }
         }
 
         private static IEnumerable<Type> SafeGetTypes(Assembly a)

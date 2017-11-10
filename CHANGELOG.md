@@ -1,6 +1,11 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.26.2] - 2017-11-09
+
+* Fixed issue with discovering MSBuild under Mono even when it is missing. ([#1011](https://github.com/OmniSharp/omnisharp-roslyn/issues/1011))
+* Fixed issue to not use Visual Studio 2017 MSBuild if it is from VS 2017 RTM. ([#1014](https://github.com/OmniSharp/omnisharp-roslyn/issues/1014))
+
 ## [1.27.0] - 2017-11-07
 
 * Significant changes made to the MSBuild project system that fix several issues. (PR: [#1003](https://github.com/OmniSharp/omnisharp-roslyn/pull/1003))
