@@ -28,6 +28,8 @@ namespace OmniSharp.Stdio
                 var output = Console.Out;
 
                 var environment = application.CreateEnvironment();
+                OmniSharp.Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
+
                 var writer = new SharedTextWriter(output);
                 var plugins = application.CreatePluginAssemblies();
                 var configuration = new ConfigurationBuilder(environment).Build();
