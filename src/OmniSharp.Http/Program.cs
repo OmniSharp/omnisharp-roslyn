@@ -11,6 +11,8 @@ namespace OmniSharp.Http
             application.OnExecute(() =>
             {
                 var environment = application.CreateEnvironment();
+                OmniSharp.Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
+
                 var writer = new SharedTextWriter(Console.Out);
                 var plugins = application.CreatePluginAssemblies();
 
