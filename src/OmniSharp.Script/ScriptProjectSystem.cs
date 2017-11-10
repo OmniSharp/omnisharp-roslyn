@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
+using OmniSharp.Roslyn.Utilities;
 using Dotnet.Script.DependencyModel.Compilation;
 using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
 
@@ -94,7 +95,7 @@ namespace OmniSharp.Script
                 enableScriptNuGetReferences = false;
             }
 
-            var commonReferences = new HashSet<MetadataReference>();
+            var commonReferences = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
 
             var compilationDependencies = TryGetCompilationDependencies(enableScriptNuGetReferences);
 
