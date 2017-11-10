@@ -1,4 +1,5 @@
-﻿using System.Composition;
+﻿using System;
+using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
@@ -45,7 +46,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
 
                     if (request.IncludeDocumentation)
                     {
-                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
+                        string newLine = Environment.NewLine + Environment.NewLine;
+                        //VS Code renders a single new line for two newline sequences in the response, hence two new lines are passed in the lineEnding parameter 
+                        response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(),newLine);
                     }
                 }
             }
