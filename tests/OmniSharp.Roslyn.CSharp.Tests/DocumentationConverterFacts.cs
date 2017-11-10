@@ -1,5 +1,5 @@
-using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using System;
+using OmniSharp.Roslyn.CSharp.Services.Documentation;
 using Xunit;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
@@ -61,7 +61,6 @@ The <paramref name=""arg""/> parameter takes a number and <paramref name=""arg2"
             var expected =
 @"DoWork is a method in the TestClass class.
 The arg parameter takes a number and arg2 takes a string.";
-            
             plainText = plainText.Replace(lineEnding+lineEnding,lineEnding);
             Assert.Equal(expected, plainText, ignoreLineEndingDifferences: true);
         }
