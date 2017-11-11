@@ -16,10 +16,10 @@ using OmniSharp.DotNet.Models;
 using OmniSharp.DotNet.Tools;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
+using OmniSharp.Helpers;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
-using OmniSharp.Helpers;
 
 namespace OmniSharp.DotNet
 {
@@ -340,7 +340,7 @@ namespace OmniSharp.DotNet
                 .WithPlatform(ParsePlatfrom(option.Platform))
                 .WithGeneralDiagnosticOption(generalDiagnosticOpt)
                 .WithOptimizationLevel(optimize)
-                .WithDefaultSuppressedDiagnosticOptions(option.SuppressWarnings)
+                .WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(option.SuppressWarnings))
                 .WithConcurrentBuild(false); // TODO: actually just need to disable on mono
 
             if (!string.IsNullOrEmpty(option.KeyFile))

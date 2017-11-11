@@ -18,7 +18,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 result = result.WithAllowUnsafe(true);
             }
 
-            result = result.WithDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
+            result = result.WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds));
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {

@@ -13,9 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
+using OmniSharp.Helpers;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
-using OmniSharp.Helpers;
 
 namespace OmniSharp.Cake
 {
@@ -239,7 +239,7 @@ namespace OmniSharp.Cake
                     metadataReferenceResolver: new CachingScriptMetadataResolver(),
                     sourceReferenceResolver: ScriptSourceResolver.Default,
                     assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
-                WithDefaultSuppressedDiagnosticOptions();
+                    WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");

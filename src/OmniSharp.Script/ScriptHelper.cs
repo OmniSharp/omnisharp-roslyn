@@ -50,7 +50,8 @@ namespace OmniSharp.Script
                 metadataReferenceResolver:
                 CreateMetadataReferenceResolver(),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).WithDefaultSuppressedDiagnosticOptions();
+                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
+                    WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
             var topLevelBinderFlagsProperty =
                 typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags",
