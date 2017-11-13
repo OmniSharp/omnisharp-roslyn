@@ -13,7 +13,6 @@ namespace OmniSharp.Models
 
         public string FileName { get; }
 
-        [JsonConverter(typeof(StringEnumConverter))]
         public FileModificationType ModificationType { get; }
     }
 }
