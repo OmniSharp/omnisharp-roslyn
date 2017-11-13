@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -13,7 +14,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
-
+using OmniSharp.Utilities;
 using RunCodeActionRequest = OmniSharp.Models.V2.RunCodeActionRequest;
 using RunCodeActionResponse = OmniSharp.Models.V2.RunCodeActionResponse;
 
@@ -22,14 +23,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     [OmniSharpHandler(OmniSharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp)]
     public class RunCodeActionService : BaseCodeActionService<RunCodeActionRequest, RunCodeActionResponse>
     {
+        private readonly IAssemblyLoader _loader;
+        private readonly Lazy<Assembly> _workspaceAssembly;
+        private readonly Lazy<Type> _renameDocumentOperation;
+        private readonly Lazy<FieldInfo> _oldDocumentId;
+        private readonly Lazy<FieldInfo> _newDocumentId;
+        private readonly Lazy<FieldInfo> _newFileName;
+
+        private const string RenameDocumentOperation = "Microsoft.CodeAnalysis.CodeActions.RenameDocumentOperation";
+
         [ImportingConstructor]
         public RunCodeActionService(
+            IAssemblyLoader loader,
             OmniSharpWorkspace workspace,
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory)
             : base(workspace, helper, providers, loggerFactory.CreateLogger<RunCodeActionService>())
         {
+            _loader = loader;
+            _workspaceAssembly = _loader.LazyLoad(Configuration.RoslynWorkspaces);
+            _renameDocumentOperation = _workspaceAssembly.LazyGetType(RenameDocumentOperation);
+            _oldDocumentId = _renameDocumentOperation.LazyGetField("_oldDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            _newDocumentId = _renameDocumentOperation.LazyGetField("_newDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            _newFileName = _renameDocumentOperation.LazyGetField("_newFileName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         }
 
         public override async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
@@ -94,12 +111,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         bool IsRenameDocumentOperation(CodeActionOperation o, out DocumentId oldDocumentId, out DocumentId newDocumentId, out string name)
         {
-            var type = Type.GetType("Microsoft.CodeAnalysis.CodeActions.RenameDocumentOperation, Microsoft.CodeAnalysis.Workspaces, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-            if (o.GetType() == type)
+            if (o.GetType() == _renameDocumentOperation.Value)
             {
-                oldDocumentId = (DocumentId)type.GetField("_oldDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(o);
-                newDocumentId = (DocumentId)type.GetField("_newDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(o);
-                name = (string)type.GetField("_newFileName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(o);
+                oldDocumentId = _oldDocumentId.GetValue<DocumentId>(o);
+                newDocumentId = _newDocumentId.GetValue<DocumentId>(o);
+                name = _newFileName.GetValue<string>(o);
                 return true;
             }
 
