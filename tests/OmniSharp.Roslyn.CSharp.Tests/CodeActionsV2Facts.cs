@@ -173,7 +173,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IDictionary<string, string> configurationData = null)
         {
-            var testFile = new TestFile(BufferPath, code);
+            var path = "buffer.cs";
+            var testFile = new TestFile(path, code);
 
             using (var host = CreateOmniSharpHost(new [] { testFile }, configurationData))
             {
@@ -186,7 +187,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Line = range.Start.Line,
                     Column = range.Start.Offset,
-                    FileName = BufferPath,
+                    FileName = path,
                     Buffer = testFile.Content.Code,
                     Selection = GetSelection(range),
                 };
