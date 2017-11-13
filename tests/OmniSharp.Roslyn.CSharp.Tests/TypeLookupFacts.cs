@@ -5,6 +5,7 @@ using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using System.IO;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -29,6 +30,26 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var response = await controller.Handle(new TypeLookupRequest { FileName = testFile.FileName, Line = 0, Column = 7 });
 
             Assert.Equal("Foo", response.Type);
+        }
+
+        [Fact]
+        public async Task TypesFromInlineAssemlbyReferenceContainDocumentation()
+        {
+            var testAssemblyPath = Path.Combine(TestAssets.Instance.TestBinariesFolder, "ClassLibraryWithDocumentation.dll");
+            var source =
+                $@"#r ""{testAssemblyPath}""
+                using ClassLibraryWithDocumentation;
+                Documented$$Class c;
+            ";
+
+            var testFile = new TestFile("dummy.csx", source);
+            var position = testFile.Content.GetPointFromPosition();
+            var workspace = TestHelpers.CreateCsxWorkspace(testFile);
+
+            var controller = new TypeLookupService(workspace, new FormattingOptions());
+            var response = await controller.Handle(new TypeLookupRequest { FileName = testFile.FileName, Line = position.Line, Column = position.Offset, IncludeDocumentation = true });
+
+            Assert.Equal("This class performs an important function.", response.Documentation?.Trim());
         }
 
         [Fact]
