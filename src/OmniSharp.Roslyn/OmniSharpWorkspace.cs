@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Roslyn;
 using OmniSharp.Utilities;
 
@@ -18,11 +19,14 @@ namespace OmniSharp
         public bool Initialized { get; set; }
         public BufferManager BufferManager { get; private set; }
 
+        private readonly ILogger<OmniSharpWorkspace> _logger;
+
         [ImportingConstructor]
-        public OmniSharpWorkspace(HostServicesAggregator aggregator)
+        public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
             : base(aggregator.CreateHostServices(), "Custom")
         {
             BufferManager = new BufferManager(this);
+            _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
         }
 
         public override bool CanOpenDocuments => true;
@@ -156,15 +160,29 @@ namespace OmniSharp
             }
         }
 
-        private void DeleteDocumentFile(DocumentId id, string filePath)
+        private void DeleteDocumentFile(DocumentId id, string fullPath)
         {
             try
             {
-                File.Delete(filePath);
+                File.Delete(fullPath);
             }
-            catch (IOException) { }
-            catch (NotSupportedException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException e)
+            {
+                LogDeletionException(e, fullPath);
+            }
+            catch (NotSupportedException e)
+            {
+                LogDeletionException(e, fullPath);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                LogDeletionException(e, fullPath);
+            }
+        }
+
+        private void LogDeletionException(Exception e, string filePath)
+        {
+            _logger.LogError(e, $"Error deleting file {filePath}");
         }
 
         protected override void ApplyDocumentAdded(DocumentInfo info, SourceText text)
@@ -195,8 +213,9 @@ namespace OmniSharp
                     newText.Write(writer);
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
+                _logger.LogError(e, $"Error saving document {fullPath}");
             }
         }
     }
