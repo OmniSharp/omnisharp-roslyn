@@ -47,7 +47,7 @@ namespace OmniSharp.Services
             }
 
             var displayText = assemblyMetadata.GetModules().FirstOrDefault()?.Name;
-
+            
             var documentationFile = Path.ChangeExtension(filePath, ".xml");
             var documentationProvider = File.Exists(documentationFile)
                 ? XmlDocumentationProvider.CreateFromFile(documentationFile)

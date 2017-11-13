@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace OmniSharp.Script
 {
@@ -38,6 +39,7 @@ namespace OmniSharp.Script
         {
             this._configuration = configuration;
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
+            InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
         }
 
         private CSharpCompilationOptions CreateCompilationOptions()
@@ -107,6 +109,30 @@ namespace OmniSharp.Script
                 hostObjectType: typeof(CommandLineScriptGlobals));
 
             return project;
+        }
+
+        private void InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver()
+        {
+            var runtimeMetadataReferenceResolverField = typeof(ScriptMetadataResolver).GetField("_resolver", BindingFlags.Instance | BindingFlags.NonPublic);
+            var runtimeMetadataReferenceResolverValue = runtimeMetadataReferenceResolverField?.GetValue(ScriptMetadataResolver.Default);
+
+            if (runtimeMetadataReferenceResolverValue != null)
+            {
+                var runtimeMetadataReferenceResolverType = typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly
+                    .GetType("Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver");
+
+                var fileReferenceProviderField = runtimeMetadataReferenceResolverType?.GetField("_fileReferenceProvider", BindingFlags.Instance | BindingFlags.NonPublic);
+                fileReferenceProviderField.SetValue(runtimeMetadataReferenceResolverValue, new Func<string, MetadataReferenceProperties, PortableExecutableReference>((path, properties) =>
+                {
+                    var documentationFile = Path.ChangeExtension(path, ".xml");
+                    var documentationProvider = File.Exists(documentationFile)
+                        ? XmlDocumentationProvider.CreateFromFile(documentationFile)
+                        : null;
+
+                    return MetadataReference.CreateFromFile(path, properties, documentationProvider);
+                }));
+            }
+
         }
     }
 }
