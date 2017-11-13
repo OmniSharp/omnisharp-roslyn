@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Configuration;
+using OmniSharp.Helpers;
 
 namespace OmniSharp.Script
 {
@@ -59,15 +60,8 @@ namespace OmniSharp.Script
                 metadataReferenceResolver:
                 CreateMetadataReferenceResolver(),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).WithSpecificDiagnosticOptions(
-                new Dictionary<string, ReportDiagnostic>
-                {
-                    // ensure that specific warnings about assembly references are always suppressed
-                    // https://github.com/dotnet/roslyn/issues/5501
-                    {"CS1701", ReportDiagnostic.Suppress},
-                    {"CS1702", ReportDiagnostic.Suppress},
-                    {"CS1705", ReportDiagnostic.Suppress}
-                });
+                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
+                    WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
