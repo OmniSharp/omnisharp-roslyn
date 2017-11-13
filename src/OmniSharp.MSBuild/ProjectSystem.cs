@@ -26,6 +26,7 @@ namespace OmniSharp.MSBuild
         private readonly OmniSharpWorkspace _workspace;
         private readonly ImmutableDictionary<string, string> _propertyOverrides;
         private readonly DotNetCliService _dotNetCli;
+        private readonly SdksPathResolver _sdksPathResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -51,6 +52,7 @@ namespace OmniSharp.MSBuild
             OmniSharpWorkspace workspace,
             IMSBuildLocator msbuildLocator,
             DotNetCliService dotNetCliService,
+            SdksPathResolver sdksPathResolver,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
@@ -60,6 +62,7 @@ namespace OmniSharp.MSBuild
             _workspace = workspace;
             _propertyOverrides = msbuildLocator.RegisteredInstance.PropertyOverrides;
             _dotNetCli = dotNetCliService;
+            _sdksPathResolver = sdksPathResolver;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
@@ -81,7 +84,7 @@ namespace OmniSharp.MSBuild
             }
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
-            _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory);
+            _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
             _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace);
 
             var initialProjectPaths = GetInitialProjectPaths();
