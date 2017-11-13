@@ -732,9 +732,9 @@ Task("ExecuteRunScript")
         var projectFolder = CombinePaths(env.Folders.Source, project);
         var script = project;
         var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
-        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\" --stdio",
-                                    new RunOptions(timeOut: 30000))
-                                .DidTimeOut;
+        var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\"",
+                                    new RunOptions(waitForIdle: true))
+                                .WasIdle;
         if (!didNotExitWithError)
         {
             throw new Exception($"Failed to run {script}");

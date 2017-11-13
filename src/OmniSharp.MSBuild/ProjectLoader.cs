@@ -16,12 +16,13 @@ namespace OmniSharp.MSBuild
         private readonly ILogger _logger;
         private readonly Dictionary<string, string> _globalProperties;
         private readonly MSBuildOptions _options;
+        private readonly SdksPathResolver _sdksPathResolver;
 
-        public ProjectLoader(MSBuildOptions options, string solutionDirectory, ImmutableDictionary<string, string> propertyOverrides, ILoggerFactory loggerFactory)
+        public ProjectLoader(MSBuildOptions options, string solutionDirectory, ImmutableDictionary<string, string> propertyOverrides, ILoggerFactory loggerFactory, SdksPathResolver sdksPathResolver)
         {
             _logger = loggerFactory.CreateLogger<ProjectLoader>();
             _options = options ?? new MSBuildOptions();
-
+            _sdksPathResolver = sdksPathResolver ?? throw new ArgumentNullException(nameof(sdksPathResolver));
             _globalProperties = CreateGlobalProperties(_options, solutionDirectory, propertyOverrides, _logger);
         }
 
@@ -56,24 +57,35 @@ namespace OmniSharp.MSBuild
 
         public (MSB.Execution.ProjectInstance projectInstance, ImmutableArray<MSBuildDiagnostic> diagnostics) BuildProject(string filePath)
         {
-            var evaluatedProject = EvaluateProjectFile(filePath);
+            using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
+            {
+                var evaluatedProject = EvaluateProjectFileCore(filePath);
 
-            SetTargetFrameworkIfNeeded(evaluatedProject);
+                SetTargetFrameworkIfNeeded(evaluatedProject);
 
-            var projectInstance = evaluatedProject.CreateProjectInstance();
-            var msbuildLogger = new MSBuildLogger(_logger);
-            var buildResult = projectInstance.Build(
-                targets: new string[] { TargetNames.Compile, TargetNames.CoreCompile },
-                loggers: new[] { msbuildLogger });
+                var projectInstance = evaluatedProject.CreateProjectInstance();
+                var msbuildLogger = new MSBuildLogger(_logger);
+                var buildResult = projectInstance.Build(
+                    targets: new string[] { TargetNames.Compile, TargetNames.CoreCompile },
+                    loggers: new[] { msbuildLogger });
 
-            var diagnostics = msbuildLogger.GetDiagnostics();
+                var diagnostics = msbuildLogger.GetDiagnostics();
 
-            return buildResult
-                ? (projectInstance, diagnostics)
-                : (null, diagnostics);
+                return buildResult
+                    ? (projectInstance, diagnostics)
+                    : (null, diagnostics);
+            }
         }
 
         public MSB.Evaluation.Project EvaluateProjectFile(string filePath)
+        {
+            using (_sdksPathResolver.SetSdksPathEnvironmentVariable(filePath))
+            {
+                return EvaluateProjectFileCore(filePath);
+            }
+        }
+
+        private MSB.Evaluation.Project EvaluateProjectFileCore(string filePath)
         {
             // Evaluate the MSBuild project
             var projectCollection = new MSB.Evaluation.ProjectCollection(_globalProperties);

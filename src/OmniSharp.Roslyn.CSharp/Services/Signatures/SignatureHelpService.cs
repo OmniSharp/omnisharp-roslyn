@@ -42,7 +42,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             var response = new SignatureHelpResponse();
 
             // define active parameter by position
-            foreach (var comma in invocations.First().ArgumentList.Arguments.GetSeparators())
+            foreach (var comma in invocations.First().Separators)
             {
                 if (comma.Span.Start > invocations.First().Position)
                 {
@@ -58,9 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             foreach (var invocation in invocations)
             {
-                var types = invocation.ArgumentList.Arguments
-                    .Select(argument => invocation.SemanticModel.GetTypeInfo(argument.Expression));
-
+                var types = invocation.ArgumentTypes;
                 foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
                 {
                     var signature = BuildSignature(methodOverload);
@@ -93,28 +91,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             // Walk up until we find a node that we're interested in.
             while (node != null)
             {
-                var invocation = node as InvocationExpressionSyntax;
-                if (invocation != null && invocation.ArgumentList.Span.Contains(position))
+                if (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Span.Contains(position))
                 {
-                    return new InvocationContext()
-                    {
-                        SemanticModel = await document.GetSemanticModelAsync(),
-                        Position = position,
-                        Receiver = invocation.Expression,
-                        ArgumentList = invocation.ArgumentList
-                    };
+                    var semanticModel = await document.GetSemanticModelAsync();
+                    return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList);
                 }
 
-                var objectCreation = node as ObjectCreationExpressionSyntax;
-                if (objectCreation != null && objectCreation.ArgumentList.Span.Contains(position))
+                if (node is ObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
                 {
-                    return new InvocationContext()
-                    {
-                        SemanticModel = await document.GetSemanticModelAsync(),
-                        Position = position,
-                        Receiver = objectCreation,
-                        ArgumentList = objectCreation.ArgumentList
-                    };
+                    var semanticModel = await document.GetSemanticModelAsync();
+                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList);
+                }
+
+                if (node is AttributeSyntax attributeSyntax && attributeSyntax.ArgumentList.Span.Contains(position))
+                {
+                    var semanticModel = await document.GetSemanticModelAsync();
+                    return new InvocationContext(semanticModel, position, attributeSyntax, attributeSyntax.ArgumentList);
                 }
 
                 node = node.Parent;
