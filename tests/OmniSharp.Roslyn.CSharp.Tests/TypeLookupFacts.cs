@@ -1,3 +1,4 @@
+using System.IO;
 using System.Threading.Tasks;
 using OmniSharp.Models.TypeLookup;
 using OmniSharp.Options;
@@ -5,7 +6,6 @@ using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
-using System.IO;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
