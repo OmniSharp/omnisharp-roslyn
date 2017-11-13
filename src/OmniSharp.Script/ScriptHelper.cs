@@ -13,6 +13,13 @@ namespace OmniSharp.Script
 {
     public class ScriptHelper
     {
+        private const string BinderFlagsType = "Microsoft.CodeAnalysis.CSharp.BinderFlags";
+        private const string TopLevelBinderFlagsProperty = "TopLevelBinderFlags";
+        private const string IgnoreCorLibraryDuplicatedTypesField = "IgnoreCorLibraryDuplicatedTypes";
+        private const string RuntimeMetadataReferenceResolverType = "Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver";
+        private const string ResolverField = "_resolver";
+        private const string FileReferenceProviderField = "_fileReferenceProvider";
+
         private readonly IConfiguration _configuration;
 
         // aligned with CSI.exe
@@ -37,7 +44,7 @@ namespace OmniSharp.Script
 
         public ScriptHelper(IConfiguration configuration = null)
         {
-            this._configuration = configuration;
+            _configuration = configuration;
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
         }
@@ -61,14 +68,10 @@ namespace OmniSharp.Script
                     {"CS1705", ReportDiagnostic.Suppress}
                 });
 
-            var topLevelBinderFlagsProperty =
-                typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags",
-                    BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly
-                .GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
 
-            var ignoreCorLibraryDuplicatedTypesMember =
-                binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField(IgnoreCorLibraryDuplicatedTypesField, BindingFlags.Static | BindingFlags.Public);
             var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
             if (ignoreCorLibraryDuplicatedTypesValue != null)
             {
@@ -113,15 +116,13 @@ namespace OmniSharp.Script
 
         private void InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver()
         {
-            var runtimeMetadataReferenceResolverField = typeof(ScriptMetadataResolver).GetField("_resolver", BindingFlags.Instance | BindingFlags.NonPublic);
+            var runtimeMetadataReferenceResolverField = typeof(ScriptMetadataResolver).GetField(ResolverField, BindingFlags.Instance | BindingFlags.NonPublic);
             var runtimeMetadataReferenceResolverValue = runtimeMetadataReferenceResolverField?.GetValue(ScriptMetadataResolver.Default);
 
             if (runtimeMetadataReferenceResolverValue != null)
             {
-                var runtimeMetadataReferenceResolverType = typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly
-                    .GetType("Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver");
-
-                var fileReferenceProviderField = runtimeMetadataReferenceResolverType?.GetField("_fileReferenceProvider", BindingFlags.Instance | BindingFlags.NonPublic);
+                var runtimeMetadataReferenceResolverType = typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.GetType(RuntimeMetadataReferenceResolverType);
+                var fileReferenceProviderField = runtimeMetadataReferenceResolverType?.GetField(FileReferenceProviderField, BindingFlags.Instance | BindingFlags.NonPublic);
                 fileReferenceProviderField.SetValue(runtimeMetadataReferenceResolverValue, new Func<string, MetadataReferenceProperties, PortableExecutableReference>((path, properties) =>
                 {
                     var documentationFile = Path.ChangeExtension(path, ".xml");
