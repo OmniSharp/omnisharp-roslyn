@@ -215,7 +215,6 @@ namespace OmniSharp.Script
             _logger.LogDebug($"Added reference to '{fileReference}'");
         }
 
-
         private ProjectInfo GetProjectFileInfo(string path)
         {
             if (!_projects.TryGetValue(path, out ProjectInfo projectFileInfo))

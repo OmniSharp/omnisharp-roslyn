@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
@@ -7,7 +8,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Configuration;
-using System.IO;
 
 namespace OmniSharp.Script
 {
@@ -94,9 +94,9 @@ namespace OmniSharp.Script
                 }
             }
             
-            return enableScriptNuGetReferences ?
-                new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(_resolver)) :
-                new CachingScriptMetadataResolver(_resolver);
+            return enableScriptNuGetReferences
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(_resolver))
+                : new CachingScriptMetadataResolver(_resolver);
         }
  
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
@@ -135,7 +135,6 @@ namespace OmniSharp.Script
                     return MetadataReference.CreateFromFile(path, properties, documentationProvider);
                 }));
             }
-
         }
     }
 }
