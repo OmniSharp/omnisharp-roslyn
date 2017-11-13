@@ -41,6 +41,7 @@ namespace OmniSharp.Script
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
+        private readonly MetadataReferenceResolver _resolver = ScriptMetadataResolver.Default;
 
         public ScriptHelper(IConfiguration configuration = null)
         {
@@ -93,8 +94,9 @@ namespace OmniSharp.Script
                 }
             }
             
-            return enableScriptNuGetReferences ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)) 
-                : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default);
+            return enableScriptNuGetReferences ?
+                new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(_resolver)) :
+                new CachingScriptMetadataResolver(_resolver);
         }
  
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
@@ -117,7 +119,7 @@ namespace OmniSharp.Script
         private void InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver()
         {
             var runtimeMetadataReferenceResolverField = typeof(ScriptMetadataResolver).GetField(ResolverField, BindingFlags.Instance | BindingFlags.NonPublic);
-            var runtimeMetadataReferenceResolverValue = runtimeMetadataReferenceResolverField?.GetValue(ScriptMetadataResolver.Default);
+            var runtimeMetadataReferenceResolverValue = runtimeMetadataReferenceResolverField?.GetValue(_resolver);
 
             if (runtimeMetadataReferenceResolverValue != null)
             {
