@@ -96,7 +96,8 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
+                new LoggerFactory());
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo.csproj"),
@@ -162,7 +163,8 @@ namespace OmniSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
+                new LoggerFactory());
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "project.json"),

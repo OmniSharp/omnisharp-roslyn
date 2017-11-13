@@ -188,7 +188,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     Column = range.Start.Offset,
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
-                    Selection = GetSelection(range)
+                    Selection = GetSelection(range),
                 };
 
                 var response = await requestHandler.Handle(request);
@@ -216,7 +216,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
                     Identifier = identifier,
-                    WantsTextChanges = wantsChanges
+                    WantsTextChanges = wantsChanges,
+                    WantsAllCodeActionOperations = true
                 };
 
                 return await requestHandler.Handle(request);

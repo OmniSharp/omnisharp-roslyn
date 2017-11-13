@@ -16,7 +16,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
-                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
+                    Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
+                new LoggerFactory());
 
             var service = new ChangeBufferService(workspace);
 

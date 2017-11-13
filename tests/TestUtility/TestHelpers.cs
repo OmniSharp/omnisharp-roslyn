@@ -15,7 +15,7 @@ namespace TestUtility
     {
         public static OmniSharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
-            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()));
+            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()), new LoggerFactory());
             AddCsxProjectToWorkspace(workspace, testFile);
             return workspace;
         }
