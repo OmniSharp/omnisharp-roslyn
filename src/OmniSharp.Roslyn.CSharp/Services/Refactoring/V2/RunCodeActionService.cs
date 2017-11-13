@@ -75,19 +75,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     changes.AddRange(fileChanges);
                     solution = applyChangesOperation.ChangedSolution;
                 }
-                else if (IsRenameDocumentOperation(o, out var originalDocumentId, out var newDocumentId, out var newFileName))
+
+                if (request.WantsAllCodeActionOperations)
                 {
-                    var originalDocument = solution.GetDocument(originalDocumentId);
-                    string newFilePath = GetNewFilePath(newFileName, originalDocument.FilePath);
-                    var text = await originalDocument.GetTextAsync();
-                    var temp = solution.RemoveDocument(originalDocumentId);
-                    solution = temp.AddDocument(newDocumentId, newFileName, text, originalDocument.Folders, newFilePath);
-                    changes.Add(new RenamedFileResponse(originalDocument.FilePath, newFilePath));
-                }
-                else if (o is OpenDocumentOperation openDocumentOperation)
-                {
-                    var document = solution.GetDocument(openDocumentOperation.DocumentId);
-                    changes.Add(new OpenFileResponse(document.FilePath));
+                    if (IsRenameDocumentOperation(o, out var originalDocumentId, out var newDocumentId, out var newFileName))
+                    {
+                        var originalDocument = solution.GetDocument(originalDocumentId);
+                        string newFilePath = GetNewFilePath(newFileName, originalDocument.FilePath);
+                        var text = await originalDocument.GetTextAsync();
+                        var temp = solution.RemoveDocument(originalDocumentId);
+                        solution = temp.AddDocument(newDocumentId, newFileName, text, originalDocument.Folders, newFilePath);
+                        changes.Add(new RenamedFileResponse(originalDocument.FilePath, newFilePath));
+                    }
+                    else if (o is OpenDocumentOperation openDocumentOperation)
+                    {
+                        var document = solution.GetDocument(openDocumentOperation.DocumentId);
+                        changes.Add(new OpenFileResponse(document.FilePath));
+                    }
                 }
             }
 
