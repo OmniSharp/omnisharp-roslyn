@@ -132,17 +132,32 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Can_send_rename_and_fileOpen_responses_when_codeAction_renames_file()
         {
-            const string code =
-@"public class [||]CCC
-{
-}";
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMismatchedFileName"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
+                var buffer = await document.GetTextAsync();
+                var path = document.FilePath;
 
-            var response = await RunRefactoringAsync(code, "Rename file to CCC.cs");
-            var changes = response.Changes.ToArray();
-            Assert.Equal(2, changes.Length);
-            Assert.Equal(FileModificationType.Renamed, changes[0].ModificationType);
-            Assert.Contains("CCC.cs", ((RenamedFileResponse)changes[0]).NewFileName);
-            Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
+                var request = new RunCodeActionRequest
+                {
+                    Line = 4,
+                    Column = 10,
+                    FileName = path,
+                    Buffer = buffer.ToString(),
+                    Identifier = "Rename file to Class1.cs",
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
+                };
+
+                var response = await requestHandler.Handle(request);
+                var changes = response.Changes.ToArray();
+                Assert.Equal(2, changes.Length);
+                Assert.Equal(FileModificationType.Renamed, changes[0].ModificationType);
+                Assert.Contains("Class1.cs", ((RenamedFileResponse)changes[0]).NewFileName);
+                Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
+            }
         }
 
         private static void AssertIgnoringIndent(string expected, string actual)
