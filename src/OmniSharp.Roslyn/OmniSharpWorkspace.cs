@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Roslyn;
 using OmniSharp.Utilities;
 
@@ -15,11 +19,14 @@ namespace OmniSharp
         public bool Initialized { get; set; }
         public BufferManager BufferManager { get; private set; }
 
+        private readonly ILogger<OmniSharpWorkspace> _logger;
+
         [ImportingConstructor]
-        public OmniSharpWorkspace(HostServicesAggregator aggregator)
+        public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
             : base(aggregator.CreateHostServices(), "Custom")
         {
             BufferManager = new BufferManager(this);
+            _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
         }
 
         public override bool CanOpenDocuments => true;
@@ -141,6 +148,75 @@ namespace OmniSharp
         public override bool CanApplyChange(ApplyChangesKind feature)
         {
             return true;
+        }
+
+        protected override void ApplyDocumentRemoved(DocumentId documentId)
+        {
+            var document = this.CurrentSolution.GetDocument(documentId);
+            if (document != null)
+            {
+                DeleteDocumentFile(document.Id, document.FilePath);
+                this.OnDocumentRemoved(documentId);
+            }
+        }
+
+        private void DeleteDocumentFile(DocumentId id, string fullPath)
+        {
+            try
+            {
+                File.Delete(fullPath);
+            }
+            catch (IOException e)
+            {
+                LogDeletionException(e, fullPath);
+            }
+            catch (NotSupportedException e)
+            {
+                LogDeletionException(e, fullPath);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                LogDeletionException(e, fullPath);
+            }
+        }
+
+        private void LogDeletionException(Exception e, string filePath)
+        {
+            _logger.LogError(e, $"Error deleting file {filePath}");
+        }
+
+        protected override void ApplyDocumentAdded(DocumentInfo info, SourceText text)
+        {
+            var project = this.CurrentSolution.GetProject(info.Id.ProjectId);
+            var fullPath = info.FilePath;
+
+            this.OnDocumentAdded(info);
+
+            if (text != null)
+            {
+                this.SaveDocumentText(info.Id, fullPath, text, text.Encoding ?? Encoding.UTF8);
+            }
+        }
+
+        private void SaveDocumentText(DocumentId id, string fullPath, SourceText newText, Encoding encoding)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(fullPath);
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                using (var writer = new StreamWriter(fullPath, append: false, encoding: encoding))
+                {
+                    newText.Write(writer);
+                }
+            }
+            catch (IOException e)
+            {
+                _logger.LogError(e, $"Error saving document {fullPath}");
+            }
         }
     }
 }

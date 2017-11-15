@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Models;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
@@ -79,7 +80,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class c {public c() {Guid.NewGuid();}}";
 
             var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings");
-            AssertIgnoringIndent(expected, response.Changes.First().Buffer);
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -125,7 +126,38 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             var response = await RunRefactoringAsync(code, "Extract Method");
-            AssertIgnoringIndent(expected, response.Changes.First().Buffer);
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_send_rename_and_fileOpen_responses_when_codeAction_renames_file()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMismatchedFileName"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
+                var buffer = await document.GetTextAsync();
+                var path = document.FilePath;
+
+                var request = new RunCodeActionRequest
+                {
+                    Line = 4,
+                    Column = 10,
+                    FileName = path,
+                    Buffer = buffer.ToString(),
+                    Identifier = "Rename file to Class1.cs",
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
+                };
+
+                var response = await requestHandler.Handle(request);
+                var changes = response.Changes.ToArray();
+                Assert.Equal(2, changes.Length);
+                Assert.Equal(FileModificationType.Renamed, changes[0].ModificationType);
+                Assert.Contains("Class1.cs", ((RenamedFileResponse)changes[0]).NewFileName);
+                Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
+            }
         }
 
         private static void AssertIgnoringIndent(string expected, string actual)
@@ -171,7 +203,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     Column = range.Start.Offset,
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
-                    Selection = GetSelection(range)
+                    Selection = GetSelection(range),
                 };
 
                 var response = await requestHandler.Handle(request);
@@ -199,7 +231,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
                     Identifier = identifier,
-                    WantsTextChanges = wantsChanges
+                    WantsTextChanges = wantsChanges,
+                    WantsAllCodeActionOperations = true
                 };
 
                 return await requestHandler.Handle(request);
