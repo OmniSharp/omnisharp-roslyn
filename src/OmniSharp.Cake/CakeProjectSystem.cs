@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
+using OmniSharp.Helpers;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
@@ -238,14 +239,7 @@ namespace OmniSharp.Cake
                     metadataReferenceResolver: new CachingScriptMetadataResolver(),
                     sourceReferenceResolver: ScriptSourceResolver.Default,
                     assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
-                WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
-                {
-                    // ensure that specific warnings about assembly references are always suppressed
-                    // https://github.com/dotnet/roslyn/issues/5501
-                    { "CS1701", ReportDiagnostic.Suppress },
-                    { "CS1702", ReportDiagnostic.Suppress },
-                    { "CS1705", ReportDiagnostic.Suppress }
-                });
+                    WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");

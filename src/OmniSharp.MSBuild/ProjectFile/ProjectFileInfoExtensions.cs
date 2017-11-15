@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using OmniSharp.Helpers;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -19,26 +18,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 result = result.WithAllowUnsafe(true);
             }
 
-            var specificDiagnosticOptions = new Dictionary<string, ReportDiagnostic>(projectFileInfo.SuppressedDiagnosticIds.Count)
-            {
-                // Ensure that specific warnings about assembly references are always suppressed.
-                { "CS1701", ReportDiagnostic.Suppress },
-                { "CS1702", ReportDiagnostic.Suppress },
-                { "CS1705", ReportDiagnostic.Suppress }
-            };
-
-            if (projectFileInfo.SuppressedDiagnosticIds.Any())
-            {
-                foreach (var id in projectFileInfo.SuppressedDiagnosticIds)
-                {
-                    if (!specificDiagnosticOptions.ContainsKey(id))
-                    {
-                        specificDiagnosticOptions.Add(id, ReportDiagnostic.Suppress);
-                    }
-                }
-            }
-
-            result = result.WithSpecificDiagnosticOptions(specificDiagnosticOptions);
+            result = result.WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds));
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
