@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
@@ -7,11 +8,19 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Configuration;
+using OmniSharp.Helpers;
 
 namespace OmniSharp.Script
 {
     public class ScriptHelper
     {
+        private const string BinderFlagsType = "Microsoft.CodeAnalysis.CSharp.BinderFlags";
+        private const string TopLevelBinderFlagsProperty = "TopLevelBinderFlags";
+        private const string IgnoreCorLibraryDuplicatedTypesField = "IgnoreCorLibraryDuplicatedTypes";
+        private const string RuntimeMetadataReferenceResolverType = "Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver";
+        private const string ResolverField = "_resolver";
+        private const string FileReferenceProviderField = "_fileReferenceProvider";
+
         private readonly IConfiguration _configuration;
 
         // aligned with CSI.exe
@@ -33,11 +42,13 @@ namespace OmniSharp.Script
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
+        private readonly MetadataReferenceResolver _resolver = ScriptMetadataResolver.Default;
 
         public ScriptHelper(IConfiguration configuration = null)
         {
-            this._configuration = configuration;
+            _configuration = configuration;
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
+            InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
         }
 
         private CSharpCompilationOptions CreateCompilationOptions()
@@ -49,24 +60,13 @@ namespace OmniSharp.Script
                 metadataReferenceResolver:
                 CreateMetadataReferenceResolver(),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).WithSpecificDiagnosticOptions(
-                new Dictionary<string, ReportDiagnostic>
-                {
-                    // ensure that specific warnings about assembly references are always suppressed
-                    // https://github.com/dotnet/roslyn/issues/5501
-                    {"CS1701", ReportDiagnostic.Suppress},
-                    {"CS1702", ReportDiagnostic.Suppress},
-                    {"CS1705", ReportDiagnostic.Suppress}
-                });
+                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
+                    WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
-            var topLevelBinderFlagsProperty =
-                typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags",
-                    BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly
-                .GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
 
-            var ignoreCorLibraryDuplicatedTypesMember =
-                binderFlagsType?.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType?.GetField(IgnoreCorLibraryDuplicatedTypesField, BindingFlags.Static | BindingFlags.Public);
             var ignoreCorLibraryDuplicatedTypesValue = ignoreCorLibraryDuplicatedTypesMember?.GetValue(null);
             if (ignoreCorLibraryDuplicatedTypesValue != null)
             {
@@ -88,8 +88,9 @@ namespace OmniSharp.Script
                 }
             }
             
-            return enableScriptNuGetReferences ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)) 
-                : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default);
+            return enableScriptNuGetReferences
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(_resolver))
+                : new CachingScriptMetadataResolver(_resolver);
         }
  
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
@@ -107,6 +108,27 @@ namespace OmniSharp.Script
                 hostObjectType: typeof(CommandLineScriptGlobals));
 
             return project;
+        }
+
+        private void InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver()
+        {
+            var runtimeMetadataReferenceResolverField = typeof(ScriptMetadataResolver).GetField(ResolverField, BindingFlags.Instance | BindingFlags.NonPublic);
+            var runtimeMetadataReferenceResolverValue = runtimeMetadataReferenceResolverField?.GetValue(_resolver);
+
+            if (runtimeMetadataReferenceResolverValue != null)
+            {
+                var runtimeMetadataReferenceResolverType = typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.GetType(RuntimeMetadataReferenceResolverType);
+                var fileReferenceProviderField = runtimeMetadataReferenceResolverType?.GetField(FileReferenceProviderField, BindingFlags.Instance | BindingFlags.NonPublic);
+                fileReferenceProviderField.SetValue(runtimeMetadataReferenceResolverValue, new Func<string, MetadataReferenceProperties, PortableExecutableReference>((path, properties) =>
+                {
+                    var documentationFile = Path.ChangeExtension(path, ".xml");
+                    var documentationProvider = File.Exists(documentationFile)
+                        ? XmlDocumentationProvider.CreateFromFile(documentationFile)
+                        : null;
+
+                    return MetadataReference.CreateFromFile(path, properties, documentationProvider);
+                }));
+            }
         }
     }
 }
