@@ -52,6 +52,7 @@ namespace OmniSharp.Stdio
                     var output = Console.Out;
 
                     var environment = application.CreateEnvironment();
+                    OmniSharp.Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
                     var configuration = new ConfigurationBuilder(environment).Build();
                     var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration);
                     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();

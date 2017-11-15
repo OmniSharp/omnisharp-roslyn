@@ -23,11 +23,14 @@ namespace OmniSharp.MSBuild.Tests
         private ProjectFileInfo CreateProjectFileInfo(OmniSharpTestHost host, ITestProject testProject, string projectFilePath)
         {
             var msbuildLocator = host.GetExport<IMSBuildLocator>();
+            var sdksPathResolver = host.GetExport<SdksPathResolver>();
+
             var loader = new ProjectLoader(
                 options: new MSBuildOptions(),
                 solutionDirectory: testProject.Directory,
                 propertyOverrides: msbuildLocator.RegisteredInstance.PropertyOverrides,
-                loggerFactory: LoggerFactory);
+                loggerFactory: LoggerFactory,
+                sdksPathResolver: sdksPathResolver);
 
             var (projectFileInfo, _) = ProjectFileInfo.Load(projectFilePath, loader);
 

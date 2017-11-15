@@ -1,6 +1,21 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.28.0] - not yet released
+* Fixed issue with loading XML documentation for `#r` assembly references in CSX scripts ([#1026](https://github.com/OmniSharp/omnisharp-roslyn/issues/1026), PR: [#1027](https://github.com/OmniSharp/omnisharp-roslyn/pull/1027))
+
+## [1.27.2] - 2017-11-10
+
+* Addressed problem with Sdk-style projects not being loaded properly in certain cases. ([omnisharp-vscode#1846](https://github.com/OmniSharp/omnisharp-vscode/issues/1846), [omnisharp-vscode#1849](https://github.com/OmniSharp/omnisharp-vscode/issues/1849), PR: [#1021](https://github.com/OmniSharp/omnisharp-roslyn/pull/1021))
+
+## [1.27.1] - 2017-11-09
+
+* Fix to allow signature help return results for attribute constructors. ([omnisharp-vscode#1814](https://github.com/OmniSharp/omnisharp-vscode/issues/1814), PR: [#1007](https://github.com/OmniSharp/omnisharp-roslyn/pull/1007))
+* Make `--zero-based-indices` command line argument work again. (PR: [#1015](https://github.com/OmniSharp/omnisharp-roslyn/pull/1015))
+* Fix serious regression introduced in 1.27.0 that causes projects to fail to load on macOS or Linux. (PR: [#1017](https://github.com/OmniSharp/omnisharp-roslyn/pull/1017)]
+* Fixed issue with discovering MSBuild under Mono even when it is missing. ([#1011](https://github.com/OmniSharp/omnisharp-roslyn/issues/1011), PR: [#1018](https://github.com/OmniSharp/omnisharp-roslyn/pull/1018))
+* Fixed issue to not use Visual Studio 2017 MSBuild if it is from VS 2017 RTM. ([#1014](https://github.com/OmniSharp/omnisharp-roslyn/issues/1014), PR: [#1018](https://github.com/OmniSharp/omnisharp-roslyn/pull/1018))
+
 ## [1.27.0] - 2017-11-07
 
 * Significant changes made to the MSBuild project system that fix several issues. (PR: [#1003](https://github.com/OmniSharp/omnisharp-roslyn/pull/1003))
@@ -8,6 +23,15 @@ All changes to the project will be documented in this file.
   * Metadata references are properly removed from projects in the OmniSharpWorkspace when necessary.
   * File watching/notification now handles paths case-insensitively.
   * MSBuild project system now loads projects asynchronously after OmniSharp has finished initializing.
+
+## [1.26.3] - 2017-11-10
+
+* Addressed problem with Sdk-style projects not being loaded properly in certain cases. ([omnisharp-vscode#1846](https://github.com/OmniSharp/omnisharp-vscode/issues/1846), [omnisharp-vescode#1849](https://github.com/OmniSharp/omnisharp-vscode/issues/1849), PR: [#1021](https://github.com/OmniSharp/omnisharp-roslyn/pull/1021))
+
+## [1.26.2] - 2017-11-09
+
+* Fixed issue with discovering MSBuild under Mono even when it is missing. ([#1011](https://github.com/OmniSharp/omnisharp-roslyn/issues/1011), PR: [#1016](https://github.com/OmniSharp/omnisharp-roslyn/pull/1016))
+* Fixed issue to not use Visual Studio 2017 MSBuild if it is from VS 2017 RTM. ([#1014](https://github.com/OmniSharp/omnisharp-roslyn/issues/1014), PR: [#1016](https://github.com/OmniSharp/omnisharp-roslyn/pull/1016))
 
 ## [1.26.1] - 2017-11-04
 

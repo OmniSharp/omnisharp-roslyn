@@ -9,9 +9,8 @@ using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.Http.Middleware;
 using OmniSharp.Options;
-using OmniSharp.Roslyn;
-using OmniSharp.Services;
 using OmniSharp.Stdio.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
 {
@@ -49,6 +48,7 @@ namespace OmniSharp.Http
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<Startup>();
+
             loggerFactory.AddConsole((category, level) =>
             {
                 if (HostHelpers.LogFilter(category, level, _environment)) return true;
@@ -60,6 +60,8 @@ namespace OmniSharp.Http
 
                 return false;
             });
+
+            logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
 
             app.UseRequestLogging();
             app.UseExceptionHandler("/error");

@@ -30,6 +30,7 @@ namespace OmniSharp.Stdio
         private readonly IDictionary<string, Lazy<EndpointHandler>> _endpointHandlers;
         private readonly CompositionHost _compositionHost;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
         private readonly IOmniSharpEnvironment _environment;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly CachedStringBuilder _cachedStringBuilder;
@@ -45,6 +46,9 @@ namespace OmniSharp.Stdio
             _configuration = configuration;
             _serviceProvider = serviceProvider;
             _loggerFactory = loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
+            _logger = loggerFactory.CreateLogger<Host>();
+
+            _logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
 
             _compositionHost = compositionHostBuilder.Build();
             _cachedStringBuilder = new CachedStringBuilder();
@@ -57,7 +61,6 @@ namespace OmniSharp.Stdio
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var projectSystems = _compositionHost.GetExports<IProjectSystem>();
-            var logger = _loggerFactory.CreateLogger<Host>();
             var endpointMetadatas = _compositionHost.GetExports<Lazy<IRequest, OmniSharpEndpointMetadata>>()
                 .Select(x => x.Metadata)
                 .ToArray();
@@ -93,7 +96,7 @@ namespace OmniSharp.Stdio
                         updateEndpointHandler = new Lazy<EndpointHandler<UpdateBufferRequest, object>>(() => null);
                     }
 
-                    return EndpointHandler.Factory(handler, _compositionHost, logger, endpoint, handlers, updateEndpointHandler, Enumerable.Empty<Plugin>());
+                    return EndpointHandler.Factory(handler, _compositionHost, _logger, endpoint, handlers, updateEndpointHandler, Enumerable.Empty<Plugin>());
                 }),
                 StringComparer.OrdinalIgnoreCase
             );
@@ -132,9 +135,7 @@ namespace OmniSharp.Stdio
 
         public void Start()
         {
-            var logger = _loggerFactory.CreateLogger<Host>();
-
-            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
+            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, _logger);
 
             Task.Factory.StartNew(async () =>
             {
@@ -155,7 +156,7 @@ namespace OmniSharp.Stdio
                     {
                         try
                         {
-                            await HandleRequest(line, logger);
+                            await HandleRequest(line, _logger);
                         }
                         catch (Exception e)
                         {
@@ -169,7 +170,7 @@ namespace OmniSharp.Stdio
                 }
             });
 
-            logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
+            _logger.LogInformation($"Omnisharp server running using {nameof(TransportType.Stdio)} at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
 
             Console.CancelKeyPress += (sender, e) =>
             {

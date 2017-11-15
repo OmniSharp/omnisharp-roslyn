@@ -82,6 +82,22 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
+            // Look for Microsoft.Build.dll in the tools path. If it isn't there, this is likely a Mono layout on Linux
+            // where the 'msbuild' package has not been installed.
+            var microsoftBuildPath = Path.Combine(toolsPath, "Microsoft.Build.dll");
+            if (!File.Exists(microsoftBuildPath))
+            {
+                Logger.LogDebug($"Mono MSBuild could not be used because '{microsoftBuildPath}' does not exist.");
+
+                if (Platform.Current.OperatingSystem == Utilities.OperatingSystem.Linux)
+                {
+                    Logger.LogWarning(@"It looks like you have Mono 5.2.0 or greater installed but MSBuild could not be found.
+Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable better MSBuild support.");
+                }
+
+                return NoInstances;
+            }
+
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
 
             var localMSBuildPath = FindLocalMSBuildDirectory();

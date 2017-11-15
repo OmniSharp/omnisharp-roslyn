@@ -20,17 +20,17 @@ public class RunOptions
     public IList<string> Output { get; }
 
     /// <summary>
-    ///  Desired maximum time-out for the process
+    ///  Wait for process to become idle before terminating it.
     /// </summary>
-    public int TimeOut { get; }
+    public bool WaitForIdle { get; }
 
     public IDictionary<string, string> Environment { get; }
 
-    public RunOptions(string workingDirectory = null, IList<string> output = null, int timeOut = 0, IDictionary<string, string> environment = null)
+    public RunOptions(string workingDirectory = null, IList<string> output = null, bool waitForIdle = false, IDictionary<string, string> environment = null)
     {
         this.WorkingDirectory = workingDirectory;
         this.Output = output;
-        this.TimeOut = timeOut;
+        this.WaitForIdle = waitForIdle;
         this.Environment = environment;
     }
 }
@@ -42,7 +42,7 @@ public class RunOptions
 public struct ExitStatus
 {
     public int Code { get; }
-    private bool _timeOut;
+    private bool _wasIdle;
 
     /// <summary>
     ///  Default constructor when the execution finished.
@@ -51,24 +51,24 @@ public struct ExitStatus
     public ExitStatus(int code)
     {
         this.Code = code;
-        this._timeOut = false;
+        this._wasIdle = false;
     }
 
     /// <summary>
     ///  Default constructor when the execution potentially timed out.
     /// </summary>
     /// <param name="code">The exit code</param>
-    /// <param name="timeOut">True if the execution timed out</param>
-    public ExitStatus(int code, bool timeOut)
+    /// <param name="wasIdle">True if the execution timed out</param>
+    public ExitStatus(int code, bool wasIdle)
     {
         this.Code = code;
-        this._timeOut = timeOut;
+        this._wasIdle = wasIdle;
     }
 
     /// <summary>
     ///  Flag signalling that the execution timed out.
     /// </summary>
-    public bool DidTimeOut { get { return _timeOut; } }
+    public bool WasIdle { get { return _wasIdle; } }
 
     /// <summary>
     ///  Implicit conversion from ExitStatus to the exit code.
@@ -139,8 +139,9 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     {
         WorkingDirectory = workingDirectory,
         UseShellExecute = false,
-        RedirectStandardOutput = runOptions.Output != null
+        RedirectStandardOutput = runOptions.Output != null || runOptions.WaitForIdle
     };
+
     if (runOptions.Environment != null)
     {
         foreach (var item in runOptions.Environment)
@@ -150,37 +151,59 @@ ExitStatus Run(string command, string arguments, RunOptions runOptions)
     }
 
     var process = System.Diagnostics.Process.Start(startInfo);
+    var lastDateTime = DateTime.Now;
 
-    if (runOptions.Output != null)
+    if (runOptions.Output != null || runOptions.WaitForIdle)
     {
         process.OutputDataReceived += (s, e) =>
         {
+            if (runOptions.WaitForIdle)
+            {
+                lastDateTime = DateTime.Now;
+            }
+
             if (e.Data != null)
             {
-                runOptions.Output.Add(e.Data);
+                if (runOptions.Output != null)
+                {
+                    runOptions.Output.Add(e.Data);
+                }
+                else if (runOptions.WaitForIdle)
+                {
+                    Console.WriteLine(e.Data);
+                }
             }
         };
 
         process.BeginOutputReadLine();
     }
 
-    if (runOptions.TimeOut == 0)
+    if (!runOptions.WaitForIdle)
     {
         process.WaitForExit();
         return new ExitStatus(process.ExitCode);
     }
     else
     {
-        bool finished = process.WaitForExit(runOptions.TimeOut);
-        if (finished)
+        while (true)
         {
-            return new ExitStatus(process.ExitCode);
+            var exited = process.HasExited || process.WaitForExit(10000);
+            if (exited)
+            {
+                return new ExitStatus(process.ExitCode);
+            }
+
+            var currentDateTime = DateTime.Now;
+            var timeSpan = currentDateTime - lastDateTime;
+
+            if (timeSpan.TotalMilliseconds >= 10000)
+            {
+                break;
+            }
         }
-        else
-        {
-            KillProcessTree(process);
-            return new ExitStatus(0, true);
-        }
+
+        KillProcessTree(process);
+        return new ExitStatus(0, true);
     }
 }
 
@@ -209,7 +232,7 @@ string RunAndCaptureOutput(string command, string arguments, string workingDirec
 ExitStatus RunTool(string command, string arguments, string workingDirectory, string logFileName = null, IDictionary<string, string> environmentVariables = null)
 {
     var output = new List<string>();
-    var options = new RunOptions(workingDirectory, output, 0, environmentVariables);
+    var options = new RunOptions(workingDirectory, output, false, environmentVariables);
     var exitStatus = Run(command, arguments, options);
 
     var log = string.Join(System.Environment.NewLine, output);
