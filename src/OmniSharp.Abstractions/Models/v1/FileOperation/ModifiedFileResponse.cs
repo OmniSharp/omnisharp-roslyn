@@ -2,16 +2,13 @@
 
 namespace OmniSharp.Models
 {
-    public class ModifiedFileResponse
+    public class ModifiedFileResponse : FileOperationResponse
     {
-        public ModifiedFileResponse() { }
-
         public ModifiedFileResponse(string fileName)
+            : base(fileName, FileModificationType.Modified)
         {
-            FileName = fileName;
         }
 
-        public string FileName { get; set; }
         public string Buffer { get; set; }
         public IEnumerable<LinePositionSpanTextChange> Changes { get; set; }
     }

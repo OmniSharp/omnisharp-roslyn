@@ -9,5 +9,6 @@ namespace OmniSharp.Models.V2
         public Range Selection { get; set; }
         public bool WantsTextChanges { get; set; }
         public bool ApplyTextChanges { get; set; } = true;
+        public bool WantsAllCodeActionOperations { get; set; }
     }
 }

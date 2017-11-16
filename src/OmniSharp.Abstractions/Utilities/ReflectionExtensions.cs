@@ -162,5 +162,31 @@ namespace OmniSharp.Utilities
         {
             return lazyMethodInfo.InvokeStatic(args);
         }
+
+        public static Lazy<FieldInfo> LazyGetField(this Lazy<Type> lazyType, string fieldName, BindingFlags bindingFlags)
+        {
+            if (lazyType == null)
+            {
+                throw new ArgumentNullException(nameof(lazyType));
+            }
+
+            return new Lazy<FieldInfo>(() =>
+            {
+                var type = lazyType.Value;
+                var field = type.GetField(fieldName, bindingFlags);
+
+                if (field == null)
+                {
+                    throw new InvalidOperationException($"Could not get method '{fieldName}' on type '{type.FullName}'");
+                }
+
+                return field;
+            });
+        }
+
+        public static T GetValue<T>(this Lazy<FieldInfo> lazyFieldInfo, object o)
+        {
+            return (T)lazyFieldInfo.Value.GetValue(o);
+        }
     }
 }

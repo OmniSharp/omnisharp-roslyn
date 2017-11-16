@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -12,7 +14,7 @@ using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
-
+using OmniSharp.Utilities;
 using RunCodeActionRequest = OmniSharp.Models.V2.RunCodeActionRequest;
 using RunCodeActionResponse = OmniSharp.Models.V2.RunCodeActionResponse;
 
@@ -21,14 +23,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     [OmniSharpHandler(OmniSharpEndpoints.V2.RunCodeAction, LanguageNames.CSharp)]
     public class RunCodeActionService : BaseCodeActionService<RunCodeActionRequest, RunCodeActionResponse>
     {
+        private readonly IAssemblyLoader _loader;
+        private readonly Lazy<Assembly> _workspaceAssembly;
+        private readonly Lazy<Type> _renameDocumentOperation;
+        private readonly Lazy<FieldInfo> _oldDocumentId;
+        private readonly Lazy<FieldInfo> _newDocumentId;
+        private readonly Lazy<FieldInfo> _newFileName;
+
+        private const string RenameDocumentOperation = "Microsoft.CodeAnalysis.CodeActions.RenameDocumentOperation";
+
         [ImportingConstructor]
         public RunCodeActionService(
+            IAssemblyLoader loader,
             OmniSharpWorkspace workspace,
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory)
             : base(workspace, helper, providers, loggerFactory.CreateLogger<RunCodeActionService>())
         {
+            _loader = loader;
+            _workspaceAssembly = _loader.LazyLoad(Configuration.RoslynWorkspaces);
+            _renameDocumentOperation = _workspaceAssembly.LazyGetType(RenameDocumentOperation);
+            _oldDocumentId = _renameDocumentOperation.LazyGetField("_oldDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            _newDocumentId = _renameDocumentOperation.LazyGetField("_newDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            _newFileName = _renameDocumentOperation.LazyGetField("_newFileName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         }
 
         public override async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
@@ -45,7 +63,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var operations = await availableAction.GetOperationsAsync(CancellationToken.None);
 
             var solution = this.Workspace.CurrentSolution;
-            var changes = new List<ModifiedFileResponse>();
+            var changes = new List<FileOperationResponse>();
             var directory = Path.GetDirectoryName(request.FileName);
 
             foreach (var o in operations)
@@ -56,6 +74,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                     changes.AddRange(fileChanges);
                     solution = applyChangesOperation.ChangedSolution;
+                }
+
+                if (request.WantsAllCodeActionOperations)
+                {
+                    if (IsRenameDocumentOperation(o, out var originalDocumentId, out var newDocumentId, out var newFileName))
+                    {
+                        var originalDocument = solution.GetDocument(originalDocumentId);
+                        string newFilePath = GetNewFilePath(newFileName, originalDocument.FilePath);
+                        var text = await originalDocument.GetTextAsync();
+                        var temp = solution.RemoveDocument(originalDocumentId);
+                        solution = temp.AddDocument(newDocumentId, newFileName, text, originalDocument.Folders, newFilePath);
+                        changes.Add(new RenamedFileResponse(originalDocument.FilePath, newFilePath));
+                    }
+                    else if (o is OpenDocumentOperation openDocumentOperation)
+                    {
+                        var document = solution.GetDocument(openDocumentOperation.DocumentId);
+                        changes.Add(new OpenFileResponse(document.FilePath));
+                    }
                 }
             }
 
@@ -69,6 +105,28 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 Changes = changes
             };
+        }
+
+        private static string GetNewFilePath(string newFileName, string currentFilePath)
+        {
+            var directory = Path.GetDirectoryName(currentFilePath);
+            return Path.Combine(directory, newFileName);
+        }
+
+        bool IsRenameDocumentOperation(CodeActionOperation o, out DocumentId oldDocumentId, out DocumentId newDocumentId, out string name)
+        {
+            if (o.GetType() == _renameDocumentOperation.Value)
+            {
+                oldDocumentId = _oldDocumentId.GetValue<DocumentId>(o);
+                newDocumentId = _newDocumentId.GetValue<DocumentId>(o);
+                name = _newFileName.GetValue<string>(o);
+                return true;
+            }
+
+            oldDocumentId = default(DocumentId);
+            newDocumentId = default(DocumentId);
+            name = null;
+            return false;
         }
 
         private async Task<IEnumerable<ModifiedFileResponse>> GetFileChangesAsync(Solution newSolution, Solution oldSolution, string directory, bool wantTextChanges)
