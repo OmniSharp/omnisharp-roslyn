@@ -1,7 +1,8 @@
-﻿using System.Text;
-namespace OmniSharp.Roslyn.CSharp.Services
+﻿using System.Collections.Generic;
+using System.Text;
+namespace OmniSharp.Models.v2.TypeLookUp
 {
-    class DocumentationComment
+    public class DocumentationComment
     {
         //[DefaultValue("")]
         public StringBuilder RemarksText { get; set; }
@@ -10,7 +11,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
         public StringBuilder ReturnsText { get; set; }
         public StringBuilder SummaryText { get; set; }
         public StringBuilder paramref { get; set; }
-        public StringBuilder param { get; set; }
+        public List<StringBuilder> Param { get; set; }
         public StringBuilder value { get; set; }
 
         
@@ -21,8 +22,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
             ExampleText = new StringBuilder();
             ExceptionText = new StringBuilder();
             ReturnsText = new StringBuilder();
+            SummaryText = new StringBuilder();
             paramref = new StringBuilder();
-            param = new StringBuilder();
+            Param = new List<StringBuilder>();
             value = new StringBuilder();
 
         }

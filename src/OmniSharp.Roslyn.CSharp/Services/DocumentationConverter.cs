@@ -1,3 +1,4 @@
+using OmniSharp.Models.v2.TypeLookUp;
 using System;
 using System.IO;
 using System.Linq;
@@ -127,7 +128,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
             return cref + " ";
         }
 
-        private static DocumentationComment ConvertDocumentationObject(string xmlDocumentation, string lineEnding)
+        public static DocumentationComment ConvertDocumentationObject(string xmlDocumentation, string lineEnding)
         {
             if (string.IsNullOrEmpty(xmlDocumentation))
                 return null;
@@ -150,32 +151,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     xml.Skip();
                                     break;
                                 case "remarks":
-                                    docComment.RemarksText.Append(lineEnding);
-                                    docComment.RemarksText.Append("Remarks:");
-                                    docComment.RemarksText.Append(lineEnding);
-                                    docComment.RemarksText.Append(TrimMultiLineString(xml.ReadInnerXml(),lineEnding));
+                                    docComment.RemarksText.Append("Remarks: ");
+                                    docComment.RemarksText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
                                     break;
                                 case "example":
-                                    docComment.ExampleText.Append(lineEnding);
-                                    docComment.ExampleText.Append("Example:");
-                                    docComment.ExampleText.Append(lineEnding);
-                                    docComment.ExampleText.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
+                                    docComment.ExampleText.Append("Example: ");
+                                    docComment.ExampleText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
                                     break;
                                 case "exception":
-                                    docComment.ExceptionText.Append(lineEnding);
                                     docComment.ExceptionText.Append(GetCref(xml["cref"]).TrimEnd());
                                     docComment.ExceptionText.Append(": ");
-                                    docComment.ExceptionText.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
+                                    docComment.ExceptionText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
                                     break;
                                 case "returns":
-                                    docComment.ReturnsText.Append(lineEnding);
                                     docComment.ReturnsText.Append("Returns: ");
-                                    docComment.ReturnsText.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
+                                    docComment.ReturnsText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
                                     break;
                                 case "summary":
-                                    docComment.SummaryText.Append(lineEnding);
-                                    docComment.SummaryText.Append("Returns: ");
-                                    docComment.SummaryText.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
+                                    docComment.SummaryText.Append("Summary: ");
+                                    docComment.SummaryText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
                                     break;
                                 /*case "see":
                                     docComment.Append(GetCref(xml["cref"]));
@@ -191,16 +185,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     docComment.paramref.Append(" ");
                                     break;*/
                                 case "param":
-                                    docComment.param.Append(lineEnding);
-                                    docComment.param.Append(TrimMultiLineString(xml["name"], lineEnding));
-                                    docComment.param.Append(": ");
-                                    docComment.param.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
+                                    StringBuilder parameter = new StringBuilder();
+                                    parameter.Append(TrimMultiLineString(xml["name"], lineEnding));
+                                    parameter.Append(": ");
+                                    parameter.Append(ReadInnerXMLText(xml, elementName, lineEnding));
+                                    docComment.Param.Add(parameter);
                                     break;
                                 case "value":
                                     docComment.value.Append(lineEnding);
                                     docComment.value.Append("Value: ");
                                     docComment.value.Append(lineEnding);
-                                    docComment.value.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
+                                    //docComment.value.Append(TrimMultiLineString(xml.ReadInnerXml(), lineEnding));
                                     break;
                                 case "br":
                                 case "para":
@@ -230,15 +225,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
         }
         private static string ReadInnerXMLText(XmlReader xml, string elementName,string lineEnding)
         {
-            if(xml.NodeType == XmlNodeType.Text)
+            if (xml.Read())
             {
-                if (elementName == "code")
+                if (xml.NodeType == XmlNodeType.Text)
                 {
-                    return xml.Value;
-                }
-                else
-                {
-                   return TrimMultiLineString(xml.Value, lineEnding);
+                    if (elementName == "code")
+                    {
+                        return xml.Value;
+                    }
+                    else
+                    {
+                        return TrimMultiLineString(xml.Value, lineEnding);
+                    }
                 }
             }
             return "";
