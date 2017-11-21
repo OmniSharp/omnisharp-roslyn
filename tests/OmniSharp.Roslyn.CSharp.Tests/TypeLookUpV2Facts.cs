@@ -297,5 +297,29 @@ Here's how you could make a second paragraph in a description.";
             Assert.Equal(expected.Replace("\r", ""), response.DocComment.SummaryText.ToString());
         }
 
+        [Fact]
+        public async Task CheckXmlDocumentationNestedTagSeeAlso()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>DoWork is a method in the TestClass class.
+    /// <seealso cref=""TestClass.Main""/>
+    /// </summary>
+            public static void Do$$Work(int Int1)
+            {
+            }
+
+            static void Main()
+            {
+            }
+}";
+        var response = await GetTypeLookUpResponse(content);
+            var expected =
+@"Summary: DoWork is a method in the TestClass class.
+See also: TestClass.Main ";
+            Assert.Equal(expected.Replace("\r",""), response.DocComment.SummaryText.ToString());
+        }
+
     }
 }

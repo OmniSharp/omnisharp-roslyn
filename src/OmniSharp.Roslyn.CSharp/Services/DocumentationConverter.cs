@@ -1,9 +1,9 @@
-using OmniSharp.Models.v2.TypeLookUp;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using OmniSharp.Models.v2.TypeLookUp;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 {
