@@ -211,6 +211,78 @@ namespace hoverXmlDoc
             Assert.Equal(expected, response.DocComment.Param[1].ToString());
         }
 
+        [Fact]
+        public async Task CheckXmlDocumentationTypeParameter()
+        {
+            string content = @"public class TestClass
+{
+    /// <summary>
+    /// Creates a new array of arbitrary type <typeparamref name=""T""/>
+    /// </summary>
+    /// <typeparam name=""T"">The element type of the array</typeparam>
+            public static T[] m$$kArray<T>(int n)
+            {
+                return new T[n];
+            }
+        }
+";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"T: The element type of the array";
+            Assert.Single(response.DocComment.TypeParam);
+            Assert.Equal(expected, response.DocComment.TypeParam[0].ToString());
+        }
+
+        [Fact]
+        public async Task CheckXmlDocumentationValueText()
+        {
+            string content = @"public class Employee
+{
+    private string _name;
+
+    /// <summary>The Name property represents the employee's name.</summary>
+    /// <value>The Name property gets/sets the value of the string field, _name.</value>
+    public string N$$ame
+    {
+        get
+        {
+            return _name;
+        }
+        set
+        {
+            _name = value;
+        }
+    }
+}
+";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Value: The Name property gets/sets the value of the string field, _name.";
+            Assert.Equal(expected, response.DocComment.ValueText.ToString());
+        }
+
+        [Fact]
+        public async Task CheckXmlDocumentationSee()
+        {
+            string content = @"/// text for class TestClass
+public class TestClass
+{
+    /// <summary>DoWork is a method in the TestClass class. <see cref=""System.Console.WriteLine(System.String)""/> for information about output statements.</summary>
+            public static void Do$$Work(int Int1)
+            {
+            }
+
+            /// text for Main
+            static void Main()
+            {
+            }
+        }
+";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Summary: DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
+            Assert.Equal(expected, response.DocComment.SummaryText.ToString());
+        }
 
     }
 }
