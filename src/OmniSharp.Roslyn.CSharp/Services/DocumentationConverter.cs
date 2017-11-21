@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -134,6 +135,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 return null;
             var docComment = new DocumentationComment();
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
+            StringBuilder RemarksText = new StringBuilder();
+            StringBuilder ExampleText = new StringBuilder();
+            StringBuilder ExceptionText = new StringBuilder();
+            StringBuilder ReturnsText = new StringBuilder();
+            StringBuilder SummaryText = new StringBuilder();
+            StringBuilder ValueText = new StringBuilder();
+            List<StringBuilder> Param = new List<StringBuilder>();
+            List<StringBuilder> TypeParam = new List<StringBuilder>();
+
             using (var xml = XmlReader.Create(reader))
             {
                 try
@@ -152,25 +162,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     xml.Skip();
                                     break;
                                 case "remarks":
-                                    docComment.RemarksText.Append("Remarks: ");
-                                    CurrentElementText = docComment.RemarksText;
+                                    RemarksText.Append("Remarks: ");
+                                    CurrentElementText = RemarksText;
                                     break;
                                 case "example":
-                                    docComment.ExampleText.Append("Example: ");
-                                    CurrentElementText = docComment.ExampleText;
+                                    ExampleText.Append("Example: ");
+                                    CurrentElementText = ExampleText;
                                     break;
                                 case "exception":
-                                    docComment.ExceptionText.Append(GetCref(xml["cref"]).TrimEnd());
-                                    docComment.ExceptionText.Append(": ");
-                                    CurrentElementText = docComment.ExceptionText;
+                                    ExceptionText.Append(GetCref(xml["cref"]).TrimEnd());
+                                    ExceptionText.Append(": ");
+                                    CurrentElementText = ExceptionText;
                                     break;
                                 case "returns":
-                                    docComment.ReturnsText.Append("Returns: ");
-                                    CurrentElementText = docComment.ReturnsText;
+                                    ReturnsText.Append("Returns: ");
+                                    CurrentElementText = ReturnsText;
                                     break;
                                 case "summary":
-                                    docComment.SummaryText.Append("Summary: ");
-                                    CurrentElementText = docComment.SummaryText;
+                                    SummaryText.Append("Summary: ");
+                                    CurrentElementText = SummaryText;
                                     break;
                                 case "see":
                                     CurrentElementText.Append(GetCref(xml["cref"]));
@@ -189,7 +199,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     parameter.Append(TrimMultiLineString(xml["name"], lineEnding));
                                     parameter.Append(": ");
                                     CurrentElementText = parameter;
-                                    docComment.Param.Add(parameter);
+                                    Param.Add(parameter);
                                     break;
                                 case "typeparamref":
                                     CurrentElementText.Append(xml["name"]);
@@ -200,11 +210,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     TypeParameter.Append(TrimMultiLineString(xml["name"], lineEnding));
                                     TypeParameter.Append(": ");
                                     CurrentElementText = TypeParameter;
-                                    docComment.TypeParam.Add(TypeParameter);
+                                    TypeParam.Add(TypeParameter);
                                     break;
                                 case "value":
-                                    docComment.ValueText.Append("Value: ");
-                                    CurrentElementText = docComment.ValueText;
+                                    ValueText.Append("Value: ");
+                                    CurrentElementText = ValueText;
                                     break;
                                 case "br":
                                 case "para":
@@ -229,6 +239,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 {
                     return null;
                 }
+                docComment.RemarksText = RemarksText.ToString();
+                docComment.ExampleText = ExampleText.ToString();
+                docComment.ExceptionText = ExceptionText.ToString();
+                docComment.ReturnsText = ReturnsText.ToString();
+                docComment.SummaryText = SummaryText.ToString();
+                docComment.ValueText = ValueText.ToString();
+                docComment.Param = Param.Select(s => s.ToString()).ToArray();
+                docComment.TypeParam = TypeParam.Select(s => s.ToString()).ToArray();
+
                 return docComment;
             }
         }

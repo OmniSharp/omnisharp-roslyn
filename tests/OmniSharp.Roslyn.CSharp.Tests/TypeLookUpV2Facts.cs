@@ -49,7 +49,7 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Remarks: You may have some additional information about this class here.";
-            Assert.Equal(expected, response.DocComment.RemarksText.ToString());
+            Assert.Equal(expected, response.DocComment.RemarksText);
         }
 
         [Fact]
@@ -66,7 +66,7 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Summary: Checks if object is tagged with the tag.";
-            Assert.Equal(expected, response.DocComment.SummaryText.ToString());
+            Assert.Equal(expected, response.DocComment.SummaryText);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Returns: Returns true if object is tagged with tag.";
-            Assert.Equal(expected, response.DocComment.ReturnsText.ToString());
+            Assert.Equal(expected, response.DocComment.ReturnsText);
         }
 
         [Fact]
@@ -100,7 +100,7 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Example: Checks if object is tagged with the tag.";
-            Assert.Equal(expected, response.DocComment.ExampleText.ToString());
+            Assert.Equal(expected, response.DocComment.ExampleText);
         }
 
         [Fact]
@@ -117,7 +117,7 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"System.Exception: Thrown when something goes wrong";
-            Assert.Equal(expected, response.DocComment.ExceptionText.ToString());
+            Assert.Equal(expected, response.DocComment.ExceptionText);
         }
 
         [Fact]
@@ -135,8 +135,8 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"gameObject: The game object.";
-            Assert.Equal(2,response.DocComment.Param.Count);
-            Assert.Equal(expected, response.DocComment.Param[0].ToString());
+            Assert.Equal(2,response.DocComment.Param.Length);
+            Assert.Equal(expected, response.DocComment.Param[0]);
         }
 
         [Fact]
@@ -155,8 +155,8 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"tagName: Name of the tag.";
-            Assert.Equal(2, response.DocComment.Param.Count);
-            Assert.Equal(expected, response.DocComment.Param[1].ToString());
+            Assert.Equal(2, response.DocComment.Param.Length);
+            Assert.Equal(expected, response.DocComment.Param[1]);
         }
 
         [Fact]
@@ -178,7 +178,7 @@ public class TestClass
             var expected =
             @"T: The element type of the array";
             Assert.Single(response.DocComment.TypeParam);
-            Assert.Equal(expected, response.DocComment.TypeParam[0].ToString());
+            Assert.Equal(expected, response.DocComment.TypeParam[0]);
         }
 
         [Fact]
@@ -199,7 +199,7 @@ public class TestClass
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Value: The Name property gets/sets the value of the string field, _name.";
-            Assert.Equal(expected, response.DocComment.ValueText.ToString());
+            Assert.Equal(expected, response.DocComment.ValueText);
         }
 
         [Fact]
@@ -216,7 +216,7 @@ public class TestClass
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Summary: DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
-            Assert.Equal(expected, response.DocComment.SummaryText.ToString());
+            Assert.Equal(expected, response.DocComment.SummaryText);
         }
 
         [Fact]
@@ -235,7 +235,7 @@ public class TestClass
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Summary: Creates a new array of arbitrary type T ";
-            Assert.Equal(expected, response.DocComment.SummaryText.ToString());
+            Assert.Equal(expected, response.DocComment.SummaryText);
         }
 
         [Fact]
@@ -272,7 +272,7 @@ public class TestClass
         }
     }
     ";
-            Assert.Equal(expected.Replace("\r",""), response.DocComment.ExampleText.ToString());
+            Assert.Equal(expected.Replace("\r",""), response.DocComment.ExampleText);
         }
 
         [Fact]
@@ -294,7 +294,7 @@ public class TestClass
 @"Summary: DoWork is a method in the TestClass class.
 
 Here's how you could make a second paragraph in a description.";
-            Assert.Equal(expected.Replace("\r", ""), response.DocComment.SummaryText.ToString());
+            Assert.Equal(expected.Replace("\r", ""), response.DocComment.SummaryText);
         }
 
         [Fact]
@@ -318,7 +318,7 @@ public class TestClass
             var expected =
 @"Summary: DoWork is a method in the TestClass class.
 See also: TestClass.Main ";
-            Assert.Equal(expected.Replace("\r",""), response.DocComment.SummaryText.ToString());
+            Assert.Equal(expected.Replace("\r",""), response.DocComment.SummaryText);
         }
 
     }
