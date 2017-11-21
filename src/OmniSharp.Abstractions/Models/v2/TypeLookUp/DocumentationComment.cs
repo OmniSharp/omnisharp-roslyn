@@ -11,7 +11,6 @@ namespace OmniSharp.Models.v2.TypeLookUp
         public StringBuilder ReturnsText { get; set; }
         public StringBuilder SummaryText { get; set; }
         public StringBuilder ValueText { get; set; }
-        public StringBuilder paramref { get; set; }
         public List<StringBuilder> Param { get; set; }
         public List<StringBuilder> TypeParam { get; set; }
 
@@ -23,7 +22,6 @@ namespace OmniSharp.Models.v2.TypeLookUp
             ReturnsText = new StringBuilder();
             SummaryText = new StringBuilder();
             ValueText = new StringBuilder();
-            paramref = new StringBuilder();
             Param = new List<StringBuilder>();
             TypeParam = new List<StringBuilder>();
 
