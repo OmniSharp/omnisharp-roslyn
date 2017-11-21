@@ -55,19 +55,15 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationRemarksText()
         {
-             string content= @"using System;
-namespace hoverXmlDoc
+             string content= @"
+class testissue
 {
-    class testissue
-    {
     ///<remarks>You may have some additional information about this class here.</remarks>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+        return gameObject.TagifyCompareTag(tagName);
     }
-}
-";
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Remarks: You may have some additional information about this class here.";
@@ -77,19 +73,14 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationSummaryText()
         {
-            string content = @"using System;
-namespace hoverXmlDoc
+            string content = @"
+class testissue
 {
-    class testissue
-    {
     ///<summary>Checks if object is tagged with the tag.</summary>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
     }
-}
-";
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Summary: Checks if object is tagged with the tag.";
@@ -99,20 +90,14 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationReturnsText()
         {
-            string content = @"using System;
-namespace hoverXmlDoc
+            string content = @"
+class testissue
 {
-    class testissue
-    {
     ///<returns>Returns true if object is tagged with tag.</returns>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
     }
-}
-";
-
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Returns: Returns true if object is tagged with tag.";
@@ -122,19 +107,14 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationExampleText()
         {
-            string content = @"using System;
-namespace hoverXmlDoc
+            string content = @"
+class testissue
 {
-    class testissue
-    {
     ///<example>Checks if object is tagged with the tag.</example>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
     }
-}
-";
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Example: Checks if object is tagged with the tag.";
@@ -144,19 +124,14 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationExceptionText()
         {
-            string content = @"using System;
-namespace hoverXmlDoc
+            string content = @"
+class testissue
 {
-    class testissue
-    {
     ///<exception cref=""System.Exception"">Thrown when something goes wrong</exception>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
     }
-}
-";
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"System.Exception: Thrown when something goes wrong";
@@ -166,20 +141,15 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationParameter1()
         {
-            string content = @"using System;
-namespace hoverXmlDoc
+            string content = @"
+class testissue
 {
-    class testissue
-    {
     /// <param name=""gameObject"">The game object.</param> 
     /// <param name=""tagName"">Name of the tag </param>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
     }
-}
-";
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"gameObject: The game object.";
@@ -190,20 +160,16 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationParameter2()
         {
-            string content = @"using System;
-namespace hoverXmlDoc
+            string content = @"
+class testissue
 {
-    class testissue
-    {
     /// <param name=""gameObject"">The game object.</param> 
     /// <param name=""tagName"">Name of the tag.</param>
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+            
     }
-}
-";
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"tagName: Name of the tag.";
@@ -214,18 +180,18 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationTypeParameter()
         {
-            string content = @"public class TestClass
+            string content = @"
+public class TestClass
 {
     /// <summary>
     /// Creates a new array of arbitrary type <typeparamref name=""T""/>
     /// </summary>
     /// <typeparam name=""T"">The element type of the array</typeparam>
-            public static T[] m$$kArray<T>(int n)
-            {
-                return new T[n];
-            }
-        }
-";
+    public static T[] m$$kArray<T>(int n)
+    {
+        return new T[n];
+    }
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"T: The element type of the array";
@@ -236,22 +202,15 @@ namespace hoverXmlDoc
         [Fact]
         public async Task CheckXmlDocumentationValueText()
         {
-            string content = @"public class Employee
+            string content =
+@"public class Employee
 {
     private string _name;
 
     /// <summary>The Name property represents the employee's name.</summary>
     /// <value>The Name property gets/sets the value of the string field, _name.</value>
-    public string N$$ame
+    public string Na$$me
     {
-        get
-        {
-            return _name;
-        }
-        set
-        {
-            _name = value;
-        }
     }
 }
 ";
@@ -262,26 +221,98 @@ namespace hoverXmlDoc
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationSee()
+        public async Task CheckXmlDocumentationNestedTagSee()
         {
-            string content = @"/// text for class TestClass
+            string content = @"
 public class TestClass
 {
     /// <summary>DoWork is a method in the TestClass class. <see cref=""System.Console.WriteLine(System.String)""/> for information about output statements.</summary>
-            public static void Do$$Work(int Int1)
-            {
-            }
-
-            /// text for Main
-            static void Main()
-            {
-            }
-        }
-";
+    public static void Do$$Work(int Int1)
+    {
+    }
+}";
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"Summary: DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
             Assert.Equal(expected, response.DocComment.SummaryText.ToString());
+        }
+
+        [Fact]
+        public async Task CheckXmlDocumentationNestedTagParamRef()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>Creates a new array of arbitrary type <typeparamref name=""T""/></summary>
+    /// <typeparam name=""T"">The element type of the array</typeparam>
+    public static T[] mk$$Array<T>(int n)
+    {
+        return new T[n];
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Summary: Creates a new array of arbitrary type T ";
+            Assert.Equal(expected, response.DocComment.SummaryText.ToString());
+        }
+
+        [Fact]
+        public async Task CheckXmlDocumentationNestedTagCode()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <example>This sample shows how to call the <see cref=""GetZero""/> method.
+    /// <code>
+    /// class TestClass 
+    /// {
+    ///     static int Main() 
+    ///     {
+    ///         return GetZero();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public static int $$GetZero()
+    {
+        return 0;
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Example: This sample shows how to call the TestClass.GetZero method.
+
+    class TestClass 
+    {
+        static int Main() 
+        {
+            return GetZero();
+        }
+    }
+    ";
+            Assert.Equal(expected.Replace("\r",""), response.DocComment.ExampleText.ToString());
+        }
+
+        [Fact]
+        public async Task CheckXmlDocumentationNestedTagPara()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>DoWork is a method in the TestClass class.
+    /// <para>Here's how you could make a second paragraph in a description.</para>
+    /// </summary>
+    public static void Do$$Work(int Int1)
+    {
+    }
+}
+            ";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+@"Summary: DoWork is a method in the TestClass class.
+
+Here's how you could make a second paragraph in a description.";
+            Assert.Equal(expected.Replace("\r", ""), response.DocComment.SummaryText.ToString());
         }
 
     }

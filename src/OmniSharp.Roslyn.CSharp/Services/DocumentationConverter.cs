@@ -140,7 +140,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 {
                     xml.Read();
                     string elementName = null;
-                    StringBuilder prevElementName = null;
+                    StringBuilder CurrentElementText = null;
                     do
                     {
                         if (xml.NodeType == XmlNodeType.Element)
@@ -153,79 +153,75 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     break;
                                 case "remarks":
                                     docComment.RemarksText.Append("Remarks: ");
-                                    docComment.RemarksText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = docComment.RemarksText;
+                                    CurrentElementText = docComment.RemarksText;
                                     break;
                                 case "example":
                                     docComment.ExampleText.Append("Example: ");
-                                    docComment.ExampleText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = docComment.ExampleText;
+                                    CurrentElementText = docComment.ExampleText;
                                     break;
                                 case "exception":
                                     docComment.ExceptionText.Append(GetCref(xml["cref"]).TrimEnd());
                                     docComment.ExceptionText.Append(": ");
-                                    docComment.ExceptionText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = docComment.ExceptionText;
+                                    CurrentElementText = docComment.ExceptionText;
                                     break;
                                 case "returns":
                                     docComment.ReturnsText.Append("Returns: ");
-                                    docComment.ReturnsText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = docComment.ReturnsText;
+                                    CurrentElementText = docComment.ReturnsText;
                                     break;
                                 case "summary":
                                     docComment.SummaryText.Append("Summary: ");
-                                    docComment.SummaryText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = docComment.SummaryText;
+                                    CurrentElementText = docComment.SummaryText;
                                     break;
                                 case "see":
-                                    prevElementName.Append(GetCref(xml["cref"]));
-                                    prevElementName.Append(xml["langword"]);
+                                    CurrentElementText.Append(GetCref(xml["cref"]));
+                                    CurrentElementText.Append(xml["langword"]);
                                     break;
                                 case "seealso":
-                                    prevElementName.Append(lineEnding);
-                                    prevElementName.Append("See also: ");
-                                    prevElementName.Append(GetCref(xml["cref"]));
+                                    CurrentElementText.Append(lineEnding);
+                                    CurrentElementText.Append("See also: ");
+                                    CurrentElementText.Append(GetCref(xml["cref"]));
                                     break;
                                 case "paramref":
-                                    prevElementName.Append(xml["name"]);
-                                    prevElementName.Append(" ");
+                                    CurrentElementText.Append(xml["name"]);
+                                    CurrentElementText.Append(" ");
                                     break;
                                 case "param":
                                     StringBuilder parameter = new StringBuilder();
                                     parameter.Append(TrimMultiLineString(xml["name"], lineEnding));
                                     parameter.Append(": ");
-                                    parameter.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = parameter;
+                                    CurrentElementText = parameter;
                                     docComment.Param.Add(parameter);
+                                    break;
+                                case "typeparamref":
+                                    CurrentElementText.Append(xml["name"]);
+                                    CurrentElementText.Append(" ");
                                     break;
                                 case "typeparam":
                                     StringBuilder TypeParameter = new StringBuilder();
                                     TypeParameter.Append(TrimMultiLineString(xml["name"], lineEnding));
                                     TypeParameter.Append(": ");
-                                    TypeParameter.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = TypeParameter;
+                                    CurrentElementText = TypeParameter;
                                     docComment.TypeParam.Add(TypeParameter);
                                     break;
                                 case "value":
                                     docComment.ValueText.Append("Value: ");
-                                    docComment.ValueText.Append(ReadInnerXMLText(xml, elementName, lineEnding));
-                                    prevElementName = docComment.ValueText;
+                                    CurrentElementText = docComment.ValueText;
                                     break;
                                 case "br":
                                 case "para":
-                                    //docComment.Append(lineEnding);
+                                    CurrentElementText.Append(lineEnding);
                                     break;
                             }
                         }
-                        else if (xml.NodeType == XmlNodeType.Text && prevElementName != null)
+                        else if (xml.NodeType == XmlNodeType.Text && CurrentElementText != null)
                         {
                             if (elementName == "code")
                             {
-                                prevElementName.Append(xml.Value);
+                                CurrentElementText.Append(xml.Value);
                             }
                             else
                             {
-                                prevElementName.Append(TrimMultiLineString(xml.Value, lineEnding));
+                                CurrentElementText.Append(TrimMultiLineString(xml.Value, lineEnding));
                             }
                         }
                     } while (xml.Read());
@@ -237,7 +233,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 return docComment;
             }
         }
-        private static string ReadInnerXMLText(XmlReader xml, string elementName,string lineEnding)
+       /* private static string ReadInnerXMLText(XmlReader xml, string elementName,string lineEnding)
         {
             if (xml.Read())
             {
@@ -254,7 +250,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 }
             }
             return "";
-        }
+        }*/
     }
 }
 

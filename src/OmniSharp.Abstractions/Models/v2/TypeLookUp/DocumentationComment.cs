@@ -14,9 +14,6 @@ namespace OmniSharp.Models.v2.TypeLookUp
         public StringBuilder paramref { get; set; }
         public List<StringBuilder> Param { get; set; }
         public List<StringBuilder> TypeParam { get; set; }
-        public StringBuilder value { get; set; }
-
-        
 
         public DocumentationComment()
         {
@@ -25,10 +22,10 @@ namespace OmniSharp.Models.v2.TypeLookUp
             ExceptionText = new StringBuilder();
             ReturnsText = new StringBuilder();
             SummaryText = new StringBuilder();
+            ValueText = new StringBuilder();
             paramref = new StringBuilder();
             Param = new List<StringBuilder>();
             TypeParam = new List<StringBuilder>();
-            value = new StringBuilder();
 
         }
     }
