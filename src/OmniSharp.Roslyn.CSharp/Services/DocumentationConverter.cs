@@ -177,7 +177,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     CurrentElementText.Append(xml["langword"]);
                                     break;
                                 case "seealso":
-                                    CurrentElementText.Append(lineEnding);
                                     CurrentElementText.Append("See also: ");
                                     CurrentElementText.Append(GetCref(xml["cref"]));
                                     break;
@@ -233,24 +232,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 return docComment;
             }
         }
-       /* private static string ReadInnerXMLText(XmlReader xml, string elementName,string lineEnding)
-        {
-            if (xml.Read())
-            {
-                if (xml.NodeType == XmlNodeType.Text)
-                {
-                    if (elementName == "code")
-                    {
-                        return xml.Value;
-                    }
-                    else
-                    {
-                        return TrimMultiLineString(xml.Value, lineEnding);
-                    }
-                }
-            }
-            return "";
-        }*/
     }
 }
 

@@ -14,24 +14,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class TypeLookUpV2Facts : AbstractSingleRequestHandlerTestFixture<TypeLookupService>
     {
-        private readonly TestFile s_testFile = new TestFile("dummy.cs", @"using System;
-namespace hoverXmlDoc
-{
-    class testissue
-    {
-    ///<remarks>Checks if object is tagged with the tag.</remarks>
-    /// <param name=""gameObject"">The game object.</param> 
-    /// <param name=""tagName"">Name of the tag </param>
-    /// <returns>Returns <c> true</c>if object is tagged with tag.</returns>
-
-        public static bool C$$ompare(int gameObject, string tagName)
-        {
-            return gameObject.TagifyCompareTag(tagName);
-        }
-    }
-}
-");
-
         public TypeLookUpV2Facts(ITestOutputHelper testOutput) : base(testOutput)
         {
         }
