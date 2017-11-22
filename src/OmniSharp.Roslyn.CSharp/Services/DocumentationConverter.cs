@@ -137,12 +137,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
             StringBuilder RemarksText = new StringBuilder();
             StringBuilder ExampleText = new StringBuilder();
-            StringBuilder ExceptionText = new StringBuilder();
             StringBuilder ReturnsText = new StringBuilder();
             StringBuilder SummaryText = new StringBuilder();
             StringBuilder ValueText = new StringBuilder();
             List<StringBuilder> Param = new List<StringBuilder>();
             List<StringBuilder> TypeParam = new List<StringBuilder>();
+            List<StringBuilder> Exception = new List<StringBuilder>();
 
             using (var xml = XmlReader.Create(reader))
             {
@@ -170,9 +170,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     CurrentElementText = ExampleText;
                                     break;
                                 case "exception":
-                                    ExceptionText.Append(GetCref(xml["cref"]).TrimEnd());
-                                    ExceptionText.Append(": ");
-                                    CurrentElementText = ExceptionText;
+                                    StringBuilder ExceptionInstance = new StringBuilder();
+                                    ExceptionInstance.Append(GetCref(xml["cref"]).TrimEnd());
+                                    ExceptionInstance.Append(": ");
+                                    CurrentElementText = ExceptionInstance;
+                                    Exception.Add(ExceptionInstance);
                                     break;
                                 case "returns":
                                     ReturnsText.Append("Returns: ");
@@ -195,22 +197,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     CurrentElementText.Append(" ");
                                     break;
                                 case "param":
-                                    StringBuilder parameter = new StringBuilder();
-                                    parameter.Append(TrimMultiLineString(xml["name"], lineEnding));
-                                    parameter.Append(": ");
-                                    CurrentElementText = parameter;
-                                    Param.Add(parameter);
+                                    StringBuilder ParamInstance = new StringBuilder();
+                                    ParamInstance.Append(TrimMultiLineString(xml["name"], lineEnding));
+                                    ParamInstance.Append(": ");
+                                    CurrentElementText = ParamInstance;
+                                    Param.Add(ParamInstance);
                                     break;
                                 case "typeparamref":
                                     CurrentElementText.Append(xml["name"]);
                                     CurrentElementText.Append(" ");
                                     break;
                                 case "typeparam":
-                                    StringBuilder TypeParameter = new StringBuilder();
-                                    TypeParameter.Append(TrimMultiLineString(xml["name"], lineEnding));
-                                    TypeParameter.Append(": ");
-                                    CurrentElementText = TypeParameter;
-                                    TypeParam.Add(TypeParameter);
+                                    StringBuilder TypeParamInstance = new StringBuilder();
+                                    TypeParamInstance.Append(TrimMultiLineString(xml["name"], lineEnding));
+                                    TypeParamInstance.Append(": ");
+                                    CurrentElementText = TypeParamInstance;
+                                    TypeParam.Add(TypeParamInstance);
                                     break;
                                 case "value":
                                     ValueText.Append("Value: ");
@@ -241,13 +243,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 }
                 docComment.RemarksText = RemarksText.ToString();
                 docComment.ExampleText = ExampleText.ToString();
-                docComment.ExceptionText = ExceptionText.ToString();
                 docComment.ReturnsText = ReturnsText.ToString();
                 docComment.SummaryText = SummaryText.ToString();
                 docComment.ValueText = ValueText.ToString();
                 docComment.Param = Param.Select(s => s.ToString()).ToArray();
                 docComment.TypeParam = TypeParam.Select(s => s.ToString()).ToArray();
-
+                docComment.Exception = Exception.Select(s => s.ToString()).ToArray();
                 return docComment;
             }
         }

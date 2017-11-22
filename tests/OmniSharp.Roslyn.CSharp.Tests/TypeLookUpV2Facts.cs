@@ -117,7 +117,8 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"System.Exception: Thrown when something goes wrong";
-            Assert.Equal(expected, response.DocComment.ExceptionText);
+            Assert.Single(response.DocComment.Exception);
+            Assert.Equal(expected, response.DocComment.Exception[0]);
         }
 
         [Fact]
