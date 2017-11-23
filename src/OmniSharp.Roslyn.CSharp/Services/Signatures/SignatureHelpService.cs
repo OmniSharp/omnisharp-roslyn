@@ -133,15 +133,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 return new IMethodSymbol[] { };
             }
 
-            var MethodOverloads = symbol.ContainingType.GetMembers(symbol.Name).OfType<IMethodSymbol>();
-            var BaseType = symbol.ContainingType.BaseType;
-            while(BaseType!=null && BaseType.ContainingNamespace.Name!= "System")
+            var methodOverloads = symbol.ContainingType.GetMembers(symbol.Name).OfType<IMethodSymbol>();
+            var baseTypeSymbol = symbol.ContainingType.BaseType;
+            while(baseTypeSymbol != null && baseTypeSymbol.ContainingNamespace.Name != "System")
             {
-                MethodOverloads = MethodOverloads.Concat(BaseType.GetMembers(symbol.Name).OfType<IMethodSymbol>());
-                BaseType = BaseType.BaseType;
+                methodOverloads = methodOverloads.Concat(baseTypeSymbol.GetMembers(symbol.Name).OfType<IMethodSymbol>());
+                baseTypeSymbol = baseTypeSymbol.BaseType;
             }
 
-            return MethodOverloads;
+            return methodOverloads;
         }
 
         private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
