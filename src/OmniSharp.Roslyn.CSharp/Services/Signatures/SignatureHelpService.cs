@@ -135,7 +135,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             var MethodOverloads = symbol.ContainingType.GetMembers(symbol.Name).OfType<IMethodSymbol>();
             var BaseType = symbol.ContainingType.BaseType;
-            while(BaseType!=null)
+            while(BaseType!=null && BaseType.ContainingNamespace.Name!= "System")
             {
                 MethodOverloads = MethodOverloads.Concat(BaseType.GetMembers(symbol.Name).OfType<IMethodSymbol>());
                 BaseType = BaseType.BaseType;

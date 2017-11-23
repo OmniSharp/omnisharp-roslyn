@@ -474,13 +474,40 @@ public class MyTestAttribute : Attribute
     {
     }
 }";
-
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Equal(1, actual.ActiveParameter);
             Assert.Contains("ctor2", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
+        [Fact]
+        public async Task SignatureHelpForOverloadedMethodsInheritance()
+        {
+            const string source =
+@"public class MyBase
+{
+    public void MyMethod(int a) { }
+    public void MyMethod(int a, int b) { }
+}
+
+public class Class1 : MyBase
+{
+    public void MyMethod(int a, int b, int c) { }
+    public void MyMethod(int a, int b, int c, int d) { }
+}
+
+public class Class2
+{
+    public void foo()
+    {
+        Class1 c1 = new Class1();
+        c1.MyMethod($$);
+    }
+
+ }";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(4, actual.Signatures.Count());
+        }
         [Fact]
         public async Task SkipReceiverOfExtensionMethods()
         {
