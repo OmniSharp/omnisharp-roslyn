@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
-using Microsoft.Extensions.Configuration;
 using OmniSharp.Helpers;
 
 namespace OmniSharp.Script
@@ -43,12 +42,12 @@ namespace OmniSharp.Script
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
-        private readonly MetadataReferenceResolver _resolver = ScriptMetadataResolver.Default;
+        private readonly ScriptOptions _scriptOptions;
 
         public ScriptHelper(ScriptOptions scriptOptions)
         {
-            _scriptOptions = scriptOptions;
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
+            _scriptOptions = scriptOptions;
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
         }
 
@@ -84,9 +83,9 @@ namespace OmniSharp.Script
 
         private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
         {
-            return _scriptOptions.IsNugetEnabled()
-                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(_resolver))
-                : new CachingScriptMetadataResolver(_resolver);
+            return _scriptOptions != null && _scriptOptions.EnableScriptNuGetReferences
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)) 
+                : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default);
         }
  
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, IEnumerable<string> namespaces = null)

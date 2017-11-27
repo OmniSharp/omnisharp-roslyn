@@ -81,10 +81,10 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            _scriptOptions = new ScriptOptions();
-            ConfigurationBinder.Bind(configuration, _scriptOptions);
-            _scriptHelper = new ScriptHelper(_scriptOptions);
+            var scriptOptions = new ScriptOptions();
+            ConfigurationBinder.Bind(configuration, scriptOptions);
 
+            _scriptHelper = new ScriptHelper(scriptOptions);
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
@@ -104,8 +104,9 @@ namespace OmniSharp.Script
             // explicitly include System.ValueTuple
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
+            
 
-            _compilationDependencies = TryGetCompilationDependencies();
+            var compilationDependencies = TryGetCompilationDependencies(scriptOptions.EnableScriptNuGetReferences);
 
             // if we have no compilation dependencies
             // we will assume desktop framework
