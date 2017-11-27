@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -59,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             foreach (var invocation in invocations)
             {
                 var types = invocation.ArgumentTypes;
-                foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
+                foreach (var methodOverload in invocation.SemanticModel.GetMemberGroup(invocation.Receiver).OfType<IMethodSymbol>())
                 {
                     var signature = BuildSignature(methodOverload);
                     signaturesSet.Add(signature);
@@ -115,35 +116,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             return null;
         }
 
-        private IEnumerable<IMethodSymbol> GetMethodOverloads(SemanticModel semanticModel, SyntaxNode node)
-        {
-            ISymbol symbol = null;
-            var symbolInfo = semanticModel.GetSymbolInfo(node);
-            if (symbolInfo.Symbol != null)
-            {
-                symbol = symbolInfo.Symbol;
-            }
-            else if (!symbolInfo.CandidateSymbols.IsEmpty)
-            {
-                symbol = symbolInfo.CandidateSymbols.First();
-            }
-
-            if (symbol == null || symbol.ContainingType == null)
-            {
-                return new IMethodSymbol[] { };
-            }
-
-            var methodOverloads = symbol.ContainingType.GetMembers(symbol.Name).OfType<IMethodSymbol>();
-            var baseTypeSymbol = symbol.ContainingType.BaseType;
-            while(baseTypeSymbol != null && baseTypeSymbol.ContainingNamespace.Name != "System")
-            {
-                methodOverloads = methodOverloads.Concat(baseTypeSymbol.GetMembers(symbol.Name).OfType<IMethodSymbol>());
-                baseTypeSymbol = baseTypeSymbol.BaseType;
-            }
-
-            return methodOverloads;
-        }
-
         private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
         {
             var parameters = GetParameters(symbol);
@@ -170,7 +142,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 }
             }
 
-            return score;
+            return score; 
         }
 
         private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)

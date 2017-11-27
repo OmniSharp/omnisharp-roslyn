@@ -534,7 +534,7 @@ public class Class2
 
  }";
             var actual = await GetSignatureHelp(source);
-            Assert.Equal(2, actual.Signatures.Count());
+            Assert.Single(actual.Signatures);
         }
 
         [Fact]
