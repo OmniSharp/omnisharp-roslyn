@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp.Helpers;
 using System.IO;
 using System.Linq;
+using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Script
 {
@@ -110,8 +111,8 @@ namespace OmniSharp.Script
         private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
         {
             return _scriptOptions.EnableScriptNuGetReferences
-                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)) 
-                : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default);
+                ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default.WithBaseDirectory(_env.TargetDirectory))) 
+                : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default.WithBaseDirectory(_env.TargetDirectory));
         }
  
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, IEnumerable<string> namespaces = null)
@@ -123,8 +124,12 @@ namespace OmniSharp.Script
                 name: csxFileName,
                 assemblyName: $"{csxFileName}.dll",
                 language: LanguageNames.CSharp,
-                compilationOptions: namespaces == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(namespaces),
-                metadataReferences: references,
+                compilationOptions: namespaces == null
+                    ? _compilationOptions.Value
+                    : _compilationOptions.Value.WithUsings(namespaces),
+                metadataReferences: _commandLineArgs.Value.MetadataReferences.Any()
+                    ? _commandLineArgs.Value.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver).Union(references, MetadataReferenceEqualityComparer.Instance)
+                    : references,
                 parseOptions: ParseOptions,
                 isSubmission: true,
                 hostObjectType: typeof(CommandLineScriptGlobals));
