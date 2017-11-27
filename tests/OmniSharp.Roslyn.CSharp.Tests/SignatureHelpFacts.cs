@@ -481,7 +481,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpForOverloadedMethodsInheritance()
+        public async Task SignatureHelpForInheritedMethods()
         {
             const string source =
 @"public class MyBase
@@ -510,7 +510,7 @@ public class Class2
         }
 
         [Fact]
-        public async Task SignatureHelpForOverloadedInaccesibleMethods()
+        public async Task SignatureHelpForInheritedInaccesibleMethods()
         {
             const string source =
 @"public class MyBase
@@ -535,6 +535,64 @@ public class Class2
  }";
             var actual = await GetSignatureHelp(source);
             Assert.Single(actual.Signatures);
+        }
+
+        [Fact]
+        public async Task SignatureHelpForOverloadedExtensionMethods1()
+        {
+            const string source =
+@"public static class ExtensionMethods
+{
+    public static void MyMethod(this string value, int number)
+    {
+    }
+}
+
+class Program
+{
+    public static void MyMethod(string a, int b)
+    {
+    }
+    public static void Main()
+    {
+        string value = ""Hello"";
+        value.MyMethod($$);
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("void string.MyMethod(int number)",signature.Label);
+        }
+
+        [Fact]
+        public async Task SignatureHelpForOverloadedExtensionMethods2()
+        {
+            const string source =
+@"public static class ExtensionMethods
+{
+    public static void MyMethod(this string value, int number)
+    {
+    }
+}
+
+class Program
+{
+    public static void MyMethod(string a, int b)
+    {
+    }
+    public static void Main()
+    {
+        string value = ""Hello"";
+        MyMethod($$);
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("void Program.MyMethod(string a, int b)", signature.Label);
         }
 
         [Fact]
