@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp.Helpers;
+using System.IO;
+using System.Linq;
 
 namespace OmniSharp.Script
 {
@@ -42,23 +44,47 @@ namespace OmniSharp.Script
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
+        private readonly Lazy<CSharpCommandLineArguments> _commandLineArgs;
         private readonly ScriptOptions _scriptOptions;
+        private readonly IOmniSharpEnvironment _env;
 
-        public ScriptHelper(ScriptOptions scriptOptions)
+        public ScriptHelper(ScriptOptions scriptOptions, IOmniSharpEnvironment env)
         {
+            _scriptOptions = scriptOptions ?? throw new ArgumentNullException(nameof(scriptOptions));
+            _env = env ?? throw new ArgumentNullException(nameof(env));
+
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
-            _scriptOptions = scriptOptions;
+            _commandLineArgs = new Lazy<CSharpCommandLineArguments>(CreateCommandLineArguments);
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
+        }
+
+        private CSharpCommandLineArguments CreateCommandLineArguments()
+        {
+            var scriptRunnerParserProperty = typeof(CSharpCommandLineParser).GetProperty("ScriptRunner", BindingFlags.Static | BindingFlags.NonPublic);
+            var scriptRunnerParser = scriptRunnerParserProperty?.GetValue(null) as CSharpCommandLineParser;
+
+            if (scriptRunnerParser != null && !string.IsNullOrWhiteSpace(_scriptOptions.RspFilePath))
+            {
+                var rspFilePath = _scriptOptions.GetNormalizedRspFilePath(_env);
+                if (rspFilePath != null)
+                {
+                    return scriptRunnerParser.Parse(new string[] { $"@{rspFilePath}" }, _env.TargetDirectory, _env.TargetDirectory);
+                }
+            }
+
+            return null;
         }
 
         private CSharpCompilationOptions CreateCompilationOptions()
         {
+            // if use specified usings via .rsp file, use those - otherwise fallback to default hardcoded set based on CSI
             var compilationOptions = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
-                usings: DefaultNamespaces,
+                usings: _commandLineArgs.Value.CompilationOptions != null && _commandLineArgs.Value.CompilationOptions.Usings.Any()
+                        ? _commandLineArgs.Value.CompilationOptions.Usings
+                        : DefaultNamespaces,
                 allowUnsafe: true,
-                metadataReferenceResolver:
-                CreateMetadataReferenceResolver(),
+                metadataReferenceResolver: CreateMetadataReferenceResolver(),
                 sourceReferenceResolver: ScriptSourceResolver.Default,
                 assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
                     WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
@@ -83,7 +109,7 @@ namespace OmniSharp.Script
 
         private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
         {
-            return _scriptOptions != null && _scriptOptions.EnableScriptNuGetReferences
+            return _scriptOptions.EnableScriptNuGetReferences
                 ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(ScriptMetadataResolver.Default)) 
                 : new CachingScriptMetadataResolver(ScriptMetadataResolver.Default);
         }

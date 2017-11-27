@@ -84,7 +84,7 @@ namespace OmniSharp.Script
             var scriptOptions = new ScriptOptions();
             ConfigurationBinder.Bind(configuration, scriptOptions);
 
-            _scriptHelper = new ScriptHelper(scriptOptions);
+            var scriptHelper = new ScriptHelper(scriptOptions, _env);
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
