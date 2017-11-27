@@ -508,6 +508,35 @@ public class Class2
             var actual = await GetSignatureHelp(source);
             Assert.Equal(4, actual.Signatures.Count());
         }
+
+        [Fact]
+        public async Task SignatureHelpForOverloadedInaccesibleMethods()
+        {
+            const string source =
+@"public class MyBase
+{
+    private void MyMethod(int a) { }
+}
+
+public class Class1 : MyBase
+{
+    public void MyMethod(int a, int b, int c) { }
+    protected void MyMethod(int a, int b, int c, int d) { }
+}
+
+public class Class2
+{
+    public void foo()
+    {
+        Class1 c1 = new Class1();
+        c1.MyMethod($$);
+    }
+
+ }";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2, actual.Signatures.Count());
+        }
+
         [Fact]
         public async Task SkipReceiverOfExtensionMethods()
         {
