@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
