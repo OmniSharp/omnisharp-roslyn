@@ -153,7 +153,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorSingleParam()
+        public async Task AttributeCtorSingleParam()
         {
             const string source =
 @"using System;
@@ -180,7 +180,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorTestParameterLabels()
+        public async Task AttributeCtorTestParameterLabels()
         {
             const string source =
 @"using System;
@@ -210,7 +210,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorActiveParamBasedOnComma()
+        public async Task AttributeCtorActiveParamBasedOnComma()
         {
             const string source =
 @"using System;
@@ -233,7 +233,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorNoParam()
+        public async Task AttributeCtorNoParam()
         {
             const string source =
 @"using System;
@@ -429,7 +429,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpForCtor()
+        public async Task TestForConstructorHelp()
         {
             const string source =
 @"class Program
@@ -454,7 +454,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpForCtorWithOverloads()
+        public async Task TestForCtorWithOverloads()
         {
             const string source =
 @"class Program
@@ -481,7 +481,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpForInheritedMethods()
+        public async Task TestForInheritedMethods()
         {
             const string source =
 @"public class MyBase
@@ -510,7 +510,7 @@ public class Class2
         }
 
         [Fact]
-        public async Task SignatureHelpForInheritedInaccesibleMethods()
+        public async Task InheritedInaccesibleMethods()
         {
             const string source =
 @"public class MyBase
@@ -538,7 +538,140 @@ public class Class2
         }
 
         [Fact]
-        public async Task SignatureHelpForOverloadedExtensionMethods1()
+        public async Task InheritedProtectedMethod()
+        {
+            const string source =
+@"class A
+{
+    protected void M1() { }
+}
+
+class B : A
+{
+    void M1(int a)
+    {
+       M1($$)
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2,actual.Signatures.Count());
+        }
+
+        [Fact]
+        public async Task InheritedProtectedMethodWithThis()
+        {
+            const string source =
+@"class A
+{
+    protected void M1() { }
+}
+
+class B : A
+{
+    void M1(int a)
+    {
+        this.M1($$)
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2, actual.Signatures.Count());
+        }
+
+        [Fact]
+        public async Task InheritedProtectedMethodWithBase()
+        {
+            const string source =
+@"class A
+{
+    protected void M1() { }
+}
+
+class B : A
+{
+    void M1(int a)
+    {
+        base.M1($$);
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+            Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
+        }
+
+        [Fact]
+        public async Task StaticContextMethod1()
+        {
+            const string source =
+@"class A
+{
+    protected static void M1(int a) { }
+    public void M1(double b) { }
+}
+
+class B : A
+{
+    static void M1()
+    {
+        A.M1($$);
+    }
+    public void M1(string c) { }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("int a", signature.Parameters.ElementAt(0).Label);
+        }
+
+        [Fact]
+        public async Task StaticContextMethod2()
+        {
+            const string source =
+@"class A
+{
+    protected static void M1(int a) { }
+    public void M1(int a,int b) { }
+}
+
+class B : A
+{
+    static void M1(int a,int b,int c)
+    {
+        B.M1($$)
+    }
+    public void M1(int a,int b,int c,int d) { }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2, actual.Signatures.Count());
+            var signatures = actual.Signatures.OrderBy(sig => sig.Parameters.Count());
+            Assert.Single(signatures.ElementAt(0).Parameters);
+            Assert.Equal(3,signatures.ElementAt(1).Parameters.Count());
+        }
+
+        [Fact]
+        public async Task InstanceContextMethod()
+        {
+            const string source =
+@"class A
+{
+    protected static void M1(int a) { }
+    public void M1(int a, int b) { }
+}
+
+class B : A
+{
+    static void M1(int a,int b,int c)
+    {
+        M1($$)
+    }
+    public void M1(int a,int b,int c,int d) { }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(4, actual.Signatures.Count());
+        }
+        [Fact]
+        public async Task OverloadedExtensionMethods1()
         {
             const string source =
 @"public static class ExtensionMethods
@@ -569,7 +702,7 @@ class Program
         }
 
         [Fact]
-        public async Task SignatureHelpForOverloadedExtensionMethods2()
+        public async Task OverloadedExtensionMethods2()
         {
             const string source =
 @"public static class ExtensionMethods
