@@ -3,6 +3,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
@@ -59,7 +60,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             foreach (var invocation in invocations)
             {
                 var types = invocation.ArgumentTypes;
-                foreach (var methodOverload in invocation.SemanticModel.GetMemberGroup(invocation.Receiver).OfType<IMethodSymbol>())
+                ISymbol throughSymbol = null;
+                ISymbol throughType = null;
+                var methodGroup = invocation.SemanticModel.GetMemberGroup(invocation.Receiver).OfType<IMethodSymbol>();
+                if (invocation.Receiver is MemberAccessExpressionSyntax)
+                {
+                    var throughExpression = ((MemberAccessExpressionSyntax)invocation.Receiver).Expression;
+                    throughSymbol = invocation.SemanticModel.GetSpeculativeSymbolInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsExpression).Symbol;
+                    throughType = invocation.SemanticModel.GetSpeculativeTypeInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
+                    var includeInstance = throughSymbol != null && !(throughSymbol is ITypeSymbol);
+                    var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType != null;
+                    methodGroup = methodGroup.Where(m => (m.IsStatic && includeStatic) || (!m.IsStatic && includeInstance));
+                }
+
+                else if (invocation.Receiver is SimpleNameSyntax && invocation.IsStatic)
+                {
+                    methodGroup = methodGroup.Where(m => m.IsStatic);
+                }
+
+                foreach (var methodOverload in methodGroup)
                 {
                     var signature = BuildSignature(methodOverload);
                     signaturesSet.Add(signature);
@@ -94,19 +113,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 if (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList);
+                    return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList, invocation.IsInStaticContext());
                 }
 
                 if (node is ObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList);
+                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList,objectCreation.IsInStaticContext());
                 }
 
                 if (node is AttributeSyntax attributeSyntax && attributeSyntax.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, attributeSyntax, attributeSyntax.ArgumentList);
+                    return new InvocationContext(semanticModel, position, attributeSyntax, attributeSyntax.ArgumentList, attributeSyntax.IsInStaticContext());
                 }
 
                 node = node.Parent;
@@ -141,7 +160,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 }
             }
 
-            return score; 
+            return score;
         }
 
         private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)
@@ -163,5 +182,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             return signature;
         }
+
     }
 }

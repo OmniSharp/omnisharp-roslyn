@@ -661,11 +661,11 @@ class B : A
 
 class B : A
 {
-    static void M1(int a,int b,int c)
+    void M1(int a,int b,int c)
     {
         M1($$)
     }
-    public void M1(int a,int b,int c,int d) { }
+    static void M1(int a,int b,int c,int d) { }
 }";
             var actual = await GetSignatureHelp(source);
             Assert.Equal(4, actual.Signatures.Count());
