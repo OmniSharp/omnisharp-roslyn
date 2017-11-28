@@ -13,6 +13,8 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 using OmniSharp.Roslyn.Utilities;
 using Dotnet.Script.DependencyModel.Compilation;
+using Dotnet.Script.DependencyModel.NuGet;
+using Microsoft.CodeAnalysis.Scripting;
 using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
 
 namespace OmniSharp.Script
@@ -105,12 +107,12 @@ namespace OmniSharp.Script
             // same applies for having a context that is not a .NET Core app
             if (!compilationDependencies.Any())
             {
-                _logger.LogInformation("Unable to find dependency context for CSX files. Will default to non-context usage (Destkop CLR scripts).");
+                _logger.LogInformation("Unable to find dependency context for CSX files. Will default to non-context usage (Desktop CLR scripts).");
                 AddDefaultClrMetadataReferences(commonReferences);
             }
             else
             {
-                foreach (var compilationAssembly in compilationDependencies)
+                foreach (var compilationAssembly in compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
                 {
                     _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly);
                     AddMetadataReference(commonReferences, compilationAssembly);
@@ -133,6 +135,15 @@ namespace OmniSharp.Script
                     var csxFileName = Path.GetFileName(csxPath);
                     var project = scriptHelper.CreateProject(csxFileName, commonReferences);
 
+                    if (enableScriptNuGetReferences)
+                    {
+                        var scriptMap = compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
+                        var options = project.CompilationOptions.WithSourceReferenceResolver(
+                            new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
+                                scriptMap));
+                        project = project.WithCompilationOptions(options);
+                    }
+
                     // add CSX project to workspace
                     _workspace.AddProject(project);
                     _workspace.AddDocument(project.Id, csxPath, SourceCodeKind.Script);
@@ -146,7 +157,7 @@ namespace OmniSharp.Script
             }
         }
 
-        private string[] TryGetCompilationDependencies(bool enableScriptNuGetReferences)
+        private CompilationDependency[] TryGetCompilationDependencies(bool enableScriptNuGetReferences)
         {
             try
             {
@@ -155,8 +166,8 @@ namespace OmniSharp.Script
             catch (Exception e)
             {
                 _logger.LogError("Failed to resolve compilation dependencies", e);
-                return Array.Empty<string>();
-            }            
+                return Array.Empty<CompilationDependency>();
+            }
         }
 
         private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences)
