@@ -5,16 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Dotnet.Script.DependencyModel.Compilation;
+using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 using OmniSharp.Roslyn.Utilities;
-using Dotnet.Script.DependencyModel.Compilation;
-using Dotnet.Script.DependencyModel.NuGet;
-using Microsoft.CodeAnalysis.Scripting;
 using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
 
 namespace OmniSharp.Script
