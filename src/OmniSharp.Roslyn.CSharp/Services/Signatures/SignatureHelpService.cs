@@ -117,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
         private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
         {
-            var parameters = GetParameters(symbol);
+            var parameters = symbol.Parameters;
             if (parameters.Count() < types.Count())
             {
                 return int.MinValue;
@@ -151,7 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
             signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
-            signature.Parameters = GetParameters(symbol).Select(parameter =>
+            signature.Parameters = symbol.Parameters.Select(parameter =>
             {
                 return new SignatureHelpParameter()
                 {
@@ -162,18 +162,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             });
 
             return signature;
-        }
-
-        private static IEnumerable<IParameterSymbol> GetParameters(IMethodSymbol methodSymbol)
-        {
-            if (!methodSymbol.IsExtensionMethod)
-            {
-                return methodSymbol.Parameters;
-            }
-            else
-            {
-                return methodSymbol.Parameters.RemoveAt(0);
-            }
         }
     }
 }

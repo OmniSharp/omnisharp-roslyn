@@ -564,6 +564,8 @@ class Program
 
             var signature = actual.Signatures.ElementAt(0);
             Assert.Equal("void string.MyMethod(int number)",signature.Label);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("number", signature.Parameters.ElementAt(0).Name);
         }
 
         [Fact]
@@ -599,27 +601,34 @@ class Program
         public async Task SkipReceiverOfExtensionMethods()
         {
             const string source =
-@"class Program
+@"public class Program1
 {
-    public static void Main()
-    {
-        new Program().B($$);
-    }
-    public Program()
-    {
-    }
-    public bool B(this Program p, int n)
+    public Program1() { }
+}
+
+public static class ExtensionClass{
+    public static bool B(this Program1 p, int n)
     {
         return p.Foo() > n;
     }
-}";
+}
 
+public class ProgramClass
+{
+    public static void Main()
+    {
+        new Program1().B($$);
+    }
+}";
             var actual = await GetSignatureHelp(source);
             Assert.Single(actual.Signatures);
-            Assert.Single(actual.Signatures.ElementAt(actual.ActiveSignature).Parameters);
-            Assert.Equal("n", actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.ElementAt(0).Name);
-        }
 
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("n", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int n", signature.Parameters.ElementAt(0).Label);
+        }
+      
         private async Task<SignatureHelpResponse> GetSignatureHelp(string source)
         {
             var testFile = new TestFile("dummy.cs", source);
