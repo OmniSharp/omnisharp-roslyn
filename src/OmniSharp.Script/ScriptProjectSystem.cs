@@ -112,7 +112,7 @@ namespace OmniSharp.Script
             }
             else
             {
-                HashSet<string> loadedFiles = new HashSet<string>();
+                HashSet<string> loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var compilationAssembly in compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
                 {
