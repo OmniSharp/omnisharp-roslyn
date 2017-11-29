@@ -19,7 +19,8 @@ namespace OmniSharp.Helpers
                 EndLine = span.EndLinePosition.Line,
                 EndColumn = span.EndLinePosition.Character,
                 Text = diagnostic.GetMessage(),
-                LogLevel = diagnostic.Severity.ToString()
+                LogLevel = diagnostic.Severity.ToString(),
+                Id = diagnostic.Id
             };
         }
 
