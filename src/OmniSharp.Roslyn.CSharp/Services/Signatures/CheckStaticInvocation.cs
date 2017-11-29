@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -7,6 +9,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
+    //TO DO: Reomove this class once a public API for Signature Help from Roslyn is available
     internal static class CheckForStaticExtension
     {
         public static bool IsInStaticContext(this SyntaxNode node)
