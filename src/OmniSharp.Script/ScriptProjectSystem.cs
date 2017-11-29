@@ -112,10 +112,15 @@ namespace OmniSharp.Script
             }
             else
             {
+                HashSet<string> loadedFiles = new HashSet<string>();
+
                 foreach (var compilationAssembly in compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
                 {
-                    _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly);
-                    AddMetadataReference(commonReferences, compilationAssembly);
+                    if (loadedFiles.Add(Path.GetFileName(compilationAssembly)))
+                    {
+                        _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly);
+                        AddMetadataReference(commonReferences, compilationAssembly);
+                    }
                 }
             }
 
