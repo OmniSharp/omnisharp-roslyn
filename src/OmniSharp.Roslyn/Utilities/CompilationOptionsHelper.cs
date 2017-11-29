@@ -24,7 +24,7 @@ namespace OmniSharp.Helpers
         {
             if (suppressedDiagnosticIds == null || !suppressedDiagnosticIds.Any()) return GetDefaultSuppressedDiagnosticOptions();
 
-            var suppressedDiagnostics = suppressedDiagnosticIds.ToDictionary(d => d, d => ReportDiagnostic.Suppress);
+            var suppressedDiagnostics = suppressedDiagnosticIds.Distinct().ToDictionary(d => d, d => ReportDiagnostic.Suppress);
             foreach (var diagnostic in defaultSuppressedDiagnostics)
             {
                 if (!suppressedDiagnostics.ContainsKey(diagnostic.Key))
