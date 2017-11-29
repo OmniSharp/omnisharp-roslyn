@@ -535,6 +535,9 @@ public class Class2
  }";
             var actual = await GetSignatureHelp(source);
             Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(3, signature.Parameters.Count());
         }
 
         [Fact]
@@ -670,6 +673,7 @@ class B : A
             var actual = await GetSignatureHelp(source);
             Assert.Equal(4, actual.Signatures.Count());
         }
+
         [Fact]
         public async Task OverloadedExtensionMethods1()
         {

@@ -1,12 +1,13 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
-    static internal class CheckForStatic
+    internal static class CheckForStaticExtension
     {
         public static bool IsInStaticContext(this SyntaxNode node)
         {
@@ -52,6 +53,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             // any other location is considered static
             return true;
         }
+
         public static SyntaxTokenList GetModifiers(SyntaxNode member)
         {
             if (member != null)
@@ -96,6 +98,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             return default;
         }
+
         public static bool IsFoundUnder<TParent>(this SyntaxNode node, Func<TParent, SyntaxNode> childGetter)
            where TParent : SyntaxNode
         {
@@ -110,6 +113,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             // See if node passes through child on the way up to ancestor.
             return node.GetAncestorsOrThis<SyntaxNode>().Contains(child);
         }
+
         public static TNode GetAncestor<TNode>(this SyntaxNode node)
            where TNode : SyntaxNode
         {
@@ -126,6 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             return null;
         }
+
         private static SyntaxNode GetParent(this SyntaxNode node)
         {
             return node is IStructuredTriviaSyntax trivia ? trivia.ParentTrivia.Token.Parent : node.Parent;

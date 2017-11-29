@@ -13,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
         public SyntaxNode Receiver { get; }
         public IEnumerable<TypeInfo> ArgumentTypes { get; }
         public IEnumerable<SyntaxToken> Separators { get; }
-        public bool IsStatic { get; } 
+        public bool IsInStaticContext { get; } 
 
         public InvocationContext(SemanticModel semModel, int position, SyntaxNode receiver, ArgumentListSyntax argList, bool isStatic)
         {
@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             Receiver = receiver;
             ArgumentTypes = argList.Arguments.Select(argument => semModel.GetTypeInfo(argument.Expression));
             Separators = argList.Arguments.GetSeparators();
-            IsStatic = isStatic;
+            IsInStaticContext = isStatic;
         }
 
         public InvocationContext(SemanticModel semModel, int position, SyntaxNode receiver, AttributeArgumentListSyntax argList, bool isStatic)
@@ -32,7 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             Receiver = receiver;
             ArgumentTypes = argList.Arguments.Select(argument => semModel.GetTypeInfo(argument.Expression));
             Separators = argList.Arguments.GetSeparators();
-            IsStatic = isStatic;
+            IsInStaticContext = isStatic;
         }
     }  
 }

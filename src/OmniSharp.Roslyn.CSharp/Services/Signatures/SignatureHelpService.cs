@@ -72,8 +72,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                     var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType != null;
                     methodGroup = methodGroup.Where(m => (m.IsStatic && includeStatic) || (!m.IsStatic && includeInstance));
                 }
-
-                else if (invocation.Receiver is SimpleNameSyntax && invocation.IsStatic)
+                else if (invocation.Receiver is SimpleNameSyntax && invocation.IsInStaticContext)
                 {
                     methodGroup = methodGroup.Where(m => m.IsStatic);
                 }
@@ -119,7 +118,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 if (node is ObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList,objectCreation.IsInStaticContext());
+                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList, objectCreation.IsInStaticContext());
                 }
 
                 if (node is AttributeSyntax attributeSyntax && attributeSyntax.ArgumentList.Span.Contains(position))
