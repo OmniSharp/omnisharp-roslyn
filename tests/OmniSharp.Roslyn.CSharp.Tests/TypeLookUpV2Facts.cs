@@ -35,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationRemarksText()
+        public async Task XmlDocumentationRemarksText()
         {
              string content= @"
 class testissue
@@ -53,7 +53,7 @@ class testissue
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationSummaryText()
+        public async Task XmlDocumentationSummaryText()
         {
             string content = @"
 class testissue
@@ -70,7 +70,7 @@ class testissue
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationReturnsText()
+        public async Task XmlDocumentationReturnsText()
         {
             string content = @"
 class testissue
@@ -87,7 +87,7 @@ class testissue
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationExampleText()
+        public async Task XmlDocumentationExampleText()
         {
             string content = @"
 class testissue
@@ -104,25 +104,30 @@ class testissue
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationExceptionText()
+        public async Task XmlDocumentationExceptionText()
         {
             string content = @"
 class testissue
 {
-    ///<exception cref=""System.Exception"">Thrown when something goes wrong</exception>
+    ///<exception cref=""A"">A description</exception>
+    ///<exception cref=""B"">B description</exception>
     public static bool C$$ompare(int gameObject, string tagName)
     {
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            var expected =
-            @"System.Exception: Thrown when something goes wrong";
-            Assert.Single(response.DocComment.Exception);
-            Assert.Equal(expected, response.DocComment.Exception[0]);
+            Assert.Equal(2,response.DocComment.Exception.Count());
+
+            var expectedException0 =
+            @"A: A description";
+            Assert.Equal(expectedException0, response.DocComment.Exception[0]);
+            var expectedException1 =
+            @"B: B description";
+            Assert.Equal(expectedException1, response.DocComment.Exception[1]);
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationParameter()
+        public async Task XmlDocumentationParameter()
         {
             string content = @"
 class testissue
@@ -134,39 +139,45 @@ class testissue
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            var expected0 =
-            @"gameObject: The game object.";
-            var expected1 =
-            @"tagName: Name of the tag.";
             Assert.Equal(2, response.DocComment.ParamElements.Length);
-            Assert.Equal(expected0, response.DocComment.ParamElements[0]);
-            Assert.Equal(expected1, response.DocComment.ParamElements[1]);
+
+            var expectedParam0 =
+            @"gameObject: The game object.";
+            Assert.Equal(expectedParam0, response.DocComment.ParamElements[0]);
+            var expectedParam1 =
+            @"tagName: Name of the tag.";
+            Assert.Equal(expectedParam1, response.DocComment.ParamElements[1]);
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationTypeParameter()
+        public async Task XmlDocumentationTypeParameter()
         {
             string content = @"
 public class TestClass
 {
     /// <summary>
-    /// Creates a new array of arbitrary type <typeparamref name=""T""/>
+    /// Creates a new array of arbitrary type <typeparamref name=""T""/> and adds the elements of incoming list to it if possible
     /// </summary>
     /// <typeparam name=""T"">The element type of the array</typeparam>
-    public static T[] m$$kArray<T>(int n)
+    /// <typeparam name=""X"">The element type of the list</typeparam>
+    public static T[] m$$kArray<T>(int n, List<X> list)
     {
         return new T[n];
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            var expected =
-            @"T: The element type of the array";
-            Assert.Single(response.DocComment.TypeParamElements);
-            Assert.Equal(expected, response.DocComment.TypeParamElements[0]);
+            Assert.Equal(2,response.DocComment.TypeParamElements.Count());
+
+            var expected0 =
+           @"T: The element type of the array";
+            Assert.Equal(expected0, response.DocComment.TypeParamElements[0]);
+            var expected1 =
+           @"X: The element type of the list";
+            Assert.Equal(expected1, response.DocComment.TypeParamElements[1]);
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationValueText()
+        public async Task XmlDocumentationValueText()
         {
             string content =
 @"public class Employee
@@ -190,7 +201,7 @@ public class TestClass
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationNestedTagSee()
+        public async Task XmlDocumentationNestedTagSee()
         {
             string content = @"
 public class TestClass
@@ -207,7 +218,7 @@ public class TestClass
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationNestedTagParamRef()
+        public async Task XmlDocumentationNestedTagParamRef()
         {
             string content = @"
 public class TestClass
@@ -226,7 +237,7 @@ public class TestClass
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationNestedTagCode()
+        public async Task XmlDocumentationNestedTagCode()
         {
             string content = @"
 public class TestClass
@@ -263,7 +274,7 @@ public class TestClass
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationNestedTagPara()
+        public async Task XmlDocumentationNestedTagPara()
         {
             string content = @"
 public class TestClass
@@ -285,7 +296,7 @@ Here's how you could make a second paragraph in a description.";
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationNestedTagSeeAlso()
+        public async Task XmlDocumentationNestedTagSeeAlso()
         {
             string content = @"
 public class TestClass
@@ -308,5 +319,81 @@ See also: TestClass.Main ";
             Assert.Equal(expected.Replace("\r",""), response.DocComment.SummaryText);
         }
 
+        [Fact]
+        public async Task XmlDocumentationSummaryAndParam()
+        {
+            string content = @"
+class testissue
+{
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Summary: Checks if object is tagged with the tag.";
+            Assert.Equal(expected, response.DocComment.SummaryText);
+
+            Assert.Equal(2, response.DocComment.ParamElements.Length);
+            var expectedParam0 =
+            @"gameObject: The game object.";
+            Assert.Equal(expectedParam0, response.DocComment.ParamElements[0]);
+            var expectedParam1 =
+            @"tagName: Name of the tag.";
+            Assert.Equal(expectedParam1, response.DocComment.ParamElements[1]);
+        }
+
+        [Fact]
+        public async Task XmlDocumentationManyTags()
+        {
+            string content = @"
+class testissue
+{
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    ///<param name=""gameObject"">The game object.</param> 
+    ///<example>Invoke using A.Compare(5) where A is an instance of the class testissue.</example>
+    ///<typeparam name=""T"">The element type of the array</typeparam>
+    ///<exception cref=""System.Exception"">Thrown when something goes wrong</exception>
+    ///<remarks>You may have some additional information about this class here.</remarks>
+    ///<returns>Returns an array of type <typeparamref name=""T""/>.</returns>
+    public static T[] C$$ompare(int gameObject)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expectedSummary =
+            @"Summary: Checks if object is tagged with the tag.";
+            Assert.Equal(expectedSummary, response.DocComment.SummaryText);
+
+            Assert.Single(response.DocComment.ParamElements);
+            var expectedParam =
+            @"gameObject: The game object.";
+            Assert.Equal(expectedParam, response.DocComment.ParamElements[0]);
+
+            var expectedExample =
+            @"Example: Invoke using A.Compare(5) where A is an instance of the class testissue.";
+            Assert.Equal(expectedExample, response.DocComment.ExampleText);
+
+            Assert.Single(response.DocComment.TypeParamElements);
+            var expectedTypeParam =
+           @"T: The element type of the array";
+            Assert.Equal(expectedTypeParam, response.DocComment.TypeParamElements[0]);
+
+            Assert.Single(response.DocComment.Exception);
+            var expectedException =
+            @"System.Exception: Thrown when something goes wrong";
+            Assert.Equal(expectedException, response.DocComment.Exception[0]);
+
+            var expectedRemarks =
+            @"Remarks: You may have some additional information about this class here.";
+            Assert.Equal(expectedRemarks, response.DocComment.RemarksText);
+
+            var expectedReturns =
+            @"Returns: Returns an array of type T .";
+            Assert.Equal(expectedReturns, response.DocComment.ReturnsText);
+        }
     }
 }
