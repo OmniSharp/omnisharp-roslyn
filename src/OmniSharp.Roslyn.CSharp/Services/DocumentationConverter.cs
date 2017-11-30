@@ -135,14 +135,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 return null;
             var docComment = new DocumentationComment();
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
-            StringBuilder RemarksText = new StringBuilder();
-            StringBuilder ExampleText = new StringBuilder();
-            StringBuilder ReturnsText = new StringBuilder();
-            StringBuilder SummaryText = new StringBuilder();
-            StringBuilder ValueText = new StringBuilder();
-            List<StringBuilder> Param = new List<StringBuilder>();
-            List<StringBuilder> TypeParam = new List<StringBuilder>();
-            List<StringBuilder> Exception = new List<StringBuilder>();
+            StringBuilder remarksText = new StringBuilder();
+            StringBuilder exampleText = new StringBuilder();
+            StringBuilder returnsText = new StringBuilder();
+            StringBuilder summaryText = new StringBuilder();
+            StringBuilder valueText = new StringBuilder();
+            List<StringBuilder> paramElements = new List<StringBuilder>();
+            List<StringBuilder> typeParamElements = new List<StringBuilder>();
+            List<StringBuilder> exception = new List<StringBuilder>();
 
             using (var xml = XmlReader.Create(reader))
             {
@@ -150,7 +150,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 {
                     xml.Read();
                     string elementName = null;
-                    StringBuilder CurrentElementText = null;
+                    StringBuilder currentSectionBuilder = null;
                     do
                     {
                         if (xml.NodeType == XmlNodeType.Element)
@@ -162,77 +162,77 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                                     xml.Skip();
                                     break;
                                 case "remarks":
-                                    RemarksText.Append("Remarks: ");
-                                    CurrentElementText = RemarksText;
+                                    remarksText.Append("Remarks: ");
+                                    currentSectionBuilder = remarksText;
                                     break;
                                 case "example":
-                                    ExampleText.Append("Example: ");
-                                    CurrentElementText = ExampleText;
+                                    exampleText.Append("Example: ");
+                                    currentSectionBuilder = exampleText;
                                     break;
                                 case "exception":
                                     StringBuilder ExceptionInstance = new StringBuilder();
                                     ExceptionInstance.Append(GetCref(xml["cref"]).TrimEnd());
                                     ExceptionInstance.Append(": ");
-                                    CurrentElementText = ExceptionInstance;
-                                    Exception.Add(ExceptionInstance);
+                                    currentSectionBuilder = ExceptionInstance;
+                                    exception.Add(ExceptionInstance);
                                     break;
                                 case "returns":
-                                    ReturnsText.Append("Returns: ");
-                                    CurrentElementText = ReturnsText;
+                                    returnsText.Append("Returns: ");
+                                    currentSectionBuilder = returnsText;
                                     break;
                                 case "summary":
-                                    SummaryText.Append("Summary: ");
-                                    CurrentElementText = SummaryText;
+                                    summaryText.Append("Summary: ");
+                                    currentSectionBuilder = summaryText;
                                     break;
                                 case "see":
-                                    CurrentElementText.Append(GetCref(xml["cref"]));
-                                    CurrentElementText.Append(xml["langword"]);
+                                    currentSectionBuilder.Append(GetCref(xml["cref"]));
+                                    currentSectionBuilder.Append(xml["langword"]);
                                     break;
                                 case "seealso":
-                                    CurrentElementText.Append("See also: ");
-                                    CurrentElementText.Append(GetCref(xml["cref"]));
+                                    currentSectionBuilder.Append("See also: ");
+                                    currentSectionBuilder.Append(GetCref(xml["cref"]));
                                     break;
                                 case "paramref":
-                                    CurrentElementText.Append(xml["name"]);
-                                    CurrentElementText.Append(" ");
+                                    currentSectionBuilder.Append(xml["name"]);
+                                    currentSectionBuilder.Append(" ");
                                     break;
                                 case "param":
-                                    StringBuilder ParamInstance = new StringBuilder();
-                                    ParamInstance.Append(TrimMultiLineString(xml["name"], lineEnding));
-                                    ParamInstance.Append(": ");
-                                    CurrentElementText = ParamInstance;
-                                    Param.Add(ParamInstance);
+                                    StringBuilder paramInstance = new StringBuilder();
+                                    paramInstance.Append(TrimMultiLineString(xml["name"], lineEnding));
+                                    paramInstance.Append(": ");
+                                    currentSectionBuilder = paramInstance;
+                                    paramElements.Add(paramInstance);
                                     break;
                                 case "typeparamref":
-                                    CurrentElementText.Append(xml["name"]);
-                                    CurrentElementText.Append(" ");
+                                    currentSectionBuilder.Append(xml["name"]);
+                                    currentSectionBuilder.Append(" ");
                                     break;
                                 case "typeparam":
-                                    StringBuilder TypeParamInstance = new StringBuilder();
-                                    TypeParamInstance.Append(TrimMultiLineString(xml["name"], lineEnding));
-                                    TypeParamInstance.Append(": ");
-                                    CurrentElementText = TypeParamInstance;
-                                    TypeParam.Add(TypeParamInstance);
+                                    StringBuilder typeParamInstance = new StringBuilder();
+                                    typeParamInstance.Append(TrimMultiLineString(xml["name"], lineEnding));
+                                    typeParamInstance.Append(": ");
+                                    currentSectionBuilder = typeParamInstance;
+                                    typeParamElements.Add(typeParamInstance);
                                     break;
                                 case "value":
-                                    ValueText.Append("Value: ");
-                                    CurrentElementText = ValueText;
+                                    valueText.Append("Value: ");
+                                    currentSectionBuilder = valueText;
                                     break;
                                 case "br":
                                 case "para":
-                                    CurrentElementText.Append(lineEnding);
+                                    currentSectionBuilder.Append(lineEnding);
                                     break;
                             }
                         }
-                        else if (xml.NodeType == XmlNodeType.Text && CurrentElementText != null)
+                        else if (xml.NodeType == XmlNodeType.Text && currentSectionBuilder != null)
                         {
                             if (elementName == "code")
                             {
-                                CurrentElementText.Append(xml.Value);
+                                currentSectionBuilder.Append(xml.Value);
                             }
                             else
                             {
-                                CurrentElementText.Append(TrimMultiLineString(xml.Value, lineEnding));
+                                currentSectionBuilder.Append(TrimMultiLineString(xml.Value, lineEnding));
                             }
                         }
                     } while (xml.Read());
@@ -241,14 +241,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
                 {
                     return null;
                 }
-                docComment.RemarksText = RemarksText.ToString();
-                docComment.ExampleText = ExampleText.ToString();
-                docComment.ReturnsText = ReturnsText.ToString();
-                docComment.SummaryText = SummaryText.ToString();
-                docComment.ValueText = ValueText.ToString();
-                docComment.Param = Param.Select(s => s.ToString()).ToArray();
-                docComment.TypeParam = TypeParam.Select(s => s.ToString()).ToArray();
-                docComment.Exception = Exception.Select(s => s.ToString()).ToArray();
+
+                docComment.RemarksText = remarksText.ToString();
+                docComment.ExampleText = exampleText.ToString();
+                docComment.ReturnsText = returnsText.ToString();
+                docComment.SummaryText = summaryText.ToString();
+                docComment.ValueText = valueText.ToString();
+                docComment.ParamElements = paramElements.Select(s => s.ToString()).ToArray();
+                docComment.TypeParamElements = typeParamElements.Select(s => s.ToString()).ToArray();
+                docComment.Exception = exception.Select(s => s.ToString()).ToArray();
                 return docComment;
             }
         }

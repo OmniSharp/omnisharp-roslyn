@@ -122,26 +122,7 @@ class testissue
         }
 
         [Fact]
-        public async Task CheckXmlDocumentationParameter1()
-        {
-            string content = @"
-class testissue
-{
-    /// <param name=""gameObject"">The game object.</param> 
-    /// <param name=""tagName"">Name of the tag </param>
-    public static bool C$$ompare(int gameObject, string tagName)
-    {
-    }
-}";
-            var response = await GetTypeLookUpResponse(content);
-            var expected =
-            @"gameObject: The game object.";
-            Assert.Equal(2,response.DocComment.Param.Length);
-            Assert.Equal(expected, response.DocComment.Param[0]);
-        }
-
-        [Fact]
-        public async Task CheckXmlDocumentationParameter2()
+        public async Task CheckXmlDocumentationParameter()
         {
             string content = @"
 class testissue
@@ -150,14 +131,16 @@ class testissue
     /// <param name=""tagName"">Name of the tag.</param>
     public static bool C$$ompare(int gameObject, string tagName)
     {
-            
     }
 }";
             var response = await GetTypeLookUpResponse(content);
-            var expected =
+            var expected0 =
+            @"gameObject: The game object.";
+            var expected1 =
             @"tagName: Name of the tag.";
-            Assert.Equal(2, response.DocComment.Param.Length);
-            Assert.Equal(expected, response.DocComment.Param[1]);
+            Assert.Equal(2, response.DocComment.ParamElements.Length);
+            Assert.Equal(expected0, response.DocComment.ParamElements[0]);
+            Assert.Equal(expected1, response.DocComment.ParamElements[1]);
         }
 
         [Fact]
@@ -178,8 +161,8 @@ public class TestClass
             var response = await GetTypeLookUpResponse(content);
             var expected =
             @"T: The element type of the array";
-            Assert.Single(response.DocComment.TypeParam);
-            Assert.Equal(expected, response.DocComment.TypeParam[0]);
+            Assert.Single(response.DocComment.TypeParamElements);
+            Assert.Equal(expected, response.DocComment.TypeParamElements[0]);
         }
 
         [Fact]
@@ -198,9 +181,12 @@ public class TestClass
 }
 ";
             var response = await GetTypeLookUpResponse(content);
-            var expected =
+            var expectedValue =
             @"Value: The Name property gets/sets the value of the string field, _name.";
-            Assert.Equal(expected, response.DocComment.ValueText);
+            Assert.Equal(expectedValue, response.DocComment.ValueText);
+            var expectedSummary =
+            @"Summary: The Name property represents the employee's name.";
+            Assert.Equal(expectedSummary, response.DocComment.SummaryText);
         }
 
         [Fact]
