@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
@@ -8,8 +9,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using OmniSharp.Helpers;
-using System.IO;
-using System.Linq;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Script
@@ -72,23 +71,23 @@ namespace OmniSharp.Script
                     return scriptRunnerParser.Parse(new string[] { $"@{rspFilePath}" }, _env.TargetDirectory, _env.TargetDirectory);
                 }
             }
-
+            
             return null;
         }
 
         private CSharpCompilationOptions CreateCompilationOptions()
         {
-            // if use specified usings via .rsp file, use those - otherwise fallback to default hardcoded set based on CSI
-            var compilationOptions = new CSharpCompilationOptions(
-                OutputKind.DynamicallyLinkedLibrary,
-                usings: _commandLineArgs.Value.CompilationOptions != null && _commandLineArgs.Value.CompilationOptions.Usings.Any()
-                        ? _commandLineArgs.Value.CompilationOptions.Usings
-                        : DefaultNamespaces,
-                allowUnsafe: true,
-                metadataReferenceResolver: CreateMetadataReferenceResolver(),
-                sourceReferenceResolver: ScriptSourceResolver.Default,
-                assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default).
-                    WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
+            var csharpCommandLineArguments = _commandLineArgs.Value;
+            var compilationOptions = csharpCommandLineArguments != null
+                ? csharpCommandLineArguments.CompilationOptions
+                : new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: DefaultNamespaces);
+
+            compilationOptions = compilationOptions
+                .WithAllowUnsafe(true)
+                .WithMetadataReferenceResolver(CreateMetadataReferenceResolver())
+                .WithSourceReferenceResolver(ScriptSourceResolver.Default)
+                .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default)
+                .WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions());
 
             var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty(TopLevelBinderFlagsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
             var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType(BinderFlagsType);
@@ -117,6 +116,8 @@ namespace OmniSharp.Script
  
         public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, IEnumerable<string> namespaces = null)
         {
+            var csharpCommandLineArguments = _commandLineArgs.Value;
+
             var project = ProjectInfo.Create(
                 filePath: csxFilePath,
                 id: ProjectId.CreateNewId(),
@@ -127,8 +128,8 @@ namespace OmniSharp.Script
                 compilationOptions: namespaces == null
                     ? _compilationOptions.Value
                     : _compilationOptions.Value.WithUsings(namespaces),
-                metadataReferences: _commandLineArgs.Value.MetadataReferences.Any()
-                    ? _commandLineArgs.Value.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver).Union(references, MetadataReferenceEqualityComparer.Instance)
+                metadataReferences: csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any()
+                    ? csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver).Union(references, MetadataReferenceEqualityComparer.Instance)
                     : references,
                 parseOptions: ParseOptions,
                 isSubmission: true,

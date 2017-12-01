@@ -104,7 +104,7 @@ namespace OmniSharp.Script
             // explicitly include System.ValueTuple
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
-            
+
 
             var compilationDependencies = TryGetCompilationDependencies(scriptOptions.EnableScriptNuGetReferences);
 
@@ -112,7 +112,8 @@ namespace OmniSharp.Script
             // we will assume desktop framework
             // and add default CLR references
             // same applies for having a context that is not a .NET Core app
-            if (!_compilationDependencies.Any())
+
+            if (!compilationDependencies.Any())
             {
                 _logger.LogInformation("Unable to find dependency context for CSX files. Will default to non-context usage (Desktop CLR scripts).");
                 AddDefaultClrMetadataReferences(_commonReferences);
@@ -171,14 +172,14 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptHelper.CreateProject(csxFileName, _commonReferences, csxPath);
 
-                if (_scriptOptions.IsNugetEnabled())
-                {
-                    var scriptMap = _compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
-                    var options = project.CompilationOptions.WithSourceReferenceResolver(
-                        new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
-                            scriptMap));
-                    project = project.WithCompilationOptions(options);
-                }
+                    if (scriptOptions.IsNugetEnabled())
+                    {
+                        var scriptMap = compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
+                        var options = project.CompilationOptions.WithSourceReferenceResolver(
+                            new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
+                                scriptMap));
+                        project = project.WithCompilationOptions(options);
+                    }
 
                 // add CSX project to workspace
                 _workspace.AddProject(project);
