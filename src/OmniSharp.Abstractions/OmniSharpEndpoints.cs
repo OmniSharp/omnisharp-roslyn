@@ -47,14 +47,12 @@ namespace OmniSharp
         {
             public const string GetCodeActions = "/v2/getcodeactions";
             public const string RunCodeAction = "/v2/runcodeaction";
-            public const string TypeLookup = "/v2/typelookup";
 
             public const string GetTestStartInfo = "/v2/getteststartinfo";
             public const string RunTest = "/v2/runtest";
             public const string DebugTestGetStartInfo = "/v2/debugtest/getstartinfo";
             public const string DebugTestLaunch = "/v2/debugtest/launch";
             public const string DebugTestStop = "/v2/debugtest/stop";
-            
         }
     }
 }

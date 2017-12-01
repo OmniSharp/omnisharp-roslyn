@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-namespace OmniSharp.Models.v2.TypeLookUp
+﻿namespace OmniSharp.Models.TypeLookup
 {
     public class DocumentationComment
     {
@@ -9,9 +7,9 @@ namespace OmniSharp.Models.v2.TypeLookUp
         public string ReturnsText { get; set; }
         public string SummaryText { get; set; }
         public string ValueText { get; set; }
-        public string [ ] ParamElements { get; set; }
-        public string [ ] TypeParamElements { get; set; }
-        public string [ ] Exception { get; set; }
+        public string[ ] ParamElements { get; set; }
+        public string[ ] TypeParamElements { get; set; }
+        public string[ ] Exception { get; set; }
 
         public DocumentationComment()
         {

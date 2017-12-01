@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using OmniSharp.Models.v2.TypeLookUp;
+using OmniSharp.Models.TypeLookup;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 {
@@ -129,7 +129,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
             return cref + " ";
         }
 
-        public static DocumentationComment ConvertDocumentationObject(string xmlDocumentation, string lineEnding)
+        public static DocumentationComment GetStructuredDocumentation(string xmlDocumentation, string lineEnding)
         {
             if (string.IsNullOrEmpty(xmlDocumentation))
                 return null;
