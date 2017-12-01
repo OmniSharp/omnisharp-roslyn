@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Endpoint;
 using OmniSharp.Mef;
 using OmniSharp.Models.UpdateBuffer;
@@ -160,6 +161,11 @@ namespace OmniSharp.Stdio
                         }
                         catch (Exception e)
                         {
+                            if (e is AggregateException aggregateEx)
+                            {
+                                e = aggregateEx.Flatten().InnerException;
+                            }
+
                             _writer.WriteLine(new EventPacket()
                             {
                                 Event = "error",
@@ -218,6 +224,11 @@ namespace OmniSharp.Stdio
             }
             catch (Exception e)
             {
+                if (e is AggregateException aggregateEx)
+                {
+                    e = aggregateEx.Flatten().InnerException;
+                }
+
                 // updating the response object here so that the ResponseStream
                 // prints the latest state when being closed
                 response.Success = false;
@@ -241,7 +252,7 @@ namespace OmniSharp.Stdio
             try
             {
                 builder.AppendLine("************ Request ************");
-                builder.Append(json);
+                builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
                 logger.LogDebug(builder.ToString());
             }
             finally
@@ -256,7 +267,7 @@ namespace OmniSharp.Stdio
             try
             {
                 builder.AppendLine("************  Response ************ ");
-                builder.Append(json);
+                builder.Append(JToken.Parse(json).ToString(Formatting.Indented));
                 logger.LogDebug(builder.ToString());
             }
             finally
