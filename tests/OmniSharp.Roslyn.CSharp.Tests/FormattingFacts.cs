@@ -128,6 +128,45 @@ class C {
                 new LinePositionSpanTextChange { StartLine = 2, StartColumn = 30, EndLine = 3, EndColumn = 0, NewText = "\n " });
         }
 
+
+
+
+        [Fact]
+        public async Task TextChangesOnSelectingBeforeFirstPositionInLine()
+        {
+            var source = new[]
+            {
+                "class Program",
+                "{",
+                "    public static void Main()",
+                "    {",
+                "[|       int foo = 1;|]",
+                "    }",
+                "}",
+            };
+
+            await AssertTextChanges(string.Join("\r\n", source),
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 0, NewText = "\n " });
+        }
+
+        [Fact]
+        public async Task TextChangesOnSelectingAfterFirstPositionInLine()
+        {
+            var source = new[]
+            {
+                "class Program",
+                "{",
+                "    public static void Main()",
+                "    {",
+                "               [|int foo = 1;|]",
+                "    }",
+                "}",
+            };
+
+            await AssertTextChanges(string.Join("\r\n", source),
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 0, NewText = "\n " });
+        }
+        
         [Fact]
         public async Task FormatRespectsIndentationSize()
         {
