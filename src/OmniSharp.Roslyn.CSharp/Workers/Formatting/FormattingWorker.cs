@@ -25,7 +25,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                     return await GetFormattingChanges(document, targetLine.Start, targetLine.End);
                 }
             }
-            else if (character == '}' || character == ';')
+            else if (character == '}' || character == ';' || character == '{')
             {
                 // format after ; and }
                 var root = await document.GetSyntaxRootAsync();
