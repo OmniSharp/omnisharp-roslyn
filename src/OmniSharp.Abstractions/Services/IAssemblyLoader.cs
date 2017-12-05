@@ -11,6 +11,8 @@ namespace OmniSharp.Services
         IReadOnlyList<Assembly> LoadAllFrom(string folderPath);
 
         Assembly LoadFrom(string assemblyPath);
+
+        Assembly LoadFrom(string assemblyPath, bool lockAssembly);
     }
 
     public static class IAssemblyLoaderExtensions
