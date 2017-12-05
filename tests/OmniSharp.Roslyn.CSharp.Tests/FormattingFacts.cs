@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeFormat;
 using OmniSharp.Models.Format;
@@ -142,8 +144,16 @@ class C {
                 "}",
             };
 
-            await AssertTextChanges(string.Join("\r\n", source),
-                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
+            var expected =
+@"class Program
+{
+    public static void Main()
+    {
+        int foo = 1;
+    }
+}";
+
+            await AssertTextChanges(string.Join("\r\n", source), expected);
         }
 
         [Fact]
@@ -160,8 +170,16 @@ class C {
                 "}",
             };
 
-            await AssertTextChanges(string.Join("\r\n", source),
-                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
+            var expected =
+@"class Program
+{
+    public static void Main()
+    {
+        int foo = 1;
+    }
+}";
+
+            await AssertTextChanges(string.Join("\r\n", source), expected);
         }
 
         [Fact]
@@ -178,8 +196,16 @@ class C {
                 "}",
             };
 
-            await AssertTextChanges(string.Join("\r\n", source),
-                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
+            var expected =
+@"class Program
+{
+    public static void Main()
+    {
+        int foo = 1;
+    }
+}";
+
+            await AssertTextChanges(string.Join("\r\n", source), expected);
         }
 
         [Fact]
@@ -193,16 +219,26 @@ class C {
                 "    {",
                 "               i[|nt foo = 1;",
                 "               bool b = false;",
-                "               Console.WriteLine(foo);|] ",
+                "               Console.WriteLine(foo);|]",
                 "    }",
                 "}",
             };
 
-            await AssertTextChanges(string.Join("\r\n", source),
-                new LinePositionSpanTextChange { StartLine = 5, StartColumn = 30, EndLine = 6, EndColumn = 7, NewText = "\n" },
-                new LinePositionSpanTextChange { StartLine = 4, StartColumn = 27, EndLine = 5, EndColumn = 7, NewText = "\n" },
-                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
+            var expected =
+@"class Program
+{
+    public static void Main()
+    {
+        int foo = 1;
+        bool b = false;
+        Console.WriteLine(foo);
+    }
+}";
+
+            await AssertTextChanges(string.Join("\r\n", source), expected);
         }
+
+
 
         [Fact]
         public async Task FormatRespectsIndentationSize()
@@ -275,6 +311,53 @@ class C {
                     Assert.Equal(expected[i].EndColumn, actual[i].EndColumn);
                 }
             }
+        }
+
+        private async Task AssertTextChanges(string source, string expected)
+        {
+            var testFile = new TestFile("dummy.cs", source);
+
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var span = testFile.Content.GetSpans().Single();
+                var range = testFile.Content.GetRangeFromSpan(span);
+
+                var request = new FormatRangeRequest()
+                {
+                    Buffer = testFile.Content.Code,
+                    FileName = testFile.FileName,
+                    Line = range.Start.Line,
+                    Column = range.Start.Offset,
+                    EndLine = range.End.Line,
+                    EndColumn = range.End.Offset
+                };
+
+                var requestHandler = host.GetRequestHandler<FormatRangeService>(OmniSharpEndpoints.FormatRange);
+
+                var response = await requestHandler.Handle(request);
+                var actual = response.Changes.ToArray();
+
+                var oldText = testFile.Content.Text;
+                var textChanges = GetTextChanges(oldText, response.Changes);
+                var actualText = oldText.WithChanges(textChanges).ToString();
+                Assert.Equal(expected.Replace("\r\n","\n"), actualText.Replace("\r\n","\n"));
+
+            }
+        }
+
+        public static IEnumerable<TextChange> GetTextChanges(SourceText oldText, IEnumerable<LinePositionSpanTextChange> changes)
+        {
+            var textChanges = new List<TextChange>();
+            foreach( var change in changes)
+            {
+                var startPosition = new LinePosition(change.StartLine, change.StartColumn);
+                var endPosition = new LinePosition(change.EndLine, change.EndColumn);
+                var span = oldText.Lines.GetTextSpan(new LinePositionSpan(startPosition, endPosition));
+                var newText = change.NewText;
+                textChanges.Add(new TextChange(span, newText));
+            }
+
+            return textChanges.OrderBy(change => change.Span);
         }
     }
 }
