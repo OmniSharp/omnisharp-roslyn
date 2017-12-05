@@ -128,11 +128,8 @@ class C {
                 new LinePositionSpanTextChange { StartLine = 2, StartColumn = 30, EndLine = 3, EndColumn = 0, NewText = "\n " });
         }
 
-
-
-
         [Fact]
-        public async Task TextChangesOnSelectingBeforeFirstPositionInLine()
+        public async Task TextChangesOnStaringSpanBeforeFirstCharacterInLine()
         {
             var source = new[]
             {
@@ -150,7 +147,7 @@ class C {
         }
 
         [Fact]
-        public async Task TextChangesOnSelectingAfterFirstPositionInLine()
+        public async Task TextChangesOnStartingSpanAtFirstCharacterInLine()
         {
             var source = new[]
             {
@@ -166,7 +163,47 @@ class C {
             await AssertTextChanges(string.Join("\r\n", source),
                 new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
         }
-        
+
+        [Fact]
+        public async Task TextChangesOnStartingSpanAfterFirstCharacterInLine()
+        {
+            var source = new[]
+            {
+                "class Program",
+                "{",
+                "    public static void Main()",
+                "    {",
+                "               i[|nt foo = 1;|]",
+                "    }",
+                "}",
+            };
+
+            await AssertTextChanges(string.Join("\r\n", source),
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
+        }
+
+        [Fact]
+        public async Task TextChangesOnStartingSpanAfterFirstCharacterInLineWithMultipleLines()
+        {
+            var source = new[]
+            {
+                "class Program",
+                "{",
+                "    public static void Main()",
+                "    {",
+                "               i[|nt foo = 1;",
+                "               bool b = false;",
+                "               Console.WriteLine(foo);|] ",
+                "    }",
+                "}",
+            };
+
+            await AssertTextChanges(string.Join("\r\n", source),
+                new LinePositionSpanTextChange { StartLine = 5, StartColumn = 30, EndLine = 6, EndColumn = 7, NewText = "\n" },
+                new LinePositionSpanTextChange { StartLine = 4, StartColumn = 27, EndLine = 5, EndColumn = 7, NewText = "\n" },
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
+        }
+
         [Fact]
         public async Task FormatRespectsIndentationSize()
         {
