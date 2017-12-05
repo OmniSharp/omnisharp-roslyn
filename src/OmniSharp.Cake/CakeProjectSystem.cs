@@ -148,7 +148,7 @@ namespace OmniSharp.Cake
                 var document = solution.GetDocument(documentId);
                 var project = document.Project;
 
-                var metadataReferences = e.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference)));
+                var metadataReferences = GetMetadataReferences(e.References);
                 var fileReferencesToRemove = project.MetadataReferences;
 
                 foreach (var reference in metadataReferences)
@@ -217,10 +217,24 @@ namespace OmniSharp.Cake
                 language: LanguageNames.CSharp,
                 compilationOptions: cakeScript.Usings == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(cakeScript.Usings),
                 parseOptions: new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script),
-                metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference))),
+                metadataReferences: GetMetadataReferences(cakeScript.References),
                 // TODO: projectReferences?
                 isSubmission: true,
                 hostObjectType: hostObjectType);
+        }
+
+        private IEnumerable<MetadataReference> GetMetadataReferences(IEnumerable<string> references)
+        {
+            foreach (var reference in references)
+            {
+                if (!File.Exists(reference))
+                {
+                    _logger.LogWarning($"Unable to create MetadataReference. File {reference} does not exist.");
+                    continue;
+                }
+
+                yield return MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference));
+            }
         }
 
         private static DocumentationProvider GetDocumentationProvider(string assemblyPath)
