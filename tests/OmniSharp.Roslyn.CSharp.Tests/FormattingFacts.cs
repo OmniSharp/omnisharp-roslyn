@@ -341,7 +341,6 @@ class C {
                 var textChanges = GetTextChanges(oldText, response.Changes);
                 var actualText = oldText.WithChanges(textChanges).ToString();
                 Assert.Equal(expected.Replace("\r\n","\n"), actualText.Replace("\r\n","\n"));
-
             }
         }
 
