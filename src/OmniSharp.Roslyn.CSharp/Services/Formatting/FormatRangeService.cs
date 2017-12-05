@@ -26,11 +26,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             {
                 return null;
             }
-
+           
             var text = await document.GetTextAsync();
             var start = text.Lines.GetPosition(new LinePosition(request.Line, request.Column));
             var end = text.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
-            var changes = await FormattingWorker.GetFormattingChanges(document, start, end);
+            var syntaxTreeRoot = document.GetSyntaxRootAsync().Result;
+            var StartToken = syntaxTreeRoot.FindToken(start);
+            var tokenStart = StartToken.FullSpan.Start;
+            var EndToken = syntaxTreeRoot.FindToken(end);
+            var tokenEnd = EndToken.FullSpan.End;
+            var changes = await FormattingWorker.GetFormattingChanges(document, tokenStart, tokenEnd);
 
             return new FormatRangeResponse()
             {

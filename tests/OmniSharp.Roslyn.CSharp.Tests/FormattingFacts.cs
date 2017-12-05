@@ -140,13 +140,13 @@ class C {
                 "{",
                 "    public static void Main()",
                 "    {",
-                "[|       int foo = 1;|]",
+                "[|               int foo = 1;|]",
                 "    }",
                 "}",
             };
 
             await AssertTextChanges(string.Join("\r\n", source),
-                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 0, NewText = "\n " });
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
         }
 
         [Fact]
@@ -164,7 +164,7 @@ class C {
             };
 
             await AssertTextChanges(string.Join("\r\n", source),
-                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 0, NewText = "\n " });
+                new LinePositionSpanTextChange { StartLine = 3, StartColumn = 5, EndLine = 4, EndColumn = 7, NewText = "\n" });
         }
         
         [Fact]
