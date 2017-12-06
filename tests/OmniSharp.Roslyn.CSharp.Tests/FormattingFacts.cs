@@ -133,16 +133,14 @@ class C {
         [Fact]
         public async Task TextChangesOnStaringSpanBeforeFirstCharacterInLine()
         {
-            var source = new[]
-            {
-                "class Program",
-                "{",
-                "    public static void Main()",
-                "    {",
-                "[|               int foo = 1;|]",
-                "    }",
-                "}",
-            };
+            var source =
+ @"class Program
+{
+    public static void Main()
+    {
+         [|          int foo = 1;|]
+    }
+}";
 
             var expected =
 @"class Program
@@ -153,23 +151,20 @@ class C {
     }
 }";
 
-            await AssertTextChanges(string.Join("\r\n", source), expected);
+            await AssertTextChanges(source, expected);
         }
 
         [Fact]
         public async Task TextChangesOnStartingSpanAtFirstCharacterInLine()
         {
-            var source = new[]
-            {
-                "class Program",
-                "{",
-                "    public static void Main()",
-                "    {",
-                "               [|int foo = 1;|]",
-                "    }",
-                "}",
-            };
-
+            var source =
+ @"class Program
+{
+    public static void Main()
+    {
+                   [|int foo = 1;|]
+    }
+}";
             var expected =
 @"class Program
 {
@@ -179,22 +174,20 @@ class C {
     }
 }";
 
-            await AssertTextChanges(string.Join("\r\n", source), expected);
+            await AssertTextChanges(source, expected);
         }
 
         [Fact]
         public async Task TextChangesOnStartingSpanAfterFirstCharacterInLine()
         {
-            var source = new[]
-            {
-                "class Program",
-                "{",
-                "    public static void Main()",
-                "    {",
-                "               i[|nt foo = 1;|]",
-                "    }",
-                "}",
-            };
+            var source =
+ @"class Program
+{
+    public static void Main()
+    {
+                   i[|nt foo = 1;|]
+    }
+}";
 
             var expected =
 @"class Program
@@ -205,24 +198,22 @@ class C {
     }
 }";
 
-            await AssertTextChanges(string.Join("\r\n", source), expected);
+            await AssertTextChanges(source, expected);
         }
 
         [Fact]
         public async Task TextChangesOnStartingSpanAfterFirstCharacterInLineWithMultipleLines()
         {
-            var source = new[]
-            {
-                "class Program",
-                "{",
-                "    public static void Main()",
-                "    {",
-                "               i[|nt foo = 1;",
-                "               bool b = false;",
-                "               Console.WriteLine(foo);|]",
-                "    }",
-                "}",
-            };
+            var source =
+@"class Program
+{
+    public static void Main()
+    {
+                i[|nt foo = 1;
+                    bool b = false;
+                        Console.WriteLine(foo);|]
+    }
+}";
 
             var expected =
 @"class Program
@@ -235,10 +226,8 @@ class C {
     }
 }";
 
-            await AssertTextChanges(string.Join("\r\n", source), expected);
+            await AssertTextChanges(source, expected);
         }
-
-
 
         [Fact]
         public async Task FormatRespectsIndentationSize()
@@ -347,7 +336,7 @@ class C {
         public static IEnumerable<TextChange> GetTextChanges(SourceText oldText, IEnumerable<LinePositionSpanTextChange> changes)
         {
             var textChanges = new List<TextChange>();
-            foreach( var change in changes)
+            foreach(var change in changes)
             {
                 var startPosition = new LinePosition(change.StartLine, change.StartColumn);
                 var endPosition = new LinePosition(change.EndLine, change.EndColumn);
