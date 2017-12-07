@@ -9,10 +9,17 @@ namespace OmniSharp.Cake.Services
 {
     internal static class ScriptGenerationToolResolver
     {
-        public static string GetExecutablePath(string rootPath, ICakeConfiguration configuration)
+        public static string GetExecutablePath(string rootPath, ICakeConfiguration configuration, CakeOptions options)
         {
+            // First check if registered through OmniSharp options
+            var executablepath = options.BakeryPath;
+            if (!string.IsNullOrEmpty(executablepath) && File.Exists(executablepath))
+            {
+                return executablepath;
+            }
+
             // First check if installed in workspace
-            var executablepath = ResolveFromToolFolder(rootPath, configuration);
+            executablepath = ResolveFromToolFolder(rootPath, configuration);
             if (!string.IsNullOrEmpty(executablepath))
             {
                 return executablepath;
