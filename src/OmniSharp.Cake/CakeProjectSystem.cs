@@ -23,6 +23,7 @@ namespace OmniSharp.Cake
     public class CakeProjectSystem : IProjectSystem
     {
         private readonly OmniSharpWorkspace _workspace;
+        private readonly MetadataFileReferenceCache _metadataReferenceCache;
         private readonly IOmniSharpEnvironment _environment;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeScriptService _scriptService;
@@ -37,12 +38,14 @@ namespace OmniSharp.Cake
         [ImportingConstructor]
         public CakeProjectSystem(
             OmniSharpWorkspace workspace,
+            MetadataFileReferenceCache metadataReferenceCache,
             IOmniSharpEnvironment environment,
             IAssemblyLoader assemblyLoader,
             ICakeScriptService scriptService,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
+            _metadataReferenceCache = metadataReferenceCache ?? throw new ArgumentNullException(nameof(metadataReferenceCache));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
@@ -233,16 +236,8 @@ namespace OmniSharp.Cake
                     continue;
                 }
 
-                yield return MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference));
+                yield return _metadataReferenceCache.GetMetadataReference(reference);
             }
-        }
-
-        private static DocumentationProvider GetDocumentationProvider(string assemblyPath)
-        {
-            var assemblyDocumentationPath = Path.ChangeExtension(assemblyPath, ".xml");
-            return File.Exists(assemblyDocumentationPath)
-                ? XmlDocumentationProvider.CreateFromFile(assemblyDocumentationPath)
-                : DocumentationProvider.Default;
         }
 
         private static CSharpCompilationOptions CreateCompilationOptions()
