@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
-    //TO DO: Reomove this class once a public API for Signature Help from Roslyn is available
+    //TO DO: Remove this class once a public API for Signature Help from Roslyn is available
     internal static class CheckForStaticExtension
     {
         public static bool IsInStaticContext(this SyntaxNode node)
