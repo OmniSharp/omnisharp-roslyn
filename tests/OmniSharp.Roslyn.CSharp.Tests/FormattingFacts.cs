@@ -336,7 +336,7 @@ class C {
         public static IEnumerable<TextChange> GetTextChanges(SourceText oldText, IEnumerable<LinePositionSpanTextChange> changes)
         {
             var textChanges = new List<TextChange>();
-            foreach(var change in changes)
+            foreach (var change in changes)
             {
                 var startPosition = new LinePosition(change.StartLine, change.StartColumn);
                 var endPosition = new LinePosition(change.EndLine, change.EndColumn);
