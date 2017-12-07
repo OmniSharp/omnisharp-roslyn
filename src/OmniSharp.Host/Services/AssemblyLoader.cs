@@ -5,14 +5,12 @@ using System.Linq;
 using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
 {
     internal class AssemblyLoader : IAssemblyLoader
     {
-        private static readonly ConcurrentDictionary<string, Assembly> AssemblyCache = new ConcurrentDictionary<string, Assembly>(
-            PlatformHelper.IsWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        private static readonly ConcurrentDictionary<string, Assembly> AssemblyCache = new ConcurrentDictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger _logger;
 
         public AssemblyLoader(ILoggerFactory loggerFactory)
@@ -63,45 +61,31 @@ namespace OmniSharp.Services
             }
         }
 
-        public Assembly LoadFrom(string assemblyPath)
+        public Assembly LoadFrom(string assemblyPath, bool dontLockAssemblyOnDisk = false)
         {
-            if (string.IsNullOrWhiteSpace(assemblyPath)) return null;
-
-            Assembly assembly = null;
-
-            try
-            {
-                assembly = Assembly.LoadFrom(assemblyPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to load assembly from path: {assemblyPath}");
-            }
-
-            _logger.LogTrace($"Assembly loaded from path: {assemblyPath}");
-            return assembly;
-        }
-
-        public Assembly LoadFrom(string assemblyPath, bool lockAssembly)
-        {
-            if (lockAssembly) return LoadFrom(assemblyPath);
             if (string.IsNullOrWhiteSpace(assemblyPath)) return null;
 
             if (!AssemblyCache.TryGetValue(assemblyPath, out var assembly))
             {
                 try
                 {
-                    var bytes = File.ReadAllBytes(assemblyPath);
-                    assembly = Assembly.Load(bytes);
+                    if (dontLockAssemblyOnDisk)
+                    {
+                        var bytes = File.ReadAllBytes(assemblyPath);
+                        assembly = Assembly.Load(bytes);
+                    }
+                    else
+                    {
+                        assembly = Assembly.LoadFrom(assemblyPath);
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, $"Failed to load assembly from path: {assemblyPath}");
+                    return assembly;
                 }
-                if (assembly != null)
-                {
-                    AssemblyCache.AddOrUpdate(assemblyPath, assembly, (k, v) => assembly);
-                }
+
+                AssemblyCache.AddOrUpdate(assemblyPath, assembly, (k, v) => assembly);
             }
 
             _logger.LogTrace($"Assembly loaded from path: {assemblyPath}");

@@ -210,7 +210,7 @@ namespace OmniSharp.Cake
             {
                 throw new FileNotFoundException($"Cake is not installed. Path {cakeScript.Host.AssemblyPath} does not exist.");
             }
-            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath, lockAssembly: false), null, false);
+            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath, dontLockAssemblyOnDisk: true), null, false);
             if (hostObjectType == null)
             {
                 throw new InvalidOperationException($"Could not get host object type: {cakeScript.Host.TypeName}.");
