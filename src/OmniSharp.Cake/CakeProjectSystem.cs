@@ -15,6 +15,7 @@ using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
 using OmniSharp.Helpers;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Cake
@@ -152,14 +153,26 @@ namespace OmniSharp.Cake
                 var project = document.Project;
 
                 var metadataReferences = GetMetadataReferences(e.References);
-                var fileReferencesToRemove = project.MetadataReferences;
+                var referencesToRemove = new HashSet<MetadataReference>(project.MetadataReferences, MetadataReferenceEqualityComparer.Instance);
+                var referencesToAdd = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
 
                 foreach (var reference in metadataReferences)
                 {
+                    if (referencesToRemove.Remove(reference))
+                    {
+                        continue;
+                    }
+
+                    if (referencesToAdd.Contains(reference))
+                    {
+                        continue;
+                    }
+
                     _workspace.AddMetadataReference(project.Id, reference);
+                    referencesToAdd.Add(reference);
                 }
 
-                foreach (var reference in fileReferencesToRemove)
+                foreach (var reference in referencesToRemove)
                 {
                     _workspace.RemoveMetadataReference(project.Id, reference);
                 }
