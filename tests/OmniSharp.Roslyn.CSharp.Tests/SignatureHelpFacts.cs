@@ -153,7 +153,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorSingleParam()
+        public async Task AttributeCtorSingleParam()
         {
             const string source =
 @"using System;
@@ -180,7 +180,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorTestParameterLabels()
+        public async Task AttributeCtorTestParameterLabels()
         {
             const string source =
 @"using System;
@@ -210,7 +210,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorActiveParamBasedOnComma()
+        public async Task AttributeCtorActiveParamBasedOnComma()
         {
             const string source =
 @"using System;
@@ -233,7 +233,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpforAttributeCtorNoParam()
+        public async Task AttributeCtorNoParam()
         {
             const string source =
 @"using System;
@@ -429,7 +429,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpForCtor()
+        public async Task TestForConstructorHelp()
         {
             const string source =
 @"class Program
@@ -454,7 +454,7 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
-        public async Task SignatureHelpForCtorWithOverloads()
+        public async Task TestForCtorWithOverloads()
         {
             const string source =
 @"class Program
@@ -474,7 +474,6 @@ public class MyTestAttribute : Attribute
     {
     }
 }";
-
             var actual = await GetSignatureHelp(source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Equal(1, actual.ActiveParameter);
@@ -482,30 +481,291 @@ public class MyTestAttribute : Attribute
         }
 
         [Fact]
+        public async Task TestForInheritedMethods()
+        {
+            const string source =
+@"public class MyBase
+{
+    public void MyMethod(int a) { }
+    public void MyMethod(int a, int b) { }
+}
+
+public class Class1 : MyBase
+{
+    public void MyMethod(int a, int b, int c) { }
+    public void MyMethod(int a, int b, int c, int d) { }
+}
+
+public class Class2
+{
+    public void foo()
+    {
+        Class1 c1 = new Class1();
+        c1.MyMethod($$);
+    }
+
+ }";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(4, actual.Signatures.Count());
+        }
+
+        [Fact]
+        public async Task InheritedInaccesibleMethods()
+        {
+            const string source =
+@"public class MyBase
+{
+    private void MyMethod(int a) { }
+}
+
+public class Class1 : MyBase
+{
+    public void MyMethod(int a, int b, int c) { }
+    protected void MyMethod(int a, int b, int c, int d) { }
+}
+
+public class Class2
+{
+    public void foo()
+    {
+        Class1 c1 = new Class1();
+        c1.MyMethod($$);
+    }
+
+ }";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(3, signature.Parameters.Count());
+        }
+
+        [Fact]
+        public async Task InheritedProtectedMethod()
+        {
+            const string source =
+@"class A
+{
+    protected void M1() { }
+}
+
+class B : A
+{
+    void M1(int a)
+    {
+       M1($$)
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2,actual.Signatures.Count());
+        }
+
+        [Fact]
+        public async Task InheritedProtectedMethodWithThis()
+        {
+            const string source =
+@"class A
+{
+    protected void M1() { }
+}
+
+class B : A
+{
+    void M1(int a)
+    {
+        this.M1($$)
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2, actual.Signatures.Count());
+        }
+
+        [Fact]
+        public async Task InheritedProtectedMethodWithBase()
+        {
+            const string source =
+@"class A
+{
+    protected void M1() { }
+}
+
+class B : A
+{
+    void M1(int a)
+    {
+        base.M1($$);
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+            Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
+        }
+
+        [Fact]
+        public async Task StaticContextMethod1()
+        {
+            const string source =
+@"class A
+{
+    protected static void M1(int a) { }
+    public void M1(double b) { }
+}
+
+class B : A
+{
+    static void M1()
+    {
+        A.M1($$);
+    }
+    public void M1(string c) { }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("int a", signature.Parameters.ElementAt(0).Label);
+        }
+
+        [Fact]
+        public async Task StaticContextMethod2()
+        {
+            const string source =
+@"class A
+{
+    protected static void M1(int a) { }
+    public void M1(int a,int b) { }
+}
+
+class B : A
+{
+    static void M1(int a,int b,int c)
+    {
+        B.M1($$)
+    }
+    public void M1(int a,int b,int c,int d) { }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(2, actual.Signatures.Count());
+            var signatures = actual.Signatures.OrderBy(sig => sig.Parameters.Count());
+            Assert.Single(signatures.ElementAt(0).Parameters);
+            Assert.Equal(3,signatures.ElementAt(1).Parameters.Count());
+        }
+
+        [Fact]
+        public async Task InstanceContextMethod()
+        {
+            const string source =
+@"class A
+{
+    protected static void M1(int a) { }
+    public void M1(int a, int b) { }
+}
+
+class B : A
+{
+    void M1(int a,int b,int c)
+    {
+        M1($$)
+    }
+    static void M1(int a,int b,int c,int d) { }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Equal(4, actual.Signatures.Count());
+        }
+
+        [Fact]
+        public async Task OverloadedExtensionMethods1()
+        {
+            const string source =
+@"public static class ExtensionMethods
+{
+    public static void MyMethod(this string value, int number)
+    {
+    }
+}
+
+class Program
+{
+    public static void MyMethod(string a, int b)
+    {
+    }
+    public static void Main()
+    {
+        string value = ""Hello"";
+        value.MyMethod($$);
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("void string.MyMethod(int number)",signature.Label);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("number", signature.Parameters.ElementAt(0).Name);
+        }
+
+        [Fact]
+        public async Task OverloadedExtensionMethods2()
+        {
+            const string source =
+@"public static class ExtensionMethods
+{
+    public static void MyMethod(this string value, int number)
+    {
+    }
+}
+
+class Program
+{
+    public static void MyMethod(string a, int b)
+    {
+    }
+    public static void Main()
+    {
+        string value = ""Hello"";
+        MyMethod($$);
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("void Program.MyMethod(string a, int b)", signature.Label);
+        }
+
+        [Fact]
         public async Task SkipReceiverOfExtensionMethods()
         {
             const string source =
-@"class Program
+@"public class Program1
 {
-    public static void Main()
-    {
-        new Program().B($$);
-    }
-    public Program()
-    {
-    }
-    public bool B(this Program p, int n)
+    public Program1() { }
+}
+
+public static class ExtensionClass{
+    public static bool B(this Program1 p, int n)
     {
         return p.Foo() > n;
     }
-}";
+}
 
+public class ProgramClass
+{
+    public static void Main()
+    {
+        new Program1().B($$);
+    }
+}";
             var actual = await GetSignatureHelp(source);
             Assert.Single(actual.Signatures);
-            Assert.Single(actual.Signatures.ElementAt(actual.ActiveSignature).Parameters);
-            Assert.Equal("n", actual.Signatures.ElementAt(actual.ActiveSignature).Parameters.ElementAt(0).Name);
-        }
 
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("n", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int n", signature.Parameters.ElementAt(0).Label);
+        }
+      
         private async Task<SignatureHelpResponse> GetSignatureHelp(string source)
         {
             var testFile = new TestFile("dummy.cs", source);
