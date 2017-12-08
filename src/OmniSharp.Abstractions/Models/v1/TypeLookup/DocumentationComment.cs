@@ -9,37 +9,37 @@ namespace OmniSharp.Models.TypeLookup
 {
     public class DocumentationComment
     {
+        public string SummaryText { get; }
+        public string[] TypeParamElements { get; }
+        public string[] ParamElements { get; }
+        public string ReturnsText { get; }
         public string RemarksText { get; }
         public string ExampleText { get; }
-        public string ReturnsText { get; }
-        public string SummaryText { get; }
         public string ValueText { get; }
-        public string[ ] ParamElements { get; }
-        public string[ ] TypeParamElements { get; }
         public string[ ] Exception { get; }
 
-        private DocumentationComment(string remarksText, string exampleText, string returnsText, string summaryText, string valueText, string [ ] paramElements, string [ ] typeParamElements, string [ ] exception)
+        private DocumentationComment(string summaryText, string[] typeParamElements, string[] paramElements, string returnsText, string remarksText, string exampleText, string valueText, string [ ] exception)
         {
+            SummaryText = summaryText;
+            TypeParamElements = typeParamElements;
+            ParamElements = paramElements;
+            ReturnsText = returnsText;
             RemarksText = remarksText;
             ExampleText = exampleText;
-            ReturnsText = returnsText;
-            SummaryText = summaryText;
             ValueText = valueText;
-            ParamElements = paramElements;
-            TypeParamElements = typeParamElements;
             Exception = exception;
         }
 
         public static DocumentationComment From(string xmlDocumentation, string lineEnding)
         {
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
+            StringBuilder summaryText = new StringBuilder();
+            List<StringBuilder> typeParamElements = new List<StringBuilder>();
+            List<StringBuilder> paramElements = new List<StringBuilder>();
+            StringBuilder returnsText = new StringBuilder();
             StringBuilder remarksText = new StringBuilder();
             StringBuilder exampleText = new StringBuilder();
-            StringBuilder returnsText = new StringBuilder();
-            StringBuilder summaryText = new StringBuilder();
             StringBuilder valueText = new StringBuilder();
-            List<StringBuilder> paramElements = new List<StringBuilder>();
-            List<StringBuilder> typeParamElements = new List<StringBuilder>();
             List<StringBuilder> exception = new List<StringBuilder>();
 
             using (var xml = XmlReader.Create(reader))
@@ -140,9 +140,7 @@ namespace OmniSharp.Models.TypeLookup
                     return null;
                 }
             }
-            return new DocumentationComment(remarksText.ToString(),exampleText.ToString(),returnsText.ToString(),summaryText.ToString(),valueText.ToString(),
-                paramElements.Select(s => s.ToString()).ToArray(),typeParamElements.Select(s => s.ToString()).ToArray(),
-                exception.Select(s => s.ToString()).ToArray());
+            return new DocumentationComment(summaryText.ToString(), typeParamElements.Select(s => s.ToString()).ToArray(), paramElements.Select(s => s.ToString()).ToArray(), returnsText.ToString(), remarksText.ToString(), exampleText.ToString(), valueText.ToString(), exception.Select(s => s.ToString()).ToArray());
         }
 
         private static string TrimMultiLineString(string input, string lineEnding)
