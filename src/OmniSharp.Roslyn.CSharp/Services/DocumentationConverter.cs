@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using OmniSharp.Models.TypeLookup;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 {
@@ -126,5 +128,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
             }
             return cref + " ";
         }
+
+        public static DocumentationComment GetStructuredDocumentation(string xmlDocumentation, string lineEnding)
+        {
+            if (string.IsNullOrEmpty(xmlDocumentation))
+                return null;
+            return DocumentationComment.From(xmlDocumentation, lineEnding);
+        }
     }
 }
+
