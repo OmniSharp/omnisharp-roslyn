@@ -477,37 +477,71 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
         var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build");
 
         Information("Building {0}...", projectName);
-        MSBuild(
-            projectFilePath,
-            c =>
-            {
-                c.Configuration = configuration;
-                c.WorkingDirectory = env.WorkingDirectory;
-                c.AddFileLogger(
-                    new MSBuildFileLogger {
+        // On Windows, we build exclusively with the .NET CLI.
+        // On OSX/Linux, we build with the MSBuild installed with Mono.
+        if (Platform.Current.IsWindows)
+        {
+            var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic ? "Embed" : "None";
+            var settings = new DotNetCoreMSBuildSettings()
+                {
+                    WorkingDirectory = env.WorkingDirectory,
+                    ArgumentCustomization = a => a.Append($"/bl:{logFileName}.binlog;ProjectImports={projectImports}"),
+                }
+                .SetConfiguration(configuration)
+                .AddFileLogger(
+                    new MSBuildFileLoggerSettings {
                         AppendToLogFile = false,
                         LogFile = logFileName + ".log",
                         ShowTimestamp = true,
-                        Verbosity = Verbosity.Diagnostic,
-                        PerformanceSummaryEnabled = true,
-                        SummaryDisabled = false,
+                        Verbosity = DotNetCoreVerbosity.Diagnostic,
                     }
-                );
-                c.BinaryLogger = new MSBuildBinaryLogSettings {
-                    Enabled = true,
-                    FileName = logFileName + ".binlog",
-                    Imports = MSBuildBinaryLogImports.Embed,
-                };
-                c
-                    .WithProperty("TestOutputType", outputType)
-                    .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
-                    .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
-                    .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
-                    .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                ;
+                )
+                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
+            if (!string.IsNullOrWhiteSpace(outputType))
+                settings.WithProperty("TestOutputType", outputType);
 
-            }
-        );
+            DotNetCoreMSBuild(
+                projectFilePath,
+                settings
+            );
+        }
+        else
+        {
+            MSBuild(
+                projectFilePath,
+                c =>
+                {
+                    c.Configuration = configuration;
+                    c.WorkingDirectory = env.WorkingDirectory;
+                    c.AddFileLogger(
+                        new MSBuildFileLogger {
+                            AppendToLogFile = false,
+                            LogFile = logFileName + ".log",
+                            ShowTimestamp = true,
+                            Verbosity = Verbosity.Diagnostic,
+                            PerformanceSummaryEnabled = true,
+                            SummaryDisabled = false,
+                        }
+                    );
+                    c.BinaryLogger = new MSBuildBinaryLogSettings {
+                        Enabled = true,
+                        FileName = logFileName + ".binlog",
+                        Imports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic ? MSBuildBinaryLogImports.Embed : MSBuildBinaryLogImports.None,
+                    };
+                    c
+                        .WithProperty("TestOutputType", outputType)
+                        .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                        .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                        .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                        .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
+                    ;
+
+                }
+            );
+        }
     }
     catch
     {
