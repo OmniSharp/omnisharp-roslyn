@@ -6,72 +6,65 @@ env:
     secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
 mono: 5.2.0
 os:
-  - linux
-  - osx
+- linux
+- osx
 osx_image: xcode8.1
-
 script:
-  - ./build.sh --target All --publish-all --archive
-
+- "./build.sh --target All --publish-all --archive"
 addons:
   apt:
     packages:
-      - gettext
-      - libcurl4-openssl-dev
-      - libicu-dev
-      - libssl-dev
-      - libunwind8
-      - zlib1g
-      - curl
-
+    - gettext
+    - libcurl4-openssl-dev
+    - libicu-dev
+    - libssl-dev
+    - libunwind8
+    - zlib1g
+    - curl
 install:
-  - | # On Unix, build libuv from source. On OSX, install it via Homebrew.
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      sudo apt-get install make automake libtool
-      curl -sSL https://github.com/libuv/libuv/archive/v1.14.0.tar.gz | sudo tar zxf - -C /usr/local/src
-      pushd /usr/local/src/libuv-1.14.0
-      sudo sh autogen.sh
-      sudo ./configure
-      sudo make
-      sudo make install
-      popd
-      sudo rm -rf /usr/local/src/libuv-1.14.0
-      sudo ldconfig
-    elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      brew update
+- |
+  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    sudo apt-get install make automake libtool
+    curl -sSL https://github.com/libuv/libuv/archive/v1.14.0.tar.gz | sudo tar zxf - -C /usr/local/src
+    pushd /usr/local/src/libuv-1.14.0
+    sudo sh autogen.sh
+    sudo ./configure
+    sudo make
+    sudo make install
+    popd
+    sudo rm -rf /usr/local/src/libuv-1.14.0
+    sudo ldconfig
+  elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    brew update
 
-      # Need to install openssl for .NET Core SDK 1.0 (legacy tests)
-      brew install openssl
-      mkdir -p /usr/local/lib
-      ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
-      ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+    # Need to install openssl for .NET Core SDK 1.0 (legacy tests)
+    brew install openssl
+    mkdir -p /usr/local/lib
+    ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
+    ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
 
-      brew install libuv
-    fi
-
-  - export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
-  - export PATH="$PWD/.dotnet:$PATH"
-
+    brew install libuv
+  fi
+- export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+- export PATH="$PWD/.dotnet:$PATH"
 notifications:
   slack:
     rooms:
-      - omnisharp:U358j4McaEOIzFqXvGexVokC#general
+    - omnisharp:U358j4McaEOIzFqXvGexVokC#general
     on_success: change
     on_failure: always
     on_pull_requests: false
-
 before_deploy:
-  - |
-    # Only deploy OSX-specific OmniSharp from the OSX.
-    # All other builds should be deployed by Linux CI.
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      rm artifacts/package/omnisharp-osx.tar.gz
-    elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      rm artifacts/package/mono.tar.gz
-      rm artifacts/package/omnisharp-linux-x86.tar.gz
-      rm artifacts/package/omnisharp-linux-x64.tar.gz
-    fi
-
+- |
+  # Only deploy OSX-specific OmniSharp from the OSX.
+  # All other builds should be deployed by Linux CI.
+  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    rm artifacts/package/omnisharp-osx.tar.gz
+  elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    rm artifacts/package/mono.tar.gz
+    rm artifacts/package/omnisharp-linux-x86.tar.gz
+    rm artifacts/package/omnisharp-linux-x64.tar.gz
+  fi
 deploy:
   provider: releases
   api_key:
@@ -82,7 +75,6 @@ deploy:
   on:
     repo: OmniSharp/omnisharp-roslyn
     tags: true
-
 after_deploy: |
   openssl enc -aes-256-cbc -a -salt -in travis_rsa.enc -out ~/.ssh/id_rsa -pass pass:$OPENSSL_PASSKEY -d
   chmod 600 ~/.ssh/id_rsa
@@ -106,3 +98,6 @@ after_deploy: |
     git push origin $BRANCH_NAME
     curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
   fi
+before_install:
+- openssl aes-256-cbc -K $encrypted_89dcd8324ec1_key -iv $encrypted_89dcd8324ec1_iv
+  -in blobstring.txt.enc -out blobstring.txt -d
