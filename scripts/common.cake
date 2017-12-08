@@ -216,14 +216,16 @@ public class BuildEnvironment
 
     public BuildEnvironment(bool useGlobalDotNetSdk, ICakeContext context)
     {
-        this.WorkingDirectory = context.WorkingDirectory;
+        this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
 
-        this.DotNetCommand = useGlobalDotNeetSdk
+        this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
+        if (Platform.Current.IsWindows) this.DotNetCommand += ".exe";
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
+        if (Platform.Current.IsWindows) this.LegacyDotNetCommand += ".exe";
 
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";

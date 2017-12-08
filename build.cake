@@ -740,6 +740,11 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
             Runtime = rid,
             Configuration = configuration,
             OutputDirectory = outputFolder,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion),
             ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory
         });
