@@ -92,7 +92,6 @@ Task("GitVersion")
     // .WithCriteria(!BuildSystem.IsLocalBuild)
     .Does(() => {
         GitVersion(new GitVersionSettings{
-            UpdateAssemblyInfo = true,
             OutputType = GitVersionOutput.BuildServer
         });
     });
