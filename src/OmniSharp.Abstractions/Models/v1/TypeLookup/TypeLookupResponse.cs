@@ -4,5 +4,6 @@
     {
         public string Type { get; set; }
         public string Documentation { get; set; }
+        public DocumentationComment StructuredDocumentation { get; set; }
     }
 }
