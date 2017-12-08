@@ -735,6 +735,30 @@ class Program
         }
 
         [Fact]
+        public async Task GivesHelpForLocalFunctions()
+        {
+            const string source =
+@"class Program
+{
+    public static void Main()
+    {
+        var flag = LocalFunction($$);
+        bool LocalFunction(int i)
+        {
+            return i > 0;
+        }
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("i", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("int i", signature.Parameters.ElementAt(0).Label);
+        }
+
+        [Fact]
         public async Task SkipReceiverOfExtensionMethods()
         {
             const string source =
