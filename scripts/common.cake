@@ -216,11 +216,10 @@ public class BuildEnvironment
 
     public BuildEnvironment(bool useGlobalDotNetSdk, ICakeContext context)
     {
-        this.WorkingDirectory = PathHelper.GetFullPath(
-            System.IO.Directory.GetCurrentDirectory());
+        this.WorkingDirectory = context.WorkingDirectory;
         this.Folders = new Folders(this.WorkingDirectory);
 
-        this.DotNetCommand = useGlobalDotNetSdk
+        this.DotNetCommand = useGlobalDotNeetSdk
             ? "dotnet"
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
 
