@@ -1,4 +1,5 @@
 #addin "Newtonsoft.Json"
+#tool "nuget:?package=GitVersion.CommandLine"
 
 #load "platform.cake"
 
@@ -211,7 +212,9 @@ public class BuildEnvironment
     public MonoRuntime[] MonoRuntimes { get; }
     public MonoRuntime CurrentMonoRuntime { get; }
 
-    public BuildEnvironment(bool useGlobalDotNetSdk)
+    public GitVersion VersionInfo { get; }
+
+    public BuildEnvironment(bool useGlobalDotNetSdk, ICakeContext context)
     {
         this.WorkingDirectory = PathHelper.GetFullPath(
             System.IO.Directory.GetCurrentDirectory());
@@ -246,6 +249,8 @@ public class BuildEnvironment
         {
             this.CurrentMonoRuntime = this.MonoRuntimes[2];
         }
+
+        VersionInfo = context.GitVersion();
     }
 }
 

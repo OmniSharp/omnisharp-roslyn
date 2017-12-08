@@ -11,6 +11,10 @@ os:
 osx_image: xcode8.1
 
 script:
+  - git fetch --unshallow
+  - git fetch origin '+refs/heads/*:refs/heads/*'
+  - git branch -r
+  - chmod 755 ./build.sh
   - ./build.sh --target All --publish-all --archive
 
 addons:

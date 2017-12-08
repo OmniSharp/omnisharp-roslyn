@@ -20,7 +20,7 @@ var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 Log.Context = Context;
 
-var env = new BuildEnvironment(useGlobalDotNetSdk);
+var env = new BuildEnvironment(useGlobalDotNetSdk, Context);
 var buildPlan = BuildPlan.Load(env);
 
 Information("");
@@ -88,10 +88,20 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
+Task("GitVersion")
+    // .WithCriteria(!BuildSystem.IsLocalBuild)
+    .Does(() => {
+        GitVersion(new GitVersionSettings{
+            UpdateAssemblyInfo = true,
+            OutputType = GitVersionOutput.BuildServer
+        });
+    });
+
 /// <summary>
 ///  Pre-build setup tasks.
 /// </summary>
 Task("Setup")
+    .IsDependentOn("GitVersion")
     .IsDependentOn("ValidateMono")
     .IsDependentOn("InstallDotNetCoreSdk")
     .IsDependentOn("InstallMonoAssets")
