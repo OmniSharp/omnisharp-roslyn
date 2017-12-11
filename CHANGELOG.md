@@ -17,6 +17,7 @@ All changes to the project will be documented in this file.
 * Improvements to the Cake bakery resolver to resolve from both OmniSharp options and PATH. (PR: [#1047](https://github.com/OmniSharp/omnisharp-roslyn/pull/1047))
 * Ensure that the Cake.Core assembly is not locked on disk when loading the host object type. (PR: [#1044](https://github.com/OmniSharp/omnisharp-roslyn/pull/1044))
 * Added internal support for watching for changes by file extension. (PR: [#1053](https://github.com/OmniSharp/omnisharp-roslyn/pull/1053))
+* Updated `Cake.Scripting.Transport` dependencies to 0.2.0 in order to improve performance when working with Cake files. (PR: [#1057](https://github.com/OmniSharp/omnisharp-roslyn/pull/1057))
 
 ## [1.27.2] - 2017-11-10
 
