@@ -387,7 +387,7 @@ Task("PrepareTestAssets:CommonTestAssets")
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder
-            });
+        });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
@@ -427,12 +427,6 @@ Task("PrepareTestAssets:LegacyTestAssets")
             // Trick to allow older .NET Core SDK to run on Sierra.
             Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", "osx.10.11-x64");
         }
-
-        // RunTool(env.LegacyDotNetCommand, "restore", folder)
-        //     .ExceptionOnError($"Failed to restore '{folder}'.");
-
-        // RunTool(env.LegacyDotNetCommand, $"build", folder)
-        //     .ExceptionOnError($"Failed to build '{folder}'.");
 
         Information("Restoring and building project.json: {0}...", project);
 
