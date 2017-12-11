@@ -65,7 +65,7 @@ namespace OmniSharp.Cake.Services
             if (!cakeScript.References.SetEquals(references))
             {
                 _cachedReferences[fileChange.FileName] = cakeScript.References;
-                OnReferencesChanged(new ReferencesChangedEventArgs(fileChange.FileName, cakeScript.References.ToList()));
+                OnReferencesChanged(new ReferencesChangedEventArgs(fileChange.FileName, cakeScript.References));
             }
 
             // Check if usings changed
