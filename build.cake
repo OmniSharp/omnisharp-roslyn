@@ -89,7 +89,7 @@ Task("Cleanup")
 });
 
 Task("GitVersion")
-    // .WithCriteria(!BuildSystem.IsLocalBuild)
+    .WithCriteria(!BuildSystem.IsLocalBuild)
     .Does(() => {
         GitVersion(new GitVersionSettings{
             OutputType = GitVersionOutput.BuildServer
