@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Roslyn.Utilities;
 
@@ -22,8 +23,6 @@ namespace OmniSharp.Script
         private const string RuntimeMetadataReferenceResolverType = "Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver";
         private const string ResolverField = "_resolver";
         private const string FileReferenceProviderField = "_fileReferenceProvider";
-
-        private readonly ScriptOptions _scriptOptions;
 
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
@@ -43,16 +42,19 @@ namespace OmniSharp.Script
 
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
 
+        private readonly MetadataReferenceResolver _resolver = ScriptMetadataResolver.Default;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
         private readonly Lazy<CSharpCommandLineArguments> _commandLineArgs;
         private readonly ScriptOptions _scriptOptions;
         private readonly IOmniSharpEnvironment _env;
+        private readonly ILogger _logger;
 
-        public ScriptHelper(ScriptOptions scriptOptions, IOmniSharpEnvironment env)
+        public ScriptHelper(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory)
         {
             _scriptOptions = scriptOptions ?? throw new ArgumentNullException(nameof(scriptOptions));
             _env = env ?? throw new ArgumentNullException(nameof(env));
 
+            _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
             _commandLineArgs = new Lazy<CSharpCommandLineArguments>(CreateCommandLineArguments);
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
@@ -68,6 +70,7 @@ namespace OmniSharp.Script
                 var rspFilePath = _scriptOptions.GetNormalizedRspFilePath(_env);
                 if (rspFilePath != null)
                 {
+                    _logger.LogInformation($"Discovered an RSP file at '{rspFilePath}' - will use this file to compute CSX compilation options.");
                     return scriptRunnerParser.Parse(new string[] { $"@{rspFilePath}" }, _env.TargetDirectory, _env.TargetDirectory);
                 }
             }
@@ -81,6 +84,11 @@ namespace OmniSharp.Script
             var compilationOptions = csharpCommandLineArguments != null
                 ? csharpCommandLineArguments.CompilationOptions
                 : new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: DefaultNamespaces);
+
+            foreach (var ns in compilationOptions.Usings)
+            {
+                _logger.LogDebug($"CSX global using statement: {ns}");
+            }
 
             compilationOptions = compilationOptions
                 .WithAllowUnsafe(true)
