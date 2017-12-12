@@ -19,3 +19,6 @@ notifications:
     auth_token:
       secure: OU7mWtP+JWLRV2Ofq3/QMQbudeN632xLgWb4zMJtOssi2v5HER4qe0GFoj/rnIYOBXd3d/5+glfKG3ijvCU3bA==
     channel: '#integrations'
+environment:
+  BLOB_STORAGE_CONNECTION_STRING:
+    secure: ljYC4LQpALoXTXY+cwRgb2VpVrQvVR/dhHZdSR+3l3aljOXzisHd/E1gjwPiD1MjXqhjrct1UWjKu0pIb738gjnH5VayJfTpZ575hNwoM1DFAOjuxaBhAOmJyVdOTy0tHp3tMHqzd53wkD0VXDlbW9rg1FvG9/CmJRXCOVDJV8WSnr/Whjmm8KF90h/F6MP6FwHjWbZnITKjwLEGOKHVgcTFh1Fr1fQLynmQb4MbCxKtGYSq2jX2INxU9tas3Qmn

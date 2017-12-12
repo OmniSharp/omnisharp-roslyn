@@ -106,3 +106,8 @@ after_deploy: |
     git push origin $BRANCH_NAME
     curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
   fi
+
+  # Only decrypt blob storage key for commits to master
+  if [ "$TRAVIS_PULL_REQUEST_BRANCH" == "false"  ] && [ "$TRAVIS_BRANCH" == "master" ]
+    openssl aes-256-cbc -K $encrypted_89dcd8324ec1_key -iv $encrypted_89dcd8324ec1_i -in blobstring.txt.enc -out blobstring.txt -d
+  fi

@@ -46,6 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Types
                     if (request.IncludeDocumentation)
                     {
                         response.Documentation = DocumentationConverter.ConvertDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
+                        response.StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(symbol.GetDocumentationCommentXml(), _formattingOptions.NewLine);
                     }
                 }
             }
