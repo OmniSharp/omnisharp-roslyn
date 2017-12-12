@@ -32,6 +32,8 @@ namespace OmniSharp.Cake
         private readonly Dictionary<string, ProjectInfo> _projects;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
 
+        private CakeOptions _options;
+
         public string Key => "Cake";
         public string Language => Constants.LanguageNames.Cake;
         public IEnumerable<string> Extensions => new[] { ".cake" };
@@ -58,6 +60,9 @@ namespace OmniSharp.Cake
 
         public void Initalize(IConfiguration configuration)
         {
+            _options = new CakeOptions();
+            configuration.Bind(_options);
+
             _logger.LogInformation($"Detecting Cake files in '{_environment.TargetDirectory}'.");
 
             // Nothing to do if there are no Cake files
@@ -70,10 +75,10 @@ namespace OmniSharp.Cake
 
             _logger.LogInformation($"Found {allCakeFiles.Length} Cake files.");
 
-            // Check that script service is connected
-            if (!_scriptService.IsConnected)
+            // Try intialize Cake scripting service
+            if (!_scriptService.Initialize(_options))
             {
-                _logger.LogWarning("Cake script service not connected. Aborting.");
+                _logger.LogWarning("Could not initialize Cake script service. Aborting.");
                 return;
             }
 

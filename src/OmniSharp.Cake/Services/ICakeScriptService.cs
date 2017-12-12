@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cake.Scripting.Abstractions;
+using Microsoft.Extensions.Configuration;
 
 namespace OmniSharp.Cake.Services
 {
     public interface ICakeScriptService : IScriptGenerationService
     {
-        bool IsConnected { get; }
+        bool Initialize(CakeOptions options);
 
         event EventHandler<ReferencesChangedEventArgs> ReferencesChanged;
 
