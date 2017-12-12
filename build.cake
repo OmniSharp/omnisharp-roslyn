@@ -365,7 +365,8 @@ Task("Restore")
     DotNetCoreRestore("OmniSharp.sln", new DotNetCoreRestoreSettings()
     {
         ToolPath = env.DotNetCommand,
-        WorkingDirectory = env.WorkingDirectory
+        WorkingDirectory = env.WorkingDirectory,
+        Verbosity = DotNetCoreVerbosity.Minimal,
     });
 });
 
@@ -386,12 +387,14 @@ Task("PrepareTestAssets:CommonTestAssets")
         DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
             ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
     });
 
@@ -407,12 +410,14 @@ Task("PrepareTestAssets:WindowsTestAssets")
         DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
             ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
     });
 
@@ -435,12 +440,13 @@ Task("PrepareTestAssets:LegacyTestAssets")
         DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
             ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder
+            WorkingDirectory = folder,
         });
     });
 
@@ -479,7 +485,11 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
             var settings = new DotNetCoreMSBuildSettings()
                 {
                     WorkingDirectory = env.WorkingDirectory,
-                    ArgumentCustomization = a => a.Append($"/bl:{logFileName}.binlog;ProjectImports={projectImports}"),
+                    ArgumentCustomization = a => a
+                        .Append($"/bl:{logFileName}.binlog;ProjectImports={projectImports}")
+                        .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}"),
+                    // Bug in cake with this command
+                    // Verbosity = DotNetCoreVerbosity.Minimal,
                 }
                 .SetConfiguration(configuration)
                 .AddFileLogger(
@@ -487,7 +497,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
                         AppendToLogFile = false,
                         LogFile = logFileName + ".log",
                         ShowTimestamp = true,
-                        Verbosity = DotNetCoreVerbosity.Diagnostic,
+                        //Verbosity = DotNetCoreVerbosity.Diagnostic,
                     }
                 )
                 .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
@@ -508,6 +518,7 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
                 projectFilePath,
                 c =>
                 {
+                    c.Verbosity = Verbosity.Minimal;
                     c.Configuration = configuration;
                     c.WorkingDirectory = env.WorkingDirectory;
                     c.AddFileLogger(
@@ -748,7 +759,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
         {
             Runtime = rid,
             ToolPath = env.DotNetCommand,
-            WorkingDirectory = env.WorkingDirectory
+            WorkingDirectory = env.WorkingDirectory,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
     }
     catch
@@ -774,7 +786,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion),
             ToolPath = env.DotNetCommand,
-            WorkingDirectory = env.WorkingDirectory
+            WorkingDirectory = env.WorkingDirectory,
+            Verbosity = DotNetCoreVerbosity.Minimal,
         });
     }
     catch
