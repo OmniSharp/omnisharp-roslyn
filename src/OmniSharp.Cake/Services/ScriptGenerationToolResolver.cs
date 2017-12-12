@@ -2,14 +2,34 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using OmniSharp.Cake.Configuration;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Services
 {
     internal static class ScriptGenerationToolResolver
     {
-        public static string GetExecutablePath(string rootPath, ICakeConfiguration configuration)
+        public static string GetExecutablePath(string rootPath, ICakeConfiguration configuration, CakeOptions options)
+        {
+            // First check if registered through OmniSharp options
+            var executablepath = options.BakeryPath;
+            if (!string.IsNullOrEmpty(executablepath) && File.Exists(executablepath))
+            {
+                return executablepath;
+            }
+
+            // First check if installed in workspace
+            executablepath = ResolveFromToolFolder(rootPath, configuration);
+            if (!string.IsNullOrEmpty(executablepath))
+            {
+                return executablepath;
+            }
+
+            // If not check from path
+            return ResolveFromPath();
+        }
+
+        private static string ResolveFromToolFolder(string rootPath, ICakeConfiguration configuration)
         {
             var toolPath = GetToolPath(rootPath, configuration);
 
@@ -54,5 +74,18 @@ namespace OmniSharp.Cake.Services
             }
         }
 
+        private static string ResolveFromPath()
+        {
+            foreach (var searchPath in PlatformHelper.GetSearchPaths())
+            {
+                var path = Path.Combine(searchPath, "Cake.Bakery.exe");
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+
+            return string.Empty;
+        }
     }
 }
