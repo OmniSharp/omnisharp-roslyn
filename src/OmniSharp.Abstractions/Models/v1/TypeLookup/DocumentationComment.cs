@@ -79,7 +79,6 @@ namespace OmniSharp.Models.TypeLookup
                                     currentSectionBuilder = returnsText;
                                     break;
                                 case "summary":
-                                    summaryText.Append("Summary: ");
                                     currentSectionBuilder = summaryText;
                                     break;
                                 case "see":
