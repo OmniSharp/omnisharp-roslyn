@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -9,6 +10,7 @@ namespace OmniSharp.Services
 {
     internal class AssemblyLoader : IAssemblyLoader
     {
+        private static readonly ConcurrentDictionary<string, Assembly> AssemblyCache = new ConcurrentDictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger _logger;
 
         public AssemblyLoader(ILoggerFactory loggerFactory)
@@ -59,19 +61,31 @@ namespace OmniSharp.Services
             }
         }
 
-        public Assembly LoadFrom(string assemblyPath)
+        public Assembly LoadFrom(string assemblyPath, bool dontLockAssemblyOnDisk = false)
         {
             if (string.IsNullOrWhiteSpace(assemblyPath)) return null;
 
-            Assembly assembly = null;
+            if (!AssemblyCache.TryGetValue(assemblyPath, out var assembly))
+            {
+                try
+                {
+                    if (dontLockAssemblyOnDisk)
+                    {
+                        var bytes = File.ReadAllBytes(assemblyPath);
+                        assembly = Assembly.Load(bytes);
+                    }
+                    else
+                    {
+                        assembly = Assembly.LoadFrom(assemblyPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Failed to load assembly from path: {assemblyPath}");
+                    return assembly;
+                }
 
-            try
-            {
-                assembly = Assembly.LoadFrom(assemblyPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to load assembly from path: {assemblyPath}");
+                AssemblyCache.AddOrUpdate(assemblyPath, assembly, (k, v) => assembly);
             }
 
             _logger.LogTrace($"Assembly loaded from path: {assemblyPath}");
