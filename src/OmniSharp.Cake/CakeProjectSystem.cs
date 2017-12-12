@@ -91,6 +91,7 @@ namespace OmniSharp.Cake
                         FileName = cakePath,
                         FromDisk = true
                     });
+
                     var project = GetProject(cakeScript, cakePath);
 
                     // add Cake project to workspace
@@ -226,8 +227,15 @@ namespace OmniSharp.Cake
         {
             var name = Path.GetFileName(filePath);
 
-            var assembly = _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
-            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => assembly, null, true);
+            if (!File.Exists(cakeScript.Host.AssemblyPath))
+            {
+                throw new FileNotFoundException($"Cake is not installed. Path {cakeScript.Host.AssemblyPath} does not exist.");
+            }
+            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath, dontLockAssemblyOnDisk: true), null, false);
+            if (hostObjectType == null)
+            {
+                throw new InvalidOperationException($"Could not get host object type: {cakeScript.Host.TypeName}.");
+            }
 
             return ProjectInfo.Create(
                 id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
