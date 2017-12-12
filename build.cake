@@ -14,7 +14,6 @@ var configuration = Argument("configuration", "Release");
 var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
-var requireArchive = HasArgument("archive");
 var publishAll = HasArgument("publish-all");
 var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
@@ -670,7 +669,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     FileHelper.Delete(CombinePaths(outputFolder, "System.Threading.Thread.dll"));
 }
 
-string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, bool archive)
+string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration)
 {
     Information($"Publishing Mono build for {project}...");
 
@@ -680,15 +679,12 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyMonoBuild(env, buildFolder, outputFolder);
 
-    if (archive)
-    {
-        Package(GetPackagePrefix(project), "mono", outputFolder, env.Folders.ArtifactsPackage);
-    }
+    Package(GetPackagePrefix(project), "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
 
-string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan, bool archive)
+string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, BuildEnvironment env, BuildPlan plan)
 {
     Information("Publishing platform-specific Mono build: {0}", monoRuntime.PlatformName);
 
@@ -706,10 +702,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     CopyMonoBuild(env, sourceFolder, omnisharpFolder);
 
-    if (archive)
-    {
-        Package(GetPackagePrefix(project), monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage);
-    }
+    Package(GetPackagePrefix(project), monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -721,7 +714,7 @@ Task("PublishMonoBuilds")
 {
     foreach (var project in buildPlan.HostProjects)
     {
-        var outputFolder = PublishMonoBuild(project, env, buildPlan, configuration, requireArchive);
+        var outputFolder = PublishMonoBuild(project, env, buildPlan, configuration);
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
 
@@ -729,13 +722,13 @@ Task("PublishMonoBuilds")
         {
             foreach (var monoRuntime in env.MonoRuntimes)
             {
-                PublishMonoBuildForPlatform(project, monoRuntime, env, buildPlan, requireArchive);
+                PublishMonoBuildForPlatform(project, monoRuntime, env, buildPlan);
             }
         }
     }
 });
 
-string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid, bool archive)
+string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration, string rid)
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
@@ -786,10 +779,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     // Copy MSBuild to output
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
 
-    if (archive)
-    {
-        Package(GetPackagePrefix(project), rid, outputFolder, env.Folders.ArtifactsPackage);
-    }
+    Package(GetPackagePrefix(project), rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -805,8 +795,8 @@ Task("PublishWindowsBuilds")
 
         if (publishAll)
         {
-            var outputFolder32 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86", requireArchive);
-            var outputFolder64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64", requireArchive);
+            var outputFolder32 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
+            var outputFolder64 = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
 
             outputFolder = Platform.Current.Is32Bit
                 ? outputFolder32
@@ -814,11 +804,11 @@ Task("PublishWindowsBuilds")
         }
         else if (Platform.Current.Is32Bit)
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86", requireArchive);
+            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x86");
         }
         else
         {
-            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64", requireArchive);
+            outputFolder = PublishWindowsBuild(project, env, buildPlan, configuration, "win7-x64");
         }
 
         CreateRunScript(project, outputFolder, env.Folders.ArtifactsScripts);
