@@ -3,8 +3,8 @@ init:
   - git config --global core.autocrlf true
 image: Visual Studio 2017
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
-install:
-  - choco install azcopy
+#install:
+#  - choco install azcopy
 build_script:
   - ps: .\build.ps1 All -publish-all -archive
 artifacts:
@@ -17,10 +17,10 @@ deploy:
     artifact: /.*\.zip/
     on:
       appveyor_repo_tag: true
-after_deploy:
-  - ps: |
-    $key = $ENV:BLOB_STORAGE_CONNECTION_STRING -split ';' | where { $_.StartsWith('AccountKey') } | foreach { $_ -split "=" } | select -Last 1;
-    AzCopy /Source:.\artifacts\deployment\ /Dest:https://roslynomnisharp.blob.core.windows.net/releases /DestKey:$key /Pattern:*.zip /S
+# after_deploy:
+#   - ps: |
+#     $key = $ENV:BLOB_STORAGE_CONNECTION_STRING -split ';' | where { $_.StartsWith('AccountKey') } | foreach { $_ -split "=" } | select -Last 1;
+#     AzCopy /Source:.\artifacts\deployment\ /Dest:https://roslynomnisharp.blob.core.windows.net/releases /DestKey:$key /Pattern:*.zip /S
 notifications:
   - provider: Slack
     auth_token:
