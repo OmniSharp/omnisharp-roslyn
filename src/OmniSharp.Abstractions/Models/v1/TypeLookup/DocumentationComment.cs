@@ -10,15 +10,15 @@ namespace OmniSharp.Models.TypeLookup
     public class DocumentationComment
     {
         public string SummaryText { get; }
-        public DocumentedObject[] TypeParamElements { get; }
-        public DocumentedObject[] ParamElements { get; }
+        public DocumentationItem[] TypeParamElements { get; }
+        public DocumentationItem[] ParamElements { get; }
         public string ReturnsText { get; }
         public string RemarksText { get; }
         public string ExampleText { get; }
         public string ValueText { get; }
-        public DocumentedObject[ ] Exception { get; }
+        public DocumentationItem[] Exception { get; }
 
-        private DocumentationComment(string summaryText, DocumentedObject[] typeParamElements, DocumentedObject[] paramElements, string returnsText, string remarksText, string exampleText, string valueText, DocumentedObject[ ] exception)
+        private DocumentationComment(string summaryText, DocumentationItem[] typeParamElements, DocumentationItem[] paramElements, string returnsText, string remarksText, string exampleText, string valueText, DocumentationItem[ ] exception)
         {
             SummaryText = summaryText;
             TypeParamElements = typeParamElements;
@@ -34,13 +34,13 @@ namespace OmniSharp.Models.TypeLookup
         {
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
             StringBuilder summaryText = new StringBuilder();
-            List<DocumentedObjectHelper> typeParamElements = new List<DocumentedObjectHelper>();
-            List<DocumentedObjectHelper> paramElements = new List<DocumentedObjectHelper>();
+            List<DocumentationItemBuilder> typeParamElements = new List<DocumentationItemBuilder>();
+            List<DocumentationItemBuilder> paramElements = new List<DocumentationItemBuilder>();
             StringBuilder returnsText = new StringBuilder();
             StringBuilder remarksText = new StringBuilder();
             StringBuilder exampleText = new StringBuilder();
             StringBuilder valueText = new StringBuilder();
-            List<DocumentedObjectHelper> exception = new List<DocumentedObjectHelper>();
+            List<DocumentationItemBuilder> exception = new List<DocumentationItemBuilder>();
 
             using (var xml = XmlReader.Create(reader))
             {
@@ -66,7 +66,7 @@ namespace OmniSharp.Models.TypeLookup
                                     currentSectionBuilder = exampleText;
                                     break;
                                 case "exception":
-                                    DocumentedObjectHelper exceptionInstance = new DocumentedObjectHelper();
+                                    DocumentationItemBuilder exceptionInstance = new DocumentationItemBuilder();
                                     exceptionInstance.Name = GetCref(xml["cref"]).TrimEnd();
                                     currentSectionBuilder = exceptionInstance.Documentation;
                                     exception.Add(exceptionInstance);
@@ -90,7 +90,7 @@ namespace OmniSharp.Models.TypeLookup
                                     currentSectionBuilder.Append(" ");
                                     break;
                                 case "param":
-                                    DocumentedObjectHelper paramInstance = new DocumentedObjectHelper();
+                                    DocumentationItemBuilder paramInstance = new DocumentationItemBuilder();
                                     paramInstance.Name = TrimMultiLineString(xml["name"], lineEnding);
                                     currentSectionBuilder = paramInstance.Documentation;
                                     paramElements.Add(paramInstance);
@@ -100,7 +100,7 @@ namespace OmniSharp.Models.TypeLookup
                                     currentSectionBuilder.Append(" ");
                                     break;
                                 case "typeparam":
-                                    DocumentedObjectHelper typeParamInstance = new DocumentedObjectHelper();
+                                    DocumentationItemBuilder typeParamInstance = new DocumentationItemBuilder();
                                     typeParamInstance.Name = TrimMultiLineString(xml["name"], lineEnding);
                                     currentSectionBuilder = typeParamInstance.Documentation;
                                     typeParamElements.Add(typeParamInstance);
@@ -133,7 +133,15 @@ namespace OmniSharp.Models.TypeLookup
                 }
             }
 
-            return new DocumentationComment(summaryText.ToString(), typeParamElements.Select(s => s.ConvertToDocumentedObject()).ToArray(), paramElements.Select(s => s.ConvertToDocumentedObject()).ToArray(), returnsText.ToString(), remarksText.ToString(), exampleText.ToString(), valueText.ToString(), exception.Select(s => s.ConvertToDocumentedObject()).ToArray());
+            return new DocumentationComment(
+                summaryText.ToString(),
+                typeParamElements.Select(s => s.ConvertToDocumentedObject()).ToArray(),
+                paramElements.Select(s => s.ConvertToDocumentedObject()).ToArray(),
+                returnsText.ToString(),
+                remarksText.ToString(),
+                exampleText.ToString(),
+                valueText.ToString(),
+                exception.Select(s => s.ConvertToDocumentedObject()).ToArray());
         }
 
         private static string TrimMultiLineString(string input, string lineEnding)
@@ -160,24 +168,19 @@ namespace OmniSharp.Models.TypeLookup
         }
     }
 
-    class DocumentedObjectHelper
+    class DocumentationItemBuilder
     {
         public string Name { get; set; }
         public StringBuilder Documentation { get; set; }
 
-        public  DocumentedObjectHelper()
+        public DocumentationItemBuilder()
         {
             Documentation = new StringBuilder();
         }
 
-        public  DocumentedObject ConvertToDocumentedObject()
+        public DocumentationItem ConvertToDocumentedObject()
         {
-            var documentedObject = new DocumentedObject
-            {
-                Name = Name,
-                Documentation = Documentation.ToString()
-            };
-            return documentedObject;
+            return new DocumentationItem(Name, Documentation.ToString());
         }
     }
 }
