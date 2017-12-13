@@ -69,7 +69,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                         }
                     }
                 }
-                while (fetched < 0);
+                while (fetched > 0);
 
                 return builder.ToImmutable();
             }
