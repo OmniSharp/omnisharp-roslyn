@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -13,7 +14,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
+using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -28,8 +31,9 @@ namespace OmniSharp.Cake
         private readonly IOmniSharpEnvironment _environment;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeScriptService _scriptService;
+        private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILogger<CakeProjectSystem> _logger;
-        private readonly Dictionary<string, ProjectInfo> _projects;
+        private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
 
         private CakeOptions _options;
@@ -45,6 +49,7 @@ namespace OmniSharp.Cake
             IOmniSharpEnvironment environment,
             IAssemblyLoader assemblyLoader,
             ICakeScriptService scriptService,
+            IFileSystemWatcher fileSystemWatcher,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
@@ -52,9 +57,10 @@ namespace OmniSharp.Cake
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
+            _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-            _projects = new Dictionary<string, ProjectInfo>();
+            _projects = new ConcurrentDictionary<string, ProjectInfo>();
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
         }
 
@@ -82,42 +88,72 @@ namespace OmniSharp.Cake
                 return;
             }
 
-            foreach (var cakePath in allCakeFiles)
+            foreach (var cakeFilePath in allCakeFiles)
             {
-                try
-                {
-                    var cakeScript = _scriptService.Generate(new FileChange
-                    {
-                        FileName = cakePath,
-                        FromDisk = true
-                    });
-
-                    var project = GetProject(cakeScript, cakePath);
-
-                    // add Cake project to workspace
-                    _workspace.AddProject(project);
-                    var documentId = DocumentId.CreateNewId(project.Id);
-                    var loader = new CakeTextLoader(cakePath, _scriptService);
-                    var documentInfo = DocumentInfo.Create(
-                        documentId,
-                        cakePath,
-                        filePath: cakePath,
-                        loader: loader,
-                        sourceCodeKind: SourceCodeKind.Script);
-
-                    _workspace.AddDocument(documentInfo);
-                    _projects[cakePath] = project;
-                    _logger.LogInformation($"Added Cake project '{cakePath}' to the workspace.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"{cakePath} will be ignored due to an following error");
-                }
+                AddCakeFile(cakeFilePath);
             }
 
             // Hook up Cake script events
             _scriptService.ReferencesChanged += ScriptReferencesChanged;
             _scriptService.UsingsChanged += ScriptUsingsChanged;
+
+            // Watch .cake files
+            _fileSystemWatcher.Watch(".cake", OnCakeFileChanged);
+        }
+
+        private void AddCakeFile(string cakeFilePath)
+        {
+            try
+            {
+                var cakeScript = _scriptService.Generate(new FileChange
+                {
+                    FileName = cakeFilePath,
+                    FromDisk = true
+                });
+
+                var project = GetProject(cakeScript, cakeFilePath);
+
+                // add Cake project to workspace
+                _workspace.AddProject(project);
+                var documentId = DocumentId.CreateNewId(project.Id);
+                var loader = new CakeTextLoader(cakeFilePath, _scriptService);
+                var documentInfo = DocumentInfo.Create(
+                    documentId,
+                    cakeFilePath,
+                    filePath: cakeFilePath,
+                    loader: loader,
+                    sourceCodeKind: SourceCodeKind.Script);
+
+                _workspace.AddDocument(documentInfo);
+                _projects[cakeFilePath] = project;
+                _logger.LogInformation($"Added Cake project '{cakeFilePath}' to the workspace.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{cakeFilePath} will be ignored due to an following error");
+            }
+        }
+
+        private void RemoveCakeFile(string cakeFilePath)
+        {
+            if (_projects.TryRemove(cakeFilePath, out var projectInfo))
+            {
+                _workspace.RemoveProject(projectInfo.Id);
+                _logger.LogInformation($"Removed Cake project '{cakeFilePath}' from the workspace.");
+            }
+        }
+
+        private void OnCakeFileChanged(string filePath, FileChangeType changeType)
+        {
+            if (changeType == FileChangeType.Unspecified && !File.Exists(filePath) || changeType == FileChangeType.Delete)
+            {
+                RemoveCakeFile(filePath);
+            }
+
+            if (changeType == FileChangeType.Unspecified && File.Exists(filePath) || changeType == FileChangeType.Create)
+            {
+                AddCakeFile(filePath);
+            }
         }
 
         private void ScriptUsingsChanged(object sender, UsingsChangedEventArgs e)
