@@ -109,7 +109,6 @@ namespace OmniSharp.Models.TypeLookup
                                     typeParamElements.Add(typeParamInstance);
                                     break;
                                 case "value":
-                                    valueText.Append("Value: ");
                                     currentSectionBuilder = valueText;
                                     break;
                                 case "br":
