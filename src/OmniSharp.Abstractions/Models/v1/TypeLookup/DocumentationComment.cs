@@ -60,11 +60,9 @@ namespace OmniSharp.Models.TypeLookup
                                     xml.Skip();
                                     break;
                                 case "remarks":
-                                    remarksText.Append("Remarks: ");
                                     currentSectionBuilder = remarksText;
                                     break;
                                 case "example":
-                                    exampleText.Append("Example: ");
                                     currentSectionBuilder = exampleText;
                                     break;
                                 case "exception":
@@ -75,7 +73,6 @@ namespace OmniSharp.Models.TypeLookup
                                     exception.Add(ExceptionInstance);
                                     break;
                                 case "returns":
-                                    returnsText.Append("Returns: ");
                                     currentSectionBuilder = returnsText;
                                     break;
                                 case "summary":
