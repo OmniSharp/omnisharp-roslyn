@@ -19,6 +19,7 @@ All changes to the project will be documented in this file.
 * Added internal support for watching for changes by file extension. (PR: [#1053](https://github.com/OmniSharp/omnisharp-roslyn/pull/1053))
 * Watch added/removed .cake-files and update workspace accordingly. (PR: [#1054] (https://github.com/OmniSharp/omnisharp-roslyn/pull/1054))
 * Watch added/removed .csx-files and update workspace accordingly. (PR: [#1056] (https://github.com/OmniSharp/omnisharp-roslyn/pull/1056))
+* Updated `Cake.Scripting.Transport` dependencies to 0.2.0 in order to improve performance when working with Cake files. (PR: [#1057](https://github.com/OmniSharp/omnisharp-roslyn/pull/1057))
 
 ## [1.27.2] - 2017-11-10
 
