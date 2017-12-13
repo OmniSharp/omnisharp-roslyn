@@ -138,7 +138,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 
         private static string TrimLeadingSpaces(string input)
         {
-            if (!input.StartsWith(@"\s"))
+            if (!Char.IsWhiteSpace(input[0]))
                 return input;
             int offset = input.TakeWhile(c => char.IsWhiteSpace(c)).Count();
             return " " + input.Substring(offset);

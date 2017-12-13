@@ -168,10 +168,14 @@ namespace OmniSharp.Models.TypeLookup
 
         private static string TrimLeadingSpaces(string input)
         {
-            if (!input.StartsWith(@"\s"))
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+            if (!Char.IsWhiteSpace(input[0]))
                 return input;
             int offset = input.TakeWhile(c => char.IsWhiteSpace(c)).Count();
             return " " + input.Substring(offset);
         }
+
+        //private static string TrimMultipleSpaces()
     }
 }

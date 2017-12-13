@@ -546,9 +546,9 @@ Here's how you could make a second paragraph in a description.";
             string content = @"
 public class TestClass
 {
-    /// <summary>DoWork is a method in the TestClass class.
-    /// <seealso cref=""TestClass.Main""/>
-    /// </summary>
+    ///<summary>DoWork is a method in the TestClass class.
+    ///<seealso cref=""TestClass.Main""/>
+    ///</summary>
             public static void Do$$Work(int Int1)
             {
             }
@@ -639,6 +639,23 @@ class testissue
             var expectedReturns =
             @"Returns: Returns an array of type T .";
             Assert.Equal(expectedReturns, response.StructuredDocumentation.ReturnsText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationSpaceBeforeText()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary><c>DoWork</c> is a method in the <c>TestClass</c> class.</summary>
+    public static void Do$$Work(int Int1)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Summary: DoWork is a method in the TestClass class.";
+            Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
         }
     }
 }
