@@ -29,19 +29,26 @@ namespace OmniSharp.FileWatching
                 {
                     directoryCallback(filePath, changeType);
                 }
+
+                var extension = Path.GetExtension(filePath);
+                if (!string.IsNullOrEmpty(extension) &&
+                    _callbacks.TryGetValue(extension, out var extensionCallback))
+                {
+                    extensionCallback(filePath, changeType);
+                }
             }
         }
 
-        public void Watch(string fileOrDirectoryPath, FileSystemNotificationCallback callback)
+        public void Watch(string pathOrExtension, FileSystemNotificationCallback callback)
         {
             lock (_gate)
             {
-                if (_callbacks.TryGetValue(fileOrDirectoryPath, out var existingCallback))
+                if (_callbacks.TryGetValue(pathOrExtension, out var existingCallback))
                 {
                     callback = callback + existingCallback;
                 }
 
-                _callbacks[fileOrDirectoryPath] = callback;
+                _callbacks[pathOrExtension] = callback;
             }
         }
     }

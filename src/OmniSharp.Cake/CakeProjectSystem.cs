@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -13,8 +14,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
+using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Cake
@@ -23,12 +27,16 @@ namespace OmniSharp.Cake
     public class CakeProjectSystem : IProjectSystem
     {
         private readonly OmniSharpWorkspace _workspace;
+        private readonly MetadataFileReferenceCache _metadataReferenceCache;
         private readonly IOmniSharpEnvironment _environment;
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeScriptService _scriptService;
+        private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILogger<CakeProjectSystem> _logger;
-        private readonly Dictionary<string, ProjectInfo> _projects;
+        private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
+
+        private CakeOptions _options;
 
         public string Key => "Cake";
         public string Language => Constants.LanguageNames.Cake;
@@ -37,23 +45,30 @@ namespace OmniSharp.Cake
         [ImportingConstructor]
         public CakeProjectSystem(
             OmniSharpWorkspace workspace,
+            MetadataFileReferenceCache metadataReferenceCache,
             IOmniSharpEnvironment environment,
             IAssemblyLoader assemblyLoader,
             ICakeScriptService scriptService,
+            IFileSystemWatcher fileSystemWatcher,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
+            _metadataReferenceCache = metadataReferenceCache ?? throw new ArgumentNullException(nameof(metadataReferenceCache));
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
+            _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-            _projects = new Dictionary<string, ProjectInfo>();
+            _projects = new ConcurrentDictionary<string, ProjectInfo>();
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
         }
 
         public void Initalize(IConfiguration configuration)
         {
+            _options = new CakeOptions();
+            configuration.Bind(_options);
+
             _logger.LogInformation($"Detecting Cake files in '{_environment.TargetDirectory}'.");
 
             // Nothing to do if there are no Cake files
@@ -66,48 +81,79 @@ namespace OmniSharp.Cake
 
             _logger.LogInformation($"Found {allCakeFiles.Length} Cake files.");
 
-            // Check that script service is connected
-            if (!_scriptService.IsConnected)
+            // Try intialize Cake scripting service
+            if (!_scriptService.Initialize(_options))
             {
-                _logger.LogWarning("Cake script service not connected. Aborting.");
+                _logger.LogWarning("Could not initialize Cake script service. Aborting.");
                 return;
             }
 
-            foreach (var cakePath in allCakeFiles)
+            foreach (var cakeFilePath in allCakeFiles)
             {
-                try
-                {
-                    var cakeScript = _scriptService.Generate(new FileChange
-                    {
-                        FileName = cakePath,
-                        FromDisk = true
-                    });
-                    var project = GetProject(cakeScript, cakePath);
-
-                    // add Cake project to workspace
-                    _workspace.AddProject(project);
-                    var documentId = DocumentId.CreateNewId(project.Id);
-                    var loader = new CakeTextLoader(cakePath, _scriptService);
-                    var documentInfo = DocumentInfo.Create(
-                        documentId,
-                        cakePath,
-                        filePath: cakePath,
-                        loader: loader,
-                        sourceCodeKind: SourceCodeKind.Script);
-
-                    _workspace.AddDocument(documentInfo);
-                    _projects[cakePath] = project;
-                    _logger.LogInformation($"Added Cake project '{cakePath}' to the workspace.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"{cakePath} will be ignored due to an following error");
-                }
+                AddCakeFile(cakeFilePath);
             }
 
             // Hook up Cake script events
             _scriptService.ReferencesChanged += ScriptReferencesChanged;
             _scriptService.UsingsChanged += ScriptUsingsChanged;
+
+            // Watch .cake files
+            _fileSystemWatcher.Watch(".cake", OnCakeFileChanged);
+        }
+
+        private void AddCakeFile(string cakeFilePath)
+        {
+            try
+            {
+                var cakeScript = _scriptService.Generate(new FileChange
+                {
+                    FileName = cakeFilePath,
+                    FromDisk = true
+                });
+
+                var project = GetProject(cakeScript, cakeFilePath);
+
+                // add Cake project to workspace
+                _workspace.AddProject(project);
+                var documentId = DocumentId.CreateNewId(project.Id);
+                var loader = new CakeTextLoader(cakeFilePath, _scriptService);
+                var documentInfo = DocumentInfo.Create(
+                    documentId,
+                    cakeFilePath,
+                    filePath: cakeFilePath,
+                    loader: loader,
+                    sourceCodeKind: SourceCodeKind.Script);
+
+                _workspace.AddDocument(documentInfo);
+                _projects[cakeFilePath] = project;
+                _logger.LogInformation($"Added Cake project '{cakeFilePath}' to the workspace.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{cakeFilePath} will be ignored due to an following error");
+            }
+        }
+
+        private void RemoveCakeFile(string cakeFilePath)
+        {
+            if (_projects.TryRemove(cakeFilePath, out var projectInfo))
+            {
+                _workspace.RemoveProject(projectInfo.Id);
+                _logger.LogInformation($"Removed Cake project '{cakeFilePath}' from the workspace.");
+            }
+        }
+
+        private void OnCakeFileChanged(string filePath, FileChangeType changeType)
+        {
+            if (changeType == FileChangeType.Unspecified && !File.Exists(filePath) || changeType == FileChangeType.Delete)
+            {
+                RemoveCakeFile(filePath);
+            }
+
+            if (changeType == FileChangeType.Unspecified && File.Exists(filePath) || changeType == FileChangeType.Create)
+            {
+                AddCakeFile(filePath);
+            }
         }
 
         private void ScriptUsingsChanged(object sender, UsingsChangedEventArgs e)
@@ -148,15 +194,27 @@ namespace OmniSharp.Cake
                 var document = solution.GetDocument(documentId);
                 var project = document.Project;
 
-                var metadataReferences = e.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference)));
-                var fileReferencesToRemove = project.MetadataReferences;
+                var metadataReferences = GetMetadataReferences(e.References);
+                var referencesToRemove = new HashSet<MetadataReference>(project.MetadataReferences, MetadataReferenceEqualityComparer.Instance);
+                var referencesToAdd = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
 
                 foreach (var reference in metadataReferences)
                 {
+                    if (referencesToRemove.Remove(reference))
+                    {
+                        continue;
+                    }
+
+                    if (referencesToAdd.Contains(reference))
+                    {
+                        continue;
+                    }
+
                     _workspace.AddMetadataReference(project.Id, reference);
+                    referencesToAdd.Add(reference);
                 }
 
-                foreach (var reference in fileReferencesToRemove)
+                foreach (var reference in referencesToRemove)
                 {
                     _workspace.RemoveMetadataReference(project.Id, reference);
                 }
@@ -205,8 +263,15 @@ namespace OmniSharp.Cake
         {
             var name = Path.GetFileName(filePath);
 
-            var assembly = _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath);
-            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => assembly, null, true);
+            if (!File.Exists(cakeScript.Host.AssemblyPath))
+            {
+                throw new FileNotFoundException($"Cake is not installed. Path {cakeScript.Host.AssemblyPath} does not exist.");
+            }
+            var hostObjectType = Type.GetType(cakeScript.Host.TypeName, a => _assemblyLoader.LoadFrom(cakeScript.Host.AssemblyPath, dontLockAssemblyOnDisk: true), null, false);
+            if (hostObjectType == null)
+            {
+                throw new InvalidOperationException($"Could not get host object type: {cakeScript.Host.TypeName}.");
+            }
 
             return ProjectInfo.Create(
                 id: ProjectId.CreateNewId(Guid.NewGuid().ToString()),
@@ -217,18 +282,24 @@ namespace OmniSharp.Cake
                 language: LanguageNames.CSharp,
                 compilationOptions: cakeScript.Usings == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(cakeScript.Usings),
                 parseOptions: new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script),
-                metadataReferences: cakeScript.References.Select(reference => MetadataReference.CreateFromFile(reference, documentation: GetDocumentationProvider(reference))),
+                metadataReferences: GetMetadataReferences(cakeScript.References),
                 // TODO: projectReferences?
                 isSubmission: true,
                 hostObjectType: hostObjectType);
         }
 
-        private static DocumentationProvider GetDocumentationProvider(string assemblyPath)
+        private IEnumerable<MetadataReference> GetMetadataReferences(IEnumerable<string> references)
         {
-            var assemblyDocumentationPath = Path.ChangeExtension(assemblyPath, ".xml");
-            return File.Exists(assemblyDocumentationPath)
-                ? XmlDocumentationProvider.CreateFromFile(assemblyDocumentationPath)
-                : DocumentationProvider.Default;
+            foreach (var reference in references)
+            {
+                if (!File.Exists(reference))
+                {
+                    _logger.LogWarning($"Unable to create MetadataReference. File {reference} does not exist.");
+                    continue;
+                }
+
+                yield return _metadataReferenceCache.GetMetadataReference(reference);
+            }
         }
 
         private static CSharpCompilationOptions CreateCompilationOptions()

@@ -55,5 +55,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.True(secondWatcherCalled);
             }
         }
+
+        [Fact]
+        public void TestFileExtensionWatchers()
+        {
+            using (var host = CreateEmptyOmniSharpHost())
+            {
+                var watcher = host.GetExport<IFileSystemWatcher>();
+
+                var extensionWatcherCalled = false;
+                watcher.Watch(".cs", (path, changeType) => { extensionWatcherCalled = true; });
+
+                var handler = GetRequestHandler(host);
+                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
+
+                Assert.True(extensionWatcherCalled);
+            }
+        }
     }
 }
