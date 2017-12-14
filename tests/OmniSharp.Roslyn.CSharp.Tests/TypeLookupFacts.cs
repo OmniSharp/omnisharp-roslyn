@@ -540,9 +540,9 @@ Here's how you could make a second paragraph in a description.";
             string content = @"
 public class TestClass
 {
-    ///<summary>DoWork is a method in the TestClass class.
-    ///<seealso cref=""TestClass.Main""/>
-    ///</summary>
+    /// <summary>DoWork is a method in the TestClass class.
+    /// <seealso cref=""TestClass.Main""/>
+    /// </summary>
             public static void Do$$Work(int Int1)
             {
             }

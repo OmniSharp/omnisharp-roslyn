@@ -176,13 +176,6 @@ namespace OmniSharp.Models.TypeLookup
             int offset = input.TakeWhile(c => char.IsWhiteSpace(c)).Count();
             return " " + input.Substring(offset);
         }
-
-        // Replace multiple spaces occuring together with a single space
-        private static string TrimMultipleSpaces(string input)
-        {
-            //var convertedString = input.ToString();
-            return System.Text.RegularExpressions.Regex.Replace(input, @"[ ]+", " ");
-        }
     }
 
     class DocumentationItemBuilder
