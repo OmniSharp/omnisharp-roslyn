@@ -34,6 +34,8 @@ bool AllowLegacyTests()
 {
     var platform = Platform.Current;
 
+    if (platform.IsMacOS && TravisCI.IsRunningOnTravisCI) return false;
+
     if (platform.IsWindows)
     {
         return true;
@@ -423,7 +425,6 @@ Task("PrepareTestAssets:WindowsTestAssets")
 
 Task("PrepareTestAssets:LegacyTestAssets")
     .WithCriteria(() => AllowLegacyTests())
-    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.LegacyTestAssets, (project) =>
     {
