@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.28.0] - not yet released
+## [1.28.0] - 2017-12-14
 
 * Fixed issue with loading XML documentation for `#r` assembly references in CSX scripts ([#1026](https://github.com/OmniSharp/omnisharp-roslyn/issues/1026), PR: [#1027](https://github.com/OmniSharp/omnisharp-roslyn/pull/1027))
 * Updated the `/v2/runcodeaction` end point to return document "renames" and "opens" that a code action might perform. (PR: [#1023](https://github.com/OmniSharp/omnisharp-roslyn/pull/1023))
