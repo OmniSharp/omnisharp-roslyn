@@ -140,7 +140,25 @@ namespace OmniSharp.Models.TypeLookup
                     return null;
                 }
             }
-            return new DocumentationComment(summaryText.ToString(), typeParamElements.Select(s => s.ToString()).ToArray(), paramElements.Select(s => s.ToString()).ToArray(), returnsText.ToString(), remarksText.ToString(), exampleText.ToString(), valueText.ToString(), exception.Select(s => s.ToString()).ToArray());
+            /* return new DocumentationComment(
+                 TrimMultipleSpaces(summaryText),
+                 typeParamElements.Select(s => TrimMultipleSpaces(s)).ToArray(),
+                 paramElements.Select(s => TrimMultipleSpaces(s)).ToArray(),
+                 TrimMultipleSpaces(returnsText),
+                 TrimMultipleSpaces(remarksText),
+                 TrimMultipleSpaces(exampleText),
+                 TrimMultipleSpaces(valueText),
+                 exception.Select(s => TrimMultipleSpaces(s)).ToArray());*/
+            return new DocumentationComment(
+               summaryText.ToString(),
+               typeParamElements.Select(s => s.ToString()).ToArray(),
+               paramElements.Select(s => s.ToString()).ToArray(),
+               returnsText.ToString(),
+               remarksText.ToString(),
+               exampleText.ToString(),
+               valueText.ToString(),
+               exception.Select(s => s.ToString()).ToArray());
+
         }
 
         private static string TrimMultiLineString(string input, string lineEnding)
@@ -176,6 +194,11 @@ namespace OmniSharp.Models.TypeLookup
             return " " + input.Substring(offset);
         }
 
-        //private static string TrimMultipleSpaces()
+        // Replace multiple spaces occuring together with a single space
+        private static string TrimMultipleSpaces(string input)
+        {
+            //var convertedString = input.ToString();
+            return System.Text.RegularExpressions.Regex.Replace(input, @"[ ]+", " ");
+        }
     }
 }

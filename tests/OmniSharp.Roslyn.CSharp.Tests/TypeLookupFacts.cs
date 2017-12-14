@@ -458,7 +458,7 @@ public class TestClass
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Summary: DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
+            @"Summary: DoWork is a method in the TestClass class. System.Console.WriteLine(System.String)  for information about output statements.";
             Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
         }
 
@@ -505,7 +505,7 @@ public class TestClass
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Example: This sample shows how to call the TestClass.GetZero method.
+            @"Example: This sample shows how to call the TestClass.GetZero  method.
 
     class TestClass 
     {

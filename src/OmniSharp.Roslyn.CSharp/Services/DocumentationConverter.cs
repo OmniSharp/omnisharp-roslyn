@@ -109,7 +109,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
         private static string TrimMultiLineString(string input, string lineEnding)
         {
             var lines = input.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            return string.Join(lineEnding, lines.Select(l => TrimLeadingSpaces(l)));
+            return string.Join(lineEnding, lines.Select(l => l.TrimStart()));
         }
 
         private static string GetCref(string cref)
@@ -134,14 +134,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
             if (string.IsNullOrEmpty(xmlDocumentation))
                 return null;
             return DocumentationComment.From(xmlDocumentation, lineEnding);
-        }
-
-        private static string TrimLeadingSpaces(string input)
-        {
-            if (!Char.IsWhiteSpace(input[0]))
-                return input;
-            int offset = input.TakeWhile(c => char.IsWhiteSpace(c)).Count();
-            return " " + input.Substring(offset);
         }
     }
 }
