@@ -293,7 +293,7 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Remarks: You may have some additional information about this class here.";
+            @"You may have some additional information about this class here.";
             Assert.Equal(expected, response.StructuredDocumentation.RemarksText);
         }
 
@@ -310,7 +310,7 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Summary: Checks if object is tagged with the tag.";
+            @"Checks if object is tagged with the tag.";
             Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
         }
 
@@ -327,7 +327,7 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Returns: Returns true if object is tagged with tag.";
+            @"Returns true if object is tagged with tag.";
             Assert.Equal(expected, response.StructuredDocumentation.ReturnsText);
         }
 
@@ -344,7 +344,7 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Example: Checks if object is tagged with the tag.";
+            @"Checks if object is tagged with the tag.";
             Assert.Equal(expected, response.StructuredDocumentation.ExampleText);
         }
 
@@ -363,12 +363,10 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             Assert.Equal(2, response.StructuredDocumentation.Exception.Count());
 
-            var expectedException0 =
-            @"A: A description";
-            Assert.Equal(expectedException0, response.StructuredDocumentation.Exception[0]);
-            var expectedException1 =
-            @"B: B description";
-            Assert.Equal(expectedException1, response.StructuredDocumentation.Exception[1]);
+            Assert.Equal("A", response.StructuredDocumentation.Exception[0].Name);
+            Assert.Equal("A description", response.StructuredDocumentation.Exception[0].Documentation);
+            Assert.Equal("B", response.StructuredDocumentation.Exception[1].Name);
+            Assert.Equal("B description", response.StructuredDocumentation.Exception[1].Documentation);
         }
 
         [Fact]
@@ -386,12 +384,10 @@ class testissue
             var response = await GetTypeLookUpResponse(content);
             Assert.Equal(2, response.StructuredDocumentation.ParamElements.Length);
 
-            var expectedParam0 =
-            @"gameObject: The game object.";
-            Assert.Equal(expectedParam0, response.StructuredDocumentation.ParamElements[0]);
-            var expectedParam1 =
-            @"tagName: Name of the tag.";
-            Assert.Equal(expectedParam1, response.StructuredDocumentation.ParamElements[1]);
+            Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
+            Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
+            Assert.Equal("tagName", response.StructuredDocumentation.ParamElements[1].Name);
+            Assert.Equal("Name of the tag.", response.StructuredDocumentation.ParamElements[1].Documentation);
         }
 
         [Fact]
@@ -413,12 +409,10 @@ public class TestClass
             var response = await GetTypeLookUpResponse(content);
             Assert.Equal(2, response.StructuredDocumentation.TypeParamElements.Count());
 
-            var expected0 =
-           @"T: The element type of the array";
-            Assert.Equal(expected0, response.StructuredDocumentation.TypeParamElements[0]);
-            var expected1 =
-           @"X: The element type of the list";
-            Assert.Equal(expected1, response.StructuredDocumentation.TypeParamElements[1]);
+            Assert.Equal("T", response.StructuredDocumentation.TypeParamElements[0].Name);
+            Assert.Equal("The element type of the array", response.StructuredDocumentation.TypeParamElements[0].Documentation);
+            Assert.Equal("X", response.StructuredDocumentation.TypeParamElements[1].Name);
+            Assert.Equal("The element type of the list", response.StructuredDocumentation.TypeParamElements[1].Documentation);
         }
 
         [Fact]
@@ -438,10 +432,10 @@ public class TestClass
 ";
             var response = await GetTypeLookUpResponse(content);
             var expectedValue =
-            @"Value: The Name property gets/sets the value of the string field, _name.";
+            @"The Name property gets/sets the value of the string field, _name.";
             Assert.Equal(expectedValue, response.StructuredDocumentation.ValueText);
             var expectedSummary =
-            @"Summary: The Name property represents the employee's name.";
+            @"The Name property represents the employee's name.";
             Assert.Equal(expectedSummary, response.StructuredDocumentation.SummaryText);
         }
 
@@ -458,7 +452,7 @@ public class TestClass
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Summary: DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
+            @"DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
             Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
         }
 
@@ -477,7 +471,7 @@ public class TestClass
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Summary: Creates a new array of arbitrary type T ";
+            @"Creates a new array of arbitrary type T ";
             Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
         }
 
@@ -505,7 +499,7 @@ public class TestClass
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Example: This sample shows how to call the TestClass.GetZero method.
+            @"This sample shows how to call the TestClass.GetZero method.
 
     class TestClass 
     {
@@ -534,7 +528,7 @@ public class TestClass
             ";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-@"Summary: DoWork is a method in the TestClass class.
+@"DoWork is a method in the TestClass class.
 
 Here's how you could make a second paragraph in a description.";
             Assert.Equal(expected.Replace("\r", ""), response.StructuredDocumentation.SummaryText);
@@ -559,7 +553,7 @@ public class TestClass
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-@"Summary: DoWork is a method in the TestClass class.
+@"DoWork is a method in the TestClass class.
 See also: TestClass.Main ";
             Assert.Equal(expected.Replace("\r", ""), response.StructuredDocumentation.SummaryText);
         }
@@ -579,16 +573,14 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             var expected =
-            @"Summary: Checks if object is tagged with the tag.";
+            @"Checks if object is tagged with the tag.";
             Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
 
             Assert.Equal(2, response.StructuredDocumentation.ParamElements.Length);
-            var expectedParam0 =
-            @"gameObject: The game object.";
-            Assert.Equal(expectedParam0, response.StructuredDocumentation.ParamElements[0]);
-            var expectedParam1 =
-            @"tagName: Name of the tag.";
-            Assert.Equal(expectedParam1, response.StructuredDocumentation.ParamElements[1]);
+            Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
+            Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
+            Assert.Equal("tagName", response.StructuredDocumentation.ParamElements[1].Name);
+            Assert.Equal("Name of the tag.", response.StructuredDocumentation.ParamElements[1].Documentation);
         }
 
         [Fact]
@@ -610,34 +602,31 @@ class testissue
 }";
             var response = await GetTypeLookUpResponse(content);
             var expectedSummary =
-            @"Summary: Checks if object is tagged with the tag.";
+            @"Checks if object is tagged with the tag.";
             Assert.Equal(expectedSummary, response.StructuredDocumentation.SummaryText);
 
             Assert.Single(response.StructuredDocumentation.ParamElements);
-            var expectedParam =
-            @"gameObject: The game object.";
-            Assert.Equal(expectedParam, response.StructuredDocumentation.ParamElements[0]);
-
+            Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
+            Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
+            
             var expectedExample =
-            @"Example: Invoke using A.Compare(5) where A is an instance of the class testissue.";
+            @"Invoke using A.Compare(5) where A is an instance of the class testissue.";
             Assert.Equal(expectedExample, response.StructuredDocumentation.ExampleText);
 
             Assert.Single(response.StructuredDocumentation.TypeParamElements);
-            var expectedTypeParam =
-           @"T: The element type of the array";
-            Assert.Equal(expectedTypeParam, response.StructuredDocumentation.TypeParamElements[0]);
+            Assert.Equal("T", response.StructuredDocumentation.TypeParamElements[0].Name);
+            Assert.Equal("The element type of the array", response.StructuredDocumentation.TypeParamElements[0].Documentation);
 
             Assert.Single(response.StructuredDocumentation.Exception);
-            var expectedException =
-            @"System.Exception: Thrown when something goes wrong";
-            Assert.Equal(expectedException, response.StructuredDocumentation.Exception[0]);
+            Assert.Equal("System.Exception", response.StructuredDocumentation.Exception[0].Name);
+            Assert.Equal("Thrown when something goes wrong", response.StructuredDocumentation.Exception[0].Documentation);
 
             var expectedRemarks =
-            @"Remarks: You may have some additional information about this class here.";
+            @"You may have some additional information about this class here.";
             Assert.Equal(expectedRemarks, response.StructuredDocumentation.RemarksText);
 
             var expectedReturns =
-            @"Returns: Returns an array of type T .";
+            @"Returns an array of type T .";
             Assert.Equal(expectedReturns, response.StructuredDocumentation.ReturnsText);
         }
     }
