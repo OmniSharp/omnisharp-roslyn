@@ -423,6 +423,7 @@ Task("PrepareTestAssets:WindowsTestAssets")
 
 Task("PrepareTestAssets:LegacyTestAssets")
     .WithCriteria(() => AllowLegacyTests())
+    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.LegacyTestAssets, (project) =>
     {
@@ -847,6 +848,7 @@ Task("Publish")
 ///  Execute the run script.
 /// </summary>
 Task("ExecuteRunScript")
+    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .Does(() =>
 {
     foreach (var project in buildPlan.HostProjects)
