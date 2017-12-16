@@ -48,7 +48,7 @@ bool AllowLegacyTests()
 
     if (platform.IsLinux)
     {
-        var version = platform.Version.ToString();
+        var version = $"{platform.Version}";
 
         // Taken from https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh
         switch (platform.DistroName)
