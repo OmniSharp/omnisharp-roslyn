@@ -1,10 +1,25 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.28.0] - not yet released
+## [1.28.0] - 2017-12-14
 
 * Fixed issue with loading XML documentation for `#r` assembly references in CSX scripts ([#1026](https://github.com/OmniSharp/omnisharp-roslyn/issues/1026), PR: [#1027](https://github.com/OmniSharp/omnisharp-roslyn/pull/1027))
 * Updated the `/v2/runcodeaction` end point to return document "renames" and "opens" that a code action might perform. (PR: [#1023](https://github.com/OmniSharp/omnisharp-roslyn/pull/1023))
+* Corrected issue where MSBuild discovery would pick instances of Visual Studio 2017 that did not have Roslyn installed. ([#1031](https://github.com/OmniSharp/omnisharp-roslyn/issues/1031), PR: [#1032](https://github.com/OmniSharp/omnisharp-roslyn/pull/1032))
+* Updated `/codecheck` endpoint to return diagnostic IDs. (PR: [#1034](https://github.com/OmniSharp/omnisharp-roslyn/pull/1034))
+* Updated OmniSharp.Script to DotNet.Script.DependencyModel 0.3.0 (PR: [#1035](https://github.com/OmniSharp/omnisharp-roslyn/pull/1035))
+* Fixed scripting suppot to not load the same assembly name multiple times ([dotnet-script#194](https://github.com/filipw/dotnet-script/issues/194), PR: [#1037](https://github.com/OmniSharp/omnisharp-roslyn/pull/1037))
+* STDIO requests and responses are now pretty-printed during logging. (PR: [#1040](https://github.com/OmniSharp/omnisharp-roslyn/pull/1040))
+* Several fixes to the `/signaturehelp` endpoint to return correct signatures in more locations. ([omnisharp-vscode#1440](https://github.com/OmniSharp/omnisharp-vscode/issues/1440), [omnisharp-vscode#1664](https://github.com/OmniSharp/omnisharp-vscode/issues/1664) [omnisharp-vscode#1715](https://github.com/OmniSharp/omnisharp-vscode/issues/1715), PRs: [#1030](https://github.com/OmniSharp/omnisharp-roslyn/pull/1030), [#1052](https://github.com/OmniSharp/omnisharp-roslyn/pull/1052))
+* Updated `/typelookup` endpoint to include structured object representing the various sections of an XML doc comment. ([omnisharp-vscode#1057](https://github.com/OmniSharp/omnisharp-vscode/issues/1057), PR: [#1038](https://github.com/OmniSharp/omnisharp-roslyn/pull/1038))
+* Ensure the correct range is used when formatting a span that includes preceding whitespace. ([omnisharp-vscode#214](https://github.com/OmniSharp/omnisharp-vscode/issues/214), PR: [#1043](https://github.com/OmniSharp/omnisharp-roslyn/pull/1043))
+* Fix issue in Cake project system where it attempted to create MetadataReferences for files that don't exist. (PR: [#1045](https://github.com/OmniSharp/omnisharp-roslyn/pull/1045))
+* Improvements to the Cake bakery resolver to resolve from both OmniSharp options and PATH. (PR: [#1047](https://github.com/OmniSharp/omnisharp-roslyn/pull/1047))
+* Ensure that the Cake.Core assembly is not locked on disk when loading the host object type. (PR: [#1044](https://github.com/OmniSharp/omnisharp-roslyn/pull/1044))
+* Added internal support for watching for changes by file extension. (PR: [#1053](https://github.com/OmniSharp/omnisharp-roslyn/pull/1053))
+* Watch added/removed .cake-files and update workspace accordingly. (PR: [#1054] (https://github.com/OmniSharp/omnisharp-roslyn/pull/1054))
+* Watch added/removed .csx-files and update workspace accordingly. (PR: [#1056] (https://github.com/OmniSharp/omnisharp-roslyn/pull/1056))
+* Updated `Cake.Scripting.Transport` dependencies to 0.2.0 in order to improve performance when working with Cake files. (PR: [#1057](https://github.com/OmniSharp/omnisharp-roslyn/pull/1057))
 
 ## [1.27.2] - 2017-11-10
 
