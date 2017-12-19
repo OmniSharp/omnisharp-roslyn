@@ -1,15 +1,10 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Eventing;
-using OmniSharp.Extensions.LanguageServer;
 using OmniSharp.LanguageServerProtocol;
-using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
 
@@ -59,9 +54,11 @@ namespace OmniSharp.Stdio
                     var plugins = application.CreatePluginAssemblies();
 
                     var writer = new SharedTextWriter(output);
+
+                    var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
                     var compositionHostBuilder = new CompositionHostBuilder(serviceProvider, environment, new StdioEventEmitter(writer))
                         .WithOmniSharpAssemblies()
-                        .WithAssemblies(plugins.AssemblyNames.Select(Assembly.Load).ToArray());
+                        .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(plugins.AssemblyNames).ToArray());
                     using (var host = new Host(input, writer, environment, configuration, serviceProvider, compositionHostBuilder, loggerFactory, cancellation))
                     {
                         host.Start();
