@@ -7,6 +7,8 @@ build_script:
   - ps: .\build.ps1 All -publish-all -archive
 artifacts:
   - path: artifacts/package/*.zip
+cache:
+  - tools -> tools/packages.config
 deploy:
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)

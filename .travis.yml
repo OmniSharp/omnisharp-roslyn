@@ -9,7 +9,13 @@ os:
   - linux
   - osx
 osx_image: xcode9.2
-
+cache:
+  directories:
+    - tools
+    - .dotnet-legacy
+    - "$HOME/.nuget/packages"
+before_cache:
+  - rm -f tools/packages.config
 script:
   - git fetch --unshallow
   - git fetch origin '+refs/heads/*:refs/heads/*'
@@ -59,7 +65,7 @@ install:
 notifications:
   slack:
     rooms:
-      - omnisharp:U358j4McaEOIzFqXvGexVokC#general
+      - omnisharp:U358j4McaEOIzFqXvGexVokC#integrations
     on_success: change
     on_failure: always
     on_pull_requests: false
