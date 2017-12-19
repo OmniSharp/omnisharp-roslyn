@@ -453,7 +453,6 @@ Task("PrepareTestAssets:LegacyTestAssets")
     });
 
 Task("PrepareTestAssets:CakeTestAssets")
-    .WithCriteria(() => AllowLegacyTests())
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.CakeTestAssets, (project) =>
     {
