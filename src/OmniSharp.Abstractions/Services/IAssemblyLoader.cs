@@ -44,7 +44,7 @@ namespace OmniSharp.Services
         {
             if (File.Exists(assemblyName))
             {
-                return Assembly.LoadFile(assemblyName);
+                return Assembly.LoadFrom(assemblyName);
             }
             else
             {
