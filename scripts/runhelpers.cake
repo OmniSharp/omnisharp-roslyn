@@ -223,38 +223,6 @@ string RunAndCaptureOutput(string command, string arguments, string workingDirec
 }
 
 /// <summary>
-///  Run tool with the given arguments
-/// </summary>
-/// <param name="command">Executable to run</param>
-/// <param name="arguments">Arguments</param>
-/// <param name="runOptions">Optional settings</param>
-/// <returns>The exit status for further queries</returns>
-ExitStatus RunTool(string command, string arguments, string workingDirectory, string logFileName = null, IDictionary<string, string> environmentVariables = null)
-{
-    var output = new List<string>();
-    var options = new RunOptions(workingDirectory, output, false, environmentVariables);
-    var exitStatus = Run(command, arguments, options);
-
-    var log = string.Join(System.Environment.NewLine, output);
-
-    if (exitStatus.Code == 0)
-    {
-        Context.Log.Write(Verbosity.Diagnostic, LogLevel.Debug, "{0}", log);
-    }
-    else
-    {
-        Context.Log.Write(Verbosity.Normal, LogLevel.Error, "{0}", log);
-    }
-
-    if (logFileName != null)
-    {
-        System.IO.File.WriteAllText(logFileName, log);
-    }
-
-    return exitStatus;
-}
-
-/// <summary>
 ///  Kill the given process and all its child processes.
 /// </summary>
 /// <param name="process">Root process</param>
