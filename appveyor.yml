@@ -1,11 +1,14 @@
 # Fix line endings in Windows. (runs before repo cloning)
 init:
   - git config --global core.autocrlf true
+image: Visual Studio 2017
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
   - ps: .\build.ps1 All -publish-all -archive
 artifacts:
   - path: artifacts/package/*.zip
+cache:
+  - tools -> tools/packages.config
 deploy:
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)

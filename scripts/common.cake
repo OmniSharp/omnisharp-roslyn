@@ -1,4 +1,5 @@
 #addin "Newtonsoft.Json"
+#tool "nuget:?package=GitVersion.CommandLine&prerelease"
 
 #load "platform.cake"
 
@@ -211,17 +212,20 @@ public class BuildEnvironment
     public MonoRuntime[] MonoRuntimes { get; }
     public MonoRuntime CurrentMonoRuntime { get; }
 
-    public BuildEnvironment(bool useGlobalDotNetSdk)
+    public GitVersion VersionInfo { get; }
+
+    public BuildEnvironment(bool useGlobalDotNetSdk, ICakeContext context)
     {
-        this.WorkingDirectory = PathHelper.GetFullPath(
-            System.IO.Directory.GetCurrentDirectory());
+        this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
 
         this.DotNetCommand = useGlobalDotNetSdk
             ? "dotnet"
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
+        if (Platform.Current.IsWindows) this.DotNetCommand += ".exe";
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
+        if (Platform.Current.IsWindows) this.LegacyDotNetCommand += ".exe";
 
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
@@ -246,6 +250,8 @@ public class BuildEnvironment
         {
             this.CurrentMonoRuntime = this.MonoRuntimes[2];
         }
+
+        VersionInfo = context.GitVersion();
     }
 }
 
