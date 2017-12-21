@@ -40,15 +40,17 @@ namespace OmniSharp.Services
             }
         }
 
-        public static Assembly LoadByAssemblyNameOrPath(string assemblyName)
+        public static Assembly LoadByAssemblyNameOrPath(
+            this IAssemblyLoader loader,
+            string assemblyName)
         {
             if (File.Exists(assemblyName))
             {
-                return Assembly.LoadFrom(assemblyName);
+                return loader.LoadFrom(assemblyName);
             }
             else
             {
-                return Assembly.Load(assemblyName);
+                return loader.Load(assemblyName);
             }
         }
 
@@ -56,7 +58,7 @@ namespace OmniSharp.Services
         {
             foreach (var assemblyName in assemblyNames)
             {
-                yield return LoadByAssemblyNameOrPath(assemblyName);
+                yield return loader.LoadByAssemblyNameOrPath(assemblyName);
             }
         }
     }
