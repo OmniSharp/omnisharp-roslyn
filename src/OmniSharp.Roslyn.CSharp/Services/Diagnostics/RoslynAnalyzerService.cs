@@ -20,41 +20,42 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly ImmutableArray<DiagnosticAnalyzer> _analyzers;
         private readonly ILogger<RoslynAnalyzerService> _logger;
-        private ConcurrentDictionary<string, Project> _projects = new ConcurrentDictionary<string, Project>();
+        private ConcurrentDictionary<string, Project> _workQueue = new ConcurrentDictionary<string, Project>();
+        private ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>> _results = new ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>>();
 
         [ImportingConstructor]
         public RoslynAnalyzerService(OmniSharpWorkspace workspace, ExternalFeaturesHostServicesProvider hostServices, ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<RoslynAnalyzerService>();
             _analyzers = hostServices.Assemblies.SelectMany(assembly =>
+            {
+                try
                 {
-                    try
-                    {
-                        _logger.LogInformation($"Loading analyzers from assembly: {assembly.Location}");
+                    _logger.LogInformation($"Loading analyzers from assembly: {assembly.Location}");
 
-                        return assembly.GetTypes()
-                            .Where(x => typeof(DiagnosticAnalyzer).IsAssignableFrom(x))
-                            .Where(x => !x.IsAbstract)
-                            .Select(Activator.CreateInstance)
-                            .Where(x => x != null)
-                            .Cast<DiagnosticAnalyzer>();
-                    }
-                    catch (ReflectionTypeLoadException ex)
-                    {
-                        _logger.LogError(
-                            $"Tried to load analyzers from extensions, loader error occurred {ex} : {ex.LoaderExceptions}");
-                        return Enumerable.Empty<DiagnosticAnalyzer>();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            $"Unexpected error during analyzer loading {ex}");
-                        return Enumerable.Empty<DiagnosticAnalyzer>();
-                    }
+                    return assembly.GetTypes()
+                        .Where(x => typeof(DiagnosticAnalyzer).IsAssignableFrom(x))
+                        .Where(x => !x.IsAbstract)
+                        .Select(Activator.CreateInstance)
+                        .Where(x => x != null)
+                        .Cast<DiagnosticAnalyzer>();
                 }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    _logger.LogError(
+                        $"Tried to load analyzers from extensions, loader error occurred {ex} : {ex.LoaderExceptions}");
+                    return Enumerable.Empty<DiagnosticAnalyzer>();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        $"Unexpected error during analyzer loading {ex}");
+                    return Enumerable.Empty<DiagnosticAnalyzer>();
+                }
+            }
             ).ToImmutableArray();
 
-            //workspace.WorkspaceChanged += OnWorkspaceChanged;
+            workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             Task.Run(() => Worker(CancellationToken.None));
         }
@@ -63,39 +64,37 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             while (!token.IsCancellationRequested)
             {
-                var work = _projects;
-                Console.WriteLine("#1");
+                var work = _workQueue;
+
                 // Yeye here we may mis update because of concurrency but lets leave it at this point.
-                _projects = new ConcurrentDictionary<string, Project>();
+                _workQueue = new ConcurrentDictionary<string, Project>();
 
-                var result = await Task.WhenAll(work.Select(async x => await Analyze(x.Value)));
+                var analyzerResults = await Task.WhenAll(work.Select(async x => new { Project = x.Key, Result = await Analyze(x.Value)}));
 
-                if (result.SelectMany(x => x).Any())
-                    CurrentDiagnosticResults = result.SelectMany(x => x).ToImmutableArray();
-
-                Console.WriteLine("#2");
+                analyzerResults.ToList().ForEach(result => _results[result.Project] = result.Result);
 
                 await Task.Delay(1000, token);
             }
         }
 
-        public ImmutableArray<DiagnosticLocation> CurrentDiagnosticResults { get; private set; } = ImmutableArray<DiagnosticLocation>.Empty;
-
+        public IEnumerable<DiagnosticLocation> GetCurrentDiagnosticResults() => _results.SelectMany(x => x.Value);
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
             {
+                var project = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).Project;
+                _logger.LogInformation($"Queued {project.Name}");
                 QueueForAnalysis(new[] { changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).Project });
             }
         }
 
-        public void QueueForAnalysis(IEnumerable<Project> projects)
+        private void QueueForAnalysis(IEnumerable<Project> projects)
         {
             projects.ToList().ForEach(project =>
             {
                 Console.WriteLine($"Queue project {project.Name}");
-                _projects.TryAdd(project.Id.ToString(), project);
+                _workQueue.TryAdd(project.Id.ToString(), project);
             });
         }
 
