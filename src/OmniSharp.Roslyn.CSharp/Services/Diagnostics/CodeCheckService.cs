@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Composition;
+﻿using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -14,11 +13,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private OmniSharpWorkspace _workspace;
+        private readonly RoslynAnalyzerService _roslynAnalyzer;
 
         [ImportingConstructor]
-        public CodeCheckService(OmniSharpWorkspace workspace)
+        public CodeCheckService(OmniSharpWorkspace workspace, RoslynAnalyzerService roslynAnalyzer)
         {
             _workspace = workspace;
+            _roslynAnalyzer = roslynAnalyzer;
         }
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
@@ -28,7 +29,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
             var quickFixes = await documents.FindDiagnosticLocationsAsync();
-            return new QuickFixResponse(quickFixes);
+            _roslynAnalyzer.QueueForAnalysis(documents.Select(x => x.Project).Distinct());
+            return new QuickFixResponse(quickFixes.Concat(_roslynAnalyzer.CurrentDiagnosticResults));
         }
     }
 }
