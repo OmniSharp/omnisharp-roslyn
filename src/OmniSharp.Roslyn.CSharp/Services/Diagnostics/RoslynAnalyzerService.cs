@@ -35,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     _logger.LogInformation($"Loading analyzers from assembly: {assembly.Location}");
 
                     return assembly.GetTypes()
-                        .Where(x => typeof(DiagnosticAnalyzer).IsAssignableFrom(x))
+                        .Where(typeof(DiagnosticAnalyzer).IsAssignableFrom)
                         .Where(x => !x.IsAbstract)
                         .Select(Activator.CreateInstance)
                         .Where(x => x != null)
@@ -59,10 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             Task.Run(() => Worker(CancellationToken.None));
-            Task.Run(() =>
-            {
-                QueueForAnalysis(workspace.CurrentSolution.Projects);
-            });
+            Task.Run(() => QueueForAnalysis(workspace.CurrentSolution.Projects));
         }
 
         private async Task Worker(CancellationToken token)
