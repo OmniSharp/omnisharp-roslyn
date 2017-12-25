@@ -71,9 +71,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 // Yeye here we may mis update because of concurrency but lets leave it at this point.
                 _workQueue = new ConcurrentDictionary<string, Project>();
 
-                var analyzerResults = await Task.WhenAll(currentWork.Select(async x => new { Project = x.Key, Result = await Analyze(x.Value)}));
+                var analyzerResults = await Task
+                    .WhenAll(currentWork
+                        .Select(async x => new
+                        {
+                            Project = x.Key,
+                            Result = await Analyze(x.Value)
+                        }));
 
-                analyzerResults.ToList().ForEach(result => _results[result.Project] = result.Result);
+                analyzerResults
+                    .ToList()
+                    .ForEach(result => _results[result.Project] = result.Result);
 
                 await Task.Delay(1000, token);
             }
