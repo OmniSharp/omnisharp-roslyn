@@ -21,7 +21,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly ImmutableArray<DiagnosticAnalyzer> _analyzers;
         private readonly ILogger<RoslynAnalyzerService> _logger;
         private ConcurrentDictionary<string, Project> _workQueue = new ConcurrentDictionary<string, Project>();
-        private ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>> _results = new ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>>();
+        private readonly ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>> _results =
+            new ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>>();
 
         [ImportingConstructor]
         public RoslynAnalyzerService(OmniSharpWorkspace workspace, ExternalFeaturesHostServicesProvider hostServices, ILoggerFactory loggerFactory)
@@ -58,18 +59,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             Task.Run(() => Worker(CancellationToken.None));
+            Task.Run(() =>
+            {
+                QueueForAnalysis(workspace.CurrentSolution.Projects);
+            });
         }
 
         private async Task Worker(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                var work = _workQueue;
+                var currentWork = _workQueue;
 
                 // Yeye here we may mis update because of concurrency but lets leave it at this point.
                 _workQueue = new ConcurrentDictionary<string, Project>();
 
-                var analyzerResults = await Task.WhenAll(work.Select(async x => new { Project = x.Key, Result = await Analyze(x.Value)}));
+                var analyzerResults = await Task.WhenAll(currentWork.Select(async x => new { Project = x.Key, Result = await Analyze(x.Value)}));
 
                 analyzerResults.ToList().ForEach(result => _results[result.Project] = result.Result);
 
@@ -104,8 +109,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 return ImmutableArray<DiagnosticLocation>.Empty;
 
             var compiled = await project.GetCompilationAsync();
-            var analysis = await compiled.WithAnalyzers(_analyzers).GetAnalysisResultAsync(CancellationToken.None);
-            analysis.GetAllDiagnostics().ToList().ForEach(x => _logger.LogInformation(x.GetMessage()));
+            var analysis = await compiled
+                .WithAnalyzers(_analyzers)
+                .GetAnalysisResultAsync(CancellationToken.None);
+
             return analysis.GetAllDiagnostics().Select(x => AsDiagnosticLocation(x, project));
         }
 

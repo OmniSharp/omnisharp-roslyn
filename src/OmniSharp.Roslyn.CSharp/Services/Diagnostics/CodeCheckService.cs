@@ -29,7 +29,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
             var quickFixes = await documents.FindDiagnosticLocationsAsync();
-            //_roslynAnalyzer.QueueForAnalysis(documents.Select(x => x.Project).Distinct());
 
             var analyzerResults =
                 _roslynAnalyzer.GetCurrentDiagnosticResults().Where(x =>
