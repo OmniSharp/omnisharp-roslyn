@@ -128,26 +128,50 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
+            IEnumerable<CodeFixProvider> sortedProviders = GetSortedCodeFixProviders();
+            foreach (var codeFixProvider in sortedProviders)
+            {
+                var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
+                if (fixableDiagnostics.Length > 0)
+                {
+                    var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
+
+                    try
+                    {
+                        await codeFixProvider.RegisterCodeFixesAsync(context);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.LogError(ex, $"Error registering code fixes for {codeFixProvider.GetType().FullName}");
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<CodeFixProvider> GetSortedCodeFixProviders()
+        {
+            List<ProviderNode> nodesList = new List<ProviderNode>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
-                    var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
-                    if (fixableDiagnostics.Length > 0)
-                    {
-                        var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
-
-                        try
-                        {
-                            await codeFixProvider.RegisterCodeFixesAsync(context);
-                        }
-                        catch (Exception ex)
-                        {
-                            this.Logger.LogError(ex, $"Error registering code fixes for {codeFixProvider.GetType().FullName}");
-                        }
-                    }
+                    nodesList.Add(ProviderNode.From(codeFixProvider));
                 }
             }
+            var graph = Graph.GetGraph(nodesList);
+            return graph.TopologicalSort();
+        }
+
+        private IEnumerable<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
+        {
+            foreach (var provider in this.Providers)
+            {
+                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
+                {
+                    var node = ProviderNode.From(codeRefactoringProvider);
+                }
+            }
+            throw new NotImplementedException();
         }
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
