@@ -3,24 +3,24 @@ using System.Collections.Generic;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    internal class Graph
+    internal class Graph<T>
     {
-        private Dictionary<string, ProviderNode> Nodes;
+        private Dictionary<string, ProviderNode<T>> Nodes;
         private Graph()
         {
-            Nodes = new Dictionary<string, ProviderNode>();
+            Nodes = new Dictionary<string, ProviderNode<T>>();
         }
-        internal static Graph GetGraph(List<ProviderNode> nodesList)
+        internal static Graph<T> GetGraph(List<ProviderNode<T>> nodesList)
         {
-            var graph = new Graph();
+            var graph = new Graph<T>();
 
-            foreach (ProviderNode node in nodesList)
+            foreach (ProviderNode<T> node in nodesList)
             {
                 if (!graph.Nodes.ContainsKey(node.ProviderName))
                     graph.Nodes[node.ProviderName] = node;
             }
 
-            foreach (ProviderNode node in nodesList)
+            foreach (ProviderNode<T> node in nodesList)
             {
                 foreach (var before in node.Before)
                 {
@@ -44,31 +44,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             return graph;
         }
 
-        public List<CodeAction> TopologicalSort()
+        public List<T> TopologicalSort()
         {
-            List<CodeAction> result = new List<CodeAction>();
-            var seenNodes = new HashSet<CodeActionNode>();
+            List<T> result = new List<T>();
+            var seenNodes = new HashSet<ProviderNode<T>>();
 
-            foreach(var nodes in Nodes.Values)
+            foreach (var node in Nodes.Values)
             {
-                foreach(var node in nodes)
-                    Visit(node, result, seenNodes);
+                Visit(node, result, seenNodes);
             }
 
             return result;
         }
 
-        private void Visit(CodeActionNode node, List<CodeAction> result, HashSet<CodeActionNode> seenNodes)
+        private void Visit(ProviderNode<T> node, List<T> result, HashSet<ProviderNode<T>> seenNodes)
         {
-            if(seenNodes.Add(node))
+            if (seenNodes.Add(node))
             {
                 foreach (var before in node.NodesBeforeMeSet)
                 {
                     Visit(before, result, seenNodes);
                 }
-                result.Add(node.CodeAction);
+                result.Add(node.Provider);
             }
         }
-
     }
 }

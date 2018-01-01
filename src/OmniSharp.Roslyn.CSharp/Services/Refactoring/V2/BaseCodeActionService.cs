@@ -150,28 +150,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private IEnumerable<CodeFixProvider> GetSortedCodeFixProviders()
         {
-            List<ProviderNode> nodesList = new List<ProviderNode>();
+            List<ProviderNode<CodeFixProvider>> nodesList = new List<ProviderNode<CodeFixProvider>>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
-                    nodesList.Add(ProviderNode.From(codeFixProvider));
+                    nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
                 }
             }
-            var graph = Graph.GetGraph(nodesList);
+            var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
             return graph.TopologicalSort();
         }
 
         private IEnumerable<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
+            List<ProviderNode<CodeRefactoringProvider>> nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
-                    var node = ProviderNode.From(codeRefactoringProvider);
+                    var node = ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider);
                 }
             }
-            throw new NotImplementedException();
+            var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
+            return graph.TopologicalSort();
         }
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
@@ -203,25 +205,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            foreach (var provider in this.Providers)
+            IEnumerable<CodeRefactoringProvider> sortedProviders = GetSortedCodeRefactoringProviders();
+            foreach (var codeRefactoringProvider in sortedProviders)
             {
-                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
+                if (_helper.IsDisallowed(codeRefactoringProvider))
                 {
-                    if (_helper.IsDisallowed(codeRefactoringProvider))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
+                var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
 
-                    try
-                    {
-                        await codeRefactoringProvider.ComputeRefactoringsAsync(context);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger.LogError(ex, $"Error computing refactorings for {codeRefactoringProvider.GetType().FullName}");
-                    }
+                try
+                {
+                    await codeRefactoringProvider.ComputeRefactoringsAsync(context);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogError(ex, $"Error computing refactorings for {codeRefactoringProvider.GetType().FullName}");
                 }
             }
         }
