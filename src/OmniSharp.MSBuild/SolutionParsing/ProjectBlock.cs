@@ -45,7 +45,8 @@ namespace OmniSharp.MSBuild.SolutionParsing
 
         public bool IsAspWebsite()
         {
-            return RelativePath.StartsWith("http://");
+            var match = Regex.Match(RelativePath, "http://", RegexOptions.IgnoreCase);
+            return match.Success;
         }
 
         public static ProjectBlock Parse(string headerLine, Scanner scanner)
