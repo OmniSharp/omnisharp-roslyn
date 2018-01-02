@@ -67,6 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 {
                     Visit(before, result, seenNodes);
                 }
+
                 result.Add(node.Provider);
             }
         }

@@ -19,10 +19,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         public static ProviderNode<T> From(T provider)
         {
             var exportAttribute = provider.GetType().GetCustomAttribute(typeof(ExportCodeFixProviderAttribute));
-            var providerName = "";
-            if(exportAttribute != null)
+            string providerName = "";
+            if (exportAttribute is ExportCodeFixProviderAttribute && ((ExportCodeFixProviderAttribute)exportAttribute).Name != null)
             {
-                providerName = ((ExportCodeFixProviderAttribute)exportAttribute).Name != null ? ((ExportCodeFixProviderAttribute)exportAttribute).Name :"";
+                providerName = ((ExportCodeFixProviderAttribute)exportAttribute).Name;
             }
 
             var orderAttributes = provider.GetType().GetCustomAttributes(typeof(ExtensionOrderAttribute), true).Select(attr => (ExtensionOrderAttribute)attr).ToList();
@@ -41,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private void AddAttribute(ExtensionOrderAttribute attribute)
         {
-            if(attribute.Before != null)
+            if (attribute.Before != null)
                 Before.Add(attribute.Before);
             if (attribute.After != null)
                 After.Add(attribute.After);

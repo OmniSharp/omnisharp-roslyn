@@ -155,6 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
                 }
             }
+
             var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
             return graph.TopologicalSort();
         }
@@ -169,6 +170,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     var node = ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider);
                 }
             }
+
             var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
             return graph.TopologicalSort();
         }
