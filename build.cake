@@ -20,7 +20,7 @@ var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
 
 Log.Context = Context;
 
-var env = new BuildEnvironment(useGlobalDotNetSdk);
+var env = new BuildEnvironment(useGlobalDotNetSdk, Context);
 var buildPlan = BuildPlan.Load(env);
 
 Information("");
@@ -33,6 +33,8 @@ Information("");
 bool AllowLegacyTests()
 {
     var platform = Platform.Current;
+
+    if (platform.IsMacOS && TravisCI.IsRunningOnTravisCI) return false;
 
     if (platform.IsWindows)
     {
@@ -88,10 +90,19 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
+Task("GitVersion")
+    .WithCriteria(!BuildSystem.IsLocalBuild)
+    .Does(() => {
+        GitVersion(new GitVersionSettings{
+            OutputType = GitVersionOutput.BuildServer
+        });
+    });
+
 /// <summary>
 ///  Pre-build setup tasks.
 /// </summary>
 Task("Setup")
+    .IsDependentOn("GitVersion")
     .IsDependentOn("ValidateMono")
     .IsDependentOn("InstallDotNetCoreSdk")
     .IsDependentOn("InstallMonoAssets")
@@ -353,75 +364,97 @@ Task("Restore")
     // Restore the projects in OmniSharp.sln
     Information("Restoring packages in OmniSharp.sln...");
 
-    RunTool(env.DotNetCommand, "restore OmniSharp.sln", env.WorkingDirectory)
-        .ExceptionOnError("Failed to restore projects in OmniSharp.sln.");
+    DotNetCoreRestore("OmniSharp.sln", new DotNetCoreRestoreSettings()
+    {
+        ToolPath = env.DotNetCommand,
+        WorkingDirectory = env.WorkingDirectory,
+        Verbosity = DotNetCoreVerbosity.Minimal,
+    });
 });
 
 /// <summary>
 ///  Prepare test assets.
 /// </summary>
 Task("PrepareTestAssets")
-    .IsDependentOn("Setup")
-    .Does(() =>
-{
-    // Restore and build test assets
-    foreach (var project in buildPlan.TestAssets)
+    .IsDependentOn("Setup");
+
+Task("PrepareTestAssets:CommonTestAssets")
+    .IsDependeeOf("PrepareTestAssets")
+    .DoesForEach(buildPlan.TestAssets, (project) =>
     {
         Information("Restoring and building: {0}...", project);
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        RunTool(env.DotNetCommand, "restore", folder)
-            .ExceptionOnError($"Failed to restore '{folder}'.");
-
-        RunTool(env.DotNetCommand, "build", folder)
-            .ExceptionOnError($"Failed to build '{folder}'.");
-    }
-
-    var platform = Platform.Current;
-
-    // Restore and build Windows-only test assets
-    if (platform.IsWindows)
-    {
-        foreach (var project in buildPlan.WindowsOnlyTestAssets)
+        DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
-            Information("Restoring and building: {0} (windows-only)...", project);
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+        {
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+    });
 
-            var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
-
-            RunTool(env.DotNetCommand, "restore", folder)
-                .ExceptionOnError($"Failed to restore '{folder}'.");
-
-            RunTool(env.DotNetCommand, "build", folder)
-                .ExceptionOnError($"Failed to build '{folder}'.");
-        }
-    }
-
-    if (AllowLegacyTests())
+Task("PrepareTestAssets:WindowsTestAssets")
+    .WithCriteria(Platform.Current.IsWindows)
+    .IsDependeeOf("PrepareTestAssets")
+    .DoesForEach(buildPlan.WindowsOnlyTestAssets, (project) =>
     {
+        Information("Restoring and building: {0}...", project);
+
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+
+        DotNetCoreRestore(new DotNetCoreRestoreSettings()
+        {
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+        {
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+    });
+
+Task("PrepareTestAssets:LegacyTestAssets")
+    .WithCriteria(() => AllowLegacyTests())
+    .IsDependeeOf("PrepareTestAssets")
+    .DoesForEach(buildPlan.LegacyTestAssets, (project) =>
+    {
+        var platform = Platform.Current;
         if (platform.IsMacOS && platform.Version.Major == 10 && platform.Version.Minor == 12)
         {
             // Trick to allow older .NET Core SDK to run on Sierra.
             Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", "osx.10.11-x64");
         }
 
-        // Restore and build legacy test assets with legacy .NET Core SDK
-        foreach (var project in buildPlan.LegacyTestAssets)
+        Information("Restoring and building project.json: {0}...", project);
+
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+
+        DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
-            Information("Restoring and building project.json: {0}...", project);
+            ToolPath = env.LegacyDotNetCommand,
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
+        {
+            ToolPath = env.LegacyDotNetCommand,
+            WorkingDirectory = folder,
+        });
+    });
 
-            var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
-
-            RunTool(env.LegacyDotNetCommand, "restore", folder)
-                .ExceptionOnError($"Failed to restore '{folder}'.");
-
-            RunTool(env.LegacyDotNetCommand, $"build", folder)
-                .ExceptionOnError($"Failed to build '{folder}'.");
-        }
-    }
-
-    // Restore Cake test assets with NuGet
-    foreach (var project in buildPlan.CakeTestAssets)
+Task("PrepareTestAssets:CakeTestAssets")
+    .IsDependeeOf("PrepareTestAssets")
+    .DoesForEach(buildPlan.CakeTestAssets, (project) =>
     {
         Information("Restoring: {0}...", project);
 
@@ -436,32 +469,91 @@ Task("PrepareTestAssets")
                 "https://api.nuget.org/v3/index.json"
             }
         });
-    }
-});
+    });
 
 void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration, string outputType = null)
 {
-    string command, arguments;
-
-    // On Windows, we build exclusively with the .NET CLI.
-    // On OSX/Linux, we build with the MSBuild installed with Mono.
-    if (Platform.Current.IsWindows)
+    try
     {
-        command = env.DotNetCommand;
-        arguments = $"build \"{projectFilePath}\" --no-restore --configuration {configuration} /v:d";
+        var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build");
+
+        Information("Building {0}...", projectName);
+        // On Windows, we build exclusively with the .NET CLI.
+        // On OSX/Linux, we build with the MSBuild installed with Mono.
+        if (Platform.Current.IsWindows)
+        {
+            var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic ? "Embed" : "None";
+            var settings = new DotNetCoreMSBuildSettings()
+                {
+                    WorkingDirectory = env.WorkingDirectory,
+                    ArgumentCustomization = a => a
+                        .Append($"/bl:{logFileName}.binlog;ProjectImports={projectImports}")
+                        .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}"),
+                    // Bug in cake with this command
+                    // Verbosity = DotNetCoreVerbosity.Minimal,
+                }
+                .SetConfiguration(configuration)
+                .AddFileLogger(
+                    new MSBuildFileLoggerSettings {
+                        AppendToLogFile = false,
+                        LogFile = logFileName + ".log",
+                        ShowTimestamp = true,
+                        //Verbosity = DotNetCoreVerbosity.Diagnostic,
+                    }
+                )
+                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
+            if (!string.IsNullOrWhiteSpace(outputType))
+                settings.WithProperty("TestOutputType", outputType);
+
+            DotNetCoreMSBuild(
+                projectFilePath,
+                settings
+            );
+        }
+        else
+        {
+            MSBuild(
+                projectFilePath,
+                c =>
+                {
+                    c.Verbosity = Verbosity.Minimal;
+                    c.Configuration = configuration;
+                    c.WorkingDirectory = env.WorkingDirectory;
+                    c.AddFileLogger(
+                        new MSBuildFileLogger {
+                            AppendToLogFile = false,
+                            LogFile = logFileName + ".log",
+                            ShowTimestamp = true,
+                            Verbosity = Verbosity.Diagnostic,
+                            PerformanceSummaryEnabled = true,
+                            SummaryDisabled = false,
+                        }
+                    );
+                    c.BinaryLogger = new MSBuildBinaryLogSettings {
+                        Enabled = true,
+                        FileName = logFileName + ".binlog",
+                        Imports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic ? MSBuildBinaryLogImports.Embed : MSBuildBinaryLogImports.None,
+                    };
+                    c
+                        .WithProperty("TestOutputType", outputType)
+                        .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                        .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                        .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                        .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
+                    ;
+
+                }
+            );
+        }
     }
-    else
+    catch
     {
-        command = env.ShellCommand;
-        arguments = $"{env.ShellArgument} msbuild \"{projectFilePath}\" /p:Configuration={configuration} /v:d";
+        Error($"Building {projectName} failed.");
+        throw;
     }
-
-    var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build.log");
-
-    Information("Building {0}...", projectName);
-
-    RunTool(command, arguments, env.WorkingDirectory, logFileName, new Dictionary<string, string>() { { "TestOutputType", outputType } })
-        .ExceptionOnError($"Building {projectName} failed.");
 }
 
 Task("BuildHosts")
@@ -662,17 +754,48 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 
     Information("Restoring packages in {0} for {1}...", projectName, rid);
 
-    RunTool(env.DotNetCommand, $"restore \"{projectFileName}\" --runtime {rid}", env.WorkingDirectory)
-        .ExceptionOnError($"Failed to restore {projectName} for {rid}.");
+    try
+    {
+        DotNetCoreRestore(projectFileName, new DotNetCoreRestoreSettings()
+        {
+            Runtime = rid,
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = env.WorkingDirectory,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+    }
+    catch
+    {
+        Error($"Failed to restore {projectName} for {rid}.");
+        throw;
+    }
 
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid);
 
-    var args = $"publish \"{projectFileName}\" --runtime {rid} --configuration {configuration} --output \"{outputFolder}\"";
-
     Information("Publishing {0} for {1}...", projectName, rid);
 
-    RunTool(env.DotNetCommand, args, env.WorkingDirectory)
-        .ExceptionOnError($"Failed to publish {project} for {rid}");
+    try
+    {
+        DotNetCorePublish(projectFileName, new DotNetCorePublishSettings()
+        {
+            Runtime = rid,
+            Configuration = configuration,
+            OutputDirectory = outputFolder,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion),
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = env.WorkingDirectory,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+    }
+    catch
+    {
+        Error($"Failed to publish {project} for {rid}");
+        throw;
+    }
 
     // Copy MSBuild to output
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
@@ -725,6 +848,7 @@ Task("Publish")
 ///  Execute the run script.
 /// </summary>
 Task("ExecuteRunScript")
+    .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .Does(() =>
 {
     foreach (var project in buildPlan.HostProjects)
