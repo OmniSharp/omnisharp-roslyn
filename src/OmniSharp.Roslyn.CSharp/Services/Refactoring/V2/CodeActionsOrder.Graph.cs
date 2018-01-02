@@ -1,4 +1,4 @@
-﻿using System;
+﻿// Adapted from ExtensionOrderer in Roslyn
 using System.Collections.Generic;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2

@@ -1,10 +1,10 @@
-﻿using System;
+﻿// Adapted from ExtensionOrderer in Roslyn
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CodeRefactorings;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
