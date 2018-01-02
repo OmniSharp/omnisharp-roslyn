@@ -69,9 +69,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             await CollectCodeFixesActions(document, span, codeActions);
             await CollectRefactoringActions(document, span, codeActions);
 
-            // TODO: Determine good way to order code actions.
-            codeActions.Reverse();
-
             // Be sure to filter out any code actions that inherit from CodeActionWithOptions.
             // This isn't a great solution and might need changing later, but every Roslyn code action
             // derived from this type tries to display a dialog. For now, this is a reasonable solution.

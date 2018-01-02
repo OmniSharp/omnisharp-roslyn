@@ -5,22 +5,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     internal class Graph<T>
     {
-        private Dictionary<string, ProviderNode<T>> Nodes;
-        private Graph()
+        //Dictionary to map between nodes and the names
+        private Dictionary<string, ProviderNode<T>> Nodes { get; }
+        private List<ProviderNode<T>> AllNodes { get; }
+        private Graph(List<ProviderNode<T>> nodesList)
         {
             Nodes = new Dictionary<string, ProviderNode<T>>();
+            AllNodes = nodesList;
         }
         internal static Graph<T> GetGraph(List<ProviderNode<T>> nodesList)
         {
-            var graph = new Graph<T>();
+            var graph = new Graph<T>(nodesList);
 
-            foreach (ProviderNode<T> node in nodesList)
+            foreach (ProviderNode<T> node in graph.AllNodes)
             {
-                if (!graph.Nodes.ContainsKey(node.ProviderName))
                     graph.Nodes[node.ProviderName] = node;
             }
 
-            foreach (ProviderNode<T> node in nodesList)
+            foreach (ProviderNode<T> node in graph.AllNodes)
             {
                 foreach (var before in node.Before)
                 {
@@ -49,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             List<T> result = new List<T>();
             var seenNodes = new HashSet<ProviderNode<T>>();
 
-            foreach (var node in Nodes.Values)
+            foreach (var node in AllNodes)
             {
                 Visit(node, result, seenNodes);
             }
