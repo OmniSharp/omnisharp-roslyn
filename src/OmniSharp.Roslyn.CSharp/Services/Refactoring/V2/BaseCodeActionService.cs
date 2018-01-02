@@ -23,6 +23,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     {
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
+        protected List<CodeFixProvider> OrderedCodeFixProviders;
+        protected List<CodeRefactoringProvider> OrderedCodeRefactoringProviders;
         protected readonly ILogger Logger;
 
         private readonly CodeActionHelper _helper;
@@ -37,6 +39,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             this.Logger = logger;
             this._helper = helper;
 
+            SetOrderedProviders();
+
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
             var nestedCodeActionsProperty = typeof(CodeAction).GetProperty("NestedCodeActions", BindingFlags.NonPublic | BindingFlags.Instance);
             if (nestedCodeActionsProperty == null)
@@ -48,6 +52,41 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             if (this._getNestedCodeActions == null)
             {
                 throw new InvalidOperationException("Could not retrieve 'get' method for CodeAction.NestedCodeActions property.");
+            }
+        }
+
+        private void SetOrderedProviders()
+        {
+            try
+            {
+                OrderedCodeFixProviders = GetSortedCodeFixProviders();
+            }
+            catch
+            {
+                OrderedCodeFixProviders = new List<CodeFixProvider>();
+                foreach (var provider in this.Providers)
+                {
+                    foreach (var codeFixProvider in provider.CodeFixProviders)
+                    {
+                        OrderedCodeFixProviders.Add(codeFixProvider);
+                    }
+                }
+            }
+
+            try
+            {
+                OrderedCodeRefactoringProviders = GetSortedCodeRefactoringProviders();
+            }
+            catch
+            {
+                OrderedCodeRefactoringProviders = new List<CodeRefactoringProvider>();
+                foreach (var provider in this.Providers)
+                {
+                    foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
+                    {
+                        OrderedCodeRefactoringProviders.Add(codeRefactoringProvider);
+                    }
+                }
             }
         }
 
@@ -125,24 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
-            List<CodeFixProvider> orderedProviders;
-            try
-            {
-                orderedProviders = GetSortedCodeFixProviders();
-            }
-            catch
-            {
-                orderedProviders = new List<CodeFixProvider>();
-                foreach (var provider in this.Providers)
-                {
-                    foreach (var codeFixProvider in provider.CodeFixProviders)
-                    {
-                        orderedProviders.Add(codeFixProvider);
-                    }
-                }
-            }
-
-            foreach (var codeFixProvider in orderedProviders)
+            foreach (var codeFixProvider in OrderedCodeFixProviders)
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
                 if (fixableDiagnostics.Length > 0)
@@ -164,12 +186,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
             List<ProviderNode<CodeFixProvider>> nodesList = new List<ProviderNode<CodeFixProvider>>();
-            List<CodeFixProvider> providerList = new List<CodeFixProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
-                    providerList.Add(codeFixProvider);
                     nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
                 }
             }
@@ -182,12 +202,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
             List<ProviderNode<CodeRefactoringProvider>> nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
-            List<CodeRefactoringProvider> providerList = new List<CodeRefactoringProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
-                    providerList.Add(codeRefactoringProvider);
                     var node = ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider);
                 }
             }
@@ -226,25 +244,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            List<CodeRefactoringProvider> orderedProviders;
-            try
-            {
-                orderedProviders = GetSortedCodeRefactoringProviders();
-            }
-            catch
-            {
-                //If we cannot get a sortedlist then just proceed with the available list
-                orderedProviders = new List<CodeRefactoringProvider>();
-                foreach (var provider in this.Providers)
-                {
-                    foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
-                    {
-                        orderedProviders.Add(codeRefactoringProvider);
-                    }
-                }
-            }
-
-            foreach (var codeRefactoringProvider in orderedProviders)
+            foreach (var codeRefactoringProvider in OrderedCodeRefactoringProviders)
             {
                 if (_helper.IsDisallowed(codeRefactoringProvider))
                 {
