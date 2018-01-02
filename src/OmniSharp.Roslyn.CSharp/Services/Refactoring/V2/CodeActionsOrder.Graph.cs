@@ -19,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             foreach (ProviderNode<T> node in graph.AllNodes)
             {
-                    graph.Nodes[node.ProviderName] = node;
+                graph.Nodes[node.ProviderName] = node;
             }
 
             foreach (ProviderNode<T> node in graph.AllNodes)
@@ -44,6 +44,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
 
             return graph;
+        }
+
+        public void CheckForCycles()
+        {
+            foreach (var node in this.AllNodes)
+            {
+                node.CheckForCycles();
+            }
         }
 
         public List<T> TopologicalSort()

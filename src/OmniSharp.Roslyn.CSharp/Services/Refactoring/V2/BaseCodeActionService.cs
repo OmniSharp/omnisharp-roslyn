@@ -125,8 +125,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
-            IEnumerable<CodeFixProvider> sortedProviders = GetSortedCodeFixProviders();
-            foreach (var codeFixProvider in sortedProviders)
+            List<CodeFixProvider> orderedProviders;
+            try
+            {
+                orderedProviders = GetSortedCodeFixProviders();
+            }
+            catch
+            {
+                orderedProviders = new List<CodeFixProvider>();
+                foreach (var provider in this.Providers)
+                {
+                    foreach (var codeFixProvider in provider.CodeFixProviders)
+                    {
+                        orderedProviders.Add(codeFixProvider);
+                    }
+                }
+            }
+
+            foreach (var codeFixProvider in orderedProviders)
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
                 if (fixableDiagnostics.Length > 0)
@@ -145,33 +161,39 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private IEnumerable<CodeFixProvider> GetSortedCodeFixProviders()
+        private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
             List<ProviderNode<CodeFixProvider>> nodesList = new List<ProviderNode<CodeFixProvider>>();
+            List<CodeFixProvider> providerList = new List<CodeFixProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
+                    providerList.Add(codeFixProvider);
                     nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
                 }
             }
 
             var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
+            graph.CheckForCycles();
             return graph.TopologicalSort();
         }
 
-        private IEnumerable<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
+        private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
             List<ProviderNode<CodeRefactoringProvider>> nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
+            List<CodeRefactoringProvider> providerList = new List<CodeRefactoringProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
+                    providerList.Add(codeRefactoringProvider);
                     var node = ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider);
                 }
             }
 
             var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
+            graph.CheckForCycles();
             return graph.TopologicalSort();
         }
 
@@ -204,8 +226,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            IEnumerable<CodeRefactoringProvider> sortedProviders = GetSortedCodeRefactoringProviders();
-            foreach (var codeRefactoringProvider in sortedProviders)
+            List<CodeRefactoringProvider> orderedProviders;
+            try
+            {
+                orderedProviders = GetSortedCodeRefactoringProviders();
+            }
+            catch
+            {
+                //If we cannot get a sortedlist then just proceed with the available list
+                orderedProviders = new List<CodeRefactoringProvider>();
+                foreach (var provider in this.Providers)
+                {
+                    foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
+                    {
+                        orderedProviders.Add(codeRefactoringProvider);
+                    }
+                }
+            }
+
+            foreach (var codeRefactoringProvider in orderedProviders)
             {
                 if (_helper.IsDisallowed(codeRefactoringProvider))
                 {
