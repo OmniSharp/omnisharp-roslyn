@@ -171,7 +171,7 @@ namespace OmniSharp.Models.TypeLookup
         {
             if (string.IsNullOrWhiteSpace(input))
                 return string.Empty;
-            if (!Char.IsWhiteSpace(input[0]))
+            if (!char.IsWhiteSpace(input[0]))
                 return input;
             return $" {input.TrimStart()}";
         }
