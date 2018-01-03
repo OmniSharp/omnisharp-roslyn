@@ -444,6 +444,25 @@ class C
             ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "number1", "number2" });
         }
 
+        [Fact]
+        public async Task Scripting_by_default_returns_completions_for_CSharp7_2()
+        {
+            const string source =
+                @"
+                  public class Foo { private protected int myValue = 0; }
+                  public class Bar : Foo
+                  {
+                    public Bar()
+                    {
+                        var x = myv$$
+                    }
+                  }
+                ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "myValue" });
+        }
+
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)
         {
             if (!completions.SequenceEqual(expected))

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cake.Scripting.Abstractions;
+using Microsoft.Extensions.Configuration;
 
 namespace OmniSharp.Cake.Services
 {
     public interface ICakeScriptService : IScriptGenerationService
     {
-        bool IsConnected { get; }
+        bool Initialize(CakeOptions options);
 
         event EventHandler<ReferencesChangedEventArgs> ReferencesChanged;
 
@@ -30,11 +31,11 @@ namespace OmniSharp.Cake.Services
 
     public class ReferencesChangedEventArgs : ScriptChangedEventArgs
     {
-        public IReadOnlyCollection<string> References { get; }
+        public ISet<string> References { get; }
 
-        public ReferencesChangedEventArgs(string scriptPath, IReadOnlyCollection<string> references) : base(scriptPath)
+        public ReferencesChangedEventArgs(string scriptPath, ISet<string> references) : base(scriptPath)
         {
-            References = references ?? new List<string>();
+            References = references ?? new HashSet<string>();
         }
     }
 
