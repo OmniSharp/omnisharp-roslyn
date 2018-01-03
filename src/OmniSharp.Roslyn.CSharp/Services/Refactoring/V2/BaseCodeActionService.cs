@@ -206,7 +206,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
-                    var node = ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider);
+                    nodesList.Add(ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider));
                 }
             }
 
