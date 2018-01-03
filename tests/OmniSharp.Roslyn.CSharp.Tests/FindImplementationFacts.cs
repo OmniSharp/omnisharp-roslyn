@@ -61,10 +61,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindOverride(string filename)
         {
             const string code = @"
-                public class BaseClass { public abstract Some$$Method() {} }
+                public abstract class BaseClass { public abstract void Some$$Method(); }
                 public class SomeClass : BaseClass
                 {
-                    public override SomeMethod() {}
+                    public override void SomeMethod() {}
                 }";
 
             var implementations = await FindImplementationsAsync(code, filename);

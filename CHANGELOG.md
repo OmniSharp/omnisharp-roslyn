@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [not yet released]
+* Updated to Roslyn 2.6.1 packages - C# 7.2 support, PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055)
+
 ## [1.28.0] - 2017-12-14
 
 * Fixed issue with loading XML documentation for `#r` assembly references in CSX scripts ([#1026](https://github.com/OmniSharp/omnisharp-roslyn/issues/1026), PR: [#1027](https://github.com/OmniSharp/omnisharp-roslyn/pull/1027))
