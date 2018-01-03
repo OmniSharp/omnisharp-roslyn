@@ -115,7 +115,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public static void Main(){
         Foo($$);
     }
-    public static Foo(bool b, int n = 1234)
+    public static void Foo(bool b, int n = 1234)
     {
     }
 }";
