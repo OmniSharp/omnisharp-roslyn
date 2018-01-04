@@ -47,25 +47,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 After.Add(attribute.After);
         }
 
-        internal void CheckForCycles()
+        internal bool CheckForCycles()
         {
-            CheckForCycles(new HashSet<ProviderNode<T>>());
+            return CheckForCycles(new HashSet<ProviderNode<T>>());
         }
 
-        private void CheckForCycles(HashSet<ProviderNode<T>> seenNodes)
+        private bool CheckForCycles(HashSet<ProviderNode<T>> seenNodes)
         {
             if (!seenNodes.Add(this))
             {
                 //Cycle detected
-                throw new ArgumentException("Cycle detected");
+                return true;
             }
 
             foreach (var before in this.NodesBeforeMeSet)
             {
-                before.CheckForCycles(seenNodes);
+                if (before.CheckForCycles(seenNodes))
+                    return true;
             }
 
             seenNodes.Remove(this);
+            return false;
         }
     }
 }

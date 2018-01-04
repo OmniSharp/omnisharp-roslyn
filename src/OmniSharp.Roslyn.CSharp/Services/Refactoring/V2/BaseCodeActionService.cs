@@ -23,14 +23,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     {
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
-        protected List<CodeFixProvider> OrderedCodeFixProviders;
-        protected List<CodeRefactoringProvider> OrderedCodeRefactoringProviders;
         protected readonly ILogger Logger;
 
         private readonly CodeActionHelper _helper;
         private readonly MethodInfo _getNestedCodeActions;
 
         private static readonly Func<TextSpan, List<Diagnostic>> s_createDiagnosticList = _ => new List<Diagnostic>();
+
+        protected List<CodeFixProvider> OrderedCodeFixProviders;
+        protected List<CodeRefactoringProvider> OrderedCodeRefactoringProviders;
 
         protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger)
         {
@@ -39,7 +40,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             this.Logger = logger;
             this._helper = helper;
 
-            SetOrderedProviders();
+            OrderedCodeFixProviders = GetSortedCodeFixProviders();
+            OrderedCodeRefactoringProviders = GetSortedCodeRefactoringProviders();
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
             var nestedCodeActionsProperty = typeof(CodeAction).GetProperty("NestedCodeActions", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -52,41 +54,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             if (this._getNestedCodeActions == null)
             {
                 throw new InvalidOperationException("Could not retrieve 'get' method for CodeAction.NestedCodeActions property.");
-            }
-        }
-
-        private void SetOrderedProviders()
-        {
-            try
-            {
-                OrderedCodeFixProviders = GetSortedCodeFixProviders();
-            }
-            catch
-            {
-                OrderedCodeFixProviders = new List<CodeFixProvider>();
-                foreach (var provider in this.Providers)
-                {
-                    foreach (var codeFixProvider in provider.CodeFixProviders)
-                    {
-                        OrderedCodeFixProviders.Add(codeFixProvider);
-                    }
-                }
-            }
-
-            try
-            {
-                OrderedCodeRefactoringProviders = GetSortedCodeRefactoringProviders();
-            }
-            catch
-            {
-                OrderedCodeRefactoringProviders = new List<CodeRefactoringProvider>();
-                foreach (var provider in this.Providers)
-                {
-                    foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
-                    {
-                        OrderedCodeRefactoringProviders.Add(codeRefactoringProvider);
-                    }
-                }
             }
         }
 
@@ -186,32 +153,42 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
             List<ProviderNode<CodeFixProvider>> nodesList = new List<ProviderNode<CodeFixProvider>>();
+            List<CodeFixProvider> providerList = new List<CodeFixProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
+                    providerList.Add(codeFixProvider);
                     nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
                 }
             }
 
             var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
-            graph.CheckForCycles();
+            if(graph.HasCycles())
+            {
+                return providerList;
+            }
             return graph.TopologicalSort();
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
             List<ProviderNode<CodeRefactoringProvider>> nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
+            List<CodeRefactoringProvider> providerList = new List<CodeRefactoringProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
+                    providerList.Add(codeRefactoringProvider);
                     nodesList.Add(ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider));
                 }
             }
 
             var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
-            graph.CheckForCycles();
+            if (graph.HasCycles())
+            {
+                return providerList;
+            }
             return graph.TopologicalSort();
         }
 

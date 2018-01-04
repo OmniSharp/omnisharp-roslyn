@@ -46,12 +46,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             return graph;
         }
 
-        public void CheckForCycles()
+        public bool HasCycles()
         {
             foreach (var node in this.AllNodes)
             {
-                node.CheckForCycles();
+                if (node.CheckForCycles())
+                    return true;
             }
+            return false;
         }
 
         public List<T> TopologicalSort()
