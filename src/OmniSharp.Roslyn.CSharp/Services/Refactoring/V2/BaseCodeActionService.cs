@@ -30,8 +30,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private static readonly Func<TextSpan, List<Diagnostic>> s_createDiagnosticList = _ => new List<Diagnostic>();
 
-        protected List<CodeFixProvider> OrderedCodeFixProviders;
-        protected List<CodeRefactoringProvider> OrderedCodeRefactoringProviders;
+        protected Lazy<List<CodeFixProvider>> OrderedCodeFixProviders;
+        protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
         protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger)
         {
@@ -40,8 +40,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             this.Logger = logger;
             this._helper = helper;
 
-            OrderedCodeFixProviders = GetSortedCodeFixProviders();
-            OrderedCodeRefactoringProviders = GetSortedCodeRefactoringProviders();
+            OrderedCodeFixProviders = new Lazy<List<CodeFixProvider>>(() => GetSortedCodeFixProviders());
+            OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
             var nestedCodeActionsProperty = typeof(CodeAction).GetProperty("NestedCodeActions", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -131,7 +131,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
-            foreach (var codeFixProvider in OrderedCodeFixProviders)
+            foreach (var codeFixProvider in OrderedCodeFixProviders.Value)
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
                 if (fixableDiagnostics.Length > 0)
@@ -164,7 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
 
             var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
-            if(graph.HasCycles())
+            if (graph.HasCycles())
             {
                 return providerList;
             }
@@ -221,7 +221,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            foreach (var codeRefactoringProvider in OrderedCodeRefactoringProviders)
+            foreach (var codeRefactoringProvider in OrderedCodeRefactoringProviders.Value)
             {
                 if (_helper.IsDisallowed(codeRefactoringProvider))
                 {
