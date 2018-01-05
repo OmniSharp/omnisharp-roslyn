@@ -99,9 +99,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var compiled = await project.GetCompilationAsync();
             var analysis = await compiled
                 .WithAnalyzers(this.providers.SelectMany(x => x.CodeDiagnosticAnalyzerProviders).ToImmutableArray())
-                .GetAnalysisResultAsync(CancellationToken.None);
+                .GetAllDiagnosticsAsync();
 
-            return analysis.GetAllDiagnostics().Select(x => AsDiagnosticLocation(x, project));
+            return analysis.Select(x => AsDiagnosticLocation(x, project));
         }
 
         private static DiagnosticLocation AsDiagnosticLocation(Diagnostic diagnostic, Project project)
