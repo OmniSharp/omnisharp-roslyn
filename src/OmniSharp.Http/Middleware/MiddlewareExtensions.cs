@@ -5,18 +5,18 @@ using Newtonsoft.Json;
 
 namespace OmniSharp.Http.Middleware
 {
-    static class MiddlewareHelpers
+    static class MiddlewareExtensions
     {
-        private static readonly Encoding _encoding = new System.Text.UTF8Encoding(false);
+        private static readonly JsonSerializer _jsonSerializer = JsonSerializer.Create();
+        private static readonly Encoding _encoding = new UTF8Encoding(false);
 
-        public static void WriteTo(HttpResponse response, object value)
+        public static void WriteJson(this HttpResponse response, object value)
         {
             using (var writer = new StreamWriter(response.Body, _encoding, 1024, true))
             using (var jsonWriter = new JsonTextWriter(writer))
             {
                 jsonWriter.CloseOutput = false;
-                var jsonSerializer = JsonSerializer.Create(/*TODO: SerializerSettings*/);
-                jsonSerializer.Serialize(jsonWriter, value);
+                _jsonSerializer.Serialize(jsonWriter, value);
             }
         }
     }
