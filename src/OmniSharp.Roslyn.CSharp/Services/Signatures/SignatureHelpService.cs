@@ -3,6 +3,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
@@ -59,7 +60,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             foreach (var invocation in invocations)
             {
                 var types = invocation.ArgumentTypes;
-                foreach (var methodOverload in GetMethodOverloads(invocation.SemanticModel, invocation.Receiver))
+                ISymbol throughSymbol = null;
+                ISymbol throughType = null;
+                var methodGroup = invocation.SemanticModel.GetMemberGroup(invocation.Receiver).OfType<IMethodSymbol>();
+                if (invocation.Receiver is MemberAccessExpressionSyntax)
+                {
+                    var throughExpression = ((MemberAccessExpressionSyntax)invocation.Receiver).Expression;
+                    throughSymbol = invocation.SemanticModel.GetSpeculativeSymbolInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsExpression).Symbol;
+                    throughType = invocation.SemanticModel.GetSpeculativeTypeInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
+                    var includeInstance = throughSymbol != null && !(throughSymbol is ITypeSymbol);
+                    var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType != null;
+                    methodGroup = methodGroup.Where(m => (m.IsStatic && includeStatic) || (!m.IsStatic && includeInstance));
+                }
+                else if (invocation.Receiver is SimpleNameSyntax && invocation.IsInStaticContext)
+                {
+                    methodGroup = methodGroup.Where(m => m.IsStatic);
+                }
+
+                foreach (var methodOverload in methodGroup)
                 {
                     var signature = BuildSignature(methodOverload);
                     signaturesSet.Add(signature);
@@ -94,19 +112,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 if (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList);
+                    return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList, invocation.IsInStaticContext());
                 }
 
                 if (node is ObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList);
+                    return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList, objectCreation.IsInStaticContext());
                 }
 
                 if (node is AttributeSyntax attributeSyntax && attributeSyntax.ArgumentList.Span.Contains(position))
                 {
                     var semanticModel = await document.GetSemanticModelAsync();
-                    return new InvocationContext(semanticModel, position, attributeSyntax, attributeSyntax.ArgumentList);
+                    return new InvocationContext(semanticModel, position, attributeSyntax, attributeSyntax.ArgumentList, attributeSyntax.IsInStaticContext());
                 }
 
                 node = node.Parent;
@@ -115,30 +133,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             return null;
         }
 
-        private IEnumerable<IMethodSymbol> GetMethodOverloads(SemanticModel semanticModel, SyntaxNode node)
-        {
-            ISymbol symbol = null;
-            var symbolInfo = semanticModel.GetSymbolInfo(node);
-            if (symbolInfo.Symbol != null)
-            {
-                symbol = symbolInfo.Symbol;
-            }
-            else if (!symbolInfo.CandidateSymbols.IsEmpty)
-            {
-                symbol = symbolInfo.CandidateSymbols.First();
-            }
-
-            if (symbol == null || symbol.ContainingType == null)
-            {
-                return new IMethodSymbol[] { };
-            }
-
-            return symbol.ContainingType.GetMembers(symbol.Name).OfType<IMethodSymbol>();
-        }
-
         private int InvocationScore(IMethodSymbol symbol, IEnumerable<TypeInfo> types)
         {
-            var parameters = GetParameters(symbol);
+            var parameters = symbol.Parameters;
             if (parameters.Count() < types.Count())
             {
                 return int.MinValue;
@@ -172,7 +169,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
             signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
-            signature.Parameters = GetParameters(symbol).Select(parameter =>
+            signature.Parameters = symbol.Parameters.Select(parameter =>
             {
                 return new SignatureHelpParameter()
                 {
@@ -185,16 +182,5 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             return signature;
         }
 
-        private static IEnumerable<IParameterSymbol> GetParameters(IMethodSymbol methodSymbol)
-        {
-            if (!methodSymbol.IsExtensionMethod)
-            {
-                return methodSymbol.Parameters;
-            }
-            else
-            {
-                return methodSymbol.Parameters.RemoveAt(0);
-            }
-        }
     }
 }

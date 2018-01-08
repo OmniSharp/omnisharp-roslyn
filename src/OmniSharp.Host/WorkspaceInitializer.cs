@@ -30,7 +30,7 @@ namespace OmniSharp
             {
                 try
                 {
-                    var projectConfiguration = configuration.GetSection((string)projectSystem.Key);
+                    var projectConfiguration = configuration.GetSection(projectSystem.Key);
                     var enabledProjectFlag = projectConfiguration.GetValue<bool>("enabled", defaultValue: true);
                     if (enabledProjectFlag)
                     {
@@ -45,7 +45,7 @@ namespace OmniSharp
                 {
                     var message = $"The project system '{projectSystem.GetType().FullName}' threw exception during initialization.";
                     // if a project system throws an unhandled exception it should not crash the entire server
-                    LoggerExceptions.LogError((ILogger)logger, e, message);
+                    logger.LogError(e, message);
                 }
             }
 
@@ -61,7 +61,7 @@ namespace OmniSharp
                 ProvideWorkspaceOptions(compositionHost, workspace, options, logger);
             });
 
-            LoggerExtensions.LogInformation((ILogger)logger, "Configuration finished.");
+            logger.LogInformation("Configuration finished.");
         }
 
         private static void ProvideWorkspaceOptions(
@@ -83,7 +83,7 @@ namespace OmniSharp
                 catch (Exception e)
                 {
                     var message = $"The workspace options provider '{providerName}' threw exception during initialization.";
-                    LoggerExceptions.LogError(logger, e, message);
+                    logger.LogError(e, message);
                 }
             }
         }

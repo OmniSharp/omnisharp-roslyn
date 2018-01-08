@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Setup.Configuration;
@@ -44,15 +45,16 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                         continue;
                     }
 
-                    var instance = instances[0];
-                    var state = ((ISetupInstance2)instance).GetState();
+                    var instance = (ISetupInstance2)instances[0];
+                    var state = instance.GetState();
 
                     if (!Version.TryParse(instance.GetInstallationVersion(), out var version))
                     {
                         continue;
                     }
 
-                    if (state == InstanceState.Complete)
+                    if (state == InstanceState.Complete &&
+                       instance.GetPackages().Any(package => package.GetId() == "Microsoft.VisualStudio.Component.Roslyn.Compiler"))
                     {
                         // Note: The code below will likely fail if MSBuild's version increments.
                         var toolsPath = Path.Combine(instance.GetInstallationPath(), "MSBuild", "15.0", "Bin");
@@ -67,7 +69,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                         }
                     }
                 }
-                while (fetched < 0);
+                while (fetched > 0);
 
                 return builder.ToImmutable();
             }

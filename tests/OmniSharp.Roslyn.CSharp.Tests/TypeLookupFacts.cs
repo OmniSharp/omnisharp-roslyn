@@ -1,5 +1,6 @@
 using System.IO;
 using System.Threading.Tasks;
+using System.Linq;
 using OmniSharp.Models.TypeLookup;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Types;
@@ -262,6 +263,371 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var response = await GetTypeLookUpResponse(line: 15, column: 70);
             Assert.Equal("IDictionary<string, IEnumerable<int>> Foo.SomeDict", response.Type);
+        }
+
+        private async Task<TypeLookupResponse> GetTypeLookUpResponse(string content)
+        {
+            TestFile testFile = new TestFile("dummy.cs", content);
+            using (var host = CreateOmniSharpHost(testFile))
+            {
+                var requestHandler = GetRequestHandler(host);
+                var point = testFile.Content.GetPointFromPosition();
+                var request = new TypeLookupRequest { FileName = testFile.FileName, Line = point.Line, Column = point.Offset };
+                request.IncludeDocumentation = true;
+
+                return await requestHandler.Handle(request);
+            }
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationRemarksText()
+        {
+            string content = @"
+class testissue
+{
+    ///<remarks>You may have some additional information about this class here.</remarks>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+        return gameObject.TagifyCompareTag(tagName);
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"You may have some additional information about this class here.";
+            Assert.Equal(expected, response.StructuredDocumentation.RemarksText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationSummaryText()
+        {
+            string content = @"
+class testissue
+{
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Checks if object is tagged with the tag.";
+            Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationReturnsText()
+        {
+            string content = @"
+class testissue
+{
+    ///<returns>Returns true if object is tagged with tag.</returns>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Returns true if object is tagged with tag.";
+            Assert.Equal(expected, response.StructuredDocumentation.ReturnsText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationExampleText()
+        {
+            string content = @"
+class testissue
+{
+    ///<example>Checks if object is tagged with the tag.</example>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Checks if object is tagged with the tag.";
+            Assert.Equal(expected, response.StructuredDocumentation.ExampleText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationExceptionText()
+        {
+            string content = @"
+class testissue
+{
+    ///<exception cref=""A"">A description</exception>
+    ///<exception cref=""B"">B description</exception>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal(2, response.StructuredDocumentation.Exception.Count());
+
+            Assert.Equal("A", response.StructuredDocumentation.Exception[0].Name);
+            Assert.Equal("A description", response.StructuredDocumentation.Exception[0].Documentation);
+            Assert.Equal("B", response.StructuredDocumentation.Exception[1].Name);
+            Assert.Equal("B description", response.StructuredDocumentation.Exception[1].Documentation);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationParameter()
+        {
+            string content = @"
+class testissue
+{
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal(2, response.StructuredDocumentation.ParamElements.Length);
+
+            Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
+            Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
+            Assert.Equal("tagName", response.StructuredDocumentation.ParamElements[1].Name);
+            Assert.Equal("Name of the tag.", response.StructuredDocumentation.ParamElements[1].Documentation);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationTypeParameter()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>
+    /// Creates a new array of arbitrary type <typeparamref name=""T""/> and adds the elements of incoming list to it if possible
+    /// </summary>
+    /// <typeparam name=""T"">The element type of the array</typeparam>
+    /// <typeparam name=""X"">The element type of the list</typeparam>
+    public static T[] m$$kArray<T>(int n, List<X> list)
+    {
+        return new T[n];
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal(2, response.StructuredDocumentation.TypeParamElements.Count());
+
+            Assert.Equal("T", response.StructuredDocumentation.TypeParamElements[0].Name);
+            Assert.Equal("The element type of the array", response.StructuredDocumentation.TypeParamElements[0].Documentation);
+            Assert.Equal("X", response.StructuredDocumentation.TypeParamElements[1].Name);
+            Assert.Equal("The element type of the list", response.StructuredDocumentation.TypeParamElements[1].Documentation);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationValueText()
+        {
+            string content =
+@"public class Employee
+{
+    private string _name;
+
+    /// <summary>The Name property represents the employee's name.</summary>
+    /// <value>The Name property gets/sets the value of the string field, _name.</value>
+    public string Na$$me
+    {
+    }
+}
+";
+            var response = await GetTypeLookUpResponse(content);
+            var expectedValue =
+            @"The Name property gets/sets the value of the string field, _name.";
+            Assert.Equal(expectedValue, response.StructuredDocumentation.ValueText);
+            var expectedSummary =
+            @"The Name property represents the employee's name.";
+            Assert.Equal(expectedSummary, response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationNestedTagSee()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>DoWork is a method in the TestClass class. <see cref=""System.Console.WriteLine(System.String)""/> for information about output statements.</summary>
+    public static void Do$$Work(int Int1)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"DoWork is a method in the TestClass class. System.Console.WriteLine(System.String) for information about output statements.";
+            Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationNestedTagParamRef()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>Creates a new array of arbitrary type <typeparamref name=""T""/></summary>
+    /// <typeparam name=""T"">The element type of the array</typeparam>
+    public static T[] mk$$Array<T>(int n)
+    {
+        return new T[n];
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Creates a new array of arbitrary type T ";
+            Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationNestedTagCode()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <example>This sample shows how to call the <see cref=""GetZero""/> method.
+    /// <code>
+    /// class TestClass 
+    /// {
+    ///     static int Main() 
+    ///     {
+    ///         return GetZero();
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public static int $$GetZero()
+    {
+        return 0;
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"This sample shows how to call the TestClass.GetZero method.
+
+    class TestClass 
+    {
+        static int Main() 
+        {
+            return GetZero();
+        }
+    }
+    ";
+            Assert.Equal(expected.Replace("\r", ""), response.StructuredDocumentation.ExampleText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationNestedTagPara()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>DoWork is a method in the TestClass class.
+    /// <para>Here's how you could make a second paragraph in a description.</para>
+    /// </summary>
+    public static void Do$$Work(int Int1)
+    {
+    }
+}
+            ";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+@"DoWork is a method in the TestClass class.
+
+Here's how you could make a second paragraph in a description.";
+            Assert.Equal(expected.Replace("\r", ""), response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationNestedTagSeeAlso()
+        {
+            string content = @"
+public class TestClass
+{
+    /// <summary>DoWork is a method in the TestClass class.
+    /// <seealso cref=""TestClass.Main""/>
+    /// </summary>
+            public static void Do$$Work(int Int1)
+            {
+            }
+
+            static void Main()
+            {
+            }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+@"DoWork is a method in the TestClass class.
+See also: TestClass.Main ";
+            Assert.Equal(expected.Replace("\r", ""), response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationSummaryAndParam()
+        {
+            string content = @"
+class testissue
+{
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    public static bool C$$ompare(int gameObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expected =
+            @"Checks if object is tagged with the tag.";
+            Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
+
+            Assert.Equal(2, response.StructuredDocumentation.ParamElements.Length);
+            Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
+            Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
+            Assert.Equal("tagName", response.StructuredDocumentation.ParamElements[1].Name);
+            Assert.Equal("Name of the tag.", response.StructuredDocumentation.ParamElements[1].Documentation);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationManyTags()
+        {
+            string content = @"
+class testissue
+{
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    ///<param name=""gameObject"">The game object.</param> 
+    ///<example>Invoke using A.Compare(5) where A is an instance of the class testissue.</example>
+    ///<typeparam name=""T"">The element type of the array</typeparam>
+    ///<exception cref=""System.Exception"">Thrown when something goes wrong</exception>
+    ///<remarks>You may have some additional information about this class here.</remarks>
+    ///<returns>Returns an array of type <typeparamref name=""T""/>.</returns>
+    public static T[] C$$ompare(int gameObject)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            var expectedSummary =
+            @"Checks if object is tagged with the tag.";
+            Assert.Equal(expectedSummary, response.StructuredDocumentation.SummaryText);
+
+            Assert.Single(response.StructuredDocumentation.ParamElements);
+            Assert.Equal("gameObject", response.StructuredDocumentation.ParamElements[0].Name);
+            Assert.Equal("The game object.", response.StructuredDocumentation.ParamElements[0].Documentation);
+            
+            var expectedExample =
+            @"Invoke using A.Compare(5) where A is an instance of the class testissue.";
+            Assert.Equal(expectedExample, response.StructuredDocumentation.ExampleText);
+
+            Assert.Single(response.StructuredDocumentation.TypeParamElements);
+            Assert.Equal("T", response.StructuredDocumentation.TypeParamElements[0].Name);
+            Assert.Equal("The element type of the array", response.StructuredDocumentation.TypeParamElements[0].Documentation);
+
+            Assert.Single(response.StructuredDocumentation.Exception);
+            Assert.Equal("System.Exception", response.StructuredDocumentation.Exception[0].Name);
+            Assert.Equal("Thrown when something goes wrong", response.StructuredDocumentation.Exception[0].Documentation);
+
+            var expectedRemarks =
+            @"You may have some additional information about this class here.";
+            Assert.Equal(expectedRemarks, response.StructuredDocumentation.RemarksText);
+
+            var expectedReturns =
+            @"Returns an array of type T .";
+            Assert.Equal(expectedReturns, response.StructuredDocumentation.ReturnsText);
         }
     }
 }

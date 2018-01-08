@@ -42,9 +42,7 @@ namespace OmniSharp.Http
             IApplicationBuilder app,
             IServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
-            IEventEmitter eventEmitter,
-            HttpEnvironment httpEnvironment,
-            IOptionsMonitor<OmniSharpOptions> options)
+            HttpEnvironment httpEnvironment)
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<Startup>();
