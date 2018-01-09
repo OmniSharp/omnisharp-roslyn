@@ -5,37 +5,49 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CodeRefactorings;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
-    internal class ProviderNode<T>
+    internal class ProviderNode<TProvider>
     {
         public string ProviderName { get; set; }
         public List<string> Before { get; set; }
         public List<string> After { get; set; }
-        public T Provider { get; set; }
-        public HashSet<ProviderNode<T>> NodesBeforeMeSet { get; set; }
+        public TProvider Provider { get; set; }
+        public HashSet<ProviderNode<TProvider>> NodesBeforeMeSet { get; set; }
 
-        public static ProviderNode<T> From(T provider)
+        public static ProviderNode<TProvider> From(TProvider provider)
         {
-            var exportAttribute = provider.GetType().GetCustomAttribute(typeof(ExportCodeFixProviderAttribute));
             string providerName = "";
-            if (exportAttribute is ExportCodeFixProviderAttribute && ((ExportCodeFixProviderAttribute)exportAttribute).Name != null)
+            if (provider is CodeFixProvider)
             {
-                providerName = ((ExportCodeFixProviderAttribute)exportAttribute).Name;
+                var exportAttribute = provider.GetType().GetCustomAttribute(typeof(ExportCodeFixProviderAttribute));
+                if (exportAttribute is ExportCodeFixProviderAttribute fixAttribute && fixAttribute.Name != null)
+                {
+                    providerName = fixAttribute.Name;
+                }
+            }
+            else
+            {
+                var exportAttribute = provider.GetType().GetCustomAttribute(typeof(ExportCodeRefactoringProviderAttribute));
+                if (exportAttribute is ExportCodeRefactoringProviderAttribute refactoringAttribute && refactoringAttribute.Name != null)
+                {
+                    providerName = refactoringAttribute.Name;
+                }
             }
 
             var orderAttributes = provider.GetType().GetCustomAttributes(typeof(ExtensionOrderAttribute), true).Select(attr => (ExtensionOrderAttribute)attr).ToList();
-            return new ProviderNode<T>(provider, providerName, orderAttributes);
+            return new ProviderNode<TProvider>(provider, providerName, orderAttributes);
         }
 
-        private ProviderNode(T provider, string providerName, List<ExtensionOrderAttribute> orderAttributes)
+        private ProviderNode(TProvider provider, string providerName, List<ExtensionOrderAttribute> orderAttributes)
         {
             Provider = provider;
             ProviderName = providerName;
             Before = new List<string>();
             After = new List<string>();
-            NodesBeforeMeSet = new HashSet<ProviderNode<T>>();
+            NodesBeforeMeSet = new HashSet<ProviderNode<TProvider>>();
             orderAttributes.ForEach(attr => AddAttribute(attr));
         }
 
@@ -49,10 +61,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         internal bool CheckForCycles()
         {
-            return CheckForCycles(new HashSet<ProviderNode<T>>());
+            return CheckForCycles(new HashSet<ProviderNode<TProvider>>());
         }
 
-        private bool CheckForCycles(HashSet<ProviderNode<T>> seenNodes)
+        private bool CheckForCycles(HashSet<ProviderNode<TProvider>> seenNodes)
         {
             if (!seenNodes.Add(this))
             {
