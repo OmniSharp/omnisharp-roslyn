@@ -93,7 +93,8 @@ namespace OmniSharp.Http.Middleware
                             Command = endpoint,
                             ArgumentsStream = httpContext.Request.Body
                         });
-                        MiddlewareHelpers.WriteTo(httpContext.Response, response);
+
+                        httpContext.Response.WriteJson(response);
                         return;
                     }
                 }
