@@ -3,21 +3,20 @@
     <PropertyGroup>
         <TargetFramework>net46</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
-        <AssemblyName>OmniSharp</AssemblyName>
+        <AssemblyName>OmniSharp.LanguageServerProtocol</AssemblyName>
         <PreserveCompilationContext>true</PreserveCompilationContext>
-        <OutputType Condition="'$(TestOutputType)'==''">Exe</OutputType>
         <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\OmniSharp.LanguageServerProtocol\OmniSharp.LanguageServerProtocol.csproj" />
+        <PackageReference Include="OmniSharp.Extensions.LanguageServerProtocol" Version="0.7.0" />
+        <!-- <ProjectReference Include="../../../csharp-language-server-protocol/src/Lsp/Lsp.csproj" /> -->
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
         <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
         <ProjectReference Include="..\OmniSharp.Script\OmniSharp.Script.csproj" />
-        <ProjectReference Include="..\OmniSharp.Cake\OmniSharp.Cake.csproj" />
     </ItemGroup>
 
 </Project>
