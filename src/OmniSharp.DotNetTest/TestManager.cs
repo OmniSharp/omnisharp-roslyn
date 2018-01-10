@@ -76,6 +76,11 @@ namespace OmniSharp.DotNetTest
         public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion);
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
+
+        public virtual Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
         protected virtual bool PrepareToConnect()

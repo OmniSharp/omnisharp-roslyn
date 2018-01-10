@@ -13,7 +13,7 @@ namespace OmniSharp.DotNetTest.Services
 {
     [OmniSharpHandler(OmniSharpEndpoints.V2.DebugTestsInClassGetStartInfo, LanguageNames.CSharp)]
     class DebugTestClassService : BaseTestService,
-        IRequestHandler<DebugTestClassGetStartInfoRequest, DebugTestGetStartInfoResponse[]>
+        IRequestHandler<DebugTestClassGetStartInfoRequest, DebugTestGetStartInfoResponse>
     {
         private DebugSessionManager _debugSessionManager;
 
@@ -23,15 +23,12 @@ namespace OmniSharp.DotNetTest.Services
         {
             _debugSessionManager = debugSessionManager;
         }
-        public async Task<DebugTestGetStartInfoResponse[]> Handle(DebugTestClassGetStartInfoRequest request)
+        public async Task<DebugTestGetStartInfoResponse> Handle(DebugTestClassGetStartInfoRequest request)
         {
             var testManager = CreateTestManager(request.FileName);
             _debugSessionManager.StartSession(testManager);
 
-            var responses = new List<DebugTestGetStartInfoResponse>();
-            foreach (var methodName in request.MethodsInClass)
-                responses.Add(await _debugSessionManager.DebugGetStartInfoAsync(methodName, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None));
-            return responses.ToArray();
+            return await _debugSessionManager.DebugGetStartInfoAsync(request.MethodsInClass, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
         }
     }
 }

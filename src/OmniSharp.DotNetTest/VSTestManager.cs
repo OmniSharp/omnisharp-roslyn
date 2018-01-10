@@ -152,6 +152,34 @@ namespace OmniSharp.DotNetTest
             };
         }
 
+        public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+        {
+            VerifyTestFramework(testFrameworkName);
+
+            var testCases = new List<TestCase>();
+            foreach(var methodName in methodNames)
+            testCases.AddRange(await DiscoverTestsAsync(methodName, targetFrameworkVersion, cancellationToken));
+
+            SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
+                new
+                {
+                    TestCases = testCases,
+                    DebuggingEnabled = true,
+                    RunSettings = GetDefaultRunSettings(targetFrameworkVersion)
+                });
+
+            var message = await ReadMessageAsync(cancellationToken);
+            var startInfo = message.DeserializePayload<TestProcessStartInfo>();
+
+            return new DebugTestGetStartInfoResponse
+            {
+                FileName = startInfo.FileName,
+                Arguments = startInfo.Arguments,
+                WorkingDirectory = startInfo.WorkingDirectory,
+                EnvironmentVariables = startInfo.EnvironmentVariables
+            };
+        }
+
         public override async Task DebugLaunchAsync(CancellationToken cancellationToken)
         {
             SendMessage(MessageType.CustomTestHostLaunchCallback,

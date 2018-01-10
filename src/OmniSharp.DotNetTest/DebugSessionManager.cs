@@ -84,6 +84,13 @@ namespace OmniSharp.DotNetTest
             return _testManager.DebugGetStartInfoAsync(methodName, testFrameworkName, targetFrameworkVersion, cancellationToken);
         }
 
+        public Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
+        {
+            VerifySession(isStarted: true);
+
+            return _testManager.DebugGetStartInfoAsync(methodNames, testFrameworkName, targetFrameworkVersion, cancellationToken);
+        }
+
         public async Task<DebugTestLaunchResponse> DebugLaunchAsync(int targetProcessId)
         {
             VerifySession(isStarted: true);
