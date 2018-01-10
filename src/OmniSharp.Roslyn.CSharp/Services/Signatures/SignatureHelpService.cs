@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.SignatureHelp;
+using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 {
@@ -165,9 +166,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
         private static SignatureHelpItem BuildSignature(IMethodSymbol symbol)
         {
             var signature = new SignatureHelpItem();
-            signature.Documentation = symbol.GetDocumentationCommentXml();
+            string xmlDocumentation = symbol.GetDocumentationCommentXml();
+            signature.Documentation = DocumentationConverter.ConvertDocumentation(xmlDocumentation, "\n");
             signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
             signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            signature.StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(xmlDocumentation, "\n");
 
             signature.Parameters = symbol.Parameters.Select(parameter =>
             {
@@ -175,12 +178,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 {
                     Name = parameter.Name,
                     Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    Documentation = parameter.GetDocumentationCommentXml()
+                    Documentation = DocumentationConverter.ConvertDocumentation(parameter.GetDocumentationCommentXml(), "\n"),
+                    StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(parameter.GetDocumentationCommentXml(), "\n")
                 };
             });
 
             return signature;
         }
-
     }
 }

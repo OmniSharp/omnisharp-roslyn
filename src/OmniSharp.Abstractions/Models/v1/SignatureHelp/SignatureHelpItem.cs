@@ -1,3 +1,4 @@
+using OmniSharp.Models.TypeLookup;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,6 +13,8 @@ namespace OmniSharp.Models.SignatureHelp
         public string Documentation { get; set; }
 
         public IEnumerable<SignatureHelpParameter> Parameters { get; set; }
+
+        public DocumentationComment StructuredDocumentation { get; set; }
 
         public override bool Equals(object obj)
         {
