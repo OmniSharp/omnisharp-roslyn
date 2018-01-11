@@ -329,7 +329,7 @@ namespace OmniSharp.MSBuild.Tests
         public void SolutionFile_LegacyAspNetWebsite_NotSupported()
         {
             var solution = SolutionFile.Parse(LegacyAspNetWebsiteSolutionContent);
-            Assert.True(solution.Projects[0].IsSupported);
+            Assert.True(solution.Projects[0].IsNotSupported);
         }
     }
 }

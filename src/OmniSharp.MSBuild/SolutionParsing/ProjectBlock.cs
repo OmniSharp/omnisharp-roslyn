@@ -33,7 +33,7 @@ namespace OmniSharp.MSBuild.SolutionParsing
         public string ProjectGuid { get; }
         public ImmutableArray<SectionBlock> Sections { get; }
 
-        public bool IsSupported =>
+        public bool IsNotSupported =>
             ProjectTypeGuid.Equals(SolutionFolderGuid, StringComparison.OrdinalIgnoreCase) ||
             ProjectTypeGuid.Equals(LegacyAspNetWebsite, StringComparison.OrdinalIgnoreCase);
 

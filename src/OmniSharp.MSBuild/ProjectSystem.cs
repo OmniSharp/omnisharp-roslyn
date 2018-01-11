@@ -134,7 +134,7 @@ namespace OmniSharp.MSBuild
 
             foreach (var project in solutionFile.Projects)
             {
-                if (project.IsSupported)
+                if (project.IsNotSupported)
                 {
                     continue;
                 }
