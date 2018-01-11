@@ -118,7 +118,7 @@ namespace TestUtility
 
             var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
 
-            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, sharedTextWriter, NullEventEmitter.Instance)
+            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, NullEventEmitter.Instance)
                 .WithAssemblies(s_lazyAssemblies.Value)
                 .Build();
 
