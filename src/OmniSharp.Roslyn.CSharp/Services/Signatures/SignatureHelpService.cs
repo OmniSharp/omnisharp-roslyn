@@ -167,19 +167,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
         {
             var signature = new SignatureHelpItem();
             string xmlDocumentation = symbol.GetDocumentationCommentXml();
-            signature.Documentation = DocumentationConverter.ConvertDocumentation(xmlDocumentation, "\n");
+            signature.Documentation = xmlDocumentation;
             signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
             signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             signature.StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(xmlDocumentation, "\n");
 
             signature.Parameters = symbol.Parameters.Select(parameter =>
             {
+                string paramXmlDocumentation = parameter.GetDocumentationCommentXml();
                 return new SignatureHelpParameter()
                 {
                     Name = parameter.Name,
                     Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    Documentation = DocumentationConverter.ConvertDocumentation(parameter.GetDocumentationCommentXml(), "\n"),
-                    StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(parameter.GetDocumentationCommentXml(), "\n")
+                    Documentation = paramXmlDocumentation,
+                    StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(paramXmlDocumentation, "\n")
                 };
             });
 
