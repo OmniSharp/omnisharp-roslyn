@@ -134,7 +134,7 @@ namespace OmniSharp.MSBuild
 
             foreach (var project in solutionFile.Projects)
             {
-                if (project.IsSolutionFolder || project.IsAspWebsite())
+                if (project.IsSupported)
                 {
                     continue;
                 }
