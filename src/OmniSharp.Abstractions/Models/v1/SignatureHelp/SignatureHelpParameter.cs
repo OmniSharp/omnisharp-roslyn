@@ -10,8 +10,6 @@ namespace OmniSharp.Models.SignatureHelp
 
         public string Documentation { get; set; }
 
-        public DocumentationComment StructuredDocumentation { get; set; }
-
         public override bool Equals(object obj)
         {
             var other = obj as SignatureHelpParameter;

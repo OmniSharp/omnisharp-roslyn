@@ -174,17 +174,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
 
             signature.Parameters = symbol.Parameters.Select(parameter =>
             {
-                string paramXmlDocumentation = parameter.GetDocumentationCommentXml();
                 return new SignatureHelpParameter()
                 {
                     Name = parameter.Name,
                     Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    Documentation = paramXmlDocumentation,
-                    StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(paramXmlDocumentation, "\n")
+                    Documentation = GetParameterDocumentation(parameter)
                 };
             });
 
             return signature;
+        }
+
+        private static string GetParameterDocumentation(IParameterSymbol parameter)
+        {
+            var contaningSymbol = parameter.ContainingSymbol.OriginalDefinition;
+            return DocumentationConverter.GetStructuredDocumentation(contaningSymbol.GetDocumentationCommentXml(), "\n").GetParameterText(parameter.Name);
         }
     }
 }

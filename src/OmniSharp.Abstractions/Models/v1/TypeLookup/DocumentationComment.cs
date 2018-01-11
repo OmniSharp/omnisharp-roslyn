@@ -30,8 +30,23 @@ namespace OmniSharp.Models.TypeLookup
             Exception = exception;
         }
 
+        private DocumentationComment()
+        {
+            SummaryText = string.Empty;
+            TypeParamElements = Array.Empty<DocumentationItem>();
+            ParamElements = Array.Empty<DocumentationItem>(); ;
+            ReturnsText = string.Empty;
+            RemarksText = string.Empty;
+            ExampleText = string.Empty;
+            ValueText = string.Empty;
+            Exception = Array.Empty<DocumentationItem>();
+
+        }
+
         public static DocumentationComment From(string xmlDocumentation, string lineEnding)
         {
+            if (string.IsNullOrEmpty(xmlDocumentation))
+                return Empty;
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
             StringBuilder summaryText = new StringBuilder();
             List<DocumentationItemBuilder> typeParamElements = new List<DocumentationItemBuilder>();
@@ -166,6 +181,17 @@ namespace OmniSharp.Models.TypeLookup
             }
             return cref + " ";
         }
+
+        //Gets the parameter documentation from this object
+        public string GetParameterText(string name)
+        {
+            var requiredParam = Array.Find(ParamElements, parameter => parameter.Name == name);
+            if (requiredParam != null)
+                return requiredParam.Documentation;
+            return string.Empty;
+        }
+
+        public static readonly DocumentationComment Empty = new DocumentationComment();
     }
 
     class DocumentationItemBuilder
