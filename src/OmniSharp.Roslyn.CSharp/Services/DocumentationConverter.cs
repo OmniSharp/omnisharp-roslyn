@@ -131,8 +131,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
 
         public static DocumentationComment GetStructuredDocumentation(string xmlDocumentation, string lineEnding)
         {
-            if (string.IsNullOrEmpty(xmlDocumentation))
-                return null;
             return DocumentationComment.From(xmlDocumentation, lineEnding);
         }
     }

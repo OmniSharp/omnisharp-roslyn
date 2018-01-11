@@ -40,7 +40,6 @@ namespace OmniSharp.Models.TypeLookup
             ExampleText = string.Empty;
             ValueText = string.Empty;
             Exception = Array.Empty<DocumentationItem>();
-
         }
 
         public static DocumentationComment From(string xmlDocumentation, string lineEnding)
