@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 
 namespace OmniSharp.Services
@@ -36,6 +37,28 @@ namespace OmniSharp.Services
             foreach (var name in assemblyNames)
             {
                 yield return Load(loader, name);
+            }
+        }
+
+        public static Assembly LoadByAssemblyNameOrPath(
+            this IAssemblyLoader loader,
+            string assemblyName)
+        {
+            if (File.Exists(assemblyName))
+            {
+                return loader.LoadFrom(assemblyName);
+            }
+            else
+            {
+                return loader.Load(assemblyName);
+            }
+        }
+
+        public static IEnumerable<Assembly> LoadByAssemblyNameOrPath(this IAssemblyLoader loader, IEnumerable<string>  assemblyNames)
+        {
+            foreach (var assemblyName in assemblyNames)
+            {
+                yield return loader.LoadByAssemblyNameOrPath(assemblyName);
             }
         }
     }
