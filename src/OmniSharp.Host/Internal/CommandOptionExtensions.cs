@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using Microsoft.Extensions.CommandLineUtils;
 
@@ -13,6 +14,11 @@ namespace OmniSharp.Internal
             }
 
             return defaultValue;
+        }
+
+        public static bool GetValueOrDefault(this CommandOption opt, bool defaultValue)
+        {
+            return opt.Value()?.Equals("on", StringComparison.OrdinalIgnoreCase) == true || defaultValue;
         }
     }
 }

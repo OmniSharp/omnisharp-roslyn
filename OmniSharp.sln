@@ -1,24 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2000
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C348365-A9D8-459E-9276-56FC46AAEE31}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07464F68-2D8E-45E5-B30A-768FCF4CC903}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		tests\app.config = tests\app.config
-		build.cake = build.cake
-		build.cmd = build.cmd
-		build.json = build.json
-		build.sh = build.sh
-		global.json = global.json
-		NuGet.Config = NuGet.Config
-		tools\packages.config = tools\packages.config
-		build\Packages.props = build\Packages.props
-	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
-		global_1json__JSONSchema = http://json.schemastore.org/global
+		                global_1json__JSONSchema = http://json.schemastore.org/global
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}"
@@ -62,6 +50,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Http", "src\OmniSharp.Http\OmniSharp.Http.csproj", "{0A9BF1CC-2F0D-431C-BAFD-403658E233F1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Http.Tests", "tests\OmniSharp.Http.Tests\OmniSharp.Http.Tests.csproj", "{1217C534-E8EB-454D-B6E1-12BD30E72F8E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.LanguageServerProtocol", "src\OmniSharp.LanguageServerProtocol\OmniSharp.LanguageServerProtocol.csproj", "{D182B870-72E7-4072-A439-45F4FC148A34}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.DotNet.ProjectModel", "src\OmniSharp.DotNet.ProjectModel\OmniSharp.DotNet.ProjectModel.csproj", "{31580626-6D87-491D-A65E-F6B881164398}"
 EndProject
@@ -319,6 +309,18 @@ Global
 		{1217C534-E8EB-454D-B6E1-12BD30E72F8E}.Release|x64.Build.0 = Release|Any CPU
 		{1217C534-E8EB-454D-B6E1-12BD30E72F8E}.Release|x86.ActiveCfg = Release|Any CPU
 		{1217C534-E8EB-454D-B6E1-12BD30E72F8E}.Release|x86.Build.0 = Release|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Debug|x64.Build.0 = Debug|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Debug|x86.Build.0 = Debug|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Release|x64.ActiveCfg = Release|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Release|x64.Build.0 = Release|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Release|x86.ActiveCfg = Release|Any CPU
+		{D182B870-72E7-4072-A439-45F4FC148A34}.Release|x86.Build.0 = Release|Any CPU
 		{31580626-6D87-491D-A65E-F6B881164398}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{31580626-6D87-491D-A65E-F6B881164398}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31580626-6D87-491D-A65E-F6B881164398}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -380,6 +382,7 @@ Global
 		{A645D475-3448-4473-88CA-E3C3B31E33CA} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 		{0A9BF1CC-2F0D-431C-BAFD-403658E233F1} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{1217C534-E8EB-454D-B6E1-12BD30E72F8E} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
+		{D182B870-72E7-4072-A439-45F4FC148A34} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{31580626-6D87-491D-A65E-F6B881164398} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{BA0713A6-EF63-419D-B60D-7A84B134531F} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{17DAECA3-AE28-4B40-AA52-1EF618346A85} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
