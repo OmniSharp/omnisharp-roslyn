@@ -5,6 +5,7 @@ All changes to the project will be documented in this file.
 * Updated to Roslyn 2.6.1 packages - C# 7.2 support, PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055)
 * Shipped Language Server Protocol support in box.  PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969)
   - Additional information and features tracked at [#968](https://github.com/OmniSharp/omnisharp-roslyn/issues/968)
+* Do not crash when encoutering Legacy ASP.NET Website projects. PR: [#1066](https://github.com/OmniSharp/omnisharp-roslyn/pull/1066) and [#1084](https://github.com/OmniSharp/omnisharp-roslyn/pull/1084)
 
 ## [1.28.0] - 2017-12-14
 
