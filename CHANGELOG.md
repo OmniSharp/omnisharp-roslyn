@@ -1,8 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [not yet released]
+## [1.29.0] - TBD
 * Updated to Roslyn 2.6.1 packages - C# 7.2 support, PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055)
+* Shipped Language Server Protocol support in box.  PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969)
+  - Additional information and features tracked at [#968](https://github.com/OmniSharp/omnisharp-roslyn/issues/968)
 
 ## [1.28.0] - 2017-12-14
 
@@ -216,7 +218,7 @@ Note: This release now requires the latest release of Mono 5.2.0 or later to bui
 - Unsafe code is now allowed in C# scripts (PR: #781)
 - C# scripting now ignores duplicated CorLibrary types, which can manifest in certain edge scenarios. (#784, PR: #785)
 - Updated to RTM Roslyn and NuGet packages (PR: #791)
--	 Introduce caching for #r to avoid leaking memory in C# scripts. ([omnisharp-vscode/issues/1306](https://github.com/OmniSharp/omnisharp-vscode/issues/1306), PR: #794)
+-     Introduce caching for #r to avoid leaking memory in C# scripts. ([omnisharp-vscode/issues/1306](https://github.com/OmniSharp/omnisharp-vscode/issues/1306), PR: #794)
 
 ## [1.10.0] - 2017-02-11
 

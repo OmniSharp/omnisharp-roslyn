@@ -30,12 +30,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private static readonly Func<TextSpan, List<Diagnostic>> s_createDiagnosticList = _ => new List<Diagnostic>();
 
+        protected Lazy<List<CodeFixProvider>> OrderedCodeFixProviders;
+        protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
+
         protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger)
         {
             this.Workspace = workspace;
             this.Providers = providers;
             this.Logger = logger;
             this._helper = helper;
+
+            OrderedCodeFixProviders = new Lazy<List<CodeFixProvider>>(() => GetSortedCodeFixProviders());
+            OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
             var nestedCodeActionsProperty = typeof(CodeAction).GetProperty("NestedCodeActions", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -68,9 +74,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             await CollectCodeFixesActions(document, span, codeActions);
             await CollectRefactoringActions(document, span, codeActions);
-
-            // TODO: Determine good way to order code actions.
-            codeActions.Reverse();
 
             // Be sure to filter out any code actions that inherit from CodeActionWithOptions.
             // This isn't a great solution and might need changing later, but every Roslyn code action
@@ -128,26 +131,65 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
+            foreach (var codeFixProvider in OrderedCodeFixProviders.Value)
+            {
+                var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
+                if (fixableDiagnostics.Length > 0)
+                {
+                    var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
+
+                    try
+                    {
+                        await codeFixProvider.RegisterCodeFixesAsync(context);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.LogError(ex, $"Error registering code fixes for {codeFixProvider.GetType().FullName}");
+                    }
+                }
+            }
+        }
+
+        private List<CodeFixProvider> GetSortedCodeFixProviders()
+        {
+            List<ProviderNode<CodeFixProvider>> nodesList = new List<ProviderNode<CodeFixProvider>>();
+            List<CodeFixProvider> providerList = new List<CodeFixProvider>();
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
-                    var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
-                    if (fixableDiagnostics.Length > 0)
-                    {
-                        var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
-
-                        try
-                        {
-                            await codeFixProvider.RegisterCodeFixesAsync(context);
-                        }
-                        catch (Exception ex)
-                        {
-                            this.Logger.LogError(ex, $"Error registering code fixes for {codeFixProvider.GetType().FullName}");
-                        }
-                    }
+                    providerList.Add(codeFixProvider);
+                    nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
                 }
             }
+
+            var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
+            if (graph.HasCycles())
+            {
+                return providerList;
+            }
+            return graph.TopologicalSort();
+        }
+
+        private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
+        {
+            List<ProviderNode<CodeRefactoringProvider>> nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
+            List<CodeRefactoringProvider> providerList = new List<CodeRefactoringProvider>();
+            foreach (var provider in this.Providers)
+            {
+                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
+                {
+                    providerList.Add(codeRefactoringProvider);
+                    nodesList.Add(ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider));
+                }
+            }
+
+            var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
+            if (graph.HasCycles())
+            {
+                return providerList;
+            }
+            return graph.TopologicalSort();
         }
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
@@ -179,25 +221,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            foreach (var provider in this.Providers)
+            foreach (var codeRefactoringProvider in OrderedCodeRefactoringProviders.Value)
             {
-                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
+                if (_helper.IsDisallowed(codeRefactoringProvider))
                 {
-                    if (_helper.IsDisallowed(codeRefactoringProvider))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
+                var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
 
-                    try
-                    {
-                        await codeRefactoringProvider.ComputeRefactoringsAsync(context);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger.LogError(ex, $"Error computing refactorings for {codeRefactoringProvider.GetType().FullName}");
-                    }
+                try
+                {
+                    await codeRefactoringProvider.ComputeRefactoringsAsync(context);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogError(ex, $"Error computing refactorings for {codeRefactoringProvider.GetType().FullName}");
                 }
             }
         }

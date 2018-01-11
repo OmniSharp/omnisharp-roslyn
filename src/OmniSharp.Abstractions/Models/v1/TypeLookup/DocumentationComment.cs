@@ -161,7 +161,7 @@ namespace OmniSharp.Models.TypeLookup
         private static string TrimMultiLineString(string input, string lineEnding)
         {
             var lines = input.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            return string.Join(lineEnding, lines.Select(l => l.TrimStart()));
+            return string.Join(lineEnding, lines.Select(l => TrimStartRetainingSingleLeadingSpace(l)));
         }
 
         private static string GetCref(string cref)
@@ -179,6 +179,15 @@ namespace OmniSharp.Models.TypeLookup
                 return cref.Substring(2, cref.Length - 2) + " ";
             }
             return cref + " ";
+        }
+
+        private static string TrimStartRetainingSingleLeadingSpace(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+            if (!char.IsWhiteSpace(input[0]))
+                return input;
+            return $" {input.TrimStart()}";
         }
 
         //Gets the parameter documentation from this object
