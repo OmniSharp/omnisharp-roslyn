@@ -28,7 +28,7 @@ namespace OmniSharp.Stdio.Tests
                 omniSharpEnvironment,
                 configuration,
                 serviceProvider,
-                new CompositionHostBuilder(serviceProvider, omniSharpEnvironment, writer, NullEventEmitter.Instance),
+                new CompositionHostBuilder(serviceProvider, omniSharpEnvironment, NullEventEmitter.Instance),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 cancelationTokenSource);
 

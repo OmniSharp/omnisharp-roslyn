@@ -100,6 +100,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task Returns_ordered_code_actions()
+        {
+            const string code =
+                @"public class Class1
+                {
+                    public void Whatever()
+                    {
+                        [|Console.Write(""should be using System;"");|]
+                    }
+                }";
+
+            var refactorings = await FindRefactoringNamesAsync(code);
+            List<string> expected = new List<string>
+            {
+                "using System;",
+                "System.Console",
+                "Generate variable 'Console' -> Generate property 'Class1.Console'",
+                "Generate variable 'Console' -> Generate field 'Class1.Console'",
+                "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+                "Generate variable 'Console' -> Generate local 'Console'",
+                "Generate type 'Console' -> Generate class 'Console' in new file",
+                "Generate type 'Console' -> Generate class 'Console'",
+                "Generate type 'Console' -> Generate nested class 'Console'",
+                "Extract Method"
+            };
+            Assert.Equal(expected, refactorings);
+        }
+
+        [Fact]
         public async Task Can_extract_method()
         {
             const string code =
@@ -190,7 +219,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var testFile = new TestFile(BufferPath, code);
 
-            using (var host = CreateOmniSharpHost(new [] { testFile }, configurationData))
+            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData))
             {
                 var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
 
