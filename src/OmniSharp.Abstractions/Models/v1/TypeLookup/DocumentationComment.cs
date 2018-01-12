@@ -18,8 +18,8 @@ namespace OmniSharp.Models.TypeLookup
         public string ValueText { get; }
         public DocumentationItem[] Exception { get; }
 
-        public DocumentationComment
-            (string summaryText = "",
+        public DocumentationComment(
+            string summaryText = "",
             DocumentationItem[] typeParamElements = null,
             DocumentationItem[] paramElements = null,
             string returnsText = "",
@@ -29,13 +29,13 @@ namespace OmniSharp.Models.TypeLookup
             DocumentationItem[] exception = null)
         {
             SummaryText = summaryText;
-            TypeParamElements = typeParamElements ?? new DocumentationItem[0];
-            ParamElements = paramElements ?? new DocumentationItem[0];
+            TypeParamElements = typeParamElements ?? Array.Empty<DocumentationItem>();
+            ParamElements = paramElements ?? Array.Empty<DocumentationItem>();
             ReturnsText = returnsText;
             RemarksText = remarksText;
             ExampleText = exampleText;
             ValueText = valueText;
-            Exception = exception ?? new DocumentationItem[0];
+            Exception = exception ?? Array.Empty<DocumentationItem>();
         }
 
         public static DocumentationComment From(string xmlDocumentation, string lineEnding)
@@ -187,7 +187,6 @@ namespace OmniSharp.Models.TypeLookup
             return $" {input.TrimStart()}";
         }
 
-        //Gets the parameter documentation from this object
         public string GetParameterText(string name)
             => Array.Find(ParamElements, parameter => parameter.Name == name)?.Documentation ?? string.Empty;
 
