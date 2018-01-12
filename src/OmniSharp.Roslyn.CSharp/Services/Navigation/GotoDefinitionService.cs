@@ -47,11 +47,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 // go to definition for namespaces is not supported
                 if (symbol != null && !(symbol is INamespaceSymbol))
                 {
-                    if (symbol is IMethodSymbol methodSymbol && methodSymbol.AssociatedSymbol is IPropertySymbol)
-                        return response;
                     // for partial methods, pick the one with body
                     if (symbol is IMethodSymbol method)
                     {
+                        // Return an empty response for property accessor symbols like get and set
+                        if (method.AssociatedSymbol is IPropertySymbol)
+                            return response;
+
                         symbol = method.PartialImplementationPart ?? symbol;
                     }
 

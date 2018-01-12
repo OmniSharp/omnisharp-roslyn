@@ -32,7 +32,7 @@ class {|def:Foo|} {
         }
 
         [Fact]
-        public async Task DoesnotReturnOnPropertAccessorGet()
+        public async Task DoesNotReturnOnPropertAccessorGet()
         {
             var testFile = new TestFile("foo.cs", @"
 class Test {
@@ -43,7 +43,7 @@ class Test {
         }
 
         [Fact]
-        public async Task DoesnotReturnOnPropertAccessorSet()
+        public async Task DoesNotReturnOnPropertAccessorSet()
         {
             var testFile = new TestFile("foo.cs", @"
 class Test {
@@ -54,7 +54,7 @@ class Test {
         }
 
         [Fact]
-        public async Task DoesnotReturnOnPropertyAccessorPropertyDef()
+        public async Task DoesNotReturnOnPropertyAccessorPropertyDef()
         {
             var testFile = new TestFile("foo.cs", @"
 class Test {
