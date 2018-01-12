@@ -177,7 +177,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 {
                     Name = parameter.Name,
                     Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    Documentation = DocumentationHelper.GetParameterDocumentation(parameter)
+                    Documentation = signature.StructuredDocumentation.GetParameterText(parameter.Name)
                 };
             });
 
