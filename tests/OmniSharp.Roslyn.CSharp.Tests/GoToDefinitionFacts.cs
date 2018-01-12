@@ -31,6 +31,110 @@ class {|def:Foo|} {
             await TestGoToSourceAsync(testFile);
         }
 
+        [Fact]
+        public async Task DoesnotReturnOnPropertAccessorGet()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+    public string Foo{ g$$et; set; }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+        [Fact]
+        public async Task DoesnotReturnOnPropertAccessorSet()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+    public int Foo{ get; s$$et; }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+        [Fact]
+        public async Task DoesnotReturnOnPropertyAccessorPropertyDef()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+    public int |def:Foo| Fo$$o{ get; set; }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+        [Fact]
+        public async Task ReturnsOnPropertyAccessorPropertySetting()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+    public int |def:Foo|{ get; set; }
+
+    public static void main()
+    {
+        F$$oo = 3;
+    }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+        [Fact]
+        public async Task ReturnsOnPropertyAccessorField1()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+
+    public int |def:foo|;
+
+    public int Foo
+    {
+        get => f$$oo;
+        set => foo = value;
+    }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+        [Fact]
+        public async Task ReturnsOnPropertyAccessorField2()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+
+    public int |def:foo|;
+
+    public int Foo
+    {
+        get => foo;
+        set => f$$oo = value;
+    }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+        [Fact]
+        public async Task ReturnsOnPropertyAccessorPropertyGetting()
+        {
+            var testFile = new TestFile("foo.cs", @"
+class Test {
+    public int |def:Foo|{ get; set; }
+
+    public static void main()
+    {
+        Foo = 3;
+    Console.WriteLine(F$$oo);
+    }
+}");
+
+            await TestGoToSourceAsync(testFile);
+        }
+
+
+
         [Theory]
         [InlineData("bar.cs")]
         [InlineData("bar.csx")]
