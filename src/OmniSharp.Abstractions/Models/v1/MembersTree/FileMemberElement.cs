@@ -9,6 +9,10 @@ namespace OmniSharp.Models.MembersTree
 
         public QuickFix Location { get; set; }
 
+        public int AttributeSpanStart { get; set; }
+
+        public int AttributeSpanEnd { get; set; }
+
         public string Kind { get; set; }
         
         public ICollection<SyntaxFeature> Features { get; } = new List<SyntaxFeature>();
