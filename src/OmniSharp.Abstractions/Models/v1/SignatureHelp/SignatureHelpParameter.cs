@@ -1,5 +1,3 @@
-using OmniSharp.Models.TypeLookup;
-
 namespace OmniSharp.Models.SignatureHelp
 {
     public class SignatureHelpParameter
