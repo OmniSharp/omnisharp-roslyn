@@ -789,6 +789,33 @@ class Program
         }
 
         [Fact]
+        public async Task ReturnsDocumentationForParametersNestedTags()
+        {
+            const string source =
+@"class Program
+{
+    public static void Main()
+    {
+        var flag = Compare($$);
+    }
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.It has the default value as <c>null</c></param>
+    /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
+    public static bool Compare(GameObject gameObject, string tagName = null)
+    {
+        return true;
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(2, signature.Parameters.Count());
+            Assert.Equal("Name of the tag.It has the default value as null", signature.Parameters.ElementAt(1).Documentation);
+        }
+
+        [Fact]
         public async Task ReturnsStructuredDocumentation()
         {
             const string source =
