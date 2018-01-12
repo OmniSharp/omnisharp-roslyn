@@ -139,32 +139,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Documentation
         {
             switch (symbol)
             {
-                case IParameterSymbol parameter: return DocumentationComment.WithSummaryText(DocumentationHelper.GetParameterDocumentation(parameter, lineEnding));
-                case ITypeParameterSymbol typeParam: return DocumentationComment.WithSummaryText(DocumentationHelper.GetTypeParameterDocumentation(typeParam, lineEnding));
-                case IAliasSymbol alias: return DocumentationComment.WithSummaryText(DocumentationHelper.GetAliasDocumentation(alias, lineEnding));
-                default: return GetStructuredDocumentation(symbol.GetDocumentationCommentXml(), lineEnding);
+                case IParameterSymbol parameter:
+                    return new DocumentationComment(summaryText: DocumentationHelper.GetParameterDocumentation(parameter, lineEnding));
+                case ITypeParameterSymbol typeParam:
+                    return new DocumentationComment(summaryText: DocumentationHelper.GetTypeParameterDocumentation(typeParam, lineEnding));
+                case IAliasSymbol alias:
+                    return new DocumentationComment(summaryText: DocumentationHelper.GetAliasDocumentation(alias, lineEnding));
+                default:
+                    return GetStructuredDocumentation(symbol.GetDocumentationCommentXml(), lineEnding);
             }
-        }
-    }
-
-    public static class DocumentationHelper
-    {
-        public static string GetParameterDocumentation(IParameterSymbol parameter, string lineEnding = "\n")
-        {
-            var contaningSymbolDef = parameter.ContainingSymbol.OriginalDefinition;
-            return DocumentationConverter.GetStructuredDocumentation(contaningSymbolDef.GetDocumentationCommentXml(), lineEnding).GetParameterText(parameter.Name);
-        }
-
-        public static string GetTypeParameterDocumentation(ITypeParameterSymbol typeParam, string lineEnding = "\n")
-        {
-            var contaningSymbol = typeParam.ContainingSymbol;
-            return DocumentationConverter.GetStructuredDocumentation(contaningSymbol.GetDocumentationCommentXml(), lineEnding).GetTypeParameterText(typeParam.Name);
-        }
-
-        public static string GetAliasDocumentation(IAliasSymbol alias, string lineEnding = "\n")
-        {
-            var target = alias.Target;
-            return DocumentationConverter.GetStructuredDocumentation(target.GetDocumentationCommentXml(), lineEnding).SummaryText;
         }
     }
 }
