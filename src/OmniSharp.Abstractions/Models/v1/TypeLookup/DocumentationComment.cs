@@ -9,16 +9,16 @@ namespace OmniSharp.Models.TypeLookup
 {
     public class DocumentationComment
     {
-        public string SummaryText { get; }
-        public DocumentationItem[] TypeParamElements { get; }
-        public DocumentationItem[] ParamElements { get; }
-        public string ReturnsText { get; }
-        public string RemarksText { get; }
-        public string ExampleText { get; }
-        public string ValueText { get; }
-        public DocumentationItem[] Exception { get; }
+        public string SummaryText { get; private set; }
+        public DocumentationItem[] TypeParamElements { get; private set; }
+        public DocumentationItem[] ParamElements { get; private set; }
+        public string ReturnsText { get; private set; }
+        public string RemarksText { get; private set; }
+        public string ExampleText { get; private set; }
+        public string ValueText { get; private set; }
+        public DocumentationItem[] Exception { get; private set; }
 
-        private DocumentationComment(string summaryText, DocumentationItem[] typeParamElements, DocumentationItem[] paramElements, string returnsText, string remarksText, string exampleText, string valueText, DocumentationItem[ ] exception)
+        private DocumentationComment(string summaryText, DocumentationItem[] typeParamElements, DocumentationItem[] paramElements, string returnsText, string remarksText, string exampleText, string valueText, DocumentationItem[] exception)
         {
             SummaryText = summaryText;
             TypeParamElements = typeParamElements;
@@ -197,6 +197,21 @@ namespace OmniSharp.Models.TypeLookup
             if (requiredParam != null)
                 return requiredParam.Documentation;
             return string.Empty;
+        }
+
+        public string GetTypeParameterText(string name)
+        {
+            var requiredParam = Array.Find(TypeParamElements, typeParam => typeParam.Name == name);
+            if (requiredParam != null)
+                return requiredParam.Documentation;
+            return string.Empty;
+        }
+
+        public static DocumentationComment WithSummaryText(string summaryText)
+        {
+            var docComment = new DocumentationComment();
+            docComment.SummaryText = summaryText;
+            return docComment;
         }
 
         public static readonly DocumentationComment Empty = new DocumentationComment();

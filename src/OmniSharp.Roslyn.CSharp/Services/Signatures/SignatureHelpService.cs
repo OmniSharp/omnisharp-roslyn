@@ -170,7 +170,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
             signature.Documentation = xmlDocumentation;
             signature.Name = symbol.MethodKind == MethodKind.Constructor ? symbol.ContainingType.Name : symbol.Name;
             signature.Label = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-            signature.StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(xmlDocumentation, "\n");
+            signature.StructuredDocumentation = DocumentationConverter.GetStructuredDocumentation(symbol);
 
             signature.Parameters = symbol.Parameters.Select(parameter =>
             {
@@ -178,17 +178,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                 {
                     Name = parameter.Name,
                     Label = parameter.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    Documentation = GetParameterDocumentation(parameter)
+                    Documentation = DocumentationHelper.GetParameterDocumentation(parameter)
                 };
             });
 
             return signature;
-        }
-
-        private static string GetParameterDocumentation(IParameterSymbol parameter)
-        {
-            var contaningSymbol = parameter.ContainingSymbol.OriginalDefinition;
-            return DocumentationConverter.GetStructuredDocumentation(contaningSymbol.GetDocumentationCommentXml(), "\n").GetParameterText(parameter.Name);
         }
     }
 }

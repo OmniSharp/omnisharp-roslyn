@@ -646,5 +646,37 @@ public class TestClass
             @"DoWork is a method in the TestClass class.";
             Assert.Equal(expected, response.StructuredDocumentation.SummaryText);
         }
+
+        [Fact]
+        public async Task StructuredDocumentationForParameters1()
+        {
+            string content = @"
+class testissue
+{
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    public static bool Compare(int gam$$eObject, string tagName)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal("The game object.", response.StructuredDocumentation.SummaryText);
+        }
+
+        [Fact]
+        public async Task StructuredDocumentationForParameters2()
+        {
+            string content = @"
+class testissue
+{
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    public static bool Compare(int gameObject, string tag$$Name)
+    {
+    }
+}";
+            var response = await GetTypeLookUpResponse(content);
+            Assert.Equal("Name of the tag.", response.StructuredDocumentation.SummaryText);
+        }
     }
 }
