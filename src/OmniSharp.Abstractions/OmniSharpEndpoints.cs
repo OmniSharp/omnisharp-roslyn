@@ -55,7 +55,6 @@ namespace OmniSharp
             public const string DebugTestLaunch = "/v2/debugtest/launch";
             public const string DebugTestStop = "/v2/debugtest/stop";
             public const string DebugTestsInClassGetStartInfo = "/v2/debugtestsinclass/getstartinfo";
-
         }
     }
 }
