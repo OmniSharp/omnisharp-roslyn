@@ -35,6 +35,7 @@ namespace OmniSharp.DotNetTest.Services
                 };
                 responses.Add(response);
             }
+
             return responses.ToArray();
         }
     }
