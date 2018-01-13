@@ -43,6 +43,12 @@ namespace OmniSharp.MSBuild.SolutionParsing
             Sections = sections;
         }
 
+        public bool IsAspWebsite()
+        {
+            var match = Regex.Match(RelativePath, "http://", RegexOptions.IgnoreCase);
+            return match.Success;
+        }
+
         public static ProjectBlock Parse(string headerLine, Scanner scanner)
         {
             var match = s_lazyProjectHeader.Value.Match(headerLine);
