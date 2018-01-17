@@ -134,8 +134,10 @@ namespace OmniSharp.DotNetTest
             VerifyTestFramework(testFrameworkName);
 
             var testCases = new List<TestCase>();
-            foreach(var methodName in methodNames)
-            testCases.AddRange(await DiscoverTestsAsync(methodName, targetFrameworkVersion, cancellationToken));
+            foreach (var methodName in methodNames)
+            {
+                testCases.AddRange(await DiscoverTestsAsync(methodName, targetFrameworkVersion, cancellationToken));
+            }
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new

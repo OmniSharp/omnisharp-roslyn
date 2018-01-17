@@ -23,7 +23,7 @@ namespace OmniSharp.DotNetTest.Services
             List<RunTestResponse> responses = new List<RunTestResponse>();
             if (testManager.IsConnected)
             {
-                foreach (var methodName in request.MethodNamesInClass)
+                foreach (var methodName in request.MethodNames)
                     responses.Add(testManager.RunTest(methodName, request.TestFrameworkName, request.TargetFrameworkVersion));
             }
             else

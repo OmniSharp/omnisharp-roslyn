@@ -4,13 +4,7 @@ using OmniSharp.Models;
 namespace OmniSharp.DotNetTest.Models
 {
     [OmniSharpEndpoint(OmniSharpEndpoints.V2.RunAllTestsInClass, typeof(RunTestsInClassRequest), typeof(RunTestResponse[]))]
-    public class RunTestsInClassRequest : Request
+    public class RunTestsInClassRequest : BaseTestClassRequest
     {
-        public string TestFrameworkName { get; set; }
-        /// <summary>
-        /// e.g. .NETCoreApp, Version=2.0
-        /// </summary>
-        public string TargetFrameworkVersion { get; set; }
-        public string[] MethodNamesInClass { get; set; }
     }
 }
