@@ -73,6 +73,12 @@ namespace OmniSharp.DotNetTest
         protected abstract void VersionCheck();
 
         public abstract RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion);
+
+        public virtual RunTestResponse RunTest(string[] methodNames, string testFrameworkName, string targetFrameworkVersion)
+        { 
+                throw new NotImplementedException();
+        }
+
         public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion);
 
         public abstract Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken);
@@ -81,6 +87,7 @@ namespace OmniSharp.DotNetTest
         {
             throw new NotImplementedException();
         }
+
         public abstract Task DebugLaunchAsync(CancellationToken cancellationToken);
 
         protected virtual bool PrepareToConnect()

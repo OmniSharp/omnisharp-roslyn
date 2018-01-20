@@ -191,10 +191,19 @@ namespace OmniSharp.DotNetTest
         }
 
         public override RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion)
+        => RunTest(new string[] { methodName }, testFrameworkName, targetFrameworkVersion);
+
+        public override RunTestResponse RunTest(string[] methodNames, string testFrameworkName, string targetFrameworkVersion)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(methodName, targetFrameworkVersion);
+            var testCasesList = new List<TestCase>();
+            foreach (var methodName in methodNames)
+            {
+                testCasesList.AddRange(DiscoverTests(methodName, targetFrameworkVersion));
+            }
+
+            var testCases = testCasesList.ToArray();
 
             var testResults = new List<TestResult>();
 
