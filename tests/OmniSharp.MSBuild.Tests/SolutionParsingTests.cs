@@ -162,6 +162,32 @@ namespace OmniSharp.MSBuild.Tests
                 EndGlobalSection
             EndGlobal";
         #endregion
+        #region LegacyAspNetWebsiteSolutionContent
+        private const string LegacyAspNetWebsiteSolutionContent = @"
+            Microsoft Visual Studio Solution File, Format Version 12.00
+            # Visual Studio 2013
+            VisualStudioVersion = 12.0.31101.0
+            MinimumVisualStudioVersion = 10.0.40219.1
+            Project(""{E24C65DC-7377-472B-9ABA-BC803B73C61A}"") = ""OmniSharp_Test_Website"", ""localhost"", ""{914CBCF1-2DED-4994-AE99-C1CE5FE79EDF}""
+
+                ProjectSection(WebsiteProperties) = preProject
+		            Debug.AspNetCompiler.Debug = ""True""
+                    Release.AspNetCompiler.Debug = ""False""
+	            EndProjectSection
+            EndProject
+            Global
+	            GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		            Debug|Any CPU = Debug|Any CPU
+	            EndGlobalSection
+	            GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		            {914CBCF1-2DED-4994-AE99-C1CE5FE79EDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		            {914CBCF1-2DED-4994-AE99-C1CE5FE79EDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	            EndGlobalSection
+	            GlobalSection(SolutionProperties) = preSolution
+		            HideSolutionNode = FALSE
+	            EndGlobalSection
+            EndGlobal";
+        #endregion
 
         [Fact]
         public void SolutionFile_Parse_throws_with_null_text()
@@ -297,6 +323,13 @@ namespace OmniSharp.MSBuild.Tests
             Assert.Equal("SolutionProperties", solution.GlobalSections[1].Name);
             Assert.Equal("ProjectConfigurationPlatforms", solution.GlobalSections[2].Name);
             Assert.Equal("NestedProjects", solution.GlobalSections[3].Name);
+        }
+
+        [Fact]
+        public void SolutionFile_LegacyAspNetWebsite_NotSupported()
+        {
+            var solution = SolutionFile.Parse(LegacyAspNetWebsiteSolutionContent);
+            Assert.True(solution.Projects[0].IsNotSupported);
         }
     }
 }

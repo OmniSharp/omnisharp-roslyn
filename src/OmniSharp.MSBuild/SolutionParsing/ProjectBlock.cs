@@ -8,6 +8,7 @@ namespace OmniSharp.MSBuild.SolutionParsing
     internal class ProjectBlock
     {
         private const string SolutionFolderGuid = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
+        private const string LegacyAspNetWebsite = "{E24C65DC-7377-472B-9ABA-BC803B73C61A}";
 
         // An example of a project line looks like this:
         //  Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{DEBCE986-61B9-435E-8018-44B9EF751655}"
@@ -32,7 +33,10 @@ namespace OmniSharp.MSBuild.SolutionParsing
         public string ProjectGuid { get; }
         public ImmutableArray<SectionBlock> Sections { get; }
 
-        public bool IsSolutionFolder => ProjectTypeGuid.Equals(SolutionFolderGuid, StringComparison.OrdinalIgnoreCase);
+        public bool IsNotSupported =>
+            ProjectTypeGuid.Equals(SolutionFolderGuid, StringComparison.OrdinalIgnoreCase) ||
+            ProjectTypeGuid.Equals(LegacyAspNetWebsite, StringComparison.OrdinalIgnoreCase) ||
+            (RelativePath != null && RelativePath.ToLowerInvariant().StartsWith("http://"));
 
         private ProjectBlock(string projectTypeGuid, string projectName, string relativePath, string projectGuid, ImmutableArray<SectionBlock> sections)
         {
@@ -41,12 +45,6 @@ namespace OmniSharp.MSBuild.SolutionParsing
             RelativePath = relativePath;
             ProjectGuid = projectGuid;
             Sections = sections;
-        }
-
-        public bool IsAspWebsite()
-        {
-            var match = Regex.Match(RelativePath, "http://", RegexOptions.IgnoreCase);
-            return match.Success;
         }
 
         public static ProjectBlock Parse(string headerLine, Scanner scanner)
