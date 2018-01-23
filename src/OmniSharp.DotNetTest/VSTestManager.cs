@@ -105,7 +105,7 @@ namespace OmniSharp.DotNetTest
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = DiscoverTests(methodName, targetFrameworkVersion);
+            var testCases = DiscoverTests(new string[] { methodName }, targetFrameworkVersion);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
@@ -127,17 +127,13 @@ namespace OmniSharp.DotNetTest
         }
 
         public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string methodName, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
-         => await DebugGetStartInfoAsync(new string[] { methodName}, testFrameworkName, targetFrameworkVersion, cancellationToken);
+         => await DebugGetStartInfoAsync(new string[] { methodName }, testFrameworkName, targetFrameworkVersion, cancellationToken);
 
         public override async Task<DebugTestGetStartInfoResponse> DebugGetStartInfoAsync(string[] methodNames, string testFrameworkName, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCases = new List<TestCase>();
-            foreach (var methodName in methodNames)
-            {
-                testCases.AddRange(await DiscoverTestsAsync(methodName, targetFrameworkVersion, cancellationToken));
-            }
+            var testCases = await DiscoverTestsAsync(methodNames, targetFrameworkVersion, cancellationToken);
 
             SendMessage(MessageType.GetTestRunnerProcessStartInfoForRunSelected,
                 new
@@ -197,13 +193,7 @@ namespace OmniSharp.DotNetTest
         {
             VerifyTestFramework(testFrameworkName);
 
-            var testCasesList = new List<TestCase>();
-            foreach (var methodName in methodNames)
-            {
-                testCasesList.AddRange(DiscoverTests(methodName, targetFrameworkVersion));
-            }
-
-            var testCases = testCasesList.ToArray();
+            var testCases = DiscoverTests(methodNames, targetFrameworkVersion);
 
             var testResults = new List<TestResult>();
 
@@ -260,7 +250,7 @@ namespace OmniSharp.DotNetTest
             };
         }
 
-        private async Task<TestCase[]> DiscoverTestsAsync(string methodName, string targetFrameworkVersion, CancellationToken cancellationToken)
+        private async Task<TestCase[]> DiscoverTestsAsync(string[] methodNames, string targetFrameworkVersion, CancellationToken cancellationToken)
         {
             SendMessage(MessageType.StartDiscovery,
                 new
@@ -302,7 +292,7 @@ namespace OmniSharp.DotNetTest
 
                             testName = testName.Trim();
 
-                            if (testName.Equals(methodName, StringComparison.Ordinal))
+                            if (Array.Exists(methodNames, methodName => testName.Equals(methodName, StringComparison.Ordinal)))
                             {
                                 testCases.Add(testCase);
                             }
@@ -319,9 +309,9 @@ namespace OmniSharp.DotNetTest
             return testCases.ToArray();
         }
 
-        private TestCase[] DiscoverTests(string methodName, string targetFrameworkVersion)
+        private TestCase[] DiscoverTests(string[] methodNames, string targetFrameworkVersion)
         {
-            return DiscoverTestsAsync(methodName, targetFrameworkVersion, CancellationToken.None).Result;
+            return DiscoverTestsAsync(methodNames, targetFrameworkVersion, CancellationToken.None).Result;
         }
     }
 }
