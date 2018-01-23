@@ -20,7 +20,6 @@ namespace OmniSharp.DotNetTest.Services
 
         protected override RunTestResponse HandleRequest(RunTestsInClassRequest request, TestManager testManager)
         {
-
             if (testManager.IsConnected)
             {
                 return testManager.RunTest(request.MethodNames, request.TestFrameworkName, request.TargetFrameworkVersion);

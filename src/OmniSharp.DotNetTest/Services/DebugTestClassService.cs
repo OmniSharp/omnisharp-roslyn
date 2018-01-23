@@ -23,6 +23,7 @@ namespace OmniSharp.DotNetTest.Services
         {
             _debugSessionManager = debugSessionManager;
         }
+
         public async Task<DebugTestGetStartInfoResponse> Handle(DebugTestClassGetStartInfoRequest request)
         {
             var testManager = CreateTestManager(request.FileName);

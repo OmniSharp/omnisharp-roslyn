@@ -191,7 +191,7 @@ namespace OmniSharp.DotNetTest
         }
 
         public override RunTestResponse RunTest(string methodName, string testFrameworkName, string targetFrameworkVersion)
-        => RunTest(new string[] { methodName }, testFrameworkName, targetFrameworkVersion);
+            => RunTest(new string[] { methodName }, testFrameworkName, targetFrameworkVersion);
 
         public override RunTestResponse RunTest(string[] methodNames, string testFrameworkName, string targetFrameworkVersion)
         {
