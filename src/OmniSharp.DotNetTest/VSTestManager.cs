@@ -264,6 +264,7 @@ namespace OmniSharp.DotNetTest
 
             var testCases = new List<TestCase>();
             var done = false;
+            var hashset = new HashSet<string>(methodNames);
 
             while (!done)
             {
@@ -292,7 +293,7 @@ namespace OmniSharp.DotNetTest
 
                             testName = testName.Trim();
 
-                            if (Array.Exists(methodNames, methodName => testName.Equals(methodName, StringComparison.Ordinal)))
+                            if (hashset.Contains(testName, StringComparer.Ordinal))
                             {
                                 testCases.Add(testCase);
                             }
