@@ -6,6 +6,7 @@ namespace OmniSharp.DotNetTest.Models
     {
         public string[] MethodNames { get; set; }
         public string TestFrameworkName { get; set; }
+        
         /// <summary>
         /// e.g. .NETCoreApp, Version=2.0
         /// </summary>
