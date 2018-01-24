@@ -3,14 +3,25 @@ sudo: required
 dist: trusty
 env:
   global:
-    secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
+    - secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
+    - secure: EA2fP5ymar2/ZM2G4cyP3FzK437zv1wP03AgUPCcQgke8Z5oG8Y5U632AzxBeeaqGAxHEi5Ewbq2A8N93pN+xAsoGlQf+AdLJROCeo7gy9O589Z8tmp/vAdMzZzyNhKi7SUSxOJ/TIDzLMlvBHZwj1XqFyCbOGABzkxl9sW4+uk=
 mono: 5.2.0
 os:
   - linux
   - osx
-osx_image: xcode8.1
-
+osx_image: xcode9.2
+cache:
+  directories:
+    - tools
+    - .dotnet-legacy
+    - "$HOME/.nuget/packages"
+before_cache:
+  - rm -f tools/packages.config
 script:
+  - git fetch --unshallow
+  - git fetch origin '+refs/heads/*:refs/heads/*'
+  - git branch -r
+  - chmod 755 ./build.sh
   - ./build.sh --target All --publish-all --archive
 
 addons:
@@ -55,7 +66,7 @@ install:
 notifications:
   slack:
     rooms:
-      - omnisharp:U358j4McaEOIzFqXvGexVokC#general
+      - omnisharp:U358j4McaEOIzFqXvGexVokC#integrations
     on_success: change
     on_failure: always
     on_pull_requests: false
@@ -106,6 +117,3 @@ after_deploy: |
     git push origin $BRANCH_NAME
     curl -X POST -H 'Authorization: token '$GITHUB_API_TOKEN'' -d '{ "title": "Upgrade to OmniSharp/omnisharp-roslyn '$TRAVIS_TAG'", "body": "*Automated PR*  -  Upgrade omnisharp-roslyn to '$TRAVIS_TAG'. [release patch]", "head": "'$BRANCH_NAME'", "base": "master" }' https://api.github.com/repos/OmniSharp/omnisharp-node-client/pulls
   fi
-  
-blobStorage:
-  secure: EA2fP5ymar2/ZM2G4cyP3FzK437zv1wP03AgUPCcQgke8Z5oG8Y5U632AzxBeeaqGAxHEi5Ewbq2A8N93pN+xAsoGlQf+AdLJROCeo7gy9O589Z8tmp/vAdMzZzyNhKi7SUSxOJ/TIDzLMlvBHZwj1XqFyCbOGABzkxl9sW4+uk=

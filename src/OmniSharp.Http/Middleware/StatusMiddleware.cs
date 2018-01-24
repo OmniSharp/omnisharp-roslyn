@@ -21,13 +21,13 @@ namespace OmniSharp.Http.Middleware
                 var endpoint = httpContext.Request.Path.Value;
                 if (endpoint == OmniSharpEndpoints.CheckAliveStatus)
                 {
-                    MiddlewareHelpers.WriteTo(httpContext.Response, true);
+                    httpContext.Response.WriteJson(true);
                     return;
                 }
 
                 if (endpoint == OmniSharpEndpoints.CheckReadyStatus)
                 {
-                    MiddlewareHelpers.WriteTo(httpContext.Response, _workspace.Initialized);
+                    httpContext.Response.WriteJson(_workspace.Initialized);
                     return;
                 }
             }

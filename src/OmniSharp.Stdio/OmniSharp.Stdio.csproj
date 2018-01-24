@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\OmniSharp.LanguageServerProtocol\OmniSharp.LanguageServerProtocol.csproj" />
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
