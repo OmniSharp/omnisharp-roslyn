@@ -34,7 +34,18 @@ addons:
       - libunwind8
       - zlib1g
       - curl
-
+before_install:
+  - |
+    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+    sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+    sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
+    sudo apt-get update
+    sudo apt-get install dotnet-sdk-2.0.2
+  - |
+    wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux
+    mkdir -p ./azcopy
+    tar -xf azcopy.tar.gz -C ./azcopy
+    sudo ./azcopy/install.sh
 install:
   - | # On Unix, build libuv from source. On OSX, install it via Homebrew.
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
@@ -99,6 +110,15 @@ after_deploy: |
   chmod 600 ~/.ssh/id_rsa
   eval `ssh-agent -s`
   ssh-add ~/.ssh/id_rsa
+
+  if [[ $TRAVIS_BRANCH == "ci-push" && $TRAVIS_PULL_REQUEST == "false" ]]; then
+    azcopy \
+      --source "$f" \
+      --destination https://roslynomnisharp.blob.core.windows.net/releases/ \
+      --dest-key $AZURE_BLOG_STORAGE_KEY \
+      --recursive
+  fi
+
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     OMNISHARP_VERSION="1.0.0-dev";
     if [ $TRAVIS_TAG ]; then

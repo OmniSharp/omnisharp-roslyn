@@ -19,16 +19,34 @@ deploy:
     artifact: /.*\.zip/
     on:
       appveyor_repo_tag: true
-# after_deploy:
-#   - ps: |
-#     $key = $ENV:BLOB_STORAGE_CONNECTION_STRING -split ';' | where { $_.StartsWith('AccountKey') } | foreach { $_ -split "=" } | select -Last 1;
-#     AzCopy /Source:.\artifacts\deployment\ /Dest:https://roslynomnisharp.blob.core.windows.net/releases /DestKey:$key /Pattern:*.zip /S
+  # Push out each version
+  - provider: AzureBlob
+    storage_account_name: roslynomnisharp
+    storage_access_key:
+        secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+    container: releases
+    folder: /
+    artifact: artifacts/deployment
+    unzip: false
+    set_content_type: false
+    # TODO: Revert these once testing is complete
+    on:
+      branch: ci-push
+  # Override latest (won't have version info but will be a static url)
+  - provider: AzureBlob
+    storage_account_name: roslynomnisharp
+    storage_access_key:
+        secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+    container: releases
+    folder: /latest/
+    artifact: artifacts/package
+    unzip: false
+    set_content_type: false
+    # TODO: Revert these once testing is complete
+    on:
+      branch: ci-push
 notifications:
   - provider: Slack
     auth_token:
       secure: OU7mWtP+JWLRV2Ofq3/QMQbudeN632xLgWb4zMJtOssi2v5HER4qe0GFoj/rnIYOBXd3d/5+glfKG3ijvCU3bA==
     channel: '#integrations'
-environment:
-  BLOB_STORAGE_CONNECTION_STRING:
-    secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
-
