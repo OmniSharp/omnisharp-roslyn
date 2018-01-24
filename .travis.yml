@@ -34,8 +34,8 @@ addons:
       - libunwind8
       - zlib1g
       - curl
-before_install:
-  - curl -L https://aka.ms/InstallAzureCli | bash
+      - python3
+      - openssl
 install:
   - | # On Unix, build libuv from source. On OSX, install it via Homebrew.
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
@@ -102,6 +102,11 @@ after_deploy: |
   ssh-add ~/.ssh/id_rsa
 
   if [[ $TRAVIS_BRANCH == "ci-push" && $TRAVIS_PULL_REQUEST == "false" ]]; then
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+    sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
+    sudo apt-get install apt-transport-https
+    sudo apt-get update && sudo apt-get install azure-cli
+
     az storage blob upload-batch \
       --container-name releases \
       --file artifacts/deployment \
