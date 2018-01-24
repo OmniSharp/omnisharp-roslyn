@@ -26,7 +26,7 @@ deploy:
         secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
     container: releases
     folder: /
-    artifact: artifacts/deployment
+    artifact: /.*\.zip/
     unzip: false
     set_content_type: false
     # TODO: Revert these once testing is complete
@@ -39,7 +39,7 @@ deploy:
         secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
     container: releases
     folder: /latest/
-    artifact: artifacts/package
+    artifact: /.*\.zip/
     unzip: false
     set_content_type: false
     # TODO: Revert these once testing is complete
