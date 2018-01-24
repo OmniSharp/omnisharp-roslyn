@@ -35,17 +35,7 @@ addons:
       - zlib1g
       - curl
 before_install:
-  - |
-    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-    sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-    sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
-    sudo apt-get update
-    sudo apt-get install dotnet-runtime-2.0.0 dotnet-sdk-2.0.2
-  - |
-    wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux
-    mkdir -p ./azcopy
-    tar -xf azcopy.tar.gz -C ./azcopy
-    sudo ./azcopy/install.sh
+  - curl -L https://aka.ms/InstallAzureCli | bash
 install:
   - | # On Unix, build libuv from source. On OSX, install it via Homebrew.
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
@@ -112,11 +102,11 @@ after_deploy: |
   ssh-add ~/.ssh/id_rsa
 
   if [[ $TRAVIS_BRANCH == "ci-push" && $TRAVIS_PULL_REQUEST == "false" ]]; then
-    azcopy \
-      --source "$f" \
-      --destination https://roslynomnisharp.blob.core.windows.net/releases/ \
-      --dest-key $AZURE_BLOG_STORAGE_KEY \
-      --recursive
+    az storage blob upload-batch \
+      --container-name releases \
+      --file artifacts/deployment \
+      --account-name roslynomnisharp
+      --account-key $AZURE_BLOG_STORAGE_KEY
   fi
 
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
