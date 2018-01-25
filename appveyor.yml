@@ -34,7 +34,7 @@ deploy:
   # Override latest (won't have version info but will be a static url)
   - provider: AzureBlob
     storage_account_name: roslynomnisharp
-    storage_access_key: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+    storage_access_key: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
     container: releases
     folder: /latest/
     artifact: /.*\.zip/
