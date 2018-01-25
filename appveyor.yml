@@ -3,28 +3,12 @@ init:
   - git config --global core.autocrlf true
 image: Visual Studio 2017
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
-environment:
-  BLOB_KEY:
-    secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
-install:
-  - choco install azcopy
 build_script:
   - ps: .\build.ps1 All -publish-all -archive
-artifacts:
-  - path: artifacts/package/*.zip
-  - path: artifacts/deployment/*.zip
+after_build:
+  - ps: Get-ChildItem ./artifacts/package/*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 cache:
   - tools -> tools/packages.config
-on_success:
-  - ps: >-
-      if ($ENV:APPVEYOR_REPO_TAG -eq 'true' -or $ENV:APPVEYOR_REPO_BRANCH -eq 'ci-push') {
-        choco install azcopy }
-
-  - ps: >-
-      if ($ENV:APPVEYOR_REPO_TAG -eq 'true' -or $ENV:APPVEYOR_REPO_BRANCH -eq 'ci-push') {
-        AzCopy /Source:".\artifacts\deployment" /Dest:https://roslynomnisharp.blob.core.windows.net/releases /DestKey:"$ENV:BLOB_KEY"
-        AzCopy /Source:".\artifacts\package" /Dest:https://roslynomnisharp.blob.core.windows.net/releases/latest /DestKey:"$ENV:BLOB_KEY" }
-
 deploy:
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)
@@ -33,6 +17,18 @@ deploy:
     artifact: /.*\.zip/
     on:
       appveyor_repo_tag: true
+  - provider: AzureBlob
+    storage_account_name: roslynomnisharp
+    storage_access_key:
+      secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
+    container: releases
+    folder: /$(GitVersion_SemVer)/
+    artifact: /.*\.zip/
+    unzip: false
+    set_content_type: false
+    # TODO: Revert these once testing is complete
+    on:
+      branch: ci-push
 notifications:
   - provider: Slack
     auth_token:
