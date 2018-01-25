@@ -36,6 +36,7 @@ addons:
     - curl
     - python3
     - openssl
+    - jq
 install:
 - |
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
@@ -69,7 +70,7 @@ after_success: |
     sudo apt-get install apt-transport-https
     sudo apt-get update && sudo apt-get install azure-cli
 
-    az storage blob upload-batch --destination releases/$GitVersion_SemVer/ --source artifacts/package --account-name roslynomnisharp --account-key $BLOB_KEY
+    az storage blob upload-batch --destination "releases/$GitVersion_SemVer/" --source artifacts/package --account-name roslynomnisharp --account-key $BLOB_KEY
   fi
 notifications:
   slack:
