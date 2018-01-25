@@ -64,6 +64,20 @@ install:
   - export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
   - export PATH="$PWD/.dotnet:$PATH"
 
+after_success: |
+  if [[ $TRAVIS_BRANCH == "ci-push" && $TRAVIS_PULL_REQUEST == "false" ]]; then
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+    sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
+    sudo apt-get install apt-transport-https
+    sudo apt-get update && sudo apt-get install azure-cli
+
+    az storage blob upload-batch \
+      --container-name releases \
+      --file artifacts/deployment \
+      --account-name roslynomnisharp
+      --account-key $AZURE_BLOG_STORAGE_KEY
+  fi
+
 notifications:
   slack:
     rooms:
@@ -100,19 +114,6 @@ after_deploy: |
   chmod 600 ~/.ssh/id_rsa
   eval `ssh-agent -s`
   ssh-add ~/.ssh/id_rsa
-
-  if [[ $TRAVIS_BRANCH == "ci-push" && $TRAVIS_PULL_REQUEST == "false" ]]; then
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-    sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
-    sudo apt-get install apt-transport-https
-    sudo apt-get update && sudo apt-get install azure-cli
-
-    az storage blob upload-batch \
-      --container-name releases \
-      --file artifacts/deployment \
-      --account-name roslynomnisharp
-      --account-key $AZURE_BLOG_STORAGE_KEY
-  fi
 
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     OMNISHARP_VERSION="1.0.0-dev";

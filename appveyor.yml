@@ -23,7 +23,7 @@ deploy:
   - provider: AzureBlob
     storage_account_name: roslynomnisharp
     storage_access_key:
-        secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+      secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
     container: releases
     folder: /
     artifact: /.*\.zip/
@@ -36,7 +36,7 @@ deploy:
   - provider: AzureBlob
     storage_account_name: roslynomnisharp
     storage_access_key:
-        secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+      secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
     container: releases
     folder: /latest/
     artifact: /.*\.zip/
