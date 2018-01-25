@@ -70,7 +70,8 @@ after_success: |
     sudo apt-get install apt-transport-https
     sudo apt-get update && sudo apt-get install azure-cli
 
-    az storage blob upload-batch --destination "releases/$GitVersion_SemVer/" --source artifacts/package --account-name roslynomnisharp --account-key $BLOB_KEY
+    export SemVer=( jq -f artifacts/gitversion.json .SemVer )
+    az storage blob upload-batch --destination "releases/$SemVer/" --source artifacts/package --account-name roslynomnisharp --account-key $BLOB_KEY
   fi
 notifications:
   slack:

@@ -95,6 +95,7 @@ Task("GitVersion")
         GitVersion(new GitVersionSettings{
             OutputType = GitVersionOutput.BuildServer
         });
+        System.IO.File.WriteAllText(@".\artifacts\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
     });
 
 /// <summary>
