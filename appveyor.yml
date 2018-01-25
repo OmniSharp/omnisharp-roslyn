@@ -9,6 +9,7 @@ build_script:
   - ps: .\build.ps1 All -publish-all -archive
 artifacts:
   - path: artifacts/package/*.zip
+  - path: artifacts/deployment/*.zip
 cache:
   - tools -> tools/packages.config
 deploy:
@@ -26,7 +27,7 @@ deploy:
       secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
     container: releases
     folder: /
-    artifact: /.*\.zip/
+    artifact: artifacts/deployment/*.zip
     unzip: false
     set_content_type: false
     # TODO: Revert these once testing is complete
@@ -39,7 +40,7 @@ deploy:
       secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
     container: releases
     folder: /latest/
-    artifact: /.*\.zip/
+    artifact: artifacts/package/*.zip
     unzip: false
     set_content_type: false
     # TODO: Revert these once testing is complete
