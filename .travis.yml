@@ -71,11 +71,7 @@ after_success: |
     sudo apt-get install apt-transport-https
     sudo apt-get update && sudo apt-get install azure-cli
 
-    az storage blob upload-batch \
-      --container-name releases \
-      --file artifacts/deployment \
-      --account-name roslynomnisharp
-      --account-key $AZURE_BLOG_STORAGE_KEY
+    az storage blob upload-batch --container-name releases --file artifacts/deployment --account-name roslynomnisharp --account-key $AZURE_BLOG_STORAGE_KEY
   fi
 
 notifications:
