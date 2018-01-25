@@ -22,8 +22,7 @@ deploy:
   # Push out each version
   - provider: AzureBlob
     storage_account_name: roslynomnisharp
-    storage_access_key:
-      secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+    storage_access_key: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
     container: releases
     folder: /
     artifact: /.*\.zip/
@@ -35,8 +34,7 @@ deploy:
   # Override latest (won't have version info but will be a static url)
   - provider: AzureBlob
     storage_account_name: roslynomnisharp
-    storage_access_key:
-      secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
+    storage_access_key: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
     container: releases
     folder: /latest/
     artifact: /.*\.zip/
