@@ -95,7 +95,6 @@ Task("GitVersion")
         GitVersion(new GitVersionSettings{
             OutputType = GitVersionOutput.BuildServer
         });
-        System.IO.File.WriteAllText(@".\artifacts\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
     });
 
 /// <summary>
@@ -106,7 +105,10 @@ Task("Setup")
     .IsDependentOn("ValidateMono")
     .IsDependentOn("InstallDotNetCoreSdk")
     .IsDependentOn("InstallMonoAssets")
-    .IsDependentOn("CreateMSBuildFolder");
+    .IsDependentOn("CreateMSBuildFolder")
+    .Does(() => {
+        System.IO.File.WriteAllText(env.Folders.Artifacts + "\\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
+    });
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder, bool sharedRuntime = false, bool noPath = false)
 {
