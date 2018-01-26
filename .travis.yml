@@ -37,6 +37,7 @@ addons:
     - python3
     - openssl
     - jq
+    - tree
 install:
 - |
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
