@@ -87,6 +87,8 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsLogs);
     DirectoryHelper.Create(env.Folders.ArtifactsPackage);
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
+
+    System.IO.File.WriteAllText(env.Folders.Artifacts + "\\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
 });
 
 Task("GitVersion")
@@ -105,10 +107,7 @@ Task("Setup")
     .IsDependentOn("ValidateMono")
     .IsDependentOn("InstallDotNetCoreSdk")
     .IsDependentOn("InstallMonoAssets")
-    .IsDependentOn("CreateMSBuildFolder")
-    .Does(() => {
-        System.IO.File.WriteAllText(env.Folders.Artifacts + "\\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
-    });
+    .IsDependentOn("CreateMSBuildFolder");;
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder, bool sharedRuntime = false, bool noPath = false)
 {
