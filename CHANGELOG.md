@@ -1,11 +1,19 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.29.0] - TBD
-* Updated to Roslyn 2.6.1 packages - C# 7.2 support, PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055)
-* Shipped Language Server Protocol support in box.  PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969)
+## [1.29.0] - 2018-1-29
+* Updated to Roslyn 2.6.1 packages - C# 7.2 support, (PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055))
+* Shipped Language Server Protocol support in box.  (PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969))
   - Additional information and features tracked at [#968](https://github.com/OmniSharp/omnisharp-roslyn/issues/968)
-* Do not crash when encoutering Legacy ASP.NET Website projects. PR: [#1066](https://github.com/OmniSharp/omnisharp-roslyn/pull/1066) and [#1084](https://github.com/OmniSharp/omnisharp-roslyn/pull/1084)
+* Fixed locating Visual Studio with more than one installation (PR: [#1063](https://github.com/OmniSharp/omnisharp-roslyn/pull/1063))
+* Do not crash when encoutering Legacy ASP.NET Website projects ([#1036](https://github.com/OmniSharp/omnisharp-roslyn/issues/1036), PRs: [#1066](https://github.com/OmniSharp/omnisharp-roslyn/pull/1066), [#1084](https://github.com/OmniSharp/omnisharp-roslyn/pull/1084))
+* Improvements to the the structured documentation returned by the /typelookup endpoint ([#1046](https://github.com/OmniSharp/omnisharp-roslyn/issues/1046), [omnisharp-vscode#1057](https://github.com/OmniSharp/omnisharp-vscode/issues/1057),  PRs: [#1062](https://github.com/OmniSharp/omnisharp-roslyn/pull/1062) [#1064](https://github.com/OmniSharp/omnisharp-roslyn/pull/1064))
+* Allowed specifying DLLs file paths for plugin loading (PR: [#1069](https://github.com/OmniSharp/omnisharp-roslyn/pull/1069))
+* Improved http server performance (PR: [#1073](https://github.com/OmniSharp/omnisharp-roslyn/pull/1073))
+* Added attribute span to file ([omnisharp-vscode#429](https://github.com/OmniSharp/omnisharp-vscode/issues/429), PR: [#1075](https://github.com/OmniSharp/omnisharp-roslyn/pull/1075))
+* Order Code Actions according by `ExtensionOrderAttribute` ([omnisharp-roslyn#748](https://github.com/OmniSharp/omnisharp-roslyn/issues/758), PR: [#1078](https://github.com/OmniSharp/omnisharp-roslyn/pull/1078))
+* Disabled Go To Definition on property get/set keywords  ([omnisharp-vscode#1949](https://github.com/OmniSharp/omnisharp-vscode/issues/1949), PR: [#1086](https://github.com/OmniSharp/omnisharp-roslyn/pull/1086/files))
+* Disabled exceptions on assembly load failure (PR: [#1072](https://github.com/OmniSharp/omnisharp-roslyn/pull/1072))
 
 ## [1.28.0] - 2017-12-14
 
