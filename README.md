@@ -18,6 +18,23 @@ See our [change log](https://github.com/OmniSharp/omnisharp-roslyn/blob/master/C
 
 ## Using the latest OmniSharp-Roslyn with VS Code
 
+### Prerelease Versions
+Pre-release versions are available in azure storage, they can be viewed [here](https://roslynomnisharp.blob.core.windows.net/releases?restype=container&comp=list).
+
+All changes to `master` will be pushed to this feed and will be made available with the following convention:
+`https://roslynomnisharp.blob.core.windows.net/releases/{version}/{packagename}-{os/arch}.{ext}`
+
+* Version is auto incremented and is visible in the travis or appveyor build output
+* Package Name would be either `omnisharp` or `omnisharp.http`
+* `os/arch` will be one of the following:
+  * `win-x64`
+  * `win-x86`
+  * `linux-x64`
+  * `linux-x86`
+  * `osx`
+  * `mono`  (Requires global mono installed)
+* Extenisons is archive specific, windows will be `zip` and other willth `tar.gz`.
+
 ### Building
 
 **On Windows**:
@@ -40,7 +57,7 @@ For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob
 
 ### VS Code
 
-Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace). 
+Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
 
 ``` JSON
 {
