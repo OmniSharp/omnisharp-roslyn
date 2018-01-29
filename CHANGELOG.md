@@ -14,6 +14,8 @@ All changes to the project will be documented in this file.
 * Order Code Actions according by `ExtensionOrderAttribute` ([omnisharp-roslyn#748](https://github.com/OmniSharp/omnisharp-roslyn/issues/758), PR: [#1078](https://github.com/OmniSharp/omnisharp-roslyn/pull/1078))
 * Disabled Go To Definition on property get/set keywords  ([omnisharp-vscode#1949](https://github.com/OmniSharp/omnisharp-vscode/issues/1949), PR: [#1086](https://github.com/OmniSharp/omnisharp-roslyn/pull/1086/files))
 * Disabled exceptions on assembly load failure (PR: [#1072](https://github.com/OmniSharp/omnisharp-roslyn/pull/1072))
+* Added structured documentation to signature help ([omnisharp-vscode#1940](https://github.com/OmniSharp/omnisharp-vscode/issues/1940), PR: [#1085](https://github.com/OmniSharp/omnisharp-roslyn/pull/1085))
+* Added /runalltests and /debugalltests endpoints to run or debug all the tests in a class ([omnisharp-vscode#1969](https://github.com/OmniSharp/omnisharp-vscode/pull/1961), PR: [#1961](https://github.com/OmniSharp/omnisharp-vscode/pull/1961))
 
 ## [1.28.0] - 2017-12-14
 
