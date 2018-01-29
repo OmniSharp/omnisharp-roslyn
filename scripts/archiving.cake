@@ -25,6 +25,11 @@ void Package(string name, string platform, string contentFolder, string packageF
     {
         DirectoryHelper.Create(cdFolder);
     }
+    var deployFolder = $"{cdFolder}/{env.VersionInfo.SemVer}";
+    if (!DirectoryHelper.Exists(deployFolder))
+    {
+        DirectoryHelper.Create(deployFolder);
+    }
 
     var platformId = platform;
 
@@ -37,8 +42,9 @@ void Package(string name, string platform, string contentFolder, string packageF
         }
     }
 
-    var archiveName = $"{packageFolder}/omnisharp{name}-{platformId}";
-    var deployArchiveName = archiveName.Replace(packageFolder, cdFolder);
+    var packageName = $"omnisharp{name}-{platformId}";
+    var archiveName = $"{packageFolder}/{packageName}";
+    var deployName = $"{deployFolder}/{packageName}";
 
     Information("Packaging {0}...", archiveName);
 
@@ -47,7 +53,7 @@ void Package(string name, string platform, string contentFolder, string packageF
     {
         var zipFile = $"{archiveName}.zip";
         Zip(contentFolder, zipFile);
-        CopyFile(zipFile, $"{deployArchiveName}.{env.VersionInfo.SemVer}.zip");
+        CopyFile(zipFile, $"{deployName}.zip");
     }
     // On all platforms use TAR.GZ for Unix runtimes
     else
@@ -55,6 +61,6 @@ void Package(string name, string platform, string contentFolder, string packageF
         var tarFile = $"{archiveName}.tar.gz";
         Run("tar", $"czf \"{tarFile}\" .", contentFolder)
             .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-        CopyFile(tarFile, $"{deployArchiveName}.{env.VersionInfo.SemVer}.tar.gz");
+        CopyFile(tarFile, $"{deployName}.tar.gz");
     }
 }

@@ -832,10 +832,7 @@ Task("PublishWindowsBuilds")
 Task("Publish")
     .IsDependentOn("BuildHosts")
     .IsDependentOn("PublishMonoBuilds")
-    .IsDependentOn("PublishWindowsBuilds")
-    .Does(() => {
-        System.IO.File.WriteAllText(env.Folders.Artifacts + "\\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
-    });
+    .IsDependentOn("PublishWindowsBuilds");
 
 /// <summary>
 ///  Execute the run script.

@@ -36,8 +36,6 @@ addons:
     - curl
     - python3
     - openssl
-    - jq
-    - tree
 install:
 - |
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
@@ -71,11 +69,7 @@ after_success: |
     sudo apt-get install apt-transport-https
     sudo apt-get update && sudo apt-get install azure-cli
 
-    tree artifacts
-    tree $TRAVIS_BUILD_DIR/artifacts
-
-    export SemVer=$( jq -f $TRAVIS_BUILD_DIR/artifacts/gitversion.json .SemVer )
-    az storage blob upload-batch --destination "releases/$SemVer/" --source artifacts/package --account-name roslynomnisharp --account-key $BLOB_KEY
+    az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
   fi
 notifications:
   slack:
