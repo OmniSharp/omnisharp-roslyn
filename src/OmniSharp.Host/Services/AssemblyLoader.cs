@@ -20,18 +20,17 @@ namespace OmniSharp.Services
 
         public Assembly Load(AssemblyName name)
         {
-            Assembly result;
+            Assembly result = null;
             try
             {
                 result = Assembly.Load(name);
+                _logger.LogTrace($"Assembly loaded: {name}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to load assembly: {name}");
-                throw;
             }
 
-            _logger.LogTrace($"Assembly loaded: {name}");
             return result;
         }
 
