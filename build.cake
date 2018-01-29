@@ -87,8 +87,6 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsLogs);
     DirectoryHelper.Create(env.Folders.ArtifactsPackage);
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
-
-    System.IO.File.WriteAllText(env.Folders.Artifacts + "\\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
 });
 
 Task("GitVersion")
@@ -834,7 +832,10 @@ Task("PublishWindowsBuilds")
 Task("Publish")
     .IsDependentOn("BuildHosts")
     .IsDependentOn("PublishMonoBuilds")
-    .IsDependentOn("PublishWindowsBuilds");
+    .IsDependentOn("PublishWindowsBuilds")
+    .Does(() => {
+        System.IO.File.WriteAllText(env.Folders.Artifacts + "\\gitversion.json", Newtonsoft.Json.JsonConvert.SerializeObject(env.VersionInfo));
+    });
 
 /// <summary>
 ///  Execute the run script.
