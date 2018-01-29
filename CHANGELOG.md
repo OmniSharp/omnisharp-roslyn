@@ -15,10 +15,6 @@ All changes to the project will be documented in this file.
 * Disabled Go To Definition on property get/set keywords  [(omnisharp-vscode#1949)](https://github.com/OmniSharp/omnisharp-vscode/issues/1949) PR: [#1086](https://github.com/OmniSharp/omnisharp-roslyn/pull/1086/files)
 * Disabled exceptions on assembly load failure PR: [#1072](https://github.com/OmniSharp/omnisharp-roslyn/pull/1072)
 
-
-
-
-
 ## [1.28.0] - 2017-12-14
 
 * Fixed issue with loading XML documentation for `#r` assembly references in CSX scripts ([#1026](https://github.com/OmniSharp/omnisharp-roslyn/issues/1026), PR: [#1027](https://github.com/OmniSharp/omnisharp-roslyn/pull/1027))
