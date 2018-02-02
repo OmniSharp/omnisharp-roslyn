@@ -16,6 +16,7 @@ namespace OmniSharp.Script
     {
         private const string BinderFlagsType = "Microsoft.CodeAnalysis.CSharp.BinderFlags";
         private const string TopLevelBinderFlagsProperty = "TopLevelBinderFlags";
+        private const string ReferencesSupersedeLowerVersionsProperty = "ReferencesSupersedeLowerVersions_internal_protected_set";
         private const string IgnoreCorLibraryDuplicatedTypesField = "IgnoreCorLibraryDuplicatedTypes";
         private const string RuntimeMetadataReferenceResolverType = "Microsoft.CodeAnalysis.Scripting.Hosting.RuntimeMetadataReferenceResolver";
         private const string ResolverField = "_resolver";
@@ -71,6 +72,14 @@ namespace OmniSharp.Script
             if (ignoreCorLibraryDuplicatedTypesValue != null)
             {
                 topLevelBinderFlagsProperty?.SetValue(compilationOptions, ignoreCorLibraryDuplicatedTypesValue);
+            }
+
+            // in scripts, the option to supersede lower versions is ALWAYS enabled
+            // see: https://github.com/dotnet/roslyn/blob/version-2.6.0-beta3/src/Compilers/CSharp/Portable/Compilation/CSharpCompilation.cs#L199
+            var referencesSupersedeLowerVersionsProperty = typeof(CompilationOptions).GetProperty(ReferencesSupersedeLowerVersionsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (referencesSupersedeLowerVersionsProperty != null)
+            {
+                referencesSupersedeLowerVersionsProperty?.SetValue(compilationOptions, true);
             }
 
             return compilationOptions;
