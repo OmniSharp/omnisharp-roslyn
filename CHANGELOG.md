@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.29.0] - not yet released
+## [1.30.0] - not yet released
 * Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))
 
 ## [1.29.0] - 2018-1-29
