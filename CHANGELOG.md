@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.29.0] - not yet released
+* Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))
+
 ## [1.29.0] - 2018-1-29
 * Updated to Roslyn 2.6.1 packages - C# 7.2 support, (PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055))
 * Shipped Language Server Protocol support in box.  (PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969))
