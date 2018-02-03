@@ -77,10 +77,7 @@ namespace OmniSharp.Script
             // in scripts, the option to supersede lower versions is ALWAYS enabled
             // see: https://github.com/dotnet/roslyn/blob/version-2.6.0-beta3/src/Compilers/CSharp/Portable/Compilation/CSharpCompilation.cs#L199
             var referencesSupersedeLowerVersionsProperty = typeof(CompilationOptions).GetProperty(ReferencesSupersedeLowerVersionsProperty, BindingFlags.Instance | BindingFlags.NonPublic);
-            if (referencesSupersedeLowerVersionsProperty != null)
-            {
-                referencesSupersedeLowerVersionsProperty?.SetValue(compilationOptions, true);
-            }
+            referencesSupersedeLowerVersionsProperty?.SetValue(compilationOptions, true);
 
             return compilationOptions;
         }
