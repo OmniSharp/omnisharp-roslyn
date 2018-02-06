@@ -18,20 +18,31 @@ namespace OmniSharp.Models.TypeLookup
         public string ValueText { get; }
         public DocumentationItem[] Exception { get; }
 
-        private DocumentationComment(string summaryText, DocumentationItem[] typeParamElements, DocumentationItem[] paramElements, string returnsText, string remarksText, string exampleText, string valueText, DocumentationItem[ ] exception)
+        public DocumentationComment(
+            string summaryText = "",
+            DocumentationItem[] typeParamElements = null,
+            DocumentationItem[] paramElements = null,
+            string returnsText = "",
+            string remarksText = "",
+            string exampleText = "",
+            string valueText = "",
+            DocumentationItem[] exception = null)
         {
             SummaryText = summaryText;
-            TypeParamElements = typeParamElements;
-            ParamElements = paramElements;
+            TypeParamElements = typeParamElements ?? Array.Empty<DocumentationItem>();
+            ParamElements = paramElements ?? Array.Empty<DocumentationItem>();
             ReturnsText = returnsText;
             RemarksText = remarksText;
             ExampleText = exampleText;
             ValueText = valueText;
-            Exception = exception;
+            Exception = exception ?? Array.Empty<DocumentationItem>();
         }
 
         public static DocumentationComment From(string xmlDocumentation, string lineEnding)
         {
+            if (string.IsNullOrEmpty(xmlDocumentation))
+                return Empty;
+
             var reader = new StringReader("<docroot>" + xmlDocumentation + "</docroot>");
             StringBuilder summaryText = new StringBuilder();
             List<DocumentationItemBuilder> typeParamElements = new List<DocumentationItemBuilder>();
@@ -175,6 +186,14 @@ namespace OmniSharp.Models.TypeLookup
                 return input;
             return $" {input.TrimStart()}";
         }
+
+        public string GetParameterText(string name)
+            => Array.Find(ParamElements, parameter => parameter.Name == name)?.Documentation ?? string.Empty;
+
+        public string GetTypeParameterText(string name)
+            => Array.Find(TypeParamElements, typeParam => typeParam.Name == name)?.Documentation ?? string.Empty;
+
+        public static readonly DocumentationComment Empty = new DocumentationComment();
     }
 
     class DocumentationItemBuilder
