@@ -56,7 +56,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers
 
             var response = IsValid(request)
                 ? await service.Handle(request)
-                : default(TResponse)
+                : default(TResponse);
 
             return await TranslateResponse(response, request);
         }
