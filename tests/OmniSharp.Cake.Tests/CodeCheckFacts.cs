@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Services.RequestHandlers.Diagnostics;
 using OmniSharp.Models;
-using OmniSharp.Models.AutoComplete;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.UpdateBuffer;
 using TestUtility;
