@@ -16,14 +16,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Diagnostics
         {
         }
 
-        public override Task<QuickFixResponse> HandleCore(CodeCheckRequest request, IRequestHandler<CodeCheckRequest, QuickFixResponse> service)
-        {
-            if (string.IsNullOrEmpty(request.FileName))
-            {
-                return Task.FromResult(new QuickFixResponse());
-            }
-
-            return service.Handle(request);
-        }
+        public override bool IsValid(CodeCheckRequest request) =>
+            !string.IsNullOrEmpty(request.FileName);
     }
 }
