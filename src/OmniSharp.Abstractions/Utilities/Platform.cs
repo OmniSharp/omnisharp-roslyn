@@ -88,8 +88,8 @@ namespace OmniSharp.Utilities
                 }
 
                 var values = output.Split(' ');
-                var osName = values[0];
-                var osArch = values[1];
+                var osName = values[0].Trim();
+                var osArch = values[1].Trim();
 
                 os = osName.Equals("Darwin", StringComparison.OrdinalIgnoreCase)
                     ? OperatingSystem.MacOS
@@ -132,11 +132,18 @@ namespace OmniSharp.Utilities
 
         private static void ReadDistroNameAndVersion(out string distroName, out Version version)
         {
-            // Details: https://www.freedesktop.org/software/systemd/man/os-release.html
-            var lines = File.ReadAllLines("/etc/os-release");
-
             distroName = null;
             version = null;
+
+            // Details: https://www.freedesktop.org/software/systemd/man/os-release.html
+            const string OS_Release_Path = "/etc/os-release";
+
+            if (!File.Exists(OS_Release_Path))
+            {
+                return;
+            }
+
+            var lines = File.ReadAllLines(OS_Release_Path);
 
             foreach (var line in lines)
             {

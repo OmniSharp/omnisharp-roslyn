@@ -47,6 +47,7 @@ namespace OmniSharp.Roslyn.Utilities
                             span = TextSpan.FromBounds(span.Start - 1, span.End);
                             prefix = "\r";
                         }
+
                         if (span.End < oldText.Length - 1 && newText[newText.Length - 1] == '\r' && oldText[span.End] == '\n')
                         {
                             // text: foo\r\nbar\r\nfoo
