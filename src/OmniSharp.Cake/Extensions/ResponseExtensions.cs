@@ -70,19 +70,18 @@ namespace OmniSharp.Cake.Extensions
 
         public static async Task<RenameResponse> TranslateAsync(this RenameResponse response, OmniSharpWorkspace workspace, RenameRequest request)
         {
-            var changes = new List<ModifiedFileResponse>();
+            var changes = new Dictionary<string, List<LinePositionSpanTextChange>>();
 
             foreach (var change in response.Changes)
             {
-                await change.TranslateAsync(workspace, request);
-
-                if (change.Changes.Any())
-                {
-                    changes.Add(change);
-                }
+                await PopulateModificationsAsync(change, workspace, changes);
             }
 
-            response.Changes = changes;
+            response.Changes = changes.Select(x => new ModifiedFileResponse(x.Key)
+            {
+                Changes = x.Value
+            });
+
             return response;
         }
 
@@ -127,24 +126,32 @@ namespace OmniSharp.Cake.Extensions
             return quickFix;
         }
 
-        private static async Task<ModifiedFileResponse> TranslateAsync(this ModifiedFileResponse modification, OmniSharpWorkspace workspace, Request request)
+        private static async Task PopulateModificationsAsync(
+            ModifiedFileResponse modification,
+            OmniSharpWorkspace workspace,
+            IDictionary<string, List<LinePositionSpanTextChange>> modifications)
         {
-            var changes = new List<LinePositionSpanTextChange>();
-
             foreach (var change in modification.Changes)
             {
-                // TODO: Handle new filename
-                await change.TranslateAsync(workspace, modification.FileName);
+                var (filename, _) = await change.TranslateAsync(workspace, modification.FileName);
 
-                if (change.StartLine >= 0)
+                if (change.StartLine < 0)
+                {
+                    continue;
+                }
+
+                if (modifications.TryGetValue(filename, out var changes))
                 {
                     changes.Add(change);
                 }
+                else
+                {
+                    modifications.Add(filename, new List<LinePositionSpanTextChange>
+                    {
+                        change
+                    });
+                }
             }
-
-            modification.Changes = changes;
-
-            return modification;
         }
 
         private static async Task<(string, LinePositionSpanTextChange)> TranslateAsync(this LinePositionSpanTextChange change, OmniSharpWorkspace workspace, string fileName)
