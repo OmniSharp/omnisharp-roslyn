@@ -3,6 +3,8 @@ All changes to the project will be documented in this file.
 
 ## [1.30.0] - not yet released
 * Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))
+
+## [1.29.1] - 2018-2-12
 * Fixed duplicate diagnostics in C# ([omnisharp-vscode#1830](https://github.com/OmniSharp/omnisharp-vscode/issues/1830), PR: [#1107](https://github.com/OmniSharp/omnisharp-roslyn/pull/1107))
 
 ## [1.29.0] - 2018-1-29
