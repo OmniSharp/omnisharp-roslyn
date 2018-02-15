@@ -141,10 +141,19 @@ namespace OmniSharp.Script
                 var resolvedRspReferences = csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver);
                 foreach (var resolvedRspReference in resolvedRspReferences)
                 {
-                    _logger.LogDebug($"{csxFileName} project. Adding RSP reference to: {resolvedRspReference.Display}");
+                    if (resolvedRspReference is UnresolvedMetadataReference)
+                    {
+                        _logger.LogWarning($"{csxFileName} project. Skipping RSP reference to: {resolvedRspReference.Display} as it can't be resolved.");
+                    }
+                    else
+                    {
+                        _logger.LogDebug($"{csxFileName} project. Adding RSP reference to: {resolvedRspReference.Display}");
+                    }
                 }
 
-                references = resolvedRspReferences.Union(references, MetadataReferenceEqualityComparer.Instance);
+                references = resolvedRspReferences.
+                    Where(reference => !(reference is UnresolvedMetadataReference)).
+                    Union(references, MetadataReferenceEqualityComparer.Instance);
             }
 
             var project = ProjectInfo.Create(
