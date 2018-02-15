@@ -48,8 +48,9 @@ namespace OmniSharp.Script
         private readonly ScriptOptions _scriptOptions;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
+        private readonly bool _isDesktopClr;
 
-        public ScriptHelper(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory)
+        public ScriptHelper(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr)
         {
             _scriptOptions = scriptOptions ?? throw new ArgumentNullException(nameof(scriptOptions));
             _env = env ?? throw new ArgumentNullException(nameof(env));
@@ -57,6 +58,7 @@ namespace OmniSharp.Script
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
             _commandLineArgs = new Lazy<CSharpCommandLineArguments>(CreateCommandLineArguments);
+            _isDesktopClr = isDesktopClr;
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
         }
 
@@ -70,8 +72,10 @@ namespace OmniSharp.Script
                 var rspFilePath = _scriptOptions.GetNormalizedRspFilePath(_env);
                 if (rspFilePath != null)
                 {
-                    _logger.LogInformation($"Discovered an RSP file at '{rspFilePath}' - will use this file to compute CSX compilation options.");
-                    return scriptRunnerParser.Parse(new string[] { $"@{rspFilePath}" }, _env.TargetDirectory, _env.TargetDirectory);
+                    _logger.LogInformation($"Discovered an RSP file at '{rspFilePath}' - will use this file to discover CSX namespaces and references.");
+                    return scriptRunnerParser.Parse(new string[] { $"@{rspFilePath}" },
+                        _env.TargetDirectory,
+                        _isDesktopClr ? Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName) : null);
                 }
             }
             
@@ -81,9 +85,13 @@ namespace OmniSharp.Script
         private CSharpCompilationOptions CreateCompilationOptions()
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
-            var compilationOptions = csharpCommandLineArguments != null
-                ? csharpCommandLineArguments.CompilationOptions
-                : new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: DefaultNamespaces);
+
+            // if RSP file was used, pick namespaces from there
+            // otherwise use default set of namespaces
+            var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+                usings: csharpCommandLineArguments != null
+                    ? csharpCommandLineArguments.CompilationOptions.Usings
+                    : DefaultNamespaces);
 
             foreach (var ns in compilationOptions.Usings)
             {
@@ -136,6 +144,8 @@ namespace OmniSharp.Script
                 compilationOptions: namespaces == null
                     ? _compilationOptions.Value
                     : _compilationOptions.Value.WithUsings(namespaces),
+                // if RSP file was used, include the metadata references from RSP merged with the provided set
+                // otherwise just use the provided metadata references 
                 metadataReferences: csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any()
                     ? csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver).Union(references, MetadataReferenceEqualityComparer.Instance)
                     : references,

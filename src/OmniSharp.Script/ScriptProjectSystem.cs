@@ -86,7 +86,6 @@ namespace OmniSharp.Script
             _scriptOptions = new ScriptOptions();
             ConfigurationBinder.Bind(configuration, _scriptOptions);
 
-            _scriptHelper = new ScriptHelper(_scriptOptions, _env, _loggerFactory);
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
@@ -109,6 +108,7 @@ namespace OmniSharp.Script
 
             _compilationDependencies = TryGetCompilationDependencies(_scriptOptions.EnableScriptNuGetReferences);
 
+            var isDesktopClr = true;
             // if we have no compilation dependencies
             // we will assume desktop framework
             // and add default CLR references
@@ -120,6 +120,7 @@ namespace OmniSharp.Script
             }
             else
             {
+                isDesktopClr = false;
                 HashSet<string> loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var compilationAssembly in _compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
@@ -138,6 +139,8 @@ namespace OmniSharp.Script
                 _logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
                 AddMetadataReference(_commonReferences, inheritedCompileLib);
             }
+
+            _scriptHelper = new ScriptHelper(_scriptOptions, _env, _loggerFactory, isDesktopClr);
 
             // Each .CSX file becomes an entry point for it's own project
             // Every #loaded file will be part of the project too
