@@ -134,6 +134,19 @@ namespace OmniSharp.Script
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
 
+            // if RSP file was used, include the metadata references from RSP merged with the provided set
+            // otherwise just use the provided metadata references 
+            if (csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any())
+            {
+                var resolvedRspReferences = csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver);
+                foreach (var resolvedRspReference in resolvedRspReferences)
+                {
+                    _logger.LogDebug($"{csxFileName} project. Adding RSP reference to: {resolvedRspReference.Display}");
+                }
+
+                references = resolvedRspReferences.Union(references, MetadataReferenceEqualityComparer.Instance);
+            }
+
             var project = ProjectInfo.Create(
                 filePath: csxFilePath,
                 id: ProjectId.CreateNewId(),
@@ -144,11 +157,7 @@ namespace OmniSharp.Script
                 compilationOptions: namespaces == null
                     ? _compilationOptions.Value
                     : _compilationOptions.Value.WithUsings(namespaces),
-                // if RSP file was used, include the metadata references from RSP merged with the provided set
-                // otherwise just use the provided metadata references 
-                metadataReferences: csharpCommandLineArguments != null && csharpCommandLineArguments.MetadataReferences.Any()
-                    ? csharpCommandLineArguments.ResolveMetadataReferences(_compilationOptions.Value.MetadataReferenceResolver).Union(references, MetadataReferenceEqualityComparer.Instance)
-                    : references,
+                metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,
                 hostObjectType: typeof(CommandLineScriptGlobals));
