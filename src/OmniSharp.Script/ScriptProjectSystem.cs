@@ -29,20 +29,21 @@ namespace OmniSharp.Script
 
         // used for tracking purposes only
         private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
+
+        private readonly HashSet<MetadataReference> _commonReferences = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
-
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILoggerFactory _loggerFactory;
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
-        private ScriptOptions _scriptOptions;
-        private ScriptHelper _scriptHelper;
         private CompilationDependency[] _compilationDependencies;
+        private ScriptHelper _scriptHelper;
+        private ScriptOptions _scriptOptions;
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory,
@@ -82,10 +83,10 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            var scriptOptions = new ScriptOptions();
-            ConfigurationBinder.Bind(configuration, scriptOptions);
+            _scriptOptions = new ScriptOptions();
+            ConfigurationBinder.Bind(configuration, _scriptOptions);
 
-            var scriptHelper = new ScriptHelper(scriptOptions, _env, _loggerFactory);
+            _scriptHelper = new ScriptHelper(_scriptOptions, _env, _loggerFactory);
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
@@ -106,14 +107,13 @@ namespace OmniSharp.Script
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
-
-            var compilationDependencies = TryGetCompilationDependencies(scriptOptions.EnableScriptNuGetReferences);
+            _compilationDependencies = TryGetCompilationDependencies(_scriptOptions.EnableScriptNuGetReferences);
 
             // if we have no compilation dependencies
             // we will assume desktop framework
             // and add default CLR references
             // same applies for having a context that is not a .NET Core app
-            if (!compilationDependencies.Any())
+            if (!_compilationDependencies.Any())
             {
                 _logger.LogInformation("Unable to find dependency context for CSX files. Will default to non-context usage (Desktop CLR scripts).");
                 AddDefaultClrMetadataReferences(_commonReferences);
@@ -172,9 +172,9 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptHelper.CreateProject(csxFileName, _commonReferences, csxPath);
 
-                    if (scriptOptions.IsNugetEnabled())
+                    if (_scriptOptions.IsNugetEnabled())
                     {
-                        var scriptMap = compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
+                        var scriptMap = _compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
                         var options = project.CompilationOptions.WithSourceReferenceResolver(
                             new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
                                 scriptMap));
