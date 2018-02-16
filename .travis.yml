@@ -94,7 +94,9 @@ deploy:
   api_key:
     secure: EsRemh0XwJc3jhIjaxSuAhcm0AGjFwa3HO6oWzJOoupX0l+HV5CxrJqui//sqJ/jK4nnwNcTfMyMFTAz2t6nWCmuwuezTncty/uNTXE0Whe+3WWc/BakfEdBrCfnRhGhwQ5EW2Y6BasuF0f/hpjnucqpNxcKmKOZvThzv93bmSA=
   file_glob: true
-  file: artifacts/package/*.tar.gz
+  file: 
+    - artifacts/package/*.tar.gz
+    - artifacts/package/*.zip
   skip_cleanup: true
   on:
     repo: OmniSharp/omnisharp-roslyn
