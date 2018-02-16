@@ -213,6 +213,10 @@ namespace OmniSharp.Stdio
 
             try
             {
+                if (!request.Command.StartsWith("/"))
+                {
+                    request.Command = $"/{request.Command}";
+                }
                 // hand off request to next layer
                 if (_endpointHandlers.TryGetValue(request.Command, out var handler))
                 {

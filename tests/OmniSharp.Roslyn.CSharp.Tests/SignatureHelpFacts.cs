@@ -759,6 +759,90 @@ class Program
         }
 
         [Fact]
+        public async Task ReturnsDocumentationForParameters()
+        {
+            const string source =
+@"class Program
+{
+    public static void Main()
+    {
+        var flag = Compare($$);
+    }
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
+    public static bool Compare(GameObject gameObject, string tagName)
+    {
+        return true;
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(2, signature.Parameters.Count());
+            Assert.Equal("gameObject", signature.Parameters.ElementAt(0).Name);
+            Assert.Equal("The game object.", signature.Parameters.ElementAt(0).Documentation);
+            Assert.Equal("tagName", signature.Parameters.ElementAt(1).Name);
+            Assert.Equal("Name of the tag.", signature.Parameters.ElementAt(1).Documentation);
+        }
+
+        [Fact]
+        public async Task ReturnsDocumentationForParametersNestedTags()
+        {
+            const string source =
+@"class Program
+{
+    public static void Main()
+    {
+        var flag = Compare($$);
+    }
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.It has the default value as <c>null</c></param>
+    /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
+    public static bool Compare(GameObject gameObject, string tagName = null)
+    {
+        return true;
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal(2, signature.Parameters.Count());
+            Assert.Equal("Name of the tag.It has the default value as null", signature.Parameters.ElementAt(1).Documentation);
+        }
+
+        [Fact]
+        public async Task ReturnsStructuredDocumentation()
+        {
+            const string source =
+@"class Program
+{
+    public static void Main()
+    {
+        var flag = Compare($$);
+    }
+    ///<summary>Checks if object is tagged with the tag.</summary>
+    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""tagName"">Name of the tag.</param>
+    /// <returns>Returns <c>true</c> if object is tagged with tag.</returns>
+    public static bool Compare(GameObject gameObject, string tagName)
+    {
+        return true;
+    }
+}";
+            var actual = await GetSignatureHelp(source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("Checks if object is tagged with the tag.", signature.StructuredDocumentation.SummaryText);
+            Assert.Equal("Returns true if object is tagged with tag.", signature.StructuredDocumentation.ReturnsText);
+        }
+
+        [Fact]
         public async Task SkipReceiverOfExtensionMethods()
         {
             const string source =
