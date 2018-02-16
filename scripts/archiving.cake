@@ -48,15 +48,13 @@ void Package(string name, string platform, string contentFolder, string packageF
 
     Information("Packaging {0}...", archiveName);
 
-    // On all platforms use ZIP for Windows runtimes
-    if (platformId.StartsWith("win"))
-    {
-        var zipFile = $"{archiveName}.zip";
-        Zip(contentFolder, zipFile);
-        CopyFile(zipFile, $"{deployName}.zip");
-    }
-    // On all platforms use TAR.GZ for Unix runtimes
-    else
+    // All platforms (Windows and Unix) produce a ZIP file
+    var zipFile = $"{archiveName}.zip";
+    Zip(contentFolder, zipFile);
+    CopyFile(zipFile, $"{deployName}.zip");
+
+    // Also create a TAR.GZ for Unix runtimes
+    if (!platformId.StartsWith("win"))
     {
         var tarFile = $"{archiveName}.tar.gz";
         Run("tar", $"czf \"{tarFile}\" .", contentFolder)
