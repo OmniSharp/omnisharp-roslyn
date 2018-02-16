@@ -33,7 +33,7 @@ All changes to `master` will be pushed to this feed and will be made available w
   * `linux-x86`
   * `osx`
   * `mono`  (Requires global mono installed)
-* Extenisons is archive specific, windows will be `zip` and other willth `tar.gz`.
+* Extenisons are archive specific, windows will be `zip` and all others will be `tar.gz`.
 
 ### Building
 

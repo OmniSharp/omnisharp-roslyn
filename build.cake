@@ -105,7 +105,7 @@ Task("Setup")
     .IsDependentOn("ValidateMono")
     .IsDependentOn("InstallDotNetCoreSdk")
     .IsDependentOn("InstallMonoAssets")
-    .IsDependentOn("CreateMSBuildFolder");;
+    .IsDependentOn("CreateMSBuildFolder");
 
 void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, string installFolder, bool sharedRuntime = false, bool noPath = false)
 {
