@@ -14,12 +14,21 @@ string GetPackagePrefix(string project)
 /// <param name="platform">The platform</param>
 /// <param name="contentFolder">The folder containing the files to package</param>
 /// <param name="packageFolder">The destination folder for the archive</param>
-/// <param name="projectName">The project name</param>
-void Package(string name, string platform, string contentFolder, string packageFolder)
+/// <param name="cdFolder">The folder to drop packages into that get continously deployed to blob storage</param>
+void Package(string name, string platform, string contentFolder, string packageFolder, string cdFolder)
 {
     if (!DirectoryHelper.Exists(packageFolder))
     {
         DirectoryHelper.Create(packageFolder);
+    }
+    if (!DirectoryHelper.Exists(cdFolder))
+    {
+        DirectoryHelper.Create(cdFolder);
+    }
+    var deployFolder = $"{cdFolder}/{env.VersionInfo.SemVer}";
+    if (!DirectoryHelper.Exists(deployFolder))
+    {
+        DirectoryHelper.Create(deployFolder);
     }
 
     var platformId = platform;
@@ -33,7 +42,9 @@ void Package(string name, string platform, string contentFolder, string packageF
         }
     }
 
-    var archiveName = $"{packageFolder}/omnisharp{name}-{platformId}";
+    var packageName = $"omnisharp{name}-{platformId}";
+    var archiveName = $"{packageFolder}/{packageName}";
+    var deployName = $"{deployFolder}/{packageName}";
 
     Information("Packaging {0}...", archiveName);
 
@@ -42,34 +53,14 @@ void Package(string name, string platform, string contentFolder, string packageF
     {
         var zipFile = $"{archiveName}.zip";
         Zip(contentFolder, zipFile);
+        CopyFile(zipFile, $"{deployName}.zip");
     }
     // On all platforms use TAR.GZ for Unix runtimes
     else
     {
         var tarFile = $"{archiveName}.tar.gz";
-        // Use 7z to create TAR.GZ on Windows
-        if (Platform.Current.IsWindows)
-        {
-            var tempFile = $"{archiveName}.tar";
-            try
-            {
-                Run("7z", $"a \"{tempFile}\"", contentFolder)
-                    .ExceptionOnError($"Tar-ing failed for {contentFolder} {archiveName}");
-                Run("7z", $"a \"{tarFile}\" \"{tempFile}\"", contentFolder)
-                    .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-
-                FileHelper.Delete(tempFile);
-            }
-            catch (Win32Exception)
-            {
-                Information("Warning: 7z not available on PATH to pack tar.gz results");
-            }
-        }
-        // Use tar to create TAR.GZ on Unix
-        else
-        {
-            Run("tar", $"czf \"{tarFile}\" .", contentFolder)
-                .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-        }
+        Run("tar", $"czf \"{tarFile}\" .", contentFolder)
+            .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
+        CopyFile(tarFile, $"{deployName}.tar.gz");
     }
 }
