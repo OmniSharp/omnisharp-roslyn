@@ -1,21 +1,37 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
 using Xunit.Abstractions;
 
 namespace TestUtility
 {
-    public abstract class AbstractTestFixture
+    public abstract class AbstractTestFixture : IDisposable
     {
         protected readonly ITestOutputHelper TestOutput;
         protected readonly ILoggerFactory LoggerFactory;
+        protected static OmniSharpTestHost OmniSharpTestHost;
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
-            this.TestOutput = output;
-            this.LoggerFactory = new LoggerFactory()
+            TestOutput = output;
+            LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
+
+            if (UseSharedOmniSharpHost)
+            {
+                if (OmniSharpTestHost == null)
+                {
+                    OmniSharpTestHost = CreateOmniSharpHost();
+                }
+                else
+                {
+                    OmniSharpTestHost.ClearWorkspace();
+                }
+            }
         }
+
+        protected virtual bool UseSharedOmniSharpHost => true;
 
         protected OmniSharpTestHost CreateEmptyOmniSharpHost()
         {
@@ -40,6 +56,11 @@ namespace TestUtility
             }
 
             return host;
+        }
+
+        public virtual void Dispose()
+        {
+            OmniSharpTestHost?.Dispose();
         }
     }
 }
