@@ -19,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string filename, string source, bool wantSnippet = false, string triggerChar = null)
         {
             var testFile = new TestFile(filename, source);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var point = testFile.Content.GetPointFromPosition();
 
             var request = new AutoCompleteRequest
@@ -35,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 TriggerCharacter = triggerChar
             };
 
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
             return await requestHandler.Handle(request);
         }

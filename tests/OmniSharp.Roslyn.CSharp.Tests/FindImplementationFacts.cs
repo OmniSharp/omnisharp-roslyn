@@ -134,9 +134,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)
         {
             var testFile = new TestFile(filename, code);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var point = testFile.Content.GetPointFromPosition();
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
             var request = new FindImplementationsRequest
             {
@@ -148,7 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var implementations = await requestHandler.Handle(request);
 
-            return await SymbolsFromQuickFixesAsync(OmniSharpTestHost.Workspace, implementations.QuickFixes);
+            return await SymbolsFromQuickFixesAsync(SharedOmniSharpTestHost.Workspace, implementations.QuickFixes);
         }
 
         private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmniSharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)

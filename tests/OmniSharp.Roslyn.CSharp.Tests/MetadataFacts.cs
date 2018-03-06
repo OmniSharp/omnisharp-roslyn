@@ -52,8 +52,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task TestMetadataAsync(string filename, string assemblyName, string typeName)
         {
             var testFile = new TestFile(filename, "class C {}");
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
             var request = new MetadataRequest
             {

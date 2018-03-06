@@ -58,10 +58,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFix[]> GetRegionsAsync(string source)
         {
             var testFile = new TestFile("dummy.cs", source);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
             var point = testFile.Content.GetPointFromPosition();
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var request = new GotoRegionRequest
             {
                 Line = point.Line,

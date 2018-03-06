@@ -994,7 +994,7 @@ public class ProgramClass
         private async Task<SignatureHelpResponse> GetSignatureHelp(string filename, string source)
         {
             var testFile = new TestFile(filename, source);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
             var point = testFile.Content.GetPointFromPosition();
             var request = new SignatureHelpRequest()
@@ -1005,7 +1005,7 @@ public class ProgramClass
                 Buffer = testFile.Content.Code
             };
 
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             return await requestHandler.Handle(request);
         }
     }

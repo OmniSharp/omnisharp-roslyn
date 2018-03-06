@@ -381,7 +381,7 @@ class Bar {
 
         private async Task<GotoDefinitionResponse> GetResponseAsync(TestFile[] testFiles, bool wantMetadata)
         {
-            OmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
             var source = testFiles.Single(tf => tf.Content.HasPosition);
             var point = source.Content.GetPointFromPosition();
 
@@ -394,7 +394,7 @@ class Bar {
                 WantMetadata = wantMetadata
             };
 
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             return await requestHandler.Handle(request);
         }
     }

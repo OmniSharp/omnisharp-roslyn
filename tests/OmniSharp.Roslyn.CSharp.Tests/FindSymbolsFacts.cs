@@ -257,8 +257,8 @@ public partial class MyClass
         private async Task<QuickFixResponse> FindSymbolsAsync(string code)
         {
             var testFile = new TestFile("dummy.cs", code);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
             return await requestHandler.Handle(null);
         }
@@ -266,8 +266,8 @@ public partial class MyClass
         private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filter)
         {
             var testFile = new TestFile("dummy.cs", code);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
             return await requestHandler.Handle(new FindSymbolsRequest { Filter = filter });
         }

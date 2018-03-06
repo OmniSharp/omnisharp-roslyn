@@ -268,7 +268,7 @@ class C {
         private async Task AssertTextChanges(string source, params LinePositionSpanTextChange[] expected)
         {
             var testFile = new TestFile("dummy.cs", source);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var span = testFile.Content.GetSpans().Single();
             var range = testFile.Content.GetRangeFromSpan(span);
 
@@ -282,7 +282,7 @@ class C {
                 EndColumn = range.End.Offset
             };
 
-            var requestHandler = OmniSharpTestHost.GetRequestHandler<FormatRangeService>(OmniSharpEndpoints.FormatRange);
+            var requestHandler = SharedOmniSharpTestHost.GetRequestHandler<FormatRangeService>(OmniSharpEndpoints.FormatRange);
 
             var response = await requestHandler.Handle(request);
             var actual = response.Changes.ToArray();
@@ -303,7 +303,7 @@ class C {
         {
             var testFile = new TestFile("dummy.cs", source);
 
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var span = testFile.Content.GetSpans().Single();
             var range = testFile.Content.GetRangeFromSpan(span);
 
@@ -317,7 +317,7 @@ class C {
                 EndColumn = range.End.Offset
             };
 
-            var requestHandler = OmniSharpTestHost.GetRequestHandler<FormatRangeService>(OmniSharpEndpoints.FormatRange);
+            var requestHandler = SharedOmniSharpTestHost.GetRequestHandler<FormatRangeService>(OmniSharpEndpoints.FormatRange);
 
             var response = await requestHandler.Handle(request);
             var actual = response.Changes.ToArray();

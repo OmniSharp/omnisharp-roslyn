@@ -235,11 +235,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false)
         {
-            OmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
             var file = testFiles.Single(tf => tf.Content.HasPosition);
             var point = file.Content.GetPointFromPosition();
 
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
             var request = new FindUsagesRequest
             {

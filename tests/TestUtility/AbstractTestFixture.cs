@@ -8,9 +8,11 @@ namespace TestUtility
 {
     public abstract class AbstractTestFixture : IClassFixture<SharedOmniSharpHostFixture>
     {
-        protected OmniSharpTestHost OmniSharpTestHost { get; }
         protected readonly ITestOutputHelper TestOutput;
         protected readonly ILoggerFactory LoggerFactory;
+
+        protected OmniSharpTestHost SharedOmniSharpTestHost { get; }
+
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
@@ -27,15 +29,17 @@ namespace TestUtility
 
             if (sharedOmniSharpHostFixture.OmniSharpTestHost == null)
             {
-                sharedOmniSharpHostFixture.OmniSharpTestHost = CreateOmniSharpHost();
+                sharedOmniSharpHostFixture.OmniSharpTestHost = CreateSharedOmniSharpTestHost();
             }
             else
             {
                 sharedOmniSharpHostFixture.OmniSharpTestHost.ClearWorkspace();
             }
 
-            OmniSharpTestHost = sharedOmniSharpHostFixture.OmniSharpTestHost;
+            SharedOmniSharpTestHost = sharedOmniSharpHostFixture.OmniSharpTestHost;
         }
+
+        protected virtual OmniSharpTestHost CreateSharedOmniSharpTestHost() => CreateOmniSharpHost();
 
         protected OmniSharpTestHost CreateEmptyOmniSharpHost()
         {

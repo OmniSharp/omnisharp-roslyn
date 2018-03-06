@@ -731,8 +731,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var startPoint = testFile.Content.Text.GetPointFromPosition(start);
             var endPoint = testFile.Content.Text.GetPointFromPosition(end);
 
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var response = await SendRequest(OmniSharpTestHost, testFile, startPoint.Line, startPoint.Offset, direction);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var response = await SendRequest(SharedOmniSharpTestHost, testFile, startPoint.Line, startPoint.Offset, direction);
 
             Assert.Equal(endPoint.Line, response.Line);
             Assert.Equal(endPoint.Offset, response.Column);

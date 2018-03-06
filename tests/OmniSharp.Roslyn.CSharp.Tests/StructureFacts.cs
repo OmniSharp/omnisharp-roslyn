@@ -74,8 +74,8 @@ namespace OmniSharp.Tests
         private async Task<FileMemberElement[]> GetStructureAsync(string source)
         {
             var testFile = new TestFile("d.cs", source);
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var nodes = await StructureComputer.Compute(OmniSharpTestHost.Workspace.GetDocuments(testFile.FileName));
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var nodes = await StructureComputer.Compute(SharedOmniSharpTestHost.Workspace.GetDocuments(testFile.FileName));
             return nodes.ToArray();
         }
     }

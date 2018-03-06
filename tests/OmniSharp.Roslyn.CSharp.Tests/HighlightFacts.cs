@@ -177,8 +177,8 @@ namespace N1
 
         private async Task<HighlightSpan[]> GetHighlightsAsync(TestFile testFile, int? line = null, HighlightClassification? exclude = null)
         {
-            OmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var request = new HighlightRequest
             {
                 FileName = testFile.FileName,

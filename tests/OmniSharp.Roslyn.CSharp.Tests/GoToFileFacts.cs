@@ -41,8 +41,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFix[]> GetFilesAsync(params TestFile[] testFiles)
         {
-            OmniSharpTestHost.AddFilesToWorkspace(testFiles);
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var response = await requestHandler.Handle(new GotoFileRequest());
 
             return response.QuickFixes.ToArray();

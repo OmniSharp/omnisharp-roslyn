@@ -496,8 +496,8 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsingsAsync(string code)
         {
-            OmniSharpTestHost.AddFilesToWorkspace(new TestFile(TestFileName, code));
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(new TestFile(TestFileName, code));
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var request = new FixUsingsRequest
             {
                 FileName = TestFileName

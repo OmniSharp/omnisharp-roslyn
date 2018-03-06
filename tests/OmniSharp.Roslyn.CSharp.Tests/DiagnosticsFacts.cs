@@ -21,8 +21,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()
         {
-            OmniSharpTestHost.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
-            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
             var quickFixes = await requestHandler.Handle(new CodeCheckRequest() { FileName = "a.cs" });
 
             Assert.Single(quickFixes.QuickFixes);
@@ -32,11 +32,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CheckAllFiles()
         {
-            OmniSharpTestHost.AddFilesToWorkspace(
+            SharedOmniSharpTestHost.AddFilesToWorkspace(
                 new TestFile("a.cs", "class C1 { int n = true; }"),
                 new TestFile("b.cs", "class C2 { int n = true; }"));
 
-            var handler = GetRequestHandler(OmniSharpTestHost);
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
             var quickFixes = await handler.Handle(new CodeCheckRequest());
 
             Assert.Equal(2, quickFixes.QuickFixes.Count());

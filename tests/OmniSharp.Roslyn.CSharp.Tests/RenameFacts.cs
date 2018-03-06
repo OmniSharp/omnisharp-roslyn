@@ -263,8 +263,8 @@ public class Program
             bool applyTextChanges = true,
             bool updateBuffer = false)
         {
-            OmniSharpTestHost.AddFilesToWorkspace(testFiles);
-            return await PerformRename(OmniSharpTestHost, testFiles, renameTo, wantsTextChanges, applyTextChanges, updateBuffer);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            return await PerformRename(SharedOmniSharpTestHost, testFiles, renameTo, wantsTextChanges, applyTextChanges, updateBuffer);
         }
 
         private Task<RenameResponse> PerformRename(
