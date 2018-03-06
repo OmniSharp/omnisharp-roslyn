@@ -13,8 +13,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class GoToDefinitionFacts : AbstractSingleRequestHandlerTestFixture<GotoDefinitionService>
     {
-        public GoToDefinitionFacts(ITestOutputHelper output)
-            : base(output)
+        public GoToDefinitionFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -381,23 +381,21 @@ class Bar {
 
         private async Task<GotoDefinitionResponse> GetResponseAsync(TestFile[] testFiles, bool wantMetadata)
         {
-            using (var host = CreateOmniSharpHost(testFiles))
+            OmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            var source = testFiles.Single(tf => tf.Content.HasPosition);
+            var point = source.Content.GetPointFromPosition();
+
+            var request = new GotoDefinitionRequest
             {
-                var source = testFiles.Single(tf => tf.Content.HasPosition);
-                var point = source.Content.GetPointFromPosition();
+                FileName = source.FileName,
+                Line = point.Line,
+                Column = point.Offset,
+                Timeout = 60000,
+                WantMetadata = wantMetadata
+            };
 
-                var request = new GotoDefinitionRequest
-                {
-                    FileName = source.FileName,
-                    Line = point.Line,
-                    Column = point.Offset,
-                    Timeout = 60000,
-                    WantMetadata = wantMetadata
-                };
-
-                var requestHandler = GetRequestHandler(host);
-                return await requestHandler.Handle(request);
-            }
+            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            return await requestHandler.Handle(request);
         }
     }
 }

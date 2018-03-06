@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.SignatureHelp;
@@ -10,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class SignatureHelpFacts : AbstractSingleRequestHandlerTestFixture<SignatureHelpService>
     {
-        public SignatureHelpFacts(ITestOutputHelper output)
-            : base(output)
+        public SignatureHelpFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -989,26 +990,23 @@ public class ProgramClass
             Assert.Equal("n", signature.Parameters.ElementAt(0).Name);
             Assert.Equal("int n", signature.Parameters.ElementAt(0).Label);
         }
-      
+
         private async Task<SignatureHelpResponse> GetSignatureHelp(string filename, string source)
         {
             var testFile = new TestFile(filename, source);
-            using (var host = CreateOmniSharpHost(testFile))
+            OmniSharpTestHost.AddFilesToWorkspace(testFile);
+
+            var point = testFile.Content.GetPointFromPosition();
+            var request = new SignatureHelpRequest()
             {
-                var point = testFile.Content.GetPointFromPosition();
+                FileName = testFile.FileName,
+                Line = point.Line,
+                Column = point.Offset,
+                Buffer = testFile.Content.Code
+            };
 
-                var request = new SignatureHelpRequest()
-                {
-                    FileName = testFile.FileName,
-                    Line = point.Line,
-                    Column = point.Offset,
-                    Buffer = testFile.Content.Code
-                };
-
-                var requestHandler = GetRequestHandler(host);
-
-                return await requestHandler.Handle(request);
-            }
+            var requestHandler = GetRequestHandler(OmniSharpTestHost);
+            return await requestHandler.Handle(request);
         }
     }
 }

@@ -2,36 +2,56 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace TestUtility
 {
-    public abstract class AbstractTestFixture : IDisposable
+    public class SharedOmniSharpHostFixture : IDisposable
     {
+        public SharedOmniSharpHostFixture()
+        {
+        }
+
+        public void Dispose()
+        {
+            OmniSharpTestHost?.Dispose();
+        }
+
+        public OmniSharpTestHost OmniSharpTestHost { get; set; }
+
+    }
+
+    public abstract class AbstractTestFixture : IClassFixture<SharedOmniSharpHostFixture>
+    {
+        protected OmniSharpTestHost OmniSharpTestHost { get; }
         protected readonly ITestOutputHelper TestOutput;
         protected readonly ILoggerFactory LoggerFactory;
-        protected static OmniSharpTestHost OmniSharpTestHost;
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
             TestOutput = output;
             LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
-
-            if (UseSharedOmniSharpHost)
-            {
-                if (OmniSharpTestHost == null)
-                {
-                    OmniSharpTestHost = CreateOmniSharpHost();
-                }
-                else
-                {
-                    OmniSharpTestHost.ClearWorkspace();
-                }
-            }
         }
 
-        protected virtual bool UseSharedOmniSharpHost => true;
+        protected AbstractTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+        {
+            TestOutput = output;
+            LoggerFactory = new LoggerFactory()
+                .AddXunit(output);
+
+            if (sharedOmniSharpHostFixture.OmniSharpTestHost == null)
+            {
+                sharedOmniSharpHostFixture.OmniSharpTestHost = CreateOmniSharpHost();
+            }
+            else
+            {
+                sharedOmniSharpHostFixture.OmniSharpTestHost.ClearWorkspace();
+            }
+
+            OmniSharpTestHost = sharedOmniSharpHostFixture.OmniSharpTestHost;
+        }
 
         protected OmniSharpTestHost CreateEmptyOmniSharpHost()
         {
@@ -56,11 +76,6 @@ namespace TestUtility
             }
 
             return host;
-        }
-
-        public virtual void Dispose()
-        {
-            OmniSharpTestHost?.Dispose();
         }
     }
 }
