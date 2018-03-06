@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
 using Xunit;
@@ -7,21 +6,6 @@ using Xunit.Abstractions;
 
 namespace TestUtility
 {
-    public class SharedOmniSharpHostFixture : IDisposable
-    {
-        public SharedOmniSharpHostFixture()
-        {
-        }
-
-        public void Dispose()
-        {
-            OmniSharpTestHost?.Dispose();
-        }
-
-        public OmniSharpTestHost OmniSharpTestHost { get; set; }
-
-    }
-
     public abstract class AbstractTestFixture : IClassFixture<SharedOmniSharpHostFixture>
     {
         protected OmniSharpTestHost OmniSharpTestHost { get; }
