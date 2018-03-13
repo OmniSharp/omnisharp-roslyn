@@ -9,10 +9,10 @@
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>
     <MicrosoftAspNetCoreServerKestrelVersion>1.1.0</MicrosoftAspNetCoreServerKestrelVersion>
-    <MicrosoftBuildVersion>15.3.409</MicrosoftBuildVersion>
-    <MicrosoftBuildFrameworkVersion>15.3.409</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildTasksCoreVersion>15.3.409</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>15.3.409</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftBuildVersion>15.6.82</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>15.6.82</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>15.6.82</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.6.82</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisCommonVersion>2.6.1</MicrosoftCodeAnalysisCommonVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.6.1</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpFeaturesVersion>2.6.1</MicrosoftCodeAnalysisCSharpFeaturesVersion>
