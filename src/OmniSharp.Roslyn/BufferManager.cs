@@ -164,6 +164,7 @@ namespace OmniSharp.Roslyn
             var fileInfo = new FileInfo(fileName);
             var dirInfo = fileInfo.Directory;
             var candidates = _workspace.CurrentSolution.Projects
+                .Where(project => !String.IsNullOrWhiteSpace (project.FilePath))
                 .GroupBy(project => new FileInfo(project.FilePath).Directory.FullName)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
 
