@@ -310,7 +310,7 @@ Task("CreateMSBuildFolder")
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
 
-        sdkResolverTFM = "netstandard1.5";
+        sdkResolverTFM = "netstandard2.0";
     }
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
