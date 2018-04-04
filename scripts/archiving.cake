@@ -61,4 +61,7 @@ void Package(string name, string platform, string contentFolder, string packageF
             .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
         CopyFile(tarFile, $"{deployName}.tar.gz");
     }
+
+    Information("Writing out version info...");
+    System.IO.File.WriteAllText(System.IO.Path.Combine(cdFolder, "versioninfo.txt"), env.VersionInfo.SemVer);
 }
