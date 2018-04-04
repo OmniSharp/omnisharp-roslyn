@@ -169,7 +169,7 @@ namespace OmniSharp.Script
             try
             {
                 var csxFileName = Path.GetFileName(csxPath);
-                var project = _scriptHelper.CreateProject(csxFileName, _commonReferences);
+                var project = _scriptHelper.CreateProject(csxFileName, _commonReferences, csxPath);
 
                 if (_enableScriptNuGetReferences)
                 {
