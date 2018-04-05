@@ -10,8 +10,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class OpenCloseFacts : AbstractSingleRequestHandlerTestFixture<FileOpenService>
     {
-        public OpenCloseFacts(ITestOutputHelper output)
-            : base(output)
+        public OpenCloseFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 

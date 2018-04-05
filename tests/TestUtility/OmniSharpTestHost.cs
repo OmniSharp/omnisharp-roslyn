@@ -194,5 +194,14 @@ namespace TestUtility
                 TestHelpers.AddCsxProjectToWorkspace(Workspace, csxFile);
             }
         }
+
+        public void ClearWorkspace()
+        {
+            var projectIds = Workspace.CurrentSolution.Projects.Select(x => x.Id);
+            foreach (var projectId in projectIds)
+            {
+                Workspace.RemoveProject(projectId);
+            }
+        }
     }
 }

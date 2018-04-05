@@ -13,8 +13,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private const string TestFileName = "test.cs";
 
-        public FixUsingsFacts(ITestOutputHelper output)
-            : base(output)
+        public FixUsingsFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -496,16 +496,14 @@ namespace OmniSharp
 
         private async Task<FixUsingsResponse> RunFixUsingsAsync(string code)
         {
-            using (var host = CreateOmniSharpHost(new TestFile(TestFileName, code)))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(new TestFile(TestFileName, code));
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var request = new FixUsingsRequest
             {
-                var requestHandler = GetRequestHandler(host);
-                var request = new FixUsingsRequest
-                {
-                    FileName = TestFileName
-                };
+                FileName = TestFileName
+            };
 
-                return await requestHandler.Handle(request);
-            }
+            return await requestHandler.Handle(request);
         }
     }
 }

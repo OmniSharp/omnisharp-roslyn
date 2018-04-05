@@ -11,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class HighlightFacts : AbstractSingleRequestHandlerTestFixture<HighlightingService>
     {
-        public HighlightFacts(ITestOutputHelper output)
-            : base(output)
+        public HighlightFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -177,20 +177,18 @@ namespace N1
 
         private async Task<HighlightSpan[]> GetHighlightsAsync(TestFile testFile, int? line = null, HighlightClassification? exclude = null)
         {
-            using (var host = CreateOmniSharpHost(testFile))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var request = new HighlightRequest
             {
-                var requestHandler = GetRequestHandler(host);
-                var request = new HighlightRequest
-                {
-                    FileName = testFile.FileName,
-                    Lines = line != null ? new[] { line.Value } : null,
-                    ExcludeClassifications = exclude != null ? new[] { exclude.Value } : null
-                };
+                FileName = testFile.FileName,
+                Lines = line != null ? new[] { line.Value } : null,
+                ExcludeClassifications = exclude != null ? new[] { exclude.Value } : null
+            };
 
-                var response = await requestHandler.Handle(request);
+            var response = await requestHandler.Handle(request);
 
-                return response.Highlights;
-            }
+            return response.Highlights;
         }
 
         private static void AssertSyntax(HighlightSpan[] highlights, string code, int startLine, params (string kind, string text)[] expectedTokens)

@@ -221,7 +221,7 @@ Task("InstallMonoAssets")
     DirectoryHelper.ForceCreate(frameworkFolder);
     DirectoryHelper.Copy(env.Folders.MonoFramework, frameworkFolder);
 
-    Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, monoRuntimeFile)}'");
+    Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "bin", monoRuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
 });
 
@@ -310,7 +310,7 @@ Task("CreateMSBuildFolder")
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
 
-        sdkResolverTFM = "netstandard1.5";
+        sdkResolverTFM = "netstandard2.0";
     }
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
@@ -636,20 +636,10 @@ Task("Test")
 
                 var runScript = CombinePaths(env.Folders.Mono, "run");
 
-                var oldMonoPath = Environment.GetEnvironmentVariable("MONO_PATH");
-                try
-                {
-                    Environment.SetEnvironmentVariable("MONO_PATH", $"{instanceFolder}");
-
-                    // By default, the run script launches OmniSharp. To launch our Mono runtime
-                    // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
-                    Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
-                        .ExceptionOnError($"Test {testProject} failed for net46");
-                }
-                finally
-                {
-                    Environment.SetEnvironmentVariable("MONO_PATH", oldMonoPath);
-                }
+                // By default, the run script launches OmniSharp. To launch our Mono runtime
+                // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
+                Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
+                    .ExceptionOnError($"Test {testProject} failed for net46");
             }
         }
     }
@@ -704,7 +694,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     DirectoryHelper.Copy(monoRuntime.InstallFolder, outputFolder);
 
-    Run("chmod", $"+x '{CombinePaths(outputFolder, monoRuntime.RuntimeFile)}'");
+    Run("chmod", $"+x '{CombinePaths(outputFolder, "bin", monoRuntime.RuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
 
     DirectoryHelper.Copy(env.Folders.MonoFramework, CombinePaths(outputFolder, "framework"));

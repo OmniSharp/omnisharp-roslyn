@@ -12,8 +12,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public partial class DiagnosticsV2Facts : AbstractTestFixture
     {
-        public DiagnosticsV2Facts(ITestOutputHelper output)
-            : base(output)
+        public DiagnosticsV2Facts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -24,27 +24,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var testFile = new TestFile(filename, "class C { int n = true; }");
 
-            using (var host = CreateOmniSharpHost(testFile))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var messages = new List<DiagnosticMessage>();
+            var emitter = new DiagnosticTestEmitter(messages);
+            var forwarder = new DiagnosticEventForwarder(emitter)
             {
-                var messages = new List<DiagnosticMessage>();
-                var emitter = new DiagnosticTestEmitter(messages);
-                var forwarder = new DiagnosticEventForwarder(emitter)
-                {
-                    IsEnabled = true
-                };
+                IsEnabled = true
+            };
 
-                var service = new CSharpDiagnosticService(host.Workspace, forwarder, this.LoggerFactory);
-                service.QueueDiagnostics(filename);
+            var service = new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, forwarder, this.LoggerFactory);
+            service.QueueDiagnostics(filename);
 
-                await emitter.Emitted;
+            await emitter.Emitted;
 
-                Assert.Single(messages);
-                var message = messages.First();
-                Assert.Single(message.Results);
-                var result = message.Results.First();
-                Assert.Single(result.QuickFixes);
-                Assert.Equal(filename, result.FileName);
-            }
+            Assert.Single(messages);
+            var message = messages.First();
+            Assert.Single(message.Results);
+            var result = message.Results.First();
+            Assert.Single(result.QuickFixes);
+            Assert.Equal(filename, result.FileName);
         }
 
         [Theory]
@@ -55,30 +53,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
 
-            using (var host = CreateOmniSharpHost(testFile1, testFile2))
-            {
-                var messages = new List<DiagnosticMessage>();
-                var emitter = new DiagnosticTestEmitter(messages);
-                var forwarder = new DiagnosticEventForwarder(emitter);
-                var service = new CSharpDiagnosticService(host.Workspace, forwarder, this.LoggerFactory);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
+            var messages = new List<DiagnosticMessage>();
+            var emitter = new DiagnosticTestEmitter(messages);
+            var forwarder = new DiagnosticEventForwarder(emitter);
+            var service = new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, forwarder, this.LoggerFactory);
 
-                var controller = new DiagnosticsService(host.Workspace, forwarder, service);
-                var response = await controller.Handle(new DiagnosticsRequest());
+            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var response = await controller.Handle(new DiagnosticsRequest());
 
-                await emitter.Emitted;
+            await emitter.Emitted;
 
-                Assert.Single(messages);
-                var message = messages.First();
-                Assert.Equal(2, message.Results.Count());
+            Assert.Single(messages);
+            var message = messages.First();
+            Assert.Equal(2, message.Results.Count());
 
-                var a = message.Results.First(x => x.FileName == filename1);
-                Assert.Single(a.QuickFixes);
-                Assert.Equal(filename1, a.FileName);
+            var a = message.Results.First(x => x.FileName == filename1);
+            Assert.Single(a.QuickFixes);
+            Assert.Equal(filename1, a.FileName);
 
-                var b = message.Results.First(x => x.FileName == filename2);
-                Assert.Single(b.QuickFixes);
-                Assert.Equal(filename2, b.FileName);
-            }
+            var b = message.Results.First(x => x.FileName == filename2);
+            Assert.Single(b.QuickFixes);
+            Assert.Equal(filename2, b.FileName);
         }
 
         [Theory]
@@ -88,19 +84,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
+            var messages = new List<DiagnosticMessage>();
+            var emitter = new DiagnosticTestEmitter(messages);
+            var forwarder = new DiagnosticEventForwarder(emitter);
+            var service = new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, forwarder, this.LoggerFactory);
 
-            using (var host = CreateOmniSharpHost(testFile1, testFile2))
-            {
-                var messages = new List<DiagnosticMessage>();
-                var emitter = new DiagnosticTestEmitter(messages);
-                var forwarder = new DiagnosticEventForwarder(emitter);
-                var service = new CSharpDiagnosticService(host.Workspace, forwarder, this.LoggerFactory);
+            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var response = await controller.Handle(new DiagnosticsRequest());
 
-                var controller = new DiagnosticsService(host.Workspace, forwarder, service);
-                var response = await controller.Handle(new DiagnosticsRequest());
-
-                Assert.True(forwarder.IsEnabled);
-            }
+            Assert.True(forwarder.IsEnabled);
         }
     }
 }

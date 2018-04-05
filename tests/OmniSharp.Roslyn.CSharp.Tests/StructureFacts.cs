@@ -10,8 +10,8 @@ namespace OmniSharp.Tests
 {
     public class StructureFacts : AbstractTestFixture
     {
-        public StructureFacts(ITestOutputHelper output)
-            : base(output)
+        public StructureFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -74,11 +74,9 @@ namespace OmniSharp.Tests
         private async Task<FileMemberElement[]> GetStructureAsync(string source)
         {
             var testFile = new TestFile("d.cs", source);
-            using (var host = CreateOmniSharpHost(testFile))
-            {
-                var nodes = await StructureComputer.Compute(host.Workspace.GetDocuments(testFile.FileName));
-                return nodes.ToArray();
-            }
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var nodes = await StructureComputer.Compute(SharedOmniSharpTestHost.Workspace.GetDocuments(testFile.FileName));
+            return nodes.ToArray();
         }
     }
 }
