@@ -15,8 +15,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FindImplementationFacts : AbstractSingleRequestHandlerTestFixture<FindImplementationsService>
     {
-        public FindImplementationFacts(ITestOutputHelper output)
-            : base(output)
+        public FindImplementationFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -134,23 +134,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)
         {
             var testFile = new TestFile(filename, code);
-            using (var host = CreateOmniSharpHost(testFile))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var point = testFile.Content.GetPointFromPosition();
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+
+            var request = new FindImplementationsRequest
             {
-                var point = testFile.Content.GetPointFromPosition();
-                var requestHandler = GetRequestHandler(host);
+                Line = point.Line,
+                Column = point.Offset,
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code
+            };
 
-                var request = new FindImplementationsRequest
-                {
-                    Line = point.Line,
-                    Column = point.Offset,
-                    FileName = testFile.FileName,
-                    Buffer = testFile.Content.Code
-                };
+            var implementations = await requestHandler.Handle(request);
 
-                var implementations = await requestHandler.Handle(request);
-
-                return await SymbolsFromQuickFixesAsync(host.Workspace, implementations.QuickFixes);
-            }
+            return await SymbolsFromQuickFixesAsync(SharedOmniSharpTestHost.Workspace, implementations.QuickFixes);
         }
 
         private async Task<IEnumerable<ISymbol>> SymbolsFromQuickFixesAsync(OmniSharpWorkspace workspace, IEnumerable<QuickFix> quickFixes)

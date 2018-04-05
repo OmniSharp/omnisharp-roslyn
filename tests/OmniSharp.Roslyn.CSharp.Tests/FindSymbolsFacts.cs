@@ -12,8 +12,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FindSymbolsFacts : AbstractSingleRequestHandlerTestFixture<FindSymbolsService>
     {
-        public FindSymbolsFacts(ITestOutputHelper output)
-            : base(output)
+        public FindSymbolsFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -257,23 +257,19 @@ public partial class MyClass
         private async Task<QuickFixResponse> FindSymbolsAsync(string code)
         {
             var testFile = new TestFile("dummy.cs", code);
-            using (var host = CreateOmniSharpHost(testFile))
-            {
-                var requestHandler = GetRequestHandler(host);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
-                return await requestHandler.Handle(null);
-            }
+            return await requestHandler.Handle(null);
         }
 
         private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filter)
         {
             var testFile = new TestFile("dummy.cs", code);
-            using (var host = CreateOmniSharpHost(testFile))
-            {
-                var requestHandler = GetRequestHandler(host);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
-                return await requestHandler.Handle(new FindSymbolsRequest { Filter = filter });
-            }
+            return await requestHandler.Handle(new FindSymbolsRequest { Filter = filter });
         }
     }
 }

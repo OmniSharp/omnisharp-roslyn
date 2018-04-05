@@ -16,8 +16,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
     public class NavigateUpDownFacts : AbstractTestFixture
     {
-        public NavigateUpDownFacts(ITestOutputHelper output)
-            : base(output)
+        public NavigateUpDownFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -731,13 +731,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var startPoint = testFile.Content.Text.GetPointFromPosition(start);
             var endPoint = testFile.Content.Text.GetPointFromPosition(end);
 
-            using (var host = CreateOmniSharpHost(testFile))
-            {
-                var response = await SendRequest(host, testFile, startPoint.Line, startPoint.Offset, direction);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var response = await SendRequest(SharedOmniSharpTestHost, testFile, startPoint.Line, startPoint.Offset, direction);
 
-                Assert.Equal(endPoint.Line, response.Line);
-                Assert.Equal(endPoint.Offset, response.Column);
-            }
+            Assert.Equal(endPoint.Line, response.Line);
+            Assert.Equal(endPoint.Offset, response.Column);
         }
 
         private static async Task<NavigateResponse> SendRequest(

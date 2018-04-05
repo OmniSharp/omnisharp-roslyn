@@ -11,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class GoToRegionFacts : AbstractSingleRequestHandlerTestFixture<GotoRegionService>
     {
-        public GoToRegionFacts(ITestOutputHelper output)
-            : base(output)
+        public GoToRegionFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -58,24 +58,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task<QuickFix[]> GetRegionsAsync(string source)
         {
             var testFile = new TestFile("dummy.cs", source);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+
             var point = testFile.Content.GetPointFromPosition();
-
-            using (var host = CreateOmniSharpHost(testFile))
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var request = new GotoRegionRequest
             {
-                var requestHandler = GetRequestHandler(host);
+                Line = point.Line,
+                Column = point.Offset,
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code
+            };
 
-                var request = new GotoRegionRequest
-                {
-                    Line = point.Line,
-                    Column = point.Offset,
-                    FileName = testFile.FileName,
-                    Buffer = testFile.Content.Code
-                };
+            var response = await requestHandler.Handle(request);
 
-                var response = await requestHandler.Handle(request);
-
-                return response.QuickFixes.ToArray();
-            }
+            return response.QuickFixes.ToArray();
         }
     }
 }

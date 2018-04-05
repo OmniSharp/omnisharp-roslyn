@@ -11,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FindReferencesFacts : AbstractSingleRequestHandlerTestFixture<FindUsagesService>
     {
-        public FindReferencesFacts(ITestOutputHelper output)
-            : base(output)
+        public FindReferencesFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -235,25 +235,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFixResponse> FindUsagesAsync(TestFile[] testFiles, bool onlyThisFile, bool excludeDefinition = false)
         {
-            using (var host = CreateOmniSharpHost(testFiles))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            var file = testFiles.Single(tf => tf.Content.HasPosition);
+            var point = file.Content.GetPointFromPosition();
+
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+
+            var request = new FindUsagesRequest
             {
-                var file = testFiles.Single(tf => tf.Content.HasPosition);
-                var point = file.Content.GetPointFromPosition();
+                Line = point.Line,
+                Column = point.Offset,
+                FileName = file.FileName,
+                Buffer = file.Content.Code,
+                OnlyThisFile = onlyThisFile,
+                ExcludeDefinition = excludeDefinition
+            };
 
-                var requestHandler = GetRequestHandler(host);
-
-                var request = new FindUsagesRequest
-                {
-                    Line = point.Line,
-                    Column = point.Offset,
-                    FileName = file.FileName,
-                    Buffer = file.Content.Code,
-                    OnlyThisFile = onlyThisFile,
-                    ExcludeDefinition = excludeDefinition
-                };
-
-                return await requestHandler.Handle(request);
-            }
+            return await requestHandler.Handle(request);
         }
     }
 }
