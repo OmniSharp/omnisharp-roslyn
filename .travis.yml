@@ -6,7 +6,7 @@ env:
   - secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
   - secure: EA2fP5ymar2/ZM2G4cyP3FzK437zv1wP03AgUPCcQgke8Z5oG8Y5U632AzxBeeaqGAxHEi5Ewbq2A8N93pN+xAsoGlQf+AdLJROCeo7gy9O589Z8tmp/vAdMzZzyNhKi7SUSxOJ/TIDzLMlvBHZwj1XqFyCbOGABzkxl9sW4+uk=
   - secure: UYglcVukRlhS09V7MXwMQ5pU6gZZZ+bsaKnCSlPV+CQyh+ExabEYYmF7NBJirF/RDK30tbuI6mlSYagjX18PpLZ3390WI3WkKRbP0F1SfylHKlMh5MDcKNTsSwYMcQ0BX7teg7kpYmxbigP7jing8LPehP/QdQAhnkhpdXe1P/o=
-mono: latest
+mono: 5.2.0
 os:
 - linux
 - osx
