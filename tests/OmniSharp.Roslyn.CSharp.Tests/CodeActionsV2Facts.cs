@@ -139,7 +139,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         [|Console.Write(""should be using System;"");|]
                     }
                 }";
-
             const string expected =
                 @"public class Class1
                 {
@@ -153,9 +152,26 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Console.Write(""should be using System;"");
                     }
                 }";
-
             var response = await RunRefactoringAsync(code, "Extract Method");
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_generate_type_and_return_name_of_new_file()
+        {
+            const string code =
+                @"public class Class1
+                {
+                    public void Whatever()
+                    {
+                        [|Console.Write(""should be using System;"");|]
+                    }
+                }";
+
+            var response = await RunRefactoringAsync(code, "Generate type 'Console' -> Generate class 'Console' in new file");
+            var changes = response.Changes.ToArray();
+            Assert.NotNull(changes[0].FileName);
+            Assert.NotNull(changes[1].FileName);
         }
 
         [Fact]
