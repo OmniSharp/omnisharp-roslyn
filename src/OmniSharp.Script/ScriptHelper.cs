@@ -99,9 +99,10 @@ namespace OmniSharp.Script
                 : new CachingScriptMetadataResolver(_resolver);
         }
  
-        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, IEnumerable<string> namespaces = null)
+        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, IEnumerable<string> namespaces = null)
         {
             var project = ProjectInfo.Create(
+                filePath: csxFilePath,
                 id: ProjectId.CreateNewId(),
                 version: VersionStamp.Create(),
                 name: csxFileName,
