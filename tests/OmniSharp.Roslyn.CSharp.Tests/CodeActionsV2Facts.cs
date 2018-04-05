@@ -159,19 +159,31 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Can_generate_type_and_return_name_of_new_file()
         {
-            const string code =
-                @"public class Class1
-                {
-                    public void Whatever()
-                    {
-                        [|Console.Write(""should be using System;"");|]
-                    }
-                }";
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
+                var buffer = await document.GetTextAsync();
+                var path = document.FilePath;
 
-            var response = await RunRefactoringAsync(code, "Generate type 'Console' -> Generate class 'Console' in new file");
-            var changes = response.Changes.ToArray();
-            Assert.NotNull(changes[0].FileName);
-            Assert.NotNull(changes[1].FileName);
+                var request = new RunCodeActionRequest
+                {
+                    Line = 8,
+                    Column = 12,
+                    FileName = path,
+                    Buffer = buffer.ToString(),
+                    Identifier = "Generate class 'Z' in new file",
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
+                };
+
+                var response = await requestHandler.Handle(request);
+                var changes = response.Changes.ToArray();
+                Assert.Equal(2, changes.Length);
+                Assert.NotNull(changes[0].FileName);
+                Assert.NotNull(changes[1].FileName);
+            }
         }
 
         [Fact]
