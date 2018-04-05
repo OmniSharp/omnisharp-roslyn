@@ -11,6 +11,11 @@ namespace TestUtility
         {
         }
 
+        protected AbstractSingleRequestHandlerTestFixture(ITestOutputHelper testOutput, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(testOutput, sharedOmniSharpHostFixture)
+        {
+        }
+
         protected abstract string EndpointName { get; }
 
         protected TRequestHandler GetRequestHandler(OmniSharpTestHost host)

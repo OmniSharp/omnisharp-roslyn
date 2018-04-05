@@ -11,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class GoToFileFacts : AbstractSingleRequestHandlerTestFixture<GotoFileService>
     {
-        public GoToFileFacts(ITestOutputHelper output)
-            : base(output)
+        public GoToFileFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -41,13 +41,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<QuickFix[]> GetFilesAsync(params TestFile[] testFiles)
         {
-            using (var host = CreateOmniSharpHost(testFiles))
-            {
-                var requestHandler = GetRequestHandler(host);
-                var response = await requestHandler.Handle(new GotoFileRequest());
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var response = await requestHandler.Handle(new GotoFileRequest());
 
-               return response.QuickFixes.ToArray();
-            }
+            return response.QuickFixes.ToArray();
         }
     }
 }
