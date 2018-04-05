@@ -37,8 +37,7 @@
     "TwoProjectsWithSolution",
     "ProjectWithGeneratedFile",
     "CSharpAndFSharp",
-    "ProjectWithMismatchedFileName",
-    "ProjectWithMissingType"
+    "ProjectWithMismatchedFileName"
   ],
   "LegacyTestAssets": [
     "LegacyNUnitTestProject",
@@ -51,5 +50,8 @@
   ],
   "WindowsOnlyTestAssets": [
     "AntlrGeneratedFiles"
+  ],
+  "TestAssetsWithErrors":[
+    "ProjectWithMissingType"
   ]
 }
