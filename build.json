@@ -1,5 +1,5 @@
 {
-  "DotNetInstallScriptURL": "https://raw.githubusercontent.com/dotnet/cli/release/2.0.0/scripts/obtain",
+  "DotNetInstallScriptURL": "https://dot.net/v1",
   "DotNetChannel": "preview",
   "DotNetVersion": "2.1.104",
   "DotNetSharedRuntimeVersions": [
