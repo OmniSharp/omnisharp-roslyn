@@ -67,7 +67,7 @@ namespace OmniSharp.DotNetTest.Tests
         //[InlineData("LegacyNUnitTestProject", "TestProgram.cs", 32, 20, false, "", "")]
         public async Task LegacyFindTestMethods(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName, string expectedMethodName)
         {
-            using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
+            using (var testProject = await this._testAssets.GetTestProjectAsync(projectName, legacyProject: true))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);

@@ -467,7 +467,7 @@ Task("PrepareTestAssets:LegacyTestAssets")
 
         Information("Restoring and building project.json: {0}...", project);
 
-        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+        var folder = CombinePaths(env.Folders.TestAssets, "legacy-test-projects", project);
 
         DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
