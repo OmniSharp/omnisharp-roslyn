@@ -757,25 +757,6 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-
-    Information("Restoring packages in {0} for {1}...", projectName, rid);
-
-    try
-    {
-        DotNetCoreRestore(projectFileName, new DotNetCoreRestoreSettings()
-        {
-            Runtime = rid,
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = env.WorkingDirectory,
-            Verbosity = DotNetCoreVerbosity.Minimal,
-        });
-    }
-    catch
-    {
-        Error($"Failed to restore {projectName} for {rid}.");
-        throw;
-    }
-
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid);
 
     Information("Publishing {0} for {1}...", projectName, rid);
