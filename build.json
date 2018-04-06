@@ -12,8 +12,8 @@
   "MonoRuntimeLinux32": "mono.linux-x86-5.10.1.20.zip",
   "MonoRuntimeLinux64": "mono.linux-x86_64-5.10.1.20.zip",
   "MonoFramework": "framework-5.10.1.20.zip",
-  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-alpha6.zip",
-  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-alpha6.zip",
+  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-mono-5.10.1.20.zip",
+  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-mono-5.10.1.20.zip",
   "HostProjects": [
     "OmniSharp.Stdio",
     "OmniSharp.Http"
