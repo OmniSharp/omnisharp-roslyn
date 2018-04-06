@@ -86,6 +86,12 @@ namespace OmniSharp
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
             var documentId = DocumentId.CreateNewId(projectId);
+            this.AddDocument(documentId, projectId, filePath, sourceCodeKind);
+            return documentId;
+        }
+
+        public DocumentId AddDocument(DocumentId documentId, ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
             var loader = new OmniSharpTextLoader(filePath);
             var documentInfo = DocumentInfo.Create(documentId, filePath, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
 
