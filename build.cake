@@ -11,7 +11,6 @@ using System.Net;
 // Arguments
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-var testConfiguration = Argument("test-configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
@@ -589,41 +588,97 @@ void BuildProject(BuildEnvironment env, string projectName, string projectFilePa
     }
 }
 
-Task("BuildHosts")
+void BuildWithDotNetCli(BuildEnvironment env, string configuration)
+{
+    Information("Building OmniSharp.sln with .NET Core CLI...");
+
+    var logFileNameBase = CombinePaths(env.Folders.ArtifactsLogs, "OmniSharp-build");
+    var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic
+        ? MSBuildBinaryLogImports.Embed
+        : MSBuildBinaryLogImports.None;
+
+    var settings = new DotNetCoreMSBuildSettings
+    {
+        WorkingDirectory = env.WorkingDirectory,
+
+        ArgumentCustomization = args =>
+            args.Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
+                .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}")
+    };
+
+    settings.AddFileLogger(
+        new MSBuildFileLoggerSettings {
+            AppendToLogFile = false,
+            LogFile = logFileNameBase + ".log",
+            ShowTimestamp = true,
+
+            // Bug in cake with this
+            // Verbosity = Verbosity.Diagnostic,
+        }
+    );
+
+    settings
+        .SetConfiguration(configuration)
+        .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+        .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+        .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+        .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
+
+    DotNetCoreMSBuild("OmniSharp.sln", settings);
+}
+
+void BuildWithMSBuild(BuildEnvironment env, string configuration)
+{
+    Information("Building OmniSharp.sln with MSBuild...");
+
+    var logFileNameBase = CombinePaths(env.Folders.ArtifactsLogs, "OmniSharp-build");
+    var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic
+        ? MSBuildBinaryLogImports.Embed
+        : MSBuildBinaryLogImports.None;
+
+    MSBuild("OmniSharp.sln", settings =>
+    {
+        settings.WorkingDirectory = env.WorkingDirectory;
+
+        settings.AddFileLogger(
+            new MSBuildFileLogger {
+                AppendToLogFile = false,
+                LogFile = logFileNameBase + ".log",
+                ShowTimestamp = true,
+                Verbosity = Verbosity.Diagnostic,
+                PerformanceSummaryEnabled = true,
+                SummaryDisabled = false
+            }
+        );
+
+        settings.BinaryLogger = new MSBuildBinaryLogSettings {
+            Enabled = true,
+            FileName = logFileNameBase + ".binlog",
+            Imports = projectImports
+        };
+
+        settings
+            .SetConfiguration(configuration)
+            .SetVerbosity(Verbosity.Minimal)
+            .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+            .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+            .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+            .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
+    });
+}
+
+Task("Build")
     .IsDependentOn("Setup")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-    foreach (var project in buildPlan.HostProjects)
+    if (Platform.Current.IsWindows)
     {
-        var projectName = project + ".csproj";
-        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
-
-        BuildProject(env, projectName, projectFilePath, configuration);
+        BuildWithDotNetCli(env, configuration);
     }
-});
-
-/// <summary>
-///  Build Test projects.
-/// </summary>
-Task("BuildTest")
-    .IsDependentOn("Setup")
-    .IsDependentOn("Restore")
-    .Does(() =>
-{
-    foreach (var project in buildPlan.HostProjects)
+    else
     {
-        var projectName = project + ".csproj";
-        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
-        BuildProject(env, projectName, projectFilePath, configuration, "test");
-    }
-
-    foreach (var testProject in buildPlan.TestProjects)
-    {
-        var testProjectName = testProject + ".csproj";
-        var testProjectFilePath = CombinePaths(env.Folders.Tests, testProject, testProjectName);
-
-        BuildProject(env, testProjectName, testProjectFilePath, testConfiguration);
+        BuildWithMSBuild(env, configuration);
     }
 });
 
@@ -632,7 +687,7 @@ Task("BuildTest")
 /// </summary>
 Task("Test")
     .IsDependentOn("Setup")
-    .IsDependentOn("BuildTest")
+    .IsDependentOn("Build")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
@@ -647,7 +702,7 @@ Task("Test")
         {
             PrintBlankLine();
 
-            var instanceFolder = CombinePaths(env.Folders.Bin, testConfiguration, testProject, "net46");
+            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net46");
 
             // Copy xunit executable to test folder to solve path errors
             var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
@@ -865,7 +920,7 @@ Task("PublishWindowsBuilds")
 });
 
 Task("Publish")
-    .IsDependentOn("BuildHosts")
+    .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
     .IsDependentOn("PublishWindowsBuilds");
 
