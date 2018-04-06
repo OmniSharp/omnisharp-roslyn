@@ -336,6 +336,40 @@ Task("CreateMSBuildFolder")
         CopyDotNetHostResolver(env, "linux", "x64", "libhostfxr.so", sdkResolverTargetFolder, copyToArchSpecificFolder: false);
     }
 
+    // Copy content of NuGet.Build.Tasks
+    var nugetBuildTasksFolder = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks");
+    var nugetBuildTasksBinariesFolder = CombinePaths(nugetBuildTasksFolder, "lib", "net46");
+    var nugetBuildTasksTargetsFolder = CombinePaths(nugetBuildTasksFolder, "runtimes", "any", "native");
+
+    FileHelper.Copy(
+        source: CombinePaths(nugetBuildTasksBinariesFolder, "NuGet.Build.Tasks.dll"),
+        destination: CombinePaths(msbuild15BinTargetFolder, "NuGet.Build.Tasks.dll"));
+
+    FileHelper.Copy(
+        source: CombinePaths(nugetBuildTasksTargetsFolder, "NuGet.targets"),
+        destination: CombinePaths(msbuild15BinTargetFolder, "NuGet.targets"));
+
+    // Copy dependencies of NuGet.Build.Tasks
+    var nugetPackages = new []
+    {
+        "NuGet.Commands",
+        "NuGet.Common",
+        "NuGet.Configuration",
+        "NuGet.Frameworks",
+        "NuGet.ProjectModel",
+        "NuGet.Protocol",
+        "NuGet.Versioning"
+    };
+
+    foreach (var nugetPackage in nugetPackages)
+    {
+        var binaryName = nugetPackage + ".dll";
+        
+        FileHelper.Copy(
+            source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net46", binaryName),
+            destination: CombinePaths(msbuild15BinTargetFolder, binaryName));
+    }
+
     // Copy content of Microsoft.Net.Compilers
     Information("Copying Microsoft.Net.Compilers...");
     var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
@@ -632,7 +666,10 @@ Task("Test")
             else
             {
                 // Copy the Mono-built Microsoft.Build.* binaries to the test folder.
+                // This is necessary to work around a Mono bug that is exasperated by xUnit.
                 DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
+
+                DeleteUnnecessaryAssemblies(instanceFolder);
 
                 var runScript = CombinePaths(env.Folders.Mono, "run");
 
@@ -649,6 +686,25 @@ Task("Test")
     }
 });
 
+/// <summary>
+/// Delete assemblies that are included in our Mono package.
+/// </summary>
+void DeleteUnnecessaryAssemblies(string folder)
+{
+    FileHelper.Delete(CombinePaths(folder, "System.AppContext.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Numerics.Vectors.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.ComponentModel.Primitives.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.ComponentModel.TypeConverter.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Console.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.IO.FileSystem.Primitives.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.IO.FileSystem.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Security.Cryptography.Encoding.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Security.Cryptography.Primitives.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Security.Cryptography.X509Certificates.dll"));
+    FileHelper.Delete(CombinePaths(folder, "System.Threading.Thread.dll"));
+}
+
 void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
 {
     DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
@@ -657,18 +713,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
 
     // Included in Mono
-    FileHelper.Delete(CombinePaths(outputFolder, "System.AppContext.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Numerics.Vectors.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.ComponentModel.Primitives.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.ComponentModel.TypeConverter.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Console.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.IO.FileSystem.Primitives.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.IO.FileSystem.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Security.Cryptography.Encoding.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Security.Cryptography.Primitives.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Security.Cryptography.X509Certificates.dll"));
-    FileHelper.Delete(CombinePaths(outputFolder, "System.Threading.Thread.dll"));
+    DeleteUnnecessaryAssemblies(outputFolder);
 }
 
 string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration)
