@@ -433,6 +433,22 @@ Task("PrepareTestAssets:CommonTestAssets")
         });
     });
 
+Task("PrepareTestAssets:TestAssetsWithErrors")
+    .IsDependeeOf("PrepareTestAssets")
+    .DoesForEach(buildPlan.TestAssetsWithErrors, (project) =>
+    {
+        Information("Restoring and building: {0}...", project);
+
+        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+
+        DotNetCoreRestore(new DotNetCoreRestoreSettings()
+        {
+            ToolPath = env.DotNetCommand,
+            WorkingDirectory = folder,
+            Verbosity = DotNetCoreVerbosity.Minimal,
+        });
+    });
+
 Task("PrepareTestAssets:WindowsTestAssets")
     .WithCriteria(Platform.Current.IsWindows)
     .IsDependeeOf("PrepareTestAssets")
