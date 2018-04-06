@@ -182,6 +182,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var changes = response.Changes.ToArray();
                 Assert.Equal(2, changes.Length);
                 Assert.NotNull(changes[0].FileName);
+
+                Assert.True(File.Exists(changes[0].FileName));
+                Assert.Equal(@"namespace ConsoleApplication
+{
+    internal class Z
+    {
+    }
+}".Replace("\r\n", "\n"), ((ModifiedFileResponse)changes[0]).Changes.First().NewText);
+
                 Assert.NotNull(changes[1].FileName);
             }
         }
