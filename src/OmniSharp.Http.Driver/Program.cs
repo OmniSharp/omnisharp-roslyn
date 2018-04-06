@@ -1,9 +1,9 @@
 using System;
 using OmniSharp.Services;
 
-namespace OmniSharp.Http
+namespace OmniSharp.Http.Driver
 {
-    class Program
+    internal class Program
     {
         static int Main(string[] args) => HostHelpers.Start(() =>
         {
@@ -11,7 +11,7 @@ namespace OmniSharp.Http
             application.OnExecute(() =>
             {
                 var environment = application.CreateEnvironment();
-                OmniSharp.Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
+                Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
 
                 var writer = new SharedTextWriter(Console.Out);
                 var plugins = application.CreatePluginAssemblies();
