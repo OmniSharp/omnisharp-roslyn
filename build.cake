@@ -387,24 +387,6 @@ Task("CreateMSBuildFolder")
 });
 
 /// <summary>
-///  Restore required NuGet packages.
-/// </summary>
-Task("Restore")
-    .IsDependentOn("Setup")
-    .Does(() =>
-{
-    // Restore the projects in OmniSharp.sln
-    Information("Restoring packages in OmniSharp.sln...");
-
-    DotNetCoreRestore("OmniSharp.sln", new DotNetCoreRestoreSettings()
-    {
-        ToolPath = env.DotNetCommand,
-        WorkingDirectory = env.WorkingDirectory,
-        Verbosity = DotNetCoreVerbosity.Minimal,
-    });
-});
-
-/// <summary>
 ///  Prepare test assets.
 /// </summary>
 Task("PrepareTestAssets")
@@ -533,7 +515,8 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
         WorkingDirectory = env.WorkingDirectory,
 
         ArgumentCustomization = args =>
-            args.Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
+            args.Append("/restore")
+                .Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
                 .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}")
     };
 
@@ -571,6 +554,9 @@ void BuildWithMSBuild(BuildEnvironment env, string configuration)
     {
         settings.WorkingDirectory = env.WorkingDirectory;
 
+        settings.ArgumentCustomization = args =>
+            args.Append("/restore");
+
         settings.AddFileLogger(
             new MSBuildFileLogger {
                 AppendToLogFile = false,
@@ -600,7 +586,6 @@ void BuildWithMSBuild(BuildEnvironment env, string configuration)
 
 Task("Build")
     .IsDependentOn("Setup")
-    .IsDependentOn("Restore")
     .Does(() =>
 {
     try
@@ -924,7 +909,7 @@ Task("Install")
 /// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("Restore")
+    .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
     .IsDependentOn("ExecuteRunScript");
