@@ -1,8 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.30.0] - not yet released
+* Updated to Roslyn 2.7.0 packages (PR: [#1132](https://github.com/OmniSharp/omnisharp-roslyn/pull/1132))
+* Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))
+
+## [1.29.1] - 2018-2-12
+* Fixed duplicate diagnostics in C# ([omnisharp-vscode#1830](https://github.com/OmniSharp/omnisharp-vscode/issues/1830), PR: [#1107](https://github.com/OmniSharp/omnisharp-roslyn/pull/1107))
+
 ## [1.29.0] - 2018-1-29
-* Updated to Roslyn 2.6.1 packages - C# 7.2 support, (PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055))
+* Updated to Roslyn 2.6.1 packages - C# 7.2 support (PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055))
 * Shipped Language Server Protocol support in box.  (PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969))
   - Additional information and features tracked at [#968](https://github.com/OmniSharp/omnisharp-roslyn/issues/968)
 * Fixed locating Visual Studio with more than one installation (PR: [#1063](https://github.com/OmniSharp/omnisharp-roslyn/pull/1063))

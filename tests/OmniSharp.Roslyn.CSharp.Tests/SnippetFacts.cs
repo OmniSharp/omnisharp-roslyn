@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models.AutoComplete;
+using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,8 +14,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private readonly ILogger _logger;
 
-        public SnippetFacts(ITestOutputHelper output)
-            : base(output)
+        public SnippetFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
             this._logger = this.LoggerFactory.CreateLogger<SnippetFacts>();
         }

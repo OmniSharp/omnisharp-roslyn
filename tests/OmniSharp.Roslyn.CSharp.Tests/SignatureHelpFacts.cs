@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.SignatureHelp;
@@ -10,15 +11,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class SignatureHelpFacts : AbstractSingleRequestHandlerTestFixture<SignatureHelpService>
     {
-        public SignatureHelpFacts(ITestOutputHelper output)
-            : base(output)
+        public SignatureHelpFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
         protected override string EndpointName => OmniSharpEndpoints.SignatureHelp;
 
-        [Fact]
-        public async Task NoInvocationNoHelp1()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NoInvocationNoHelp1(string filename)
         {
             const string source =
 @"class Program
@@ -27,12 +30,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         System.Guid.NoSuchMethod();
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Null(actual);
         }
 
-        [Fact]
-        public async Task NoInvocationNoHelp2()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NoInvocationNoHelp2(string filename)
         {
             const string source =
 @"class Program
@@ -41,12 +46,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         System.Gu$$id.NoSuchMethod();
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Null(actual);
         }
 
-        [Fact]
-        public async Task NoInvocationNoHelp3()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NoInvocationNoHelp3(string filename)
         {
             const string source =
 @"class Program
@@ -55,12 +62,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         System.Guid.NoSuchMethod()$$;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Null(actual);
         }
 
-        [Fact]
-        public async Task NoTypeNoHelp()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NoTypeNoHelp(string filename)
         {
             const string source =
 @"class Program
@@ -69,12 +78,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         System.Guid.Foo$$Bar();
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Null(actual);
         }
 
-        [Fact]
-        public async Task NoMethodNoHelp()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task NoMethodNoHelp(string filename)
         {
             const string source =
 @"class Program
@@ -83,12 +94,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         System.Gu$$id;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Null(actual);
         }
 
-        [Fact]
-        public async Task SimpleSignatureHelp()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task SimpleSignatureHelp(string filename)
         {
             const string source =
 @"class Program
@@ -98,7 +111,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     }
 }";
 
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
@@ -106,8 +119,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
         }
 
-        [Fact]
-        public async Task TestForParameterLabels()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestForParameterLabels(string filename)
         {
             const string source =
 @"class Program
@@ -119,7 +134,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
@@ -132,8 +147,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("int n = 1234", signature.Parameters.ElementAt(1).Label);
         }
 
-        [Fact]
-        public async Task ActiveParameterIsBasedOnComma1()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveParameterIsBasedOnComma1(string filename)
         {
             // 1st position, a
             const string source =
@@ -148,12 +165,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         return 3;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(0, actual.ActiveParameter);
         }
 
-        [Fact]
-        public async Task AttributeCtorSingleParam()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task AttributeCtorSingleParam(string filename)
         {
             const string source =
 @"using System;
@@ -170,7 +189,7 @@ public class MyTestAttribute : Attribute
     {
     }
 }";
-            var actual = await GetSignatureHelp(source);    
+            var actual = await GetSignatureHelp(filename, source);    
             Assert.Equal(0, actual.ActiveParameter);
        
             var signature = actual.Signatures.ElementAt(0);
@@ -179,8 +198,10 @@ public class MyTestAttribute : Attribute
             Assert.Equal("int value", signature.Parameters.ElementAt(0).Label);
         }
 
-        [Fact]
-        public async Task AttributeCtorTestParameterLabels()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task AttributeCtorTestParameterLabels(string filename)
         {
             const string source =
 @"using System;
@@ -198,7 +219,7 @@ public class MyTestAttribute : Attribute
     }
 }
 ";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(0, actual.ActiveParameter);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -209,8 +230,10 @@ public class MyTestAttribute : Attribute
             Assert.Equal("double value2", signature.Parameters.ElementAt(1).Label);
         }
 
-        [Fact]
-        public async Task AttributeCtorActiveParamBasedOnComma()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task AttributeCtorActiveParamBasedOnComma(string filename)
         {
             const string source =
 @"using System;
@@ -228,12 +251,14 @@ public class MyTestAttribute : Attribute
     }
 }
 ";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(1, actual.ActiveParameter);
         }
 
-        [Fact]
-        public async Task AttributeCtorNoParam()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task AttributeCtorNoParam(string filename)
         {
             const string source =
 @"using System;
@@ -250,7 +275,7 @@ public class MyTestAttribute : Attribute
     {
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
             Assert.Equal(0, actual.ActiveParameter);
             Assert.Equal(0, actual.ActiveSignature);
@@ -258,8 +283,10 @@ public class MyTestAttribute : Attribute
             Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
         }
 
-        [Fact]
-        public async Task ActiveParameterIsBasedOnComma2()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveParameterIsBasedOnComma2(string filename)
         {
             // 1st position, b
             const string source =
@@ -274,12 +301,14 @@ public class MyTestAttribute : Attribute
         return 3;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(0, actual.ActiveParameter);
         }
 
-        [Fact]
-        public async Task ActiveParameterIsBasedOnComma3()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveParameterIsBasedOnComma3(string filename)
         {
             // 2nd position, a
             const string source =
@@ -294,12 +323,14 @@ public class MyTestAttribute : Attribute
         return 3;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(1, actual.ActiveParameter);
         }
 
-        [Fact]
-        public async Task ActiveParameterIsBasedOnComma4()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveParameterIsBasedOnComma4(string filename)
         {
             // 2nd position, b
             const string source =
@@ -314,12 +345,14 @@ public class MyTestAttribute : Attribute
         return 3;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(1, actual.ActiveParameter);
         }
 
-        [Fact]
-        public async Task ActiveParameterIsBasedOnComma5()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveParameterIsBasedOnComma5(string filename)
         {
             // 3rd position, a
             const string source =
@@ -334,12 +367,14 @@ public class MyTestAttribute : Attribute
         return 3;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(2, actual.ActiveParameter);
         }
 
-        [Fact]
-        public async Task ActiveSignatureIsBasedOnTypes1()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveSignatureIsBasedOnTypes1(string filename)
         {
             const string source =
 @"class Program
@@ -363,13 +398,15 @@ public class MyTestAttribute : Attribute
         return Foo(m.length, n);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Contains("foo2", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
-        [Fact]
-        public async Task ActiveSignatureIsBasedOnTypes2()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveSignatureIsBasedOnTypes2(string filename)
         {
             const string source =
 @"class Program
@@ -393,13 +430,15 @@ public class MyTestAttribute : Attribute
         return Foo(m.length, n);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Contains("foo3", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
-        [Fact]
-        public async Task ActiveSignatureIsBasedOnTypes3()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ActiveSignatureIsBasedOnTypes3(string filename)
         {
             const string source =
 @"class Program
@@ -423,13 +462,15 @@ public class MyTestAttribute : Attribute
         return Foo(m.length, n);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Contains("foo1", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
-        [Fact]
-        public async Task TestForConstructorHelp()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestForConstructorHelp(string filename)
         {
             const string source =
 @"class Program
@@ -449,12 +490,14 @@ public class MyTestAttribute : Attribute
     }
 }";
 
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(3, actual.Signatures.Count());
         }
 
-        [Fact]
-        public async Task TestForCtorWithOverloads()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestForCtorWithOverloads(string filename)
         {
             const string source =
 @"class Program
@@ -474,14 +517,16 @@ public class MyTestAttribute : Attribute
     {
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(3, actual.Signatures.Count());
             Assert.Equal(1, actual.ActiveParameter);
             Assert.Contains("ctor2", actual.Signatures.ElementAt(actual.ActiveSignature).Documentation);
         }
 
-        [Fact]
-        public async Task TestForInheritedMethods()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TestForInheritedMethods(string filename)
         {
             const string source =
 @"public class MyBase
@@ -505,12 +550,14 @@ public class Class2
     }
 
  }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(4, actual.Signatures.Count());
         }
 
-        [Fact]
-        public async Task InheritedInaccesibleMethods()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task InheritedInaccesibleMethods(string filename)
         {
             const string source =
 @"public class MyBase
@@ -533,15 +580,17 @@ public class Class2
     }
 
  }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
             Assert.Equal(3, signature.Parameters.Count());
         }
 
-        [Fact]
-        public async Task InheritedProtectedMethod()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task InheritedProtectedMethod(string filename)
         {
             const string source =
 @"class A
@@ -556,12 +605,14 @@ class B : A
        M1($$)
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(2,actual.Signatures.Count());
         }
 
-        [Fact]
-        public async Task InheritedProtectedMethodWithThis()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task InheritedProtectedMethodWithThis(string filename)
         {
             const string source =
 @"class A
@@ -576,12 +627,14 @@ class B : A
         this.M1($$)
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(2, actual.Signatures.Count());
         }
 
-        [Fact]
-        public async Task InheritedProtectedMethodWithBase()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task InheritedProtectedMethodWithBase(string filename)
         {
             const string source =
 @"class A
@@ -596,13 +649,15 @@ class B : A
         base.M1($$);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
             Assert.Empty(actual.Signatures.ElementAt(0).Parameters);
         }
 
-        [Fact]
-        public async Task StaticContextMethod1()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task StaticContextMethod1(string filename)
         {
             const string source =
 @"class A
@@ -619,7 +674,7 @@ class B : A
     }
     public void M1(string c) { }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -627,8 +682,10 @@ class B : A
             Assert.Equal("int a", signature.Parameters.ElementAt(0).Label);
         }
 
-        [Fact]
-        public async Task StaticContextMethod2()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task StaticContextMethod2(string filename)
         {
             const string source =
 @"class A
@@ -645,15 +702,17 @@ class B : A
     }
     public void M1(int a,int b,int c,int d) { }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(2, actual.Signatures.Count());
             var signatures = actual.Signatures.OrderBy(sig => sig.Parameters.Count());
             Assert.Single(signatures.ElementAt(0).Parameters);
             Assert.Equal(3,signatures.ElementAt(1).Parameters.Count());
         }
 
-        [Fact]
-        public async Task InstanceContextMethod()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task InstanceContextMethod(string filename)
         {
             const string source =
 @"class A
@@ -670,7 +729,7 @@ class B : A
     }
     static void M1(int a,int b,int c,int d) { }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(4, actual.Signatures.Count());
         }
 
@@ -696,11 +755,35 @@ class Program
         value.MyMethod($$);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp("dummy.cs", source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
             Assert.Equal("void string.MyMethod(int number)",signature.Label);
+            Assert.Single(signature.Parameters);
+            Assert.Equal("number", signature.Parameters.ElementAt(0).Name);
+        }
+
+        [Fact]
+        public async Task OverloadedExtensionMethods1_CsxScript()
+        {
+            const string source =
+@"public static void MyMethod(this string value, int number)
+{
+}
+
+public static void MyMethod(string a, int b)
+{
+}
+
+string value = ""Hello"";
+value.MyMethod($$);
+";
+            var actual = await GetSignatureHelp("dummy.csx", source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("void string.MyMethod(int number)", signature.Label);
             Assert.Single(signature.Parameters);
             Assert.Equal("number", signature.Parameters.ElementAt(0).Name);
         }
@@ -727,7 +810,7 @@ class Program
         MyMethod($$);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp("dummy.cs", source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -735,7 +818,35 @@ class Program
         }
 
         [Fact]
-        public async Task GivesHelpForLocalFunctions()
+        public async Task OverloadedExtensionMethods2_CsxScript()
+        {
+            const string source =
+@"public static void MyMethod(this string value, int number)
+{
+}
+
+class Program
+{
+    public static void MyMethod(string a, int b)
+    {
+    }
+    public static void Main()
+    {
+        string value = ""Hello"";
+        MyMethod($$);
+    }
+}";
+            var actual = await GetSignatureHelp("dummy.csx", source);
+            Assert.Single(actual.Signatures);
+
+            var signature = actual.Signatures.ElementAt(0);
+            Assert.Equal("void Program.MyMethod(string a, int b)", signature.Label);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task GivesHelpForLocalFunctions(string filename)
         {
             const string source =
 @"class Program
@@ -749,7 +860,7 @@ class Program
         }
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -758,8 +869,10 @@ class Program
             Assert.Equal("int i", signature.Parameters.ElementAt(0).Label);
         }
 
-        [Fact]
-        public async Task ReturnsDocumentationForParameters()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsDocumentationForParameters(string filename)
         {
             const string source =
 @"class Program
@@ -777,7 +890,7 @@ class Program
         return true;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -788,8 +901,10 @@ class Program
             Assert.Equal("Name of the tag.", signature.Parameters.ElementAt(1).Documentation);
         }
 
-        [Fact]
-        public async Task ReturnsDocumentationForParametersNestedTags()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsDocumentationForParametersNestedTags(string filename)
         {
             const string source =
 @"class Program
@@ -807,7 +922,7 @@ class Program
         return true;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -815,8 +930,10 @@ class Program
             Assert.Equal("Name of the tag.It has the default value as null", signature.Parameters.ElementAt(1).Documentation);
         }
 
-        [Fact]
-        public async Task ReturnsStructuredDocumentation()
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsStructuredDocumentation(string filename)
         {
             const string source =
 @"class Program
@@ -834,7 +951,7 @@ class Program
         return true;
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -865,7 +982,7 @@ public class ProgramClass
         new Program1().B($$);
     }
 }";
-            var actual = await GetSignatureHelp(source);
+            var actual = await GetSignatureHelp("dummy.cs", source);
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
@@ -873,26 +990,23 @@ public class ProgramClass
             Assert.Equal("n", signature.Parameters.ElementAt(0).Name);
             Assert.Equal("int n", signature.Parameters.ElementAt(0).Label);
         }
-      
-        private async Task<SignatureHelpResponse> GetSignatureHelp(string source)
+
+        private async Task<SignatureHelpResponse> GetSignatureHelp(string filename, string source)
         {
-            var testFile = new TestFile("dummy.cs", source);
-            using (var host = CreateOmniSharpHost(testFile))
+            var testFile = new TestFile(filename, source);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+
+            var point = testFile.Content.GetPointFromPosition();
+            var request = new SignatureHelpRequest()
             {
-                var point = testFile.Content.GetPointFromPosition();
+                FileName = testFile.FileName,
+                Line = point.Line,
+                Column = point.Offset,
+                Buffer = testFile.Content.Code
+            };
 
-                var request = new SignatureHelpRequest()
-                {
-                    FileName = testFile.FileName,
-                    Line = point.Line,
-                    Column = point.Offset,
-                    Buffer = testFile.Content.Code
-                };
-
-                var requestHandler = GetRequestHandler(host);
-
-                return await requestHandler.Handle(request);
-            }
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            return await requestHandler.Handle(request);
         }
     }
 }

@@ -73,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     var fileChanges = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges);
 
                     changes.AddRange(fileChanges);
-                    solution = applyChangesOperation.ChangedSolution;
+                    solution = this.Workspace.CurrentSolution;
                 }
 
                 if (request.WantsAllCodeActionOperations)
@@ -179,7 +179,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             }
                         }
 
-                        this.Workspace.AddDocument(projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
+                        this.Workspace.AddDocument(documentId, projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
                     }
                     else
                     {

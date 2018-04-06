@@ -1,4 +1,5 @@
 ﻿using System.Composition;
+using System.Threading.Tasks;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
@@ -14,5 +15,8 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Diagnostics
             : base(workspace)
         {
         }
+
+        public override bool IsValid(CodeCheckRequest request) =>
+            !string.IsNullOrEmpty(request.FileName);
     }
 }

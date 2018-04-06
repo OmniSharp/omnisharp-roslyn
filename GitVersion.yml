@@ -3,3 +3,4 @@ mode: ContinuousDeployment
 branches: {}
 ignore:
   sha: []
+continuous-delivery-fallback-tag: beta
