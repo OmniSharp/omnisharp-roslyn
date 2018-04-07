@@ -3,9 +3,16 @@
 
 using System.IO.Compression;
 
-string GetPackagePrefix(string project)
+private string GetDiscriminator(string name)
 {
-    return project.EndsWith(".Stdio") ? string.Empty : project.Substring(project.IndexOf('.')).ToLower();
+    if (name.EndsWith(".Driver"))
+    {
+        name = name.Substring(0, name.LastIndexOf('.'));
+    }
+
+    return name.EndsWith(".Stdio")
+        ? string.Empty
+        : name.Substring(name.LastIndexOf('.')).ToLower();
 }
 
 /// <summary>
@@ -15,16 +22,18 @@ string GetPackagePrefix(string project)
 /// <param name="contentFolder">The folder containing the files to package</param>
 /// <param name="packageFolder">The destination folder for the archive</param>
 /// <param name="cdFolder">The folder to drop packages into that get continously deployed to blob storage</param>
-void Package(string name, string platform, string contentFolder, string packageFolder, string cdFolder)
+void Package(string projectName, string platform, string contentFolder, string packageFolder, string cdFolder)
 {
     if (!DirectoryHelper.Exists(packageFolder))
     {
         DirectoryHelper.Create(packageFolder);
     }
+
     if (!DirectoryHelper.Exists(cdFolder))
     {
         DirectoryHelper.Create(cdFolder);
     }
+
     var deployFolder = $"{cdFolder}/{env.VersionInfo.SemVer}";
     if (!DirectoryHelper.Exists(deployFolder))
     {
@@ -42,7 +51,9 @@ void Package(string name, string platform, string contentFolder, string packageF
         }
     }
 
-    var packageName = $"omnisharp{name}-{platformId}";
+    var disciminator = GetDiscriminator(projectName);
+
+    var packageName = $"omnisharp{disciminator}-{platformId}";
     var archiveName = $"{packageFolder}/{packageName}";
     var deployName = $"{deployFolder}/{packageName}";
 

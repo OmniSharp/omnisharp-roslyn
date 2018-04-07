@@ -9,4 +9,5 @@ if [ "$TRAVIS_OS_NAME" == "osx" ] || [ `uname` == "Darwin" ]; then
 else
   export OMNISHARP_PACKAGE_OSNAME=linux-x64
 fi
+
 bash ./scripts/cake-bootstrap.sh "$@"

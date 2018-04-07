@@ -8,9 +8,9 @@ using OmniSharp.LanguageServerProtocol;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
 
-namespace OmniSharp.Stdio
+namespace OmniSharp.Stdio.Driver
 {
-    class Program
+    internal class Program
     {
         static int Main(string[] args) => HostHelpers.Start(() =>
         {

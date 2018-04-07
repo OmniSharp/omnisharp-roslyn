@@ -32,7 +32,9 @@ namespace OmniSharp.DotNetTest.Tests
 
         protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework)
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
+            var isLegacy = DotNetCliVersion == DotNetCliVersion.Legacy;
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName, legacyProject: isLegacy))
             using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion))
             {
                 var service = GetRequestHandler(host);

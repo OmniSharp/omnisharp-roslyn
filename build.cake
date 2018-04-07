@@ -10,8 +10,7 @@ using System.Net;
 
 // Arguments
 var target = Argument("target", "Default");
-var configuration = Argument("configuration", "Release");
-var testConfiguration = Argument("test-configuration", "Debug");
+var configuration = Argument("configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
@@ -388,24 +387,6 @@ Task("CreateMSBuildFolder")
 });
 
 /// <summary>
-///  Restore required NuGet packages.
-/// </summary>
-Task("Restore")
-    .IsDependentOn("Setup")
-    .Does(() =>
-{
-    // Restore the projects in OmniSharp.sln
-    Information("Restoring packages in OmniSharp.sln...");
-
-    DotNetCoreRestore("OmniSharp.sln", new DotNetCoreRestoreSettings()
-    {
-        ToolPath = env.DotNetCommand,
-        WorkingDirectory = env.WorkingDirectory,
-        Verbosity = DotNetCoreVerbosity.Minimal,
-    });
-});
-
-/// <summary>
 ///  Prepare test assets.
 /// </summary>
 Task("PrepareTestAssets")
@@ -486,7 +467,7 @@ Task("PrepareTestAssets:LegacyTestAssets")
 
         Information("Restoring and building project.json: {0}...", project);
 
-        var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
+        var folder = CombinePaths(env.Folders.TestAssets, "legacy-test-projects", project);
 
         DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
@@ -520,126 +501,108 @@ Task("PrepareTestAssets:CakeTestAssets")
         });
     });
 
-void BuildProject(BuildEnvironment env, string projectName, string projectFilePath, string configuration, string outputType = null)
+void BuildWithDotNetCli(BuildEnvironment env, string configuration)
+{
+    Information("Building OmniSharp.sln with .NET Core CLI...");
+
+    var logFileNameBase = CombinePaths(env.Folders.ArtifactsLogs, "OmniSharp-build");
+    var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic
+        ? MSBuildBinaryLogImports.Embed
+        : MSBuildBinaryLogImports.None;
+
+    var settings = new DotNetCoreMSBuildSettings
+    {
+        WorkingDirectory = env.WorkingDirectory,
+
+        ArgumentCustomization = args =>
+            args.Append("/restore")
+                .Append($"/bl:{logFileNameBase}.binlog;ProjectImports={projectImports}")
+                .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}")
+    };
+
+    settings.AddFileLogger(
+        new MSBuildFileLoggerSettings {
+            AppendToLogFile = false,
+            LogFile = logFileNameBase + ".log",
+            ShowTimestamp = true,
+
+            // Bug in cake with this
+            // Verbosity = Verbosity.Diagnostic,
+        }
+    );
+
+    settings
+        .SetConfiguration(configuration)
+        .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+        .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+        .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+        .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
+
+    DotNetCoreMSBuild("OmniSharp.sln", settings);
+}
+
+void BuildWithMSBuild(BuildEnvironment env, string configuration)
+{
+    Information("Building OmniSharp.sln with MSBuild...");
+
+    var logFileNameBase = CombinePaths(env.Folders.ArtifactsLogs, "OmniSharp-build");
+    var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic
+        ? MSBuildBinaryLogImports.Embed
+        : MSBuildBinaryLogImports.None;
+
+    MSBuild("OmniSharp.sln", settings =>
+    {
+        settings.WorkingDirectory = env.WorkingDirectory;
+
+        settings.ArgumentCustomization = args =>
+            args.Append("/restore");
+
+        settings.AddFileLogger(
+            new MSBuildFileLogger {
+                AppendToLogFile = false,
+                LogFile = logFileNameBase + ".log",
+                ShowTimestamp = true,
+                Verbosity = Verbosity.Diagnostic,
+                PerformanceSummaryEnabled = true,
+                SummaryDisabled = false
+            }
+        );
+
+        settings.BinaryLogger = new MSBuildBinaryLogSettings {
+            Enabled = true,
+            FileName = logFileNameBase + ".binlog",
+            Imports = projectImports
+        };
+
+        settings
+            .SetConfiguration(configuration)
+            .SetVerbosity(Verbosity.Minimal)
+            .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+            .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+            .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+            .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
+    });
+}
+
+Task("Build")
+    .IsDependentOn("Setup")
+    .Does(() =>
 {
     try
     {
-        var logFileName = CombinePaths(env.Folders.ArtifactsLogs, $"{projectName}-build");
-
-        Information("Building {0}...", projectName);
-        // On Windows, we build exclusively with the .NET CLI.
-        // On OSX/Linux, we build with the MSBuild installed with Mono.
         if (Platform.Current.IsWindows)
         {
-            var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic ? "Embed" : "None";
-            var settings = new DotNetCoreMSBuildSettings()
-                {
-                    WorkingDirectory = env.WorkingDirectory,
-                    ArgumentCustomization = a => a
-                        .Append($"/bl:{logFileName}.binlog;ProjectImports={projectImports}")
-                        .Append($"/v:{Verbosity.Minimal.GetMSBuildVerbosityName()}"),
-                    // Bug in cake with this command
-                    // Verbosity = DotNetCoreVerbosity.Minimal,
-                }
-                .SetConfiguration(configuration)
-                .AddFileLogger(
-                    new MSBuildFileLoggerSettings {
-                        AppendToLogFile = false,
-                        LogFile = logFileName + ".log",
-                        ShowTimestamp = true,
-                        //Verbosity = DotNetCoreVerbosity.Diagnostic,
-                    }
-                )
-                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
-                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
-                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
-                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
-            if (!string.IsNullOrWhiteSpace(outputType))
-                settings.WithProperty("TestOutputType", outputType);
-
-            DotNetCoreMSBuild(
-                projectFilePath,
-                settings
-            );
+            BuildWithDotNetCli(env, configuration);
         }
         else
         {
-            MSBuild(
-                projectFilePath,
-                c =>
-                {
-                    c.Verbosity = Verbosity.Minimal;
-                    c.Configuration = configuration;
-                    c.WorkingDirectory = env.WorkingDirectory;
-                    c.AddFileLogger(
-                        new MSBuildFileLogger {
-                            AppendToLogFile = false,
-                            LogFile = logFileName + ".log",
-                            ShowTimestamp = true,
-                            Verbosity = Verbosity.Diagnostic,
-                            PerformanceSummaryEnabled = true,
-                            SummaryDisabled = false,
-                        }
-                    );
-                    c.BinaryLogger = new MSBuildBinaryLogSettings {
-                        Enabled = true,
-                        FileName = logFileName + ".binlog",
-                        Imports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic ? MSBuildBinaryLogImports.Embed : MSBuildBinaryLogImports.None,
-                    };
-                    c
-                        .WithProperty("TestOutputType", outputType)
-                        .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
-                        .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
-                        .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
-                        .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion)
-                    ;
-
-                }
-            );
+            BuildWithMSBuild(env, configuration);
         }
     }
     catch
     {
-        Error($"Building {projectName} failed.");
+        Error($"Build failed.");
         throw;
-    }
-}
-
-Task("BuildHosts")
-    .IsDependentOn("Setup")
-    .IsDependentOn("Restore")
-    .Does(() =>
-{
-    foreach (var project in buildPlan.HostProjects)
-    {
-        var projectName = project + ".csproj";
-        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
-
-        BuildProject(env, projectName, projectFilePath, configuration);
-    }
-});
-
-/// <summary>
-///  Build Test projects.
-/// </summary>
-Task("BuildTest")
-    .IsDependentOn("Setup")
-    .IsDependentOn("Restore")
-    .Does(() =>
-{
-    foreach (var project in buildPlan.HostProjects)
-    {
-        var projectName = project + ".csproj";
-        var projectFilePath = CombinePaths(env.Folders.Source, project, projectName);
-        BuildProject(env, projectName, projectFilePath, configuration, "test");
-    }
-
-    foreach (var testProject in buildPlan.TestProjects)
-    {
-        var testProjectName = testProject + ".csproj";
-        var testProjectFilePath = CombinePaths(env.Folders.Tests, testProject, testProjectName);
-
-        BuildProject(env, testProjectName, testProjectFilePath, testConfiguration);
     }
 });
 
@@ -648,7 +611,7 @@ Task("BuildTest")
 /// </summary>
 Task("Test")
     .IsDependentOn("Setup")
-    .IsDependentOn("BuildTest")
+    .IsDependentOn("Build")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
@@ -663,7 +626,7 @@ Task("Test")
         {
             PrintBlankLine();
 
-            var instanceFolder = CombinePaths(env.Folders.Bin, testConfiguration, testProject, "net46");
+            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net46");
 
             // Copy xunit executable to test folder to solve path errors
             var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
@@ -742,7 +705,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyMonoBuild(env, buildFolder, outputFolder);
 
-    Package(GetPackagePrefix(project), "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
+    Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -765,7 +728,7 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     CopyMonoBuild(env, sourceFolder, omnisharpFolder);
 
-    Package(GetPackagePrefix(project), monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
+    Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -795,25 +758,6 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 {
     var projectName = project + ".csproj";
     var projectFileName = CombinePaths(env.Folders.Source, project, projectName);
-
-    Information("Restoring packages in {0} for {1}...", projectName, rid);
-
-    try
-    {
-        DotNetCoreRestore(projectFileName, new DotNetCoreRestoreSettings()
-        {
-            Runtime = rid,
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = env.WorkingDirectory,
-            Verbosity = DotNetCoreVerbosity.Minimal,
-        });
-    }
-    catch
-    {
-        Error($"Failed to restore {projectName} for {rid}.");
-        throw;
-    }
-
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, rid);
 
     Information("Publishing {0} for {1}...", projectName, rid);
@@ -844,7 +788,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     // Copy MSBuild to output
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
 
-    Package(GetPackagePrefix(project), rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
+    Package(project, rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }
@@ -881,7 +825,7 @@ Task("PublishWindowsBuilds")
 });
 
 Task("Publish")
-    .IsDependentOn("BuildHosts")
+    .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
     .IsDependentOn("PublishWindowsBuilds");
 
@@ -892,17 +836,20 @@ Task("ExecuteRunScript")
     .WithCriteria(() => !(Platform.Current.IsMacOS && TravisCI.IsRunningOnTravisCI))
     .Does(() =>
 {
+    // TODO: Pass configuration into run script to ensure that MSBuild output paths are handled correctly.
+    // Otherwise, we get "could not resolve output path" messages when building for release.
+
     foreach (var project in buildPlan.HostProjects)
     {
         var projectFolder = CombinePaths(env.Folders.Source, project);
-        var script = project;
-        var scriptPath = CombinePaths(env.Folders.ArtifactsScripts, script);
+
+        var scriptPath = GetScriptPath(env.Folders.ArtifactsScripts, project);
         var didNotExitWithError = Run(env.ShellCommand, $"{env.ShellArgument}  \"{scriptPath}\" -s \"{projectFolder}\"",
                                     new RunOptions(waitForIdle: true))
                                 .WasIdle;
         if (!didNotExitWithError)
         {
-            throw new Exception($"Failed to run {script}");
+            throw new Exception($"Failed to run {scriptPath}");
         }
     }
 });
@@ -962,7 +909,7 @@ Task("Install")
 /// </summary>
 Task("All")
     .IsDependentOn("Cleanup")
-    .IsDependentOn("Restore")
+    .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Publish")
     .IsDependentOn("ExecuteRunScript");

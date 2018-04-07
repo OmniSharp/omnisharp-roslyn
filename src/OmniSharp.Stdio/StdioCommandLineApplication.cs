@@ -3,7 +3,7 @@ using OmniSharp.Internal;
 
 namespace OmniSharp.Stdio
 {
-    class StdioCommandLineApplication : CommandLineApplication
+    internal class StdioCommandLineApplication : CommandLineApplication
     {
         private readonly CommandOption _stdio;
         private readonly CommandOption _lsp;

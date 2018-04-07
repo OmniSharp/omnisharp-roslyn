@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net46</TargetFramework>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <AssemblyName>OmniSharp</AssemblyName>
+        <OutputType>Exe</OutputType>
+        <PreserveCompilationContext>true</PreserveCompilationContext>
+        <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\OmniSharp.Stdio\OmniSharp.Stdio.csproj" />
+    </ItemGroup>
+
+</Project>

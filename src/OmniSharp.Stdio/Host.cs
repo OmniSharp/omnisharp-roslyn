@@ -22,7 +22,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Stdio
 {
-    class Host : IDisposable
+    internal class Host : IDisposable
     {
         private readonly IConfiguration _configuration;
         private readonly TextReader _input;
