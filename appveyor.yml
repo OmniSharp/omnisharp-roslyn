@@ -9,8 +9,6 @@ build_script:
   - ps: .\build.ps1 -configuration Release -target All -publish-all -archive
 after_build:
   - ps: Get-ChildItem ./artifacts/package/*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-cache:
-  - tools -> tools/packages.config
 deploy:
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)

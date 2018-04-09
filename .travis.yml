@@ -12,13 +12,6 @@ os:
 - linux
 - osx
 osx_image: xcode9.2
-cache:
-  directories:
-  - tools
-  - ".dotnet-legacy"
-  - "$HOME/.nuget/packages"
-before_cache:
-- rm -f tools/packages.config
 script:
 - git fetch --unshallow
 - git fetch origin '+refs/heads/*:refs/heads/*'
