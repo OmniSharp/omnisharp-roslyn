@@ -10,7 +10,7 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
 {
-    class Host
+    internal class Host
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly ISharedTextWriter _sharedTextWriter;

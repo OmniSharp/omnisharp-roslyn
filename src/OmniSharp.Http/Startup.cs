@@ -5,16 +5,14 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.Http.Middleware;
-using OmniSharp.Options;
 using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
 {
-    class Startup
+    internal class Startup
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly IEventEmitter _eventEmitter;

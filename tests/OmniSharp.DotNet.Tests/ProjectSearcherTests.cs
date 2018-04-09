@@ -44,7 +44,7 @@ namespace OmniSharp.DotNet.Tests
         [InlineData("ProjectSearchSample04", "ProjectSearchSample04")]
         public async Task SingleResultExpect(string testSampleName, string projectName)
         {
-            using (var testProject = await _testAssets.GetTestProjectAsync(testSampleName))
+            using (var testProject = await _testAssets.GetTestProjectAsync(testSampleName, legacyProject: true))
             {
                 var projectFilePath = ProjectSearcher.Search(testProject.Directory).Single();
                 Assert.Equal(projectName, GetLocation(testProject.BaseDirectory, projectFilePath));
@@ -54,7 +54,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public async Task NoneProjectJson()
         {
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample02"))
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample02", legacyProject: true))
             {
                 var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
                 Assert.Empty(projectFilePaths);
@@ -64,7 +64,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public async Task RecursivelySearch()
         {
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample05"))
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample05", legacyProject: true))
             {
                 var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
                 var locations = projectFilePaths.Select(p => GetLocation(testProject.BaseDirectory, p));
@@ -84,7 +84,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public async Task GlobalJsonExpand()
         {
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample06"))
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample06", legacyProject: true))
             {
                 var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
                 var locations = projectFilePaths.Select(p => GetLocation(testProject.BaseDirectory, p));
@@ -102,7 +102,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public async Task GlobalJsonFindNothing()
         {
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample07"))
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample07", legacyProject: true))
             {
                 var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
                 Assert.Empty(projectFilePaths);
@@ -112,7 +112,7 @@ namespace OmniSharp.DotNet.Tests
         [Fact]
         public async Task GlobalJsonTopLevelFolders()
         {
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample08"))
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectSearchSample08", legacyProject: true))
             {
                 var projectFilePaths = ProjectSearcher.Search(testProject.Directory);
                 var locations = projectFilePaths.Select(p => GetLocation(testProject.BaseDirectory, p));

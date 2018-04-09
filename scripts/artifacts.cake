@@ -31,8 +31,13 @@ private void CreateScript(string outputRoot, string scriptFolder, string name)
     }
 }
 
-private string GetScriptPath(string scriptFolder, string name)
+public string GetScriptPath(string scriptFolder, string name)
 {
+    // Tweak the script name by shaving off the "Driver" portion
+    name = name.EndsWith(".Driver")
+        ? name = name.Substring(0, name.Length - ".Driver".Length)
+        : name;
+
     var result = CombinePaths(scriptFolder, name);
 
     if (Platform.Current.IsWindows)

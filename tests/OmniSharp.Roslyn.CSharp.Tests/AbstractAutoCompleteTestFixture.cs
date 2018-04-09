@@ -9,8 +9,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class AbstractAutoCompleteTestFixture : AbstractSingleRequestHandlerTestFixture<IntellisenseService>
     {
-        protected AbstractAutoCompleteTestFixture(ITestOutputHelper output)
-            : base(output)
+        protected AbstractAutoCompleteTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -19,27 +19,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected async Task<IEnumerable<AutoCompleteResponse>> FindCompletionsAsync(string filename, string source, bool wantSnippet = false, string triggerChar = null)
         {
             var testFile = new TestFile(filename, source);
-            using (var host = CreateOmniSharpHost(testFile))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var point = testFile.Content.GetPointFromPosition();
+
+            var request = new AutoCompleteRequest
             {
-                var point = testFile.Content.GetPointFromPosition();
+                Line = point.Line,
+                Column = point.Offset,
+                FileName = testFile.FileName,
+                Buffer = testFile.Content.Code,
+                WordToComplete = GetPartialWord(testFile.Content),
+                WantMethodHeader = true,
+                WantSnippet = wantSnippet,
+                WantReturnType = true,
+                TriggerCharacter = triggerChar
+            };
 
-                var request = new AutoCompleteRequest
-                {
-                    Line = point.Line,
-                    Column = point.Offset,
-                    FileName = testFile.FileName,
-                    Buffer = testFile.Content.Code,
-                    WordToComplete = GetPartialWord(testFile.Content),
-                    WantMethodHeader = true,
-                    WantSnippet = wantSnippet,
-                    WantReturnType = true,
-                    TriggerCharacter = triggerChar
-                };
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
-                var requestHandler = GetRequestHandler(host);
-
-                return await requestHandler.Handle(request);
-            }
+            return await requestHandler.Handle(request);
         }
 
         private static string GetPartialWord(TestContent testConnect)

@@ -11,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class DiagnosticsFacts : AbstractSingleRequestHandlerTestFixture<CodeCheckService>
     {
-        public DiagnosticsFacts(ITestOutputHelper output)
-            : base(output)
+        public DiagnosticsFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -21,29 +21,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CodeCheckSpecifiedFileOnly()
         {
-            using (var host = CreateOmniSharpHost(
-                new TestFile("a.cs", "class C { int n = true; }")))
-            {
-                var requestHandler = GetRequestHandler(host);
-                var quickFixes = await requestHandler.Handle(new CodeCheckRequest() { FileName = "a.cs" });
+            SharedOmniSharpTestHost.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var quickFixes = await requestHandler.Handle(new CodeCheckRequest() { FileName = "a.cs" });
 
-                Assert.Single(quickFixes.QuickFixes);
-                Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
-            }
+            Assert.Single(quickFixes.QuickFixes);
+            Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
         }
 
         [Fact]
         public async Task CheckAllFiles()
         {
-            using (var host = CreateOmniSharpHost(
+            SharedOmniSharpTestHost.AddFilesToWorkspace(
                 new TestFile("a.cs", "class C1 { int n = true; }"),
-                new TestFile("b.cs", "class C2 { int n = true; }")))
-            {
-                var handler = GetRequestHandler(host);
-                var quickFixes = await handler.Handle(new CodeCheckRequest());
+                new TestFile("b.cs", "class C2 { int n = true; }"));
 
-                Assert.Equal(2, quickFixes.QuickFixes.Count());
-            }
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+            var quickFixes = await handler.Handle(new CodeCheckRequest());
+
+            Assert.Equal(2, quickFixes.QuickFixes.Count());
         }
     }
 }

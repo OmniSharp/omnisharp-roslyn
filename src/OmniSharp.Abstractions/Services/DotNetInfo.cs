@@ -59,27 +59,27 @@ namespace OmniSharp.Services
                     var name = line.Substring(0, colonIndex).Trim();
                     var value = line.Substring(colonIndex + 1).Trim();
 
-                    if (name.Equals("Version", StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(version) && name.Equals("Version", StringComparison.OrdinalIgnoreCase))
                     {
                         version = value;
                     }
-                    else if (name.Equals("OS Name", StringComparison.OrdinalIgnoreCase))
+                    else if (string.IsNullOrEmpty(osName) && name.Equals("OS Name", StringComparison.OrdinalIgnoreCase))
                     {
                         osName = value;
                     }
-                    else if (name.Equals("OS Version", StringComparison.OrdinalIgnoreCase))
+                    else if (string.IsNullOrEmpty(osVersion) && name.Equals("OS Version", StringComparison.OrdinalIgnoreCase))
                     {
                         osVersion = value;
                     }
-                    else if (name.Equals("OS Platform", StringComparison.OrdinalIgnoreCase))
+                    else if (string.IsNullOrEmpty(osPlatform) && name.Equals("OS Platform", StringComparison.OrdinalIgnoreCase))
                     {
                         osPlatform = value;
                     }
-                    else if (name.Equals("RID", StringComparison.OrdinalIgnoreCase))
+                    else if (string.IsNullOrEmpty(rid) && name.Equals("RID", StringComparison.OrdinalIgnoreCase))
                     {
                         rid = value;
                     }
-                    else if (name.Equals("Base Path", StringComparison.OrdinalIgnoreCase))
+                    else if (string.IsNullOrEmpty(basePath) && name.Equals("Base Path", StringComparison.OrdinalIgnoreCase))
                     {
                         basePath = value;
                     }

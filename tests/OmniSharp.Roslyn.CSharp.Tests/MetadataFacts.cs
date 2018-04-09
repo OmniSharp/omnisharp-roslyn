@@ -9,8 +9,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class MetadataFacts : AbstractSingleRequestHandlerTestFixture<MetadataService>
     {
-        public MetadataFacts(ITestOutputHelper output)
-            : base(output)
+        public MetadataFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -52,22 +52,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private async Task TestMetadataAsync(string filename, string assemblyName, string typeName)
         {
             var testFile = new TestFile(filename, "class C {}");
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
 
-            using (var host = CreateOmniSharpHost(testFile))
+            var request = new MetadataRequest
             {
-                var requestHandler = GetRequestHandler(host);
+                AssemblyName = assemblyName,
+                TypeName = typeName,
+                Timeout = 60000
+            };
 
-                var request = new MetadataRequest
-                {
-                    AssemblyName = assemblyName,
-                    TypeName = typeName,
-                    Timeout = 60000
-                };
+            var response = await requestHandler.Handle(request);
 
-                var response = await requestHandler.Handle(request);
-
-                Assert.NotNull(response.Source);
-            }
+            Assert.NotNull(response.Source);
         }
     }
 }

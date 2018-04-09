@@ -30,19 +30,29 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            // To better support older versions of Mono that don't include
-            // MSBuild 15, we attempt to set property overrides to the locations
-            // of Mono's 'xbuild' and 'xbuild-frameworks' paths.
-            if (_allowMonoPaths && PlatformHelper.IsMono)
+            if (PlatformHelper.IsMono)
             {
-                if (TryGetMonoXBuildPath(out var xbuildPath))
-                {
-                    extensionsPath = xbuildPath;
-                }
+                // This disables a hack in the "GetReferenceAssemblyPaths" task which attempts
+                // guarantee that .NET Framework SP1 is installed when the target framework is
+                // .NET Framework, but the version is less than 4.0. The hack attempts to locate
+                // a particular assembly in the GAC as a "guarantee". However, we don't include that
+                // in our Mono package. So, we'll just bypass the check.
+                propertyOverrides.Add("BypassFrameworkInstallChecks", "true");
 
-                if (TryGetMonoXBuildFrameworksPath(out var xbuildFrameworksPath))
+                // To better support older versions of Mono that don't include
+                // MSBuild 15, we attempt to set property overrides to the locations
+                // of Mono's 'xbuild' and 'xbuild-frameworks' paths.
+                if (_allowMonoPaths)
                 {
-                    propertyOverrides.Add("TargetFrameworkRootPath", xbuildFrameworksPath);
+                    if (TryGetMonoXBuildPath(out var xbuildPath))
+                    {
+                        extensionsPath = xbuildPath;
+                    }
+
+                    if (TryGetMonoXBuildFrameworksPath(out var xbuildFrameworksPath))
+                    {
+                        propertyOverrides.Add("TargetFrameworkRootPath", xbuildFrameworksPath);
+                    }
                 }
             }
 
