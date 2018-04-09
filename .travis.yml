@@ -40,6 +40,7 @@ addons:
 install:
 - |
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+    # On Linux, we build libuv from source
     sudo apt-get install make automake libtool
     curl -sSL https://github.com/libuv/libuv/archive/v1.14.0.tar.gz | sudo tar zxf - -C /usr/local/src
     pushd /usr/local/src/libuv-1.14.0
@@ -51,14 +52,7 @@ install:
     sudo rm -rf /usr/local/src/libuv-1.14.0
     sudo ldconfig
   elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    brew update
-
-    # Need to install openssl for .NET Core SDK 1.0 (legacy tests)
-    brew install openssl
-    mkdir -p /usr/local/lib
-    ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
-    ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
-
+    # On OSX, we install libuv via Homebrew
     brew install libuv
   fi
 - export PATH="$PWD/.dotnet:$PATH"
