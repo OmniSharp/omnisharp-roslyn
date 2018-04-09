@@ -2,6 +2,8 @@
 init:
   - git config --global core.autocrlf true
 image: Visual Studio 2017
+environment:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
   - ps: .\build.ps1 -configuration Release -target All -publish-all -archive
