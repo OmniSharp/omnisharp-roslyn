@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Models.AutoComplete;
-using OmniSharp.Roslyn.CSharp.Services.Intellisense;
+using OmniSharp.Roslyn.CSharp.Services.IntelliSense;
 using TestUtility;
 using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class AbstractAutoCompleteTestFixture : AbstractSingleRequestHandlerTestFixture<IntellisenseService>
+    public class AbstractAutoCompleteTestFixture : AbstractSingleRequestHandlerTestFixture<AutoCompleteService>
     {
         protected AbstractAutoCompleteTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
             : base(output, sharedOmniSharpHostFixture)

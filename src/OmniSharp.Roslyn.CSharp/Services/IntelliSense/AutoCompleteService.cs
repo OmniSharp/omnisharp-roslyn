@@ -13,16 +13,16 @@ using OmniSharp.Models.AutoComplete;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Documentation;
 
-namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
+namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense
 {
     [OmniSharpHandler(OmniSharpEndpoints.AutoComplete, LanguageNames.CSharp)]
-    public class IntellisenseService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
+    public class AutoCompleteService : IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly FormattingOptions _formattingOptions;
 
         [ImportingConstructor]
-        public IntellisenseService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
+        public AutoCompleteService(OmniSharpWorkspace workspace, FormattingOptions formattingOptions)
         {
             _workspace = workspace;
             _formattingOptions = formattingOptions;

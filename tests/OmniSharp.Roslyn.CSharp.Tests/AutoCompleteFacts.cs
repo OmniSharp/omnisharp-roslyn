@@ -10,14 +10,14 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class IntellisenseFacts : AbstractAutoCompleteTestFixture
+    public class AutoCompleteFacts : AbstractAutoCompleteTestFixture
     {
         private readonly ILogger _logger;
 
-        public IntellisenseFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+        public AutoCompleteFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
             : base(output, sharedOmniSharpHostFixture)
         {
-            this._logger = this.LoggerFactory.CreateLogger<IntellisenseFacts>();
+            this._logger = this.LoggerFactory.CreateLogger<AutoCompleteFacts>();
         }
 
         [Theory]

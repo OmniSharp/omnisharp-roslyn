@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using OmniSharp.Utilities;
 
-namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
+namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense
 {
     internal static class CompletionItemExtensions
     {
