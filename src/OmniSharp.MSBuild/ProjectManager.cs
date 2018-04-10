@@ -9,6 +9,7 @@ using System.Threading.Tasks.Dataflow;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.UpdateBuffer;
@@ -235,6 +236,8 @@ namespace OmniSharp.MSBuild
         private void AddProject(ProjectFileInfo projectFileInfo)
         {
             _logger.LogInformation($"Adding project '{projectFileInfo.FilePath}'");
+
+            _logger.LogDebug(JObject.FromObject(projectFileInfo).ToString());
 
             _projectFiles.Add(projectFileInfo);
 
