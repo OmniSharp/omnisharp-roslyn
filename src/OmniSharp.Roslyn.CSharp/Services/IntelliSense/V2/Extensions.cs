@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.IntelliSense.V2
             switch (trigger.Kind)
             {
                 case Models.CompletionTriggerKind.Invoke:
-                    return CompletionTrigger.Default;
+                    return CompletionTrigger.Invoke;
                 case Models.CompletionTriggerKind.Insertion:
                     return CompletionTrigger.CreateInsertionTrigger(trigger.Character[0]);
                 case Models.CompletionTriggerKind.Deletion:
