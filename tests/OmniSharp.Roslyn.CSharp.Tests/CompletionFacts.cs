@@ -290,9 +290,8 @@ class C
             // namespace aliases, such as: 'using S = System;'
 
             var item = items.Single(i => i.DisplayText == "System");
-            Assert.Equal(1, item.CommitCharacterRules.Length);
+            var rule = Assert.Single(item.CommitCharacterRules);
 
-            var rule = item.CommitCharacterRules[0];
             Assert.Equal(CharacterSetModificationRuleKind.Replace, rule.Kind);
             Assert.Equal(2, rule.Characters.Length);
             Assert.Contains('.', rule.Characters);
