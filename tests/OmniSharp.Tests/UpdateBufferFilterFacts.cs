@@ -70,7 +70,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [Fact(Skip = "Fails on line 95 because there are 3 documents, not 2, named 'transient.cs'")]
+        [Fact]
         public async Task UpdateBuffer_TransientDocumentsDisappearWhenProjectAddsThem()
         {
             var testFile = new TestFile("test.cs", "class C {}");
@@ -89,7 +89,6 @@ namespace OmniSharp.Tests
                     filePath: "transient.cs");
 
                 var newSolution = host.Workspace.CurrentSolution.AddDocument(document);
-                host.Workspace.TryApplyChanges(newSolution);
 
                 docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
                 Assert.Equal(2, docIds.Length);

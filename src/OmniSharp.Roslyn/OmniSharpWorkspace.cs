@@ -194,7 +194,7 @@ namespace OmniSharp
         protected override void ApplyDocumentAdded(DocumentInfo info, SourceText text)
         {
             var project = this.CurrentSolution.GetProject(info.Id.ProjectId);
-            var fullPath = info.FilePath;
+            var fullPath = Path.GetFullPath(info.FilePath);
 
             this.OnDocumentAdded(info);
 
