@@ -3,6 +3,7 @@
     internal static class PropertyNames
     {
         public const string AllowUnsafeBlocks = nameof(AllowUnsafeBlocks);
+        public const string AlwaysCompileMarkupFilesInSeparateDomain = nameof(AlwaysCompileMarkupFilesInSeparateDomain);
         public const string AssemblyName = nameof(AssemblyName);
         public const string AssemblyOriginatorKeyFile = nameof(AssemblyOriginatorKeyFile);
         public const string BuildProjectReferences = nameof(BuildProjectReferences);
