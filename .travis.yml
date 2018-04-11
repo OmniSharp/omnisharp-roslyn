@@ -18,7 +18,7 @@ script:
 - git fetch origin '+refs/heads/*:refs/heads/*'
 - git branch -r
 - chmod 755 ./build.sh
-- "./build.sh --configuration Release --target All --publish-all --archive"
+- "./build.sh --configuration Release --verbosity Verbose --target All --publish-all --archive"
 addons:
   apt:
     packages:
