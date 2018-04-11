@@ -43,6 +43,20 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<PackageReference> PackageReferences { get; }
             public ImmutableArray<string> Analyzers { get; }
 
+            private ProjectData()
+            {
+                // Be sure to initialize all collection properties with ImmutableArray<T>.Empty.
+                // Otherwise, Json.net won't be able to serialize the values.
+                TargetFrameworks = ImmutableArray<string>.Empty;
+                PreprocessorSymbolNames = ImmutableArray<string>.Empty;
+                SuppressedDiagnosticIds = ImmutableArray<string>.Empty;
+                SourceFiles = ImmutableArray<string>.Empty;
+                ProjectReferences = ImmutableArray<string>.Empty;
+                References = ImmutableArray<string>.Empty;
+                PackageReferences = ImmutableArray<PackageReference>.Empty;
+                Analyzers = ImmutableArray<string>.Empty;
+            }
+
             private ProjectData(
                 Guid guid, string name,
                 string assemblyName, string targetPath, string outputPath, string projectAssetsFile,
@@ -56,6 +70,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> suppressedDiagnosticIds,
                 bool signAssembly,
                 string assemblyOriginatorKeyFile)
+                : this()
             {
                 Guid = guid;
                 Name = name;
@@ -77,12 +92,6 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
-
-                SourceFiles = ImmutableArray<string>.Empty;
-                ProjectReferences = ImmutableArray<string>.Empty;
-                References = ImmutableArray<string>.Empty;
-                PackageReferences = ImmutableArray<PackageReference>.Empty;
-                Analyzers = ImmutableArray<string>.Empty;
             }
 
             private ProjectData(
