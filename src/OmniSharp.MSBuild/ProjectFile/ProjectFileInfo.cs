@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -34,8 +33,8 @@ namespace OmniSharp.MSBuild.ProjectFile
         public LanguageVersion LanguageVersion => _data.LanguageVersion;
         public bool AllowUnsafeCode => _data.AllowUnsafeCode;
         public string DocumentationFile => _data.DocumentationFile;
-        public IList<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
-        public IList<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
+        public ImmutableArray<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
+        public ImmutableArray<string> SuppressedDiagnosticIds => _data.SuppressedDiagnosticIds;
 
         public bool SignAssembly => _data.SignAssembly;
         public string AssemblyOriginatorKeyFile => _data.AssemblyOriginatorKeyFile;

@@ -281,7 +281,7 @@ public class BuildPlan
     public string[] LegacyTestAssets { get; set; }
     public string[] CakeTestAssets { get; set; }
     public string[] WindowsOnlyTestAssets { get; set; }
-    public string[] TestAssetsWithErrors { get; set; }
+    public string[] RestoreOnlyTestAssets { get; set; }
 
     public static BuildPlan Load(BuildEnvironment env)
     {

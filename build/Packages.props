@@ -49,8 +49,8 @@
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemThreadingTasksDataflowVersion>4.6.0</SystemThreadingTasksDataflowVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
-    <XunitRunnerVisualStudioVersion>2.3.0-rc1-build3809</XunitRunnerVisualStudioVersion>
-    <XunitVersion>2.3.0-rc1-build3809</XunitVersion>
+    <XunitRunnerVisualStudioVersion>2.3.1</XunitRunnerVisualStudioVersion>
+    <XunitVersion>2.3.1</XunitVersion>
   </PropertyGroup>
 
 </Project>
