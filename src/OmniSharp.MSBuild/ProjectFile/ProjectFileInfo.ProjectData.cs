@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NuGet.Packaging.Core;
+using OmniSharp.Utilities;
 
 using MSB = Microsoft.Build;
 
@@ -66,17 +66,23 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ProjectAssetsFile = projectAssetsFile;
 
                 TargetFramework = targetFramework;
-                TargetFrameworks = targetFrameworks;
+                TargetFrameworks = targetFrameworks.EmptyIfDefault();
 
                 OutputKind = outputKind;
                 LanguageVersion = languageVersion;
                 AllowUnsafeCode = allowUnsafeCode;
                 DocumentationFile = documentationFile;
-                PreprocessorSymbolNames = preprocessorSymbolNames;
-                SuppressedDiagnosticIds = suppressedDiagnosticIds;
+                PreprocessorSymbolNames = preprocessorSymbolNames.EmptyIfDefault();
+                SuppressedDiagnosticIds = suppressedDiagnosticIds.EmptyIfDefault();
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
+
+                SourceFiles = ImmutableArray<string>.Empty;
+                ProjectReferences = ImmutableArray<string>.Empty;
+                References = ImmutableArray<string>.Empty;
+                PackageReferences = ImmutableArray<PackageReference>.Empty;
+                Analyzers = ImmutableArray<string>.Empty;
             }
 
             private ProjectData(
@@ -101,11 +107,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                       targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile)
             {
-                SourceFiles = sourceFiles;
-                ProjectReferences = projectReferences;
-                References = references;
-                PackageReferences = packageReferences;
-                Analyzers = analyzers;
+                SourceFiles = sourceFiles.EmptyIfDefault();
+                ProjectReferences = projectReferences.EmptyIfDefault();
+                References = references.EmptyIfDefault();
+                PackageReferences = packageReferences.EmptyIfDefault();
+                Analyzers = analyzers.EmptyIfDefault();
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
