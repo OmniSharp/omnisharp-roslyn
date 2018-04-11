@@ -314,7 +314,11 @@ namespace OmniSharp.MSBuild
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
         {
-            var currentDocuments = project.Documents.ToDictionary(d => d.FilePath, d => d.Id);
+            // Remove transient documents from list of current documents, to assure proper new documents are added.
+            // Transient documents will be removed on workspace DocumentAdded event.
+            var currentDocuments = project.Documents
+                .Where(document => !_workspace.BufferManager.IsTransientDocument(document.Id))
+                .ToDictionary(d => d.FilePath, d => d.Id);
 
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
