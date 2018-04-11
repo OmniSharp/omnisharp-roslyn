@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
-		                global_1json__JSONSchema = http://json.schemastore.org/global
+		global_1json__JSONSchema = http://json.schemastore.org/global
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}"
@@ -67,6 +67,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Http.Driver", "src\OmniSharp.Http.Driver\OmniSharp.Http.Driver.csproj", "{BC640CBF-F6E2-42EA-9D61-FB6E515AEA44}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Stdio.Driver", "src\OmniSharp.Stdio.Driver\OmniSharp.Stdio.Driver.csproj", "{D2A78CEE-B278-476F-AF34-A7D6F792F973}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Razor", "src\Omnisharp.Razor\OmniSharp.Razor.csproj", "{2BBB7084-45D8-4970-8EC8-5A0786A22F24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -390,6 +392,18 @@ Global
 		{D2A78CEE-B278-476F-AF34-A7D6F792F973}.Release|x64.Build.0 = Release|Any CPU
 		{D2A78CEE-B278-476F-AF34-A7D6F792F973}.Release|x86.ActiveCfg = Release|Any CPU
 		{D2A78CEE-B278-476F-AF34-A7D6F792F973}.Release|x86.Build.0 = Release|Any CPU
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Debug|x64.ActiveCfg = Debug|x64
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Debug|x64.Build.0 = Debug|x64
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Debug|x86.ActiveCfg = Debug|x86
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Debug|x86.Build.0 = Debug|x86
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Release|x64.ActiveCfg = Release|x64
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Release|x64.Build.0 = Release|x64
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Release|x86.ActiveCfg = Release|x86
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -421,6 +435,7 @@ Global
 		{17DAECA3-AE28-4B40-AA52-1EF618346A85} = {35E025BF-BBB2-4FAC-9F4B-37CBA083EE47}
 		{BC640CBF-F6E2-42EA-9D61-FB6E515AEA44} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 		{D2A78CEE-B278-476F-AF34-A7D6F792F973} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
+		{2BBB7084-45D8-4970-8EC8-5A0786A22F24} = {2C348365-A9D8-459E-9276-56FC46AAEE31}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4DD725CE-B49A-4151-8B77-BB33FE88E46E}

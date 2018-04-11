@@ -51,6 +51,7 @@
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
     <XunitRunnerVisualStudioVersion>2.3.0-rc1-build3809</XunitRunnerVisualStudioVersion>
     <XunitVersion>2.3.0-rc1-build3809</XunitVersion>
+    <AspNetRazorVersion>2.1.0-preview2-nimullenimportfix-31390</AspNetRazorVersion>
   </PropertyGroup>
 
 </Project>
