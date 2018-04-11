@@ -403,25 +403,19 @@ Task("PrepareTestAssets:CommonTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
-        });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
 
-Task("PrepareTestAssets:TestAssetsWithErrors")
+Task("PrepareTestAssets:RestoreOnlyTestAssets")
     .IsDependeeOf("PrepareTestAssets")
-    .DoesForEach(buildPlan.TestAssetsWithErrors, (project) =>
+    .DoesForEach(buildPlan.RestoreOnlyTestAssets, (project) =>
     {
-        Information("Restoring and building: {0}...", project);
+        Information("Restoring: {0}...", project);
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
@@ -429,11 +423,11 @@ Task("PrepareTestAssets:TestAssetsWithErrors")
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
 
-Task("PrepareTestAssets:WindowsTestAssets")
+Task("PrepareTestAssets:WindowsOnlyTestAssets")
     .WithCriteria(Platform.Current.IsWindows)
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.WindowsOnlyTestAssets, (project) =>
@@ -442,17 +436,11 @@ Task("PrepareTestAssets:WindowsTestAssets")
 
         var folder = CombinePaths(env.Folders.TestAssets, "test-projects", project);
 
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
-        {
-            ToolPath = env.DotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
-        });
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
     });
 
@@ -476,12 +464,13 @@ Task("PrepareTestAssets:LegacyTestAssets")
         {
             ToolPath = env.LegacyDotNetCommand,
             WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal,
+            Verbosity = DotNetCoreVerbosity.Minimal
         });
+
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
             ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder,
+            WorkingDirectory = folder
         });
     });
 
