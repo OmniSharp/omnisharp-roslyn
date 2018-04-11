@@ -187,6 +187,9 @@ Task("InstallDotNetCoreSdk")
             noPath: true);
     }
 
+    // Disable the first time run experience. We don't need to expand all of .NET Core just to build OmniSharp.
+    Environment.SetEnvironmentVariable("DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "true");
+
     Run(env.DotNetCommand, "--info");
 });
 
@@ -855,6 +858,13 @@ Task("ExecuteRunScript")
 });
 
 /// <summary>
+///  Quick build.
+/// </summary>
+Task("Quick")
+    .IsDependentOn("Cleanup")
+    .IsDependentOn("Publish");
+
+/// <summary>
 ///  Clean install path.
 /// </summary>
 Task("CleanupInstall")
@@ -862,13 +872,6 @@ Task("CleanupInstall")
 {
     DirectoryHelper.ForceCreate(installFolder);
 });
-
-/// <summary>
-///  Quick build.
-/// </summary>
-Task("Quick")
-    .IsDependentOn("Cleanup")
-    .IsDependentOn("Publish");
 
 /// <summary>
 ///  Quick build + install.
@@ -919,6 +922,12 @@ Task("All")
 /// </summary>
 Task("Default")
     .IsDependentOn("All");
+
+Teardown(context =>
+{
+    // Ensure that we shutdown all build servers used by the CLI during build.
+    Run(env.DotNetCommand, "buildserver shutdown");
+});
 
 /// <summary>
 ///  Default to All.

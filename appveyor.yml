@@ -7,7 +7,7 @@ environment:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
-  - ps: .\build.ps1 -configuration Release -target All -publish-all -archive
+  - ps: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
 after_build:
   - ps: Get-ChildItem ./artifacts/package/*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 deploy:
