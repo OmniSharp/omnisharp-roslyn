@@ -202,7 +202,7 @@ namespace OmniSharp.Script
         {
             try
             {
-                _logger.LogInformation($"Searching for compilation dependencies for target fallback framework '{_scriptOptions.DefaultTargetFramework}'.");
+                _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{_scriptOptions.DefaultTargetFramework}'.");
                 return _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, _scriptOptions.IsNugetEnabled(), _scriptOptions.DefaultTargetFramework).ToArray();
             }
             catch (Exception e)
