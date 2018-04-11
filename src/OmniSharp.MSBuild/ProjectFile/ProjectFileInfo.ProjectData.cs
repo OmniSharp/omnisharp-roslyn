@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NuGet.Packaging.Core;
+using OmniSharp.Utilities;
 
 using MSB = Microsoft.Build;
 
@@ -43,6 +43,20 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<PackageReference> PackageReferences { get; }
             public ImmutableArray<string> Analyzers { get; }
 
+            private ProjectData()
+            {
+                // Be sure to initialize all collection properties with ImmutableArray<T>.Empty.
+                // Otherwise, Json.net won't be able to serialize the values.
+                TargetFrameworks = ImmutableArray<string>.Empty;
+                PreprocessorSymbolNames = ImmutableArray<string>.Empty;
+                SuppressedDiagnosticIds = ImmutableArray<string>.Empty;
+                SourceFiles = ImmutableArray<string>.Empty;
+                ProjectReferences = ImmutableArray<string>.Empty;
+                References = ImmutableArray<string>.Empty;
+                PackageReferences = ImmutableArray<PackageReference>.Empty;
+                Analyzers = ImmutableArray<string>.Empty;
+            }
+
             private ProjectData(
                 Guid guid, string name,
                 string assemblyName, string targetPath, string outputPath, string projectAssetsFile,
@@ -56,6 +70,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> suppressedDiagnosticIds,
                 bool signAssembly,
                 string assemblyOriginatorKeyFile)
+                : this()
             {
                 Guid = guid;
                 Name = name;
@@ -66,14 +81,14 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ProjectAssetsFile = projectAssetsFile;
 
                 TargetFramework = targetFramework;
-                TargetFrameworks = targetFrameworks;
+                TargetFrameworks = targetFrameworks.EmptyIfDefault();
 
                 OutputKind = outputKind;
                 LanguageVersion = languageVersion;
                 AllowUnsafeCode = allowUnsafeCode;
                 DocumentationFile = documentationFile;
-                PreprocessorSymbolNames = preprocessorSymbolNames;
-                SuppressedDiagnosticIds = suppressedDiagnosticIds;
+                PreprocessorSymbolNames = preprocessorSymbolNames.EmptyIfDefault();
+                SuppressedDiagnosticIds = suppressedDiagnosticIds.EmptyIfDefault();
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
@@ -101,11 +116,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                       targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile)
             {
-                SourceFiles = sourceFiles;
-                ProjectReferences = projectReferences;
-                References = references;
-                PackageReferences = packageReferences;
-                Analyzers = analyzers;
+                SourceFiles = sourceFiles.EmptyIfDefault();
+                ProjectReferences = projectReferences.EmptyIfDefault();
+                References = references.EmptyIfDefault();
+                PackageReferences = packageReferences.EmptyIfDefault();
+                Analyzers = analyzers.EmptyIfDefault();
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)

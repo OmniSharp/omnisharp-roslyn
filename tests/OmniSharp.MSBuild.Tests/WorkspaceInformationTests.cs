@@ -122,6 +122,25 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task TestProjectWithReferencedProjectOutsideOfOmniSharp()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
+            using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory, "App")))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(2, workspaceInfo.Projects.Count);
+
+                var project1 = workspaceInfo.Projects[0];
+                Assert.Equal("App.csproj", Path.GetFileName(project1.Path));
+
+                var project2 = workspaceInfo.Projects[1];
+                Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
+            }
+        }
+
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task AntlrGeneratedFiles()
         {
