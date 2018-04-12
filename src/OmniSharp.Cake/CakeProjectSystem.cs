@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
 using OmniSharp.Models.UpdateBuffer;
@@ -32,6 +33,7 @@ namespace OmniSharp.Cake
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeScriptService _scriptService;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILogger<CakeProjectSystem> _logger;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
@@ -50,6 +52,7 @@ namespace OmniSharp.Cake
             IAssemblyLoader assemblyLoader,
             ICakeScriptService scriptService,
             IFileSystemWatcher fileSystemWatcher,
+            FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
@@ -58,6 +61,7 @@ namespace OmniSharp.Cake
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
+            _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _projects = new ConcurrentDictionary<string, ProjectInfo>();
@@ -72,7 +76,7 @@ namespace OmniSharp.Cake
             _logger.LogInformation($"Detecting Cake files in '{_environment.TargetDirectory}'.");
 
             // Nothing to do if there are no Cake files
-            var allCakeFiles = Directory.GetFiles(_environment.TargetDirectory, "*.cake", SearchOption.AllDirectories);
+            var allCakeFiles = _fileSystemHelper.GetFiles("**/*.cake").ToArray();
             if (allCakeFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any Cake files");
