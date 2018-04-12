@@ -6,7 +6,7 @@ namespace TestConsole
     {
         static void Main(string[] args)
         {
-			var t = new TestNs.TestClass();
+            var t = new TestNs.TestClass();
             Console.WriteLine("Hello World!");
         }
     }

@@ -37,6 +37,13 @@ namespace OmniSharp.MSBuild
                 { PropertyNames._ResolveReferenceDependencies, "true" },
                 { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar },
 
+                // Setting this property will cause any XAML markup compiler tasks to run in the
+                // current AppDomain, rather than creating a new one. This is important because
+                // our AppDomain.AssemblyResolve handler for MSBuild will not be connected to
+                // the XAML markup compiler's AppDomain, causing the task not to be able to find
+                // MSBuild.
+                { PropertyNames.AlwaysCompileMarkupFilesInSeparateDomain, "false" },
+
                 // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
                 // See https://github.com/dotnet/roslyn/pull/4604 for details.
                 { PropertyNames.ProvideCommandLineArgs, "true" },
