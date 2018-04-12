@@ -194,7 +194,7 @@ namespace OmniSharp
         protected override void ApplyDocumentAdded(DocumentInfo info, SourceText text)
         {
             var project = this.CurrentSolution.GetProject(info.Id.ProjectId);
-            var fullPath = Path.GetFullPath(info.FilePath);
+            var fullPath = info.FilePath;
 
             this.OnDocumentAdded(info);
 
@@ -209,7 +209,7 @@ namespace OmniSharp
             try
             {
                 var dir = Path.GetDirectoryName(fullPath);
-                if (!Directory.Exists(dir))
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
                 }
