@@ -51,6 +51,8 @@ namespace OmniSharp.MSBuild
         private readonly Task _processLoopTask;
         private bool _processingQueue;
 
+        private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
+
         public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
@@ -65,6 +67,8 @@ namespace OmniSharp.MSBuild
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
+
+            _onDirectoryFileChanged = OnDirectoryFileChanged;
         }
 
         protected override void DisposeCore(bool disposing)
@@ -319,7 +323,7 @@ namespace OmniSharp.MSBuild
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
             {
-                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
+                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), _onDirectoryFileChanged);
 
                 // If a document for this source file already exists in the project, carry on.
                 if (currentDocuments.Remove(sourceFile))
