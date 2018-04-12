@@ -10,10 +10,4 @@ namespace OmniSharp.Options
 
         public FileOptions FileOptions { get; } = new FileOptions();
     }
-
-    public class FileOptions
-    {
-        public string[] ExcludeSearchPatterns { get; set; } = new[] { "**/node_modules/**/*", "**/bin/**/*", "**/obj/**/*" };
-
-    }
 }
