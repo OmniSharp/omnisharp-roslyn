@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.FileSystemGlobbing;
-using OmniSharp.Options;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using Microsoft.Extensions.FileSystemGlobbing;
+using OmniSharp.Options;
 
 namespace OmniSharp.FileSystem
 {

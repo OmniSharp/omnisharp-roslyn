@@ -13,12 +13,12 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 using OmniSharp.Roslyn.Utilities;
 using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
-using OmniSharp.FileSystem;
 
 namespace OmniSharp.Script
 {
