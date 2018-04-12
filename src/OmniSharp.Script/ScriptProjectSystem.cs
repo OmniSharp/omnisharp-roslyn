@@ -39,8 +39,8 @@ namespace OmniSharp.Script
 
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
 
+        private ScriptOptions _scriptOptions;
         private ScriptHelper _scriptHelper;
-        private bool _enableScriptNuGetReferences;
         private CompilationDependency[] _compilationDependencies;
 
         [ImportingConstructor]
@@ -79,7 +79,9 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            _scriptHelper = new ScriptHelper(configuration);
+            _scriptOptions = new ScriptOptions();
+            ConfigurationBinder.Bind(configuration, _scriptOptions);
+            _scriptHelper = new ScriptHelper(_scriptOptions);
 
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
@@ -101,12 +103,7 @@ namespace OmniSharp.Script
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
-            if (!bool.TryParse(configuration["enableScriptNuGetReferences"], out _enableScriptNuGetReferences))
-            {
-                _enableScriptNuGetReferences = false;
-            }
-
-            _compilationDependencies = TryGetCompilationDependencies(_enableScriptNuGetReferences);
+            _compilationDependencies = TryGetCompilationDependencies();
 
             // if we have no compilation dependencies
             // we will assume desktop framework
@@ -171,7 +168,7 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptHelper.CreateProject(csxFileName, _commonReferences, csxPath);
 
-                if (_enableScriptNuGetReferences)
+                if (_scriptOptions.IsNugetEnabled())
                 {
                     var scriptMap = _compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
                     var options = project.CompilationOptions.WithSourceReferenceResolver(
@@ -201,11 +198,12 @@ namespace OmniSharp.Script
             }
         }
 
-        private CompilationDependency[] TryGetCompilationDependencies(bool enableScriptNuGetReferences)
+        private CompilationDependency[] TryGetCompilationDependencies()
         {
             try
             {
-                return _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, enableScriptNuGetReferences).ToArray();
+                _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{_scriptOptions.DefaultTargetFramework}'.");
+                return _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, _scriptOptions.IsNugetEnabled(), _scriptOptions.DefaultTargetFramework).ToArray();
             }
             catch (Exception e)
             {

@@ -22,7 +22,7 @@ namespace OmniSharp.Script
         private const string ResolverField = "_resolver";
         private const string FileReferenceProviderField = "_fileReferenceProvider";
 
-        private readonly IConfiguration _configuration;
+        private readonly ScriptOptions _scriptOptions;
 
         // aligned with CSI.exe
         // https://github.com/dotnet/roslyn/blob/version-2.0.0-rc3/src/Interactive/csi/csi.rsp
@@ -45,9 +45,9 @@ namespace OmniSharp.Script
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
         private readonly MetadataReferenceResolver _resolver = ScriptMetadataResolver.Default;
 
-        public ScriptHelper(IConfiguration configuration = null)
+        public ScriptHelper(ScriptOptions scriptOptions)
         {
-            _configuration = configuration;
+            _scriptOptions = scriptOptions;
             _compilationOptions = new Lazy<CSharpCompilationOptions>(CreateCompilationOptions);
             InjectXMLDocumentationProviderIntoRuntimeMetadataReferenceResolver();
         }
@@ -84,17 +84,7 @@ namespace OmniSharp.Script
 
         private CachingScriptMetadataResolver CreateMetadataReferenceResolver()
         {
-            bool enableScriptNuGetReferences = false;
-
-            if (_configuration != null)
-            {
-                if (!bool.TryParse(_configuration["enableScriptNuGetReferences"], out enableScriptNuGetReferences))
-                {
-                    enableScriptNuGetReferences = false;
-                }
-            }
-            
-            return enableScriptNuGetReferences
+            return _scriptOptions.IsNugetEnabled()
                 ? new CachingScriptMetadataResolver(new NuGetMetadataReferenceResolver(_resolver))
                 : new CachingScriptMetadataResolver(_resolver);
         }
