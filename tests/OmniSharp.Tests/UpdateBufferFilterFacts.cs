@@ -89,9 +89,18 @@ namespace OmniSharp.Tests
                     filePath: "transient.cs");
 
                 var newSolution = host.Workspace.CurrentSolution.AddDocument(document);
+                host.Workspace.TryApplyChanges(newSolution);
 
+                // 2 transient + 1 real document.
                 docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
-                Assert.Equal(2, docIds.Length);
+                Assert.Equal(3, docIds.Length);
+
+                // wait for event to be raised.
+                System.Threading.Thread.Sleep(100);
+
+                // only the real one remains.
+                docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
+                Assert.Single(docIds);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "transient.cs", Buffer = "enum E {}" });
                 var sourceText = await host.Workspace.CurrentSolution.GetDocument(docIds.First()).GetTextAsync();
