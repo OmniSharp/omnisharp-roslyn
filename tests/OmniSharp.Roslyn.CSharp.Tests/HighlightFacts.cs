@@ -35,7 +35,7 @@ namespace N1
                 ClassName("C1"),
                 Punctuation("{"),
                 Keyword("int"),
-                Identifier("n"),
+                FieldName("n"),
                 Operator("="),
                 Keyword("true"),
                 Punctuation(";"),
@@ -62,7 +62,7 @@ namespace N1
                 ClassName("C1"),
                 Punctuation("{"),
                 Keyword("int"),
-                Identifier("n"),
+                FieldName("n"),
                 Operator("="),
                 Keyword("true"),
                 Punctuation(";"),
@@ -88,7 +88,7 @@ class C1
                 ClassName("C1"),
                 Punctuation("{"),
                 Keyword("string"),
-                Identifier("s"),
+                FieldName("s"),
                 Operator("="),
                 String("$\""),
                 Punctuation("{"),
@@ -234,6 +234,7 @@ namespace N1
         }
 
         private static (string kind, string text) ClassName(string text) => ("class name", text);
+        private static (string kind, string text) FieldName(string text) => ("field name", text);
         private static (string kind, string text) Identifier(string text) => ("identifier", text);
         private static (string kind, string text) Keyword(string text) => ("keyword", text);
         private static (string kind, string text) Number(string text) => ("number", text);
