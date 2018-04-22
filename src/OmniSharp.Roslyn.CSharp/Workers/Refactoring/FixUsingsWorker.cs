@@ -51,64 +51,20 @@ namespace OmniSharp
 
         public async Task<FixUsingsWorkerResponse> FixUsingsAsync(Document document)
         {
-            document = await AddMissingUsingsAsync(document);
+            var missingUsings = await AddMissingUsingsAsync(document);
+
+            document = missingUsings.Document;
             document = await RemoveUnnecessaryUsingsAsync(document);
             document = await TryAddLinqQuerySyntaxAsync(document);
 
-            var ambiguous = await GetAmbiguousUsingsAsync(document);
-
-            var response = new FixUsingsWorkerResponse()
+            return new FixUsingsWorkerResponse()
             {
-                AmbiguousResults = ambiguous,
+                AmbiguousResults = missingUsings.AmbiguousUsings,
                 Document = document
             };
-
-            response.AmbiguousResults = ambiguous;
-            response.Document = document;
-
-            return response;
         }
 
-        private async Task<List<QuickFix>> GetAmbiguousUsingsAsync(Document document)
-        {
-            var ambiguousNodes = new List<SimpleNameSyntax>();
-            var results = new List<QuickFix>();
-
-            var semanticModel = await document.GetSemanticModelAsync();
-            var root = await semanticModel.SyntaxTree.GetRootAsync();
-
-            var simpleNames = root
-                .DescendantNodes()
-                .OfType<SimpleNameSyntax>()
-                .Where(x => semanticModel.GetSymbolInfo(x).Symbol == null)
-                .ToArray();
-
-            foreach (var name in simpleNames)
-            {
-                if (ambiguousNodes.Contains(name))
-                {
-                    continue;
-                }
-
-                var diagnostics = await GetDiagnosticsAtSpanAsync(document, name.Identifier.Span, "CS0246", "CS1061", "CS0103");
-                if (diagnostics.Any())
-                {
-                    var span = diagnostics.First().Location.SourceSpan;
-                    if (diagnostics.Any(d => d.Location.SourceSpan != span))
-                    {
-                        continue;
-                    }
-
-                    var operations = await GetCodeFixOperationsAsync(_addImportProvider, document, span, diagnostics);
-                    if (operations.Length > 1)
-                        await TrackAmbiguousResult(results, ambiguousNodes, name, operations, document);
-                }
-            }
-
-            return results;
-        }
-
-        private async Task TrackAmbiguousResult(IList<QuickFix> results, IList<SimpleNameSyntax> ambiguousNodes, SimpleNameSyntax name, ImmutableArray<CodeActionOperation> operations, Document document)
+        private async Task TrackAmbiguousQuickFix(IList<QuickFix> results, IList<SimpleNameSyntax> ambiguousNodes, SimpleNameSyntax name, ImmutableArray<CodeActionOperation> operations, Document document)
         {
             ambiguousNodes.Add(name);
             var unresolvedText = name.Identifier.ValueText;
@@ -144,8 +100,11 @@ namespace OmniSharp
             return ambiguousNamespaces;
         }
 
-        private async Task<Document> AddMissingUsingsAsync(Document document)
+        private async Task<MissingUsingsResult> AddMissingUsingsAsync(Document document)
         {
+            var ambiguousNodes = new List<SimpleNameSyntax>();
+            var quickFixes = new List<QuickFix>();
+
             while (true)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
@@ -161,6 +120,11 @@ namespace OmniSharp
 
                 foreach (var name in unboundNames)
                 {
+                    if (ambiguousNodes.Contains(name))
+                    {
+                        continue;
+                    }
+
                     var diagnostics = await GetDiagnosticsAtSpanAsync(document, name.Identifier.Span, "CS0246", "CS1061", "CS0103");
                     if (diagnostics.Any())
                     {
@@ -173,7 +137,9 @@ namespace OmniSharp
 
                         var operations = await GetCodeFixOperationsAsync(_addImportProvider, document, span, diagnostics);
 
-                        if (operations.Length == 1 && operations[0] is ApplyChangesOperation)
+                        if (operations.Length > 1)
+                            await TrackAmbiguousQuickFix(quickFixes, ambiguousNodes, name, operations, document);
+                        else if (operations.Length == 1 && operations[0] is ApplyChangesOperation)
                         {
                             // Only one operation - apply it and loop back around
                             var newSolution = ((ApplyChangesOperation)operations[0]).ChangedSolution;
@@ -193,7 +159,7 @@ namespace OmniSharp
                 }
             }
 
-            return document;
+            return new MissingUsingsResult { Document = document, AmbiguousUsings = quickFixes };
         }
 
         private async Task<Document> RemoveUnnecessaryUsingsAsync(Document document)
@@ -346,6 +312,12 @@ namespace OmniSharp
                 default:
                     return false;
             }
+        }
+
+        private class MissingUsingsResult
+        {
+            public Document Document { get; set; }
+            public IEnumerable<QuickFix> AmbiguousUsings { get; set; }
         }
     }
 }
