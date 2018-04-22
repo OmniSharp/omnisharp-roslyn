@@ -100,27 +100,48 @@ namespace OmniSharp
                     }
 
                     var operations = await GetCodeFixOperationsAsync(_addImportProvider, document, span, diagnostics);
-
                     if (operations.Length > 1)
-                    {
-                        // More than one operation - ambiguous
-                        ambiguousNodes.Add(name);
-                        var unresolvedText = name.Identifier.ValueText;
-                        var unresolvedLocation = name.GetLocation().GetLineSpan().StartLinePosition;
-
-                        results.Add(
-                            new QuickFix
-                            {
-                                Line = unresolvedLocation.Line,
-                                Column = unresolvedLocation.Character,
-                                FileName = document.FilePath,
-                                Text = "`" + unresolvedText + "`" + " is ambiguous"
-                            });
-                    }
+                        await TrackAmbiguousResult(results, ambiguousNodes, name, operations, document);
                 }
             }
 
             return results;
+        }
+
+        private async Task TrackAmbiguousResult(IList<QuickFix> results, IList<SimpleNameSyntax> ambiguousNodes, SimpleNameSyntax name, ImmutableArray<CodeActionOperation> operations, Document document)
+        {
+            ambiguousNodes.Add(name);
+            var unresolvedText = name.Identifier.ValueText;
+            var unresolvedLocation = name.GetLocation().GetLineSpan().StartLinePosition;
+            var ambiguousNamespaces = await GetAmbiguousNamespacesAsync(operations, document);
+
+            results.Add(new QuickFix
+                {
+                    Line = unresolvedLocation.Line,
+                    Column = unresolvedLocation.Character,
+                    FileName = document.FilePath,
+                    Text = $"`{unresolvedText}` is ambiguous. Namespaces:{ambiguousNamespaces}"
+                });
+        }
+
+        private async Task<string> GetAmbiguousNamespacesAsync(ImmutableArray<CodeActionOperation> operations, Document document)
+        {
+            var namespaces = new List<string>();
+            foreach (var operation in operations.Where(x => x is ApplyChangesOperation))
+            {
+                var newSolution = ((ApplyChangesOperation)operation).ChangedSolution;
+                var newDocument = newSolution.GetDocument(document.Id);
+
+                var changes = await newDocument.GetTextChangesAsync(document);
+                foreach (var change in changes)
+                    namespaces.Add(change.NewText.Trim());
+            }
+
+            var ambiguousNamespaces = string.Empty;
+            foreach (var uniqueNamespace in namespaces.Distinct())
+                ambiguousNamespaces += $" {uniqueNamespace}";
+
+            return ambiguousNamespaces;
         }
 
         private async Task<Document> AddMissingUsingsAsync(Document document)
