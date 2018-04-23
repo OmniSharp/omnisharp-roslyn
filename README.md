@@ -59,16 +59,14 @@ For more details, see [Build](https://github.com/OmniSharp/omnisharp-roslyn/blob
 
 Add the following setting to your [User Settings or Workspace Settings](https://code.visualstudio.com/Docs/customization/userandworkspace).
 
-To consume the latest build of omnisharp from "master": 
-
 ``` JSON
 {
-  "omnisharp.path": "latest"
+  "omnisharp.path": "<Path to the omnisharp executable>"
 }
 ```
-The above option can also set to the path to an OmniSharp executable on disk or a specific version number like `1.29.2-beta.60`
-
-In order to use the latest build from the master branch, add
+The above option can also be set to:
+* "latest" - To consume the latest build from the master branch
+* A specific version number like `1.29.2-beta.60`
 
 In order to be able to attach a debugger, add the following setting:
 
