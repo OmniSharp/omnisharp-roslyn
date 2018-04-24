@@ -26,6 +26,11 @@ namespace OmniSharp.FileSystem
             var matcher = new Matcher();
             matcher.AddInclude(includePattern);
 
+            if (_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns != null && _omniSharpOptions.FileOptions.SystemExcludeSearchPatterns.Any())
+            {
+                matcher.AddExcludePatterns(_omniSharpOptions.FileOptions.SystemExcludeSearchPatterns);
+            }
+
             if (_omniSharpOptions.FileOptions.ExcludeSearchPatterns != null && _omniSharpOptions.FileOptions.ExcludeSearchPatterns.Any())
             {
                 matcher.AddExcludePatterns(_omniSharpOptions.FileOptions.ExcludeSearchPatterns);

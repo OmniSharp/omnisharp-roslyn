@@ -65,6 +65,24 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
+        public void FileSystemHelperFacts_CanExcludeSearchPath_MultipleFolders_BothSystemAndUserPaths()
+        {
+            var helper = CreateFileSystemHelper(new[] { "**/MSTestProject/**/*", "**/NUnitTestProject/**/*" }, systemExcludePatterns: new[] { "**/ProjectWithSdkProperty/**/*" });
+
+            var msbuildProjectFiles = helper.GetFiles("**/*.csproj");
+            Assert.NotEmpty(msbuildProjectFiles);
+
+            var msTestProject = msbuildProjectFiles.FirstOrDefault(p => p.Contains("MSTestProject"));
+            Assert.Null(msTestProject);
+
+            var nunitTestProject = msbuildProjectFiles.FirstOrDefault(p => p.Contains("NUnitTestProject"));
+            Assert.Null(nunitTestProject);
+
+            var projectWithSdkProperty = msbuildProjectFiles.FirstOrDefault(p => p.Contains("ProjectWithSdkProperty"));
+            Assert.Null(projectWithSdkProperty);
+        }
+
+        [Fact]
         public void FileSystemHelperFacts_CanHandleInvalidPath()
         {
             var helper = CreateFileSystemHelper("!@@#$$@%&&*()_+");
@@ -78,6 +96,17 @@ namespace OmniSharp.Tests
             var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);
             var options = new OmniSharpOptions();
             options.FileOptions.ExcludeSearchPatterns = excludePatterns;
+            var helper = new FileSystemHelper(options, environment);
+            return helper;
+        }
+
+        private FileSystemHelper CreateFileSystemHelper(string[] excludePatterns, string[] systemExcludePatterns)
+        {
+            var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);
+            var options = new OmniSharpOptions();
+            options.FileOptions.ExcludeSearchPatterns = excludePatterns;
+            options.FileOptions.SystemExcludeSearchPatterns = systemExcludePatterns;
+
             var helper = new FileSystemHelper(options, environment);
             return helper;
         }
