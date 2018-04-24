@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
@@ -36,7 +37,7 @@ namespace OmniSharp.Script
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IFileSystemWatcher _fileSystemWatcher;
-
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
 
         private ScriptOptions _scriptOptions;
@@ -45,12 +46,13 @@ namespace OmniSharp.Script
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory,
-            MetadataFileReferenceCache metadataFileReferenceCache, IFileSystemWatcher fileSystemWatcher)
+            MetadataFileReferenceCache metadataFileReferenceCache, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
             _fileSystemWatcher = fileSystemWatcher;
+            _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new ConcurrentDictionary<string, ProjectInfo>();
 
@@ -86,7 +88,7 @@ namespace OmniSharp.Script
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
-            var allCsxFiles = Directory.GetFiles(_env.TargetDirectory, "*.csx", SearchOption.AllDirectories);
+            var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
             if (allCsxFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any CSX files");
