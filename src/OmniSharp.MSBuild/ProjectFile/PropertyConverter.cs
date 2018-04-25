@@ -47,6 +47,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "7": return LanguageVersion.CSharp7;
                 case "7.1": return LanguageVersion.CSharp7_1;
                 case "7.2": return LanguageVersion.CSharp7_2;
+                case "7.3": return LanguageVersion.CSharp7_3;
                 default: return LanguageVersion.Default;
             }
         }
