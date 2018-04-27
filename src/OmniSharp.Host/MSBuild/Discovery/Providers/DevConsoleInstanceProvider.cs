@@ -38,6 +38,17 @@ namespace OmniSharp.MSBuild.Discovery.Providers
 
             if (version == null)
             {
+                var dashIndex = versionString.IndexOf('-');
+
+                if (dashIndex > 0)
+                {
+                    versionString = versionString.Substring(0, dashIndex);
+                    Version.TryParse(versionString, out version);
+                }
+            }
+
+            if (version == null)
+            {
                 versionString = Environment.GetEnvironmentVariable("VisualStudioVersion");
                 Version.TryParse(versionString, out version);
             }
