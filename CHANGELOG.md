@@ -6,6 +6,12 @@ All changes to the project will be documented in this file.
 * Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))
 * Updated OmniSharp.Script to DotNet.Script.DependencyModel 0.6.0 (PR: [#1150](https://github.com/OmniSharp/omnisharp-roslyn/pull/1150))
 * It is now possible to define the default target framework for C# scripts in the OmniSharp configuration (PR: [#1154](https://github.com/OmniSharp/omnisharp-roslyn/pull/1154))
+* Upgraded embedded Mono and MSBuild to 5.10.1.20 (PRs: #[1137](https://github.com/OmniSharp/omnisharp-roslyn/pull/1137), #[1145](https://github.com/OmniSharp/omnisharp-roslyn/pull/1145))
+* Fixed issue where generate type refactoring could not generate new files ([omnisharp-vscode#2112](https://github.com/OmniSharp/omnisharp-vscode/issues/2112), PR: [#1143](https://github.com/OmniSharp/omnisharp-roslyn/pull/1143))
+* Added detailed project information output at debug log level (PR: [#1151](https://github.com/OmniSharp/omnisharp-roslyn/pull/1151))
+* Set MSBuild property to allow the XAML markup compiler task to run ([omnisharp-vscode#2173](https://github.com/OmniSharp/omnisharp-vscode/issues/2112), PR: [#1157](https://github.com/OmniSharp/omnisharp-roslyn/pull/1157))
+* Added support for excluding search paths via globbing patterns (PR: [#1161](https://github.com/OmniSharp/omnisharp-roslyn/pull/1161))
+* Improved versioning reporting for VS preview consoles (PR: [#1166](https://github.com/OmniSharp/omnisharp-roslyn/pull/1166))
 
 ## [1.29.1] - 2018-2-12
 * Fixed duplicate diagnostics in C# ([omnisharp-vscode#1830](https://github.com/OmniSharp/omnisharp-vscode/issues/1830), PR: [#1107](https://github.com/OmniSharp/omnisharp-roslyn/pull/1107))
