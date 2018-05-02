@@ -106,7 +106,7 @@ namespace OmniSharp.Script
             inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
                 x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
 
-            _compilationDependencies = TryGetCompilationDependencies(_scriptOptions.EnableScriptNuGetReferences);
+            _compilationDependencies = TryGetCompilationDependencies();
 
             var isDesktopClr = true;
             // if we have no compilation dependencies
