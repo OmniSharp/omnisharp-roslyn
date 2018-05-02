@@ -62,16 +62,13 @@ namespace OmniSharp.Script
 
         private CSharpCommandLineArguments CreateCommandLineArguments()
         {
-            var scriptRunnerParserProperty = typeof(CSharpCommandLineParser).GetProperty("ScriptRunner", BindingFlags.Static | BindingFlags.NonPublic);
-            var scriptRunnerParser = scriptRunnerParserProperty?.GetValue(null) as CSharpCommandLineParser;
-
-            if (scriptRunnerParser != null && !string.IsNullOrWhiteSpace(_scriptOptions.RspFilePath))
+            if (!string.IsNullOrWhiteSpace(_scriptOptions.RspFilePath))
             {
                 var rspFilePath = _scriptOptions.GetNormalizedRspFilePath(_env);
                 if (rspFilePath != null)
                 {
                     _logger.LogInformation($"Discovered an RSP file at '{rspFilePath}' - will use this file to discover CSX namespaces and references.");
-                    return scriptRunnerParser.Parse(new string[] { $"@{rspFilePath}" },
+                    return CSharpCommandLineParser.Script.Parse(new string[] { $"@{rspFilePath}" },
                         _env.TargetDirectory,
                         _isDesktopClr ? Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName) : null);
                 }
