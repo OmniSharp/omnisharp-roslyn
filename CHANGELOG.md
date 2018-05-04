@@ -10,7 +10,7 @@ All changes to the project will be documented in this file.
 * Fixed issue where generate type refactoring could not generate new files ([omnisharp-vscode#2112](https://github.com/OmniSharp/omnisharp-vscode/issues/2112), PR: [#1143](https://github.com/OmniSharp/omnisharp-roslyn/pull/1143))
 * Added detailed project information output at debug log level (PR: [#1151](https://github.com/OmniSharp/omnisharp-roslyn/pull/1151))
 * Set MSBuild property to allow the XAML markup compiler task to run (PR: [#1157](https://github.com/OmniSharp/omnisharp-roslyn/pull/1157))
-* Added support for excluding search paths via globbing patterns (PR: [#1161](https://github.com/OmniSharp/omnisharp-roslyn/pull/1161))
+* Added support for excluding search paths via globbing patterns ([#896](https://github.com/OmniSharp/omnisharp-roslyn/issues/896), PR: [#1161](https://github.com/OmniSharp/omnisharp-roslyn/pull/1161))
 * Improved versioning reporting for VS preview consoles (PR: [#1166](https://github.com/OmniSharp/omnisharp-roslyn/pull/1166))
 
 ## [1.29.1] - 2018-2-12
