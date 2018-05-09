@@ -43,7 +43,7 @@ namespace OmniSharp.MSBuild
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly PackageDependencyChecker _packageDependencyChecker;
         private readonly ProjectFileInfoCollection _projectFiles;
-        private readonly ConcurrentDictionary<string, int> _failedToLoadProjectFiles;
+        private readonly HashSet<string> _failedToLoadProjectFiles;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
 
@@ -63,7 +63,7 @@ namespace OmniSharp.MSBuild
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _packageDependencyChecker = packageDependencyChecker;
             _projectFiles = new ProjectFileInfoCollection();
-            _failedToLoadProjectFiles = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
 
@@ -151,13 +151,13 @@ namespace OmniSharp.MSBuild
                     projectList.Add(currentProject);
 
                     // update or add project
-                    _failedToLoadProjectFiles.TryRemove(currentProject.FilePath, out int notUsed);
+                    _failedToLoadProjectFiles.Remove(currentProject.FilePath);
                     if (_projectFiles.TryGetValue(currentProject.FilePath, out var projectFileInfo))
                     {
                         projectFileInfo = ReloadProject(projectFileInfo);
                         if (projectFileInfo == null)
                         {
-                            _failedToLoadProjectFiles.TryAdd(currentProject.FilePath, 0 /*not used*/);
+                            _failedToLoadProjectFiles.Add(currentProject.FilePath);
                             continue;
                         }
                         _projectFiles[currentProject.FilePath] = projectFileInfo;
@@ -167,7 +167,7 @@ namespace OmniSharp.MSBuild
                         projectFileInfo = LoadProject(currentProject.FilePath);
                         if (projectFileInfo == null)
                         {
-                            _failedToLoadProjectFiles.TryAdd(currentProject.FilePath, 0 /*not used*/);
+                            _failedToLoadProjectFiles.Add(currentProject.FilePath);
                             continue;
                         }
                         AddProject(projectFileInfo);
@@ -215,7 +215,7 @@ namespace OmniSharp.MSBuild
 
                 if (projectFileInfo != null)
                 {
-                    _logger.LogWarning($"Successfully loaded project file '{projectFilePath}'.");
+                    _logger.LogInformation($"Successfully loaded project file '{projectFilePath}'.");
                 }
                 else
                 {
@@ -226,7 +226,7 @@ namespace OmniSharp.MSBuild
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Failed to load project file '{projectFilePath}' : {ex.ToString()}.");
+                _logger.LogWarning($"Failed to load project file '{projectFilePath}'.", ex);
                 _eventEmitter.Error(ex, fileName: projectFilePath);
                 projectFileInfo = null;
             }
@@ -236,7 +236,7 @@ namespace OmniSharp.MSBuild
 
         private bool RemoveProject(string projectFilePath)
         {
-            _failedToLoadProjectFiles.TryRemove(projectFilePath, out int notUsed);
+            _failedToLoadProjectFiles.Remove(projectFilePath);
             if (!_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
             {
                 return false;
@@ -425,7 +425,7 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectReferencePath in projectReferencePaths)
             {
-                if (_failedToLoadProjectFiles.ContainsKey(projectReferencePath))
+                if (_failedToLoadProjectFiles.Contains(projectReferencePath))
                 {
                     _logger.LogWarning($"Ignoring previously failed to load project '{projectReferencePath}' referenced by '{project.Name}'.");
                     continue;
