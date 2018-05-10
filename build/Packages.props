@@ -4,7 +4,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>15.6.82</MSBuildPackageVersion>
     <NuGetPackageVersion>4.3.0</NuGetPackageVersion>
-    <RoslynPackageVersion>2.7.0</RoslynPackageVersion>
+    <RoslynPackageVersion>2.8.0</RoslynPackageVersion>
     <XunitPackageVersion>2.3.1</XunitPackageVersion>
 
     <CakeScriptinTransportVersion>0.2.0</CakeScriptinTransportVersion>
