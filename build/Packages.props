@@ -2,6 +2,11 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
+    <MSBuildPackageVersion>15.6.82</MSBuildPackageVersion>
+    <NuGetPackageVersion>4.3.0</NuGetPackageVersion>
+    <RoslynPackageVersion>2.7.0</RoslynPackageVersion>
+    <XunitPackageVersion>2.3.1</XunitPackageVersion>
+
     <CakeScriptinTransportVersion>0.2.0</CakeScriptinTransportVersion>
     <DotnetScriptDependencyModelVersion>0.6.0</DotnetScriptDependencyModelVersion>
     <DotnetScriptDependencyModelNuGetVersion>0.6.0</DotnetScriptDependencyModelNuGetVersion>
@@ -9,16 +14,16 @@
     <MicrosoftAspNetCoreHostingVersion>1.1.0</MicrosoftAspNetCoreHostingVersion>
     <MicrosoftAspNetCoreHttpFeaturesVersion>1.1.0</MicrosoftAspNetCoreHttpFeaturesVersion>
     <MicrosoftAspNetCoreServerKestrelVersion>1.1.0</MicrosoftAspNetCoreServerKestrelVersion>
-    <MicrosoftBuildVersion>15.6.82</MicrosoftBuildVersion>
-    <MicrosoftBuildFrameworkVersion>15.6.82</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildTasksCoreVersion>15.6.82</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>15.6.82</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisCommonVersion>2.7.0</MicrosoftCodeAnalysisCommonVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>2.7.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftCodeAnalysisCSharpFeaturesVersion>2.7.0</MicrosoftCodeAnalysisCSharpFeaturesVersion>
-    <MicrosoftCodeAnalysisCSharpScriptingVersion>2.7.0</MicrosoftCodeAnalysisCSharpScriptingVersion>
-    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>2.7.0</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
-    <MicrosoftCodeAnalysisWorkspacesCommonVersion>2.7.0</MicrosoftCodeAnalysisWorkspacesCommonVersion>
+    <MicrosoftBuildVersion>$(MSBuildPackageVersion)</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>$(MSBuildPackageVersion)</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>$(MSBuildPackageVersion)</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>$(MSBuildPackageVersion)</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisCommonVersion>$(RoslynPackageVersion)</MicrosoftCodeAnalysisCommonVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>$(RoslynPackageVersion)</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpFeaturesVersion>$(RoslynPackageVersion)</MicrosoftCodeAnalysisCSharpFeaturesVersion>
+    <MicrosoftCodeAnalysisCSharpScriptingVersion>$(RoslynPackageVersion)</MicrosoftCodeAnalysisCSharpScriptingVersion>
+    <MicrosoftCodeAnalysisCSharpWorkspacesVersion>$(RoslynPackageVersion)</MicrosoftCodeAnalysisCSharpWorkspacesVersion>
+    <MicrosoftCodeAnalysisWorkspacesCommonVersion>$(RoslynPackageVersion)</MicrosoftCodeAnalysisWorkspacesCommonVersion>
     <MicrosoftExtensionsCachingMemoryVersion>1.1.0</MicrosoftExtensionsCachingMemoryVersion>
     <MicrosoftExtensionsCommandLineUtilsVersion>1.1.0</MicrosoftExtensionsCommandLineUtilsVersion>
     <MicrosoftExtensionsConfigurationVersion>1.1.0</MicrosoftExtensionsConfigurationVersion>
@@ -40,17 +45,17 @@
     <MicrosoftVisualStudioSetupConfigurationInteropVersion>1.14.114</MicrosoftVisualStudioSetupConfigurationInteropVersion>
     <MicrosoftVisualStudioSDKEmbedInteropTypesVersion>15.0.12</MicrosoftVisualStudioSDKEmbedInteropTypesVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <NuGetPackagingVersion>4.3.0</NuGetPackagingVersion>
-    <NuGetPackagingCoreVersion>4.3.0</NuGetPackagingCoreVersion>
-    <NuGetProjectModelVersion>4.3.0</NuGetProjectModelVersion>
-    <NuGetVersioningVersion>4.3.0</NuGetVersioningVersion>
+    <NuGetPackagingVersion>$(NuGetPackageVersion)</NuGetPackagingVersion>
+    <NuGetPackagingCoreVersion>$(NuGetPackageVersion)</NuGetPackagingCoreVersion>
+    <NuGetProjectModelVersion>$(NuGetPackageVersion)</NuGetProjectModelVersion>
+    <NuGetVersioningVersion>$(NuGetPackageVersion)</NuGetVersioningVersion>
     <SystemCollectionsImmutableVersion>1.4.0</SystemCollectionsImmutableVersion>
     <SystemCompositionVersion>1.0.31</SystemCompositionVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemThreadingTasksDataflowVersion>4.5.24</SystemThreadingTasksDataflowVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
-    <XunitRunnerVisualStudioVersion>2.3.1</XunitRunnerVisualStudioVersion>
-    <XunitVersion>2.3.1</XunitVersion>
+    <XunitRunnerVisualStudioVersion>$(XunitPackageVersion)</XunitRunnerVisualStudioVersion>
+    <XunitVersion>$(XunitPackageVersion)</XunitVersion>
   </PropertyGroup>
 
 </Project>
