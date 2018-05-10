@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.31.0] - _Not Yet Released_
+* Update to Roslyn 2.8.0 packages, adding support for C# 7.3. (PR: [#1182](https://github.com/OmniSharp/omnisharp-roslyn/pull/1182))
+
 ## [1.30.0] - 2018-4-30
 * Updated to Roslyn 2.7.0 packages (PR: [#1132](https://github.com/OmniSharp/omnisharp-roslyn/pull/1132))
 * Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))

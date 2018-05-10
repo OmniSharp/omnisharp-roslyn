@@ -915,7 +915,7 @@ Task("Default")
 Teardown(context =>
 {
     // Ensure that we shutdown all build servers used by the CLI during build.
-    Run(env.DotNetCommand, "buildserver shutdown");
+    Run(env.DotNetCommand, "build-server shutdown");
 });
 
 /// <summary>
