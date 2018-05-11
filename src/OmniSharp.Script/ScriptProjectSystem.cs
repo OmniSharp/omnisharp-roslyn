@@ -97,13 +97,15 @@ namespace OmniSharp.Script
 
             _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
+            var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
             // explicitly inherit scripting library references to all global script object (CommandLineScriptGlobals) to be recognized
-            var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
-                x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
+            var inheritedCompileLibraries = currentDomainAssemblies.Where(x =>
+                x.FullName.StartsWith("microsoft.codeanalysis", StringComparison.OrdinalIgnoreCase)).ToList();
 
             // explicitly include System.ValueTuple
-            inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
+            inheritedCompileLibraries.AddRange(currentDomainAssemblies.Where(x =>
+                x.FullName.StartsWith("system.valuetuple", StringComparison.OrdinalIgnoreCase)));
 
             _compilationDependencies = TryGetCompilationDependencies();
 
@@ -131,10 +133,10 @@ namespace OmniSharp.Script
             }
 
             // inject all inherited assemblies
-            foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
+            foreach (var inheritedCompileLib in inheritedCompileLibraries)
             {
                 _logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
-                AddMetadataReference(_commonReferences, inheritedCompileLib);
+                AddMetadataReference(_commonReferences, inheritedCompileLib.Location);
             }
 
             // Each .CSX file becomes an entry point for it's own project
