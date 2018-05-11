@@ -4,6 +4,7 @@ All changes to the project will be documented in this file.
 ## [1.31.0] - _Not Yet Released_
 * Update to Roslyn 2.8.0 packages, adding support for C# 7.3. (PR: [#1182](https://github.com/OmniSharp/omnisharp-roslyn/pull/1182))
 * MSBuild project system no longer stops when a project fails to load. (PR: [#1181](https://github.com/OmniSharp/omnisharp-roslyn/pull/1181)) 
+* Fixed a 1.30.0 regression that prevented script project system from working on Unix-based systems (PR: [#1185](https://github.com/OmniSharp/omnisharp-roslyn/pull/1185))
 
 ## [1.30.0] - 2018-4-30
 * Updated to Roslyn 2.7.0 packages (PR: [#1132](https://github.com/OmniSharp/omnisharp-roslyn/pull/1132))
