@@ -42,6 +42,7 @@ namespace OmniSharp.MSBuild
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly PackageDependencyChecker _packageDependencyChecker;
         private readonly ProjectFileInfoCollection _projectFiles;
+        private readonly HashSet<string> _failedToLoadProjectFiles;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
 
@@ -51,6 +52,8 @@ namespace OmniSharp.MSBuild
         private readonly Task _processLoopTask;
         private bool _processingQueue;
 
+        private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
+
         public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
@@ -59,12 +62,15 @@ namespace OmniSharp.MSBuild
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _packageDependencyChecker = packageDependencyChecker;
             _projectFiles = new ProjectFileInfoCollection();
+            _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
 
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
+
+            _onDirectoryFileChanged = OnDirectoryFileChanged;
         }
 
         protected override void DisposeCore(bool disposing)
@@ -144,14 +150,25 @@ namespace OmniSharp.MSBuild
                     projectList.Add(currentProject);
 
                     // update or add project
+                    _failedToLoadProjectFiles.Remove(currentProject.FilePath);
                     if (_projectFiles.TryGetValue(currentProject.FilePath, out var projectFileInfo))
                     {
                         projectFileInfo = ReloadProject(projectFileInfo);
+                        if (projectFileInfo == null)
+                        {
+                            _failedToLoadProjectFiles.Add(currentProject.FilePath);
+                            continue;
+                        }
                         _projectFiles[currentProject.FilePath] = projectFileInfo;
                     }
                     else
                     {
                         projectFileInfo = LoadProject(currentProject.FilePath);
+                        if (projectFileInfo == null)
+                        {
+                            _failedToLoadProjectFiles.Add(currentProject.FilePath);
+                            continue;
+                        }
                         AddProject(projectFileInfo);
                     }
                 }
@@ -189,16 +206,22 @@ namespace OmniSharp.MSBuild
             _logger.LogInformation($"Loading project: {projectFilePath}");
 
             ProjectFileInfo projectFileInfo;
-            ImmutableArray<MSBuildDiagnostic> diagnostics;
 
             try
             {
+                ImmutableArray<MSBuildDiagnostic> diagnostics;
                 (projectFileInfo, diagnostics) = loadFunc();
 
-                if (projectFileInfo == null)
+                if (projectFileInfo != null)
+                {
+                    _logger.LogInformation($"Successfully loaded project file '{projectFilePath}'.");
+                }
+                else
                 {
                     _logger.LogWarning($"Failed to load project file '{projectFilePath}'.");
                 }
+
+                _eventEmitter.MSBuildProjectDiagnostics(projectFilePath, diagnostics);
             }
             catch (Exception ex)
             {
@@ -207,13 +230,12 @@ namespace OmniSharp.MSBuild
                 projectFileInfo = null;
             }
 
-            _eventEmitter.MSBuildProjectDiagnostics(projectFilePath, diagnostics);
-
             return projectFileInfo;
         }
 
         private bool RemoveProject(string projectFilePath)
         {
+            _failedToLoadProjectFiles.Remove(projectFilePath);
             if (!_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
             {
                 return false;
@@ -323,7 +345,7 @@ namespace OmniSharp.MSBuild
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
             {
-                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), OnDirectoryFileChanged);
+                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), _onDirectoryFileChanged);
 
                 // If a document for this source file already exists in the project, carry on.
                 if (currentDocuments.Remove(sourceFile))
@@ -406,6 +428,12 @@ namespace OmniSharp.MSBuild
 
             foreach (var projectReferencePath in projectReferencePaths)
             {
+                if (_failedToLoadProjectFiles.Contains(projectReferencePath))
+                {
+                    _logger.LogWarning($"Ignoring previously failed to load project '{projectReferencePath}' referenced by '{project.Name}'.");
+                    continue;
+                }
+
                 if (!_projectFiles.TryGetValue(projectReferencePath, out var referencedProject))
                 {
                     if (File.Exists(projectReferencePath) &&

@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
@@ -36,21 +37,22 @@ namespace OmniSharp.Script
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IFileSystemWatcher _fileSystemWatcher;
-
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
 
+        private ScriptOptions _scriptOptions;
         private ScriptHelper _scriptHelper;
-        private bool _enableScriptNuGetReferences;
         private CompilationDependency[] _compilationDependencies;
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory,
-            MetadataFileReferenceCache metadataFileReferenceCache, IFileSystemWatcher fileSystemWatcher)
+            MetadataFileReferenceCache metadataFileReferenceCache, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper)
         {
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
             _fileSystemWatcher = fileSystemWatcher;
+            _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new ConcurrentDictionary<string, ProjectInfo>();
 
@@ -79,12 +81,14 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            _scriptHelper = new ScriptHelper(configuration);
+            _scriptOptions = new ScriptOptions();
+            ConfigurationBinder.Bind(configuration, _scriptOptions);
+            _scriptHelper = new ScriptHelper(_scriptOptions);
 
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
             // Nothing to do if there are no CSX files
-            var allCsxFiles = Directory.GetFiles(_env.TargetDirectory, "*.csx", SearchOption.AllDirectories);
+            var allCsxFiles = _fileSystemHelper.GetFiles("**/*.csx").ToArray();
             if (allCsxFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any CSX files");
@@ -93,20 +97,17 @@ namespace OmniSharp.Script
 
             _logger.LogInformation($"Found {allCsxFiles.Length} CSX files.");
 
+            var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
             // explicitly inherit scripting library references to all global script object (CommandLineScriptGlobals) to be recognized
-            var inheritedCompileLibraries = DependencyContext.Default.CompileLibraries.Where(x =>
-                x.Name.ToLowerInvariant().StartsWith("microsoft.codeanalysis")).ToList();
+            var inheritedCompileLibraries = currentDomainAssemblies.Where(x =>
+                x.FullName.StartsWith("microsoft.codeanalysis", StringComparison.OrdinalIgnoreCase)).ToList();
 
             // explicitly include System.ValueTuple
-            inheritedCompileLibraries.AddRange(DependencyContext.Default.CompileLibraries.Where(x =>
-                x.Name.ToLowerInvariant().StartsWith("system.valuetuple")));
+            inheritedCompileLibraries.AddRange(currentDomainAssemblies.Where(x =>
+                x.FullName.StartsWith("system.valuetuple", StringComparison.OrdinalIgnoreCase)));
 
-            if (!bool.TryParse(configuration["enableScriptNuGetReferences"], out _enableScriptNuGetReferences))
-            {
-                _enableScriptNuGetReferences = false;
-            }
-
-            _compilationDependencies = TryGetCompilationDependencies(_enableScriptNuGetReferences);
+            _compilationDependencies = TryGetCompilationDependencies();
 
             // if we have no compilation dependencies
             // we will assume desktop framework
@@ -132,10 +133,10 @@ namespace OmniSharp.Script
             }
 
             // inject all inherited assemblies
-            foreach (var inheritedCompileLib in inheritedCompileLibraries.SelectMany(x => x.ResolveReferencePaths()))
+            foreach (var inheritedCompileLib in inheritedCompileLibraries)
             {
                 _logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
-                AddMetadataReference(_commonReferences, inheritedCompileLib);
+                AddMetadataReference(_commonReferences, inheritedCompileLib.Location);
             }
 
             // Each .CSX file becomes an entry point for it's own project
@@ -171,7 +172,7 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptHelper.CreateProject(csxFileName, _commonReferences, csxPath);
 
-                if (_enableScriptNuGetReferences)
+                if (_scriptOptions.IsNugetEnabled())
                 {
                     var scriptMap = _compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
                     var options = project.CompilationOptions.WithSourceReferenceResolver(
@@ -201,11 +202,12 @@ namespace OmniSharp.Script
             }
         }
 
-        private CompilationDependency[] TryGetCompilationDependencies(bool enableScriptNuGetReferences)
+        private CompilationDependency[] TryGetCompilationDependencies()
         {
             try
             {
-                return _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, enableScriptNuGetReferences).ToArray();
+                _logger.LogInformation($"Searching for compilation dependencies with the fallback framework of '{_scriptOptions.DefaultTargetFramework}'.");
+                return _compilationDependencyResolver.GetDependencies(_env.TargetDirectory, _scriptOptions.IsNugetEnabled(), _scriptOptions.DefaultTargetFramework).ToArray();
             }
             catch (Exception e)
             {

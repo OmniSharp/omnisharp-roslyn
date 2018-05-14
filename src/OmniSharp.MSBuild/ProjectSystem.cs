@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Discovery;
@@ -30,6 +31,7 @@ namespace OmniSharp.MSBuild
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
@@ -56,6 +58,7 @@ namespace OmniSharp.MSBuild
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
+            FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory)
         {
             _environment = environment;
@@ -66,6 +69,7 @@ namespace OmniSharp.MSBuild
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
+            _fileSystemHelper = fileSystemHelper;
             _loggerFactory = loggerFactory;
 
             _projectsToProcess = new Queue<ProjectFileInfo>();
@@ -121,7 +125,7 @@ namespace OmniSharp.MSBuild
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
             _solutionFileOrRootPath = _environment.TargetDirectory;
-            return Directory.GetFiles(_environment.TargetDirectory, "*.csproj", SearchOption.AllDirectories);
+            return _fileSystemHelper.GetFiles("**/*.csproj");
         }
 
         private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
