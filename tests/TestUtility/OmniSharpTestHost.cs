@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
@@ -25,8 +26,6 @@ namespace TestUtility
 {
     public class OmniSharpTestHost : DisposableObject
     {
-        private const string MSBuildSDKsPath = "MSBuildSDKsPath";
-
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
             typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
@@ -41,7 +40,6 @@ namespace TestUtility
 
         private readonly TestServiceProvider _serviceProvider;
         private readonly CompositionHost _compositionHost;
-        private readonly string _oldMSBuildSdksPath;
 
         private Dictionary<(string name, string language), Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> _handlers;
 
@@ -52,16 +50,13 @@ namespace TestUtility
             TestServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             OmniSharpWorkspace workspace,
-            CompositionHost compositionHost,
-            string oldMSBuildSdksPath)
+            CompositionHost compositionHost)
         {
             this._serviceProvider = serviceProvider;
             this._compositionHost = compositionHost;
 
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
-
-            _oldMSBuildSdksPath = oldMSBuildSdksPath;
         }
 
         ~OmniSharpTestHost()
@@ -71,8 +66,6 @@ namespace TestUtility
 
         protected override void DisposeCore(bool disposing)
         {
-            Environment.SetEnvironmentVariable(MSBuildSDKsPath, _oldMSBuildSdksPath);
-
             this._serviceProvider.Dispose();
             this._compositionHost.Dispose();
 
@@ -110,6 +103,15 @@ namespace TestUtility
 
             var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
+
+            // We need to set the "UseLegacySdkResolver" for tests because
+            // MSBuild's SDK resolver will not be able to locate the .NET Core SDKs
+            // that we install locally in the ".dotnet" and ".dotnet-legacy" directories.
+            // This property will cause the MSBuild project loader to set the
+            // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
+            // within the appropriate .NET Core SDK.
+            builder.Properties["MSBuild:UseLegacySdkResolver"] = true;
+
             var configuration = builder.Build();
 
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
@@ -130,32 +132,15 @@ namespace TestUtility
             var version = dotNetCli.GetVersion();
             logger.LogInformation($"Using .NET CLI: {version}");
 
-            var oldMSBuildSdksPath = SetMSBuildSdksPath(dotNetCli);
-
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
 
-            var host = new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost, oldMSBuildSdksPath);
+            var host = new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
 
             // Force workspace to be updated
             var service = host.GetWorkspaceInformationService();
             service.Handle(new WorkspaceInformationRequest()).Wait();
 
             return host;
-        }
-
-        private static string SetMSBuildSdksPath(DotNetCliService dotNetCli)
-        {
-            var oldMSBuildSDKsPath = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
-
-            var info = dotNetCli.GetInfo();
-            var msbuildSdksPath = Path.Combine(info.BasePath, "Sdks");
-
-            if (Directory.Exists(msbuildSdksPath))
-            {
-                Environment.SetEnvironmentVariable(MSBuildSDKsPath, msbuildSdksPath);
-            }
-
-            return oldMSBuildSDKsPath;
         }
 
         public T GetExport<T>()

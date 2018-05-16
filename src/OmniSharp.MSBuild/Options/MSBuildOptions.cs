@@ -8,6 +8,13 @@ namespace OmniSharp.Options
         public string Platform { get; set; }
         public bool EnablePackageAutoRestore { get; set; }
 
+        /// <summary>
+        /// When set to true, the MSBuild project system will attempt to resolve the path to the MSBuild
+        /// SDKs for a project by running 'dotnet --info' and retrieving the path. This is only needed
+        /// for older versions of the .NET Core SDK.
+        /// </summary>
+        public bool UseLegacySdkResolver { get; set; }
+
         public string MSBuildExtensionsPath { get; set; }
         public string TargetFrameworkRootPath { get; set; }
         public string MSBuildSDKsPath { get; set; }

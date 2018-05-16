@@ -81,6 +81,9 @@ namespace OmniSharp.MSBuild
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
+            _sdksPathResolver.Enabled = _options.UseLegacySdkResolver;
+            _sdksPathResolver.OverridePath = _options.MSBuildSDKsPath;
+
             if (_environment.LogLevel < LogLevel.Information)
             {
                 var buildEnvironmentInfo = MSBuildHelpers.GetBuildEnvironmentInfo();
