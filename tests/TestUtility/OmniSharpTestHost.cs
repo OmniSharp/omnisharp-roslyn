@@ -105,8 +105,13 @@ namespace TestUtility
             // This property will cause the MSBuild project loader to set the
             // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
             // within the appropriate .NET Core SDK.
-            builder.Properties[$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = true;
-            builder.Properties[$"MSBuild:{nameof(MSBuildOptions.MSBuildSDKsPath)}"] = Path.Combine(info.BasePath, "Sdks");
+            var msbuildProperties = new Dictionary<string, string>()
+            {
+                [$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = "true",
+                [$"MSBuild:{nameof(MSBuildOptions.MSBuildSDKsPath)}"] = Path.Combine(info.BasePath, "Sdks")
+            };
+
+            builder.AddInMemoryCollection(msbuildProperties);
 
             var configuration = builder.Build();
 
