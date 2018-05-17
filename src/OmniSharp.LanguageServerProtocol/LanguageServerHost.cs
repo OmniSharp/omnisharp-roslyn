@@ -86,12 +86,13 @@ namespace OmniSharp.LanguageServerProtocol
             _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
 
             _configuration = new ConfigurationBuilder(_environment).Build();
-            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, new LanguageServerEventEmitter(_server), _services);
+            var eventEmitter = new LanguageServerEventEmitter(_server);
+            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, _configuration, eventEmitter, _services);
 
             var plugins = _application.CreatePluginAssemblies();
 
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
-            var compositionHostBuilder = new CompositionHostBuilder(_serviceProvider, _environment)
+            var compositionHostBuilder = new CompositionHostBuilder(_serviceProvider)
                 .WithOmniSharpAssemblies()
                 .WithAssemblies(typeof(LanguageServerHost).Assembly)
                 .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(plugins.AssemblyNames).ToArray());
