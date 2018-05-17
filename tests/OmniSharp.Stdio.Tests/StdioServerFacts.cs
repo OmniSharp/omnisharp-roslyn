@@ -1,13 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OmniSharp.Endpoint;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Protocol;
@@ -21,14 +17,14 @@ namespace OmniSharp.Stdio.Tests
         private Host BuildTestServerAndStart(TextReader reader, ISharedTextWriter writer, Action<Host> programDelegate = null)
         {
             var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
-            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration);
+            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(configuration, NullEventEmitter.Instance);
             var omniSharpEnvironment = new OmniSharpEnvironment();
             var cancelationTokenSource = new CancellationTokenSource();
             var host = new Host(reader, writer,
                 omniSharpEnvironment,
                 configuration,
                 serviceProvider,
-                new CompositionHostBuilder(serviceProvider, omniSharpEnvironment, NullEventEmitter.Instance),
+                new CompositionHostBuilder(serviceProvider, omniSharpEnvironment),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 cancelationTokenSource);
 

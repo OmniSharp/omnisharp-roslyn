@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
@@ -16,6 +15,7 @@ using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -52,8 +52,8 @@ namespace TestUtility
             OmniSharpWorkspace workspace,
             CompositionHost compositionHost)
         {
-            this._serviceProvider = serviceProvider;
-            this._compositionHost = compositionHost;
+            _serviceProvider = serviceProvider;
+            _compositionHost = compositionHost;
 
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
@@ -66,8 +66,8 @@ namespace TestUtility
 
         protected override void DisposeCore(bool disposing)
         {
-            this._serviceProvider.Dispose();
-            this._compositionHost.Dispose();
+            _serviceProvider.Dispose();
+            _compositionHost.Dispose();
 
             this.LoggerFactory.Dispose();
             this.Workspace.Dispose();
@@ -86,20 +86,15 @@ namespace TestUtility
 
         public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
         {
-            var dotNetPath = Path.Combine(
-                TestAssets.Instance.RootFolder,
-                GetDotNetCliFolderName(dotNetCliVersion),
-                "dotnet");
+            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
+            var loggerFactory = new LoggerFactory().AddXunit(testOutput);
+            var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
+            var sharedTextWriter = new TestSharedTextWriter(testOutput);
 
-            if (!File.Exists(dotNetPath))
-            {
-                dotNetPath = Path.ChangeExtension(dotNetPath, ".exe");
-            }
+            var dotNetCliService = CreateTestDotNetCliService(dotNetCliVersion, loggerFactory);
 
-            if (!File.Exists(dotNetPath))
-            {
-                throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
-            }
+            var info = dotNetCliService.GetInfo();
+            logger.LogInformation($"Using .NET CLI: {info.Version}");
 
             var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
@@ -110,27 +105,18 @@ namespace TestUtility
             // This property will cause the MSBuild project loader to set the
             // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
             // within the appropriate .NET Core SDK.
-            builder.Properties["MSBuild:UseLegacySdkResolver"] = true;
+            builder.Properties[$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = true;
+            builder.Properties[$"MSBuild:{nameof(MSBuildOptions.MSBuildSDKsPath)}"] = Path.Combine(info.BasePath, "Sdks");
 
             var configuration = builder.Build();
 
-            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
-            var loggerFactory = new LoggerFactory().AddXunit(testOutput);
-            var sharedTextWriter = new TestSharedTextWriter(testOutput);
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration, NullEventEmitter.Instance, dotNetCliService);
 
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
-
-            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, NullEventEmitter.Instance)
+            var compositionHost = new CompositionHostBuilder(serviceProvider, environment)
                 .WithAssemblies(s_lazyAssemblies.Value)
                 .Build();
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
-            var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
-
-            var dotNetCli = compositionHost.GetExport<DotNetCliService>();
-            dotNetCli.SetDotNetPath(dotNetPath);
-            var version = dotNetCli.GetVersion();
-            logger.LogInformation($"Using .NET CLI: {version}");
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
 
@@ -141,6 +127,26 @@ namespace TestUtility
             service.Handle(new WorkspaceInformationRequest()).Wait();
 
             return host;
+        }
+
+        private static DotNetCliService CreateTestDotNetCliService(DotNetCliVersion dotNetCliVersion, ILoggerFactory loggerFactory)
+        {
+            var dotnetPath = Path.Combine(
+                TestAssets.Instance.RootFolder,
+                GetDotNetCliFolderName(dotNetCliVersion),
+                "dotnet");
+
+            if (!File.Exists(dotnetPath))
+            {
+                dotnetPath = Path.ChangeExtension(dotnetPath, ".exe");
+            }
+
+            if (!File.Exists(dotnetPath))
+            {
+                throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
+            }
+
+            return new DotNetCliService(loggerFactory, NullEventEmitter.Instance, dotnetPath);
         }
 
         public T GetExport<T>()

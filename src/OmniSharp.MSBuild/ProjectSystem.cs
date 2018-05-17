@@ -26,7 +26,7 @@ namespace OmniSharp.MSBuild
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly ImmutableDictionary<string, string> _propertyOverrides;
-        private readonly DotNetCliService _dotNetCli;
+        private readonly IDotNetCliService _dotNetCli;
         private readonly SdksPathResolver _sdksPathResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
@@ -53,7 +53,7 @@ namespace OmniSharp.MSBuild
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             IMSBuildLocator msbuildLocator,
-            DotNetCliService dotNetCliService,
+            IDotNetCliService dotNetCliService,
             SdksPathResolver sdksPathResolver,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,

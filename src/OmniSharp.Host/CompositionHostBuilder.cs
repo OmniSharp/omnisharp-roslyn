@@ -16,7 +16,6 @@ using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
@@ -24,18 +23,15 @@ namespace OmniSharp
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IOmniSharpEnvironment _environment;
-        private readonly IEventEmitter _eventEmitter;
         private readonly IEnumerable<Assembly> _assemblies;
 
         public CompositionHostBuilder(
             IServiceProvider serviceProvider,
             IOmniSharpEnvironment environment,
-            IEventEmitter eventEmitter,
             IEnumerable<Assembly> assemblies = null)
         {
             _serviceProvider = serviceProvider;
             _environment = environment;
-            _eventEmitter = eventEmitter;
             _assemblies = assemblies ?? Array.Empty<Assembly>();
         }
 
@@ -45,6 +41,8 @@ namespace OmniSharp
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
             var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
+            var eventEmitter = _serviceProvider.GetRequiredService<IEventEmitter>();
+            var dotNetCliService = _serviceProvider.GetRequiredService<IDotNetCliService>();
             var config = new ContainerConfiguration();
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
@@ -68,9 +66,10 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(options.CurrentValue))
                 .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
+                .WithProvider(MefValueProvider.From(dotNetCliService))
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
-                .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
+                .WithProvider(MefValueProvider.From(eventEmitter));
 
             var parts = _assemblies
                 .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
@@ -132,7 +131,7 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             }
         }
 
-        public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration, IServiceCollection services = null)
+        public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
         {
             services = services ?? new ServiceCollection();
 
@@ -140,6 +139,10 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
             services.AddOptions();
+
+            services.AddSingleton(eventEmitter);
+
+            services.AddSingleton<IDotNetCliService, DotNetCliService>();
 
             // MSBuild
             services.AddSingleton<IMSBuildLocator>(sp =>
@@ -161,7 +164,6 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             return new CompositionHostBuilder(
                 _serviceProvider,
                 _environment,
-                _eventEmitter,
                 _assemblies.Concat(assemblies).Distinct()
             );
         }
@@ -171,7 +173,6 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             return new CompositionHostBuilder(
                 _serviceProvider,
                 _environment,
-                _eventEmitter,
                 _assemblies.Concat(assemblies).Distinct()
             );
         }

@@ -12,14 +12,14 @@ namespace OmniSharp.MSBuild
         private const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
         private const string Sdks = nameof(Sdks);
 
-        private readonly DotNetCliService _dotNetCli;
+        private readonly IDotNetCliService _dotNetCli;
         private readonly ILogger _logger;
 
         public bool Enabled { get; set; } = false;
         public string OverridePath { get; set; }
 
         [ImportingConstructor]
-        public SdksPathResolver(DotNetCliService dotNetCli, ILoggerFactory loggerFactory)
+        public SdksPathResolver(IDotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             _dotNetCli = dotNetCli;
             _logger = loggerFactory.CreateLogger<SdksPathResolver>();
