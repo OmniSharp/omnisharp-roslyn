@@ -61,11 +61,10 @@ namespace OmniSharp.DotNet
             _projectStates = new ProjectStatesCache(loggerFactory, _eventEmitter);
         }
 
+        public string Key { get; } = "DotNet";
+        public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new string[] { ".cs" };
-
-        public string Key => "DotNet";
-
-        public string Language => LanguageNames.CSharp;
+        public bool EnabledByDefault { get; } = false;
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {

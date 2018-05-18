@@ -32,6 +32,8 @@ namespace OmniSharp.DotNetTest.Tests
             this._testAssets = TestAssets.Instance;
         }
 
+        public override DotNetCliVersion DotNetCliVersion { get; } = 0;
+
         [Theory]
         [InlineData(XunitTestProject, TestProgram, 8, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.Test")]
         [InlineData(XunitTestProject, TestProgram, 16, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.DataDrivenTest1")]
@@ -48,7 +50,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task FindTestMethods(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
+            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion.Current))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
 
@@ -70,7 +72,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task LegacyFindTestMethods(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName, legacyProject: true))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
+            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion.Legacy))
             {
                 var filePath = Path.Combine(testProject.Directory, fileName);
 
