@@ -16,7 +16,6 @@ namespace TestUtility
         public string TestBinariesFolder { get; }
         public string TestScriptsFolder { get; }
 
-
         private TestAssets()
         {
             RootFolder = FindRootFolder();

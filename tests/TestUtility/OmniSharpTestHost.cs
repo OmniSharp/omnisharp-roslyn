@@ -35,7 +35,7 @@ namespace TestUtility
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(ProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
-            typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
+            typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
