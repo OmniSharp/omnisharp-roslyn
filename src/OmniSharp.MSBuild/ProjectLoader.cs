@@ -110,7 +110,11 @@ namespace OmniSharp.MSBuild
 
             toolsVersion = GetLegalToolsetVersion(toolsVersion, projectCollection.Toolsets);
 
-            return projectCollection.LoadProject(filePath, toolsVersion);
+            var project = projectCollection.LoadProject(filePath, toolsVersion);
+
+            SetTargetFrameworkIfNeeded(project);
+
+            return project;
         }
 
         private static void SetTargetFrameworkIfNeeded(MSB.Evaluation.Project evaluatedProject)
@@ -127,10 +131,7 @@ namespace OmniSharp.MSBuild
                 // do better and potentially allow OmniSharp hosts to select a target framework.
                 targetFramework = targetFrameworks[0];
                 evaluatedProject.SetProperty(PropertyNames.TargetFramework, targetFramework);
-            }
-            else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
-            {
-                targetFrameworks = ImmutableArray.Create(targetFramework);
+                evaluatedProject.ReevaluateIfNecessary();
             }
         }
 

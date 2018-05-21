@@ -37,7 +37,8 @@
     "TwoProjectsWithSolution",
     "ProjectWithGeneratedFile",
     "CSharpAndFSharp",
-    "ProjectWithMismatchedFileName"
+    "ProjectWithMismatchedFileName",
+    "ProjectWithMultiTFMLib"
   ],
   "LegacyTestAssets": [
     "LegacyNUnitTestProject",
