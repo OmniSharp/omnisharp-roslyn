@@ -30,7 +30,7 @@ namespace OmniSharp.DotNet
 
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly DotNetCliService _dotNetCliService;
+        private readonly IDotNetCliService _dotNetCliService;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -44,7 +44,7 @@ namespace OmniSharp.DotNet
         public DotNetProjectSystem(
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
-            DotNetCliService dotNetCliService,
+            IDotNetCliService dotNetCliService,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
