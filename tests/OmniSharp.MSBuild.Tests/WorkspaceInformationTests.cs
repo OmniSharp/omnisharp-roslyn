@@ -141,6 +141,27 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task TestProjectWithMultiTFMReferencedProjectOutsideOfOmniSharp()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib"))
+            using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory, "App")))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(2, workspaceInfo.Projects.Count);
+
+                var project1 = workspaceInfo.Projects[0];
+                Assert.Equal("App.csproj", Path.GetFileName(project1.Path));
+
+                var project2 = workspaceInfo.Projects[1];
+                Assert.Equal("Lib.csproj", Path.GetFileName(project2.Path));
+                Assert.Equal(".NETStandard,Version=v1.3", project2.TargetFramework);
+                Assert.Equal(2, project2.TargetFrameworks.Count);
+            }
+        }
+
         [ConditionalFact(typeof(WindowsOnly))]
         public async Task AntlrGeneratedFiles()
         {
