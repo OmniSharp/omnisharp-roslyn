@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Cake.Utilities;
 using OmniSharp.Models;
-using OmniSharp.Models.GotoDefinition;
 using OmniSharp.Models.Navigate;
 using OmniSharp.Models.MembersTree;
+using OmniSharp.Models.Rename;
 
 namespace OmniSharp.Cake.Extensions
 {
@@ -66,6 +68,23 @@ namespace OmniSharp.Cake.Extensions
             return response;
         }
 
+        public static async Task<RenameResponse> TranslateAsync(this RenameResponse response, OmniSharpWorkspace workspace, RenameRequest request)
+        {
+            var changes = new Dictionary<string, List<LinePositionSpanTextChange>>();
+
+            foreach (var change in response.Changes)
+            {
+                await PopulateModificationsAsync(change, workspace, changes);
+            }
+
+            response.Changes = changes.Select(x => new ModifiedFileResponse(x.Key)
+            {
+                Changes = x.Value
+            });
+
+            return response;
+        }
+
         private static async Task<FileMemberElement> TranslateAsync(this FileMemberElement element, OmniSharpWorkspace workspace, Request request)
         {
             element.Location = await element.Location.TranslateAsync(workspace, request);
@@ -105,6 +124,47 @@ namespace OmniSharp.Cake.Extensions
             quickFix.EndLine = line;
 
             return quickFix;
+        }
+
+        private static async Task PopulateModificationsAsync(
+            ModifiedFileResponse modification,
+            OmniSharpWorkspace workspace,
+            IDictionary<string, List<LinePositionSpanTextChange>> modifications)
+        {
+            foreach (var change in modification.Changes)
+            {
+                var (filename, _) = await change.TranslateAsync(workspace, modification.FileName);
+
+                if (change.StartLine < 0)
+                {
+                    continue;
+                }
+
+                if (modifications.TryGetValue(filename, out var changes))
+                {
+                    changes.Add(change);
+                }
+                else
+                {
+                    modifications.Add(filename, new List<LinePositionSpanTextChange>
+                    {
+                        change
+                    });
+                }
+            }
+        }
+
+        private static async Task<(string, LinePositionSpanTextChange)> TranslateAsync(this LinePositionSpanTextChange change, OmniSharpWorkspace workspace, string fileName)
+        {
+            var (line, newFileName) = await LineIndexHelper.TranslateFromGenerated(fileName, change.StartLine, workspace, false);
+
+            change.StartLine = line;
+
+            (line, _) = await LineIndexHelper.TranslateFromGenerated(fileName, change.EndLine, workspace, false);
+
+            change.EndLine = line;
+
+            return (newFileName, change);
         }
     }
 }
