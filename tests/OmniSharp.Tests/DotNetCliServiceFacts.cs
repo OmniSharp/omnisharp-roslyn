@@ -17,7 +17,7 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var version = dotNetCli.GetVersion();
 
@@ -33,7 +33,7 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var info = dotNetCli.GetInfo();
 
@@ -49,7 +49,7 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var version = dotNetCli.GetVersion();
 
@@ -65,7 +65,7 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var info = dotNetCli.GetInfo();
 

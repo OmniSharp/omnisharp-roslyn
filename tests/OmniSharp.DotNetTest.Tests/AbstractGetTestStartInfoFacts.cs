@@ -48,7 +48,7 @@ namespace OmniSharp.DotNetTest.Tests
 
                 var response = await service.Handle(request);
 
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 Assert.Equal(dotNetCli.DotNetPath, response.Executable);
             }

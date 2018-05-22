@@ -65,7 +65,7 @@ namespace OmniSharp.MSBuild.Discovery
 
             foreach (var assemblyName in s_msbuildAssemblies)
             {
-                LoadMSBuildAssembly(assemblyName);
+                LoadAssemblyByNameOnly(assemblyName);
             }
 
             AppDomain.CurrentDomain.AssemblyResolve += Resolve;
@@ -113,15 +113,12 @@ namespace OmniSharp.MSBuild.Discovery
 
             _logger.LogDebug($"Attempting to resolve '{assemblyName}'");
 
-            if (s_msbuildAssemblies.Contains(assemblyName.Name))
-            {
-                return LoadMSBuildAssembly(assemblyName.Name);
-            }
-
-            return null;
+            return s_msbuildAssemblies.Contains(assemblyName.Name)
+                ? LoadAssemblyByNameOnly(assemblyName.Name)
+                : LoadAssemblyByFullName(assemblyName);
         }
 
-        private Assembly LoadMSBuildAssembly(string assemblyName)
+        private Assembly LoadAssemblyByNameOnly(string assemblyName)
         {
             var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName + ".dll");
             var result = File.Exists(assemblyPath)
@@ -130,10 +127,88 @@ namespace OmniSharp.MSBuild.Discovery
 
             if (result != null)
             {
-                _logger.LogDebug($"Resolved '{assemblyName}' to '{assemblyPath}'");
+                _logger.LogDebug($"SUCCESS: Resolved to '{assemblyPath}' (name-only).");
             }
 
             return result;
+        }
+
+        private Assembly LoadAssemblyByFullName(AssemblyName assemblyName)
+        {
+            var assemblyPath = Path.Combine(_registeredInstance.MSBuildPath, assemblyName.Name + ".dll");
+            if (!File.Exists(assemblyPath))
+            {
+                _logger.LogDebug($"FAILURE: Could not locate '{assemblyPath}'.");
+                return null;
+            }
+
+            if (!TryGetAssemblyName(assemblyPath, out var resultAssemblyName))
+            {
+                _logger.LogDebug($"FAILURE: Could not retrieve {nameof(AssemblyName)} for '{assemblyPath}'.");
+                return null;
+            }
+
+            if (assemblyName.Name != resultAssemblyName.Name ||
+                assemblyName.Version != resultAssemblyName.Version ||
+                !AreEqual(assemblyName.GetPublicKeyToken(), resultAssemblyName.GetPublicKeyToken()))
+            {
+                _logger.LogDebug($"FAILURE: Found '{assemblyPath}' but name, '{resultAssemblyName}', did not match.");
+                return null;
+            }
+
+            // Note: don't bother testing culture. If the assembly has a different culture than what we're
+            // looking for, go ahead and use it.
+
+            var resultAssembly = _assemblyLoader.LoadFrom(assemblyPath);
+
+            if (resultAssembly != null)
+            {
+                _logger.LogDebug($"SUCCESS: Resolved to '{assemblyPath}'");
+            }
+
+            return resultAssembly;
+        }
+
+        private static bool AreEqual(byte[] array1, byte[] array2)
+        {
+            if (array1 == null)
+            {
+                return array2 == null;
+            }
+
+            if (array1 == null)
+            {
+                return false;
+            }
+
+            if (array1.Length != array2.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < array1.Length; i++)
+            {
+                if (array1[i] != array2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool TryGetAssemblyName(string assemblyPath, out AssemblyName assemblyName)
+        {
+            try
+            {
+                assemblyName = AssemblyName.GetAssemblyName(assemblyPath);
+                return assemblyName != null;
+            }
+            catch
+            {
+                assemblyName = null;
+                return false;
+            }
         }
 
         public ImmutableArray<MSBuildInstance> GetInstances()

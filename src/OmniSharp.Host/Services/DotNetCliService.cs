@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Composition;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,25 +11,25 @@ using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
 {
-    [Export, Shared]
-    public class DotNetCliService
+    internal class DotNetCliService : IDotNetCliService
     {
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
         private readonly ConcurrentDictionary<string, object> _locks;
         private readonly SemaphoreSlim _semaphore;
 
-        private string _dotnetPath = "dotnet";
+        public string DotNetPath { get; }
 
-        public string DotNetPath => _dotnetPath;
-
-        [ImportingConstructor]
-        public DotNetCliService(ILoggerFactory loggerFactory, IEventEmitter eventEmitter)
+        public DotNetCliService(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, string dotnetPath = null)
         {
-            this._logger = loggerFactory.CreateLogger<DotNetCliService>();
-            this._eventEmitter = eventEmitter;
-            this._locks = new ConcurrentDictionary<string, object>();
-            this._semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
+            _logger = loggerFactory.CreateLogger<DotNetCliService>();
+            _eventEmitter = eventEmitter;
+            _locks = new ConcurrentDictionary<string, object>();
+            _semaphore = new SemaphoreSlim(Environment.ProcessorCount / 2);
+
+            DotNetPath = dotnetPath ?? "dotnet";
+
+            _logger.LogInformation($"DotNetPath set to {DotNetPath}");
         }
 
         private static void RemoveMSBuildEnvironmentVariables(IDictionary<string, string> environment)
@@ -39,24 +38,6 @@ namespace OmniSharp.Services
             // the .NET CLI is not launched with the wrong values.
             environment.Remove("MSBUILD_EXE_PATH");
             environment.Remove("MSBuildExtensionsPath");
-        }
-
-        public void SetDotNetPath(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                path = "dotnet";
-            }
-
-            if (string.Equals(_dotnetPath, path, StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            _dotnetPath = path;
-
-            _logger.LogInformation($"DotNetPath set to {_dotnetPath}");
-
         }
 
         public Task RestoreAsync(string workingDirectory, string arguments = null, Action onFailure = null)
@@ -75,7 +56,7 @@ namespace OmniSharp.Services
                     {
                         // A successful restore will update the project lock file which is monitored
                         // by the dotnet project system which eventually update the Roslyn model
-                        exitStatus = ProcessHelper.Run(_dotnetPath, $"restore {arguments}", workingDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables);
+                        exitStatus = ProcessHelper.Run(DotNetPath, $"restore {arguments}", workingDirectory, updateEnvironment: RemoveMSBuildEnvironmentVariables);
                     }
                     finally
                     {
@@ -98,7 +79,7 @@ namespace OmniSharp.Services
 
         public Process Start(string arguments, string workingDirectory)
         {
-            var startInfo = new ProcessStartInfo(_dotnetPath, arguments)
+            var startInfo = new ProcessStartInfo(DotNetPath, arguments)
             {
                 WorkingDirectory = workingDirectory,
                 CreateNoWindow = true,
@@ -114,7 +95,7 @@ namespace OmniSharp.Services
 
         public SemanticVersion GetVersion(string workingDirectory = null)
         {
-            var output = ProcessHelper.RunAndCaptureOutput(_dotnetPath, "--version", workingDirectory);
+            var output = ProcessHelper.RunAndCaptureOutput(DotNetPath, "--version", workingDirectory);
 
             return SemanticVersion.Parse(output);
         }

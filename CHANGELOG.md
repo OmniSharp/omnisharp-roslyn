@@ -5,6 +5,19 @@ All changes to the project will be documented in this file.
 * Update to Roslyn 2.8.0 packages, adding support for C# 7.3. (PR: [#1182](https://github.com/OmniSharp/omnisharp-roslyn/pull/1182))
 * MSBuild project system no longer stops when a project fails to load. (PR: [#1181](https://github.com/OmniSharp/omnisharp-roslyn/pull/1181)) 
 * Fixed null-reference exception that could be thrown during MSBuild discovery. ([#1188](https://github.com/OmniSharp/omnisharp-roslyn/issues/1188), PR: [#1189](https://github.com/OmniSharp/omnisharp-roslyn/issues/1188))
+* Fixed an issue where referenced projects outside of OmniSharp's target path/solution would not be evaluated properly if they were multi-targeted (e.g. contained `<TargetFrameworks>`), which could result in downstream failures. ([omnisharp-vscode#2295](https://github.com/OmniSharp/omnisharp-vscode/issues/2295), PR: [#1195](https://github.com/OmniSharp/omnisharp-roslyn/pull/1195))
+* Removed logic that set `MSBuildSDKsPath` environment variable before loading a project. This environment variable overrides normal MSBuild SDK resolution, which breaks resolution for custom MSBuild SDKs (for more information on MSBuild SDKs, see the [documentation](https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-use-project-sdk#how-project-sdks-are-resolved)). ([#1190](https://github.com/OmniSharp/omnisharp-roslyn/issues/1190), PR: [#1192](https://github.com/OmniSharp/omnisharp-roslyn/pull/1192))
+    * **Breaking Change**: Removing this logic means that OmniSharp will no longer load .NET Core projects that target a .NET Core SDK with a version <= 1.0.3 by default. If you need to restore this behavior, you can set the following option in an `omnisharp.json` configuration file:
+    
+        ```JSON
+        {
+            "MSBuild": {
+                "UseLegacySdkResolver": true
+            }
+        }
+        ```
+        See [Configuration Options](https://github.com/OmniSharp/omnisharp-roslyn/wiki/Configuration-Options) for more details on `omnisharp.json`.
+* Support `/rename` endpoint in `.cake` files.
 
 ## [1.30.1] - 2018-05-11
 * Fixed a 1.30.0 regression that prevented the script project system from working on Unix-based systems (PR: [#1185](https://github.com/OmniSharp/omnisharp-roslyn/pull/1185))
