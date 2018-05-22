@@ -14,6 +14,7 @@ namespace TestUtility
         public string LegacyTestProjectsFolder { get; }
         public string TestProjectsFolder { get; }
         public string TestBinariesFolder { get; }
+        public string TestScriptsFolder { get; }
 
         private TestAssets()
         {
@@ -22,6 +23,7 @@ namespace TestUtility
             TestAssetsFolder = Path.Combine(RootFolder, "test-assets");
             LegacyTestProjectsFolder = Path.Combine(TestAssetsFolder, "legacy-test-projects");
             TestProjectsFolder = Path.Combine(TestAssetsFolder, "test-projects");
+            TestScriptsFolder = Path.Combine(TestAssetsFolder, "test-scripts");
             TestBinariesFolder = Path.Combine(TestAssetsFolder, "binaries");
         }
 
@@ -73,6 +75,12 @@ namespace TestUtility
             using (var sourceStream = File.OpenRead(file.FullName))
             using (var destStream = File.Create(destFileName))
                 await sourceStream.CopyToAsync(destStream);
+        }
+
+        public ITestProject GetTestScript(string folderName)
+        {
+            var sourceDirectory = Path.Combine(TestScriptsFolder, folderName);
+            return new TestProject(folderName, TestScriptsFolder, sourceDirectory, shadowCopied: false);
         }
 
         public async Task<ITestProject> GetTestProjectAsync(string name, bool shadowCopy = true, bool legacyProject = false)

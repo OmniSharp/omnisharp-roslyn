@@ -237,7 +237,11 @@ namespace OmniSharp.Script
                 .Where(a => a != null)
                 .Select(a => a.Location)
                 .Distinct()
-                .Select(l => _metadataFileReferenceCache.GetMetadataReference(l));
+                .Select(l =>
+                {
+                    _assemblyReferences.Add(l);
+                    return _metadataFileReferenceCache.GetMetadataReference(l);
+                });
 
             foreach (var reference in references)
             {
