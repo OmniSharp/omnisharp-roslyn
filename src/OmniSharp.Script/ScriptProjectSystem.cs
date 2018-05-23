@@ -5,7 +5,6 @@ using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dotnet.Script.DependencyModel.Compilation;
 using Dotnet.Script.DependencyModel.NuGet;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
@@ -15,8 +14,6 @@ using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
-using OmniSharp.Roslyn.Utilities;
-using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
 
 namespace OmniSharp.Script
 {
@@ -25,29 +22,29 @@ namespace OmniSharp.Script
     {
         private const string CsxExtension = ".csx";
 
-        private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
+        private readonly ConcurrentDictionary<string, ProjectInfo> _projects = new ConcurrentDictionary<string, ProjectInfo>();
+        private readonly ScriptContextProvider _scriptContextProvider;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILoggerFactory _loggerFactory;
         private readonly FileSystemHelper _fileSystemHelper;
-        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
+        private ScriptOptions _scriptOptions;
         private Lazy<ScriptContext> _scriptContext;
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory,
-            MetadataFileReferenceCache metadataFileReferenceCache, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper)
+            ScriptContextProvider scriptContextProvider, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper)
         {
-            _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
             _loggerFactory = loggerFactory;
             _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
-            _projects = new ConcurrentDictionary<string, ProjectInfo>();
+            _scriptContextProvider = scriptContextProvider;
         }
 
         public string Key => "Script";
@@ -56,10 +53,10 @@ namespace OmniSharp.Script
 
         public void Initalize(IConfiguration configuration)
         {
-            var scriptOptions = new ScriptOptions();
-            ConfigurationBinder.Bind(configuration, scriptOptions);
+            _scriptOptions = new ScriptOptions();
+            ConfigurationBinder.Bind(configuration, _scriptOptions);
 
-            _scriptContext = new Lazy<ScriptContext>(() => new ScriptContext(scriptOptions, _loggerFactory, _env, _metadataFileReferenceCache));
+            _scriptContext = new Lazy<ScriptContext>(() => _scriptContextProvider.CreateScriptContext(_scriptOptions));
 
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
@@ -109,7 +106,7 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptContext.Value.ScriptProjectProvider.CreateProject(csxFileName, _scriptContext.Value.MetadataReferences, csxPath);
 
-                    if (_scriptContext.Value.ScriptOptions.IsNugetEnabled())
+                    if (_scriptOptions.IsNugetEnabled())
                     {
                         var scriptMap = _scriptContext.Value.CompilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
                         var options = project.CompilationOptions.WithSourceReferenceResolver(
