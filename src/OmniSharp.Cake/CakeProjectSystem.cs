@@ -283,7 +283,7 @@ namespace OmniSharp.Cake
                 assemblyName: $"{name}.dll",
                 language: LanguageNames.CSharp,
                 compilationOptions: cakeScript.Usings == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(cakeScript.Usings),
-                parseOptions: new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script),
+                parseOptions: new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script),
                 metadataReferences: GetMetadataReferences(cakeScript.References),
                 // TODO: projectReferences?
                 isSubmission: true,
