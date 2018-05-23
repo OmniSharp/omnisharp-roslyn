@@ -32,7 +32,6 @@ namespace OmniSharp.Script
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILoggerFactory _loggerFactory;
         private readonly FileSystemHelper _fileSystemHelper;
-        private readonly CompilationDependencyResolver _compilationDependencyResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
         private Lazy<ScriptContext> _scriptContext;
@@ -49,23 +48,6 @@ namespace OmniSharp.Script
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
             _projects = new ConcurrentDictionary<string, ProjectInfo>();
-            _compilationDependencyResolver = new CompilationDependencyResolver(type =>
-            {
-                // Prefix with "OmniSharp" so that we make it through the log filter.
-                var categoryName = $"OmniSharp.Script.{type.FullName}";
-                var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
-                return ((level, message) =>
-                {
-                    if (level == LogLevel.Debug)
-                    {
-                        dependencyResolverLogger.LogDebug(message);
-                    }
-                    if (level == LogLevel.Info)
-                    {
-                        dependencyResolverLogger.LogInformation(message);
-                    }
-                });
-            });
         }
 
         public string Key => "Script";
@@ -77,7 +59,7 @@ namespace OmniSharp.Script
             var scriptOptions = new ScriptOptions();
             ConfigurationBinder.Bind(configuration, scriptOptions);
 
-            _scriptContext = new Lazy<ScriptContext>(() => new ScriptContext(scriptOptions, _compilationDependencyResolver, _loggerFactory, _env, _metadataFileReferenceCache));
+            _scriptContext = new Lazy<ScriptContext>(() => new ScriptContext(scriptOptions, _loggerFactory, _env, _metadataFileReferenceCache));
 
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 

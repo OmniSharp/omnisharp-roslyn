@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
+using LogLevel = Dotnet.Script.DependencyModel.Logging.LogLevel;
 
 namespace OmniSharp.Script
 {
@@ -19,13 +20,29 @@ namespace OmniSharp.Script
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly ILogger _logger;
 
-        public ScriptContext(ScriptOptions scriptOptions, CompilationDependencyResolver compilationDependencyResolver, ILoggerFactory loggerFactory, IOmniSharpEnvironment env, MetadataFileReferenceCache metadataFileReferenceCache)
+        public ScriptContext(ScriptOptions scriptOptions, ILoggerFactory loggerFactory, IOmniSharpEnvironment env, MetadataFileReferenceCache metadataFileReferenceCache)
         {
             _scriptOptions = scriptOptions;
-            _compilationDependencyResolver = compilationDependencyResolver;
             _env = env;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _logger = loggerFactory.CreateLogger<ScriptContext>();
+            _compilationDependencyResolver = new CompilationDependencyResolver(type =>
+            {
+                // Prefix with "OmniSharp" so that we make it through the log filter.
+                var categoryName = $"OmniSharp.Script.{type.FullName}";
+                var dependencyResolverLogger = loggerFactory.CreateLogger(categoryName);
+                return ((level, message) =>
+                {
+                    if (level == LogLevel.Debug)
+                    {
+                        dependencyResolverLogger.LogDebug(message);
+                    }
+                    if (level == LogLevel.Info)
+                    {
+                        dependencyResolverLogger.LogInformation(message);
+                    }
+                });
+            });
 
             ScriptOptions = scriptOptions;
 
