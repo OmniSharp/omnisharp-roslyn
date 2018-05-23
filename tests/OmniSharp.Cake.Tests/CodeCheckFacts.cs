@@ -48,7 +48,7 @@ namespace OmniSharp.Cake.Tests
 var target = Argument(""target"", ""Default"");";
 
             var diagnostics = await FindDiagnostics(input, includeFileName: true);
-            Assert.Null(diagnostics);
+            Assert.Empty(diagnostics.QuickFixes);
         }
 
         private async Task<QuickFixResponse> FindDiagnostics(string contents, bool includeFileName)
