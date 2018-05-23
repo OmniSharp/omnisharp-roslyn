@@ -28,9 +28,10 @@ namespace OmniSharp.Cake.Tests
             {
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
-                Assert.Equal(2, workspaceInfo.Projects.Count());
+                Assert.Equal(3, workspaceInfo.Projects.Count());
                 Assert.Contains("build.cake", workspaceInfo.Projects.Select(p => Path.GetFileName(p.Path)));
                 Assert.Contains("foo.cake", workspaceInfo.Projects.Select(p => Path.GetFileName(p.Path)));
+                Assert.Contains("error.cake", workspaceInfo.Projects.Select(p => Path.GetFileName(p.Path)));
             }
         }
 
@@ -43,16 +44,16 @@ namespace OmniSharp.Cake.Tests
                 var tempFile = Path.Combine(testProject.Directory, "temp.cake");
 
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
-                Assert.Equal(2, workspaceInfo.Projects.Count());
+                Assert.Equal(3, workspaceInfo.Projects.Count());
 
                 await AddFile(host, tempFile);
                 workspaceInfo = await GetWorkspaceInfoAsync(host);
-                Assert.Equal(3, workspaceInfo.Projects.Count());
+                Assert.Equal(4, workspaceInfo.Projects.Count());
                 Assert.Contains("temp.cake", workspaceInfo.Projects.Select(p => Path.GetFileName(p.Path)));
 
                 await RemoveFile(host, tempFile);
                 workspaceInfo = await GetWorkspaceInfoAsync(host);
-                Assert.Equal(2, workspaceInfo.Projects.Count());
+                Assert.Equal(3, workspaceInfo.Projects.Count());
                 Assert.DoesNotContain("temp.cake", workspaceInfo.Projects.Select(p => Path.GetFileName(p.Path)));
             }
         }
