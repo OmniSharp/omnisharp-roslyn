@@ -18,6 +18,29 @@ All changes to the project will be documented in this file.
         ```
         See [Configuration Options](https://github.com/OmniSharp/omnisharp-roslyn/wiki/Configuration-Options) for more details on `omnisharp.json`.
 * Support `/rename` endpoint in `.cake` files.
+* Support custom `.rsp` files in scripting. It is now possible to use `omnisharp.json` to define a path to an `.rsp` file, containing predefined namespaces and assembly references, and OmniSharp will respect those as part of its language services for CSX files. For example, given the following `.rsp` file:
+
+    ```
+    /r:bin/FakeLib.dll
+    /r:bin/FSharp.Core.dll
+    /r:bin/FSharpx.Extras.dll
+    /u:Fake
+    /u:FSharpx
+    /u:System.Linq
+    /u:System.IO
+    ```
+    and the following `omnisharp.json`:
+     
+    ```
+    {
+        "Script": {
+            "RspFilePath": "path/to/my.rsp"
+        }
+    }
+    ```   
+    OmniSharp will automatically include the predefined DLLs and namespaces in the language services for all the scripts in the given folder (in case of a local `omnisharp.json`) or on the machine (in case of a global `omnisharp.json`). Note that the reference to `mscorlib`/`System.Runtime` is always there anyway and doesn't need to be specified again in the `.rsp` file. ([#1024](https://github.com/OmniSharp/omnisharp-roslyn/issues/1024), PR: [#1112](https://github.com/OmniSharp/omnisharp-roslyn/issues/1112))
+    * Note that the reference to `mscorlib`/`System.Runtime` is always there anyway and doesn't need to be specified again in the `.rsp` file
+    * only imports and references are supported as part of the `.rsp` file (scripting doesn't support other compiler settings passed using the `.rsp` file). In the future, depending on whether the [feature is available in Roslyn](https://github.com/dotnet/roslyn/issues/23421), OmniSharp may also support defining a scripting globals type via `.rsp` file.
 
 ## [1.30.1] - 2018-05-11
 * Fixed a 1.30.0 regression that prevented the script project system from working on Unix-based systems (PR: [#1185](https://github.com/OmniSharp/omnisharp-roslyn/pull/1185))
