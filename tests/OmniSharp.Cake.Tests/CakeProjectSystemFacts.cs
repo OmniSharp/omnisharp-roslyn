@@ -1,12 +1,12 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.WorkspaceInformation;
-using OmniSharp.MSBuild.Models;
 using OmniSharp.Roslyn.CSharp.Services.Files;
-using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -54,6 +54,19 @@ namespace OmniSharp.Cake.Tests
                 workspaceInfo = await GetWorkspaceInfoAsync(host);
                 Assert.Equal(2, workspaceInfo.Projects.Count());
                 Assert.DoesNotContain("temp.cake", workspaceInfo.Projects.Select(p => Path.GetFileName(p.Path)));
+            }
+        }
+
+        [Fact]
+        public async Task AllProjectsShouldUseLatestLanguageVersion()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                Assert.All(host.Workspace.CurrentSolution.Projects, project =>
+                    Assert.Equal(
+                        expected: LanguageVersion.Latest,
+                        actual: ((CSharpParseOptions)project.ParseOptions).SpecifiedLanguageVersion));
             }
         }
 
