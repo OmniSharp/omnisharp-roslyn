@@ -241,10 +241,10 @@ namespace OmniSharp.DotNetTest
                     Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
                     ErrorMessage = testResult.ErrorMessage,
                     ErrorStackTrace = testResult.ErrorStackTrace,
-                    StandardOutputMessages = testResult.Messages
+                    StandardOutput = testResult.Messages
                                     .Where(message => message.Category == TestResultMessage.StandardOutCategory)
                                     .Select(message => message.Text).ToArray(),
-                    StandardErrorMessages = testResult.Messages.Where(message => message.Category == TestResultMessage.StandardErrorCategory)
+                    StandardError = testResult.Messages.Where(message => message.Category == TestResultMessage.StandardErrorCategory)
                     .Select(message => message.Text).ToArray()
                 });
 
