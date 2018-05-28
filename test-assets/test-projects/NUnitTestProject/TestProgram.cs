@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 
 namespace Main.Test
 {
@@ -33,7 +34,15 @@ namespace Main.Test
         [Test]
         public void FailingTest()
         {
-            Assert.Equals(1, 2);
+            Assert.AreEqual(1, 2);
+        }
+
+        [Test]
+        public void CheckStandardOutput()
+        {
+            int a = 1, b = 1;
+            Console.WriteLine($"a = {a}, b = {b}");
+            Assert.AreEqual(a,b);
         }
 
         public void UtilityFunction()

@@ -81,6 +81,19 @@ namespace OmniSharp.DotNetTest.Tests
         }
 
         [Fact]
+        public async Task RunXunitStandardOutputIsReturned()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.MainTest.CheckStandardOutput",
+                testFramework: "xunit",
+                shouldPass: true);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].StandardOutput);
+        }
+
+        [Fact]
         public async Task RunNunitTest()
         {
             await RunDotNetTestAsync(
@@ -126,12 +139,25 @@ namespace OmniSharp.DotNetTest.Tests
             var response = await RunDotNetTestAsync(
                 NUnitTestProject,
                 methodName: "Main.Test.MainTest.FailingTest",
-                testFramework: "xunit",
+                testFramework: "nunit",
                 shouldPass: false);
 
             Assert.Single(response.Results);
             Assert.NotEmpty(response.Results[0].ErrorMessage);
             Assert.NotEmpty(response.Results[0].ErrorStackTrace);
+        }
+
+        [Fact]
+        public async Task RunNunitStandardOutputIsReturned()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.MainTest.CheckStandardOutput",
+                testFramework: "nunit",
+                shouldPass: true);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].StandardOutput);
         }
 
         [Fact]
@@ -170,12 +196,25 @@ namespace OmniSharp.DotNetTest.Tests
             var response = await RunDotNetTestAsync(
                 MSTestProject,
                 methodName: "Main.Test.MainTest.FailingTest",
-                testFramework: "xunit",
+                testFramework: "mstest",
                 shouldPass: false);
 
             Assert.Single(response.Results);
             Assert.NotEmpty(response.Results[0].ErrorMessage);
             Assert.NotEmpty(response.Results[0].ErrorStackTrace);
+        }
+
+        [Fact]
+        public async Task RunMSTestStandardOutputIsReturned()
+        {
+            var response = await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.CheckStandardOutput",
+                testFramework: "mstest",
+                shouldPass: true);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].StandardOutput);
         }
     }
 }

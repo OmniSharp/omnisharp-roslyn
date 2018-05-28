@@ -1,3 +1,4 @@
+using System;
 using Xunit;
 
 namespace Main.Test
@@ -53,6 +54,14 @@ namespace Main.Test
         public void FailingTest()
         {
             Assert.Equal(1, 2);
+        }
+
+        [Fact]
+        public void CheckStandardOutput()
+        {
+            int a = 1, b = 1;
+            Console.WriteLine($"a = {a}, b = {b}");
+            Assert.Equal(a,b);
         }
     }
 }

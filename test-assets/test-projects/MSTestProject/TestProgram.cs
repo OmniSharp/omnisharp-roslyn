@@ -1,3 +1,4 @@
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Main.Test
@@ -30,7 +31,15 @@ namespace Main.Test
         [TestMethod]
         public void FailingTest()
         {
-            Assert.Equals(1, 2);
+            Assert.AreEqual(1, 2);
+        }
+
+        [TestMethod]
+        public void CheckStandardOutput()
+        {
+            int a = 1, b = 1;
+            Console.WriteLine($"a = {a}, b = {b}");
+            Assert.AreEqual(a,b);
         }
 
         private void UtilityFunction()
