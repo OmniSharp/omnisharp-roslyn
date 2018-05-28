@@ -9,7 +9,7 @@ namespace Main.Test
         {
             Assert.True(true);
         }
-        
+
         [Theory]
         [InlineData(0)]
         [InlineData(1)]
@@ -17,7 +17,7 @@ namespace Main.Test
         {
             Assert.True(i > 0);
         }
-        
+
         [Theory]
         [InlineData(0)]
         [InlineData(1)]
@@ -25,10 +25,10 @@ namespace Main.Test
         {
             Assert.True(i >= 0);
         }
-        
+
         private void UtilityFunction()
         {
-            
+
         }
 
         [Fact(DisplayName = "My Test Name")]
@@ -47,6 +47,12 @@ namespace Main.Test
         public void TestWithSimilarNameFooBar()
         {
             Assert.True(true);
+        }
+
+        [Fact]
+        public void FailingTest()
+        {
+            Assert.Equal(1, 2);
         }
     }
 }

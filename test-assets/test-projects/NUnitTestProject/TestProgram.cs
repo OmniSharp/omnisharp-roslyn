@@ -30,6 +30,12 @@ namespace Main.Test
             Assert.True(i > 0);
         }
 
+        [Test]
+        public void FailingTest()
+        {
+            Assert.Equals(1, 2);
+        }
+
         public void UtilityFunction()
         {
 
