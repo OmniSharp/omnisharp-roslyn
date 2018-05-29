@@ -20,15 +20,18 @@ namespace OmniSharp.DotNetTest.Tests
         }
 
         [Theory]
-        [InlineData("XunitTestProject", "TestProgram.cs", 7, 20, true, "XunitTestMethod", "Main.Test.MainTest.Test")]
-        [InlineData("XunitTestProject", "TestProgram.cs", 15, 20, true, "XunitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData("XunitTestProject", "TestProgram.cs", 23, 20, true, "XunitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData("XunitTestProject", "TestProgram.cs", 28, 21, false, "", "")]
-        [InlineData("NUnitTestProject", "TestProgram.cs", 7, 20, true, "NUnitTestMethod", "Main.Test.MainTest.Test")]
-        [InlineData("NUnitTestProject", "TestProgram.cs", 14, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData("NUnitTestProject", "TestProgram.cs", 21, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData("NUnitTestProject", "TestProgram.cs", 27, 20, true, "NUnitTestMethod", "Main.Test.MainTest.SourceDataDrivenTest")]
-        [InlineData("NUnitTestProject", "TestProgram.cs", 32, 20, false, "", "")]
+        [InlineData("XunitTestProject", "TestProgram.cs", 8, 20, true, "XunitTestMethod", "Main.Test.MainTest.Test")]
+        [InlineData("XunitTestProject", "TestProgram.cs", 16, 20, true, "XunitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
+        [InlineData("XunitTestProject", "TestProgram.cs", 24, 20, true, "XunitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
+        [InlineData("XunitTestProject", "TestProgram.cs", 53, 20, true, "XunitTestMethod", "Main.Test.MainTest.FailingTest")]
+        [InlineData("XunitTestProject", "TestProgram.cs", 59, 20, true, "XunitTestMethod", "Main.Test.MainTest.CheckStandardOutput")]
+        [InlineData("XunitTestProject", "TestProgram.cs", 29, 21, false, "", "")]
+        [InlineData("NUnitTestProject", "TestProgram.cs", 8, 20, true, "NUnitTestMethod", "Main.Test.MainTest.Test")]
+        [InlineData("NUnitTestProject", "TestProgram.cs", 15, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest1")]
+        [InlineData("NUnitTestProject", "TestProgram.cs", 22, 20, true, "NUnitTestMethod", "Main.Test.MainTest.DataDrivenTest2")]
+        [InlineData("NUnitTestProject", "TestProgram.cs", 28, 20, true, "NUnitTestMethod", "Main.Test.MainTest.SourceDataDrivenTest")]
+        [InlineData("NUnitTestProject", "TestProgram.cs", 34, 20, true, "NUnitTestMethod", "Main.Test.MainTest.FailingTest")]
+        [InlineData("NUnitTestProject", "TestProgram.cs", 47, 20, false, "", "")]
         public async Task FindTestMethods(string projectName, string fileName, int line, int column, bool found, string expectedFeatureName, string expectedMethodName)
         {
             using (var testProject = await this._testAssets.GetTestProjectAsync(projectName))

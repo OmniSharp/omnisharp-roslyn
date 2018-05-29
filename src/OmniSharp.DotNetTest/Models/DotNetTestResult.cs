@@ -6,5 +6,7 @@ namespace OmniSharp.DotNetTest.Models
         public string Outcome { get; set; }
         public string ErrorMessage { get; set; }
         public string ErrorStackTrace { get; set; }
+        public string[] StandardOutput { get; set; }
+        public string[] StandardError { get; set; }
     }
 }
