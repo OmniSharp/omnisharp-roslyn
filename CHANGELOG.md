@@ -42,6 +42,7 @@ All changes to the project will be documented in this file.
     * Note that the reference to `mscorlib`/`System.Runtime` is always there anyway and doesn't need to be specified again in the `.rsp` file
     * only imports and references are supported as part of the `.rsp` file (scripting doesn't support other compiler settings passed using the `.rsp` file). In the future, depending on whether the [feature is available in Roslyn](https://github.com/dotnet/roslyn/issues/23421), OmniSharp may also support defining a scripting globals type via `.rsp` file.
 * `.cake` files are now parsed using the C# version `Latest` rather than `Default`, to match the runtime behavior of Cake. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))
+* Updated `DotNetTest` result to include messages from stdout and stderr. (PR: [#1203](https://github.com/OmniSharp/omnisharp-roslyn/pull/1203))
 
 ## [1.30.1] - 2018-05-11
 * Fixed a 1.30.0 regression that prevented the script project system from working on Unix-based systems (PR: [#1185](https://github.com/OmniSharp/omnisharp-roslyn/pull/1185))
