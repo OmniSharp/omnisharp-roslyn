@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
+using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.Roslyn.CSharp.Services.Files;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -45,6 +47,43 @@ namespace OmniSharp.Script.Tests
         }
 
         [Fact]
+        public async Task CsiScriptWithFileCreatedAfterStartingServer()
+        {
+            using (var testProject = TestAssets.Instance.GetTestScript("EmptyScript"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                Assert.Empty(workspaceInfo.Projects);
+
+                using (var file = new DisposableFile("main.csx"))
+                {
+                    var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
+                    await service.Handle(new[]
+                    {
+                        new FilesChangedRequest
+                        {
+                            FileName = file.FilePath,
+                            ChangeType = FileWatching.FileChangeType.Create
+                        }
+                    });
+
+                    await Task.Delay(2000);
+
+                    workspaceInfo = await GetWorkspaceInfoAsync(host);
+                    var project = Assert.Single(workspaceInfo.Projects);
+
+                    Assert.Equal("main.csx", Path.GetFileName(project.Path));
+
+                    // should have reference to mscorlib
+                    VerifyCorLib(project);
+
+                    // default globals object
+                    Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
+                }
+            }
+        }
+
+        [Fact]
         public async Task TwoCsiScripts()
         {
             using (var testProject = TestAssets.Instance.GetTestScript("TwoCsiScripts"))
@@ -54,8 +93,9 @@ namespace OmniSharp.Script.Tests
                 var scriptProjects = workspaceInfo.Projects.ToArray();
                 Assert.Equal(2, scriptProjects.Length);
 
-                Assert.Equal("main.csx", Path.GetFileName(scriptProjects[0].Path));
-                Assert.Equal("users.csx", Path.GetFileName(scriptProjects[1].Path));
+                // ordering is non deterministic
+                Assert.True(scriptProjects.Any(x => Path.GetFileName(x.Path) == "main.csx"), "Expected a 'main.csx' but couldn't find it");
+                Assert.True(scriptProjects.Any(x => Path.GetFileName(x.Path) == "users.csx"), "Expected a 'main.csx' but couldn't find it");
 
                 // should have reference to mscorlib
                 VerifyCorLib(scriptProjects[0]);
