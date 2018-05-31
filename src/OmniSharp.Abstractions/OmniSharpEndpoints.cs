@@ -25,6 +25,7 @@ namespace OmniSharp
         public const string Rename = "/rename";
         public const string SignatureHelp = "/signatureHelp";
         public const string MembersTree = "/currentfilemembersastree";
+        public const string BlockStructure = "/blockstructure";
         public const string MembersFlat = "/currentfilemembersasflat";
         public const string TestCommand = "/gettestcontext";
         public const string Metadata = "/metadata";
