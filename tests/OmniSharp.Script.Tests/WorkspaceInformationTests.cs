@@ -55,32 +55,30 @@ namespace OmniSharp.Script.Tests
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
                 Assert.Empty(workspaceInfo.Projects);
 
-                using (var file = new DisposableFile("main.csx"))
+                var filePath = testProject.AddDisposableFile("main.csx");
+                var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
+                await service.Handle(new[]
                 {
-                    var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
-                    await service.Handle(new[]
+                    new FilesChangedRequest
                     {
-                        new FilesChangedRequest
-                        {
-                            FileName = file.FilePath,
-                            ChangeType = FileWatching.FileChangeType.Create
-                        }
-                    });
+                        FileName = filePath,
+                        ChangeType = FileWatching.FileChangeType.Create
+                    }
+                });
 
-                    // back off for 2 seconds to let the watcher and workspace process new projects
-                    await Task.Delay(2000);
+                // back off for 2 seconds to let the watcher and workspace process new projects
+                await Task.Delay(2000);
 
-                    workspaceInfo = await GetWorkspaceInfoAsync(host);
-                    var project = Assert.Single(workspaceInfo.Projects);
+                workspaceInfo = await GetWorkspaceInfoAsync(host);
+                var project = Assert.Single(workspaceInfo.Projects);
 
-                    Assert.Equal("main.csx", Path.GetFileName(project.Path));
+                Assert.Equal("main.csx", Path.GetFileName(project.Path));
 
-                    // should have reference to mscorlib
-                    VerifyCorLib(project);
+                // should have reference to mscorlib
+                VerifyCorLib(project);
 
-                    // default globals object
-                    Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
-                }
+                // default globals object
+                Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
             }
         }
 
