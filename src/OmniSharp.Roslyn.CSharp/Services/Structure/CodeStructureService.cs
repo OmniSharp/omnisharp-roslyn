@@ -16,9 +16,37 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
     [OmniSharpHandler(OmniSharpEndpoints.V2.CodeStructure, LanguageNames.CSharp)]
     public class CodeStructureService : IRequestHandler<CodeStructureRequest, CodeStructureResponse>
     {
+        private static readonly SymbolDisplayFormat s_ShortTypeFormat = new SymbolDisplayFormat(
+            typeQualificationStyle:
+                SymbolDisplayTypeQualificationStyle.NameOnly,
+            genericsOptions:
+                SymbolDisplayGenericsOptions.IncludeTypeParameters);
+
         private static readonly SymbolDisplayFormat s_TypeFormat = new SymbolDisplayFormat(
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-            genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance);
+            typeQualificationStyle:
+                SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+            genericsOptions:
+                SymbolDisplayGenericsOptions.IncludeTypeParameters |
+                SymbolDisplayGenericsOptions.IncludeVariance);
+
+        private static readonly SymbolDisplayFormat s_ShortMemberFormat = new SymbolDisplayFormat(
+            genericsOptions:
+                SymbolDisplayGenericsOptions.IncludeTypeParameters);
+
+        private static readonly SymbolDisplayFormat s_MemberFormat = new SymbolDisplayFormat(
+            genericsOptions:
+                SymbolDisplayGenericsOptions.IncludeTypeParameters |
+                SymbolDisplayGenericsOptions.IncludeVariance,
+            memberOptions:
+                SymbolDisplayMemberOptions.IncludeParameters,
+            parameterOptions:
+                SymbolDisplayParameterOptions.IncludeDefaultValue |
+                SymbolDisplayParameterOptions.IncludeExtensionThis |
+                SymbolDisplayParameterOptions.IncludeName |
+                SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                SymbolDisplayParameterOptions.IncludeType,
+            miscellaneousOptions:
+                SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
         private readonly OmniSharpWorkspace _workspace;
 
@@ -52,32 +80,48 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var syntaxRoot = await document.GetSyntaxRootAsync();
             var semanticModel = await document.GetSemanticModelAsync();
 
-            return GetCodeElements(syntaxRoot.ChildNodes(), semanticModel, text);
+            return GetCodeElements(((CompilationUnitSyntax)syntaxRoot).Members, text, semanticModel);
         }
 
-        private static CodeElement[] GetCodeElements(IEnumerable<SyntaxNode> nodes, SemanticModel semanticModel, SourceText text)
+        private static CodeElement[] GetCodeElements(IEnumerable<SyntaxNode> nodes, SourceText text, SemanticModel semanticModel)
         {
             List<CodeElement> results = null;
+
+            Action<CodeElement> adder = Add;
 
             foreach (var node in nodes)
             {
                 switch (node)
                 {
-                    case BaseTypeDeclarationSyntax baseTypeDeclaration:
-                        Add(GetCodeElement(baseTypeDeclaration, text, semanticModel));
+                    case TypeDeclarationSyntax typeDeclaration:
+                        adder(GetCodeElement(typeDeclaration, text, semanticModel));
                         break;
                     case DelegateDeclarationSyntax delegateDeclaration:
-                        Add(GetCodeElement(delegateDeclaration, text, semanticModel));
+                        adder(GetCodeElement(delegateDeclaration, text, semanticModel));
+                        break;
+                    case EnumDeclarationSyntax enumDeclaration:
+                        adder(GetCodeElement(enumDeclaration, text, semanticModel));
                         break;
                     case NamespaceDeclarationSyntax namespaceDeclaration:
-                        Add(GetCodeElement(namespaceDeclaration, text, semanticModel));
+                        adder(GetCodeElement(namespaceDeclaration, text, semanticModel));
+                        break;
+                    case BaseMethodDeclarationSyntax baseMethodDeclaration:
+                        adder(GetCodeElement(baseMethodDeclaration, text, semanticModel));
+                        break;
+                    case BasePropertyDeclarationSyntax basePropertyDeclaration:
+                        adder(GetCodeElement(basePropertyDeclaration, text, semanticModel));
+                        break;
+                    case BaseFieldDeclarationSyntax baseFieldDeclaration:
+                        foreach (var variableDeclarator in baseFieldDeclaration.Declaration.Variables)
+                        {
+                            adder(GetCodeElement(variableDeclarator, baseFieldDeclaration, text, semanticModel));
+                        }
+
                         break;
                 }
             }
 
-            return results != null
-                ? results.ToArray()
-                : null;
+            return results?.ToArray();
 
             void Add(CodeElement element)
             {
@@ -95,18 +139,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             }
         }
 
-        private static CodeElement GetCodeElement(BaseTypeDeclarationSyntax baseTypeDeclaration, SourceText text, SemanticModel semanticModel)
+        private static CodeElement GetCodeElement(TypeDeclarationSyntax typeDeclaration, SourceText text, SemanticModel semanticModel)
         {
-            var symbol = semanticModel.GetDeclaredSymbol(baseTypeDeclaration);
+            var symbol = semanticModel.GetDeclaredSymbol(typeDeclaration);
             if (symbol == null)
             {
                 return null;
             }
 
             var ranges = new List<CodeElementRange>();
-            AddRange(ranges, CodeElementRangeKinds.Attributes, baseTypeDeclaration.AttributeLists.Span, text);
-            AddRange(ranges, CodeElementRangeKinds.Full, baseTypeDeclaration.Span, text);
-            AddRange(ranges, CodeElementRangeKinds.Name, baseTypeDeclaration.Identifier.Span, text);
+            AddRange(ranges, CodeElementRangeKinds.Attributes, typeDeclaration.AttributeLists.Span, text);
+            AddRange(ranges, CodeElementRangeKinds.Full, typeDeclaration.Span, text);
 
             var propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
 
@@ -120,10 +163,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             return new CodeElement
             {
-                Kind = GetKind(baseTypeDeclaration, symbol),
-                Name = baseTypeDeclaration.Identifier.ToString(),
+                Kind = GetKind(typeDeclaration, symbol),
+                Name = symbol.ToDisplayString(s_ShortTypeFormat),
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
-                Children = GetCodeElements(baseTypeDeclaration.ChildNodes(), semanticModel, text),
+                Children = GetCodeElements(typeDeclaration.Members, text, semanticModel),
                 Ranges = ranges.ToArray(),
                 Properties = propertyBuilder.ToImmutable()
             };
@@ -140,7 +183,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var ranges = new List<CodeElementRange>();
             AddRange(ranges, CodeElementRangeKinds.Attributes, delegateDeclaration.AttributeLists.Span, text);
             AddRange(ranges, CodeElementRangeKinds.Full, delegateDeclaration.Span, text);
-            AddRange(ranges, CodeElementRangeKinds.Name, delegateDeclaration.Identifier.Span, text);
 
             var propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
 
@@ -155,8 +197,41 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return new CodeElement
             {
                 Kind = GetKind(delegateDeclaration, symbol),
-                Name = delegateDeclaration.Identifier.ToString(),
+                Name = symbol.ToDisplayString(s_ShortTypeFormat),
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
+                Ranges = ranges.ToArray(),
+                Properties = propertyBuilder.ToImmutable()
+            };
+        }
+
+        private static CodeElement GetCodeElement(EnumDeclarationSyntax enumDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(enumDeclaration);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var ranges = new List<CodeElementRange>();
+            AddRange(ranges, CodeElementRangeKinds.Attributes, enumDeclaration.AttributeLists.Span, text);
+            AddRange(ranges, CodeElementRangeKinds.Full, enumDeclaration.Span, text);
+
+            var propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
+
+            var accessibility = GetAccessibility(symbol);
+            if (accessibility != null)
+            {
+                propertyBuilder.Add(CodeElementPropertyNames.Accessibility, accessibility);
+            }
+
+            propertyBuilder.Add(CodeElementPropertyNames.Static, symbol.IsStatic);
+
+            return new CodeElement
+            {
+                Kind = GetKind(enumDeclaration, symbol),
+                Name = symbol.ToDisplayString(s_ShortTypeFormat),
+                DisplayName = symbol.ToDisplayString(s_TypeFormat),
+                Children = GetCodeElements(enumDeclaration.Members, text, semanticModel),
                 Ranges = ranges.ToArray(),
                 Properties = propertyBuilder.ToImmutable()
             };
@@ -172,15 +247,111 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var ranges = new List<CodeElementRange>();
             AddRange(ranges, CodeElementRangeKinds.Full, namespaceDeclaration.Span, text);
-            AddRange(ranges, CodeElementRangeKinds.Name, namespaceDeclaration.Name.Span, text);
 
             return new CodeElement
             {
                 Kind = GetKind(namespaceDeclaration, symbol),
-                Name = namespaceDeclaration.Name.ToString(),
+                Name = symbol.ToDisplayString(s_ShortTypeFormat),
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
-                Children = GetCodeElements(namespaceDeclaration.ChildNodes(), semanticModel, text),
+                Children = GetCodeElements(namespaceDeclaration.Members, text, semanticModel),
                 Ranges = ranges.ToArray()
+            };
+        }
+
+        private static CodeElement GetCodeElement(BaseMethodDeclarationSyntax baseMethodDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(baseMethodDeclaration);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var ranges = new List<CodeElementRange>();
+            AddRange(ranges, CodeElementRangeKinds.Attributes, baseMethodDeclaration.AttributeLists.Span, text);
+            AddRange(ranges, CodeElementRangeKinds.Full, baseMethodDeclaration.Span, text);
+
+            var propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
+
+            var accessibility = GetAccessibility(symbol);
+            if (accessibility != null)
+            {
+                propertyBuilder.Add(CodeElementPropertyNames.Accessibility, accessibility);
+            }
+
+            propertyBuilder.Add(CodeElementPropertyNames.Static, symbol.IsStatic);
+
+            return new CodeElement
+            {
+                Kind = GetKind(baseMethodDeclaration, symbol),
+                Name = symbol.ToDisplayString(s_ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(s_MemberFormat),
+                Ranges = ranges.ToArray(),
+                Properties = propertyBuilder.ToImmutable()
+            };
+        }
+
+        private static CodeElement GetCodeElement(BasePropertyDeclarationSyntax basePropertyDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(basePropertyDeclaration);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var ranges = new List<CodeElementRange>();
+            AddRange(ranges, CodeElementRangeKinds.Attributes, basePropertyDeclaration.AttributeLists.Span, text);
+            AddRange(ranges, CodeElementRangeKinds.Full, basePropertyDeclaration.Span, text);
+
+            var propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
+
+            var accessibility = GetAccessibility(symbol);
+            if (accessibility != null)
+            {
+                propertyBuilder.Add(CodeElementPropertyNames.Accessibility, accessibility);
+            }
+
+            propertyBuilder.Add(CodeElementPropertyNames.Static, symbol.IsStatic);
+
+            return new CodeElement
+            {
+                Kind = GetKind(basePropertyDeclaration, symbol),
+                Name = symbol.ToDisplayString(s_ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(s_MemberFormat),
+                Ranges = ranges.ToArray(),
+                Properties = propertyBuilder.ToImmutable()
+            };
+        }
+
+        private static CodeElement GetCodeElement(VariableDeclaratorSyntax variableDeclarator, BaseFieldDeclarationSyntax baseFieldDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(variableDeclarator);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var ranges = new List<CodeElementRange>();
+
+            AddRange(ranges, CodeElementRangeKinds.Attributes, baseFieldDeclaration.AttributeLists.Span, text);
+            AddRange(ranges, CodeElementRangeKinds.Full, variableDeclarator.Span, text);
+
+            var propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
+
+            var accessibility = GetAccessibility(symbol);
+            if (accessibility != null)
+            {
+                propertyBuilder.Add(CodeElementPropertyNames.Accessibility, accessibility);
+            }
+
+            propertyBuilder.Add(CodeElementPropertyNames.Static, symbol.IsStatic);
+
+            return new CodeElement
+            {
+                Kind = GetKind(baseFieldDeclaration, symbol),
+                Name = symbol.ToDisplayString(s_ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(s_TypeFormat),
+                Ranges = ranges.ToArray(),
+                Properties = propertyBuilder.ToImmutable()
             };
         }
 
