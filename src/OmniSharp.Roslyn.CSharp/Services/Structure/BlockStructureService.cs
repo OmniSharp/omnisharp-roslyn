@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
-using OmniSharp.Models.MembersFlat;
 using OmniSharp.Models.v2;
 using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.Extensions;

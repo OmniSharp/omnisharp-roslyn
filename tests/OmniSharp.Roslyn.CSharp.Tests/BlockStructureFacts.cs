@@ -1,13 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models;
-using OmniSharp.Models.GotoFile;
-using OmniSharp.Models.MembersFlat;
 using OmniSharp.Models.v2;
-using OmniSharp.Models.V2;
-using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
 using OmniSharp.Roslyn.Extensions;
 using TestUtility;

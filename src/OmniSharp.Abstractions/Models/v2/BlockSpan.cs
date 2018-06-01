@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OmniSharp.Models.V2
+﻿namespace OmniSharp.Models.V2
 {
     public class BlockSpan
     {
