@@ -8,13 +8,13 @@ namespace OmniSharp.Models.V2.CodeStructure
         public string Name { get; }
         public string DisplayName { get; }
         public IReadOnlyList<CodeElement> Children { get; }
-        public IReadOnlyList<CodeElementRange> Ranges { get; }
+        public IReadOnlyDictionary<string, Range> Ranges { get; }
         public IReadOnlyDictionary<string, object> Properties { get; }
 
         private CodeElement(
             string kind, string name, string displayName,
             IReadOnlyList<CodeElement> children,
-            IReadOnlyList<CodeElementRange> ranges,
+            IReadOnlyDictionary<string, Range> ranges,
             IReadOnlyDictionary<string, object> properties)
         {
             Kind = kind;

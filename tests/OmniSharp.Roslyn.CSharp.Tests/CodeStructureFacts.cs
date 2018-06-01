@@ -276,12 +276,12 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            Assert.Contains(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Full);
-            Assert.Contains(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
 
             var elementM = Assert.Single(elementC.Children);
-            Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Full);
-            Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
         }
 
         [Fact]
@@ -297,12 +297,12 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            Assert.Contains(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Full);
-            Assert.DoesNotContain(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.DoesNotContain(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
 
             var elementM = Assert.Single(elementC.Children);
-            Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Full);
-            Assert.DoesNotContain(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.DoesNotContain(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
         }
 
         private class NameLengthPropertyProvider : ICodeElementPropertyProvider

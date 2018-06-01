@@ -7,8 +7,8 @@ namespace OmniSharp.Models.V2.CodeStructure
         public class Builder
         {
             private ImmutableList<CodeElement>.Builder _childrenBuilder;
-            private ImmutableList<CodeElementRange>.Builder _rangeBuilder;
-            private ImmutableDictionary<string, object>.Builder _propertyBuilder;
+            private ImmutableDictionary<string, Range>.Builder _rangesBuilder;
+            private ImmutableDictionary<string, object>.Builder _propertiesBuilder;
 
             public string Kind { get; set; }
             public string Name { get; set; }
@@ -24,24 +24,24 @@ namespace OmniSharp.Models.V2.CodeStructure
                 _childrenBuilder.Add(element);
             }
 
-            public void AddRange(CodeElementRange range)
+            public void AddRange(string name, Range range)
             {
-                if (_rangeBuilder == null)
+                if (_rangesBuilder == null)
                 {
-                    _rangeBuilder = ImmutableList.CreateBuilder<CodeElementRange>();
+                    _rangesBuilder = ImmutableDictionary.CreateBuilder<string, Range>();
                 }
 
-                _rangeBuilder.Add(range);
+                _rangesBuilder.Add(name, range);
             }
 
             public void AddProperty(string name, object value)
             {
-                if (_propertyBuilder == null)
+                if (_propertiesBuilder == null)
                 {
-                    _propertyBuilder = ImmutableDictionary.CreateBuilder<string, object>();
+                    _propertiesBuilder = ImmutableDictionary.CreateBuilder<string, object>();
                 }
 
-                _propertyBuilder.Add(name, value);
+                _propertiesBuilder.Add(name, value);
             }
 
             public CodeElement ToCodeElement()
@@ -49,8 +49,8 @@ namespace OmniSharp.Models.V2.CodeStructure
                 return new CodeElement(
                     Kind, Name, DisplayName,
                     _childrenBuilder?.ToImmutable(),
-                    _rangeBuilder?.ToImmutable(),
-                    _propertyBuilder?.ToImmutable());
+                    _rangesBuilder?.ToImmutable(),
+                    _propertiesBuilder?.ToImmutable());
             }
         }
     }

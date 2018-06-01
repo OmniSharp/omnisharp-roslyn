@@ -226,7 +226,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
             };
 
-            builder.AddRange(CreateRange(CodeElementRangeKinds.Full, namespaceDeclaration.Span, text));
+            AddRanges(builder, attributesSpan: default, namespaceDeclaration.Span, text);
 
             foreach (var member in namespaceDeclaration.Members)
             {
@@ -364,19 +364,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             }
         }
 
-        private static CodeElementRange CreateRange(string name, TextSpan span, SourceText text)
+        private static Range CreateRange(TextSpan span, SourceText text)
         {
             var startLine = text.Lines.GetLineFromPosition(span.Start);
             var endLine = text.Lines.GetLineFromPosition(span.End);
 
-            return new CodeElementRange
+            return new Range
             {
-                Name = name,
-                Range = new Range
-                {
-                    Start = new Point { Line = startLine.LineNumber, Column = span.Start - startLine.Start },
-                    End = new Point { Line = endLine.LineNumber, Column = span.End - endLine.Start }
-                }
+                Start = new Point { Line = startLine.LineNumber, Column = span.Start - startLine.Start },
+                End = new Point { Line = endLine.LineNumber, Column = span.End - endLine.Start }
             };
         }
 
@@ -384,12 +380,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         {
             if (attributesSpan != default)
             {
-                builder.AddRange(CreateRange(CodeElementRangeKinds.Attributes, attributesSpan, text));
+                builder.AddRange(CodeElementRangeNames.Attributes, CreateRange(attributesSpan, text));
             }
 
             if (fullSpan != default)
             {
-                builder.AddRange(CreateRange(CodeElementRangeKinds.Full, fullSpan, text));
+                builder.AddRange(CodeElementRangeNames.Full, CreateRange(fullSpan, text));
             }
         }
 
