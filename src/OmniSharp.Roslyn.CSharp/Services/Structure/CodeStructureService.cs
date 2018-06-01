@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
@@ -49,11 +49,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
         private readonly OmniSharpWorkspace _workspace;
+        private readonly IEnumerable<ICodeElementPropertyProvider> _propertyProviders;
 
         [ImportingConstructor]
-        public CodeStructureService(OmniSharpWorkspace workspace)
+        public CodeStructureService(
+            OmniSharpWorkspace workspace,
+            [ImportMany] IEnumerable<ICodeElementPropertyProvider> propertyProviders)
         {
             _workspace = workspace;
+            _propertyProviders = propertyProviders;
         }
 
         public async Task<CodeStructureResponse> Handle(CodeStructureRequest request)
@@ -74,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return response;
         }
 
-        private static async Task<IReadOnlyList<CodeElement>> GetCodeElementsAsync(Document document)
+        private async Task<IReadOnlyList<CodeElement>> GetCodeElementsAsync(Document document)
         {
             var text = await document.GetTextAsync();
             var syntaxRoot = await document.GetSyntaxRootAsync();
@@ -96,7 +100,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return results.ToImmutable();
         }
 
-        private static IEnumerable<CodeElement> CreateCodeElements(SyntaxNode node, SourceText text, SemanticModel semanticModel)
+        private IEnumerable<CodeElement> CreateCodeElements(SyntaxNode node, SourceText text, SemanticModel semanticModel)
         {
             switch (node)
             {
@@ -128,7 +132,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             }
         }
 
-        private static CodeElement CreateCodeElement(TypeDeclarationSyntax typeDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(TypeDeclarationSyntax typeDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(typeDeclaration);
             if (symbol == null)
@@ -157,7 +161,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private static CodeElement CreateCodeElement(DelegateDeclarationSyntax delegateDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(DelegateDeclarationSyntax delegateDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(delegateDeclaration);
             if (symbol == null)
@@ -178,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private static CodeElement CreateCodeElement(EnumDeclarationSyntax enumDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(EnumDeclarationSyntax enumDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(enumDeclaration);
             if (symbol == null)
@@ -207,7 +211,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private static CodeElement CreateCodeElement(NamespaceDeclarationSyntax namespaceDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(NamespaceDeclarationSyntax namespaceDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(namespaceDeclaration);
             if (symbol == null)
@@ -235,7 +239,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private static CodeElement CreateCodeElement(BaseMethodDeclarationSyntax baseMethodDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(BaseMethodDeclarationSyntax baseMethodDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(baseMethodDeclaration);
             if (symbol == null)
@@ -256,7 +260,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private static CodeElement CreateCodeElement(BasePropertyDeclarationSyntax basePropertyDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(BasePropertyDeclarationSyntax basePropertyDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(basePropertyDeclaration);
             if (symbol == null)
@@ -277,7 +281,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private static CodeElement CreateCodeElement(VariableDeclaratorSyntax variableDeclarator, BaseFieldDeclarationSyntax baseFieldDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(VariableDeclaratorSyntax variableDeclarator, BaseFieldDeclarationSyntax baseFieldDeclaration, SourceText text, SemanticModel semanticModel)
         {
             var symbol = semanticModel.GetDeclaredSymbol(variableDeclarator);
             if (symbol == null)
@@ -389,7 +393,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             }
         }
 
-        private static void AddSymbolProperties(ISymbol symbol, CodeElement.Builder builder)
+        private void AddSymbolProperties(ISymbol symbol, CodeElement.Builder builder)
         {
             var accessibility = GetAccessibility(symbol);
             if (accessibility != null)
@@ -398,6 +402,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             }
 
             builder.AddProperty(CodeElementPropertyNames.Static, symbol.IsStatic);
+
+            foreach (var propertyProvider in _propertyProviders)
+            {
+                foreach (var (name, value) in propertyProvider.ProvideProperties(symbol))
+                {
+                    builder.AddProperty(name, value);
+                }
+            }
         }
     }
 }

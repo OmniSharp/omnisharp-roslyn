@@ -1,6 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeStructure;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -278,7 +282,6 @@ class C
             var elementM = Assert.Single(elementC.Children);
             Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Full);
             Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
-
         }
 
         [Fact]
@@ -300,7 +303,38 @@ class C
             var elementM = Assert.Single(elementC.Children);
             Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Full);
             Assert.DoesNotContain(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+        }
 
+        private class NameLengthPropertyProvider : ICodeElementPropertyProvider
+        {
+            public IEnumerable<(string name, object value)> ProvideProperties(ISymbol symbol)
+            {
+                yield return ("namelength", symbol.Name.Length);
+            }
+        }
+
+        [Fact]
+        public async Task TestPropertyProvider()
+        {
+            const string source = @"
+class ClassName
+{
+    void MethodName() { }
+}
+";
+            var propertyProvider = new NameLengthPropertyProvider();
+            var export = MefValueProvider.From<ICodeElementPropertyProvider>(propertyProvider);
+
+            using (var host = CreateOmniSharpHost(additionalExports: new[] { export }))
+            {
+                var response = await GetCodeStructureAsync(source, host);
+
+                var elementC = Assert.Single(response.Elements);
+                Assert.Contains(elementC.Properties, kvp => kvp.Key == "namelength" && (int)kvp.Value == 9);
+
+                var elementM = Assert.Single(elementC.Children);
+                Assert.Contains(elementM.Properties, kvp => kvp.Key == "namelength" && (int)kvp.Value == 10);
+            }
         }
 
         private static void AssertElement(CodeElement element, string kind, string name, string displayName, string accessibility = null, bool? @static = null)
@@ -320,12 +354,14 @@ class C
             }
         }
 
-        private Task<CodeStructureResponse> GetCodeStructureAsync(string source)
+        private Task<CodeStructureResponse> GetCodeStructureAsync(string source, OmniSharpTestHost host = null)
         {
-            var testFile = new TestFile("test.cs", source);
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            host = host ?? SharedOmniSharpTestHost;
 
-            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var testFile = new TestFile("test.cs", source);
+            host.AddFilesToWorkspace(testFile);
+
+            var requestHandler = GetRequestHandler(host);
 
             var request = new CodeStructureRequest
             {
