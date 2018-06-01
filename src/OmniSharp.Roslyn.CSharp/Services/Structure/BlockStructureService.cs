@@ -1,21 +1,24 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Services;
-using OmniSharp.Utilities;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Composition;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Mef;
+using OmniSharp.Models.MembersFlat;
+using OmniSharp.Models.v2;
+using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.Extensions;
+using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
 {
-    [OmniSharpHandler(OmniSharpEndpoints.BlockStructure, LanguageNames.CSharp)]
-    public class BlockStructureService : IRequestHandler<Request, IEnumerable<QuickFix>>
+    [OmniSharpHandler(OmniSharpEndpoints.V2.BlockStructure, LanguageNames.CSharp)]
+    public class BlockStructureService : IRequestHandler<BlockStructureRequest, BlockStructureResponse>
     {
         private readonly IAssemblyLoader _loader;
         private readonly Lazy<Assembly> _featureAssembly;
@@ -23,9 +26,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         private readonly Lazy<Type> _blockStructure;
         private readonly Lazy<Type> _blockSpan;
         private readonly Lazy<MethodInfo> _getBlockStructure;
-        private readonly PropertyInfo _getSpans;
-        private readonly PropertyInfo _getIsCollpasible;
-        private readonly PropertyInfo _getTextSpan;
+        private readonly MethodInfo _getSpans;
+        private readonly MethodInfo _getIsCollpasible;
+        private readonly MethodInfo _getTextSpan;
+        private readonly MethodInfo _getHintSpan;
+        private readonly MethodInfo _getBannerText;
+        private readonly MethodInfo _getType;
         private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
@@ -40,12 +46,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             _blockSpan = _featureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockSpan");
 
             _getBlockStructure = _blockStructureService.LazyGetMethod("GetBlockStructure");
-            _getSpans = _blockStructure.Value.GetProperty("Spans");
-            _getIsCollpasible = _blockSpan.Value.GetProperty("IsCollapsible");
-            _getTextSpan = _blockSpan.Value.GetProperty("TextSpan");
+            _getSpans = _blockStructure.Value.GetProperty("Spans").GetMethod;
+            _getIsCollpasible = _blockSpan.Value.GetProperty("IsCollapsible").GetMethod;
+            _getTextSpan = _blockSpan.Value.GetProperty("TextSpan").GetMethod;
+            _getHintSpan = _blockSpan.Value.GetProperty("HintSpan").GetMethod;
+            _getBannerText = _blockSpan.Value.GetProperty("BannerText").GetMethod;
+            _getType = _blockSpan.Value.GetProperty("Type").GetMethod;
         }
 
-        public async Task<IEnumerable<QuickFix>> Handle(Request request)
+        public async Task<BlockStructureResponse> Handle(BlockStructureRequest request)
         {
             var document = _workspace.GetDocument(request.FileName);
             var text = await document.GetTextAsync();
@@ -54,23 +63,31 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var service = _blockStructureService.LazyGetMethod("GetService").InvokeStatic(new[] { document });
 
             var structure = _getBlockStructure.Invoke<object>(service, new object[] { document, CancellationToken.None });
-            IEnumerable spans = _getSpans.GetMethod.Invoke<IEnumerable>(structure, Array.Empty<object>());
+            var spans = _getSpans.Invoke<IEnumerable>(structure, Array.Empty<object>());
 
-            List<QuickFix> outliningSpans = new List<QuickFix>();
+
+            var outliningSpans = new List<BlockSpan>();
             foreach (var span in spans)
             {
-                if (_getIsCollpasible.GetMethod.Invoke<bool>(span, Array.Empty<object>()))
+                if (_getIsCollpasible.Invoke<bool>(span, Array.Empty<object>()))
                 {
-                    var textSpan = _getTextSpan.GetMethod.Invoke<TextSpan>(span, Array.Empty<object>());
-                    outliningSpans.Add(new QuickFix()
-                    {
-                        Line = lines.GetLineFromPosition(textSpan.Start).LineNumber,
-                        EndLine = lines.GetLineFromPosition(textSpan.End).LineNumber
-                    });
+                    var textSpan = _getTextSpan.Invoke<TextSpan>(span, Array.Empty<object>());
+                    var line = lines.GetLineFromPosition(textSpan.Start);
+                    var column = textSpan.Start - line.Start;
+                    var endLine = lines.GetLineFromPosition(textSpan.End);
+                    var endColumn = textSpan.End - endLine.Start;
+
+                    outliningSpans.Add(new BlockSpan(
+                        textSpan.ToRange(lines),
+                        hintSpan: _getHintSpan.Invoke<TextSpan>(span, Array.Empty<object>()).ToRange(lines),
+                        bannerText: _getBannerText.Invoke<string>(span, Array.Empty<object>()),
+                        type: _getType.Invoke<string>(span, Array.Empty<object>())));
                 }
             }
 
-            return outliningSpans;
+            return new BlockStructureResponse() { Spans = outliningSpans };
         }
+
+        
     }
 }
