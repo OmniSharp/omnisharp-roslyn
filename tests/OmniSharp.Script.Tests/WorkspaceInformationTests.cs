@@ -67,6 +67,7 @@ namespace OmniSharp.Script.Tests
                         }
                     });
 
+                    // back off for 2 seconds to let the watcher and workspace process new projects
                     await Task.Delay(2000);
 
                     workspaceInfo = await GetWorkspaceInfoAsync(host);
