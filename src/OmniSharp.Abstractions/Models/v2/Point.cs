@@ -8,5 +8,8 @@ namespace OmniSharp.Models.V2
         public int Line { get; set; }
         [JsonConverter(typeof(ZeroBasedIndexConverter))]
         public int Column { get; set; }
+
+        public override string ToString()
+            => $"Line = {Line}, Column = {Column}";
     }
 }
