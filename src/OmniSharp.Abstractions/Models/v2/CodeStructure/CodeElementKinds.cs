@@ -16,6 +16,7 @@
         public static readonly string EnumMember = nameof(EnumMember).ToLowerInvariant();
         public static readonly string Event = nameof(Event).ToLowerInvariant();
         public static readonly string Field = nameof(Field).ToLowerInvariant();
+        public static readonly string Indexer = nameof(Indexer).ToLowerInvariant();
         public static readonly string Method = nameof(Method).ToLowerInvariant();
         public static readonly string Operator = nameof(Operator).ToLowerInvariant();
         public static readonly string Property = nameof(Property).ToLowerInvariant();

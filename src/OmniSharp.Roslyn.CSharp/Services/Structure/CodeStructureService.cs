@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
@@ -147,7 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_TypeFormat)
             };
 
-            AddRanges(builder, typeDeclaration.AttributeLists.Span, typeDeclaration.Span, text);
+            AddRanges(builder, typeDeclaration.AttributeLists.Span, typeDeclaration.Span, typeDeclaration.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             foreach (var member in typeDeclaration.Members)
@@ -176,7 +177,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
             };
 
-            AddRanges(builder, delegateDeclaration.AttributeLists.Span, delegateDeclaration.Span, text);
+            AddRanges(builder, delegateDeclaration.AttributeLists.Span, delegateDeclaration.Span, delegateDeclaration.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
@@ -197,7 +198,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
             };
 
-            AddRanges(builder, enumDeclaration.AttributeLists.Span, enumDeclaration.Span, text);
+            AddRanges(builder, enumDeclaration.AttributeLists.Span, enumDeclaration.Span, enumDeclaration.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             foreach (var member in enumDeclaration.Members)
@@ -226,7 +227,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_TypeFormat),
             };
 
-            AddRanges(builder, attributesSpan: default, namespaceDeclaration.Span, text);
+            AddRanges(builder, attributesSpan: default, namespaceDeclaration.Span, namespaceDeclaration.Name.Span, text);
 
             foreach (var member in namespaceDeclaration.Members)
             {
@@ -254,7 +255,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_MemberFormat),
             };
 
-            AddRanges(builder, baseMethodDeclaration.AttributeLists.Span, baseMethodDeclaration.Span, text);
+            AddRanges(builder, baseMethodDeclaration.AttributeLists.Span, baseMethodDeclaration.Span, GetNameSpan(baseMethodDeclaration), text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
@@ -275,7 +276,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_MemberFormat),
             };
 
-            AddRanges(builder, basePropertyDeclaration.AttributeLists.Span, basePropertyDeclaration.Span, text);
+            AddRanges(builder, basePropertyDeclaration.AttributeLists.Span, basePropertyDeclaration.Span, GetNameSpan(basePropertyDeclaration), text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
@@ -296,7 +297,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(s_MemberFormat),
             };
 
-            AddRanges(builder, baseFieldDeclaration.AttributeLists.Span, variableDeclarator.Span, text);
+            AddRanges(builder, baseFieldDeclaration.AttributeLists.Span, variableDeclarator.Span, variableDeclarator.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
@@ -325,6 +326,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     return ((IFieldSymbol)symbol).IsConst
                         ? CodeElementKinds.Constant
                         : CodeElementKinds.Field;
+                case SyntaxKind.IndexerDeclaration:
+                    return CodeElementKinds.Indexer;
                 case SyntaxKind.InterfaceDeclaration:
                     return CodeElementKinds.Interface;
                 case SyntaxKind.MethodDeclaration:
@@ -364,6 +367,40 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             }
         }
 
+        private static TextSpan GetNameSpan(BaseMethodDeclarationSyntax baseMethodDeclaration)
+        {
+            switch (baseMethodDeclaration)
+            {
+                case MethodDeclarationSyntax methodDeclaration:
+                    return methodDeclaration.Identifier.Span;
+                case ConstructorDeclarationSyntax constructorDeclaration:
+                    return constructorDeclaration.Identifier.Span;
+                case DestructorDeclarationSyntax destructorDeclaration:
+                    return destructorDeclaration.Identifier.Span;
+                case OperatorDeclarationSyntax operatorDeclaration:
+                    return operatorDeclaration.OperatorToken.Span;
+                case ConversionOperatorDeclarationSyntax conversionOperatorDeclaration:
+                    return conversionOperatorDeclaration.Type.Span;
+                default:
+                    return default;
+            }
+        }
+
+        private static TextSpan GetNameSpan(BasePropertyDeclarationSyntax basePropertyDeclaration)
+        {
+            switch (basePropertyDeclaration)
+            {
+                case PropertyDeclarationSyntax propertyDeclaration:
+                    return propertyDeclaration.Identifier.Span;
+                case EventDeclarationSyntax eventDeclaration:
+                    return eventDeclaration.Identifier.Span;
+                case IndexerDeclarationSyntax indexerDeclaration:
+                    return indexerDeclaration.ThisKeyword.Span;
+                default:
+                    return default;
+            }
+        }
+
         private static Range CreateRange(TextSpan span, SourceText text)
         {
             var startLine = text.Lines.GetLineFromPosition(span.Start);
@@ -376,7 +413,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             };
         }
 
-        private static void AddRanges(CodeElement.Builder builder, TextSpan attributesSpan, TextSpan fullSpan, SourceText text)
+        private static void AddRanges(CodeElement.Builder builder, TextSpan attributesSpan, TextSpan fullSpan, TextSpan nameSpan, SourceText text)
         {
             if (attributesSpan != default)
             {
@@ -386,6 +423,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             if (fullSpan != default)
             {
                 builder.AddRange(CodeElementRangeNames.Full, CreateRange(fullSpan, text));
+            }
+
+            if (nameSpan != default)
+            {
+                builder.AddRange(CodeElementRangeNames.Name, CreateRange(nameSpan, text));
             }
         }
 

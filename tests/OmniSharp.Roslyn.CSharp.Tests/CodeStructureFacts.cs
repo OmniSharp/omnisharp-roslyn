@@ -194,6 +194,7 @@ class C
     public event EventHandler E;
     public event EventHandler E1, E2;
     public event EventHandler E3 { add { } remove { } }
+    internal int this[int index] => 42;
 }
 ";
 
@@ -203,7 +204,7 @@ class C
             AssertElement(elementC, CodeElementKinds.Class, "C", "C", @static: false);
 
             var children = elementC.Children;
-            Assert.Equal(15, children.Count);
+            Assert.Equal(16, children.Count);
             AssertElement(children[0], CodeElementKinds.Field, "_f", "_f", CodeElementAccessibilities.Private, @static: false);
             AssertElement(children[1], CodeElementKinds.Field, "_f1", "_f1", CodeElementAccessibilities.Private, @static: false);
             AssertElement(children[2], CodeElementKinds.Field, "_f2", "_f2", CodeElementAccessibilities.Private, @static: false);
@@ -219,6 +220,7 @@ class C
             AssertElement(children[12], CodeElementKinds.Event, "E1", "E1", CodeElementAccessibilities.Public, @static: false);
             AssertElement(children[13], CodeElementKinds.Event, "E2", "E2", CodeElementAccessibilities.Public, @static: false);
             AssertElement(children[14], CodeElementKinds.Event, "E3", "E3", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[15], CodeElementKinds.Indexer, "this", "this[int index]", CodeElementAccessibilities.Internal, @static: false);
         }
 
         [Fact]
@@ -277,10 +279,12 @@ class C
 
             var elementC = Assert.Single(response.Elements);
             Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
             Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
 
             var elementM = Assert.Single(elementC.Children);
             Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
             Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
         }
 
@@ -298,10 +302,12 @@ class C
 
             var elementC = Assert.Single(response.Elements);
             Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
             Assert.DoesNotContain(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
 
             var elementM = Assert.Single(elementC.Children);
             Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
             Assert.DoesNotContain(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
         }
 
