@@ -4,8 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.GotoFile;
+using OmniSharp.Models.MembersFlat;
+using OmniSharp.Models.v2;
+using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
+using OmniSharp.Roslyn.Extensions;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,34 +23,37 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
         }
 
-        protected override string EndpointName => OmniSharpEndpoints.BlockStructure;
+        protected override string EndpointName => OmniSharpEndpoints.V2.BlockStructure;
 
         [Fact]
         public async Task UsesRoslynBlockStructureService()
         {
-            var testFile1 = new TestFile("foo.cs", @"class Foo
+            var testFile = new TestFile("foo.cs", @"class Foo[|
 {
-    void M()
+    void M()[|
     {
-        if (false)
+        if (false)[|
         {
-        }
-    }
-}");
-            var testFile = new TestFile("bar.cs", @"class Bar {}");
+        }|]
+    }|]
+}|]");
+            var text = testFile.Content.Text;
 
-            var lineSpans = (await GetResponseAsync(testFile1)).
-                    Select(l => (l.Line, l.EndLine)).ToArray();
+            var lineSpans = (await GetResponseAsync(testFile)).Spans
+                .Select(b => b.TextSpan)
+                .ToArray();
 
-            var expected = new [] { (0, 8), (2, 7), (4, 6) };
+
+            var expected = testFile.Content.GetSpans()
+                .Select(t => t.ToRange(text.Lines)).ToArray();
+
             Assert.Equal(expected, lineSpans);
         }
 
-
-        private async Task<IEnumerable<QuickFix>> GetResponseAsync(TestFile testFile)
+        private async Task<BlockStructureResponse> GetResponseAsync(TestFile testFile)
         {
             SharedOmniSharpTestHost.AddFilesToWorkspace(new[] { testFile });
-            var request = new Request
+            var request = new BlockStructureRequest
             {
                 FileName = testFile.FileName,
             };
