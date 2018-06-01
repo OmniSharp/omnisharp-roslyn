@@ -21,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string source = @"
 class C { }
-delegate void D();
+delegate void D(int i, ref string s);
 enum E { One, Two, Three }
 interface I { }
 struct S { }
@@ -29,7 +29,7 @@ struct S { }
 
             var response = await GetCodeStructureAsync(source);
 
-            Assert.Equal(5, response.Elements.Length);
+            Assert.Equal(5, response.Elements.Count);
             AssertElement(response.Elements[0], CodeElementKinds.Class, "C", "C");
             AssertElement(response.Elements[1], CodeElementKinds.Delegate, "D", "D");
             AssertElement(response.Elements[2], CodeElementKinds.Enum, "E", "E");
@@ -44,7 +44,7 @@ struct S { }
 namespace N
 {
     class C { }
-    delegate void D();
+    delegate void D(int i, ref string s);
     enum E { One, Two, Three }
     interface I { }
     struct S { }
@@ -57,7 +57,7 @@ namespace N
             AssertElement(elementN, CodeElementKinds.Namespace, "N", "N");
 
             var children = elementN.Children;
-            Assert.Equal(5, children.Length);
+            Assert.Equal(5, children.Count);
             AssertElement(children[0], CodeElementKinds.Class, "C", "N.C");
             AssertElement(children[1], CodeElementKinds.Delegate, "D", "N.D");
             AssertElement(children[2], CodeElementKinds.Enum, "E", "N.E");
@@ -72,7 +72,7 @@ namespace N
 namespace N
 {
     class C<T> { }
-    delegate void D<T1, T2>();
+    delegate void D<T1, T2>(int i, ref string s);
     interface I<T> { }
     struct S<T> { }
 }
@@ -84,7 +84,7 @@ namespace N
             AssertElement(elementN, CodeElementKinds.Namespace, "N", "N");
 
             var children = elementN.Children;
-            Assert.Equal(4, children.Length);
+            Assert.Equal(4, children.Count);
             AssertElement(children[0], CodeElementKinds.Class, "C<T>", "N.C<T>");
             AssertElement(children[1], CodeElementKinds.Delegate, "D<T1, T2>", "N.D<T1, T2>");
             AssertElement(children[2], CodeElementKinds.Interface, "I<T>", "N.I<T>");
@@ -118,7 +118,7 @@ namespace N1
             var elementN1 = Assert.Single(response.Elements);
             AssertElement(elementN1, CodeElementKinds.Namespace, "N1", "N1");
 
-            Assert.Equal(3, elementN1.Children.Length);
+            Assert.Equal(3, elementN1.Children.Count);
 
             var elementN3 = elementN1.Children[0];
             AssertElement(elementN3, CodeElementKinds.Namespace, "N3", "N1.N2.N3");
@@ -142,7 +142,7 @@ namespace N1
             const string source = @"
 class C
 {
-    delegate void D();
+    delegate void D(int i, ref string s);
     interface I { }
     struct S
     {
@@ -156,7 +156,7 @@ class C
             var elementC = Assert.Single(response.Elements);
             AssertElement(elementC, CodeElementKinds.Class, "C", "C");
 
-            Assert.Equal(3, elementC.Children.Length);
+            Assert.Equal(3, elementC.Children.Count);
 
             var elementD = elementC.Children[0];
             AssertElement(elementD, CodeElementKinds.Delegate, "D", "C.D");
@@ -196,28 +196,114 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
+            AssertElement(elementC, CodeElementKinds.Class, "C", "C", @static: false);
+
+            var children = elementC.Children;
+            Assert.Equal(15, children.Count);
+            AssertElement(children[0], CodeElementKinds.Field, "_f", "_f", CodeElementAccessibilities.Private, @static: false);
+            AssertElement(children[1], CodeElementKinds.Field, "_f1", "_f1", CodeElementAccessibilities.Private, @static: false);
+            AssertElement(children[2], CodeElementKinds.Field, "_f2", "_f2", CodeElementAccessibilities.Private, @static: false);
+            AssertElement(children[3], CodeElementKinds.Constant, "_c", "_c", CodeElementAccessibilities.Private, @static: true);
+            AssertElement(children[4], CodeElementKinds.Constructor, "C", "C()", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[5], CodeElementKinds.Destructor, "~C", "~C()", CodeElementAccessibilities.Protected, @static: false);
+            AssertElement(children[6], CodeElementKinds.Method, "M1", "M1()", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[7], CodeElementKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[8], CodeElementKinds.Operator, "implicit operator C", "implicit operator C(int i)", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[9], CodeElementKinds.Operator, "operator +", "operator +(C c1, C c2)", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[10], CodeElementKinds.Property, "P", "P", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[11], CodeElementKinds.Event, "E", "E", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[12], CodeElementKinds.Event, "E1", "E1", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[13], CodeElementKinds.Event, "E2", "E2", CodeElementAccessibilities.Public, @static: false);
+            AssertElement(children[14], CodeElementKinds.Event, "E3", "E3", CodeElementAccessibilities.Public, @static: false);
+        }
+
+        [Fact]
+        public async Task StaticClassAndMembers()
+        {
+            const string source = @"
+static class C
+{
+    private static int _f;
+    private static int _f1, _f2;
+    private const int _c;
+    static C() { }
+    public static void M1() { }
+    public static void M2(int i, ref string s, params object[] array) { }
+    public static int P { get; set; }
+    public static event EventHandler E;
+    public static event EventHandler E1, E2;
+    public static event EventHandler E3 { add { } remove { } }
+}
+";
+
+            var response = await GetCodeStructureAsync(source);
+
+            var elementC = Assert.Single(response.Elements);
             AssertElement(elementC, CodeElementKinds.Class, "C", "C");
 
             var children = elementC.Children;
-            Assert.Equal(15, children.Length);
-            AssertElement(children[0], CodeElementKinds.Field, "_f", "_f", CodeElementAccessibilities.Private);
-            AssertElement(children[1], CodeElementKinds.Field, "_f1", "_f1", CodeElementAccessibilities.Private);
-            AssertElement(children[2], CodeElementKinds.Field, "_f2", "_f2", CodeElementAccessibilities.Private);
-            AssertElement(children[3], CodeElementKinds.Constant, "_c", "_c", CodeElementAccessibilities.Private);
-            AssertElement(children[4], CodeElementKinds.Constructor, "C", "C()", CodeElementAccessibilities.Public);
-            AssertElement(children[5], CodeElementKinds.Destructor, "~C", "~C()", CodeElementAccessibilities.Protected);
-            AssertElement(children[6], CodeElementKinds.Method, "M1", "M1()", CodeElementAccessibilities.Public);
-            AssertElement(children[7], CodeElementKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", CodeElementAccessibilities.Public);
-            AssertElement(children[8], CodeElementKinds.Operator, "implicit operator C", "implicit operator C(int i)", CodeElementAccessibilities.Public);
-            AssertElement(children[9], CodeElementKinds.Operator, "operator +", "operator +(C c1, C c2)", CodeElementAccessibilities.Public);
-            AssertElement(children[10], CodeElementKinds.Property, "P", "P", CodeElementAccessibilities.Public);
-            AssertElement(children[11], CodeElementKinds.Event, "E", "E", CodeElementAccessibilities.Public);
-            AssertElement(children[12], CodeElementKinds.Event, "E1", "E1", CodeElementAccessibilities.Public);
-            AssertElement(children[13], CodeElementKinds.Event, "E2", "E2", CodeElementAccessibilities.Public);
-            AssertElement(children[14], CodeElementKinds.Event, "E3", "E3", CodeElementAccessibilities.Public);
+            Assert.Equal(12, children.Count);
+            AssertElement(children[0], CodeElementKinds.Field, "_f", "_f", CodeElementAccessibilities.Private, @static: true);
+            AssertElement(children[1], CodeElementKinds.Field, "_f1", "_f1", CodeElementAccessibilities.Private, @static: true);
+            AssertElement(children[2], CodeElementKinds.Field, "_f2", "_f2", CodeElementAccessibilities.Private, @static: true);
+            AssertElement(children[3], CodeElementKinds.Constant, "_c", "_c", CodeElementAccessibilities.Private, @static: true);
+            AssertElement(children[4], CodeElementKinds.Constructor, "C", "C()", CodeElementAccessibilities.Private, @static: true);
+            AssertElement(children[5], CodeElementKinds.Method, "M1", "M1()", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[6], CodeElementKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[7], CodeElementKinds.Property, "P", "P", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[8], CodeElementKinds.Event, "E", "E", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[9], CodeElementKinds.Event, "E1", "E1", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[10], CodeElementKinds.Event, "E2", "E2", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[11], CodeElementKinds.Event, "E3", "E3", CodeElementAccessibilities.Public, @static: true);
         }
 
-        private static void AssertElement(CodeElement element, string kind, string name, string displayName, string accessibility = null)
+        [Fact]
+        public async Task HasAttributes()
+        {
+            const string source = @"
+[Hello]
+class C
+{
+    [World]
+    void M() { }
+}
+";
+
+            var response = await GetCodeStructureAsync(source);
+
+            var elementC = Assert.Single(response.Elements);
+            Assert.Contains(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Full);
+            Assert.Contains(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+
+            var elementM = Assert.Single(elementC.Children);
+            Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Full);
+            Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+
+        }
+
+        [Fact]
+        public async Task HasNoAttributes()
+        {
+            const string source = @"
+class C
+{
+    void M() { }
+}
+";
+
+            var response = await GetCodeStructureAsync(source);
+
+            var elementC = Assert.Single(response.Elements);
+            Assert.Contains(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Full);
+            Assert.DoesNotContain(elementC.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+
+            var elementM = Assert.Single(elementC.Children);
+            Assert.Contains(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Full);
+            Assert.DoesNotContain(elementM.Ranges, r => r.Name == CodeElementRangeKinds.Attributes);
+
+        }
+
+        private static void AssertElement(CodeElement element, string kind, string name, string displayName, string accessibility = null, bool? @static = null)
         {
             Assert.Equal(kind, element.Kind);
             Assert.Equal(name, element.Name);
@@ -226,6 +312,11 @@ class C
             if (accessibility != null)
             {
                 Assert.Equal(accessibility, element.Properties[CodeElementPropertyNames.Accessibility]);
+            }
+
+            if (@static != null)
+            {
+                Assert.Equal(@static, element.Properties[CodeElementPropertyNames.Static]);
             }
         }
 
