@@ -64,6 +64,9 @@ Add the following setting to your [User Settings or Workspace Settings](https://
   "omnisharp.path": "<Path to the omnisharp executable>"
 }
 ```
+The above option can also be set to:
+* "latest" - To consume the latest build from the master branch
+* A specific version number like `1.29.2-beta.60`
 
 In order to be able to attach a debugger, add the following setting:
 

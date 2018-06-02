@@ -39,7 +39,18 @@ namespace OmniSharp.Cake.Tests
             var diagnostics = await FindDiagnostics(input, includeFileName: false);
             Assert.Null(diagnostics);
         }
-        
+
+        [Fact]
+        public async Task ShouldNotIncludeDiagnosticsFromLoadedFilesIfFileNameIsSpecified()
+        {
+            const string input = @"
+#load error.cake
+var target = Argument(""target"", ""Default"");";
+
+            var diagnostics = await FindDiagnostics(input, includeFileName: true);
+            Assert.Empty(diagnostics.QuickFixes);
+        }
+
         private async Task<QuickFixResponse> FindDiagnostics(string contents, bool includeFileName)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))

@@ -26,23 +26,24 @@ namespace OmniSharp.Script
     public class ScriptProjectSystem : IProjectSystem
     {
         private const string CsxExtension = ".csx";
-        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
         // used for tracking purposes only
         private readonly HashSet<string> _assemblyReferences = new HashSet<string>();
-        private readonly HashSet<MetadataReference> _commonReferences = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
 
+        private readonly HashSet<MetadataReference> _commonReferences = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
+        private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
 
-        private ScriptOptions _scriptOptions;
-        private ScriptHelper _scriptHelper;
         private CompilationDependency[] _compilationDependencies;
+        private ScriptHelper _scriptHelper;
+        private ScriptOptions _scriptOptions;
 
         [ImportingConstructor]
         public ScriptProjectSystem(OmniSharpWorkspace workspace, IOmniSharpEnvironment env, ILoggerFactory loggerFactory,
@@ -51,6 +52,7 @@ namespace OmniSharp.Script
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _workspace = workspace;
             _env = env;
+            _loggerFactory = loggerFactory;
             _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
@@ -83,7 +85,6 @@ namespace OmniSharp.Script
         {
             _scriptOptions = new ScriptOptions();
             ConfigurationBinder.Bind(configuration, _scriptOptions);
-            _scriptHelper = new ScriptHelper(_scriptOptions);
 
             _logger.LogInformation($"Detecting CSX files in '{_env.TargetDirectory}'.");
 
@@ -109,6 +110,7 @@ namespace OmniSharp.Script
 
             _compilationDependencies = TryGetCompilationDependencies();
 
+            var isDesktopClr = true;
             // if we have no compilation dependencies
             // we will assume desktop framework
             // and add default CLR references
@@ -120,6 +122,7 @@ namespace OmniSharp.Script
             }
             else
             {
+                isDesktopClr = false;
                 HashSet<string> loadedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var compilationAssembly in _compilationDependencies.SelectMany(cd => cd.AssemblyPaths).Distinct())
@@ -138,6 +141,8 @@ namespace OmniSharp.Script
                 _logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
                 AddMetadataReference(_commonReferences, inheritedCompileLib.Location);
             }
+
+            _scriptHelper = new ScriptHelper(_scriptOptions, _env, _loggerFactory, isDesktopClr);
 
             // Each .CSX file becomes an entry point for it's own project
             // Every #loaded file will be part of the project too
@@ -172,14 +177,14 @@ namespace OmniSharp.Script
                 var csxFileName = Path.GetFileName(csxPath);
                 var project = _scriptHelper.CreateProject(csxFileName, _commonReferences, csxPath);
 
-                if (_scriptOptions.IsNugetEnabled())
-                {
-                    var scriptMap = _compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
-                    var options = project.CompilationOptions.WithSourceReferenceResolver(
-                        new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
-                            scriptMap));
-                    project = project.WithCompilationOptions(options);
-                }
+                    if (_scriptOptions.IsNugetEnabled())
+                    {
+                        var scriptMap = _compilationDependencies.ToDictionary(rdt => rdt.Name, rdt => rdt.Scripts);
+                        var options = project.CompilationOptions.WithSourceReferenceResolver(
+                            new NuGetSourceReferenceResolver(ScriptSourceResolver.Default,
+                                scriptMap));
+                        project = project.WithCompilationOptions(options);
+                    }
 
                 // add CSX project to workspace
                 _workspace.AddProject(project);
@@ -232,7 +237,11 @@ namespace OmniSharp.Script
                 .Where(a => a != null)
                 .Select(a => a.Location)
                 .Distinct()
-                .Select(l => _metadataFileReferenceCache.GetMetadataReference(l));
+                .Select(l =>
+                {
+                    _assemblyReferences.Add(l);
+                    return _metadataFileReferenceCache.GetMetadataReference(l);
+                });
 
             foreach (var reference in references)
             {

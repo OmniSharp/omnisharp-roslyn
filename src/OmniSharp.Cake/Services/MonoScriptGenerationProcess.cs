@@ -95,7 +95,7 @@ namespace OmniSharp.Cake.Services
             process.WaitForExit();
 
             // If OmniSharp bundled Mono runtime, use bootstrap script.
-            var script = Path.Combine(Path.GetDirectoryName(runtime), "run");
+            var script = Path.Combine(Path.GetDirectoryName(runtime), "../run");
             if (File.Exists(script))
             {
                 return (script, "--no-omnisharp ");

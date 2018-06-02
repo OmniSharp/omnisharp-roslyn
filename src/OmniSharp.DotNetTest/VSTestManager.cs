@@ -21,7 +21,7 @@ namespace OmniSharp.DotNetTest
 {
     internal class VSTestManager : TestManager
     {
-        public VSTestManager(Project project, string workingDirectory, DotNetCliService dotNetCli, SemanticVersion dotNetCliVersion, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+        public VSTestManager(Project project, string workingDirectory, IDotNetCliService dotNetCli, SemanticVersion dotNetCliVersion, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(project, workingDirectory, dotNetCli, dotNetCliVersion, eventEmitter, loggerFactory.CreateLogger<VSTestManager>())
         {
         }
@@ -240,7 +240,12 @@ namespace OmniSharp.DotNetTest
                     MethodName = testResult.TestCase.FullyQualifiedName,
                     Outcome = testResult.Outcome.ToString().ToLowerInvariant(),
                     ErrorMessage = testResult.ErrorMessage,
-                    ErrorStackTrace = testResult.ErrorStackTrace
+                    ErrorStackTrace = testResult.ErrorStackTrace,
+                    StandardOutput = testResult.Messages
+                                    .Where(message => message.Category == TestResultMessage.StandardOutCategory)
+                                    .Select(message => message.Text).ToArray(),
+                    StandardError = testResult.Messages.Where(message => message.Category == TestResultMessage.StandardErrorCategory)
+                    .Select(message => message.Text).ToArray()
                 });
 
             return new RunTestResponse

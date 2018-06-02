@@ -17,7 +17,7 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var version = dotNetCli.GetVersion();
 
@@ -33,7 +33,7 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Legacy))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var info = dotNetCli.GetInfo();
 
@@ -49,14 +49,14 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var version = dotNetCli.GetVersion();
 
                 Assert.Equal(2, version.Major);
                 Assert.Equal(1, version.Minor);
                 Assert.Equal(300, version.Patch);
-                Assert.Equal("rc1-008673", version.Release);
+                Assert.Equal("", version.Release);
             }
         }
 
@@ -65,14 +65,14 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(dotNetCliVersion: DotNetCliVersion.Current))
             {
-                var dotNetCli = host.GetExport<DotNetCliService>();
+                var dotNetCli = host.GetExport<IDotNetCliService>();
 
                 var info = dotNetCli.GetInfo();
 
                 Assert.Equal(2, info.Version.Major);
                 Assert.Equal(1, info.Version.Minor);
                 Assert.Equal(300, info.Version.Patch);
-                Assert.Equal("rc1-008673", info.Version.Release);
+                Assert.Equal("", info.Version.Release);
             }
         }
     }
