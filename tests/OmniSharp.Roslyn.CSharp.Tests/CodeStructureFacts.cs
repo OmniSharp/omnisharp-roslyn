@@ -343,6 +343,82 @@ class ClassName
             }
         }
 
+        [Fact]
+        public async Task TestTypeNameRanges()
+        {
+            const string source = @"
+class {|nameC:C|} { }
+delegate void {|nameD:D|}(int i, ref string s);
+enum {|nameE:E|} { One, Two, Three }
+interface {|nameI:I|} { }
+struct {|nameS:S|} { }
+";
+
+            var testFile = new TestFile("test.cs", source);
+
+            var response = await GetCodeStructureAsync(testFile);
+
+            AssertRange(response.Elements[0], testFile.Content, "nameC", "name");
+            AssertRange(response.Elements[1], testFile.Content, "nameD", "name");
+            AssertRange(response.Elements[2], testFile.Content, "nameE", "name");
+            AssertRange(response.Elements[3], testFile.Content, "nameI", "name");
+            AssertRange(response.Elements[4], testFile.Content, "nameS", "name");
+        }
+
+        [Fact]
+        public async Task TestClassMembersNameRanges()
+        {
+            const string source = @"
+class C
+{
+    private int {|name_f:_f|};
+    private int {|name_f1:_f1|}, {|name_f2:_f2|};
+    private const int {|name_c:_c|};
+    public {|nameCtor:C|}() { }
+    ~{|nameDtor:C|}() { }
+    public void {|nameM1:M1|}() { }
+    public void {|nameM2:M2|}(int i, ref string s, params object[] array) { }
+    public static implicit operator {|nameOpC:C|}(int i) { return null; }
+    public static C operator {|nameOpPlus:+|}(C c1, C c2) { return null; }
+    public int {|nameP:P|} { get; set; }
+    public event EventHandler {|nameE:E|};
+    public event EventHandler {|nameE1:E1|}, {|nameE2:E2|};
+    public event EventHandler {|nameE3:E3|} { add { } remove { } }
+    internal int {|nameThis:this|}[int index] => 42;
+}
+";
+
+            var testFile = new TestFile("test.cs", source);
+
+            var response = await GetCodeStructureAsync(testFile);
+
+            var elementC = Assert.Single(response.Elements);
+
+            AssertRange(elementC.Children[0], testFile.Content, "name_f", "name");
+            AssertRange(elementC.Children[1], testFile.Content, "name_f1", "name");
+            AssertRange(elementC.Children[2], testFile.Content, "name_f2", "name");
+            AssertRange(elementC.Children[3], testFile.Content, "name_c", "name");
+            AssertRange(elementC.Children[4], testFile.Content, "nameCtor", "name");
+            AssertRange(elementC.Children[5], testFile.Content, "nameDtor", "name");
+            AssertRange(elementC.Children[6], testFile.Content, "nameM1", "name");
+            AssertRange(elementC.Children[7], testFile.Content, "nameM2", "name");
+            AssertRange(elementC.Children[8], testFile.Content, "nameOpC", "name");
+            AssertRange(elementC.Children[9], testFile.Content, "nameOpPlus", "name");
+            AssertRange(elementC.Children[10], testFile.Content, "nameP", "name");
+            AssertRange(elementC.Children[11], testFile.Content, "nameE", "name");
+            AssertRange(elementC.Children[12], testFile.Content, "nameE1", "name");
+            AssertRange(elementC.Children[13], testFile.Content, "nameE2", "name");
+            AssertRange(elementC.Children[14], testFile.Content, "nameE3", "name");
+            AssertRange(elementC.Children[15], testFile.Content, "nameThis", "name");
+        }
+
+        private static void AssertRange(CodeElement elementC, TestContent content, string contentSpanName, string elementRangeName)
+        {
+            var span = Assert.Single(content.GetSpans(contentSpanName));
+            var range = content.GetRangeFromSpan(span).ToRange();
+            Assert.Equal(range, elementC.Ranges[elementRangeName]);
+        }
+
         private static void AssertElement(CodeElement element, string kind, string name, string displayName, string accessibility = null, bool? @static = null)
         {
             Assert.Equal(kind, element.Kind);
@@ -362,9 +438,14 @@ class ClassName
 
         private Task<CodeStructureResponse> GetCodeStructureAsync(string source, OmniSharpTestHost host = null)
         {
+            var testFile = new TestFile("test.cs", source);
+            return GetCodeStructureAsync(testFile, host);
+        }
+
+        private Task<CodeStructureResponse> GetCodeStructureAsync(TestFile testFile, OmniSharpTestHost host = null)
+        {
             host = host ?? SharedOmniSharpTestHost;
 
-            var testFile = new TestFile("test.cs", source);
             host.AddFilesToWorkspace(testFile);
 
             var requestHandler = GetRequestHandler(host);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniSharp.Models.V2;
+using System;
 
 namespace TestUtility
 {
@@ -14,6 +15,9 @@ namespace TestUtility
             this.Start = start;
             this.End = end;
         }
+
+        public Range ToRange()
+            => new Range { Start = this.Start.ToPoint(), End = this.End.ToPoint() };
 
         public int CompareTo(TextRange other)
         {
