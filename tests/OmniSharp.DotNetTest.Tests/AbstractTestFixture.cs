@@ -11,12 +11,12 @@ namespace OmniSharp.DotNetTest.Tests
             ["DotNet:Enabled"] = "true"
         };
 
-        protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
-        protected const string LegacyNunitTestProject = "LegacyNUnitTestProject";
-        protected const string LegacyMSTestProject = "LegacyMSTestProject";
-        protected const string XunitTestProject = "XunitTestProject";
-        protected const string NUnitTestProject = "NUnitTestProject";
-        protected const string MSTestProject = "MSTestProject";
+        protected const string LegacyXunitTestProject = nameof(LegacyXunitTestProject);
+        protected const string LegacyNUnitTestProject = nameof(LegacyNUnitTestProject);
+        protected const string LegacyMSTestProject = nameof(LegacyMSTestProject);
+        protected const string XunitTestProject = nameof(XunitTestProject);
+        protected const string NUnitTestProject = nameof(NUnitTestProject);
+        protected const string MSTestProject = nameof(MSTestProject);
 
         protected AbstractTestFixture(ITestOutputHelper output)
             : base(output)

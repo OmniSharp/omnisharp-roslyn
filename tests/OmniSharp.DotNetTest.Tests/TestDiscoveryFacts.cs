@@ -13,14 +13,10 @@ namespace OmniSharp.DotNetTest.Tests
     public class TestDiscoveryFacts : AbstractTestFixture
     {
         private const string xunit = nameof(xunit);
-        private const string LegacyXunitTestProject = nameof(LegacyXunitTestProject);
         private const string XunitTestMethod = "XunitTestMethod";
-        private const string XunitTestProject = nameof(XunitTestProject);
 
         private const string nunit = nameof(nunit);
-        private const string LegacyNUnitTestProject = "LegacyNUnitTestProject";
         private const string NUnitTestMethod = "NUnitTestMethod";
-        private const string NUnitTestProject = nameof(NUnitTestProject);
 
         private const string TestProgram = "TestProgram.cs";
 
