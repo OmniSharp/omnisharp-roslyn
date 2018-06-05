@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Composition.Hosting.Core;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -86,7 +87,12 @@ namespace TestUtility
             }
         }
 
-        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
+        public static OmniSharpTestHost Create(
+            string path = null,
+            ITestOutputHelper testOutput = null,
+            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
+            IEnumerable<ExportDescriptorProvider> additionalExports = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
             var loggerFactory = new LoggerFactory().AddXunit(testOutput);
@@ -119,8 +125,7 @@ namespace TestUtility
 
             var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration, NullEventEmitter.Instance, dotNetCliService);
 
-            var compositionHost = new CompositionHostBuilder(serviceProvider)
-                .WithAssemblies(s_lazyAssemblies.Value)
+            var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
                 .Build();
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();

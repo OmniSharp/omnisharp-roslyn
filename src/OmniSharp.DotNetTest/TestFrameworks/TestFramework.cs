@@ -45,6 +45,38 @@ namespace OmniSharp.DotNetTest.TestFrameworks
 
         protected abstract bool IsTestAttributeName(string typeName);
 
+        public bool IsTestAttribute(INamedTypeSymbol symbol)
+        {
+            while (symbol != null && symbol.SpecialType != SpecialType.System_Object)
+            {
+                var typeName = !symbol.ContainingNamespace.IsGlobalNamespace
+                    ? $"{symbol.ContainingNamespace}.{symbol.Name}"
+                    : symbol.Name;
+
+                if (IsTestAttributeName(typeName))
+                {
+                    return true;
+                }
+
+                symbol = symbol.BaseType;
+            }
+
+            return false;
+        }
+
+        public bool IsTestMethod(IMethodSymbol symbol)
+        {
+            foreach (var attribute in symbol.GetAttributes())
+            {
+                if (IsTestAttribute(attribute.AttributeClass))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool IsTestMethod(MethodDeclarationSyntax methodDeclaration, SemanticModel sematicModel)
         {
             foreach (var attributeList in methodDeclaration.AttributeLists)

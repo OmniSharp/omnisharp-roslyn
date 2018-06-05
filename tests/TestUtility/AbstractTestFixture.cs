@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Composition.Hosting.Core;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
 using Xunit;
@@ -48,8 +49,12 @@ namespace TestUtility
             return host;
         }
 
-        protected OmniSharpTestHost CreateOmniSharpHost(string path = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current) =>
-            OmniSharpTestHost.Create(path, this.TestOutput, configurationData, dotNetCliVersion);
+        protected OmniSharpTestHost CreateOmniSharpHost(
+            string path = null,
+            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
+            IEnumerable<ExportDescriptorProvider> additionalExports = null)
+            => OmniSharpTestHost.Create(path, this.TestOutput, configurationData, dotNetCliVersion, additionalExports);
 
         protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) => 
             CreateOmniSharpHost(testFiles, null);

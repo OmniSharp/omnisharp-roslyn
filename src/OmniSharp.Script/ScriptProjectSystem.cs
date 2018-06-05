@@ -47,9 +47,10 @@ namespace OmniSharp.Script
             _scriptContextProvider = scriptContextProvider;
         }
 
-        public string Key => "Script";
-        public string Language => LanguageNames.CSharp;
+        public string Key { get; } = "Script";
+        public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { CsxExtension };
+        public bool EnabledByDefault { get; } = true;
 
         public void Initalize(IConfiguration configuration)
         {
