@@ -279,14 +279,14 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
-            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
-            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == SymbolRangeNames.Full);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == SymbolRangeNames.Name);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == SymbolRangeNames.Attributes);
 
             var elementM = Assert.Single(elementC.Children);
-            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
-            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
-            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == SymbolRangeNames.Full);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == SymbolRangeNames.Name);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == SymbolRangeNames.Attributes);
         }
 
         [Fact]
@@ -302,14 +302,14 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
-            Assert.Contains(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
-            Assert.DoesNotContain(elementC.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == SymbolRangeNames.Full);
+            Assert.Contains(elementC.Ranges, kvp => kvp.Key == SymbolRangeNames.Name);
+            Assert.DoesNotContain(elementC.Ranges, kvp => kvp.Key == SymbolRangeNames.Attributes);
 
             var elementM = Assert.Single(elementC.Children);
-            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Full);
-            Assert.Contains(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Name);
-            Assert.DoesNotContain(elementM.Ranges, kvp => kvp.Key == CodeElementRangeNames.Attributes);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == SymbolRangeNames.Full);
+            Assert.Contains(elementM.Ranges, kvp => kvp.Key == SymbolRangeNames.Name);
+            Assert.DoesNotContain(elementM.Ranges, kvp => kvp.Key == SymbolRangeNames.Attributes);
         }
 
         private class NameLengthPropertyProvider : ICodeElementPropertyProvider
@@ -428,12 +428,12 @@ class C
 
             if (accessibility != null)
             {
-                Assert.Equal(accessibility, element.Properties[CodeElementPropertyNames.Accessibility]);
+                Assert.Equal(accessibility, element.Properties[SymbolPropertyNames.Accessibility]);
             }
 
             if (@static != null)
             {
-                Assert.Equal(@static, element.Properties[CodeElementPropertyNames.Static]);
+                Assert.Equal(@static, element.Properties[SymbolPropertyNames.Static]);
             }
         }
 

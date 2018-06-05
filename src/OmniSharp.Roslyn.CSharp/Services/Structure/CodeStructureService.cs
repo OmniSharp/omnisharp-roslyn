@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
+using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -309,17 +310,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         {
             if (attributesSpan != default)
             {
-                builder.AddRange(CodeElementRangeNames.Attributes, text.GetRangeFromSpan(attributesSpan));
+                builder.AddRange(SymbolRangeNames.Attributes, text.GetRangeFromSpan(attributesSpan));
             }
 
             if (fullSpan != default)
             {
-                builder.AddRange(CodeElementRangeNames.Full, text.GetRangeFromSpan(fullSpan));
+                builder.AddRange(SymbolRangeNames.Full, text.GetRangeFromSpan(fullSpan));
             }
 
             if (nameSpan != default)
             {
-                builder.AddRange(CodeElementRangeNames.Name, text.GetRangeFromSpan(nameSpan));
+                builder.AddRange(SymbolRangeNames.Name, text.GetRangeFromSpan(nameSpan));
             }
         }
 
@@ -328,10 +329,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var accessibility = symbol.GetAccessibilityString();
             if (accessibility != null)
             {
-                builder.AddProperty(CodeElementPropertyNames.Accessibility, accessibility);
+                builder.AddProperty(SymbolPropertyNames.Accessibility, accessibility);
             }
 
-            builder.AddProperty(CodeElementPropertyNames.Static, symbol.IsStatic);
+            builder.AddProperty(SymbolPropertyNames.Static, symbol.IsStatic);
 
             foreach (var propertyProvider in _propertyProviders)
             {
