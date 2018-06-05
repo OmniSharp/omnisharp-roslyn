@@ -1,6 +1,6 @@
 ﻿using System.Composition;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Refactoring.V2
 {

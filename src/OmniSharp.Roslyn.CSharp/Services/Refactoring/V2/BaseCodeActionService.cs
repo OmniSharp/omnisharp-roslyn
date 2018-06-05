@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
