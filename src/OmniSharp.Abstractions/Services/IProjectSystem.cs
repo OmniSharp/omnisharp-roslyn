@@ -10,6 +10,7 @@ namespace OmniSharp.Services
         string Key { get; }
         string Language { get; }
         IEnumerable<string> Extensions { get; }
+        bool EnabledByDefault { get; }
 
         /// <summary>
         /// Initialize the project system.

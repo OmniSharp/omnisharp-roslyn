@@ -26,7 +26,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunNunitTest()
         {
             await GetDotNetTestStartInfoAsync(
-                LegacyNunitTestProject,
+                LegacyNUnitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit");
         }

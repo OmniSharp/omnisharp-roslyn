@@ -7,11 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OmniSharp.Eventing;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Plugins
 {
@@ -37,6 +34,7 @@ namespace OmniSharp.Plugins
         public string Key { get; }
         public string Language { get; }
         public IEnumerable<string> Extensions { get; }
+        public bool EnabledByDefault { get; } = true;
 
         public Task<TResponse> Handle<TRequest, TResponse>(string endpoint, TRequest request)
         {

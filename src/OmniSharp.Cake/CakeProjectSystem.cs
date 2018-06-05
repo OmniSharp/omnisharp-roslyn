@@ -38,9 +38,10 @@ namespace OmniSharp.Cake
 
         private CakeOptions _options;
 
-        public string Key => "Cake";
-        public string Language => Constants.LanguageNames.Cake;
-        public IEnumerable<string> Extensions => new[] { ".cake" };
+        public string Key { get; } = "Cake";
+        public string Language { get; } = Constants.LanguageNames.Cake;
+        public IEnumerable<string> Extensions { get; } = new[] { ".cake" };
+        public bool EnabledByDefault { get; } = true;
 
         [ImportingConstructor]
         public CakeProjectSystem(
