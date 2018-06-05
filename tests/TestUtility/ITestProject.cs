@@ -8,5 +8,6 @@ namespace TestUtility
         string BaseDirectory { get; }
         string Directory { get; }
         bool ShadowCopied { get; }
+        string AddDisposableFile(string fileName, string contents = null);
     }
 }
