@@ -10,7 +10,7 @@ namespace OmniSharp.Script
         {
             Path = csxPath;
             ImplicitAssemblyReferences = implicitAssemblyReferences;
-            CommonUsings = ScriptHelper.DefaultNamespaces;
+            CommonUsings = ScriptProjectProvider.DefaultNamespaces;
             GlobalsType = project.HostObjectType;
         }
 
