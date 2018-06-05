@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models.V2;
 using OmniSharp.Utilities;
@@ -174,7 +175,11 @@ namespace OmniSharp.Extensions
                 : SymbolKinds.Property;
         }
 
-        public static string GetKind(this ISymbol symbol)
+        /// <summary>
+        /// Do not use this API in new OmniSharp endpoints. Use <see cref="GetKindString(ISymbol)"/> instead.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal static string GetKind(this ISymbol symbol)
         {
             if (symbol is INamedTypeSymbol namedType)
             {
