@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
@@ -23,13 +24,16 @@ namespace OmniSharp
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IEnumerable<Assembly> _assemblies;
+        private readonly IEnumerable<ExportDescriptorProvider> _exportDescriptorProviders;
 
         public CompositionHostBuilder(
             IServiceProvider serviceProvider,
-            IEnumerable<Assembly> assemblies = null)
+            IEnumerable<Assembly> assemblies = null,
+            IEnumerable<ExportDescriptorProvider> exportDescriptorProviders = null)
         {
             _serviceProvider = serviceProvider;
             _assemblies = assemblies ?? Array.Empty<Assembly>();
+            _exportDescriptorProviders = exportDescriptorProviders ?? Array.Empty<ExportDescriptorProvider>();
         }
 
         public CompositionHost Build()
@@ -68,6 +72,11 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
                 .WithProvider(MefValueProvider.From(eventEmitter));
+
+            foreach (var exportDescriptorProvider in _exportDescriptorProviders)
+            {
+                config = config.WithProvider(exportDescriptorProvider);
+            }
 
             var parts = _assemblies
                 .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
