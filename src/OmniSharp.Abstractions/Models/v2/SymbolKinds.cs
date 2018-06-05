@@ -1,6 +1,6 @@
-﻿namespace OmniSharp.Models.V2.CodeStructure
+﻿namespace OmniSharp.Models.V2
 {
-    public static class CodeElementKinds
+    public static class SymbolKinds
     {
         // types
         public static readonly string Class = nameof(Class).ToLowerInvariant();

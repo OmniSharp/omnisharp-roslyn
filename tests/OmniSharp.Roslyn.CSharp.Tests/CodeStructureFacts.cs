@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
+using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
 using OmniSharp.Services;
@@ -34,11 +35,11 @@ struct S { }
             var response = await GetCodeStructureAsync(source);
 
             Assert.Equal(5, response.Elements.Count);
-            AssertElement(response.Elements[0], CodeElementKinds.Class, "C", "C");
-            AssertElement(response.Elements[1], CodeElementKinds.Delegate, "D", "D");
-            AssertElement(response.Elements[2], CodeElementKinds.Enum, "E", "E");
-            AssertElement(response.Elements[3], CodeElementKinds.Interface, "I", "I");
-            AssertElement(response.Elements[4], CodeElementKinds.Struct, "S", "S");
+            AssertElement(response.Elements[0], SymbolKinds.Class, "C", "C");
+            AssertElement(response.Elements[1], SymbolKinds.Delegate, "D", "D");
+            AssertElement(response.Elements[2], SymbolKinds.Enum, "E", "E");
+            AssertElement(response.Elements[3], SymbolKinds.Interface, "I", "I");
+            AssertElement(response.Elements[4], SymbolKinds.Struct, "S", "S");
         }
 
         [Fact]
@@ -58,15 +59,15 @@ namespace N
             var response = await GetCodeStructureAsync(source);
 
             var elementN = Assert.Single(response.Elements);
-            AssertElement(elementN, CodeElementKinds.Namespace, "N", "N");
+            AssertElement(elementN, SymbolKinds.Namespace, "N", "N");
 
             var children = elementN.Children;
             Assert.Equal(5, children.Count);
-            AssertElement(children[0], CodeElementKinds.Class, "C", "N.C");
-            AssertElement(children[1], CodeElementKinds.Delegate, "D", "N.D");
-            AssertElement(children[2], CodeElementKinds.Enum, "E", "N.E");
-            AssertElement(children[3], CodeElementKinds.Interface, "I", "N.I");
-            AssertElement(children[4], CodeElementKinds.Struct, "S", "N.S");
+            AssertElement(children[0], SymbolKinds.Class, "C", "N.C");
+            AssertElement(children[1], SymbolKinds.Delegate, "D", "N.D");
+            AssertElement(children[2], SymbolKinds.Enum, "E", "N.E");
+            AssertElement(children[3], SymbolKinds.Interface, "I", "N.I");
+            AssertElement(children[4], SymbolKinds.Struct, "S", "N.S");
         }
 
         [Fact]
@@ -85,14 +86,14 @@ namespace N
             var response = await GetCodeStructureAsync(source);
 
             var elementN = Assert.Single(response.Elements);
-            AssertElement(elementN, CodeElementKinds.Namespace, "N", "N");
+            AssertElement(elementN, SymbolKinds.Namespace, "N", "N");
 
             var children = elementN.Children;
             Assert.Equal(4, children.Count);
-            AssertElement(children[0], CodeElementKinds.Class, "C<T>", "N.C<T>");
-            AssertElement(children[1], CodeElementKinds.Delegate, "D<T1, T2>", "N.D<T1, T2>");
-            AssertElement(children[2], CodeElementKinds.Interface, "I<T>", "N.I<T>");
-            AssertElement(children[3], CodeElementKinds.Struct, "S<T>", "N.S<T>");
+            AssertElement(children[0], SymbolKinds.Class, "C<T>", "N.C<T>");
+            AssertElement(children[1], SymbolKinds.Delegate, "D<T1, T2>", "N.D<T1, T2>");
+            AssertElement(children[2], SymbolKinds.Interface, "I<T>", "N.I<T>");
+            AssertElement(children[3], SymbolKinds.Struct, "S<T>", "N.S<T>");
         }
 
         [Fact]
@@ -120,24 +121,24 @@ namespace N1
             var response = await GetCodeStructureAsync(source);
 
             var elementN1 = Assert.Single(response.Elements);
-            AssertElement(elementN1, CodeElementKinds.Namespace, "N1", "N1");
+            AssertElement(elementN1, SymbolKinds.Namespace, "N1", "N1");
 
             Assert.Equal(3, elementN1.Children.Count);
 
             var elementN3 = elementN1.Children[0];
-            AssertElement(elementN3, CodeElementKinds.Namespace, "N3", "N1.N2.N3");
+            AssertElement(elementN3, SymbolKinds.Namespace, "N3", "N1.N2.N3");
 
             var elementN4 = Assert.Single(elementN3.Children);
-            AssertElement(elementN4, CodeElementKinds.Namespace, "N4", "N1.N2.N3.N4");
+            AssertElement(elementN4, SymbolKinds.Namespace, "N4", "N1.N2.N3.N4");
 
             var elementN5 = elementN1.Children[1];
-            AssertElement(elementN5, CodeElementKinds.Namespace, "N5", "N1.N5");
+            AssertElement(elementN5, SymbolKinds.Namespace, "N5", "N1.N5");
 
             var elementN2 = elementN1.Children[2];
-            AssertElement(elementN2, CodeElementKinds.Namespace, "N2", "N1.N2");
+            AssertElement(elementN2, SymbolKinds.Namespace, "N2", "N1.N2");
 
             var elementN6 = Assert.Single(elementN2.Children);
-            AssertElement(elementN6, CodeElementKinds.Namespace, "N6", "N1.N2.N6");
+            AssertElement(elementN6, SymbolKinds.Namespace, "N6", "N1.N2.N6");
         }
 
         [Fact]
@@ -158,21 +159,21 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            AssertElement(elementC, CodeElementKinds.Class, "C", "C");
+            AssertElement(elementC, SymbolKinds.Class, "C", "C");
 
             Assert.Equal(3, elementC.Children.Count);
 
             var elementD = elementC.Children[0];
-            AssertElement(elementD, CodeElementKinds.Delegate, "D", "C.D");
+            AssertElement(elementD, SymbolKinds.Delegate, "D", "C.D");
 
             var elementI = elementC.Children[1];
-            AssertElement(elementI, CodeElementKinds.Interface, "I", "C.I");
+            AssertElement(elementI, SymbolKinds.Interface, "I", "C.I");
 
             var elementS = elementC.Children[2];
-            AssertElement(elementS, CodeElementKinds.Struct, "S", "C.S");
+            AssertElement(elementS, SymbolKinds.Struct, "S", "C.S");
 
             var elementE = Assert.Single(elementS.Children);
-            AssertElement(elementE, CodeElementKinds.Enum, "E", "C.S.E");
+            AssertElement(elementE, SymbolKinds.Enum, "E", "C.S.E");
         }
 
         [Fact]
@@ -201,26 +202,26 @@ class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            AssertElement(elementC, CodeElementKinds.Class, "C", "C", @static: false);
+            AssertElement(elementC, SymbolKinds.Class, "C", "C", @static: false);
 
             var children = elementC.Children;
             Assert.Equal(16, children.Count);
-            AssertElement(children[0], CodeElementKinds.Field, "_f", "_f", CodeElementAccessibilities.Private, @static: false);
-            AssertElement(children[1], CodeElementKinds.Field, "_f1", "_f1", CodeElementAccessibilities.Private, @static: false);
-            AssertElement(children[2], CodeElementKinds.Field, "_f2", "_f2", CodeElementAccessibilities.Private, @static: false);
-            AssertElement(children[3], CodeElementKinds.Constant, "_c", "_c", CodeElementAccessibilities.Private, @static: true);
-            AssertElement(children[4], CodeElementKinds.Constructor, "C", "C()", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[5], CodeElementKinds.Destructor, "~C", "~C()", CodeElementAccessibilities.Protected, @static: false);
-            AssertElement(children[6], CodeElementKinds.Method, "M1", "M1()", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[7], CodeElementKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[8], CodeElementKinds.Operator, "implicit operator C", "implicit operator C(int i)", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[9], CodeElementKinds.Operator, "operator +", "operator +(C c1, C c2)", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[10], CodeElementKinds.Property, "P", "P", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[11], CodeElementKinds.Event, "E", "E", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[12], CodeElementKinds.Event, "E1", "E1", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[13], CodeElementKinds.Event, "E2", "E2", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[14], CodeElementKinds.Event, "E3", "E3", CodeElementAccessibilities.Public, @static: false);
-            AssertElement(children[15], CodeElementKinds.Indexer, "this", "this[int index]", CodeElementAccessibilities.Internal, @static: false);
+            AssertElement(children[0], SymbolKinds.Field, "_f", "_f", SymbolAccessibilities.Private, @static: false);
+            AssertElement(children[1], SymbolKinds.Field, "_f1", "_f1", SymbolAccessibilities.Private, @static: false);
+            AssertElement(children[2], SymbolKinds.Field, "_f2", "_f2", SymbolAccessibilities.Private, @static: false);
+            AssertElement(children[3], SymbolKinds.Constant, "_c", "_c", SymbolAccessibilities.Private, @static: true);
+            AssertElement(children[4], SymbolKinds.Constructor, "C", "C()", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[5], SymbolKinds.Destructor, "~C", "~C()", SymbolAccessibilities.Protected, @static: false);
+            AssertElement(children[6], SymbolKinds.Method, "M1", "M1()", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[7], SymbolKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[8], SymbolKinds.Operator, "implicit operator C", "implicit operator C(int i)", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[9], SymbolKinds.Operator, "operator +", "operator +(C c1, C c2)", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[10], SymbolKinds.Property, "P", "P", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[11], SymbolKinds.Event, "E", "E", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[12], SymbolKinds.Event, "E1", "E1", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[13], SymbolKinds.Event, "E2", "E2", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[14], SymbolKinds.Event, "E3", "E3", SymbolAccessibilities.Public, @static: false);
+            AssertElement(children[15], SymbolKinds.Indexer, "this", "this[int index]", SymbolAccessibilities.Internal, @static: false);
         }
 
         [Fact]
@@ -245,22 +246,22 @@ static class C
             var response = await GetCodeStructureAsync(source);
 
             var elementC = Assert.Single(response.Elements);
-            AssertElement(elementC, CodeElementKinds.Class, "C", "C");
+            AssertElement(elementC, SymbolKinds.Class, "C", "C");
 
             var children = elementC.Children;
             Assert.Equal(12, children.Count);
-            AssertElement(children[0], CodeElementKinds.Field, "_f", "_f", CodeElementAccessibilities.Private, @static: true);
-            AssertElement(children[1], CodeElementKinds.Field, "_f1", "_f1", CodeElementAccessibilities.Private, @static: true);
-            AssertElement(children[2], CodeElementKinds.Field, "_f2", "_f2", CodeElementAccessibilities.Private, @static: true);
-            AssertElement(children[3], CodeElementKinds.Constant, "_c", "_c", CodeElementAccessibilities.Private, @static: true);
-            AssertElement(children[4], CodeElementKinds.Constructor, "C", "C()", CodeElementAccessibilities.Private, @static: true);
-            AssertElement(children[5], CodeElementKinds.Method, "M1", "M1()", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[6], CodeElementKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[7], CodeElementKinds.Property, "P", "P", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[8], CodeElementKinds.Event, "E", "E", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[9], CodeElementKinds.Event, "E1", "E1", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[10], CodeElementKinds.Event, "E2", "E2", CodeElementAccessibilities.Public, @static: true);
-            AssertElement(children[11], CodeElementKinds.Event, "E3", "E3", CodeElementAccessibilities.Public, @static: true);
+            AssertElement(children[0], SymbolKinds.Field, "_f", "_f", SymbolAccessibilities.Private, @static: true);
+            AssertElement(children[1], SymbolKinds.Field, "_f1", "_f1", SymbolAccessibilities.Private, @static: true);
+            AssertElement(children[2], SymbolKinds.Field, "_f2", "_f2", SymbolAccessibilities.Private, @static: true);
+            AssertElement(children[3], SymbolKinds.Constant, "_c", "_c", SymbolAccessibilities.Private, @static: true);
+            AssertElement(children[4], SymbolKinds.Constructor, "C", "C()", SymbolAccessibilities.Private, @static: true);
+            AssertElement(children[5], SymbolKinds.Method, "M1", "M1()", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[6], SymbolKinds.Method, "M2", "M2(int i, ref string s, params object[] array)", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[7], SymbolKinds.Property, "P", "P", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[8], SymbolKinds.Event, "E", "E", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[9], SymbolKinds.Event, "E1", "E1", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[10], SymbolKinds.Event, "E2", "E2", SymbolAccessibilities.Public, @static: true);
+            AssertElement(children[11], SymbolKinds.Event, "E3", "E3", SymbolAccessibilities.Public, @static: true);
         }
 
         [Fact]

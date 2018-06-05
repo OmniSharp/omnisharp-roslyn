@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
@@ -7,9 +6,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Structure
@@ -17,38 +17,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
     [OmniSharpHandler(OmniSharpEndpoints.V2.CodeStructure, LanguageNames.CSharp)]
     public class CodeStructureService : IRequestHandler<CodeStructureRequest, CodeStructureResponse>
     {
-        private static readonly SymbolDisplayFormat s_ShortTypeFormat = new SymbolDisplayFormat(
-            typeQualificationStyle:
-                SymbolDisplayTypeQualificationStyle.NameOnly,
-            genericsOptions:
-                SymbolDisplayGenericsOptions.IncludeTypeParameters);
-
-        private static readonly SymbolDisplayFormat s_TypeFormat = new SymbolDisplayFormat(
-            typeQualificationStyle:
-                SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-            genericsOptions:
-                SymbolDisplayGenericsOptions.IncludeTypeParameters |
-                SymbolDisplayGenericsOptions.IncludeVariance);
-
-        private static readonly SymbolDisplayFormat s_ShortMemberFormat = new SymbolDisplayFormat(
-            genericsOptions:
-                SymbolDisplayGenericsOptions.IncludeTypeParameters);
-
-        private static readonly SymbolDisplayFormat s_MemberFormat = new SymbolDisplayFormat(
-            genericsOptions:
-                SymbolDisplayGenericsOptions.IncludeTypeParameters |
-                SymbolDisplayGenericsOptions.IncludeVariance,
-            memberOptions:
-                SymbolDisplayMemberOptions.IncludeParameters,
-            parameterOptions:
-                SymbolDisplayParameterOptions.IncludeDefaultValue |
-                SymbolDisplayParameterOptions.IncludeExtensionThis |
-                SymbolDisplayParameterOptions.IncludeName |
-                SymbolDisplayParameterOptions.IncludeParamsRefOut |
-                SymbolDisplayParameterOptions.IncludeType,
-            miscellaneousOptions:
-                SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeElementPropertyProvider> _propertyProviders;
 
@@ -143,9 +111,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(typeDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortTypeFormat),
-                DisplayName = symbol.ToDisplayString(s_TypeFormat)
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortTypeFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat)
             };
 
             AddRanges(builder, typeDeclaration.AttributeLists.Span, typeDeclaration.Span, typeDeclaration.Identifier.Span, text);
@@ -172,9 +140,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(delegateDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortTypeFormat),
-                DisplayName = symbol.ToDisplayString(s_TypeFormat),
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortTypeFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat),
             };
 
             AddRanges(builder, delegateDeclaration.AttributeLists.Span, delegateDeclaration.Span, delegateDeclaration.Identifier.Span, text);
@@ -193,9 +161,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(enumDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortTypeFormat),
-                DisplayName = symbol.ToDisplayString(s_TypeFormat),
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortTypeFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat),
             };
 
             AddRanges(builder, enumDeclaration.AttributeLists.Span, enumDeclaration.Span, enumDeclaration.Identifier.Span, text);
@@ -222,9 +190,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(namespaceDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortTypeFormat),
-                DisplayName = symbol.ToDisplayString(s_TypeFormat),
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortTypeFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat),
             };
 
             AddRanges(builder, attributesSpan: default, namespaceDeclaration.Span, namespaceDeclaration.Name.Span, text);
@@ -250,9 +218,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(baseMethodDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortMemberFormat),
-                DisplayName = symbol.ToDisplayString(s_MemberFormat),
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.MemberFormat),
             };
 
             AddRanges(builder, baseMethodDeclaration.AttributeLists.Span, baseMethodDeclaration.Span, GetNameSpan(baseMethodDeclaration), text);
@@ -271,9 +239,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(basePropertyDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortMemberFormat),
-                DisplayName = symbol.ToDisplayString(s_MemberFormat),
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.MemberFormat),
             };
 
             AddRanges(builder, basePropertyDeclaration.AttributeLists.Span, basePropertyDeclaration.Span, GetNameSpan(basePropertyDeclaration), text);
@@ -292,79 +260,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
             var builder = new CodeElement.Builder
             {
-                Kind = GetKind(baseFieldDeclaration, symbol),
-                Name = symbol.ToDisplayString(s_ShortMemberFormat),
-                DisplayName = symbol.ToDisplayString(s_MemberFormat),
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.MemberFormat),
             };
 
             AddRanges(builder, baseFieldDeclaration.AttributeLists.Span, variableDeclarator.Span, variableDeclarator.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
-        }
-
-        private static string GetKind(SyntaxNode node, ISymbol symbol)
-        {
-            switch (node.Kind())
-            {
-                case SyntaxKind.ClassDeclaration:
-                    return CodeElementKinds.Class;
-                case SyntaxKind.ConstructorDeclaration:
-                    return CodeElementKinds.Constructor;
-                case SyntaxKind.DelegateDeclaration:
-                    return CodeElementKinds.Delegate;
-                case SyntaxKind.DestructorDeclaration:
-                    return CodeElementKinds.Destructor;
-                case SyntaxKind.EnumDeclaration:
-                    return CodeElementKinds.Enum;
-                case SyntaxKind.EnumMemberDeclaration:
-                    return CodeElementKinds.EnumMember;
-                case SyntaxKind.EventDeclaration:
-                case SyntaxKind.EventFieldDeclaration:
-                    return CodeElementKinds.Event;
-                case SyntaxKind.FieldDeclaration:
-                    return ((IFieldSymbol)symbol).IsConst
-                        ? CodeElementKinds.Constant
-                        : CodeElementKinds.Field;
-                case SyntaxKind.IndexerDeclaration:
-                    return CodeElementKinds.Indexer;
-                case SyntaxKind.InterfaceDeclaration:
-                    return CodeElementKinds.Interface;
-                case SyntaxKind.MethodDeclaration:
-                    return CodeElementKinds.Method;
-                case SyntaxKind.NamespaceDeclaration:
-                    return CodeElementKinds.Namespace;
-                case SyntaxKind.OperatorDeclaration:
-                case SyntaxKind.ConversionOperatorDeclaration:
-                    return CodeElementKinds.Operator;
-                case SyntaxKind.PropertyDeclaration:
-                    return CodeElementKinds.Property;
-                case SyntaxKind.StructDeclaration:
-                    return CodeElementKinds.Struct;
-                default:
-                    return CodeElementKinds.Unknown;
-            }
-        }
-
-        private static string GetAccessibility(ISymbol symbol)
-        {
-            switch (symbol.DeclaredAccessibility)
-            {
-                case Accessibility.Public:
-                    return CodeElementAccessibilities.Public;
-                case Accessibility.Internal:
-                    return CodeElementAccessibilities.Internal;
-                case Accessibility.Private:
-                    return CodeElementAccessibilities.Private;
-                case Accessibility.Protected:
-                    return CodeElementAccessibilities.Protected;
-                case Accessibility.ProtectedOrInternal:
-                    return CodeElementAccessibilities.ProtectedInternal;
-                case Accessibility.ProtectedAndInternal:
-                    return CodeElementAccessibilities.PrivateProtected;
-                default:
-                    return null;
-            }
         }
 
         private static TextSpan GetNameSpan(BaseMethodDeclarationSyntax baseMethodDeclaration)
@@ -400,40 +304,28 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     return default;
             }
         }
-
-        private static Range CreateRange(TextSpan span, SourceText text)
-        {
-            var startLine = text.Lines.GetLineFromPosition(span.Start);
-            var endLine = text.Lines.GetLineFromPosition(span.End);
-
-            return new Range
-            {
-                Start = new Point { Line = startLine.LineNumber, Column = span.Start - startLine.Start },
-                End = new Point { Line = endLine.LineNumber, Column = span.End - endLine.Start }
-            };
-        }
-
+        
         private static void AddRanges(CodeElement.Builder builder, TextSpan attributesSpan, TextSpan fullSpan, TextSpan nameSpan, SourceText text)
         {
             if (attributesSpan != default)
             {
-                builder.AddRange(CodeElementRangeNames.Attributes, CreateRange(attributesSpan, text));
+                builder.AddRange(CodeElementRangeNames.Attributes, text.GetRangeFromSpan(attributesSpan));
             }
 
             if (fullSpan != default)
             {
-                builder.AddRange(CodeElementRangeNames.Full, CreateRange(fullSpan, text));
+                builder.AddRange(CodeElementRangeNames.Full, text.GetRangeFromSpan(fullSpan));
             }
 
             if (nameSpan != default)
             {
-                builder.AddRange(CodeElementRangeNames.Name, CreateRange(nameSpan, text));
+                builder.AddRange(CodeElementRangeNames.Name, text.GetRangeFromSpan(nameSpan));
             }
         }
 
         private void AddSymbolProperties(ISymbol symbol, CodeElement.Builder builder)
         {
-            var accessibility = GetAccessibility(symbol);
+            var accessibility = symbol.GetAccessibilityString();
             if (accessibility != null)
             {
                 builder.AddProperty(CodeElementPropertyNames.Accessibility, accessibility);

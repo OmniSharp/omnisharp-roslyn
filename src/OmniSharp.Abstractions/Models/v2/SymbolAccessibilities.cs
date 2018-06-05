@@ -1,6 +1,6 @@
-﻿namespace OmniSharp.Models.V2.CodeStructure
+﻿namespace OmniSharp.Models.V2
 {
-    public static class CodeElementAccessibilities
+    public static class SymbolAccessibilities
     {
         public static readonly string Internal = nameof(Internal).ToLowerInvariant();
         public static readonly string Private = nameof(Private).ToLowerInvariant();

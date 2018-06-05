@@ -158,14 +158,22 @@ namespace OmniSharp.DotNetTest.Tests
 
             while (elements != null)
             {
+                var stop = true;
+
                 foreach (var element in elements)
                 {
                     if (element.Ranges[CodeElementRangeNames.Full].Contains(line, column))
                     {
                         result = element;
                         elements = element.Children;
+                        stop = false;
                         break;
                     }
+                }
+
+                if (stop)
+                {
+                    break;
                 }
             }
 
