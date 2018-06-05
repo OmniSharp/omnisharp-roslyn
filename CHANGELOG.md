@@ -1,7 +1,7 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.32.0] - _Not Yet Released _
+## [1.32.0] - _Not Yet Released_
 * Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PR: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211))
 
 ## [1.31.1] - 2018-05-28
