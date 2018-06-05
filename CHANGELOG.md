@@ -1,9 +1,11 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.0] - _Not Yet Released _
+* Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PR: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211))
+
 ## [1.31.1] - 2018-05-28
 * Fixed bug where diagnostics from loaded `.cake` files was shown in the current file. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))
-* Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PR: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211))
 
 ## [1.31.0] - 2018-05-29
 * Update to Roslyn 2.8.0 packages, adding support for C# 7.3. (PR: [#1182](https://github.com/OmniSharp/omnisharp-roslyn/pull/1182))
