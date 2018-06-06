@@ -38,21 +38,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
 
             var expected = testFile.Content.GetSpans()
-                .Select(t => t.ToRange(text.Lines)).ToArray();
+                .Select(t => testFile.Content.GetRangeFromSpan(t)).ToArray();
 
             Assert.Equal(expected, lineSpans);
         }
 
-        private async Task<BlockStructureResponse> GetResponseAsync(TestFile testFile)
+        private Task<BlockStructureResponse> GetResponseAsync(TestFile testFile)
         {
-            SharedOmniSharpTestHost.AddFilesToWorkspace(new[] { testFile });
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var request = new BlockStructureRequest
             {
                 FileName = testFile.FileName,
             };
 
             var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
-            return await requestHandler.Handle(request);
+            return requestHandler.Handle(request);
         }
     }
 }
