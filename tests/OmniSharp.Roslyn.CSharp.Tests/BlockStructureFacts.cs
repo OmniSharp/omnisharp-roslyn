@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.v2;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
-using OmniSharp.Roslyn.Extensions;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -33,12 +32,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var text = testFile.Content.Text;
 
             var lineSpans = (await GetResponseAsync(testFile)).Spans
-                .Select(b => b.TextSpan)
+                .Select(b => b.Range)
                 .ToArray();
 
 
             var expected = testFile.Content.GetSpans()
-                .Select(t => testFile.Content.GetRangeFromSpan(t)).ToArray();
+                .Select(span => testFile.Content.GetRangeFromSpan(span).ToRange()).ToArray();
 
             Assert.Equal(expected, lineSpans);
         }

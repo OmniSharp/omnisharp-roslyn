@@ -5,6 +5,6 @@ namespace OmniSharp.Models.v2
 {
     public class BlockStructureResponse
     {
-        public IEnumerable<BlockSpan> Spans { get; set; }
+        public IEnumerable<CodeFoldingBlock> Spans { get; set; }
     }
 }

@@ -7,10 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.v2;
 using OmniSharp.Models.V2;
-using OmniSharp.Roslyn.Extensions;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -28,8 +28,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         private readonly MethodInfo _getSpans;
         private readonly MethodInfo _getIsCollpasible;
         private readonly MethodInfo _getTextSpan;
-        private readonly MethodInfo _getHintSpan;
-        private readonly MethodInfo _getBannerText;
         private readonly MethodInfo _getType;
         private readonly OmniSharpWorkspace _workspace;
 
@@ -48,8 +46,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             _getSpans = _blockStructure.Value.GetProperty("Spans").GetMethod;
             _getIsCollpasible = _blockSpan.Value.GetProperty("IsCollapsible").GetMethod;
             _getTextSpan = _blockSpan.Value.GetProperty("TextSpan").GetMethod;
-            _getHintSpan = _blockSpan.Value.GetProperty("HintSpan").GetMethod;
-            _getBannerText = _blockSpan.Value.GetProperty("BannerText").GetMethod;
             _getType = _blockSpan.Value.GetProperty("Type").GetMethod;
         }
 
@@ -57,7 +53,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         {
             var document = _workspace.GetDocument(request.FileName);
             var text = await document.GetTextAsync();
-            var lines = text.Lines;
 
             var service = _blockStructureService.LazyGetMethod("GetService").InvokeStatic(new[] { document });
 
@@ -65,28 +60,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             var spans = _getSpans.Invoke<IEnumerable>(structure, Array.Empty<object>());
 
 
-            var outliningSpans = new List<BlockSpan>();
+            var outliningSpans = new List<CodeFoldingBlock>();
             foreach (var span in spans)
             {
                 if (_getIsCollpasible.Invoke<bool>(span, Array.Empty<object>()))
                 {
                     var textSpan = _getTextSpan.Invoke<TextSpan>(span, Array.Empty<object>());
-                    var line = lines.GetLineFromPosition(textSpan.Start);
-                    var column = textSpan.Start - line.Start;
-                    var endLine = lines.GetLineFromPosition(textSpan.End);
-                    var endColumn = textSpan.End - endLine.Start;
 
-                    outliningSpans.Add(new BlockSpan(
-                        textSpan.ToRange(lines),
-                        hintSpan: _getHintSpan.Invoke<TextSpan>(span, Array.Empty<object>()).ToRange(lines),
-                        bannerText: _getBannerText.Invoke<string>(span, Array.Empty<object>()),
-                        type: _getType.Invoke<string>(span, Array.Empty<object>())));
+                    outliningSpans.Add(new CodeFoldingBlock(
+                        text.GetRangeFromSpan(textSpan),
+                        type: ConvertToWellKnownBlockType(_getType.Invoke<string>(span, Array.Empty<object>()))));
                 }
             }
 
             return new BlockStructureResponse() { Spans = outliningSpans };
         }
 
-        
+        private string ConvertToWellKnownBlockType(string kind)
+        {
+            return kind == CodeFoldingBlockKind.Comment ||
+                   kind == CodeFoldingBlockKind.Imports ||
+                   kind == CodeFoldingBlockKind.Region
+                ? kind
+                : null;
+        }
     }
 }
