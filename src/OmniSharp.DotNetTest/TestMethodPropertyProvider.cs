@@ -2,7 +2,7 @@
 using System.Composition;
 using Microsoft.CodeAnalysis;
 using OmniSharp.DotNetTest.TestFrameworks;
-using OmniSharp.Roslyn.Utilities;
+using OmniSharp.Extensions;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNetTest

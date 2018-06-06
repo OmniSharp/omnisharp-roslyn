@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace OmniSharp.Models.V2
+namespace OmniSharp.Models.V2.CodeActions
 {
     public interface ICodeActionRequest
     {

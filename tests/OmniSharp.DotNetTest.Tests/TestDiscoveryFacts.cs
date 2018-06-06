@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.MembersTree;
+using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
 using TestUtility;
@@ -158,14 +159,22 @@ namespace OmniSharp.DotNetTest.Tests
 
             while (elements != null)
             {
+                var stop = true;
+
                 foreach (var element in elements)
                 {
-                    if (element.Ranges[CodeElementRangeNames.Full].Contains(line, column))
+                    if (element.Ranges[SymbolRangeNames.Full].Contains(line, column))
                     {
                         result = element;
                         elements = element.Children;
+                        stop = false;
                         break;
                     }
+                }
+
+                if (stop)
+                {
+                    break;
                 }
             }
 

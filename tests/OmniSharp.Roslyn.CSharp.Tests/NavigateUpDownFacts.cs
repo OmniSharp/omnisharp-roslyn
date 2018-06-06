@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using OmniSharp.Models.Navigate;
 using OmniSharp.Roslyn.CSharp.Services.Navigation;
+using OmniSharp.Roslyn.Utilities;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -728,8 +729,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var start = testFile.Content.GetSpans("start").Single().Start;
             var end = testFile.Content.GetSpans("end").Single().Start;
 
-            var startPoint = testFile.Content.Text.GetPointFromPosition(start);
-            var endPoint = testFile.Content.Text.GetPointFromPosition(end);
+            var startPoint = testFile.Content.GetPointFromPosition(start);
+            var endPoint = testFile.Content.GetPointFromPosition(end);
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var response = await SendRequest(SharedOmniSharpTestHost, testFile, startPoint.Line, startPoint.Offset, direction);

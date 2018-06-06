@@ -8,6 +8,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;

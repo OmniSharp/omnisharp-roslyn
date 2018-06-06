@@ -1,6 +1,6 @@
-﻿namespace OmniSharp.Models.V2.CodeStructure
+﻿namespace OmniSharp.Models.V2
 {
-    public static class CodeElementRangeNames
+    public static class SymbolRangeNames
     {
         public static readonly string Attributes = nameof(Attributes).ToLowerInvariant();
         public static readonly string Full = nameof(Full).ToLowerInvariant();

@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Composition;
+﻿using System.Composition;
 using System.Threading.Tasks;
 using OmniSharp.Cake.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.FileOpen;
-using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Refactoring.V2
 {

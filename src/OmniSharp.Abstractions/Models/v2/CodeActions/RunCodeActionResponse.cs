@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OmniSharp.Models.V2
+namespace OmniSharp.Models.V2.CodeActions
 {
     public class RunCodeActionResponse
     {

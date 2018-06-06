@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;

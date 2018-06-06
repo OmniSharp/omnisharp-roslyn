@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Cake.Utilities;
@@ -7,7 +6,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.Navigate;
 using OmniSharp.Models.MembersTree;
 using OmniSharp.Models.Rename;
-using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 
 namespace OmniSharp.Cake.Extensions
 {
