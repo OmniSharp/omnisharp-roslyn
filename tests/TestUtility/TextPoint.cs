@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniSharp.Models.V2;
+using System;
 
 namespace TestUtility
 {
@@ -14,6 +15,10 @@ namespace TestUtility
             this.Line = line;
             this.Offset = offset;
         }
+
+        public Point ToPoint()
+            // Note that OmniSharp is 1-based by default, so make sure we convert here.
+            => new Point { Line = this.Line + 1, Column = this.Offset + 1 };
 
         public int CompareTo(TextPoint other)
         {

@@ -74,9 +74,10 @@ namespace OmniSharp.Http.Tests
         [Export(typeof(IProjectSystem))]
         class FakeProjectSystem : IProjectSystem
         {
-            public string Key { get { return "Fake"; } }
-            public string Language { get { return LanguageNames.CSharp; } }
+            public string Key { get; } = "Fake";
+            public string Language { get; } = LanguageNames.CSharp;
             public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
+            public bool EnabledByDefault { get; } = true;
 
             public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
             {

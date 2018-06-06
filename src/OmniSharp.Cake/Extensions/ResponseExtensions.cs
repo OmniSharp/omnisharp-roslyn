@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Cake.Utilities;
@@ -7,6 +6,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.Navigate;
 using OmniSharp.Models.MembersTree;
 using OmniSharp.Models.Rename;
+using OmniSharp.Models.V2.CodeActions;
 
 namespace OmniSharp.Cake.Extensions
 {
@@ -82,6 +82,42 @@ namespace OmniSharp.Cake.Extensions
                 Changes = x.Value
             });
 
+            return response;
+        }
+
+        public static async Task<RunCodeActionResponse> TranslateAsync(this RunCodeActionResponse response, OmniSharpWorkspace workspace)
+        {
+            if (response?.Changes == null)
+            {
+                return response;
+            }
+
+            var fileOperations = new List<FileOperationResponse>();
+            var changes = new Dictionary<string, List<LinePositionSpanTextChange>>();
+
+            foreach (var fileOperation in response.Changes)
+            {
+                if (fileOperation.ModificationType == FileModificationType.Modified &&
+                    fileOperation is ModifiedFileResponse modifiedFile)
+                {
+                    await PopulateModificationsAsync(modifiedFile, workspace, changes);
+                }
+
+                fileOperations.Add(fileOperation);
+            }
+
+            foreach (var change in changes)
+            {
+
+                if (fileOperations.FirstOrDefault(x => x.FileName == change.Key &&
+                        x.ModificationType == FileModificationType.Modified)
+                    is ModifiedFileResponse modifiedFile)
+                {
+                    modifiedFile.Changes = change.Value;
+                }
+            }
+
+            response.Changes = fileOperations;
             return response;
         }
 

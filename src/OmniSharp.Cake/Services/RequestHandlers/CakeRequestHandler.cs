@@ -61,7 +61,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers
             return await TranslateResponse(response, request);
         }
 
-        public virtual bool IsValid(TRequest request) => true;
+        protected virtual bool IsValid(TRequest request) => true;
 
         protected virtual async Task<TRequest> TranslateRequestAsync(TRequest req)
         {

@@ -47,6 +47,7 @@ namespace OmniSharp.MSBuild
         public string Key { get; } = "MsBuild";
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
+        public bool EnabledByDefault { get; } = true;
 
         [ImportingConstructor]
         public ProjectSystem(

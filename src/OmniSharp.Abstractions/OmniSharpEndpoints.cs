@@ -57,6 +57,7 @@ namespace OmniSharp
             public const string DebugTestsInClassGetStartInfo = "/v2/debugtestsinclass/getstartinfo";
 
             public const string BlockStructure = "/v2/blockstructure";
+            public const string CodeStructure = "/v2/codestructure";
         }
     }
 }
