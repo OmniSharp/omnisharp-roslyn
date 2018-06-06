@@ -22,8 +22,8 @@
 
     public class CodeFoldingBlockKind
     {
-        public static readonly string Comment = nameof(Comment).ToLowerInvariant();
-        public static readonly string Imports = nameof(Imports).ToLowerInvariant();
-        public static readonly string Region = nameof(Region).ToLowerInvariant();
+        public static readonly string Comment = nameof(Comment);
+        public static readonly string Imports = nameof(Imports);
+        public static readonly string Region = nameof(Region);
     }
 }
