@@ -12,11 +12,10 @@ namespace OmniSharp.Extensions
         {
             var line = text.Lines.GetLineFromPosition(position);
 
-            // Note: OmniSharp text coordinates are 1-based by default.
             return new Point
             {
-                Line = line.LineNumber + 1,
-                Column = position - line.Start + 1
+                Line = line.LineNumber,
+                Column = position - line.Start
             };
         }
 
