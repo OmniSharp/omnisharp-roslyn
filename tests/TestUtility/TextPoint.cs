@@ -17,8 +17,7 @@ namespace TestUtility
         }
 
         public Point ToPoint()
-            // Note that OmniSharp is 1-based by default, so make sure we convert here.
-            => new Point { Line = this.Line + 1, Column = this.Offset + 1 };
+            => new Point { Line = this.Line, Column = this.Offset };
 
         public int CompareTo(TextPoint other)
         {

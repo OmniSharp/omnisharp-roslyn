@@ -12,13 +12,24 @@ namespace OmniSharp.Extensions
         {
             var line = text.Lines.GetLineFromPosition(position);
 
-            // Note: OmniSharp text coordinates are 1-based by default.
             return new Point
             {
-                Line = line.LineNumber + 1,
-                Column = position - line.Start + 1
+                Line = line.LineNumber,
+                Column = position - line.Start
             };
         }
+
+        /// <summary>
+        /// Converts a line number and offset to a zero-based position within a <see cref="SourceText"/>.
+        /// </summary>
+        public static int GetPositionFromLineAndOffset(this SourceText text, int lineNumber, int offset)
+            => text.Lines[lineNumber].Start + offset;
+
+        /// <summary>
+        /// Converts an OmniSharp <see cref="Point"/> to a zero-based position within a <see cref="SourceText"/>.
+        /// </summary>
+        public static int GetPositionFromPoint(this SourceText text, Point point)
+            => text.GetPositionFromLineAndOffset(point.Line, point.Column);
 
         /// <summary>
         /// Converts a <see cref="TextSpan"/> in a <see cref="SourceText"/> to an OmniSharp <see cref="Range"/>.
@@ -29,5 +40,13 @@ namespace OmniSharp.Extensions
                 Start = text.GetPointFromPosition(span.Start),
                 End = text.GetPointFromPosition(span.End)
             };
+
+        /// <summary>
+        /// Converts an OmniSharp <see cref="Range"/> to a <see cref="TextSpan"/> within a <see cref="SourceText"/>.
+        /// </summary>
+        public static TextSpan GetSpanFromRange(this SourceText text, Range range)
+            => TextSpan.FromBounds(
+                start: text.GetPositionFromPoint(range.Start),
+                end: text.GetPositionFromPoint(range.End));
     }
 }
