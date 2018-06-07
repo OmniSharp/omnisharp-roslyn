@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
@@ -88,12 +89,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             if (request.Selection != null)
             {
-                return TextSpan.FromBounds(
-                    sourceText.Lines.GetPosition(new LinePosition(request.Selection.Start.Line, request.Selection.Start.Column)),
-                    sourceText.Lines.GetPosition(new LinePosition(request.Selection.End.Line, request.Selection.End.Column)));
+                return sourceText.GetSpanFromRange(request.Selection);
             }
 
-            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+            var position = sourceText.GetPositionFromLineAndOffset(request.Line, request.Column);
             return new TextSpan(position, length: 0);
         }
 
@@ -152,8 +151,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
-            List<ProviderNode<CodeFixProvider>> nodesList = new List<ProviderNode<CodeFixProvider>>();
-            List<CodeFixProvider> providerList = new List<CodeFixProvider>();
+            var nodesList = new List<ProviderNode<CodeFixProvider>>();
+            var providerList = new List<CodeFixProvider>();
+
             foreach (var provider in this.Providers)
             {
                 foreach (var codeFixProvider in provider.CodeFixProviders)
@@ -168,13 +168,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 return providerList;
             }
+
             return graph.TopologicalSort();
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
-            List<ProviderNode<CodeRefactoringProvider>> nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
-            List<CodeRefactoringProvider> providerList = new List<CodeRefactoringProvider>();
+            var nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
+            var providerList = new List<CodeRefactoringProvider>();
+
             foreach (var provider in this.Providers)
             {
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
@@ -189,6 +191,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 return providerList;
             }
+
             return graph.TopologicalSort();
         }
 
