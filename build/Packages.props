@@ -29,7 +29,7 @@
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces.Common" Version="$(RoslynPackageVersion)" />
+    <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
 
     <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="1.1.0" />
     <PackageReference Update="Microsoft.Extensions.CommandLineUtils" Version="1.1.0" />
