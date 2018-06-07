@@ -2,7 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.32.0] - _Not Yet Released_
-* Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PR: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211))
+* Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PRs: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211) [#1217](https://github.com/OmniSharp/omnisharp-roslyn/pull/1217))
 * Fixed a bug where language services for newly created CSX files were not provided if no CSX files existed at the moment OmniSharp was started ([#1199](https://github.com/OmniSharp/omnisharp-roslyn/issues/1199), PR: [#1210](https://github.com/OmniSharp/omnisharp-roslyn/pull/1210))
 * The legacy project.json support is now disabled by default, allowing OmniSharp to start up a bit faster for common scenarios. If you wish to enable project.json support, add the following setting to your `omnisharp.json` file. (PR: [#1194](https://github.com/OmniSharp/omnisharp-roslyn/pull/1194))
 
