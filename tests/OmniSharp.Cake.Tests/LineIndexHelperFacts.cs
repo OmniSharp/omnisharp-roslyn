@@ -76,8 +76,8 @@ namespace OmniSharp.Cake.Tests
         }
 
         [Theory]
-        [InlineData(0, 8208)]
-        [InlineData(7, 8215)]
+        [InlineData(0, 8209)]
+        [InlineData(7, 8216)]
         public async Task TranslateToGenerated_Should_Translate_Index_In_Single_File(int index, int expected)
         {
             var fileName = SingleCakePath;
@@ -91,8 +91,8 @@ namespace OmniSharp.Cake.Tests
         }
 
         [Theory]
-        [InlineData(8208, 0)]
-        [InlineData(8215, 7)]
+        [InlineData(8209, 0)]
+        [InlineData(8216, 7)]
         public async Task TranslateFromGenerated_Should_Translate_Index_In_Single_File(int index, int expected)
         {
             var fileName = SingleCakePath;
@@ -105,10 +105,40 @@ namespace OmniSharp.Cake.Tests
                 GetFileContent(actualFileName).Split('\n')[actualIndex]);
         }
 
+        [Theory]
+        [InlineData(0, 8209)]
+        [InlineData(4, 8227)]
+        public async Task TranslateToGenerated_Should_Translate_Index_With_Multiple_Files(int index, int expected)
+        {
+            var fileName = MultiCakePath;
+            var workspace = CreateSimpleWorkspace(fileName, GetGeneratedFileContent(fileName));
+
+            var actual = await LineIndexHelper.TranslateToGenerated(fileName, index, workspace);
+
+            Assert.Equal(expected, actual);
+            Assert.Equal(GetFileContent(fileName).Split('\n')[index],
+                GetGeneratedFileContent(fileName).Split('\n')[actual]);
+        }
+
+        [Theory]
+        [InlineData(8209, 0)]
+        [InlineData(8227, 4)]
+        public async Task TranslateFromGenerated_Should_Translate_Index_With_Multiple_Files(int index, int expected)
+        {
+            var fileName = MultiCakePath;
+            var workspace = CreateSimpleWorkspace(fileName, GetGeneratedFileContent(fileName));
+
+            var (actualIndex, actualFileName) = await LineIndexHelper.TranslateFromGenerated(fileName, index, workspace, true);
+
+            Assert.Equal(expected, actualIndex);
+            Assert.Equal(GetGeneratedFileContent(fileName).Split('\n')[index],
+                GetFileContent(actualFileName).Split('\n')[actualIndex]);
+        }
+
         [Fact]
         public async Task TranslateFromGenerated_Should_Translate_To_Negative_If_Outside_Bounds()
         {
-            const int index = 8206;
+            const int index = 8207;
             const int expected = -1;
             var fileName = SingleCakePath;
             var workspace = CreateSimpleWorkspace(fileName, GetGeneratedFileContent(fileName));

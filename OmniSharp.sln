@@ -68,7 +68,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Http.Driver", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Stdio.Driver", "src\OmniSharp.Stdio.Driver\OmniSharp.Stdio.Driver.csproj", "{D2A78CEE-B278-476F-AF34-A7D6F792F973}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.Script.Tests", "tests\OmniSharp.Script.Tests\OmniSharp.Script.Tests.csproj", "{9E4BA68C-7F4B-429A-A0C7-8CE7D41D610F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Script.Tests", "tests\OmniSharp.Script.Tests\OmniSharp.Script.Tests.csproj", "{9E4BA68C-7F4B-429A-A0C7-8CE7D41D610F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
