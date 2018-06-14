@@ -35,7 +35,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 .Select(b => b.Range)
                 .ToArray();
 
-
             var expected = testFile.Content.GetSpans()
                 .Select(span => testFile.Content.GetRangeFromSpan(span).ToRange()).ToArray();
 

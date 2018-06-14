@@ -78,9 +78,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
         private string ConvertToWellKnownBlockType(string kind)
         {
-            return kind == CodeFoldingBlockKind.Comment ||
-                   kind == CodeFoldingBlockKind.Imports ||
-                   kind == CodeFoldingBlockKind.Region
+            return kind == CodeFoldingBlockKinds.Comment ||
+                   kind == CodeFoldingBlockKinds.Imports ||
+                   kind == CodeFoldingBlockKinds.Region
                 ? kind
                 : null;
         }
