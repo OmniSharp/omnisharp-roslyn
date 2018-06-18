@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Cake.Utilities;
@@ -9,17 +11,46 @@ using OmniSharp.Models.Rename;
 using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Models.V2.CodeStructure;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Extensions
 {
     internal static class ResponseExtensions
     {
+        public static QuickFixResponse OnlyThisFile(this QuickFixResponse response, string fileName)
+        {
+            if (response?.QuickFixes == null)
+            {
+                return response;
+            }
+
+            var quickFixes = response.QuickFixes.Where(x => PathsAreEqual(x.FileName, fileName));
+            response.QuickFixes = quickFixes;
+            return response;
+
+            bool PathsAreEqual(string x, string y)
+            {
+                if (x == null && y == null)
+                {
+                    return true;
+                }
+                if (x == null || y == null)
+                {
+                    return false;
+                }
+
+                var comparer = PlatformHelper.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+                return Path.GetFullPath(x).Equals(Path.GetFullPath(y), comparer);
+            }
+        }
+
         public static Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace)
         {
             return response.TranslateAsync(workspace, new Request());
         }
 
-        public static async Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace, Request request)
+        public static async Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace, Request request, bool removeGenerated = false)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -27,10 +58,15 @@ namespace OmniSharp.Cake.Extensions
             {
                 await quickFix.TranslateAsync(workspace, request);
 
-                if (quickFix.Line >= 0)
+                if (quickFix.Line < 0)
                 {
-                    quickFixes.Add(quickFix);
+                    continue;
                 }
+                if (removeGenerated && quickFix.FileName.Equals(Constants.Paths.Generated))
+                {
+                    continue;
+                }
+                quickFixes.Add(quickFix);
             }
 
             response.QuickFixes = quickFixes;
