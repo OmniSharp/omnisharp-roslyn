@@ -316,7 +316,7 @@ Task("CreateMSBuildFolder")
     }
 
     // Copy MSBuild SDK Resolver and DotNetHostResolver
-    Information("Coping MSBuild SDK resolver...");
+    Information("Copying MSBuild SDK resolver...");
     var sdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
     var sdkResolverTargetFolder = CombinePaths(msbuild15BinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
     DirectoryHelper.ForceCreate(sdkResolverTargetFolder);
