@@ -14,6 +14,7 @@ All changes to the project will be documented in this file.
     }
     ```
 * Added support for code actions in `.cake` files. ([#1205](https://github.com/OmniSharp/omnisharp-roslyn/issues/1205), PR: [#1212](https://github.com/OmniSharp/omnisharp-roslyn/pull/1212))
+* Added a new `/blockstructure` endpoint that returns the spans of the C# code blocks (usings, namespaces, methods, etc.) in a file. (PR: [#1209](https://github.com/OmniSharp/omnisharp-roslyn/pull/1209))
 
 ## [1.31.1] - 2018-05-28
 * Fixed bug where diagnostics from loaded `.cake` files was shown in the current file. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))
