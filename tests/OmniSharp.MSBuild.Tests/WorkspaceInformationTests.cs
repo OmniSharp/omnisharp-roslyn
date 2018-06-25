@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
@@ -156,11 +157,15 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(2, workspaceInfo.Projects.Count);
 
                 QuickFixResponse quickFixResponse = await GeCodeChecksync(host, Path.Combine(testProject.Directory, "DotNetCoreAppSigned\\Program.cs"));
+
+                // Log result to easier debugging of the test should it fail during automated valdiation
                 foreach (QuickFix fix in quickFixResponse.QuickFixes)
                 {
-                    host.Logger.LogError($"Unexpected QuickFix returned for {fix.FileName}: {fix.Text}");
+                    host.Logger.LogInformation($"Unexpected QuickFix returned for {fix.FileName}: {fix.Text}");
                 }
-                Assert.Empty(quickFixResponse.QuickFixes);
+
+                // Depending on how the test machine is configured 'Unnecessary using directive.' QuickFix might still show up.
+                Assert.Empty(quickFixResponse.QuickFixes.Where(f => !f.Text.Equals("Unnecessary using directive.", System.StringComparison.Ordinal)));
             }
         }
 

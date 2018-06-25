@@ -1,4 +1,6 @@
-﻿namespace DotNetCoreAppSigned
+﻿using System;
+
+namespace DotNetCoreAppSigned
 {
     class Program
     {
