@@ -512,6 +512,23 @@ class C
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task ReturnsAtleastOnePreselectOnNew(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public M()
+    {
+        Class1 c = new $$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true, triggerChar: " ");
+            Assert.NotEmpty(completions.Where(completion => completion.Preselect == true));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task NotTriggeredOnSpaceWithoutObjectCreation(string filename)
         {
             const string input =
