@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.WorkspaceInformation;
@@ -155,6 +156,10 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(2, workspaceInfo.Projects.Count);
 
                 QuickFixResponse quickFixResponse = await GeCodeChecksync(host, Path.Combine(testProject.Directory, "DotNetCoreAppSigned\\Program.cs"));
+                foreach (QuickFix fix in quickFixResponse.QuickFixes)
+                {
+                    host.Logger.LogError($"Unexpected QuickFix returned for {fix.FileName}: {fix.Text}");
+                }
                 Assert.Empty(quickFixResponse.QuickFixes);
             }
         }

@@ -49,6 +49,7 @@ namespace TestUtility
 
         public ILoggerFactory LoggerFactory { get; }
         public OmniSharpWorkspace Workspace { get; }
+        public ILogger<OmniSharpTestHost> Logger { get; }
 
         private OmniSharpTestHost(
             TestServiceProvider serviceProvider,
@@ -61,6 +62,7 @@ namespace TestUtility
 
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
+            this.Logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
         }
 
         ~OmniSharpTestHost()
