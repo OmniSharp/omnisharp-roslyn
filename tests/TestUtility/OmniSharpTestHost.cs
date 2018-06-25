@@ -18,6 +18,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -182,6 +183,11 @@ namespace TestUtility
         public WorkspaceInformationService GetWorkspaceInformationService()
         {
             return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
+        }
+
+        public CodeCheckService GetCodeCheckServiceService()
+        {
+            return GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
         }
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)

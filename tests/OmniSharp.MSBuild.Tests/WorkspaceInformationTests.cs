@@ -1,7 +1,10 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using OmniSharp.Models;
+using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -142,6 +145,21 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
+        public async Task TestProjectWithSignedReferencedProject()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("DotNetCoreAppSigned"))
+            using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory)))
+            {
+                MSBuildWorkspaceInfo workspaceInfo = await GetWorkspaceInfoAsync(host);
+                Assert.NotNull(workspaceInfo.Projects);
+                Assert.Equal(2, workspaceInfo.Projects.Count);
+
+                QuickFixResponse quickFixResponse = await GeCodeChecksync(host, Path.Combine(testProject.Directory, "DotNetCoreAppSigned\\Program.cs"));
+                Assert.Empty(quickFixResponse.QuickFixes);
+            }
+        }
+
+        [Fact]
         public async Task TestProjectWithMultiTFMReferencedProjectOutsideOfOmniSharp()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib"))
@@ -176,7 +194,7 @@ namespace OmniSharp.MSBuild.Tests
                 var project = workspaceInfo.Projects[0];
                 Assert.Equal(6, project.SourceFiles.Count);
                 Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
-            }
+            }    
         }
 
         private static async Task<MSBuildWorkspaceInfo> GetWorkspaceInfoAsync(OmniSharpTestHost host)
@@ -191,6 +209,15 @@ namespace OmniSharp.MSBuild.Tests
             var response = await service.Handle(request);
 
             return (MSBuildWorkspaceInfo)response["MsBuild"];
+        }
+
+        private static async Task<QuickFixResponse> GeCodeChecksync(OmniSharpTestHost host, string filePath)
+        {
+            CodeCheckService service = host.GetCodeCheckServiceService();
+
+            var request = new CodeCheckRequest { FileName = filePath };
+
+            return await service.Handle(request);
         }
     }
 }

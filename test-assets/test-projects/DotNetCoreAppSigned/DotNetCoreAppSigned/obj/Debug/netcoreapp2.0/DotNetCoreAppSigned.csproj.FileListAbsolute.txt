@@ -1,0 +1,14 @@
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\DotNetCoreAppSigned.deps.json
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\DotNetCoreAppSigned.runtimeconfig.json
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\DotNetCoreAppSigned.runtimeconfig.dev.json
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\DotNetCoreAppSigned.dll
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\DotNetCoreAppSigned.pdb
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\SignedLib.dll
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\bin\Debug\netcoreapp2.0\SignedLib.pdb
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.csprojResolveAssemblyReference.cache
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.csproj.CoreCompileInputs.cache
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.AssemblyInfoInputs.cache
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.AssemblyInfo.cs
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.csproj.CopyComplete
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.dll
+C:\temp\DotNetCoreAppSigned\DotNetCoreAppSigned\obj\Debug\netcoreapp2.0\DotNetCoreAppSigned.pdb
