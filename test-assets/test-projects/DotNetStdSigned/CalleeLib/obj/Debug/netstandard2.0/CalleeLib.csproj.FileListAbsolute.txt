@@ -1,0 +1,8 @@
+C:\temp\DotNetStdSigned\CalleeLib\Out\netstandard2.0\CalleeLib.deps.json
+C:\temp\DotNetStdSigned\CalleeLib\Out\netstandard2.0\CalleeLib.dll
+C:\temp\DotNetStdSigned\CalleeLib\Out\netstandard2.0\CalleeLib.pdb
+C:\temp\DotNetStdSigned\CalleeLib\obj\Debug\netstandard2.0\CalleeLib.csproj.CoreCompileInputs.cache
+C:\temp\DotNetStdSigned\CalleeLib\obj\Debug\netstandard2.0\CalleeLib.AssemblyInfoInputs.cache
+C:\temp\DotNetStdSigned\CalleeLib\obj\Debug\netstandard2.0\CalleeLib.AssemblyInfo.cs
+C:\temp\DotNetStdSigned\CalleeLib\obj\Debug\netstandard2.0\CalleeLib.dll
+C:\temp\DotNetStdSigned\CalleeLib\obj\Debug\netstandard2.0\CalleeLib.pdb

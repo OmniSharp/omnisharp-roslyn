@@ -1,0 +1,12 @@
+C:\temp\DotNetStdSigned\CallerLib\Out\netstandard2.0\CallerLib.deps.json
+C:\temp\DotNetStdSigned\CallerLib\Out\netstandard2.0\CallerLib.dll
+C:\temp\DotNetStdSigned\CallerLib\Out\netstandard2.0\CallerLib.pdb
+C:\temp\DotNetStdSigned\CallerLib\Out\netstandard2.0\CalleeLib.dll
+C:\temp\DotNetStdSigned\CallerLib\Out\netstandard2.0\CalleeLib.pdb
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.csprojResolveAssemblyReference.cache
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.csproj.CoreCompileInputs.cache
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.AssemblyInfoInputs.cache
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.AssemblyInfo.cs
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.csproj.CopyComplete
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.dll
+C:\temp\DotNetStdSigned\CallerLib\obj\Debug\netstandard2.0\CallerLib.pdb
