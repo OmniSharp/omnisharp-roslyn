@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net46</TargetFramework>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+    <ProjectReference Include="..\src\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+    <ProjectReference Include="..\src\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Configuration">
+      <HintPath>..\..\..\..\Documents\omnisharp\Microsoft.Extensions.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
+      <HintPath>..\..\..\..\Documents\omnisharp\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6\System.ComponentModel.Composition.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Composition.AttributedModel">
+      <HintPath>..\..\..\..\Documents\omnisharp\System.Composition.AttributedModel.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
