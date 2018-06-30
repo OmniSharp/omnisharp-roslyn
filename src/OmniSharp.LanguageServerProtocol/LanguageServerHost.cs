@@ -45,7 +45,8 @@ namespace OmniSharp.LanguageServerProtocol
             _options.WithLoggerFactory(_loggerFactory = new LoggerFactory())
                     .AddDefaultLoggingProvider()
                     .WithInput(input)
-                    .WithOutput(output);
+                    .WithOutput(output)
+                    .OnInitialize(Initialize);
             _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
