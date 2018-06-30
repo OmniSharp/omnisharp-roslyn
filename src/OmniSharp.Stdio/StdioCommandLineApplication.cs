@@ -12,7 +12,7 @@ namespace OmniSharp.Stdio
         public StdioCommandLineApplication() : base()
         {
             _stdio = Application.Option("-stdio | --stdio", "Use STDIO over HTTP as OmniSharp communication protocol.", CommandOptionType.NoValue);
-            _lsp = Application.Option("-lsp | --languageserver", "Use Language Server Protocol.", CommandOptionType.NoValue);
+            _lsp = Application.Option("-lsp | --lsp", "Use Language Server Protocol.", CommandOptionType.NoValue);
             _encoding = Application.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
         }
 

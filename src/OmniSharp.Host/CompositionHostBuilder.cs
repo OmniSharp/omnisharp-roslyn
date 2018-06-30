@@ -138,7 +138,7 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             }
         }
 
-        public static IServiceProvider CreateDefaultServiceProvider(IOmniSharpEnvironment environment, IConfiguration configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
+        public static IServiceProvider CreateDefaultServices(IOmniSharpEnvironment environment, IConfiguration configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
         {
             services = services ?? new ServiceCollection();
 
@@ -161,6 +161,14 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);
             services.AddLogging();
+
+            return services.BuildServiceProvider();
+        }
+
+        public static IServiceProvider CreateDefaultServiceProvider(IOmniSharpEnvironment environment, IConfiguration configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
+        {
+            services = services ?? new ServiceCollection();
+            CreateDefaultServices(environment, configuration, eventEmitter, services);
 
             return services.BuildServiceProvider();
         }

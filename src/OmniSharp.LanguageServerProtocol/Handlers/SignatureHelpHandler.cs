@@ -5,9 +5,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
-using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.AutoComplete;
 using OmniSharp.Models.SignatureHelp;
 
@@ -33,7 +34,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new SignatureHelpHandler(handler, selector);
         }
 
-        public async Task<SignatureHelp> Handle(TextDocumentPositionParams request, CancellationToken token)
+        public async Task<SignatureHelp> Handle(SignatureHelpParams request, CancellationToken token)
         {
             var omnisharpRequest = new SignatureHelpRequest
             {

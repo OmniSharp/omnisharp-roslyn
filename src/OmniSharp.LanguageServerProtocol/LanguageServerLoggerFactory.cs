@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.LanguageServerProtocol.Logging;
 using OmniSharp.Services;
 

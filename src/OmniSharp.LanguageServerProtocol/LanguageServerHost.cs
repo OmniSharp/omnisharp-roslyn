@@ -18,17 +18,17 @@ using OmniSharp.Models.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using OmniSharp.Extensions.LanguageServer.Server;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 
 namespace OmniSharp.LanguageServerProtocol
 {
     internal class LanguageServerHost : IDisposable
     {
-        private readonly ServiceCollection _services;
-        private readonly LanguageServer _server;
+        private readonly LanguageServerOptions _options;
         private CompositionHost _compositionHost;
-        private readonly LanguageServerLoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly LoggerFactory _loggerFactory;
         private IConfiguration _configuration;
         private IServiceProvider _serviceProvider;
         private RequestHandlers _handlers;
@@ -41,11 +41,12 @@ namespace OmniSharp.LanguageServerProtocol
             CommandLineApplication application,
             CancellationTokenSource cancellationTokenSource)
         {
-            _services = new ServiceCollection();
-            _loggerFactory = new LanguageServerLoggerFactory();
-            _services.AddSingleton<ILoggerFactory>(_loggerFactory);
-            _server = new LanguageServer(input, output, _loggerFactory);
-            _server.OnInitialize(Initialize);
+            _options = new LanguageServerOptions();
+            _options.WithLoggerFactory(_loggerFactory = new LoggerFactory())
+                    .AddDefaultLoggingProvider()
+                    .WithInput(input)
+                    .WithOutput(output);
+            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
         }
@@ -53,7 +54,6 @@ namespace OmniSharp.LanguageServerProtocol
         public void Dispose()
         {
             _compositionHost?.Dispose();
-            _loggerFactory?.Dispose();
             _cancellationTokenSource?.Dispose();
         }
 
@@ -81,14 +81,11 @@ namespace OmniSharp.LanguageServerProtocol
                 GetLogLevel(initializeParams.Trace),
                 _application.OtherArgs.ToArray());
 
-            // TODO: Make this work with logger factory differently
-            // Maybe create a child logger factory?
-            _loggerFactory.AddProvider(_server, _environment);
-            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
-
             _configuration = new ConfigurationBuilder(_environment).Build();
-            var eventEmitter = new LanguageServerEventEmitter(_server);
-            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, _configuration, eventEmitter, _services);
+
+            var eventEmitter = new LanguageServerEventEmitter();
+
+            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, _configuration, eventEmitter);
 
             var plugins = _application.CreatePluginAssemblies();
 
@@ -113,7 +110,8 @@ namespace OmniSharp.LanguageServerProtocol
                         {
                             Pattern = $"**/*{z}"
                         }))
-                    ));
+                    ))
+                    .ToArray();
 
             _logger.LogTrace(
                 "Configured Document Selectors {@DocumentSelectors}",
@@ -151,34 +149,31 @@ namespace OmniSharp.LanguageServerProtocol
             // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
 
-            _server.AddHandlers(TextDocumentSyncHandler.Enumerate(_handlers, workspace));
-            _server.AddHandlers(DefinitionHandler.Enumerate(_handlers));
-            _server.AddHandlers(HoverHandler.Enumerate(_handlers));
-            _server.AddHandlers(CompletionHandler.Enumerate(_handlers));
-            _server.AddHandlers(SignatureHelpHandler.Enumerate(_handlers));
-            _server.AddHandlers(RenameHandler.Enumerate(_handlers));
-            _server.AddHandlers(DocumentSymbolHandler.Enumerate(_handlers));
-
-            _server.LogMessage(new LogMessageParams()
+            foreach (var handler in TextDocumentSyncHandler.Enumerate(_handlers, workspace)
+                .Concat(DefinitionHandler.Enumerate(_handlers))
+                .Concat(HoverHandler.Enumerate(_handlers))
+                .Concat(CompletionHandler.Enumerate(_handlers))
+                .Concat(SignatureHelpHandler.Enumerate(_handlers))
+                .Concat(RenameHandler.Enumerate(_handlers))
+                .Concat(DocumentSymbolHandler.Enumerate(_handlers)))
             {
-                Message = "Added handlers... waiting for initialize...",
-                Type = MessageType.Log
-            });
+                _options.WithHandler(handler);
+            }
+
+            // _options.LogMessage(new LogMessageParams()
+            // {
+            //     Message = "Added handlers... waiting for initialize...",
+            //     Type = MessageType.Log
+            // });
 
             return Task.CompletedTask;
         }
 
         public async Task Start()
         {
-            _server.LogMessage(new LogMessageParams()
-            {
-                Message = "Starting server...",
-                Type = MessageType.Log
-            });
+            var server = await LanguageServer.From(_options);
 
-            await _server.Initialize();
-
-            _server.LogMessage(new LogMessageParams()
+            server.Window.LogMessage(new LogMessageParams()
             {
                 Message = "initialized...",
                 Type = MessageType.Log

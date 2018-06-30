@@ -5,9 +5,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
-using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Mef;
 using OmniSharp.Models.TypeLookup;
 
@@ -41,7 +42,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             };
         }
 
-        public async Task<Hover> Handle(TextDocumentPositionParams request, CancellationToken token)
+        public async Task<Hover> Handle(HoverParams request, CancellationToken token)
         {
             var omnisharpRequest = new TypeLookupRequest()
             {
@@ -57,7 +58,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 // TODO: Range?  We don't currently have that!
                 // Range =
-                Contents = new MarkedStringContainer(omnisharpResponse.Type, omnisharpResponse.Documentation)
+                Contents = new MarkedStringsOrMarkupContent(omnisharpResponse.Type, omnisharpResponse.Documentation)
             };
         }
 
