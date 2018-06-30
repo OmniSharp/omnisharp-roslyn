@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
@@ -17,6 +17,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
+using OmniSharp.Extensions.LanguageServer.Server;
 
 namespace OmniSharp.LanguageServerProtocol
 {
@@ -60,13 +61,13 @@ namespace OmniSharp.LanguageServerProtocol
         {
             switch (initializeTrace)
             {
-                case InitializeTrace.verbose:
+                case InitializeTrace.Verbose:
                     return LogLevel.Trace;
 
-                case InitializeTrace.off:
+                case InitializeTrace.Off:
                     return LogLevel.Warning;
 
-                case InitializeTrace.messages:
+                case InitializeTrace.Messages:
                 default:
                     return LogLevel.Information;
             }

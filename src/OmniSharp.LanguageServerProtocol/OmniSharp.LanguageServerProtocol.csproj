@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="OmniSharp.Extensions.LanguageServerProtocol" Version="0.7.0" />
+        <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.9.0-beta0005" />
         <!-- <ProjectReference Include="../../../csharp-language-server-protocol/src/Lsp/Lsp.csproj" /> -->
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
