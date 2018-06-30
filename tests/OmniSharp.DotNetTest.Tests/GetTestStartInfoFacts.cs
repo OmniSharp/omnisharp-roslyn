@@ -19,7 +19,8 @@ namespace OmniSharp.DotNetTest.Tests
             await GetDotNetTestStartInfoAsync(
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
-                testFramework: "xunit");
+                testFramework: "xunit",
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         // NUnit does not work with .NET CLI RTM yet. https://github.com/nunit/dotnet-test-nunit/issues/108
