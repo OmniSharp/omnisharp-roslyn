@@ -17,6 +17,11 @@ All changes to the project will be documented in this file.
 * Added a new `/blockstructure` endpoint that returns the spans of the C# code blocks (usings, namespaces, methods, etc.) in a file. (PR: [#1209](https://github.com/OmniSharp/omnisharp-roslyn/pull/1209))
 * Fixed bug where find usages returned usages from loaded `.cake` files even though `OnlyThisFile` was set to `true` in the request. ([#1204](https://github.com/OmniSharp/omnisharp-roslyn/issues/1204), PR: [#1213](https://github.com/OmniSharp/omnisharp-roslyn/pull/1213))
 * Performance improvements for line mappings when working with `.cake` files. (PR: [#1226](https://github.com/OmniSharp/omnisharp-roslyn/pull/1226))
+* Upgraded to .NET Core SDK 2.1.301
+* Upgraded to Microsoft.AspNetCore.* version 2.1.1
+* Upgraded to Microsoft.Extensions.* version 2.1.1
+* Upgraded to MSBuild 15.7
+* Upgraded to Roslyn 2.8.2
 
 ## [1.31.1] - 2018-05-28
 * Fixed bug where diagnostics from loaded `.cake` files was shown in the current file. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))
