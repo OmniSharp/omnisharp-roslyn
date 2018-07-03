@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
+using OmniSharp.MSBuild;
+using OmniSharp.Roslyn;
 using OmniSharp.Services;
 
 namespace OmniSharp.OrphanFiles
@@ -25,13 +27,15 @@ namespace OmniSharp.OrphanFiles
         private readonly OmniSharpWorkspace _workspace;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
+        private readonly ProjectSystem _msbuildSystem; 
 
         [ImportingConstructor]
-        public OrphanFileSystem(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper)
+        public OrphanFileSystem(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper, [Import] ProjectSystem msbuildSystem)
         {
             _workspace = workspace;
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _fileSystemHelper = fileSystemHelper;
+            _msbuildSystem = msbuildSystem;
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
@@ -52,11 +56,12 @@ namespace OmniSharp.OrphanFiles
 
             foreach (var file in allFiles)
             {
-                if (_workspace.GetDocument(file) == null)
+                var project = await _projectEventforwarder.GetProjectInformationAsync(file);
+                if (project == null)
                 {
                     var doc = _workspace.GetDocument(file);
                     //implies the document doesnot exist in the workspace currently
-                    var project = ProjectInfo.Create(
+                    var newProject = ProjectInfo.Create(
                         filePath: file,
                         id: ProjectId.CreateNewId(),
                         version: VersionStamp.Create(),
@@ -66,8 +71,8 @@ namespace OmniSharp.OrphanFiles
                         //TODO: Ask if there should be other languages as well 
                         language: Language);
 
-                    _workspace.AddProject(project);
-                    _workspace.AddDocument(project.Id, file);
+                    _workspace.AddProject(newProject);
+                    _workspace.AddDocument(newProject.Id, file);
                 }
             }
         }
