@@ -81,7 +81,7 @@ namespace OmniSharp.Roslyn
             }
         }
 
-        public async Task<ProjectInformationResponse> GetProjectInformationAsync(string fileName)
+        private async Task<ProjectInformationResponse> GetProjectInformationAsync(string fileName)
         {
             var response = new ProjectInformationResponse();
 
