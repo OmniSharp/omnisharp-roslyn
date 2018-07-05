@@ -24,7 +24,7 @@ namespace TestUtility
         {
             var references = GetReferences();
             var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true);            
-            var project = scriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), testFile.FileName, Enumerable.Empty<string>());
+            var project = scriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), testFile.FileName, typeof(CommandLineScriptGlobals), Enumerable.Empty<string>());
             workspace.AddProject(project);
 
             var documentInfo = DocumentInfo.Create(

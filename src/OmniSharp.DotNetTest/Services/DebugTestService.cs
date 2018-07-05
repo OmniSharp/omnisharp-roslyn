@@ -1,4 +1,5 @@
-﻿using System.Composition;
+﻿using System;
+using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -31,9 +32,14 @@ namespace OmniSharp.DotNetTest.Services
         public Task<DebugTestGetStartInfoResponse> Handle(DebugTestGetStartInfoRequest request)
         {
             var testManager = CreateTestManager(request.FileName);
-            _debugSessionManager.StartSession(testManager);
+            if (testManager.IsConnected)
+            {
+                //only if the test manager connected successfully, shall we proceed with the request
+                _debugSessionManager.StartSession(testManager);
+                return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
+            }
 
-            return _debugSessionManager.DebugGetStartInfoAsync(request.MethodName, request.TestFrameworkName, request.TargetFrameworkVersion, CancellationToken.None);
+            throw new InvalidOperationException("The debugger could not be started");
         }
 
         public Task<DebugTestLaunchResponse> Handle(DebugTestLaunchRequest request)
