@@ -130,7 +130,7 @@ namespace OmniSharp.Script
             return decoratedResolver;
         }
  
-        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, IEnumerable<string> namespaces = null)
+        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, Type globalsType, IEnumerable<string> namespaces = null)
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
 
@@ -169,7 +169,7 @@ namespace OmniSharp.Script
                 metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,
-                hostObjectType: typeof(CommandLineScriptGlobals));
+                hostObjectType: globalsType);
 
             return project;
         }

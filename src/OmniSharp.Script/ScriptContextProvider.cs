@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Dotnet.Script.DependencyModel.Compilation;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -16,6 +17,8 @@ namespace OmniSharp.Script
     [Export, Shared]
     public class ScriptContextProvider
     {
+        // default, which also force loads the Scripting DLL into the AppDomain
+        private readonly Type _defaultGlobalsType = typeof(CommandLineScriptGlobals);
         private readonly ILoggerFactory _loggerFactory;
         private readonly CompilationDependencyResolver _compilationDependencyResolver;
         private readonly IOmniSharpEnvironment _env;
@@ -109,7 +112,7 @@ namespace OmniSharp.Script
 
             var scriptProjectProvider = new ScriptProjectProvider(scriptOptions, _env, _loggerFactory, isDesktopClr);
 
-            return new ScriptContext(scriptProjectProvider, metadataReferences, assemblyReferences, compilationDependencies);
+            return new ScriptContext(scriptProjectProvider, metadataReferences, assemblyReferences, compilationDependencies, _defaultGlobalsType);
         }
 
         private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences, HashSet<string> assemblyReferences)
