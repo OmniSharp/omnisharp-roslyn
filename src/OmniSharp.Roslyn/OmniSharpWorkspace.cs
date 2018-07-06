@@ -21,12 +21,15 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
+        private HashSet<DocumentId> _miscellanousFiles;
+
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
             : base(aggregator.CreateHostServices(), "Custom")
         {
             BufferManager = new BufferManager(this);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
+            _miscellanousFiles = new HashSet<DocumentId>();
         }
 
         public override bool CanOpenDocuments => true;
@@ -223,6 +226,33 @@ namespace OmniSharp
             {
                 _logger.LogError(e, $"Error saving document {fullPath}");
             }
+        }
+
+        public void AddMiscellanousFile(string filePath, string language)
+        {
+            if (GetDocument(filePath) == null)
+            {
+                string assemblyName = Guid.NewGuid().ToString("N");
+                var newProject = ProjectInfo.Create(
+                   filePath: filePath,
+                   id: ProjectId.CreateNewId(),
+                   version: VersionStamp.Create(),
+                   name: Path.GetFileName(filePath),
+                   metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
+                   assemblyName: assemblyName,
+                   language: language);
+
+                AddProject(newProject);
+                var documentId = AddDocument(newProject.Id, filePath);
+                _miscellanousFiles.Add(documentId);
+                _logger.LogInformation($"Successfully added file '{filePath}' to workspace");
+            }
+        }
+
+        public bool IsCapableOfSemanticDiagnostics(Document document)
+        {
+            var documentId = GetDocumentId(document.FilePath);
+            return !_miscellanousFiles.Contains(documentId);
         }
     }
 }

@@ -140,7 +140,7 @@ namespace OmniSharp.Workers.Diagnostics
         private async Task<DiagnosticResult> ProcessNextItem(string filePath)
         {
             var documents = _workspace.GetDocuments(filePath);
-            var items = await documents.FindDiagnosticLocationsAsync();
+            var items = await documents.FindDiagnosticLocationsAsync(_workspace);
 
             return new DiagnosticResult()
             {

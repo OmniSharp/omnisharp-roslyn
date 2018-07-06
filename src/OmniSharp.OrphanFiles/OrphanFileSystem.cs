@@ -54,35 +54,16 @@ namespace OmniSharp.OrphanFiles
         void IProjectSystem.Initalize(IConfiguration configuration)
         {
             var allFiles = _fileSystemHelper.GetFiles("**/*.cs");
-            var solution = _workspace.CurrentSolution;
-
-            foreach (var file in allFiles)
-            {
-                AddFileToWorkSpace(file);
-            }
+            AddMiscellanousFiles(allFiles);
         }
 
-        private async void AddFileToWorkSpace(string filename)
+        private async void AddMiscellanousFiles(IEnumerable<string> allFiles)
         {
-            string assemblyName = Guid.NewGuid().ToString("N");
-            await _projectSystem.GetProjectModelAsync(filename);
-            var document = _workspace.GetDocument(filename);
-            if (document == null)
+            foreach (var filePath in allFiles)
             {
-                var newProject = ProjectInfo.Create(
-                   filePath: filename,
-                   id: ProjectId.CreateNewId(),
-                   version: VersionStamp.Create(),
-                   name: Path.GetFileName(filename),
-                   metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
-                   assemblyName: assemblyName,
-                   //TODO: Ask if there should be other languages as well 
-                   language: Language);
-
-                _workspace.AddProject(newProject);
-                _workspace.AddDocument(newProject.Id, filename);
-
-                _logger.LogInformation($"Successfully added file '{filename}' to workspace");
+                //wait for the project system to get initialised
+                await _projectSystem.GetProjectModelAsync(filePath);
+                _workspace.AddMiscellanousFile(filePath, Language);
             }
         }
     }
