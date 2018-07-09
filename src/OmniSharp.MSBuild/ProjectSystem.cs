@@ -210,5 +210,10 @@ namespace OmniSharp.MSBuild
 
             return new MSBuildProjectInfo(projectFileInfo);
         }
+
+        public async Task hasCompletedUpdateRequest()
+        {
+            await _manager.WaitForQueueEmptyAsync();
+        }
     }
 }

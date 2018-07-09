@@ -19,16 +19,17 @@ namespace OmniSharp.OrphanFiles
     [Export(typeof(IProjectSystem)), Shared]
     public class OrphanFileSystem : IProjectSystem
     {
+        private string miscFileExtension = ".cs";
         public string Key { get; } = "OrphanFiles";
         public string Language { get; } = LanguageNames.CSharp;
-        IEnumerable<string> IProjectSystem.Extensions => throw new NotImplementedException();
+        IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };
         public bool EnabledByDefault { get; } = true;
 
-        private readonly ConcurrentDictionary<string, ProjectInfo> _projects = new ConcurrentDictionary<string, ProjectInfo>();
+        private readonly ConcurrentDictionary<string, DocumentId> _documents = new ConcurrentDictionary<string, DocumentId>();
         private readonly OmniSharpWorkspace _workspace;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
-        private readonly IProjectSystem _projectSystem;
+        private readonly ProjectSystem _projectSystem;
         private readonly ILogger _logger;
 
         [ImportingConstructor]
@@ -54,16 +55,46 @@ namespace OmniSharp.OrphanFiles
         void IProjectSystem.Initalize(IConfiguration configuration)
         {
             var allFiles = _fileSystemHelper.GetFiles("**/*.cs");
-            AddMiscellanousFiles(allFiles);
+            foreach (var filePath in allFiles)
+                AddIfMiscellanousFile(filePath);
+
+            _fileSystemWatcher.Watch(miscFileExtension, onFileChanged);
         }
 
-        private async void AddMiscellanousFiles(IEnumerable<string> allFiles)
+        private async void AddIfMiscellanousFile(string filePath)
         {
-            foreach (var filePath in allFiles)
+            //wait for the project system to get initialised
+            await _projectSystem.hasCompletedUpdateRequest();
+            if (_workspace.GetDocument(filePath) == null)
             {
-                //wait for the project system to get initialised
-                await _projectSystem.GetProjectModelAsync(filePath);
-                _workspace.AddMiscellanousFile(filePath, Language);
+                var documentId =_workspace.AddMiscellanousFile(filePath, Language);
+                _documents.TryAdd(filePath, documentId);
+                _logger.LogInformation($"Successfully added file '{filePath}' to workspace");
+            }
+        }
+
+        private void onFileChanged(string filePath, FileChangeType changeType)
+        {
+            if (changeType == FileChangeType.Unspecified && File.Exists(filePath) ||
+                changeType == FileChangeType.Create)
+            {
+                AddIfMiscellanousFile(filePath);
+            }
+
+            else if(changeType == FileChangeType.Unspecified && !File.Exists(filePath) ||
+                changeType == FileChangeType.Delete)
+            {
+                RemoveFromWorkspace(filePath);       
+            }
+        }
+
+        private void RemoveFromWorkspace(string filePath)
+        {
+            if (_documents.TryRemove(filePath, out var documentId))
+            {
+                _workspace.RemoveDocument(documentId);
+                //ToDo: Identify if we need to remove the project here and how
+                _logger.LogInformation($"Removed file '{filePath}' from the workspace.");
             }
         }
     }
