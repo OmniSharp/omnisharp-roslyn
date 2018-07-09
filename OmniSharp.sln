@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -70,7 +71,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Stdio.Driver", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.Script.Tests", "tests\OmniSharp.Script.Tests\OmniSharp.Script.Tests.csproj", "{9E4BA68C-7F4B-429A-A0C7-8CE7D41D610F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmniSharp.OrphanFiles", "src\OmniSharp.OrphanFiles\OmniSharp.OrphanFiles.csproj", "{2BF50528-38C4-4928-9FB2-7539A3C20DA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OmniSharp.MiscellanousFiles", "src\OmniSharp.MiscellanousFiles\OmniSharp.MiscellanousFiles.csproj", "{2BF50528-38C4-4928-9FB2-7539A3C20DA8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

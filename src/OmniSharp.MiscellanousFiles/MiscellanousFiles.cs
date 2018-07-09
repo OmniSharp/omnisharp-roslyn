@@ -16,8 +16,9 @@ using OmniSharp.Services;
 
 namespace OmniSharp.OrphanFiles
 {
+    [ExtensionOrder(After = nameof(ProjectSystem))]
     [Export(typeof(IProjectSystem)), Shared]
-    public class OrphanFileSystem : IProjectSystem
+    public class MiscellanousFiles : IProjectSystem
     {
         private string miscFileExtension = ".cs";
         public string Key { get; } = "OrphanFiles";
@@ -33,12 +34,12 @@ namespace OmniSharp.OrphanFiles
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public OrphanFileSystem(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper, ILoggerFactory loggerFactory, [Import] ProjectSystem projectSystem)
+        public MiscellanousFiles(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper, ILoggerFactory loggerFactory, [Import] ProjectSystem projectSystem)
         {
             _workspace = workspace;
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _fileSystemHelper = fileSystemHelper;
-            _logger = loggerFactory.CreateLogger<OrphanFileSystem>();
+            _logger = loggerFactory.CreateLogger<MiscellanousFiles>();
             _projectSystem = projectSystem;
         }
 
