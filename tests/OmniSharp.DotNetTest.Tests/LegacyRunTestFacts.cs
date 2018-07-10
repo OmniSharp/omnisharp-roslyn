@@ -51,7 +51,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunNunitTest()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                LegacyNUnitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "nunit",
                 shouldPass: true);
@@ -61,7 +61,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunNunitDataDriveTest1()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                LegacyNUnitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest1",
                 testFramework: "nunit",
                 shouldPass: false);
@@ -71,7 +71,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunNunitDataDriveTest2()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                LegacyNUnitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "nunit",
                 shouldPass: true);
@@ -81,7 +81,7 @@ namespace OmniSharp.DotNetTest.Tests
         public async Task RunNunitSourceDataDrivenTest()
         {
             await RunDotNetTestAsync(
-                LegacyNunitTestProject,
+                LegacyNUnitTestProject,
                 methodName: "Main.Test.MainTest.SourceDataDrivenTest",
                 testFramework: "nunit",
                 shouldPass: true);

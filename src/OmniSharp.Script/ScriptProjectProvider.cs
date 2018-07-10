@@ -14,7 +14,7 @@ using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Script
 {
-    public class ScriptHelper
+    public class ScriptProjectProvider
     {
         private const string BinderFlagsType = "Microsoft.CodeAnalysis.CSharp.BinderFlags";
         private const string TopLevelBinderFlagsProperty = "TopLevelBinderFlags";
@@ -49,7 +49,7 @@ namespace OmniSharp.Script
         private readonly ILogger _logger;
         private readonly bool _isDesktopClr;
 
-        public ScriptHelper(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr)
+        public ScriptProjectProvider(ScriptOptions scriptOptions, IOmniSharpEnvironment env, ILoggerFactory loggerFactory, bool isDesktopClr)
         {
             _scriptOptions = scriptOptions ?? throw new ArgumentNullException(nameof(scriptOptions));
             _env = env ?? throw new ArgumentNullException(nameof(env));
@@ -130,7 +130,7 @@ namespace OmniSharp.Script
             return decoratedResolver;
         }
  
-        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, IEnumerable<string> namespaces = null)
+        public ProjectInfo CreateProject(string csxFileName, IEnumerable<MetadataReference> references, string csxFilePath, Type globalsType, IEnumerable<string> namespaces = null)
         {
             var csharpCommandLineArguments = _commandLineArgs.Value;
 
@@ -169,7 +169,7 @@ namespace OmniSharp.Script
                 metadataReferences: references,
                 parseOptions: ParseOptions,
                 isSubmission: true,
-                hostObjectType: typeof(CommandLineScriptGlobals));
+                hostObjectType: globalsType);
 
             return project;
         }

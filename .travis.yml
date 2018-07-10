@@ -8,7 +8,7 @@ env:
   - secure: UYglcVukRlhS09V7MXwMQ5pU6gZZZ+bsaKnCSlPV+CQyh+ExabEYYmF7NBJirF/RDK30tbuI6mlSYagjX18PpLZ3390WI3WkKRbP0F1SfylHKlMh5MDcKNTsSwYMcQ0BX7teg7kpYmxbigP7jing8LPehP/QdQAhnkhpdXe1P/o=
   - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
   - DOTNET_CLI_TELEMETRY_OPTOUT=true
-mono: 5.8.0
+mono: latest
 os:
 - linux
 - osx
@@ -52,8 +52,10 @@ install:
 - export PATH="$PWD/.dotnet:$PATH"
 after_success: |
   if [[ "$TRAVIS_OS_NAME" == "linux" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]; then
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-    sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
+    AZ_REPO=$(lsb_release -cs)
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
+      sudo tee /etc/apt/sources.list.d/azure-cli.list
+    curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
     sudo apt-get install apt-transport-https
     sudo apt-get update && sudo apt-get install azure-cli
 

@@ -11,13 +11,6 @@ namespace OmniSharp.DotNetTest.Tests
 {
     public abstract class AbstractGetTestStartInfoFacts : AbstractTestFixture
     {
-        protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
-        protected const string LegacyNunitTestProject = "LegacyNUnitTestProject";
-        protected const string LegacyMSTestProject = "LegacyMSTestProject";
-        protected const string XunitTestProject = "XunitTestProject";
-        protected const string NunitTestProject = "NUnitTestProject";
-        protected const string MSTestProject = "MSTestProject";
-
         protected AbstractGetTestStartInfoFacts(ITestOutputHelper output)
             : base(output)
         {
@@ -28,14 +21,12 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<GetTestStartInfoService>(OmniSharpEndpoints.V2.GetTestStartInfo);
         }
 
-        public abstract DotNetCliVersion DotNetCliVersion { get; }
-
-        protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework)
+        protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework, string targetFrameworkVersion = null)
         {
             var isLegacy = DotNetCliVersion == DotNetCliVersion.Legacy;
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName, legacyProject: isLegacy))
-            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion))
+            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion))
             {
                 var service = GetRequestHandler(host);
 
@@ -43,7 +34,8 @@ namespace OmniSharp.DotNetTest.Tests
                 {
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,
-                    TestFrameworkName = testFramework
+                    TestFrameworkName = testFramework,
+                    TargetFrameworkVersion = targetFrameworkVersion
                 };
 
                 var response = await service.Handle(request);
