@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Models;
@@ -148,14 +151,30 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task TestProjectWithSignedReferencedProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("DotNetStdSigned"))
-            using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory)))
+            using (ITestProject testProject = await TestAssets.Instance.GetTestProjectAsync("SolutionWithSignedProject"))
+            using (OmniSharpTestHost host = CreateOmniSharpHost(Path.Combine(testProject.Directory)))
             {
                 MSBuildWorkspaceInfo workspaceInfo = await GetWorkspaceInfoAsync(host);
                 Assert.NotNull(workspaceInfo.Projects);
                 Assert.Equal(2, workspaceInfo.Projects.Count);
 
-                QuickFixResponse quickFixResponse = await GeCodeChecksync(host, Path.Combine(testProject.Directory, "DotNetStdSigned\\CallerLib\\Caller.cs"));
+                // For the test to validate that assemblies representing targets of loaded projects are being skipped,
+                // the assemblies must be present on disk.
+                foreach (MSBuildProjectInfo loadedProject in workspaceInfo.Projects)
+                {
+                    Assert.True(File.Exists(loadedProject.TargetPath),
+                        $"Project target assembly is not found {loadedProject.TargetPath}. " +
+                        $"Make sure to build the whole repo using the build script before running the test.");
+                }
+
+                // The callee assembly must be signed to ensure that in case of a bug the assembly is loaded
+                // "The type 'Callee' exists in both ..." is present as a code check (which is validated below).
+                MSBuildProjectInfo signedProject = workspaceInfo.Projects.SingleOrDefault(p => p.AssemblyName.Equals("CalleeLib", StringComparison.OrdinalIgnoreCase));
+                Assert.NotNull(signedProject);
+                string token = BitConverter.ToString(AssemblyName.GetAssemblyName(signedProject.TargetPath).GetPublicKeyToken());
+                Assert.Equal("A5-D8-5A-5B-AA-39-A6-A6", token, ignoreCase: true);
+
+                QuickFixResponse quickFixResponse = await GetCodeChecksync(host, Path.Combine(testProject.Directory, "CallerLib\\Caller.cs"));
                 // Log result to easier debugging of the test should it fail during automated valdiation
                 foreach (QuickFix fix in quickFixResponse.QuickFixes)
                 {
@@ -218,7 +237,7 @@ namespace OmniSharp.MSBuild.Tests
             return (MSBuildWorkspaceInfo)response["MsBuild"];
         }
 
-        private static async Task<QuickFixResponse> GeCodeChecksync(OmniSharpTestHost host, string filePath)
+        private static async Task<QuickFixResponse> GetCodeChecksync(OmniSharpTestHost host, string filePath)
         {
             CodeCheckService service = host.GetCodeCheckServiceService();
 

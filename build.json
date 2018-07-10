@@ -38,6 +38,7 @@
     "ProjectWithGeneratedFile",
     "CSharpAndFSharp",
     "ProjectWithMismatchedFileName",
+    "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib"
   ],
   "LegacyTestAssets": [
