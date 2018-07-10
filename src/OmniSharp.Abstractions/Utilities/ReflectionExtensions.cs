@@ -160,7 +160,7 @@ namespace OmniSharp.Utilities
 
         public static object InvokeStatic(this Lazy<MethodInfo> lazyMethodInfo, object[] args)
         {
-            return lazyMethodInfo.InvokeStatic(args);
+            return lazyMethodInfo.Value.InvokeStatic(args);
         }
 
         public static Lazy<FieldInfo> LazyGetField(this Lazy<Type> lazyType, string fieldName, BindingFlags bindingFlags)

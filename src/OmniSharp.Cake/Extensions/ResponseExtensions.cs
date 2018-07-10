@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Cake.Utilities;
@@ -6,18 +8,49 @@ using OmniSharp.Models;
 using OmniSharp.Models.Navigate;
 using OmniSharp.Models.MembersTree;
 using OmniSharp.Models.Rename;
+using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeActions;
+using OmniSharp.Models.V2.CodeStructure;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Extensions
 {
     internal static class ResponseExtensions
     {
+        public static QuickFixResponse OnlyThisFile(this QuickFixResponse response, string fileName)
+        {
+            if (response?.QuickFixes == null)
+            {
+                return response;
+            }
+
+            var quickFixes = response.QuickFixes.Where(x => PathsAreEqual(x.FileName, fileName));
+            response.QuickFixes = quickFixes;
+            return response;
+
+            bool PathsAreEqual(string x, string y)
+            {
+                if (x == null && y == null)
+                {
+                    return true;
+                }
+                if (x == null || y == null)
+                {
+                    return false;
+                }
+
+                var comparer = PlatformHelper.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+                return Path.GetFullPath(x).Equals(Path.GetFullPath(y), comparer);
+            }
+        }
+
         public static Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace)
         {
             return response.TranslateAsync(workspace, new Request());
         }
 
-        public static async Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace, Request request)
+        public static async Task<QuickFixResponse> TranslateAsync(this QuickFixResponse response, OmniSharpWorkspace workspace, Request request, bool removeGenerated = false)
         {
             var quickFixes = new List<QuickFix>();
 
@@ -25,10 +58,15 @@ namespace OmniSharp.Cake.Extensions
             {
                 await quickFix.TranslateAsync(workspace, request);
 
-                if (quickFix.Line >= 0)
+                if (quickFix.Line < 0)
                 {
-                    quickFixes.Add(quickFix);
+                    continue;
                 }
+                if (removeGenerated && quickFix.FileName.Equals(Constants.Paths.Generated))
+                {
+                    continue;
+                }
+                quickFixes.Add(quickFix);
             }
 
             response.QuickFixes = quickFixes;
@@ -85,7 +123,8 @@ namespace OmniSharp.Cake.Extensions
             return response;
         }
 
-        public static async Task<RunCodeActionResponse> TranslateAsync(this RunCodeActionResponse response, OmniSharpWorkspace workspace)
+        public static async Task<RunCodeActionResponse> TranslateAsync(this RunCodeActionResponse response,
+            OmniSharpWorkspace workspace)
         {
             if (response?.Changes == null)
             {
@@ -110,7 +149,7 @@ namespace OmniSharp.Cake.Extensions
             {
 
                 if (fileOperations.FirstOrDefault(x => x.FileName == change.Key &&
-                        x.ModificationType == FileModificationType.Modified)
+                                                       x.ModificationType == FileModificationType.Modified)
                     is ModifiedFileResponse modifiedFile)
                 {
                     modifiedFile.Changes = change.Value;
@@ -119,6 +158,85 @@ namespace OmniSharp.Cake.Extensions
 
             response.Changes = fileOperations;
             return response;
+        }
+
+        public static async Task<CodeStructureResponse> TranslateAsync(this CodeStructureResponse response, OmniSharpWorkspace workspace, CodeStructureRequest request)
+        {
+            var zeroIndex = await LineIndexHelper.TranslateToGenerated(request.FileName, 0, workspace);
+            var elements = new List<CodeElement>();
+
+            foreach (var element in response.Elements)
+            {
+                if (element.Ranges.Values.Any(x => x.Start.Line < zeroIndex))
+                {
+                    continue;
+                }
+
+                var translatedElement = await element.TranslateAsync(workspace, request);
+
+                if (translatedElement.Ranges.Values.Any(x => x.Start.Line < 0))
+                {
+                    continue;
+                }
+
+                elements.Add(translatedElement);
+            }
+
+            response.Elements = elements;
+            return response;
+        }
+
+        private static async Task<CodeElement> TranslateAsync(this CodeElement element, OmniSharpWorkspace workspace, SimpleFileRequest request)
+        {
+            var builder = new CodeElement.Builder
+            {
+                Kind = element.Kind,
+                DisplayName = element.DisplayName,
+                Name = element.Name
+            };
+
+            foreach (var property in element.Properties ?? Enumerable.Empty<KeyValuePair<string, object>>())
+            {
+                builder.AddProperty(property.Key, property.Value);
+            }
+
+            foreach (var range in element.Ranges ?? Enumerable.Empty<KeyValuePair<string, Range>>())
+            {
+                builder.AddRange(range.Key, await range.Value.TranslateAsync(workspace, request));
+            }
+
+            foreach (var childElement in element.Children ?? Enumerable.Empty<CodeElement>())
+            {
+                var translatedElement = await childElement.TranslateAsync(workspace, request);
+
+                // This is plain stupid, but someone might put a #load directive inside a method or class
+                if (translatedElement.Ranges.Values.Any(x => x.Start.Line < 0))
+                {
+                    continue;
+                }
+
+                builder.AddChild(childElement);
+            }
+
+            return builder.ToCodeElement();
+        }
+
+        private static async Task<Range> TranslateAsync(this Range range, OmniSharpWorkspace workspace, SimpleFileRequest request)
+        {
+            var (line, _) = await LineIndexHelper.TranslateFromGenerated(request.FileName, range.Start.Line, workspace, true);
+
+            if (range.Start.Line == range.End.Line)
+            {
+                range.Start.Line = line;
+                range.End.Line = line;
+                return range;
+            }
+
+            range.Start.Line = line;
+            (line, _) = await LineIndexHelper.TranslateFromGenerated(request.FileName, range.End.Line, workspace, true);
+            range.End.Line = line;
+
+            return range;
         }
 
         private static async Task<FileMemberElement> TranslateAsync(this FileMemberElement element, OmniSharpWorkspace workspace, Request request)

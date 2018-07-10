@@ -21,7 +21,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -31,7 +32,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest1",
                 testFramework: "xunit",
-                shouldPass: false);
+                shouldPass: false,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -41,7 +43,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -51,7 +54,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.UsesDisplayName",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -61,7 +65,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.TestWithSimilarName",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
 
             Assert.Single(response.Results);
         }
@@ -73,7 +78,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.FailingTest",
                 testFramework: "xunit",
-                shouldPass: false);
+                shouldPass: false,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
 
             Assert.Single(response.Results);
             Assert.NotEmpty(response.Results[0].ErrorMessage);
@@ -87,7 +93,8 @@ namespace OmniSharp.DotNetTest.Tests
                 NUnitTestProject,
                 methodName: "Main.Test.MainTest.CheckStandardOutput",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
 
             Assert.Single(response.Results);
             Assert.NotEmpty(response.Results[0].StandardOutput);

@@ -21,7 +21,7 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<GetTestStartInfoService>(OmniSharpEndpoints.V2.GetTestStartInfo);
         }
 
-        protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework)
+        protected async Task GetDotNetTestStartInfoAsync(string projectName, string methodName, string testFramework, string targetFrameworkVersion = null)
         {
             var isLegacy = DotNetCliVersion == DotNetCliVersion.Legacy;
 
@@ -34,7 +34,8 @@ namespace OmniSharp.DotNetTest.Tests
                 {
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,
-                    TestFrameworkName = testFramework
+                    TestFrameworkName = testFramework,
+                    TargetFrameworkVersion = targetFrameworkVersion
                 };
 
                 var response = await service.Handle(request);
