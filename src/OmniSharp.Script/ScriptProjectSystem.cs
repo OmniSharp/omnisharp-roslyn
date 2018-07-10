@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Script
 {
+    [DisplayName(nameof(ScriptProjectSystem))]
     [Export(typeof(IProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {

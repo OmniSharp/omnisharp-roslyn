@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Threading.Tasks;
@@ -11,16 +12,16 @@ using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
-using OmniSharp.Roslyn;
 using OmniSharp.Services;
 
 namespace OmniSharp.OrphanFiles
 {
+    [DisplayName(nameof(MiscellanousFiles))]
     [ExtensionOrder(After = nameof(ProjectSystem))]
     [Export(typeof(IProjectSystem)), Shared]
     public class MiscellanousFiles : IProjectSystem
     {
-        private string miscFileExtension = ".cs";
+        private readonly string miscFileExtension = ".cs";
         public string Key { get; } = "OrphanFiles";
         public string Language { get; } = LanguageNames.CSharp;
         IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };

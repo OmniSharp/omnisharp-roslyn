@@ -1,28 +1,28 @@
 ﻿// Adapted from ExtensionOrderer in Roslyn
 using System.Collections.Generic;
 
-namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
+namespace OmniSharp.Utilities
 {
     internal class Graph<T>
     {
         //Dictionary to map between nodes and the names
-        private Dictionary<string, ProviderNode<T>> Nodes { get; }
-        private List<ProviderNode<T>> AllNodes { get; }
-        private Graph(List<ProviderNode<T>> nodesList)
+        private Dictionary<string, Node<T>> Nodes { get; }
+        private IEnumerable<Node<T>> AllNodes { get; }
+        private Graph(IEnumerable<Node<T>> nodesList)
         {
-            Nodes = new Dictionary<string, ProviderNode<T>>();
+            Nodes = new Dictionary<string, Node<T>>();
             AllNodes = nodesList;
         }
-        internal static Graph<T> GetGraph(List<ProviderNode<T>> nodesList)
+        internal static Graph<T> GetGraph(IEnumerable<Node<T>> nodesList)
         {
             var graph = new Graph<T>(nodesList);
 
-            foreach (ProviderNode<T> node in graph.AllNodes)
+            foreach (Node<T> node in graph.AllNodes)
             {
-                graph.Nodes[node.ProviderName] = node;
+                graph.Nodes[node.Name] = node;
             }
 
-            foreach (ProviderNode<T> node in graph.AllNodes)
+            foreach (Node<T> node in graph.AllNodes)
             {
                 foreach (var before in node.Before)
                 {
@@ -59,7 +59,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         public List<T> TopologicalSort()
         {
             List<T> result = new List<T>();
-            var seenNodes = new HashSet<ProviderNode<T>>();
+            var seenNodes = new HashSet<Node<T>>();
 
             foreach (var node in AllNodes)
             {
@@ -69,7 +69,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             return result;
         }
 
-        private void Visit(ProviderNode<T> node, List<T> result, HashSet<ProviderNode<T>> seenNodes)
+        private void Visit(Node<T> node, List<T> result, HashSet<Node<T>> seenNodes)
         {
             if (seenNodes.Add(node))
             {
@@ -78,7 +78,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     Visit(before, result, seenNodes);
                 }
 
-                result.Add(node.Provider);
+                result.Add(node.Extension);
             }
         }
     }

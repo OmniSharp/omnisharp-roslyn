@@ -151,7 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
-            var nodesList = new List<ProviderNode<CodeFixProvider>>();
+            var nodesList = new List<Node<CodeFixProvider>>();
             var providerList = new List<CodeFixProvider>();
 
             foreach (var provider in this.Providers)
@@ -159,7 +159,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 foreach (var codeFixProvider in provider.CodeFixProviders)
                 {
                     providerList.Add(codeFixProvider);
-                    nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
+                    nodesList.Add(Node<CodeFixProvider>.From<ExportCodeFixProviderAttribute>(codeFixProvider,attribute => attribute.Name));
                 }
             }
 
@@ -174,7 +174,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
-            var nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
+            var nodesList = new List<Node<CodeRefactoringProvider>>();
             var providerList = new List<CodeRefactoringProvider>();
 
             foreach (var provider in this.Providers)
@@ -182,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
                 {
                     providerList.Add(codeRefactoringProvider);
-                    nodesList.Add(ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider));
+                    nodesList.Add(Node<CodeRefactoringProvider>.From<ExportCodeRefactoringProviderAttribute>(codeRefactoringProvider, attribute => attribute.Name));
                 }
             }
 

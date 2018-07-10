@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNet
 {
+    [DisplayName(nameof(DotNetProjectSystem))]
     [Export(typeof(IProjectSystem)), Shared]
     public class DotNetProjectSystem : IProjectSystem
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
+    [DisplayName(nameof(ProjectSystem))]
     [Export(typeof(ProjectSystem))]
     [Export(typeof(IProjectSystem)), Shared]
     public class ProjectSystem : IProjectSystem

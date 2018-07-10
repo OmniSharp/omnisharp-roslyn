@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Composition;
 using System.Composition.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +11,7 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Options;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
@@ -24,9 +28,17 @@ namespace OmniSharp
 
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
+            var projectSystems = compositionHost.GetExports<IProjectSystem>();
+            var nodes = new List<Node<IProjectSystem>>();
+            foreach(var projectSystem in projectSystems)
+            {
+                nodes.Add(Node<IProjectSystem>.From<DisplayNameAttribute>(projectSystem, attribute => attribute.DisplayName));
+            }
+            var graph = Graph<IProjectSystem>.GetGraph(nodes);
+            var sortedList = graph.TopologicalSort();
 
             // Initialize all the project systems
-            foreach (var projectSystem in compositionHost.GetExports<IProjectSystem>())
+            foreach (var projectSystem in sortedList)
             {
                 try
                 {

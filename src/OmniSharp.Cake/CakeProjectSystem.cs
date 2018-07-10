@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Cake
 {
+    [DisplayName(nameof(CakeProjectSystem))]
     [Export(typeof(IProjectSystem)), Shared]
     public class CakeProjectSystem : IProjectSystem
     {
