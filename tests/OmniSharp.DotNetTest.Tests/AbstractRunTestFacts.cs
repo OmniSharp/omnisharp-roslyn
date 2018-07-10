@@ -20,7 +20,7 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<RunTestService>(OmniSharpEndpoints.V2.RunTest);
         }
 
-        protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, bool expectResults = true)
+        protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, string targetFrameworkVersion = null, bool expectResults = true)
         {
             var isLegacy = DotNetCliVersion == DotNetCliVersion.Legacy;
 
@@ -33,7 +33,8 @@ namespace OmniSharp.DotNetTest.Tests
                 {
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,
-                    TestFrameworkName = testFramework
+                    TestFrameworkName = testFramework,
+                    TargetFrameworkVersion = targetFrameworkVersion
                 };
 
                 var response = await service.Handle(request);

@@ -11,12 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <!-- New VSTest 'dotnet test' support -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPlatformTranslationLayerVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
   </ItemGroup>
 
 </Project>
