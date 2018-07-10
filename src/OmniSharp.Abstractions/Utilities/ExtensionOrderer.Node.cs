@@ -14,12 +14,14 @@ namespace OmniSharp.Utilities
         public TNode Extension { get; set; }
         public HashSet<Node<TNode>> NodesBeforeMeSet { get; set; }
 
-        public static Node<TNode> From<TNodeAttribute>(TNode extension, Func<TNodeAttribute, string> nameExtractor) where TNodeAttribute: Attribute
+        public static Node<TNode> From<TNodeAttribute>(TNode extension, Func<TNodeAttribute, string> nameExtractor) where TNodeAttribute : Attribute
         {
-            //we are getting two attributes here, how do we decide what name to use and what to do  .... :/
+            string name = string.Empty;
             var attribute = extension.GetType().GetCustomAttribute<TNodeAttribute>();
-            string name = nameExtractor(attribute);
-            //string name = string.Empty;
+            if (attribute is TNodeAttribute && !string.IsNullOrEmpty(nameExtractor(attribute)))
+            {
+                name = nameExtractor(attribute);
+            }
             var orderAttributes = extension.GetType().GetCustomAttributes<ExtensionOrderAttribute>(true);
             return new Node<TNode>(extension, name, orderAttributes);
         }
@@ -31,7 +33,7 @@ namespace OmniSharp.Utilities
             Before = new List<string>();
             After = new List<string>();
             NodesBeforeMeSet = new HashSet<Node<TNode>>();
-            foreach(var attribute in orderAttributes)
+            foreach (var attribute in orderAttributes)
             {
                 AddAttribute(attribute);
             }
