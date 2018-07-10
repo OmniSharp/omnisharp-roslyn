@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
-using OmniSharp.Models.v2;
 using OmniSharp.Models.V2;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
