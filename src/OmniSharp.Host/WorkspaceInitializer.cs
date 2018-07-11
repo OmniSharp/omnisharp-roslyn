@@ -29,16 +29,9 @@ namespace OmniSharp
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
-            var nodes = new List<Node<IProjectSystem>>();
-            foreach(var projectSystem in projectSystems)
-            {
-                nodes.Add(Node<IProjectSystem>.From<DisplayNameAttribute>(projectSystem, attribute => attribute.DisplayName));
-            }
-            var graph = Graph<IProjectSystem>.GetGraph(nodes);
-            var sortedList = graph.TopologicalSort();
-
-            // Initialize all the project systems
-            foreach (var projectSystem in sortedList)
+            var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, DisplayNameAttribute>(projectSystems, attribute => attribute.DisplayName);
+           
+            foreach (var projectSystem in orderedProjectSystems)
             {
                 try
                 {

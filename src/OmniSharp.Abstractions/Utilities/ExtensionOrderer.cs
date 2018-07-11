@@ -11,14 +11,9 @@ namespace OmniSharp.Utilities
         /* Returns a sorted order of the nodes if such a sorting exists, else returns the unsorted list */
         public static IEnumerable<TExtension> GetOrderedOrUnorderedList<TExtension, TAttribute>(IEnumerable<TExtension> unsortedList, Func<TAttribute, string> nameExtractor) where TAttribute: Attribute
         {
-            var nodesList = unsortedList.Select(elem => Node<TExtension>.From<TAttribute>(elem, nameExtractor));
-            var graph = Graph<TExtension>.GetGraph(nodesList);
-            if (graph.HasCycles())
-            {
-                return unsortedList;
-            }
-
-            return graph.TopologicalSort();
+            var nodesList = unsortedList.Select(elem => Node<TExtension>.From(elem, nameExtractor));
+            var graph = Graph<TExtension>.GetGraph(nodesList.ToList());
+            return graph.HasCycles() ? unsortedList : graph.TopologicalSort();
         }
     }
 }
