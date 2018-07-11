@@ -86,6 +86,20 @@ namespace OmniSharp
             OnDocumentAdded(documentInfo);
         }
 
+        public void AddMiscellanousFileDocument(ProjectId projectId, string filePath)
+        {
+            var documentId = AddDocument(projectId, filePath);
+            _miscellanousFiles.Add(documentId);
+        }
+
+        public void RemoveMiscellanousFileDocument(ProjectId projectId)
+        {
+            var project = CurrentSolution.GetProject(projectId);
+            var id = project.DocumentIds.First();
+            _miscellanousFiles.Remove(id);
+            RemoveProject(projectId);
+        }
+
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
             var documentId = DocumentId.CreateNewId(projectId);
@@ -226,24 +240,6 @@ namespace OmniSharp
             {
                 _logger.LogError(e, $"Error saving document {fullPath}");
             }
-        }
-
-        public DocumentId AddMiscellanousFile(string filePath, string language)
-        {
-            string assemblyName = Guid.NewGuid().ToString("N");
-            var project = ProjectInfo.Create(
-               filePath: filePath,
-               id: ProjectId.CreateNewId(),
-               version: VersionStamp.Create(),
-               name: Path.GetFileName(filePath),
-               metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
-               assemblyName: assemblyName,
-               language: language);
-
-            AddProject(project);
-            var documentId = AddDocument(project.Id, filePath);
-            _miscellanousFiles.Add(documentId);
-            return documentId;
         }
 
         public bool IsCapableOfSemanticDiagnostics(Document document)
