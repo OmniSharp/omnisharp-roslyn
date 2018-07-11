@@ -18,6 +18,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -48,6 +49,7 @@ namespace TestUtility
 
         public ILoggerFactory LoggerFactory { get; }
         public OmniSharpWorkspace Workspace { get; }
+        public ILogger<OmniSharpTestHost> Logger { get; }
 
         private OmniSharpTestHost(
             TestServiceProvider serviceProvider,
@@ -60,6 +62,7 @@ namespace TestUtility
 
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
+            this.Logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
         }
 
         ~OmniSharpTestHost()
@@ -182,6 +185,11 @@ namespace TestUtility
         public WorkspaceInformationService GetWorkspaceInformationService()
         {
             return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
+        }
+
+        public CodeCheckService GetCodeCheckServiceService()
+        {
+            return GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
         }
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)
