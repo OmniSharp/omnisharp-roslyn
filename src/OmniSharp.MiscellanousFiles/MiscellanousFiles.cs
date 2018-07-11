@@ -14,7 +14,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Services;
 
-namespace OmniSharp.OrphanFiles
+namespace OmniSharp.MicellanousFiles
 {
     [DisplayName(nameof(MiscellanousFiles))]
     [ExtensionOrder(After = nameof(ProjectSystem))]
@@ -22,7 +22,7 @@ namespace OmniSharp.OrphanFiles
     public class MiscellanousFiles : IProjectSystem
     {
         private readonly string miscFileExtension = ".cs";
-        public string Key { get; } = "OrphanFiles";
+        public string Key { get; } = "MiscellanousFiles";
         public string Language { get; } = LanguageNames.CSharp;
         IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };
         public bool EnabledByDefault { get; } = true;
