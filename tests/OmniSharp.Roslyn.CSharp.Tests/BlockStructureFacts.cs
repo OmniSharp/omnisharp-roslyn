@@ -1,6 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Models.v2;
+using OmniSharp.Models.V2;
 using OmniSharp.Roslyn.CSharp.Services.Structure;
 using TestUtility;
 using Xunit;
