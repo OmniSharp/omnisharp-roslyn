@@ -6,68 +6,71 @@ using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Utilities
 {
-    internal class Node<TNode>
+    static partial class ExtensionOrderer
     {
-        public string Name { get; set; }
-        public List<string> Before { get; set; }
-        public List<string> After { get; set; }
-        public TNode Extension { get; set; }
-        public HashSet<Node<TNode>> NodesBeforeMeSet { get; set; }
-
-        public static Node<TNode> From<TNodeAttribute>(TNode extension, Func<TNodeAttribute, string> nameExtractor) where TNodeAttribute : Attribute
+        internal class Node<TNode>
         {
-            string name = string.Empty;
-            var attribute = extension.GetType().GetCustomAttribute<TNodeAttribute>();
-            if (attribute is TNodeAttribute && !string.IsNullOrEmpty(nameExtractor(attribute)))
+            public string Name { get; set; }
+            public List<string> Before { get; set; }
+            public List<string> After { get; set; }
+            public TNode Extension { get; set; }
+            public HashSet<Node<TNode>> NodesBeforeMeSet { get; set; }
+
+            public static Node<TNode> From<TNodeAttribute>(TNode extension, Func<TNodeAttribute, string> nameExtractor) where TNodeAttribute : Attribute
             {
-                name = nameExtractor(attribute);
-            }
-            var orderAttributes = extension.GetType().GetCustomAttributes<ExtensionOrderAttribute>(true);
-            return new Node<TNode>(extension, name, orderAttributes);
-        }
-
-        private Node(TNode extension, string name, IEnumerable<ExtensionOrderAttribute> orderAttributes)
-        {
-            Extension = extension;
-            Name = name;
-            Before = new List<string>();
-            After = new List<string>();
-            NodesBeforeMeSet = new HashSet<Node<TNode>>();
-            foreach (var attribute in orderAttributes)
-            {
-                AddAttribute(attribute);
-            }
-        }
-
-        private void AddAttribute(ExtensionOrderAttribute attribute)
-        {
-            if (attribute.Before != null)
-                Before.Add(attribute.Before);
-            if (attribute.After != null)
-                After.Add(attribute.After);
-        }
-
-        internal bool CheckForCycles()
-        {
-            return CheckForCycles(new HashSet<Node<TNode>>());
-        }
-
-        private bool CheckForCycles(HashSet<Node<TNode>> seenNodes)
-        {
-            if (!seenNodes.Add(this))
-            {
-                //Cycle detected
-                return true;
+                string name = string.Empty;
+                var attribute = extension.GetType().GetCustomAttribute<TNodeAttribute>();
+                if (attribute is TNodeAttribute && !string.IsNullOrEmpty(nameExtractor(attribute)))
+                {
+                    name = nameExtractor(attribute);
+                }
+                var orderAttributes = extension.GetType().GetCustomAttributes<ExtensionOrderAttribute>(true);
+                return new Node<TNode>(extension, name, orderAttributes);
             }
 
-            foreach (var before in this.NodesBeforeMeSet)
+            private Node(TNode extension, string name, IEnumerable<ExtensionOrderAttribute> orderAttributes)
             {
-                if (before.CheckForCycles(seenNodes))
+                Extension = extension;
+                Name = name;
+                Before = new List<string>();
+                After = new List<string>();
+                NodesBeforeMeSet = new HashSet<Node<TNode>>();
+                foreach (var attribute in orderAttributes)
+                {
+                    AddAttribute(attribute);
+                }
+            }
+
+            private void AddAttribute(ExtensionOrderAttribute attribute)
+            {
+                if (attribute.Before != null)
+                    Before.Add(attribute.Before);
+                if (attribute.After != null)
+                    After.Add(attribute.After);
+            }
+
+            internal bool CheckForCycles()
+            {
+                return CheckForCycles(new HashSet<Node<TNode>>());
+            }
+
+            private bool CheckForCycles(HashSet<Node<TNode>> seenNodes)
+            {
+                if (!seenNodes.Add(this))
+                {
+                    //Cycle detected
                     return true;
-            }
+                }
 
-            seenNodes.Remove(this);
-            return false;
+                foreach (var before in this.NodesBeforeMeSet)
+                {
+                    if (before.CheckForCycles(seenNodes))
+                        return true;
+                }
+
+                seenNodes.Remove(this);
+                return false;
+            }
         }
     }
 }

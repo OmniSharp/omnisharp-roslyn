@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Utilities
 {
-    static class ExtensionOrderer
+    static partial class ExtensionOrderer
     {
         /* Returns a sorted order of the nodes if such a sorting exists, else returns the unsorted list */
         public static IEnumerable<TExtension> GetOrderedOrUnorderedList<TExtension, TAttribute>(IEnumerable<TExtension> unsortedList, Func<TAttribute, string> nameExtractor) where TAttribute: Attribute
