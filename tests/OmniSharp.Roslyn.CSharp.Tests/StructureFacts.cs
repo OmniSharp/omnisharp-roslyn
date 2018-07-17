@@ -71,9 +71,25 @@ namespace OmniSharp.Tests
             Assert.Equal(SyntaxKind.InterfaceDeclaration.ToString(), nodes[0].Kind);
         }
 
-        private async Task<FileMemberElement[]> GetStructureAsync(string source)
+        [Fact]
+        public async Task EnsureFileNameIsSet()
         {
-            var testFile = new TestFile("d.cs", source);
+            const string source =
+                @"public interface Far {
+
+                }";
+
+            const string fileName = "test.cs";
+
+            var nodes = await GetStructureAsync(source, fileName);
+            Assert.Single(nodes);
+            Assert.Equal(fileName, nodes[0].Location.FileName);
+        }
+
+
+        private async Task<FileMemberElement[]> GetStructureAsync(string source, string fileName = "d.cs")
+        {
+            var testFile = new TestFile(fileName, source);
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var nodes = await StructureComputer.Compute(SharedOmniSharpTestHost.Workspace.GetDocuments(testFile.FileName));
             return nodes.ToArray();
