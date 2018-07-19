@@ -6,11 +6,11 @@ namespace OmniSharp.Script
     {
         public bool EnableScriptNuGetReferences { get; set; }
 
-        public string DefaultTargetFramework { get; set; } = "net46";
+        public string DefaultTargetFramework { get; set; } = "net461";
 
-        /// <summary>  
+        /// <summary>
         ///  Nuget for scripts is enabled when <see cref="EnableScriptNuGetReferences"/> is enabled or when <see cref="DefaultTargetFramework"/> is .NET Core
-        /// </summary>  
+        /// </summary>
         public bool IsNugetEnabled() =>
             EnableScriptNuGetReferences ||
             (DefaultTargetFramework != null && DefaultTargetFramework.StartsWith("netcoreapp", System.StringComparison.OrdinalIgnoreCase));
