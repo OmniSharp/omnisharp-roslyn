@@ -93,13 +93,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private async Task<IEnumerable<DiagnosticLocation>> Analyze(Project project)
         {
-            if (!this.providers.SelectMany(x => x.CodeDiagnosticAnalyzerProviders).Any())
-                return ImmutableArray<DiagnosticLocation>.Empty;
+            //if (!this.providers.SelectMany(x => x.CodeDiagnosticAnalyzerProviders).Any())
+            //    return ImmutableArray<DiagnosticLocation>.Empty;
 
             var compiled = await project.GetCompilationAsync();
+
+            var allAnalyzers = this.providers
+                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
+                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()))
+                .ToImmutableArray();
+
             var analysis = await compiled
-                .WithAnalyzers(this.providers.SelectMany(x => x.CodeDiagnosticAnalyzerProviders).ToImmutableArray())
+                .WithAnalyzers(allAnalyzers)
                 .GetAllDiagnosticsAsync();
+
+            var foo = analysis.ToList();
 
             return analysis.Select(x => AsDiagnosticLocation(x, project));
         }

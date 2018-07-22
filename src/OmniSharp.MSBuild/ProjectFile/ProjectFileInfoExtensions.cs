@@ -43,7 +43,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo)
         {
-            var tempHardCodedPath = @"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll";
+            //var tempHardCodedPath = @"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll";
 
             // SAVPEK TODO: Add analyzer references here!
             return ProjectInfo.Create(
@@ -55,7 +55,71 @@ namespace OmniSharp.MSBuild.ProjectFile
                 filePath: projectFileInfo.FilePath,
                 outputFilePath: projectFileInfo.TargetPath,
                 compilationOptions: projectFileInfo.CreateCompilationOptions(),
-                analyzerReferences: new[] { new OmnisharpAnalyzerReference(tempHardCodedPath)});
+                analyzerReferences: new AnalyzerReference[] { new AnalyzerFileReference(@"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll", new AnalyzerAssemblyLoader()) });
+        }
+    }
+
+    public class AnalyzerAssemblyLoader : IAnalyzerAssemblyLoader
+    {
+        public void AddDependencyLocation(string fullPath)
+        {
+        }
+
+        public Assembly LoadFromPath(string fullPath)
+        {
+            return Assembly.LoadFrom(@"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll");
+        }
+    }
+
+    public class OmnisharpAnalyzerReference2 : AnalyzerReference, IEquatable<AnalyzerReference>
+    {
+        public override string FullPath => "foobar";
+        public override string Display => "foo";
+        public override object Id => "foobarlol";
+
+        public bool Equals(AnalyzerReference other)
+        {
+            return other.Id == this.Id;
+        }
+
+        public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(string language)
+        {
+            return new DiagnosticAnalyzer[] { }.ToImmutableArray();
+//            var assembly = Assembly.LoadFrom(@"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll");
+//
+//            var types = assembly.GetTypes()
+//                .Where(type => !type.GetTypeInfo().IsInterface &&
+//                               !type.GetTypeInfo().IsAbstract &&
+//                               !type.GetTypeInfo().ContainsGenericParameters)
+//                               .ToList();
+//
+//            return types
+//                .Where(t => typeof(DiagnosticAnalyzer).IsAssignableFrom(t))
+//                .Select(type => CreateInstance<DiagnosticAnalyzer>(type))
+//                .Where(instance => instance != null)
+//                .ToList()
+//                .ToImmutableArray();
+        }
+
+//       private T CreateInstance<T>(Type type) where T : class
+//       {
+//           try
+//           {
+//               var defaultCtor = type.GetConstructor(new Type[] { });
+//
+//               return defaultCtor != null
+//                   ? (T)Activator.CreateInstance(type)
+//                   : null;
+//           }
+//           catch (Exception ex)
+//           {
+//               throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
+//           }
+//       }
+
+        public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForAllLanguages()
+        {
+            return new DiagnosticAnalyzer[] { }.ToImmutableArray();
         }
     }
 
