@@ -27,8 +27,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
-            OmniSharpWorkspace workspace, 
-            [ImportMany] IEnumerable<ICodeActionProvider> providers, 
+            OmniSharpWorkspace workspace,
+            [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<RoslynAnalyzerService>();
@@ -58,7 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .ToList()
                     .ForEach(result => _results[result.Project] = result.Result);
 
-                await Task.Delay(1000, token);
+                await Task.Delay(1500, token);
             }
         }
 
