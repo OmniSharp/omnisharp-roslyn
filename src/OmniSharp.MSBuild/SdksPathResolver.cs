@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Composition;
 using System.IO;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
@@ -11,12 +12,17 @@ namespace OmniSharp.MSBuild
         private const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
         private const string Sdks = nameof(Sdks);
 
-        private readonly DotNetCliService _dotNetCli;
+        private readonly IDotNetCliService _dotNetCli;
+        private readonly ILogger _logger;
+
+        public bool Enabled { get; set; } = false;
+        public string OverridePath { get; set; }
 
         [ImportingConstructor]
-        public SdksPathResolver(DotNetCliService dotNetCli)
+        public SdksPathResolver(IDotNetCliService dotNetCli, ILoggerFactory loggerFactory)
         {
             _dotNetCli = dotNetCli;
+            _logger = loggerFactory.CreateLogger<SdksPathResolver>();
         }
 
         public bool TryGetSdksPath(string projectFilePath, out string sdksPath)
@@ -44,13 +50,22 @@ namespace OmniSharp.MSBuild
 
         public IDisposable SetSdksPathEnvironmentVariable(string projectFilePath)
         {
-            if (!TryGetSdksPath(projectFilePath, out var sdksPath))
+            if (!Enabled)
+            {
+                return NullDisposable.Instance;
+            }
+
+            var sdksPath = OverridePath;
+            if (string.IsNullOrWhiteSpace(sdksPath) &&
+                !TryGetSdksPath(projectFilePath, out sdksPath))
             {
                 return NullDisposable.Instance;
             }
 
             var oldMSBuildSDKsPath = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
             Environment.SetEnvironmentVariable(MSBuildSDKsPath, sdksPath);
+
+            _logger.LogDebug($"Set {MSBuildSDKsPath} environment variable to: {sdksPath}");
 
             return new ResetSdksPathEnvironmentVariable(oldMSBuildSDKsPath);
         }

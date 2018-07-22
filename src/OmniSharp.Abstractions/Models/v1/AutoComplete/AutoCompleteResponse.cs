@@ -18,6 +18,7 @@ namespace OmniSharp.Models.AutoComplete
         public string Snippet { get; set; }
         public string Kind { get; set; }
         public bool IsSuggestionMode { get; set; }
+        public bool Preselect { get; set; }
 
         public override bool Equals(object other)
         {

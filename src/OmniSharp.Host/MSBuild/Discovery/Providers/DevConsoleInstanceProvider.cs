@@ -36,6 +36,17 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             var versionString = Environment.GetEnvironmentVariable("VSCMD_VER");
             Version.TryParse(versionString, out var version);
 
+            if (version == null && versionString != null)
+            {
+                var dashIndex = versionString.IndexOf('-');
+
+                if (dashIndex > 0)
+                {
+                    versionString = versionString.Substring(0, dashIndex);
+                    Version.TryParse(versionString, out version);
+                }
+            }
+
             if (version == null)
             {
                 versionString = Environment.GetEnvironmentVariable("VisualStudioVersion");

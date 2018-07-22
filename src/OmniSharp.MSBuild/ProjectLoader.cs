@@ -37,6 +37,13 @@ namespace OmniSharp.MSBuild
                 { PropertyNames._ResolveReferenceDependencies, "true" },
                 { PropertyNames.SolutionDir, solutionDirectory + Path.DirectorySeparatorChar },
 
+                // Setting this property will cause any XAML markup compiler tasks to run in the
+                // current AppDomain, rather than creating a new one. This is important because
+                // our AppDomain.AssemblyResolve handler for MSBuild will not be connected to
+                // the XAML markup compiler's AppDomain, causing the task not to be able to find
+                // MSBuild.
+                { PropertyNames.AlwaysCompileMarkupFilesInSeparateDomain, "false" },
+
                 // This properties allow the design-time build to handle the Compile target without actually invoking the compiler.
                 // See https://github.com/dotnet/roslyn/pull/4604 for details.
                 { PropertyNames.ProvideCommandLineArgs, "true" },
@@ -51,6 +58,11 @@ namespace OmniSharp.MSBuild
             globalProperties.AddPropertyOverride(PropertyNames.VisualStudioVersion, options.VisualStudioVersion, propertyOverrides, logger);
             globalProperties.AddPropertyOverride(PropertyNames.Configuration, options.Configuration, propertyOverrides, logger);
             globalProperties.AddPropertyOverride(PropertyNames.Platform, options.Platform, propertyOverrides, logger);
+
+            if (propertyOverrides.TryGetValue(PropertyNames.BypassFrameworkInstallChecks, out var value))
+            {
+                globalProperties.Add(PropertyNames.BypassFrameworkInstallChecks, value);
+            }
 
             return globalProperties;
         }
@@ -98,7 +110,11 @@ namespace OmniSharp.MSBuild
 
             toolsVersion = GetLegalToolsetVersion(toolsVersion, projectCollection.Toolsets);
 
-            return projectCollection.LoadProject(filePath, toolsVersion);
+            var project = projectCollection.LoadProject(filePath, toolsVersion);
+
+            SetTargetFrameworkIfNeeded(project);
+
+            return project;
         }
 
         private static void SetTargetFrameworkIfNeeded(MSB.Evaluation.Project evaluatedProject)
@@ -115,10 +131,7 @@ namespace OmniSharp.MSBuild
                 // do better and potentially allow OmniSharp hosts to select a target framework.
                 targetFramework = targetFrameworks[0];
                 evaluatedProject.SetProperty(PropertyNames.TargetFramework, targetFramework);
-            }
-            else if (!string.IsNullOrWhiteSpace(targetFramework) && targetFrameworks.Length == 0)
-            {
-                targetFrameworks = ImmutableArray.Create(targetFramework);
+                evaluatedProject.ReevaluateIfNecessary();
             }
         }
 

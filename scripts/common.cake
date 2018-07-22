@@ -146,6 +146,7 @@ public class Folders
     public string ArtifactsPublish { get; }
     public string ArtifactsLogs { get; }
     public string ArtifactsPackage { get; }
+    public string DeploymentPackage { get; }
     public string ArtifactsScripts { get; }
 
     public string MonoRuntimeMacOS { get; }
@@ -172,6 +173,7 @@ public class Folders
         this.ArtifactsPublish = PathHelper.Combine(this.Artifacts, "publish");
         this.ArtifactsLogs = PathHelper.Combine(this.Artifacts, "logs");
         this.ArtifactsPackage = PathHelper.Combine(this.Artifacts, "package");
+        this.DeploymentPackage = PathHelper.Combine(this.Artifacts, "deployment");
         this.ArtifactsScripts = PathHelper.Combine(this.Artifacts, "scripts");
 
         this.MonoRuntimeMacOS = PathHelper.Combine(this.Tools, "Mono.Runtime.MacOS");
@@ -279,6 +281,7 @@ public class BuildPlan
     public string[] LegacyTestAssets { get; set; }
     public string[] CakeTestAssets { get; set; }
     public string[] WindowsOnlyTestAssets { get; set; }
+    public string[] RestoreOnlyTestAssets { get; set; }
 
     public static BuildPlan Load(BuildEnvironment env)
     {

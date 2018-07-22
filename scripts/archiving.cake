@@ -3,9 +3,16 @@
 
 using System.IO.Compression;
 
-string GetPackagePrefix(string project)
+private string GetDiscriminator(string name)
 {
-    return project.EndsWith(".Stdio") ? string.Empty : project.Substring(project.IndexOf('.')).ToLower();
+    if (name.EndsWith(".Driver"))
+    {
+        name = name.Substring(0, name.LastIndexOf('.'));
+    }
+
+    return name.EndsWith(".Stdio")
+        ? string.Empty
+        : name.Substring(name.LastIndexOf('.')).ToLower();
 }
 
 /// <summary>
@@ -14,12 +21,23 @@ string GetPackagePrefix(string project)
 /// <param name="platform">The platform</param>
 /// <param name="contentFolder">The folder containing the files to package</param>
 /// <param name="packageFolder">The destination folder for the archive</param>
-/// <param name="projectName">The project name</param>
-void Package(string name, string platform, string contentFolder, string packageFolder)
+/// <param name="cdFolder">The folder to drop packages into that get continously deployed to blob storage</param>
+void Package(string projectName, string platform, string contentFolder, string packageFolder, string cdFolder)
 {
     if (!DirectoryHelper.Exists(packageFolder))
     {
         DirectoryHelper.Create(packageFolder);
+    }
+
+    if (!DirectoryHelper.Exists(cdFolder))
+    {
+        DirectoryHelper.Create(cdFolder);
+    }
+
+    var deployFolder = $"{cdFolder}/{env.VersionInfo.SemVer}";
+    if (!DirectoryHelper.Exists(deployFolder))
+    {
+        DirectoryHelper.Create(deployFolder);
     }
 
     var platformId = platform;
@@ -33,43 +51,28 @@ void Package(string name, string platform, string contentFolder, string packageF
         }
     }
 
-    var archiveName = $"{packageFolder}/omnisharp{name}-{platformId}";
+    var disciminator = GetDiscriminator(projectName);
+
+    var packageName = $"omnisharp{disciminator}-{platformId}";
+    var archiveName = $"{packageFolder}/{packageName}";
+    var deployName = $"{deployFolder}/{packageName}";
 
     Information("Packaging {0}...", archiveName);
 
-    // On all platforms use ZIP for Windows runtimes
-    if (platformId.StartsWith("win"))
-    {
-        var zipFile = $"{archiveName}.zip";
-        Zip(contentFolder, zipFile);
-    }
-    // On all platforms use TAR.GZ for Unix runtimes
-    else
+    // All platforms (Windows and Unix) produce a ZIP file
+    var zipFile = $"{archiveName}.zip";
+    Zip(contentFolder, zipFile);
+    CopyFile(zipFile, $"{deployName}.zip");
+
+    // Also create a TAR.GZ for Unix runtimes
+    if (!platformId.StartsWith("win"))
     {
         var tarFile = $"{archiveName}.tar.gz";
-        // Use 7z to create TAR.GZ on Windows
-        if (Platform.Current.IsWindows)
-        {
-            var tempFile = $"{archiveName}.tar";
-            try
-            {
-                Run("7z", $"a \"{tempFile}\"", contentFolder)
-                    .ExceptionOnError($"Tar-ing failed for {contentFolder} {archiveName}");
-                Run("7z", $"a \"{tarFile}\" \"{tempFile}\"", contentFolder)
-                    .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-
-                FileHelper.Delete(tempFile);
-            }
-            catch (Win32Exception)
-            {
-                Information("Warning: 7z not available on PATH to pack tar.gz results");
-            }
-        }
-        // Use tar to create TAR.GZ on Unix
-        else
-        {
-            Run("tar", $"czf \"{tarFile}\" .", contentFolder)
-                .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
-        }
+        Run("tar", $"czf \"{tarFile}\" .", contentFolder)
+            .ExceptionOnError($"Compression failed for {contentFolder} {archiveName}");
+        CopyFile(tarFile, $"{deployName}.tar.gz");
     }
+
+    Information("Writing out version info...");
+    System.IO.File.WriteAllText(System.IO.Path.Combine(cdFolder, "versioninfo.txt"), env.VersionInfo.SemVer);
 }

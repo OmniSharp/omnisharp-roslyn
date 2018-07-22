@@ -25,8 +25,8 @@ fi
 # Define default arguments.
 SCRIPT="build.cake"
 TARGET="Default"
-CONFIGURATION="Release"
-VERBOSITY="verbose"
+CONFIGURATION="Debug"
+VERBOSITY="Normal"
 DRYRUN=
 SHOW_VERSION=false
 SCRIPT_ARGUMENTS=()

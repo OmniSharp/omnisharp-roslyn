@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,8 +14,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private readonly ILogger _logger;
 
-        public IntellisenseFacts(ITestOutputHelper output)
-            : base(output)
+        public IntellisenseFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
             this._logger = this.LoggerFactory.CreateLogger<IntellisenseFacts>();
         }
@@ -506,6 +507,23 @@ class C
 
             var completions = await FindCompletionsAsync(filename, input, wantSnippet: true, triggerChar: " ");
             Assert.NotEmpty(completions);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task ReturnsAtleastOnePreselectOnNew(string filename)
+        {
+            const string input =
+@"public class Class1 {
+    public M()
+    {
+        Class1 c = new $$
+    }
+}";
+
+            var completions = await FindCompletionsAsync(filename, input, wantSnippet: true, triggerChar: " ");
+            Assert.NotEmpty(completions.Where(completion => completion.Preselect == true));
         }
 
         [Theory]

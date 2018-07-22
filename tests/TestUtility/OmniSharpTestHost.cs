@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Composition.Hosting.Core;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,7 +16,10 @@ using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
@@ -25,8 +29,6 @@ namespace TestUtility
 {
     public class OmniSharpTestHost : DisposableObject
     {
-        private const string MSBuildSDKsPath = "MSBuildSDKsPath";
-
         private static Lazy<Assembly[]> s_lazyAssemblies = new Lazy<Assembly[]>(() => new[]
         {
             typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
@@ -34,6 +36,7 @@ namespace TestUtility
             typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(ProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
+            typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
@@ -41,27 +44,25 @@ namespace TestUtility
 
         private readonly TestServiceProvider _serviceProvider;
         private readonly CompositionHost _compositionHost;
-        private readonly string _oldMSBuildSdksPath;
 
         private Dictionary<(string name, string language), Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> _handlers;
 
         public ILoggerFactory LoggerFactory { get; }
         public OmniSharpWorkspace Workspace { get; }
+        public ILogger<OmniSharpTestHost> Logger { get; }
 
         private OmniSharpTestHost(
             TestServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             OmniSharpWorkspace workspace,
-            CompositionHost compositionHost,
-            string oldMSBuildSdksPath)
+            CompositionHost compositionHost)
         {
-            this._serviceProvider = serviceProvider;
-            this._compositionHost = compositionHost;
+            _serviceProvider = serviceProvider;
+            _compositionHost = compositionHost;
 
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
-
-            _oldMSBuildSdksPath = oldMSBuildSdksPath;
+            this.Logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
         }
 
         ~OmniSharpTestHost()
@@ -71,10 +72,8 @@ namespace TestUtility
 
         protected override void DisposeCore(bool disposing)
         {
-            Environment.SetEnvironmentVariable(MSBuildSDKsPath, _oldMSBuildSdksPath);
-
-            this._serviceProvider.Dispose();
-            this._compositionHost.Dispose();
+            _serviceProvider.Dispose();
+            _compositionHost.Dispose();
 
             this.LoggerFactory.Dispose();
             this.Workspace.Dispose();
@@ -91,50 +90,52 @@ namespace TestUtility
             }
         }
 
-        public static OmniSharpTestHost Create(string path = null, ITestOutputHelper testOutput = null, IEnumerable<KeyValuePair<string, string>> configurationData = null, DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current)
+        public static OmniSharpTestHost Create(
+            string path = null,
+            ITestOutputHelper testOutput = null,
+            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
+            IEnumerable<ExportDescriptorProvider> additionalExports = null)
         {
-            var dotNetPath = Path.Combine(
-                TestAssets.Instance.RootFolder,
-                GetDotNetCliFolderName(dotNetCliVersion),
-                "dotnet");
+            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
+            var loggerFactory = new LoggerFactory().AddXunit(testOutput);
+            var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
+            var sharedTextWriter = new TestSharedTextWriter(testOutput);
 
-            if (!File.Exists(dotNetPath))
-            {
-                dotNetPath = Path.ChangeExtension(dotNetPath, ".exe");
-            }
+            var dotNetCliService = CreateTestDotNetCliService(dotNetCliVersion, loggerFactory);
 
-            if (!File.Exists(dotNetPath))
-            {
-                throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
-            }
+            var info = dotNetCliService.GetInfo();
+            logger.LogInformation($"Using .NET CLI: {info.Version}");
 
             var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder();
             builder.AddInMemoryCollection(configurationData);
+
+            // We need to set the "UseLegacySdkResolver" for tests because
+            // MSBuild's SDK resolver will not be able to locate the .NET Core SDKs
+            // that we install locally in the ".dotnet" and ".dotnet-legacy" directories.
+            // This property will cause the MSBuild project loader to set the
+            // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
+            // within the appropriate .NET Core SDK.
+            var msbuildProperties = new Dictionary<string, string>()
+            {
+                [$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = "true",
+                [$"MSBuild:{nameof(MSBuildOptions.MSBuildSDKsPath)}"] = Path.Combine(info.BasePath, "Sdks")
+            };
+
+            builder.AddInMemoryCollection(msbuildProperties);
+
             var configuration = builder.Build();
 
-            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
-            var loggerFactory = new LoggerFactory().AddXunit(testOutput);
-            var sharedTextWriter = new TestSharedTextWriter(testOutput);
+            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration, NullEventEmitter.Instance, dotNetCliService);
 
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration);
-
-            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, NullEventEmitter.Instance)
-                .WithAssemblies(s_lazyAssemblies.Value)
+            var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
                 .Build();
 
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
-            var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
-
-            var dotNetCli = compositionHost.GetExport<DotNetCliService>();
-            dotNetCli.SetDotNetPath(dotNetPath);
-            var version = dotNetCli.GetVersion();
-            logger.LogInformation($"Using .NET CLI: {version}");
-
-            var oldMSBuildSdksPath = SetMSBuildSdksPath(dotNetCli);
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
 
-            var host = new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost, oldMSBuildSdksPath);
+            var host = new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
 
             // Force workspace to be updated
             var service = host.GetWorkspaceInformationService();
@@ -143,19 +144,24 @@ namespace TestUtility
             return host;
         }
 
-        private static string SetMSBuildSdksPath(DotNetCliService dotNetCli)
+        private static DotNetCliService CreateTestDotNetCliService(DotNetCliVersion dotNetCliVersion, ILoggerFactory loggerFactory)
         {
-            var oldMSBuildSDKsPath = Environment.GetEnvironmentVariable(MSBuildSDKsPath);
+            var dotnetPath = Path.Combine(
+                TestAssets.Instance.RootFolder,
+                GetDotNetCliFolderName(dotNetCliVersion),
+                "dotnet");
 
-            var info = dotNetCli.GetInfo();
-            var msbuildSdksPath = Path.Combine(info.BasePath, "Sdks");
-
-            if (Directory.Exists(msbuildSdksPath))
+            if (!File.Exists(dotnetPath))
             {
-                Environment.SetEnvironmentVariable(MSBuildSDKsPath, msbuildSdksPath);
+                dotnetPath = Path.ChangeExtension(dotnetPath, ".exe");
             }
 
-            return oldMSBuildSDKsPath;
+            if (!File.Exists(dotnetPath))
+            {
+                throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
+            }
+
+            return new DotNetCliService(loggerFactory, NullEventEmitter.Instance, dotnetPath);
         }
 
         public T GetExport<T>()
@@ -181,6 +187,11 @@ namespace TestUtility
             return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
         }
 
+        public CodeCheckService GetCodeCheckServiceService()
+        {
+            return GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
+        }
+
         public void AddFilesToWorkspace(params TestFile[] testFiles)
         {
             TestHelpers.AddProjectToWorkspace(
@@ -192,6 +203,15 @@ namespace TestUtility
             foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))
             {
                 TestHelpers.AddCsxProjectToWorkspace(Workspace, csxFile);
+            }
+        }
+
+        public void ClearWorkspace()
+        {
+            var projectIds = Workspace.CurrentSolution.Projects.Select(x => x.Id);
+            foreach (var projectId in projectIds)
+            {
+                Workspace.RemoveProject(projectId);
             }
         }
     }

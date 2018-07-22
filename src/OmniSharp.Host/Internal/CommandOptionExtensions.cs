@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel;
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace OmniSharp.Internal
 {

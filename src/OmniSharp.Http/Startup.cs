@@ -5,16 +5,14 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
 using OmniSharp.Http.Middleware;
-using OmniSharp.Options;
 using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
 {
-    class Startup
+    internal class Startup
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly IEventEmitter _eventEmitter;
@@ -30,8 +28,8 @@ namespace OmniSharp.Http
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_configuration, services);
-            _compositionHost = new CompositionHostBuilder(serviceProvider, _environment, _eventEmitter)
+            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, _configuration, _eventEmitter, services);
+            _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
                 .Build();
 

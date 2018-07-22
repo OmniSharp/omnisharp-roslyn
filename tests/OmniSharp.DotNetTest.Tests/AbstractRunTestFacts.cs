@@ -10,13 +10,6 @@ namespace OmniSharp.DotNetTest.Tests
 {
     public abstract class AbstractRunTestFacts : AbstractTestFixture
     {
-        protected const string LegacyXunitTestProject = "LegacyXunitTestProject";
-        protected const string LegacyNunitTestProject = "LegacyNUnitTestProject";
-        protected const string LegacyMSTestProject = "LegacyMSTestProject";
-        protected const string XunitTestProject = "XunitTestProject";
-        protected const string NUnitTestProject = "NUnitTestProject";
-        protected const string MSTestProject = "MSTestProject";
-
         public AbstractRunTestFacts(ITestOutputHelper testOutput)
             : base(testOutput)
         {
@@ -27,12 +20,12 @@ namespace OmniSharp.DotNetTest.Tests
             return host.GetRequestHandler<RunTestService>(OmniSharpEndpoints.V2.RunTest);
         }
 
-        public abstract DotNetCliVersion DotNetCliVersion { get; }
-
-        protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, bool expectResults = true)
+        protected async Task<RunTestResponse> RunDotNetTestAsync(string projectName, string methodName, string testFramework, bool shouldPass, string targetFrameworkVersion = null, bool expectResults = true)
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName))
-            using (var host = CreateOmniSharpHost(testProject.Directory, dotNetCliVersion: DotNetCliVersion))
+            var isLegacy = DotNetCliVersion == DotNetCliVersion.Legacy;
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName, legacyProject: isLegacy))
+            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion))
             {
                 var service = GetRequestHandler(host);
 
@@ -40,7 +33,8 @@ namespace OmniSharp.DotNetTest.Tests
                 {
                     FileName = Path.Combine(testProject.Directory, "TestProgram.cs"),
                     MethodName = methodName,
-                    TestFrameworkName = testFramework
+                    TestFrameworkName = testFramework,
+                    TargetFrameworkVersion = targetFrameworkVersion
                 };
 
                 var response = await service.Handle(request);

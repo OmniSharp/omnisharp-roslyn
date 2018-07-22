@@ -1,8 +1,96 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.0] - _Not Yet Released_
+* Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PRs: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211) [#1217](https://github.com/OmniSharp/omnisharp-roslyn/pull/1217))
+* Fixed a bug where language services for newly created CSX files were not provided if no CSX files existed at the moment OmniSharp was started ([#1199](https://github.com/OmniSharp/omnisharp-roslyn/issues/1199), PR: [#1210](https://github.com/OmniSharp/omnisharp-roslyn/pull/1210))
+* The legacy project.json support is now disabled by default, allowing OmniSharp to start up a bit faster for common scenarios. If you wish to enable project.json support, add the following setting to your `omnisharp.json` file. (PR: [#1194](https://github.com/OmniSharp/omnisharp-roslyn/pull/1194))
+
+    ```JSON
+    {
+        "dotnet": {
+            "enabled": false
+        }
+    }
+    ```
+* Added support for code actions in `.cake` files. ([#1205](https://github.com/OmniSharp/omnisharp-roslyn/issues/1205), PR: [#1212](https://github.com/OmniSharp/omnisharp-roslyn/pull/1212))
+* Added a new `/blockstructure` endpoint that returns the spans of the C# code blocks (usings, namespaces, methods, etc.) in a file. (PRs: [#1209](https://github.com/OmniSharp/omnisharp-roslyn/pull/1209) [#1231](https://github.com/OmniSharp/omnisharp-roslyn/pull/1231))
+* Fixed bug where find usages returned usages from loaded `.cake` files even though `OnlyThisFile` was set to `true` in the request. ([#1204](https://github.com/OmniSharp/omnisharp-roslyn/issues/1204), PR: [#1213](https://github.com/OmniSharp/omnisharp-roslyn/pull/1213))
+* Performance improvements for line mappings when working with `.cake` files. (PR: [#1226](https://github.com/OmniSharp/omnisharp-roslyn/pull/1226))
+* Fixed a bug where a new debug session could not be started after a previous one failed due to build error. (PR: [#1239](https://github.com/OmniSharp/omnisharp-roslyn/pull/1239))
+* Upgraded dependencies (PR: [#1237](https://github.com/OmniSharp/omnisharp-roslyn/pull/1237))
+  * Upgraded to .NET Core SDK 2.1.301
+  * Upgraded to Microsoft.AspNetCore.* version 2.1.1
+  * Upgraded to Microsoft.Extensions.* version 2.1.1
+  * Upgraded to MSBuild 15.7
+  * Upgraded to Roslyn 2.8.2
+
+## [1.31.1] - 2018-05-28
+* Fixed bug where diagnostics from loaded `.cake` files was shown in the current file. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))
+
+## [1.31.0] - 2018-05-29
+* Update to Roslyn 2.8.0 packages, adding support for C# 7.3. (PR: [#1182](https://github.com/OmniSharp/omnisharp-roslyn/pull/1182))
+* MSBuild project system no longer stops when a project fails to load. (PR: [#1181](https://github.com/OmniSharp/omnisharp-roslyn/pull/1181))
+* Fixed null-reference exception that could be thrown during MSBuild discovery. ([#1188](https://github.com/OmniSharp/omnisharp-roslyn/issues/1188), PR: [#1189](https://github.com/OmniSharp/omnisharp-roslyn/issues/1188))
+* Fixed an issue where referenced projects outside of OmniSharp's target path/solution would not be evaluated properly if they were multi-targeted (e.g. contained `<TargetFrameworks>`), which could result in downstream failures. ([omnisharp-vscode#2295](https://github.com/OmniSharp/omnisharp-vscode/issues/2295), PR: [#1195](https://github.com/OmniSharp/omnisharp-roslyn/pull/1195))
+* Removed logic that set `MSBuildSDKsPath` environment variable before loading a project. This environment variable overrides normal MSBuild SDK resolution, which breaks resolution for custom MSBuild SDKs (for more information on MSBuild SDKs, see the [documentation](https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-use-project-sdk#how-project-sdks-are-resolved)). ([#1190](https://github.com/OmniSharp/omnisharp-roslyn/issues/1190), PR: [#1192](https://github.com/OmniSharp/omnisharp-roslyn/pull/1192))
+    * **Breaking Change**: Removing this logic means that OmniSharp will no longer load .NET Core projects that target a .NET Core SDK with a version <= 1.0.3 by default. If you need to restore this behavior, you can set the following option in an `omnisharp.json` configuration file:
+
+        ```JSON
+        {
+            "MSBuild": {
+                "UseLegacySdkResolver": true
+            }
+        }
+        ```
+        See [Configuration Options](https://github.com/OmniSharp/omnisharp-roslyn/wiki/Configuration-Options) for more details on `omnisharp.json`.
+* Support `/rename` endpoint in `.cake` files.
+* Support custom `.rsp` files in scripting. It is now possible to use `omnisharp.json` to define a path to an `.rsp` file, containing predefined namespaces and assembly references, and OmniSharp will respect those as part of its language services for CSX files. For example, given the following `.rsp` file:
+
+    ```
+    /r:bin/FakeLib.dll
+    /r:bin/FSharp.Core.dll
+    /r:bin/FSharpx.Extras.dll
+    /u:Fake
+    /u:FSharpx
+    /u:System.Linq
+    /u:System.IO
+    ```
+    and the following `omnisharp.json`:
+
+    ```
+    {
+        "Script": {
+            "RspFilePath": "path/to/my.rsp"
+        }
+    }
+    ```
+    OmniSharp will automatically include the predefined DLLs and namespaces in the language services for all the scripts in the given folder (in case of a local `omnisharp.json`) or on the machine (in case of a global `omnisharp.json`). Note that the reference to `mscorlib`/`System.Runtime` is always there anyway and doesn't need to be specified again in the `.rsp` file. ([#1024](https://github.com/OmniSharp/omnisharp-roslyn/issues/1024), PR: [#1112](https://github.com/OmniSharp/omnisharp-roslyn/issues/1112))
+    * Note that the reference to `mscorlib`/`System.Runtime` is always there anyway and doesn't need to be specified again in the `.rsp` file
+    * only imports and references are supported as part of the `.rsp` file (scripting doesn't support other compiler settings passed using the `.rsp` file). In the future, depending on whether the [feature is available in Roslyn](https://github.com/dotnet/roslyn/issues/23421), OmniSharp may also support defining a scripting globals type via `.rsp` file.
+* `.cake` files are now parsed using the C# version `Latest` rather than `Default`, to match the runtime behavior of Cake. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))
+* Updated `DotNetTest` result to include messages from stdout and stderr. (PR: [#1203](https://github.com/OmniSharp/omnisharp-roslyn/pull/1203))
+
+## [1.30.1] - 2018-05-11
+* Fixed a 1.30.0 regression that prevented the script project system from working on Unix-based systems (PR: [#1185](https://github.com/OmniSharp/omnisharp-roslyn/pull/1185))
+
+## [1.30.0] - 2018-4-30
+* Updated to Roslyn 2.7.0 packages (PR: [#1132](https://github.com/OmniSharp/omnisharp-roslyn/pull/1132))
+* Ensure that the lower assembly versions are always superseded in C# scripts (PR: [#1103](https://github.com/OmniSharp/omnisharp-roslyn/pull/1103))
+* Updated OmniSharp.Script to DotNet.Script.DependencyModel 0.6.0 (PR: [#1150](https://github.com/OmniSharp/omnisharp-roslyn/pull/1150))
+* It is now possible to define the default target framework for C# scripts in the OmniSharp configuration (PR: [#1154](https://github.com/OmniSharp/omnisharp-roslyn/pull/1154))
+* Upgraded embedded Mono and MSBuild to 5.10.1.20 (PRs: #[1137](https://github.com/OmniSharp/omnisharp-roslyn/pull/1137), #[1145](https://github.com/OmniSharp/omnisharp-roslyn/pull/1145))
+* Fixed issue where generate type refactoring could not generate new files ([omnisharp-vscode#2112](https://github.com/OmniSharp/omnisharp-vscode/issues/2112), PR: [#1143](https://github.com/OmniSharp/omnisharp-roslyn/pull/1143))
+* Added detailed project information output at debug log level (PR: [#1151](https://github.com/OmniSharp/omnisharp-roslyn/pull/1151))
+* Set MSBuild property to allow the XAML markup compiler task to run (PR: [#1157](https://github.com/OmniSharp/omnisharp-roslyn/pull/1157))
+* Added support for excluding search paths via globbing patterns ([#896](https://github.com/OmniSharp/omnisharp-roslyn/issues/896), PR: [#1161](https://github.com/OmniSharp/omnisharp-roslyn/pull/1161))
+* Improved versioning reporting for VS preview consoles (PR: [#1166](https://github.com/OmniSharp/omnisharp-roslyn/pull/1166))
+
+## [1.29.1] - 2018-2-12
+* Fixed duplicate diagnostics in C# ([omnisharp-vscode#1830](https://github.com/OmniSharp/omnisharp-vscode/issues/1830), PR: [#1107](https://github.com/OmniSharp/omnisharp-roslyn/pull/1107))
+
 ## [1.29.0] - 2018-1-29
-* Updated to Roslyn 2.6.1 packages - C# 7.2 support, (PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055))
+* Updated to Roslyn 2.6.1 packages - C# 7.2 support (PR: [#1055](https://github.com/OmniSharp/omnisharp-roslyn/pull/1055))
 * Shipped Language Server Protocol support in box.  (PR: [#969](https://github.com/OmniSharp/omnisharp-roslyn/pull/969))
   - Additional information and features tracked at [#968](https://github.com/OmniSharp/omnisharp-roslyn/issues/968)
 * Fixed locating Visual Studio with more than one installation (PR: [#1063](https://github.com/OmniSharp/omnisharp-roslyn/pull/1063))

@@ -15,8 +15,8 @@ using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using RunCodeActionRequest = OmniSharp.Models.V2.RunCodeActionRequest;
-using RunCodeActionResponse = OmniSharp.Models.V2.RunCodeActionResponse;
+using RunCodeActionRequest = OmniSharp.Models.V2.CodeActions.RunCodeActionRequest;
+using RunCodeActionResponse = OmniSharp.Models.V2.CodeActions.RunCodeActionResponse;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
@@ -44,9 +44,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             _loader = loader;
             _workspaceAssembly = _loader.LazyLoad(Configuration.RoslynWorkspaces);
             _renameDocumentOperation = _workspaceAssembly.LazyGetType(RenameDocumentOperation);
-            _oldDocumentId = _renameDocumentOperation.LazyGetField("_oldDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            _newDocumentId = _renameDocumentOperation.LazyGetField("_newDocumentId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            _newFileName = _renameDocumentOperation.LazyGetField("_newFileName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            _oldDocumentId = _renameDocumentOperation.LazyGetField("_oldDocumentId", BindingFlags.NonPublic | BindingFlags.Instance);
+            _newDocumentId = _renameDocumentOperation.LazyGetField("_newDocumentId", BindingFlags.NonPublic | BindingFlags.Instance);
+            _newFileName = _renameDocumentOperation.LazyGetField("_newFileName", BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
         public override async Task<RunCodeActionResponse> Handle(RunCodeActionRequest request)
@@ -73,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     var fileChanges = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges);
 
                     changes.AddRange(fileChanges);
-                    solution = applyChangesOperation.ChangedSolution;
+                    solution = this.Workspace.CurrentSolution;
                 }
 
                 if (request.WantsAllCodeActionOperations)
@@ -179,7 +179,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             }
                         }
 
-                        this.Workspace.AddDocument(projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
+                        this.Workspace.AddDocument(documentId, projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
                     }
                     else
                     {

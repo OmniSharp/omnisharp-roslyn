@@ -23,7 +23,7 @@ namespace TestUtility
     public class TestContent
     {
         private int? position;
-        private ImmutableDictionary<string, ImmutableList<TextSpan>> spans;
+        private readonly ImmutableDictionary<string, ImmutableList<TextSpan>> spans;
         private SourceText text;
 
         public string Code { get; }
@@ -32,15 +32,20 @@ namespace TestUtility
         public int Position => this.position.Value;
         public bool HasPosition => this.position.HasValue;
 
-        public TextPoint GetPointFromPosition()
+        public TextPoint GetPointFromPosition(int? position = null)
         {
-            return this.Text.GetPointFromPosition(this.Position);
+            var p = position ?? this.Position;
+
+            var line = Text.Lines.GetLineFromPosition(p);
+            var offset = p - line.Start;
+
+            return new TextPoint(line.LineNumber, offset);
         }
 
         public TextRange GetRangeFromSpan(TextSpan span)
-        {
-            return this.Text.GetRangeFromSpan(span);
-        }
+            => new TextRange(
+                start: GetPointFromPosition(span.Start),
+                end: GetPointFromPosition(span.End));
 
         private TestContent(string code, int? position, ImmutableDictionary<string, ImmutableList<TextSpan>> spans)
         {

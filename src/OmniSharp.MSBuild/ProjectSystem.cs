@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Discovery;
@@ -25,11 +26,12 @@ namespace OmniSharp.MSBuild
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly ImmutableDictionary<string, string> _propertyOverrides;
-        private readonly DotNetCliService _dotNetCli;
+        private readonly IDotNetCliService _dotNetCli;
         private readonly SdksPathResolver _sdksPathResolver;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
@@ -45,17 +47,19 @@ namespace OmniSharp.MSBuild
         public string Key { get; } = "MsBuild";
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
+        public bool EnabledByDefault { get; } = true;
 
         [ImportingConstructor]
         public ProjectSystem(
             IOmniSharpEnvironment environment,
             OmniSharpWorkspace workspace,
             IMSBuildLocator msbuildLocator,
-            DotNetCliService dotNetCliService,
+            IDotNetCliService dotNetCliService,
             SdksPathResolver sdksPathResolver,
             MetadataFileReferenceCache metadataFileReferenceCache,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
+            FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory)
         {
             _environment = environment;
@@ -66,6 +70,7 @@ namespace OmniSharp.MSBuild
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
+            _fileSystemHelper = fileSystemHelper;
             _loggerFactory = loggerFactory;
 
             _projectsToProcess = new Queue<ProjectFileInfo>();
@@ -76,6 +81,9 @@ namespace OmniSharp.MSBuild
         {
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
+
+            _sdksPathResolver.Enabled = _options.UseLegacySdkResolver;
+            _sdksPathResolver.OverridePath = _options.MSBuildSDKsPath;
 
             if (_environment.LogLevel < LogLevel.Information)
             {
@@ -121,7 +129,7 @@ namespace OmniSharp.MSBuild
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
             _solutionFileOrRootPath = _environment.TargetDirectory;
-            return Directory.GetFiles(_environment.TargetDirectory, "*.csproj", SearchOption.AllDirectories);
+            return _fileSystemHelper.GetFiles("**/*.csproj");
         }
 
         private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)

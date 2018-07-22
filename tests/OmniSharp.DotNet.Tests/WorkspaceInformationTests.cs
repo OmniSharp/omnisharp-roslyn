@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.DotNet.Models;
 using OmniSharp.Models.WorkspaceInformation;
@@ -10,6 +11,11 @@ namespace OmniSharp.DotNet.Tests
 {
     public class WorkspaceInformationTests : AbstractTestFixture
     {
+        private static readonly Dictionary<string, string> s_configurationData = new Dictionary<string, string>
+        {
+            ["DotNet:Enabled"] = "true"
+        };
+
         public WorkspaceInformationTests(ITestOutputHelper output)
             : base(output)
         {
@@ -18,8 +24,8 @@ namespace OmniSharp.DotNet.Tests
         [ConditionalFact(typeof(IsLegacyTest))]
         public async Task TestSimpleProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyProjectJsonApp"))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyProjectJsonApp", legacyProject: true))
+            using (var host = CreateOmniSharpHost(testProject.Directory, s_configurationData))
             {
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
@@ -42,8 +48,8 @@ namespace OmniSharp.DotNet.Tests
         [ConditionalFact(typeof(IsLegacyTest))]
         public async Task TestMSTestProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyMSTestProject"))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyMSTestProject", legacyProject: true))
+            using (var host = CreateOmniSharpHost(testProject.Directory, s_configurationData))
             {
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
@@ -65,8 +71,8 @@ namespace OmniSharp.DotNet.Tests
         [ConditionalFact(typeof(IsLegacyTest))]
         public async Task TestNUnitProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyNUnitTestProject"))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyNUnitTestProject", legacyProject: true))
+            using (var host = CreateOmniSharpHost(testProject.Directory, s_configurationData))
             {
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
@@ -88,8 +94,8 @@ namespace OmniSharp.DotNet.Tests
         [ConditionalFact(typeof(IsLegacyTest))]
         public async Task TestXunitProject()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyXunitTestProject"))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("LegacyXunitTestProject", legacyProject: true))
+            using (var host = CreateOmniSharpHost(testProject.Directory, s_configurationData))
             {
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 

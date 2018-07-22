@@ -3,10 +3,12 @@
     internal static class PropertyNames
     {
         public const string AllowUnsafeBlocks = nameof(AllowUnsafeBlocks);
+        public const string AlwaysCompileMarkupFilesInSeparateDomain = nameof(AlwaysCompileMarkupFilesInSeparateDomain);
         public const string AssemblyName = nameof(AssemblyName);
         public const string AssemblyOriginatorKeyFile = nameof(AssemblyOriginatorKeyFile);
         public const string BuildProjectReferences = nameof(BuildProjectReferences);
         public const string BuildingInsideVisualStudio = nameof(BuildingInsideVisualStudio);
+        public const string BypassFrameworkInstallChecks = nameof(BypassFrameworkInstallChecks);
         public const string Configuration = nameof(Configuration);
         public const string CscToolExe = nameof(CscToolExe);
         public const string CscToolPath = nameof(CscToolPath);

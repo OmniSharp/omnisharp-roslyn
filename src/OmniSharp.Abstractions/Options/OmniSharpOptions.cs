@@ -7,5 +7,7 @@ namespace OmniSharp.Options
         public RoslynExtensionsOptions RoslynExtensionsOptions { get; } = new RoslynExtensionsOptions();
 
         public FormattingOptions FormattingOptions { get; } = new FormattingOptions();
+
+        public FileOptions FileOptions { get; } = new FileOptions();
     }
 }

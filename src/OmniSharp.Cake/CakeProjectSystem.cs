@@ -12,11 +12,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Cake.Configuration;
 using OmniSharp.Cake.Services;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
-using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -32,15 +31,17 @@ namespace OmniSharp.Cake
         private readonly IAssemblyLoader _assemblyLoader;
         private readonly ICakeScriptService _scriptService;
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILogger<CakeProjectSystem> _logger;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
 
         private CakeOptions _options;
 
-        public string Key => "Cake";
-        public string Language => Constants.LanguageNames.Cake;
-        public IEnumerable<string> Extensions => new[] { ".cake" };
+        public string Key { get; } = "Cake";
+        public string Language { get; } = Constants.LanguageNames.Cake;
+        public IEnumerable<string> Extensions { get; } = new[] { ".cake" };
+        public bool EnabledByDefault { get; } = true;
 
         [ImportingConstructor]
         public CakeProjectSystem(
@@ -50,6 +51,7 @@ namespace OmniSharp.Cake
             IAssemblyLoader assemblyLoader,
             ICakeScriptService scriptService,
             IFileSystemWatcher fileSystemWatcher,
+            FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory)
         {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
@@ -58,6 +60,7 @@ namespace OmniSharp.Cake
             _assemblyLoader = assemblyLoader ?? throw new ArgumentNullException(nameof(assemblyLoader));
             _scriptService = scriptService ?? throw new ArgumentNullException(nameof(scriptService));
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
+            _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory?.CreateLogger<CakeProjectSystem>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _projects = new ConcurrentDictionary<string, ProjectInfo>();
@@ -72,7 +75,7 @@ namespace OmniSharp.Cake
             _logger.LogInformation($"Detecting Cake files in '{_environment.TargetDirectory}'.");
 
             // Nothing to do if there are no Cake files
-            var allCakeFiles = Directory.GetFiles(_environment.TargetDirectory, "*.cake", SearchOption.AllDirectories);
+            var allCakeFiles = _fileSystemHelper.GetFiles("**/*.cake").ToArray();
             if (allCakeFiles.Length == 0)
             {
                 _logger.LogInformation("Could not find any Cake files");
@@ -281,7 +284,7 @@ namespace OmniSharp.Cake
                 assemblyName: $"{name}.dll",
                 language: LanguageNames.CSharp,
                 compilationOptions: cakeScript.Usings == null ? _compilationOptions.Value : _compilationOptions.Value.WithUsings(cakeScript.Usings),
-                parseOptions: new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.Parse, SourceCodeKind.Script),
+                parseOptions: new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script),
                 metadataReferences: GetMetadataReferences(cakeScript.References),
                 // TODO: projectReferences?
                 isSubmission: true,

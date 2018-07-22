@@ -2,13 +2,14 @@
 init:
   - git config --global core.autocrlf true
 image: Visual Studio 2017
+environment:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
 test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
 build_script:
-  - ps: .\build.ps1 All -publish-all -archive
-artifacts:
-  - path: artifacts/package/*.zip
-cache:
-  - tools -> tools/packages.config
+  - ps: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
+after_build:
+  - ps: Get-ChildItem ./artifacts/package/*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 deploy:
   - provider: GitHub
     tag: $(APPVEYOR_REPO_TAG_NAME)
@@ -17,12 +18,19 @@ deploy:
     artifact: /.*\.zip/
     on:
       appveyor_repo_tag: true
+  - provider: AzureBlob
+    storage_account_name: roslynomnisharp
+    storage_access_key:
+      secure: Je3/ykZyjxIqPv9GEVCYlgG9u5cJE6pmmoHWpy7I7XcQr2Qh+oaGYc9GKb0uGmyX2tA/NOm/wWZI9TWZFQST+mAscxyYdP9PrD9OADP3UZckW3hAf8OHvK9gZVMFO+bK
+    container: releases
+    folder: /$(GitVersion_SemVer)/
+    artifact: /.*\.zip/
+    unzip: false
+    set_content_type: false
+    on:
+      branch: master
 notifications:
   - provider: Slack
     auth_token:
       secure: OU7mWtP+JWLRV2Ofq3/QMQbudeN632xLgWb4zMJtOssi2v5HER4qe0GFoj/rnIYOBXd3d/5+glfKG3ijvCU3bA==
     channel: '#integrations'
-environment:
-  BLOB_STORAGE_CONNECTION_STRING:
-    secure: 2rbJfMTsDegeZYML1OhZD4IgQ2ejSZQqUe4sNDFy+7gdKVAXdoSUzIs2bhL4thw5jO83FgxSjeAhZ6QwaoijeLeGGKwcVdogXMLdoNJQno+jLXWglQPoLx33p8KyFoZS
-

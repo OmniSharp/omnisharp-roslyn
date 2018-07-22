@@ -1,9 +1,9 @@
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using OmniSharp.Internal;
 
 namespace OmniSharp.Http
 {
-    class HttpCommandLineApplication : CommandLineApplication
+    internal class HttpCommandLineApplication : CommandLineApplication
     {
         private readonly CommandOption _serverInterface;
         private readonly CommandOption _port;

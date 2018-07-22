@@ -1,54 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using OmniSharp.Models.FilesChanged;
 
 namespace OmniSharp.FileWatching
 {
-    internal class ManualFileSystemWatcher : IFileSystemWatcher, IFileSystemNotifier
+    internal partial class ManualFileSystemWatcher : IFileSystemWatcher, IFileSystemNotifier
     {
         private readonly object _gate = new object();
-        private readonly Dictionary<string, FileSystemNotificationCallback> _callbacks;
+        private readonly Dictionary<string, Callbacks> _callbacksMap;
 
         public ManualFileSystemWatcher()
         {
-            _callbacks = new Dictionary<string, FileSystemNotificationCallback>(StringComparer.OrdinalIgnoreCase);
+            _callbacksMap = new Dictionary<string, Callbacks>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void Notify(string filePath, FileChangeType changeType = FileChangeType.Unspecified)
         {
             lock (_gate)
             {
-                if (_callbacks.TryGetValue(filePath, out var fileCallback))
+                if (_callbacksMap.TryGetValue(filePath, out var fileCallbacks))
                 {
-                    fileCallback(filePath, changeType);
+                    fileCallbacks.Invoke(filePath, changeType);
                 }
 
                 var directoryPath = Path.GetDirectoryName(filePath);
-                if (_callbacks.TryGetValue(directoryPath, out var directoryCallback))
+                if (_callbacksMap.TryGetValue(directoryPath, out var directoryCallbacks))
                 {
-                    directoryCallback(filePath, changeType);
+                    directoryCallbacks.Invoke(filePath, changeType);
                 }
 
                 var extension = Path.GetExtension(filePath);
                 if (!string.IsNullOrEmpty(extension) &&
-                    _callbacks.TryGetValue(extension, out var extensionCallback))
+                    _callbacksMap.TryGetValue(extension, out var extensionCallbacks))
                 {
-                    extensionCallback(filePath, changeType);
+                    extensionCallbacks.Invoke(filePath, changeType);
                 }
             }
         }
 
         public void Watch(string pathOrExtension, FileSystemNotificationCallback callback)
         {
+            if (pathOrExtension == null)
+            {
+                throw new ArgumentNullException(nameof(pathOrExtension));
+            }
+
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
             lock (_gate)
             {
-                if (_callbacks.TryGetValue(pathOrExtension, out var existingCallback))
+                if (!_callbacksMap.TryGetValue(pathOrExtension, out var callbacks))
                 {
-                    callback = callback + existingCallback;
+                    callbacks = new Callbacks();
+                    _callbacksMap.Add(pathOrExtension, callbacks);
                 }
 
-                _callbacks[pathOrExtension] = callback;
+                callbacks.Add(callback);
             }
         }
     }

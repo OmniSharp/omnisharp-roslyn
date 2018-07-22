@@ -11,8 +11,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class HighlightFacts : AbstractSingleRequestHandlerTestFixture<HighlightingService>
     {
-        public HighlightFacts(ITestOutputHelper output)
-            : base(output)
+        public HighlightFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -35,7 +35,7 @@ namespace N1
                 ClassName("C1"),
                 Punctuation("{"),
                 Keyword("int"),
-                Identifier("n"),
+                Field("n"),
                 Operator("="),
                 Keyword("true"),
                 Punctuation(";"),
@@ -62,7 +62,7 @@ namespace N1
                 ClassName("C1"),
                 Punctuation("{"),
                 Keyword("int"),
-                Identifier("n"),
+                Field("n"),
                 Operator("="),
                 Keyword("true"),
                 Punctuation(";"),
@@ -88,7 +88,7 @@ class C1
                 ClassName("C1"),
                 Punctuation("{"),
                 Keyword("string"),
-                Identifier("s"),
+                Field("s"),
                 Operator("="),
                 String("$\""),
                 Punctuation("{"),
@@ -177,20 +177,18 @@ namespace N1
 
         private async Task<HighlightSpan[]> GetHighlightsAsync(TestFile testFile, int? line = null, HighlightClassification? exclude = null)
         {
-            using (var host = CreateOmniSharpHost(testFile))
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            var request = new HighlightRequest
             {
-                var requestHandler = GetRequestHandler(host);
-                var request = new HighlightRequest
-                {
-                    FileName = testFile.FileName,
-                    Lines = line != null ? new[] { line.Value } : null,
-                    ExcludeClassifications = exclude != null ? new[] { exclude.Value } : null
-                };
+                FileName = testFile.FileName,
+                Lines = line != null ? new[] { line.Value } : null,
+                ExcludeClassifications = exclude != null ? new[] { exclude.Value } : null
+            };
 
-                var response = await requestHandler.Handle(request);
+            var response = await requestHandler.Handle(request);
 
-                return response.Highlights;
-            }
+            return response.Highlights;
         }
 
         private static void AssertSyntax(HighlightSpan[] highlights, string code, int startLine, params (string kind, string text)[] expectedTokens)
@@ -201,7 +199,7 @@ namespace N1
 
             for (var i = 0; i < highlights.Length; i++)
             {
-                var token = expectedTokens[i];
+                var (kind, text) = expectedTokens[i];
                 var highlight = highlights[i];
 
                 string line;
@@ -209,12 +207,12 @@ namespace N1
                 do
                 {
                     line = lines[lineNo].ToString();
-                    start = line.IndexOf(token.text, lastIndex);
+                    start = line.IndexOf(text, lastIndex);
                     if (start == -1)
                     {
                         if (++lineNo >= lines.Count)
                         {
-                            throw new Exception($"Could not find token {token.text} in the code");
+                            throw new Exception($"Could not find token {text} in the code");
                         }
 
                         lastIndex = 0;
@@ -222,10 +220,10 @@ namespace N1
                 }
                 while (start == -1);
 
-                end = start + token.text.Length;
+                end = start + text.Length;
                 lastIndex = end;
 
-                Assert.Equal(token.kind, highlight.Kind);
+                Assert.Equal(kind, highlight.Kind);
                 Assert.Equal(lineNo, highlight.StartLine);
                 Assert.Equal(lineNo, highlight.EndLine);
                 Assert.Equal(start, highlight.StartColumn);
@@ -236,6 +234,7 @@ namespace N1
         }
 
         private static (string kind, string text) ClassName(string text) => ("class name", text);
+        private static (string kind, string text) Field(string text) => ("field name", text);
         private static (string kind, string text) Identifier(string text) => ("identifier", text);
         private static (string kind, string text) Keyword(string text) => ("keyword", text);
         private static (string kind, string text) Number(string text) => ("number", text);

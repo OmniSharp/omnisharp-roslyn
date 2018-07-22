@@ -12,7 +12,7 @@ namespace OmniSharp.DotNetTest.Services
     internal class RunTestService : BaseTestService<RunTestRequest, RunTestResponse>
     {
         [ImportingConstructor]
-        public RunTestService(OmniSharpWorkspace workspace, DotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
+        public RunTestService(OmniSharpWorkspace workspace, IDotNetCliService dotNetCli, IEventEmitter eventEmitter, ILoggerFactory loggerFactory)
             : base(workspace, dotNetCli, eventEmitter, loggerFactory)
         {
         }

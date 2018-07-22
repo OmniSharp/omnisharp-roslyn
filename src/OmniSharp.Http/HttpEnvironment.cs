@@ -1,6 +1,6 @@
 namespace OmniSharp.Http
 {
-    class HttpEnvironment
+    internal class HttpEnvironment
     {
         public int Port { get; set; }
     }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp;
+using OmniSharp.Eventing;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -23,20 +24,27 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             ILoggerFactory loggerFactory,
             ISharedTextWriter sharedTextWriter,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IEventEmitter eventEmitter,
+            IDotNetCliService dotNetCliService = null)
         {
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
 
             _services[typeof(IOptionsMonitor<OmniSharpOptions>)] = new OptionsMonitor<OmniSharpOptions>(
-                new IConfigureOptions<OmniSharpOptions>[] {
-                    new ConfigureOptions<OmniSharpOptions>(c => ConfigurationBinder.Bind(configuration, c))
-                },
-                Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>()
+                new OptionsFactory<OmniSharpOptions>(
+                    new IConfigureOptions<OmniSharpOptions>[] {
+                        new ConfigureOptions<OmniSharpOptions>(c => ConfigurationBinder.Bind(configuration, c))
+                    },
+                    Enumerable.Empty<IPostConfigureOptions<OmniSharpOptions>>()
+                ),
+                Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>(),
+                new OptionsCache<OmniSharpOptions>()
             );
 
             var assemblyLoader = new AssemblyLoader(loggerFactory);
             var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader, allowMonoPaths: false);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            dotNetCliService = dotNetCliService ?? new DotNetCliService(loggerFactory, eventEmitter);
 
             _services[typeof(ILoggerFactory)] = loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = environment;
@@ -44,6 +52,8 @@ namespace TestUtility
             _services[typeof(IMemoryCache)] = memoryCache;
             _services[typeof(ISharedTextWriter)] = sharedTextWriter;
             _services[typeof(IMSBuildLocator)] = msbuildLocator;
+            _services[typeof(IEventEmitter)] = eventEmitter;
+            _services[typeof(IDotNetCliService)] = dotNetCliService;
         }
 
         ~TestServiceProvider()

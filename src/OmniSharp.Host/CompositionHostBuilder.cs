@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
@@ -16,27 +17,23 @@ using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Services;
 
 namespace OmniSharp
 {
     public class CompositionHostBuilder
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IOmniSharpEnvironment _environment;
-        private readonly IEventEmitter _eventEmitter;
         private readonly IEnumerable<Assembly> _assemblies;
+        private readonly IEnumerable<ExportDescriptorProvider> _exportDescriptorProviders;
 
         public CompositionHostBuilder(
             IServiceProvider serviceProvider,
-            IOmniSharpEnvironment environment,
-            IEventEmitter eventEmitter,
-            IEnumerable<Assembly> assemblies = null)
+            IEnumerable<Assembly> assemblies = null,
+            IEnumerable<ExportDescriptorProvider> exportDescriptorProviders = null)
         {
             _serviceProvider = serviceProvider;
-            _environment = environment;
-            _eventEmitter = eventEmitter;
             _assemblies = assemblies ?? Array.Empty<Assembly>();
+            _exportDescriptorProviders = exportDescriptorProviders ?? Array.Empty<ExportDescriptorProvider>();
         }
 
         public CompositionHost Build()
@@ -45,6 +42,9 @@ namespace OmniSharp
             var memoryCache = _serviceProvider.GetRequiredService<IMemoryCache>();
             var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             var assemblyLoader = _serviceProvider.GetRequiredService<IAssemblyLoader>();
+            var environment = _serviceProvider.GetRequiredService<IOmniSharpEnvironment>();
+            var eventEmitter = _serviceProvider.GetRequiredService<IEventEmitter>();
+            var dotNetCliService = _serviceProvider.GetRequiredService<IDotNetCliService>();
             var config = new ContainerConfiguration();
 
             var fileSystemWatcher = new ManualFileSystemWatcher();
@@ -64,13 +64,19 @@ namespace OmniSharp
                 .WithProvider(MefValueProvider.From<IFileSystemWatcher>(fileSystemWatcher))
                 .WithProvider(MefValueProvider.From(memoryCache))
                 .WithProvider(MefValueProvider.From(loggerFactory))
-                .WithProvider(MefValueProvider.From(_environment))
+                .WithProvider(MefValueProvider.From(environment))
                 .WithProvider(MefValueProvider.From(options.CurrentValue))
                 .WithProvider(MefValueProvider.From(options.CurrentValue.FormattingOptions))
                 .WithProvider(MefValueProvider.From(assemblyLoader))
+                .WithProvider(MefValueProvider.From(dotNetCliService))
                 .WithProvider(MefValueProvider.From(metadataHelper))
                 .WithProvider(MefValueProvider.From(msbuildLocator))
-                .WithProvider(MefValueProvider.From(_eventEmitter ?? NullEventEmitter.Instance));
+                .WithProvider(MefValueProvider.From(eventEmitter));
+
+            foreach (var exportDescriptorProvider in _exportDescriptorProviders)
+            {
+                config = config.WithProvider(exportDescriptorProvider);
+            }
 
             var parts = _assemblies
                 .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
@@ -132,14 +138,19 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             }
         }
 
-        public static IServiceProvider CreateDefaultServiceProvider(IConfiguration configuration, IServiceCollection services = null)
+        public static IServiceProvider CreateDefaultServiceProvider(IOmniSharpEnvironment environment, IConfiguration configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
         {
             services = services ?? new ServiceCollection();
+
+            services.AddSingleton(environment);
+            services.AddSingleton(eventEmitter);
 
             // Caching
             services.AddSingleton<IMemoryCache, MemoryCache>();
             services.AddSingleton<IAssemblyLoader, AssemblyLoader>();
             services.AddOptions();
+
+            services.AddSingleton<IDotNetCliService, DotNetCliService>();
 
             // MSBuild
             services.AddSingleton<IMSBuildLocator>(sp =>
@@ -160,8 +171,6 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
 
             return new CompositionHostBuilder(
                 _serviceProvider,
-                _environment,
-                _eventEmitter,
                 _assemblies.Concat(assemblies).Distinct()
             );
         }
@@ -170,8 +179,6 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
         {
             return new CompositionHostBuilder(
                 _serviceProvider,
-                _environment,
-                _eventEmitter,
                 _assemblies.Concat(assemblies).Distinct()
             );
         }

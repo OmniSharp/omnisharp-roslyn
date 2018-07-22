@@ -10,8 +10,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class RenameFacts : AbstractSingleRequestHandlerTestFixture<RenameService>
     {
-        public RenameFacts(ITestOutputHelper output)
-            : base(output)
+        public RenameFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+            : base(output, sharedOmniSharpHostFixture)
         {
         }
 
@@ -263,10 +263,8 @@ public class Program
             bool applyTextChanges = true,
             bool updateBuffer = false)
         {
-            using (var host = CreateOmniSharpHost(testFiles))
-            {
-                return await PerformRename(host, testFiles, renameTo, wantsTextChanges, applyTextChanges, updateBuffer);
-            }
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFiles);
+            return await PerformRename(SharedOmniSharpTestHost, testFiles, renameTo, wantsTextChanges, applyTextChanges, updateBuffer);
         }
 
         private Task<RenameResponse> PerformRename(

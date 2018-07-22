@@ -17,10 +17,10 @@ namespace OmniSharp.MSBuild
     {
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
-        private readonly DotNetCliService _dotNetCli;
+        private readonly IDotNetCliService _dotNetCli;
         private readonly MSBuildOptions _options;
 
-        public PackageDependencyChecker(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, DotNetCliService dotNetCli, MSBuildOptions options)
+        public PackageDependencyChecker(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IDotNetCliService dotNetCli, MSBuildOptions options)
         {
             _logger = loggerFactory.CreateLogger<PackageDependencyChecker>();
             _eventEmitter = eventEmitter;

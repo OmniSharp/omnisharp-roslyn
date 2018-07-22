@@ -44,9 +44,9 @@ Param(
     [string]$Target = "Default",
     [string]$Script = "build.cake",
     [ValidateSet("Release", "Debug")]
-    [string]$Configuration = "Release",
+    [string]$Configuration = "Debug",
     [ValidateSet("Quiet", "Minimal", "Normal", "Verbose", "Diagnostic")]
-    [string]$Verbosity = "Verbose",
+    [string]$Verbosity = "Normal",
     [switch]$Experimental = $true,
     [Alias("DryRun","Noop")]
     [switch]$WhatIf,

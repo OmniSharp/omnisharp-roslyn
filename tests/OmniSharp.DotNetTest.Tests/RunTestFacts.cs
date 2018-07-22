@@ -21,7 +21,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.Test",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -31,7 +32,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest1",
                 testFramework: "xunit",
-                shouldPass: false);
+                shouldPass: false,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -41,7 +43,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -51,7 +54,8 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.UsesDisplayName",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
         }
 
         [Fact]
@@ -61,9 +65,39 @@ namespace OmniSharp.DotNetTest.Tests
                 XunitTestProject,
                 methodName: "Main.Test.MainTest.TestWithSimilarName",
                 testFramework: "xunit",
-                shouldPass: true);
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
 
             Assert.Single(response.Results);
+        }
+
+        [Fact]
+        public async Task RunXunitFailingTest()
+        {
+            var response = await RunDotNetTestAsync(
+                XunitTestProject,
+                methodName: "Main.Test.MainTest.FailingTest",
+                testFramework: "xunit",
+                shouldPass: false,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].ErrorMessage);
+            Assert.NotEmpty(response.Results[0].ErrorStackTrace);
+        }
+
+        [Fact]
+        public async Task RunXunitStandardOutputIsReturned()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.MainTest.CheckStandardOutput",
+                testFramework: "xunit",
+                shouldPass: true,
+                targetFrameworkVersion: ".NETCoreApp, Version=1.1");
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].StandardOutput);
         }
 
         [Fact]
@@ -107,6 +141,33 @@ namespace OmniSharp.DotNetTest.Tests
         }
 
         [Fact]
+        public async Task RunNunitFailingTest()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.MainTest.FailingTest",
+                testFramework: "nunit",
+                shouldPass: false);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].ErrorMessage);
+            Assert.NotEmpty(response.Results[0].ErrorStackTrace);
+        }
+
+        [Fact]
+        public async Task RunNunitStandardOutputIsReturned()
+        {
+            var response = await RunDotNetTestAsync(
+                NUnitTestProject,
+                methodName: "Main.Test.MainTest.CheckStandardOutput",
+                testFramework: "nunit",
+                shouldPass: true);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].StandardOutput);
+        }
+
+        [Fact]
         public async Task RunMSTestTest()
         {
             await RunDotNetTestAsync(
@@ -134,6 +195,33 @@ namespace OmniSharp.DotNetTest.Tests
                 methodName: "Main.Test.MainTest.DataDrivenTest2",
                 testFramework: "mstest",
                 shouldPass: true);
+        }
+
+        [Fact]
+        public async Task RunMSTestFailingTest()
+        {
+            var response = await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.FailingTest",
+                testFramework: "mstest",
+                shouldPass: false);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].ErrorMessage);
+            Assert.NotEmpty(response.Results[0].ErrorStackTrace);
+        }
+
+        [Fact]
+        public async Task RunMSTestStandardOutputIsReturned()
+        {
+            var response = await RunDotNetTestAsync(
+                MSTestProject,
+                methodName: "Main.Test.MainTest.CheckStandardOutput",
+                testFramework: "mstest",
+                shouldPass: true);
+
+            Assert.Single(response.Results);
+            Assert.NotEmpty(response.Results[0].StandardOutput);
         }
     }
 }

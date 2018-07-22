@@ -74,9 +74,10 @@ namespace OmniSharp.Http.Tests
         [Export(typeof(IProjectSystem))]
         class FakeProjectSystem : IProjectSystem
         {
-            public string Key { get { return "Fake"; } }
-            public string Language { get { return LanguageNames.CSharp; } }
+            public string Key { get; } = "Fake";
+            public string Language { get; } = LanguageNames.CSharp;
             public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
+            public bool EnabledByDefault { get; } = true;
 
             public Task<object> GetWorkspaceModelAsync(WorkspaceInformationRequest request)
             {
@@ -118,8 +119,8 @@ namespace OmniSharp.Http.Tests
         {
             var environment = new OmniSharpEnvironment();
             var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
-            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
-            var compositionHost = new CompositionHostBuilder(serviceProvider, environment, NullEventEmitter.Instance)
+            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(), NullEventEmitter.Instance);
+            var compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithAssemblies(assemblies)
                 .Build();
 

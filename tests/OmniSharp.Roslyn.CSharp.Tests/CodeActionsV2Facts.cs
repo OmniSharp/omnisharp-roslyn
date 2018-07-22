@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.V2;
+using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;
@@ -139,7 +140,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         [|Console.Write(""should be using System;"");|]
                     }
                 }";
-
             const string expected =
                 @"public class Class1
                 {
@@ -153,9 +153,47 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Console.Write(""should be using System;"");
                     }
                 }";
-
             var response = await RunRefactoringAsync(code, "Extract Method");
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_generate_type_and_return_name_of_new_file()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
+                var buffer = await document.GetTextAsync();
+                var path = document.FilePath;
+
+                var request = new RunCodeActionRequest
+                {
+                    Line = 8,
+                    Column = 12,
+                    FileName = path,
+                    Buffer = buffer.ToString(),
+                    Identifier = "Generate class 'Z' in new file",
+                    WantsTextChanges = true,
+                    WantsAllCodeActionOperations = true
+                };
+
+                var response = await requestHandler.Handle(request);
+                var changes = response.Changes.ToArray();
+                Assert.Equal(2, changes.Length);
+                Assert.NotNull(changes[0].FileName);
+
+                Assert.True(File.Exists(changes[0].FileName));
+                Assert.Equal(@"namespace ConsoleApplication
+{
+    internal class Z
+    {
+    }
+}".Replace("\r\n", "\n"), ((ModifiedFileResponse)changes[0]).Changes.First().NewText);
+
+                Assert.NotNull(changes[1].FileName);
+            }
         }
 
         [Fact]

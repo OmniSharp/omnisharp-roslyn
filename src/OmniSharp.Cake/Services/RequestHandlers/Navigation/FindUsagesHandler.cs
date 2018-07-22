@@ -17,9 +17,13 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
         {
         }
 
-        protected override Task<QuickFixResponse> TranslateResponse(QuickFixResponse response, FindUsagesRequest request)
+        protected override async Task<QuickFixResponse> TranslateResponse(QuickFixResponse response, FindUsagesRequest request)
         {
-            return response.TranslateAsync(Workspace, request);
+            response = await response.TranslateAsync(Workspace, request, removeGenerated: true);
+
+            return request.OnlyThisFile ?
+                response.OnlyThisFile(request.FileName) :
+                response;
         }
     }
 }
