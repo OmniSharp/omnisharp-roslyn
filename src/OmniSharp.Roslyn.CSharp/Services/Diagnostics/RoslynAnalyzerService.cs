@@ -95,8 +95,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             var allAnalyzers = this.providers
                 .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()))
-                .ToImmutableArray();
+                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
 
             if (!allAnalyzers.Any())
                 return ImmutableArray<DiagnosticLocation>.Empty;
@@ -104,7 +103,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var compiled = await project.GetCompilationAsync();
 
             var analysis = await compiled
-                .WithAnalyzers(allAnalyzers)
+                .WithAnalyzers(allAnalyzers.ToImmutableArray())
                 .GetAllDiagnosticsAsync();
 
             return analysis.Select(x => AsDiagnosticLocation(x, project));
