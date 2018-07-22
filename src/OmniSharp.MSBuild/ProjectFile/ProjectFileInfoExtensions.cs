@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -43,7 +41,8 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo)
         {
-            // SAVPEK TODO: Add analyzer references here!
+            var analyzerReferences = ResolveAnalyzerReferencesForProject(projectFileInfo);
+
             return ProjectInfo.Create(
                 id: projectFileInfo.Id,
                 version: VersionStamp.Create(),
@@ -53,19 +52,23 @@ namespace OmniSharp.MSBuild.ProjectFile
                 filePath: projectFileInfo.FilePath,
                 outputFilePath: projectFileInfo.TargetPath,
                 compilationOptions: projectFileInfo.CreateCompilationOptions(),
-                analyzerReferences: new AnalyzerReference[] { new AnalyzerFileReference(@"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll", new AnalyzerAssemblyLoader()) });
-        }
-    }
-
-    public class AnalyzerAssemblyLoader : IAnalyzerAssemblyLoader
-    {
-        public void AddDependencyLocation(string fullPath)
-        {
+                analyzerReferences: analyzerReferences);
         }
 
-        public Assembly LoadFromPath(string fullPath)
+        private static IEnumerable<AnalyzerFileReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo)
         {
-            return Assembly.LoadFrom(@"C:\RoslynAnalyzers\Roslynator.CSharp.Analyzers.dll");
+            return projectFileInfo.Analyzers
+                .GroupBy(x => Path.GetDirectoryName(x))
+                .Select(singleAnalyzerPackageGroup =>
+                {
+                    // Is there better way to figure out entry assembly for specific nuget analyzer package?
+                    var analyzerMainAssembly = singleAnalyzerPackageGroup.Single(x => x.EndsWith("Analyzers.dll") || x.EndsWith("Analyzer.dll"));
+
+                    var assemblyLoader = new AnalyzerAssemblyLoader();
+                    singleAnalyzerPackageGroup.ToList().ForEach(x => assemblyLoader.AddDependencyLocation(x));
+
+                    return new AnalyzerFileReference(analyzerMainAssembly, assemblyLoader);
+                });
         }
     }
 }
