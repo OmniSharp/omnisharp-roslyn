@@ -10,15 +10,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Services;
 
-namespace OmniSharp.MicellanousFiles
+namespace OmniSharp.MiscellanousFiles
 {
-    [DisplayName(nameof(MiscellanousFiles))]
     [ExtensionOrder(After = nameof(ProjectSystem))]
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportIProjectSystem(nameof(MiscellanousFiles)), Shared]
     public class MiscellanousFiles : IProjectSystem
     {
         private readonly string miscFileExtension = ".cs";

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Threading.Tasks;
@@ -11,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Models;
@@ -21,9 +21,8 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
-    [DisplayName(nameof(ProjectSystem))]
     [Export(typeof(ProjectSystem))]
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportIProjectSystem(nameof(ProjectSystem)), Shared]
     public class ProjectSystem : IProjectSystem
     {
         private readonly IOmniSharpEnvironment _environment;

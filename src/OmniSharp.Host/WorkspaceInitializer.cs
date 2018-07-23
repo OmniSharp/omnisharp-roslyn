@@ -29,8 +29,8 @@ namespace OmniSharp
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
-            var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, DisplayNameAttribute>(projectSystems, attribute => attribute.DisplayName);
-           
+            var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, Attribute>(projectSystems, _=> null);
+
             foreach (var projectSystem in orderedProjectSystems)
             {
                 try

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -17,14 +16,14 @@ using OmniSharp.Cake.Services;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Cake
 {
-    [DisplayName(nameof(CakeProjectSystem))]
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportIProjectSystem(nameof(CakeProjectSystem)), Shared]
     public class CakeProjectSystem : IProjectSystem
     {
         private readonly OmniSharpWorkspace _workspace;

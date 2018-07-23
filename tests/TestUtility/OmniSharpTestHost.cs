@@ -14,6 +14,7 @@ using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.Mef;
+using OmniSharp.MiscellanousFiles;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -39,6 +40,7 @@ namespace TestUtility
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
+            typeof(MiscellanousFiles).GetTypeInfo().Assembly // OmniSharp.MiscellanousFiles
         });
 
         private readonly TestServiceProvider _serviceProvider;

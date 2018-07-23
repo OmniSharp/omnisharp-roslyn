@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -13,13 +12,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
 {
-    [DisplayName(nameof(ScriptProjectSystem))]
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportIProjectSystem(nameof(ScriptProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
         private const string CsxExtension = ".csx";

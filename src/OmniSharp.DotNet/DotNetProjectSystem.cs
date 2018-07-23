@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -18,14 +17,14 @@ using OmniSharp.DotNet.Tools;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNet
 {
-    [DisplayName(nameof(DotNetProjectSystem))]
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportIProjectSystem(nameof(DotNetProjectSystem)), Shared]
     public class DotNetProjectSystem : IProjectSystem
     {
         private const string CompilationConfiguration = "Debug";
