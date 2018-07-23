@@ -17,8 +17,8 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MiscellanousFiles
 {
-    [ExtensionOrder(After = nameof(ProjectSystem))]
-    [ExportIProjectSystem(nameof(MiscellanousFiles)), Shared]
+    //[ExtensionOrder(After = nameof(ProjectSystem))]
+    [ExportIProjectSystem("Misc files", after: nameof(ProjectSystem)), Shared]
     public class MiscellanousFiles : IProjectSystem
     {
         private readonly string miscFileExtension = ".cs";
