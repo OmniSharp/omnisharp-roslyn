@@ -55,14 +55,17 @@ namespace OmniSharp.MSBuild.ProjectFile
                 analyzerReferences: analyzerReferences);
         }
 
-        private static IEnumerable<AnalyzerFileReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo)
+        private static IEnumerable<AnalyzerReference> ResolveAnalyzerReferencesForProject(ProjectFileInfo projectFileInfo)
         {
             return projectFileInfo.Analyzers
                 .GroupBy(x => Path.GetDirectoryName(x))
                 .Select(singleAnalyzerPackageGroup =>
                 {
-                    // Is there better way to figure out entry assembly for specific nuget analyzer package?
-                    var analyzerMainAssembly = singleAnalyzerPackageGroup.Single(x => x.EndsWith("Analyzers.dll") || x.EndsWith("Analyzer.dll"));
+                    // Is there better way to figure out entry assembly for specific nuget analyzer package? And is there even entry assembly or is better way to just lookup all referenced assemblies?
+                    var analyzerMainAssembly = singleAnalyzerPackageGroup.SingleOrDefault(x => x.EndsWith("Analyzers.dll") || x.EndsWith("Analyzer.dll"));
+
+                    if (analyzerMainAssembly == null)
+                        return (AnalyzerReference)new UnresolvedAnalyzerReference(singleAnalyzerPackageGroup.First());
 
                     var assemblyLoader = new AnalyzerAssemblyLoader();
                     singleAnalyzerPackageGroup.ToList().ForEach(x => assemblyLoader.AddDependencyLocation(x));

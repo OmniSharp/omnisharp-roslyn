@@ -51,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .Select(async x => new
                         {
                             Project = x.Key,
-                            Result = await Analyze(x.Value)
+                            Result = await Analyze(x.Value, token)
                         }));
 
                 analyzerResults
@@ -91,7 +91,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             });
         }
 
-        private async Task<IEnumerable<DiagnosticLocation>> Analyze(Project project)
+        private async Task<IEnumerable<DiagnosticLocation>> Analyze(Project project, CancellationToken token)
         {
             var allAnalyzers = this.providers
                 .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
@@ -100,11 +100,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             if (!allAnalyzers.Any())
                 return ImmutableArray<DiagnosticLocation>.Empty;
 
-            var compiled = await project.GetCompilationAsync();
+            var compiled = await project.GetCompilationAsync(token);
 
             var analysis = await compiled
                 .WithAnalyzers(allAnalyzers.ToImmutableArray())
-                .GetAllDiagnosticsAsync();
+                .GetAllDiagnosticsAsync(token);
 
             return analysis.Select(x => AsDiagnosticLocation(x, project));
         }
