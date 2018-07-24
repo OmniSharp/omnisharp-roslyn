@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
@@ -19,12 +20,12 @@ namespace OmniSharp.MiscellanousFiles.Tests
         [Fact]
         public async Task Returns_only_semantic_diagnotics()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var filePath = testProject.AddDisposableFile("a.cs", "class C { int n = true; }");
-                var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
-                await service.Handle(new[]
+                var filePath = testProject.AddDisposableFile("a.cs", "class C { b a = new b(); int n  }");
+                var fileChangedService = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
+                await fileChangedService.Handle(new[]
                 {
                     new FilesChangedRequest
                     {
@@ -35,11 +36,11 @@ namespace OmniSharp.MiscellanousFiles.Tests
 
                 await Task.Delay(2000);
 
-                var service1 = host.GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
-                var quickFixes = await service1.Handle(new CodeCheckRequest());
+                var codeCheckService = host.GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
+                var quickFixes = await codeCheckService.Handle(new CodeCheckRequest());
 
-                // back off for 2 seconds to let the watcher and workspace process new projects
                 Assert.Single(quickFixes.QuickFixes);
+                Assert.Equal("; expected", quickFixes.QuickFixes.First().Text);
             }
         }
     }
