@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Composition;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
@@ -17,8 +18,8 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MiscellanousFiles
 {
-    //[ExtensionOrder(After = nameof(ProjectSystem))]
-    [ExportIProjectSystem("MiscellanousFiles", after: nameof(ProjectSystem)), Shared]
+    [ExtensionOrder(After = nameof(ProjectSystem))]
+    [ExportIProjectSystem("MiscellanousFiles"), Shared]
     public class MiscellanousFiles : IProjectSystem
     {
         private readonly string miscFileExtension = ".cs";
@@ -35,13 +36,14 @@ namespace OmniSharp.MiscellanousFiles
         private readonly ILogger _logger;
 
         [ImportingConstructor]
-        public MiscellanousFiles(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper, ILoggerFactory loggerFactory, [Import] ProjectSystem projectSystem)
+        public MiscellanousFiles(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper,
+            ILoggerFactory loggerFactory, [ImportMany] IEnumerable<Lazy<IProjectSystem, ProjectSystemMetadata>> projectSystems)
         {
             _workspace = workspace;
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<MiscellanousFiles>();
-            _projectSystem = projectSystem;
+            _projectSystem = (ProjectSystem)projectSystems.Where(ps => ps.Metadata.Name == nameof(ProjectSystem)).First().Value;
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)

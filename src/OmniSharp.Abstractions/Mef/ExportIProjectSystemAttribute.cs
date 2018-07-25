@@ -10,14 +10,10 @@ namespace OmniSharp.Mef
     public class ExportIProjectSystemAttribute: ExportAttribute
     {
         public string Name { get; }
-        public string Before { get; }
-        public string After { get; }
-
-        public ExportIProjectSystemAttribute(string name, string before="", string after="") : base(typeof(IProjectSystem))
+        
+        public ExportIProjectSystemAttribute(string name) : base(typeof(IProjectSystem))
         {
             Name = name;
-            Before = before;
-            After = after;
         }
     }
 }

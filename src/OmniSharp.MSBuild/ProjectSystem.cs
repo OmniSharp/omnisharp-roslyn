@@ -21,7 +21,6 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
-    [Export(typeof(ProjectSystem))]
     [ExportIProjectSystem(nameof(ProjectSystem)), Shared]
     public class ProjectSystem : IProjectSystem
     {

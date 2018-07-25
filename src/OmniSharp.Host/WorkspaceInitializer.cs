@@ -30,7 +30,7 @@ namespace OmniSharp
 
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
-            var projectSystems = compositionHost.GetExports<Lazy<IProjectSystem, OrderableMetadata>>();
+            var projectSystems = compositionHost.GetExports<Lazy<IProjectSystem, ProjectSystemMetadata>>();
             var ps = projectSystems.Select(n => n.Value);
             var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, ExportIProjectSystemAttribute>(ps, eps => eps.Name);
 
