@@ -1,6 +1,7 @@
-﻿using OmniSharp.Services;
-using System;
+﻿using System;
 using System.Composition;
+using Microsoft.CodeAnalysis;
+using OmniSharp.Services;
 
 namespace OmniSharp.Mef
 {
@@ -18,10 +19,5 @@ namespace OmniSharp.Mef
             Before = before;
             After = after;
         }
-    }
-
-    public class ProjectSystemMetadata 
-    {
-         string Name { get; set; }
     }
 }
