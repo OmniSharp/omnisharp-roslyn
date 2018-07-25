@@ -1,8 +1,10 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using OmniSharp.Models.CodeCheck;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
@@ -10,36 +12,52 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class RoslynAnalyzerFacts : AbstractTestFixture
+    public class RoslynAnalyzerFacts : AbstractSingleRequestHandlerTestFixture<CodeCheckService>
     {
+        protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
+
         public class TestAnalyzerReference : AnalyzerReference
         {
+            private readonly Guid _id;
+
+            public TestAnalyzerReference(Guid testAnalyzerId)
+            {
+                _id = testAnalyzerId;
+            }
+
             public override string FullPath => null;
-            public override object Id => Display;
-            public override string Display => nameof(TestAnalyzerReference);
+            public override object Id => _id.ToString();
+            public override string Display => $"{nameof(TestAnalyzerReference)}_{Id}";
 
             public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(string language)
             {
-                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer() }.ToImmutableArray();
+                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer(Id.ToString()) }.ToImmutableArray();
             }
 
             public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForAllLanguages()
             {
-                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer() }.ToImmutableArray();
+                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer(Id.ToString()) }.ToImmutableArray();
             }
         }
 
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
         public class TestDiagnosticAnalyzer : DiagnosticAnalyzer
         {
-            private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(
-                nameof(TestDiagnosticAnalyzer),
+            public TestDiagnosticAnalyzer(string id)
+            {
+                this.id = id;
+            }
+
+            private DiagnosticDescriptor Rule => new DiagnosticDescriptor(
+                this.id,
                 "Testtitle",
                 "Type name '{0}' contains lowercase letters",
                 "Naming",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true
             );
+
+            private readonly string id;
 
             public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             {
@@ -51,7 +69,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
             }
 
-            private static void AnalyzeSymbol(SymbolAnalysisContext context)
+            private void AnalyzeSymbol(SymbolAnalysisContext context)
             {
                 var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
                 if (namedTypeSymbol.Name == "_this_is_invalid_test_class_name")
@@ -77,7 +95,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
-            var testAnalyzerRef = new TestAnalyzerReference();
+            var analyzerId = Guid.NewGuid();
+
+            var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
 
             TestHelpers.AddProjectToWorkspace(
                 SharedOmniSharpTestHost.Workspace,
@@ -86,38 +106,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new[] { testFile },
                 analyzerRefs: new AnalyzerReference []{ testAnalyzerRef }.ToImmutableArray());
 
-            var analyzerService = SharedOmniSharpTestHost.GetExport<RoslynAnalyzerService>();
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
-            // TODO: This is hack, requires real wait for result routine.
-            await Task.Delay(5000);
-
-            Assert.Single(
-                analyzerService.GetCurrentDiagnosticResults().Where(x => x.Id == nameof(TestDiagnosticAnalyzer)));
-        }
-
-        [Fact]
-        public async Task When_custom_analyzer_doesnt_have_match_then_dont_return_it()
-        {
-            var testFile = new TestFile("testFile.cs", "class SomeClass { int n = true; }");
-
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
-
-            var testAnalyzerRef = new TestAnalyzerReference();
-
-            TestHelpers.AddProjectToWorkspace(
-                SharedOmniSharpTestHost.Workspace,
-                "project.csproj",
-                new[] { "netcoreapp2.1" },
-                new[] { testFile },
-                analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
-
-            var analyzerService = SharedOmniSharpTestHost.GetExport<RoslynAnalyzerService>();
-
-            // TODO: This is hack, requires real wait for result routine.
-            await Task.Delay(5000);
-
-            Assert.Empty(
-                analyzerService.GetCurrentDiagnosticResults().Where(x => x.Id == nameof(TestDiagnosticAnalyzer)));
+            await AssertForEventuallyMatch(
+                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains(analyzerId.ToString())));
         }
 
         [Fact]
@@ -133,13 +125,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new[] { "netcoreapp2.1" },
                 new[] { testFile });
 
-            var analyzerService = SharedOmniSharpTestHost.GetExport<RoslynAnalyzerService>();
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
-            // TODO: This is hack, requires real wait for result routine.
-            await Task.Delay(5000);
+            await AssertForEventuallyMatch(
+                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains("CS5001")));
+        }
 
-            Assert.Single(
-                analyzerService.GetCurrentDiagnosticResults().Where(x => x.Id == "CS5001"));
+        private static async Task<T> AssertForEventuallyMatch<T>(Task<T> func, Predicate<T> check, int retryCount = 50)
+        {
+            while (retryCount-- > 0)
+            {
+                var result = await func;
+
+                if (check(result))
+                    return result;
+
+                await Task.Delay(200);
+            }
+
+            throw new InvalidOperationException("Timeout expired before meaningfull result returned.");
         }
     }
 }
