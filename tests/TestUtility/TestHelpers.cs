@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
@@ -36,7 +38,7 @@ namespace TestUtility
             workspace.AddDocument(documentInfo);
         }
 
-        public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles)
+        public static void AddProjectToWorkspace(OmniSharpWorkspace workspace, string filePath, string[] frameworks, TestFile[] testFiles, ImmutableArray<AnalyzerReference> analyzerRefs = default)
         {
             var versionStamp = VersionStamp.Create();
             var references = GetReferences();
@@ -51,7 +53,8 @@ namespace TestUtility
                     assemblyName: "AssemblyName",
                     language: LanguageNames.CSharp,
                     filePath: filePath,
-                    metadataReferences: references);
+                    metadataReferences: references,
+                    analyzerReferences: analyzerRefs);
 
                 workspace.AddProject(projectInfo);
 

@@ -58,7 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .ToList()
                     .ForEach(result => _results[result.Project] = result.Result);
 
-                await Task.Delay(1500, token);
+                await Task.Delay(500, token);
             }
         }
 

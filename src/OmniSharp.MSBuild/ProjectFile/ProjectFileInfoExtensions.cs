@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Newtonsoft.Json;
 using OmniSharp.Helpers;
 
 namespace OmniSharp.MSBuild.ProjectFile
