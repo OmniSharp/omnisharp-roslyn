@@ -18,15 +18,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         public class TestAnalyzerReference : AnalyzerReference
         {
-            private readonly Guid _id;
+            private readonly string _id;
 
-            public TestAnalyzerReference(Guid testAnalyzerId)
+            public TestAnalyzerReference(string testAnalyzerId)
             {
                 _id = testAnalyzerId;
             }
 
             public override string FullPath => null;
-            public override object Id => _id.ToString();
+            public override object Id => _id;
             public override string Display => $"{nameof(TestAnalyzerReference)}_{Id}";
 
             public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(string language)
@@ -95,7 +95,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
-            var analyzerId = Guid.NewGuid();
+            var analyzerId = "TS1000".ToString();
 
             var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
 
@@ -107,9 +107,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 analyzerRefs: new AnalyzerReference []{ testAnalyzerRef }.ToImmutableArray());
 
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
-
             await AssertForEventuallyMatch(
-                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains(analyzerId.ToString())));
+                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains("CS5001")));
         }
 
         [Fact]
@@ -131,7 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains("CS5001")));
         }
 
-        private static async Task<T> AssertForEventuallyMatch<T>(Task<T> func, Predicate<T> check, int retryCount = 50)
+        private static async Task<T> AssertForEventuallyMatch<T>(Task<T> func, Predicate<T> check, int retryCount = 10)
         {
             while (retryCount-- > 0)
             {
@@ -140,7 +139,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 if (check(result))
                     return result;
 
-                await Task.Delay(200);
+                await Task.Delay(1000);
             }
 
             throw new InvalidOperationException("Timeout expired before meaningfull result returned.");

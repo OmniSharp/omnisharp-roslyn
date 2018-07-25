@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -20,10 +19,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class RoslynAnalyzerService
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
-        private ConcurrentDictionary<string, Project> _workQueue = new ConcurrentDictionary<string, Project>();
+        private ConcurrentDictionary<string, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<string, (DateTime modified, Project project)>();
         private readonly ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>> _results =
             new ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>>();
         private readonly IEnumerable<ICodeActionProvider> providers;
+
+        private int throttlingMs = 1000;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
@@ -44,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             while (!token.IsCancellationRequested)
             {
-                var currentWork = GetCurrentWork();
+                var currentWork = GetThrottledWork();
 
                 var analyzerResults = await Task
                     .WhenAll(currentWork
@@ -62,13 +63,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private ConcurrentDictionary<string, Project> GetCurrentWork()
+        private IDictionary<string, Project> GetThrottledWork()
         {
             lock (_workQueue)
             {
-                var currentWork = _workQueue;
-                _workQueue = new ConcurrentDictionary<string, Project>();
-                return currentWork;
+                var currentWork = _workQueue
+                    .Where(x => x.Value.modified.AddMilliseconds(this.throttlingMs) < DateTime.UtcNow)
+                    .ToList();
+
+                currentWork.Select(x => x.Key).ToList().ForEach(key => _workQueue.TryRemove(key, out _));
+
+                return currentWork.ToDictionary(x => x.Key, x => x.Value.project);
             }
         }
 
@@ -87,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             projects.ToList().ForEach(project =>
             {
-                _workQueue.TryAdd(project.Id.ToString(), project);
+                _workQueue.AddOrUpdate(project.Id.ToString(), (modified: DateTime.UtcNow, project: project), (key, old) => (modified: DateTime.UtcNow, project: project));
             });
         }
 
