@@ -138,7 +138,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             // TODO: This is hack, requires real wait for result routine.
             await Task.Delay(5000);
 
-            Assert.Empty(
+            Assert.Single(
                 analyzerService.GetCurrentDiagnosticResults().Where(x => x.Id == "CS5001"));
         }
     }
