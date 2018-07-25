@@ -5,7 +5,7 @@
     <MSBuildPackageVersion>15.7.179</MSBuildPackageVersion>
     <NuGetPackageVersion>4.7.0</NuGetPackageVersion>
     <RoslynPackageVersion>2.8.2</RoslynPackageVersion>
-    <XunitPackageVersion>2.3.1</XunitPackageVersion>
+    <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
