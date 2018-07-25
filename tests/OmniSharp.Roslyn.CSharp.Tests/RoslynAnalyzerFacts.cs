@@ -108,7 +108,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
             await AssertForEventuallyMatch(
-                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains("CS5001")));
+                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains(analyzerId)));
         }
 
         [Fact]
