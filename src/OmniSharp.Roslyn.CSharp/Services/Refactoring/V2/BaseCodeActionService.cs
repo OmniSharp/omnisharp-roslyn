@@ -29,8 +29,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private readonly CodeActionHelper _helper;
         private readonly MethodInfo _getNestedCodeActions;
 
-        private static readonly Func<TextSpan, List<Diagnostic>> s_createDiagnosticList = _ => new List<Diagnostic>();
-
         protected Lazy<List<CodeFixProvider>> OrderedCodeFixProviders;
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
@@ -98,31 +96,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            Dictionary<TextSpan, List<Diagnostic>> aggregatedDiagnostics = null;
-
             var semanticModel = await document.GetSemanticModelAsync();
 
-            foreach (var diagnostic in semanticModel.GetDiagnostics())
-            {
-                if (!span.IntersectsWith(diagnostic.Location.SourceSpan))
-                {
-                    continue;
-                }
+            var groupedBySpan = semanticModel.GetDiagnostics()
+                .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
+                .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 
-                aggregatedDiagnostics = aggregatedDiagnostics ?? new Dictionary<TextSpan, List<Diagnostic>>();
-                var list = aggregatedDiagnostics.GetOrAdd(diagnostic.Location.SourceSpan, s_createDiagnosticList);
-                list.Add(diagnostic);
-            }
-
-            if (aggregatedDiagnostics == null)
+            foreach (var diagnosticGroupedBySpan in groupedBySpan)
             {
-                return;
-            }
-
-            foreach (var kvp in aggregatedDiagnostics)
-            {
-                var diagnosticSpan = kvp.Key;
-                var diagnosticsWithSameSpan = kvp.Value.OrderByDescending(d => d.Severity);
+                var diagnosticSpan = diagnosticGroupedBySpan.Key;
+                var diagnosticsWithSameSpan = diagnosticGroupedBySpan.OrderByDescending(d => d.Severity);
 
                 await AppendFixesAsync(document, diagnosticSpan, diagnosticsWithSameSpan, codeActions);
             }
@@ -133,6 +116,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             foreach (var codeFixProvider in OrderedCodeFixProviders.Value)
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
+
                 if (fixableDiagnostics.Length > 0)
                 {
                     var context = new CodeFixContext(document, span, fixableDiagnostics, (a, _) => codeActions.Add(a), CancellationToken.None);
@@ -151,45 +135,31 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
-            var nodesList = new List<ProviderNode<CodeFixProvider>>();
-            var providerList = new List<CodeFixProvider>();
+            var codeFixProviders = this.Providers
+                .SelectMany(provider => provider.CodeFixProviders)
+                .ToList();
 
-            foreach (var provider in this.Providers)
-            {
-                foreach (var codeFixProvider in provider.CodeFixProviders)
-                {
-                    providerList.Add(codeFixProvider);
-                    nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
-                }
-            }
-
-            var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
-            if (graph.HasCycles())
-            {
-                return providerList;
-            }
-
-            return graph.TopologicalSort();
+            return SortByTopologyIfPossibleOrReturnAsItWas(codeFixProviders);
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
-            var nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
-            var providerList = new List<CodeRefactoringProvider>();
+            var codeRefactoringProviders = this.Providers
+                .SelectMany(provider => provider.CodeRefactoringProviders)
+                .ToList();
 
-            foreach (var provider in this.Providers)
-            {
-                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
-                {
-                    providerList.Add(codeRefactoringProvider);
-                    nodesList.Add(ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider));
-                }
-            }
+            return SortByTopologyIfPossibleOrReturnAsItWas(codeRefactoringProviders);
+        }
 
-            var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
+        private List<T> SortByTopologyIfPossibleOrReturnAsItWas<T>(IEnumerable<T> source)
+        {
+            var codeFixNodes = source.Select(codeFix => ProviderNode<T>.From(codeFix)).ToList();
+
+            var graph = Graph<T>.GetGraph(codeFixNodes);
+
             if (graph.HasCycles())
             {
-                return providerList;
+                return source.ToList();
             }
 
             return graph.TopologicalSort();
@@ -197,44 +167,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {
-            var typeName = codeFixProvider.GetType().FullName;
-
-            if (_helper.IsDisallowed(typeName))
-            {
-                return false;
-            }
-
-            // TODO: This is a horrible hack! However, remove unnecessary usings only
-            // responds for diagnostics that are produced by its diagnostic analyzer.
-            // We need to provide a *real* diagnostic engine to address this.
-            if (typeName != CodeActionHelper.RemoveUnnecessaryUsingsProviderName)
-            {
-                if (!codeFixProvider.FixableDiagnosticIds.Contains(diagnosticId))
-                {
-                    return false;
-                }
-            }
-            else if (diagnosticId != "CS8019") // ErrorCode.HDN_UnusedUsingDirective
-            {
-                return false;
-            }
-
-            return true;
+            return !_helper.IsDisallowed(codeFixProvider.GetType().FullName);
         }
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            foreach (var codeRefactoringProvider in OrderedCodeRefactoringProviders.Value)
+            var availableRefactorings = OrderedCodeRefactoringProviders.Value.Where(x => !_helper.IsDisallowed(x));
+
+            foreach (var codeRefactoringProvider in availableRefactorings)
             {
-                if (_helper.IsDisallowed(codeRefactoringProvider))
-                {
-                    continue;
-                }
-
-                var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
-
                 try
                 {
+                    var context = new CodeRefactoringContext(document, span, a => codeActions.Add(a), CancellationToken.None);
                     await codeRefactoringProvider.ComputeRefactoringsAsync(context);
                 }
                 catch (Exception ex)
@@ -246,32 +190,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private IEnumerable<AvailableCodeAction> ConvertToAvailableCodeAction(IEnumerable<CodeAction> actions)
         {
-            var codeActions = new List<AvailableCodeAction>();
-
-            foreach (var action in actions)
+            return actions.SelectMany(action =>
             {
-                var handledNestedActions = false;
-
-                // Roslyn supports "nested" code actions in order to allow submenus in the VS light bulb menu.
-                // For now, we'll just expand nested code actions in place.
                 var nestedActions = this._getNestedCodeActions.Invoke<ImmutableArray<CodeAction>>(action, null);
-                if (nestedActions.Length > 0)
-                {
-                    foreach (var nestedAction in nestedActions)
-                    {
-                        codeActions.Add(new AvailableCodeAction(nestedAction, action));
-                    }
 
-                    handledNestedActions = true;
+                if (nestedActions.Any())
+                {
+                    return nestedActions.Select(nestedAction => new AvailableCodeAction(nestedAction, action));
                 }
 
-                if (!handledNestedActions)
-                {
-                    codeActions.Add(new AvailableCodeAction(action));
-                }
-            }
-
-            return codeActions;
+                return new[] { new AvailableCodeAction(action) };
+            });
         }
     }
 }
