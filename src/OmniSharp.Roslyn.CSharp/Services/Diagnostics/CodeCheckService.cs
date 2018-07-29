@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var quickFixes = await documents.FindDiagnosticLocationsAsync();
 
             var analyzerResults =
-                _roslynAnalyzer.GetCurrentDiagnosticResults().Where(x =>
+                _roslynAnalyzer.GetCurrentDiagnosticResult().Select(x => x.ToDiagnosticLocation()).Where(x =>
                     request.FileName == null || x.FileName == request.FileName);
 
             return new QuickFixResponse(quickFixes.Concat(analyzerResults));

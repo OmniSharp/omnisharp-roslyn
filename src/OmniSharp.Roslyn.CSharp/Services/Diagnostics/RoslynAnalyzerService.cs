@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Models.Diagnostics;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
@@ -19,12 +18,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class RoslynAnalyzerService
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
-        private ConcurrentDictionary<string, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<string, (DateTime modified, Project project)>();
+        private readonly ConcurrentDictionary<string, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<string, (DateTime modified, Project project)>();
         private readonly ConcurrentDictionary<string, IEnumerable<Diagnostic>> _results =
             new ConcurrentDictionary<string, IEnumerable<Diagnostic>>();
         private readonly IEnumerable<ICodeActionProvider> providers;
 
-        private int throttlingMs = 500;
+        private readonly int throttlingMs = 500;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
@@ -37,7 +36,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
-            Task.Run(() => Worker(CancellationToken.None));
+            Task.Factory.StartNew(() => Worker(CancellationToken.None), TaskCreationOptions.LongRunning);
+            Task.Run(() =>
+            {
+                while (!workspace.Initialized) Task.Delay(500);
+                QueueForAnalysis(workspace.CurrentSolution.Projects);
+            });
         }
 
         private async Task Worker(CancellationToken token)
@@ -68,6 +72,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 var currentWork = _workQueue
                     .Where(x => x.Value.modified.AddMilliseconds(this.throttlingMs) < DateTime.UtcNow)
+                    .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
+                    .Take(3) // Limit mount of work executed by once. This is needed on large solution...
                     .ToList();
 
                 currentWork.Select(x => x.Key).ToList().ForEach(key => _workQueue.TryRemove(key, out _));
@@ -76,8 +82,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public IEnumerable<DiagnosticLocation> GetCurrentDiagnosticResults() => _results.SelectMany(x => x.Value).Select(x => AsDiagnosticLocation(x));
-        public IEnumerable<Diagnostic> GetCurrentDiagnosticResults2() => _results.SelectMany(x => x.Value);
+        public IEnumerable<Diagnostic> GetCurrentDiagnosticResult() => _results.SelectMany(x => x.Value);
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
@@ -87,17 +92,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {
                 var project = changeEvent.NewSolution.GetProject(changeEvent.ProjectId);
+
                 _results.TryRemove(project.Id.ToString(), out _);
+
                 QueueForAnalysis(new[] { changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).Project });
             }
         }
 
         private void QueueForAnalysis(IEnumerable<Project> projects)
         {
-            projects.ToList().ForEach(project =>
-            {
-                _workQueue.AddOrUpdate(project.Id.ToString(), (modified: DateTime.UtcNow, project: project), (key, old) => (modified: DateTime.UtcNow, project: project));
-            });
+            projects.ToList()
+                .ForEach(project => _workQueue.AddOrUpdate(project.Id.ToString(), (modified: DateTime.UtcNow, project: project), (key, old) => (modified: DateTime.UtcNow, project: project)));
         }
 
         private async Task<IEnumerable<Diagnostic>> Analyze(Project project, CancellationToken token)
@@ -114,23 +119,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return await compiled
                 .WithAnalyzers(allAnalyzers.ToImmutableArray())
                 .GetAllDiagnosticsAsync(token);
-        }
-
-        private static DiagnosticLocation AsDiagnosticLocation(Diagnostic diagnostic)
-        {
-            var span = diagnostic.Location.GetMappedLineSpan();
-            return new DiagnosticLocation
-            {
-                FileName = span.Path,
-                Line = span.StartLinePosition.Line,
-                Column = span.StartLinePosition.Character,
-                EndLine = span.EndLinePosition.Line,
-                EndColumn = span.EndLinePosition.Character,
-                Text = $"{diagnostic.GetMessage()} ({diagnostic.Id})",
-                LogLevel = diagnostic.Severity.ToString(),
-                Id = diagnostic.Id,
-                Projects = new List<string> {  }
-            };
         }
     }
 }
