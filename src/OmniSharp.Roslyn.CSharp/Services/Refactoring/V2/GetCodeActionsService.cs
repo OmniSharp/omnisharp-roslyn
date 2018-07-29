@@ -21,8 +21,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            RoslynAnalyzerService analyzers)
-            : base(workspace, helper, providers, loggerFactory.CreateLogger<GetCodeActionsService>(), analyzers)
+            RoslynAnalyzerService analyzers,
+            CodeFixesForProjects codeFixesForProjects)
+            : base(workspace, providers, loggerFactory.CreateLogger<GetCodeActionsService>(), analyzers, codeFixesForProjects)
         {
         }
 

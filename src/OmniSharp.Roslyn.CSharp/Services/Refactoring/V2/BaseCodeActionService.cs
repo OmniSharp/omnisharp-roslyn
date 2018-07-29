@@ -28,10 +28,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
         private readonly RoslynAnalyzerService analyzers;
-        private readonly CodeActionHelper _helper;
+        private readonly CodeFixesForProjects codeFixesForProject;
         private readonly MethodInfo _getNestedCodeActions;
 
-        protected Lazy<List<CodeFixProvider>> OrderedCodeFixProviders;
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
         // For some (probably visual studio specific?) reason diagnostic and fix codes doesn't match in every case.
@@ -40,15 +39,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             { "CS8019", "RemoveUnnecessaryImportsFixable" }
         };
 
-        protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger, RoslynAnalyzerService analyzers)
+        protected BaseCodeActionService(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILogger logger, RoslynAnalyzerService analyzers, CodeFixesForProjects codeFixesForProject)
         {
             this.Workspace = workspace;
             this.Providers = providers;
             this.Logger = logger;
             this.analyzers = analyzers;
-            this._helper = helper;
+            this.codeFixesForProject = codeFixesForProject;
 
-            OrderedCodeFixProviders = new Lazy<List<CodeFixProvider>>(() => GetSortedCodeFixProviders());
             OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
@@ -125,7 +123,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
-            foreach (var codeFixProvider in OrderedCodeFixProviders.Value)
+            foreach (var codeFixProvider in GetSortedCodeFixProviders(document))
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
 
@@ -145,11 +143,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private List<CodeFixProvider> GetSortedCodeFixProviders()
+        private List<CodeFixProvider> GetSortedCodeFixProviders(Document document)
         {
             var codeFixProviders = this.Providers
                 .SelectMany(provider => provider.CodeFixProviders)
-                .ToList();
+                .Concat(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id.ToString()));
 
             return SortByTopologyIfPossibleOrReturnAsItWas(codeFixProviders);
         }

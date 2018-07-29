@@ -16,6 +16,7 @@ using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -45,7 +46,7 @@ namespace OmniSharp.MSBuild
         private readonly HashSet<string> _failedToLoadProjectFiles;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
-
+        private readonly CodeFixesForProjects codeFixesForProject;
         private const int LoopDelay = 100; // milliseconds
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
@@ -54,7 +55,7 @@ namespace OmniSharp.MSBuild
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
-        public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace)
+        public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace, CodeFixesForProjects codeFixesForProject)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _eventEmitter = eventEmitter;
@@ -65,7 +66,7 @@ namespace OmniSharp.MSBuild
             _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
-
+            this.codeFixesForProject = codeFixesForProject;
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
@@ -264,6 +265,9 @@ namespace OmniSharp.MSBuild
             _projectFiles.Add(projectFileInfo);
 
             var projectInfo = projectFileInfo.CreateProjectInfo();
+
+            codeFixesForProject.LoadFrom(projectInfo.Id.ToString(), projectFileInfo.Analyzers);
+
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
             if (!_workspace.TryApplyChanges(newSolution))

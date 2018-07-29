@@ -40,8 +40,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            RoslynAnalyzerService analyzers)
-            : base(workspace, helper, providers, loggerFactory.CreateLogger<RunCodeActionService>(), analyzers)
+            RoslynAnalyzerService analyzers,
+            CodeFixesForProjects codeFixesForProjects)
+            : base(workspace, providers, loggerFactory.CreateLogger<RunCodeActionService>(), analyzers, codeFixesForProjects)
         {
             _loader = loader;
             _workspaceAssembly = _loader.LazyLoad(Configuration.RoslynWorkspaces);

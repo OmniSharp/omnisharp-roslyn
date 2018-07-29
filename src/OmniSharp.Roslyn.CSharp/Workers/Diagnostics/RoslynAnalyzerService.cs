@@ -18,9 +18,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class RoslynAnalyzerService
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
+
         private readonly ConcurrentDictionary<string, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<string, (DateTime modified, Project project)>();
+
         private readonly ConcurrentDictionary<string, IEnumerable<Diagnostic>> _results =
             new ConcurrentDictionary<string, IEnumerable<Diagnostic>>();
+
         private readonly IEnumerable<ICodeActionProvider> providers;
 
         private readonly int throttlingMs = 500;
@@ -86,23 +89,34 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged ||
-                changeEvent.Kind == WorkspaceChangeKind.ProjectChanged ||
-                changeEvent.Kind == WorkspaceChangeKind.ProjectAdded ||
-                changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
+            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
+                || changeEvent.Kind == WorkspaceChangeKind.ProjectChanged
+                || changeEvent.Kind == WorkspaceChangeKind.ProjectAdded
+                || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {
                 var project = changeEvent.NewSolution.GetProject(changeEvent.ProjectId);
+                ClearCurrentlyEditedFileFromAnalysisIfApplicaple(changeEvent, project);
+                QueueForAnalysis(new[] { project });
+            }
+        }
 
-                _results.TryRemove(project.Id.ToString(), out _);
-
-                QueueForAnalysis(new[] { changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).Project });
+        // This isn't perfect, but if you make change that add lines etc. for litle moment analyzers only knowns analysis from original file
+        // which can cause warnings in incorrect locations if editor fetches them at that point. For this reason during analysis don't return
+        // any information about that file before new result is available.
+        private void ClearCurrentlyEditedFileFromAnalysisIfApplicaple(WorkspaceChangeEventArgs changeEvent, Project project)
+        {
+            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged && _results.ContainsKey(project.Id.ToString()))
+            {
+                var updatedFilePath = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).FilePath;
+                var filteredResults = _results[project.Id.ToString()].Where(x => x.Location.GetMappedLineSpan().Path != updatedFilePath);
+                _results.AddOrUpdate(project.Id.ToString(), filteredResults, (_, __) => filteredResults);
             }
         }
 
         private void QueueForAnalysis(IEnumerable<Project> projects)
         {
             projects.ToList()
-                .ForEach(project => _workQueue.AddOrUpdate(project.Id.ToString(), (modified: DateTime.UtcNow, project: project), (key, old) => (modified: DateTime.UtcNow, project: project)));
+                .ForEach(project => _workQueue.AddOrUpdate(project.Id.ToString(), (modified: DateTime.UtcNow, project: project), (_, __) => (modified: DateTime.UtcNow, project: project)));
         }
 
         private async Task<IEnumerable<Diagnostic>> Analyze(Project project, CancellationToken token)
