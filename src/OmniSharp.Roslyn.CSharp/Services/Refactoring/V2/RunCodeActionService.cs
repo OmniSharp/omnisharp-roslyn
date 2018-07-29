@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -38,8 +39,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             OmniSharpWorkspace workspace,
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
-            ILoggerFactory loggerFactory)
-            : base(workspace, helper, providers, loggerFactory.CreateLogger<RunCodeActionService>())
+            ILoggerFactory loggerFactory,
+            RoslynAnalyzerService analyzers)
+            : base(workspace, helper, providers, loggerFactory.CreateLogger<RunCodeActionService>(), analyzers)
         {
             _loader = loader;
             _workspaceAssembly = _loader.LazyLoad(Configuration.RoslynWorkspaces);

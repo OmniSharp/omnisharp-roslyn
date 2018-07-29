@@ -15,8 +15,10 @@ using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
+using System.IO;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
@@ -25,18 +27,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
-
+        private readonly RoslynAnalyzerService analyzers;
         private readonly CodeActionHelper _helper;
         private readonly MethodInfo _getNestedCodeActions;
 
         protected Lazy<List<CodeFixProvider>> OrderedCodeFixProviders;
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
-        protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger)
+        protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger, RoslynAnalyzerService analyzers)
         {
             this.Workspace = workspace;
             this.Providers = providers;
             this.Logger = logger;
+            this.analyzers = analyzers;
             this._helper = helper;
 
             OrderedCodeFixProviders = new Lazy<List<CodeFixProvider>>(() => GetSortedCodeFixProviders());
@@ -74,10 +77,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             await CollectCodeFixesActions(document, span, codeActions);
             await CollectRefactoringActions(document, span, codeActions);
 
+            var distinctActions = codeActions.GroupBy(x => x.Title).Select(x => x.First());
+
             // Be sure to filter out any code actions that inherit from CodeActionWithOptions.
             // This isn't a great solution and might need changing later, but every Roslyn code action
             // derived from this type tries to display a dialog. For now, this is a reasonable solution.
-            var availableActions = ConvertToAvailableCodeAction(codeActions)
+            var availableActions = ConvertToAvailableCodeAction(distinctActions)
                 .Where(a => !a.CodeAction.GetType().GetTypeInfo().IsSubclassOf(typeof(CodeActionWithOptions)));
 
             return availableActions;
@@ -99,6 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var semanticModel = await document.GetSemanticModelAsync();
 
             var groupedBySpan = semanticModel.GetDiagnostics()
+                .Concat(this.analyzers.GetCurrentDiagnosticResults2())
                 .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
                 .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 
@@ -167,7 +173,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {
-            return !_helper.IsDisallowed(codeFixProvider.GetType().FullName);
+            return !_helper.IsDisallowed(codeFixProvider.GetType().FullName) && codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
         }
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)

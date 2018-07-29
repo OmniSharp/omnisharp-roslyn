@@ -20,11 +20,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
         private ConcurrentDictionary<string, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<string, (DateTime modified, Project project)>();
-        private readonly ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>> _results =
-            new ConcurrentDictionary<string, IEnumerable<DiagnosticLocation>>();
+        private readonly ConcurrentDictionary<string, IEnumerable<Diagnostic>> _results =
+            new ConcurrentDictionary<string, IEnumerable<Diagnostic>>();
         private readonly IEnumerable<ICodeActionProvider> providers;
 
-        private int throttlingMs = 1000;
+        private int throttlingMs = 500;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
@@ -38,7 +38,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             Task.Run(() => Worker(CancellationToken.None));
-            Task.Run(() => QueueForAnalysis(workspace.CurrentSolution.Projects));
         }
 
         private async Task Worker(CancellationToken token)
@@ -59,7 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .ToList()
                     .ForEach(result => _results[result.Project] = result.Result);
 
-                await Task.Delay(500, token);
+                await Task.Delay(200, token);
             }
         }
 
@@ -77,13 +76,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public IEnumerable<DiagnosticLocation> GetCurrentDiagnosticResults() => _results.SelectMany(x => x.Value);
+        public IEnumerable<DiagnosticLocation> GetCurrentDiagnosticResults() => _results.SelectMany(x => x.Value).Select(x => AsDiagnosticLocation(x));
+        public IEnumerable<Diagnostic> GetCurrentDiagnosticResults2() => _results.SelectMany(x => x.Value);
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
+            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged ||
+                changeEvent.Kind == WorkspaceChangeKind.ProjectChanged ||
+                changeEvent.Kind == WorkspaceChangeKind.ProjectAdded ||
+                changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
             {
-                var project = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).Project;
+                var project = changeEvent.NewSolution.GetProject(changeEvent.ProjectId);
+                _results.TryRemove(project.Id.ToString(), out _);
                 QueueForAnalysis(new[] { changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).Project });
             }
         }
@@ -96,25 +100,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             });
         }
 
-        private async Task<IEnumerable<DiagnosticLocation>> Analyze(Project project, CancellationToken token)
+        private async Task<IEnumerable<Diagnostic>> Analyze(Project project, CancellationToken token)
         {
             var allAnalyzers = this.providers
                 .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
                 .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
 
             if (!allAnalyzers.Any())
-                return ImmutableArray<DiagnosticLocation>.Empty;
+                return ImmutableArray<Diagnostic>.Empty;
 
             var compiled = await project.GetCompilationAsync(token);
 
-            var analysis = await compiled
+            return await compiled
                 .WithAnalyzers(allAnalyzers.ToImmutableArray())
                 .GetAllDiagnosticsAsync(token);
-
-            return analysis.Select(x => AsDiagnosticLocation(x, project));
         }
 
-        private static DiagnosticLocation AsDiagnosticLocation(Diagnostic diagnostic, Project project)
+        private static DiagnosticLocation AsDiagnosticLocation(Diagnostic diagnostic)
         {
             var span = diagnostic.Location.GetMappedLineSpan();
             return new DiagnosticLocation
@@ -127,7 +129,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 Text = $"{diagnostic.GetMessage()} ({diagnostic.Id})",
                 LogLevel = diagnostic.Severity.ToString(),
                 Id = diagnostic.Id,
-                Projects = new List<string> { project.Name }
+                Projects = new List<string> {  }
             };
         }
     }
