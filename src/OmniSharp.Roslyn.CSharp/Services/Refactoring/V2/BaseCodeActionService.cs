@@ -34,6 +34,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected Lazy<List<CodeFixProvider>> OrderedCodeFixProviders;
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
+        // For some (probably visual studio specific?) reason diagnostic and fix codes doesn't match in every case.
+        private Dictionary<string, string> customDiagVsFixMap = new Dictionary<string, string>
+        {
+            { "CS8019", "RemoveUnnecessaryImportsFixable" }
+        };
+
         protected BaseCodeActionService(OmniSharpWorkspace workspace, CodeActionHelper helper, IEnumerable<ICodeActionProvider> providers, ILogger logger, RoslynAnalyzerService analyzers)
         {
             this.Workspace = workspace;
@@ -173,12 +179,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
         {
-            return !_helper.IsDisallowed(codeFixProvider.GetType().FullName) && codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
+            return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId)
+                || (customDiagVsFixMap.ContainsKey(diagnosticId) && codeFixProvider.FixableDiagnosticIds.Any(id => id == customDiagVsFixMap[diagnosticId]));
         }
 
         private async Task CollectRefactoringActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var availableRefactorings = OrderedCodeRefactoringProviders.Value.Where(x => !_helper.IsDisallowed(x));
+            var availableRefactorings = OrderedCodeRefactoringProviders.Value;
 
             foreach (var codeRefactoringProvider in availableRefactorings)
             {
