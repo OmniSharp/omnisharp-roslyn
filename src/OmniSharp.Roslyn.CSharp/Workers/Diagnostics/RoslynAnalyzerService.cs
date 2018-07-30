@@ -60,10 +60,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             while (!token.IsCancellationRequested)
             {
+                var currentWork = GetThrottledWork();
+
                 try
                 {
-                    var currentWork = GetThrottledWork();
-
                     var analyzerResults = await Task
                         .WhenAll(currentWork
                             .Select(async x => new
@@ -82,8 +82,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 catch (Exception ex)
                 {
                     _logger.LogError($"Analyzer worker failed: {ex}");
+                    OnErrorInitializeWithEmptyDummyIfNeeded(currentWork);
                 }
             }
+        }
+
+        private void OnErrorInitializeWithEmptyDummyIfNeeded(IDictionary<ProjectId, Project> currentWork)
+        {
+            currentWork.ToList().ForEach(x =>
+            {
+                if (!_results.ContainsKey(x.Key))
+                    _results[x.Key] = ($"errored {x.Key}", Enumerable.Empty<Diagnostic>());
+            });
         }
 
         private IDictionary<ProjectId, Project> GetThrottledWork()
@@ -102,23 +112,36 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public Task<IEnumerable<(string name, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
+        public Task<IEnumerable<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
         {
             return Task.Run(() =>
             {
-                while (projectIds.Any(projectId => _workQueue.ContainsKey(projectId)))
+                while(!ResultsInitialized(projectIds) || PendingWork(projectIds))
                 {
                     Task.Delay(100);
                 }
+
                 return _results
                     .Where(x => projectIds.Any(pid => pid == x.Key))
-                    .SelectMany(x => x.Value.diagnostics, (k, v) => (k.Value.name, v));
+                    .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)));
             });
+        }
+
+        private bool PendingWork(IEnumerable<ProjectId> projectIds)
+        {
+            return projectIds.Any(x => _workQueue.ContainsKey(x));
+        }
+
+        private bool ResultsInitialized(IEnumerable<ProjectId> projectIds)
+        {
+            return projectIds.All(x => _results.ContainsKey(x));
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
+            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
+                || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
+                || changeEvent.Kind == WorkspaceChangeKind.ProjectAdded)
             {
                 var project = changeEvent.NewSolution.GetProject(changeEvent.ProjectId);
                 QueueForAnalysis(new[] { project });

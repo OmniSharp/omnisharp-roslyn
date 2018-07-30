@@ -32,13 +32,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task CheckAllFiles()
         {
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+
             SharedOmniSharpTestHost.AddFilesToWorkspace(
                 new TestFile("a.cs", "class C1 { int n = true; }"),
                 new TestFile("b.cs", "class C2 { int n = true; }"));
 
-            var handler = GetRequestHandler(SharedOmniSharpTestHost);
             var quickFixes = await handler.Handle(new CodeCheckRequest());
-
             Assert.Equal(2, quickFixes.QuickFixes.Count());
         }
     }

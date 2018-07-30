@@ -36,15 +36,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var analyzerResults =
                 await _roslynAnalyzer.GetCurrentDiagnosticResult(projects.Select(x => x.Id));
 
-            return new QuickFixResponse(analyzerResults
+            var locations = analyzerResults
                 .Where(x => (request.FileName == null || x.diagnostic.Location.GetLineSpan().Path == request.FileName))
+                .Select(x => new
+                {
+                    location = x.diagnostic.ToDiagnosticLocation(),
+                    project = x.projectName
+                });
+
+            var groupedByProjectWhenMultipleFrameworksAreUsed = locations
+                .GroupBy(x => x.location)
                 .Select(x =>
                 {
-                        var asLocation = x.diagnostic.ToDiagnosticLocation();
-                        asLocation.Projects = new[] { x.name };
-                        return asLocation;
-                })
-                .Where(x => x.FileName != null));
+                    var location = x.First().location;
+                    location.Projects = x.Select(a => a.project).ToList();
+                    return location;
+                });
+
+            return new QuickFixResponse(
+                groupedByProjectWhenMultipleFrameworksAreUsed.Where(x => x.FileName != null));
         }
     }
 }
