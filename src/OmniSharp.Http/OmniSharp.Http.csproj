@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net46</TargetFramework>
+        <TargetFramework>net461</TargetFramework>
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
@@ -16,10 +16,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="$(MicrosoftAspNetCoreDiagnosticsVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="$(MicrosoftAspNetCoreServerKestrelVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="$(MicrosoftAspNetCoreHostingVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="$(MicrosoftAspNetCoreHttpFeaturesVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" />
+        <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Features" />
     </ItemGroup>
 
 </Project>

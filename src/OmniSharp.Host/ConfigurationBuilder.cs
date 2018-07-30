@@ -51,7 +51,7 @@ namespace OmniSharp
             return configBuilder.Build();
         }
 
-        public Dictionary<string, object> Properties => _builder.Properties;
-        public IEnumerable<IConfigurationSource> Sources => _builder.Sources;
+        public IDictionary<string, object> Properties => _builder.Properties;
+        public IList<IConfigurationSource> Sources => _builder.Sources;
     }
 }

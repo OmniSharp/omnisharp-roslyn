@@ -1,6 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using OmniSharp.Extensions;
+using OmniSharp.Models.V2;
+using OmniSharp.Roslyn.Extensions;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Cake.Utilities
@@ -20,32 +25,33 @@ namespace OmniSharp.Cake.Utilities
                 return index;
             }
 
-            var fullPath = Path.GetFullPath(fileName);
-            if (PlatformHelper.IsWindows)
-            {
-                // Cake alwyas normalizes dir separators to /
-                fullPath = fullPath.Replace('\\', '/');
-            }
             var sourceText = await document.GetTextAsync();
+            var root = await document.GetSyntaxRootAsync();
+
             for (var i = sourceText.Lines.Count - 1; i >= 0; i--)
             {
-                var text = sourceText.Lines[i].ToString();
+                var line = sourceText.Lines[i];
 
-                if (!text.StartsWith("#line ") || !text.EndsWith($" \"{fullPath}\""))
+                if (!line.StartsWith("#line "))
                 {
                     continue;
                 }
 
-                var tokens = text.Split(' ');
-                if (tokens.Length <= 2 || !int.TryParse(tokens[1], out int lineNumber))
+                if (!(root.FindNode(line.Span, true) is LineDirectiveTriviaSyntax lineDirective) ||
+                    lineDirective.Line.IsMissing ||
+                    !PathsAreEqual((string)lineDirective.File.Value, fileName))
                 {
                     continue;
                 }
-                lineNumber--;
-                if (index >= lineNumber)
+
+                var lineDirectiveValue = (int) lineDirective.Line.Value - 1;
+
+                if (index < lineDirectiveValue)
                 {
-                    return sourceText.Lines[i].LineNumber - lineNumber + index + 1;
+                    continue;
                 }
+
+                return line.LineNumber - lineDirectiveValue + index + 1;
             }
 
             return index;
@@ -58,10 +64,6 @@ namespace OmniSharp.Cake.Utilities
                 return (-1, fileName);
             }
 
-            if (PlatformHelper.IsWindows)
-            {
-                fileName = fileName.Replace('/', '\\');
-            }
             var document = workspace.GetDocument(fileName);
             if (document == null)
             {
@@ -74,37 +76,44 @@ namespace OmniSharp.Cake.Utilities
                 return (-1, fileName);
             }
 
-            for (var i = index; i >= 0; i--)
+            var syntaxTree = await document.GetSyntaxTreeAsync(CancellationToken.None);
+            if (syntaxTree == null)
             {
-                var text = sourceText.Lines[i].ToString();
-
-                if (!text.StartsWith("#line "))
-                {
-                    continue;
-                }
-
-                var tokens = text.Split(new[] {' '}, 3, StringSplitOptions.RemoveEmptyEntries);
-                if (tokens.Length < 3 || !int.TryParse(tokens[1], out int lineNumber))
-                {
-                    continue;
-                }
-
-                var newFileName = tokens[2].Trim('"');
-                if (PlatformHelper.IsWindows)
-                {
-                    newFileName = newFileName.Replace('/', '\\');
-                }
-                if (sameFile && !newFileName.Equals(fileName))
-                {
-                    return (-1, fileName);
-                }
-
-                var newIndex = lineNumber - 2 + (index - i);
-
-                return (newIndex, newFileName);
+                return (-1, fileName);
             }
 
-            return (-1, fileName);
+            var point = new Point { Column = 0, Line = index };
+            var textSpan = sourceText.GetSpanFromRange(new Range
+            {
+                Start = point,
+                End = point
+            });
+
+            var lineMapping = syntaxTree.GetMappedLineSpan(textSpan);
+
+            if (sameFile && !PathsAreEqual(lineMapping.Path, fileName))
+            {
+                return (-1, fileName);
+            }
+
+            return (lineMapping.StartLinePosition.Line, PlatformHelper.IsWindows ? lineMapping.Path.Replace('/', '\\') : lineMapping.Path);
+        }
+
+        private static bool PathsAreEqual(string x, string y)
+        {
+            if (x == null && y == null)
+            {
+                return true;
+            }
+
+            if (x == null || y == null)
+            {
+                return false;
+            }
+
+            var comparer = PlatformHelper.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+
+            return Path.GetFullPath(x).Equals(Path.GetFullPath(y), comparer);
         }
     }
 }

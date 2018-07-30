@@ -106,7 +106,7 @@ namespace OmniSharp.Script
             try
             {
                 var csxFileName = Path.GetFileName(csxPath);
-                var project = _scriptContext.Value.ScriptProjectProvider.CreateProject(csxFileName, _scriptContext.Value.MetadataReferences, csxPath);
+                var project = _scriptContext.Value.ScriptProjectProvider.CreateProject(csxFileName, _scriptContext.Value.MetadataReferences, csxPath, _scriptContext.Value.GlobalsType);
 
                     if (_scriptOptions.IsNugetEnabled())
                     {
