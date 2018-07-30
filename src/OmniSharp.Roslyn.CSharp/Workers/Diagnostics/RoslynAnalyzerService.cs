@@ -27,12 +27,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly IEnumerable<ICodeActionProvider> providers;
 
         private readonly int throttlingMs = 500;
+        private readonly DiagnosticEventForwarder _forwarder;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            DiagnosticEventForwarder forwarder)
         {
             _logger = loggerFactory.CreateLogger<RoslynAnalyzerService>();
             this.providers = providers;
@@ -44,7 +46,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 while (!workspace.Initialized) Task.Delay(500);
                 QueueForAnalysis(workspace.CurrentSolution.Projects);
+                _logger.LogInformation("Solution updated, requed all projects for code analysis.");
             });
+            _forwarder = forwarder;
         }
 
         private async Task Worker(CancellationToken token)
@@ -85,7 +89,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public IEnumerable<Diagnostic> GetCurrentDiagnosticResult() => _results.SelectMany(x => x.Value);
+        public IDictionary<string, IEnumerable<Diagnostic>> GetCurrentDiagnosticResult() => _results.ToDictionary(x => x.Key, x => x.Value);
+
+        public Task<Dictionary<string, IEnumerable<Diagnostic>>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
+        {
+            return Task.Run(() =>
+            {
+                while(projectIds.Any(projectId => _workQueue.ContainsKey(projectId.ToString()))) Task.Delay(100);
+                return _results.ToDictionary(x => x.Key, x => x.Value);
+            });
+        }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {

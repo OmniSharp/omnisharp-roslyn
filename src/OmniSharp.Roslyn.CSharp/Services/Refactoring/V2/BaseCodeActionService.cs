@@ -34,7 +34,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
         // For some (probably visual studio specific?) reason diagnostic and fix codes doesn't match in every case.
-        private Dictionary<string, string> customDiagVsFixMap = new Dictionary<string, string>
+        private readonly Dictionary<string, string> customDiagVsFixMap = new Dictionary<string, string>
         {
             { "CS8019", "RemoveUnnecessaryImportsFixable" }
         };
@@ -57,6 +57,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
 
             this._getNestedCodeActions = nestedCodeActionsProperty.GetGetMethod(nonPublic: true);
+
             if (this._getNestedCodeActions == null)
             {
                 throw new InvalidOperationException("Could not retrieve 'get' method for CodeAction.NestedCodeActions property.");
@@ -108,7 +109,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             var semanticModel = await document.GetSemanticModelAsync();
 
             var groupedBySpan = semanticModel.GetDiagnostics()
-                .Concat(this.analyzers.GetCurrentDiagnosticResult())
+                .Concat(this.analyzers.GetCurrentDiagnosticResult().SelectMany(x => x.Value))
                 .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
                 .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 

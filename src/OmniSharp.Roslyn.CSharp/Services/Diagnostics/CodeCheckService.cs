@@ -6,6 +6,8 @@ using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
+using System.Collections.Generic;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
@@ -24,19 +26,37 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
-            var documents = request.FileName != null
-                ? _workspace.GetDocuments(request.FileName)
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
-
-            var quickFixes = await documents.FindDiagnosticLocationsAsync();
+            var projects = request.FileName != null
+                ? _workspace.GetDocuments(request.FileName).Select(x => x.Project)
+                : _workspace.CurrentSolution.Projects;
 
             var analyzerResults =
-                _roslynAnalyzer.GetCurrentDiagnosticResult().Select(x => x.ToDiagnosticLocation()).Where(x =>
-                    request.FileName == null || x.FileName == request.FileName);
+                await _roslynAnalyzer.GetCurrentDiagnosticResult(projects.Select(x => x.Id));
 
-            var distinctDiagnosticResult = quickFixes.Concat(analyzerResults).GroupBy(x => new { x.Id, x.FileName}).Select(x => x.First());
+            return new QuickFixResponse(analyzerResults
+                .SelectMany(x => x.Value, (key, diagnostic) => new { key, diagnostic }).Select(x =>
+                {
+                    var asLocation = x.diagnostic.ToDiagnosticLocation();
+                    asLocation.Projects = new[] { x.key.Key };
+                    return asLocation;
+                }).Where(x => request.FileName == null || x.FileName == request.FileName)
+                .Take(50));
+        }
 
-            return new QuickFixResponse(distinctDiagnosticResult);
+        private static DiagnosticLocation ToDiagnosticLocation(Diagnostic diagnostic, string project)
+        {
+            var span = diagnostic.Location.GetMappedLineSpan();
+            return new DiagnosticLocation
+            {
+                FileName = span.Path,
+                Line = span.StartLinePosition.Line,
+                Column = span.StartLinePosition.Character,
+                EndLine = span.EndLinePosition.Line,
+                EndColumn = span.EndLinePosition.Character,
+                Text = $"{diagnostic.GetMessage()} ({diagnostic.Id})",
+                LogLevel = diagnostic.Severity.ToString(),
+                Id = diagnostic.Id
+            };
         }
     }
 }
