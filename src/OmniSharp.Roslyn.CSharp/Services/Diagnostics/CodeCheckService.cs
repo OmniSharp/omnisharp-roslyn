@@ -34,7 +34,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _roslynAnalyzer.GetCurrentDiagnosticResult().Select(x => x.ToDiagnosticLocation()).Where(x =>
                     request.FileName == null || x.FileName == request.FileName);
 
-            return new QuickFixResponse(quickFixes.Concat(analyzerResults));
+            var distinctDiagnosticResult = quickFixes.Concat(analyzerResults).GroupBy(x => x.Id).Select(x => x.First());
+
+            return new QuickFixResponse(distinctDiagnosticResult);
         }
     }
 }
