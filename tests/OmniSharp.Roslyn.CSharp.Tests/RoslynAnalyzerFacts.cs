@@ -92,6 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task When_custom_analyzers_are_executed_then_return_results()
         {
             var testFile = new TestFile("testFile.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
@@ -106,15 +107,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new[] { testFile },
                 analyzerRefs: new AnalyzerReference []{ testAnalyzerRef }.ToImmutableArray());
 
-            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
-            await AssertForEventuallyMatch(
-                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains(analyzerId)));
+
+
+            var result = await codeCheckService.Handle(new CodeCheckRequest());
+
+            Assert.Contains(result.QuickFixes, f => f.Text.Contains(analyzerId));
         }
 
         [Fact]
         public async Task Always_return_results_from_net_default_analyzers()
         {
             var testFile = new TestFile("testFile.cs", "class SomeClass { int n = true; }");
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
@@ -124,25 +128,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new[] { "netcoreapp2.1" },
                 new[] { testFile });
 
-            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
-            await AssertForEventuallyMatch(
-                codeCheckService.Handle(new CodeCheckRequest()), x => x.QuickFixes.Any(f => f.Text.Contains("CS5001")));
-        }
+            var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-        private static async Task<T> AssertForEventuallyMatch<T>(Task<T> func, Predicate<T> check, int retryCount = 10)
-        {
-            while (retryCount-- > 0)
-            {
-                var result = await func;
-
-                if (check(result))
-                    return result;
-
-                await Task.Delay(1000);
-            }
-
-            throw new InvalidOperationException("Timeout expired before meaningfull result returned.");
+            Assert.Contains(result.QuickFixes, f => f.Text.Contains("CS0029"));
         }
     }
 }
