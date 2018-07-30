@@ -108,8 +108,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             var semanticModel = await document.GetSemanticModelAsync();
 
+            var analyzers = await this.analyzers.GetCurrentDiagnosticResult(new [] { document.Project.Id });
+
             var groupedBySpan = semanticModel.GetDiagnostics()
-                .Concat(this.analyzers.GetCurrentDiagnosticResult().SelectMany(x => x.Value))
+                .Concat(analyzers.Select(x => x.diagnostic))
                 .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
                 .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 

@@ -19,15 +19,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
 
-        private readonly ConcurrentDictionary<string, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<string, (DateTime modified, Project project)>();
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<ProjectId, (DateTime modified, Project project)>();
 
-        private readonly ConcurrentDictionary<string, IEnumerable<Diagnostic>> _results =
-            new ConcurrentDictionary<string, IEnumerable<Diagnostic>>();
+        private readonly ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)> _results =
+            new ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)>();
 
-        private readonly IEnumerable<ICodeActionProvider> providers;
+        private readonly IEnumerable<ICodeActionProvider> _providers;
 
         private readonly int throttlingMs = 500;
+
         private readonly DiagnosticEventForwarder _forwarder;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
@@ -37,43 +39,54 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             DiagnosticEventForwarder forwarder)
         {
             _logger = loggerFactory.CreateLogger<RoslynAnalyzerService>();
-            this.providers = providers;
+            _providers = providers;
 
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             Task.Factory.StartNew(() => Worker(CancellationToken.None), TaskCreationOptions.LongRunning);
+
             Task.Run(() =>
             {
                 while (!workspace.Initialized) Task.Delay(500);
-                QueueForAnalysis(workspace.CurrentSolution.Projects);
-                _logger.LogInformation("Solution updated, requed all projects for code analysis.");
+                QueueForAnalysis(workspace.CurrentSolution.Projects.ToList());
+                _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
             });
+
             _forwarder = forwarder;
+            _workspace = workspace;
         }
 
         private async Task Worker(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                var currentWork = GetThrottledWork();
+                try
+                {
+                    var currentWork = GetThrottledWork();
 
-                var analyzerResults = await Task
-                    .WhenAll(currentWork
-                        .Select(async x => new
-                        {
-                            Project = x.Key,
-                            Result = await Analyze(x.Value, token)
-                        }));
+                    var analyzerResults = await Task
+                        .WhenAll(currentWork
+                            .Select(async x => new
+                            {
+                                ProjectId = x.Value.Id,
+                                ProjectName = x.Value.Name,
+                                Result = await Analyze(x.Value, token)
+                            }));
 
-                analyzerResults
-                    .ToList()
-                    .ForEach(result => _results[result.Project] = result.Result);
+                    analyzerResults
+                        .ToList()
+                        .ForEach(result => _results[result.ProjectId] = (result.ProjectName, result.Result));
 
-                await Task.Delay(200, token);
+                    await Task.Delay(200, token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Analyzer worker failed: {ex}");
+                }
             }
         }
 
-        private IDictionary<string, Project> GetThrottledWork()
+        private IDictionary<ProjectId, Project> GetThrottledWork()
         {
             lock (_workQueue)
             {
@@ -89,52 +102,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public IDictionary<string, IEnumerable<Diagnostic>> GetCurrentDiagnosticResult() => _results.ToDictionary(x => x.Key, x => x.Value);
-
-        public Task<Dictionary<string, IEnumerable<Diagnostic>>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
+        public Task<IEnumerable<(string name, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
         {
             return Task.Run(() =>
             {
-                while(projectIds.Any(projectId => _workQueue.ContainsKey(projectId.ToString()))) Task.Delay(100);
-                return _results.ToDictionary(x => x.Key, x => x.Value);
+                while (projectIds.Any(projectId => _workQueue.ContainsKey(projectId)))
+                {
+                    Task.Delay(100);
+                }
+                return _results
+                    .Where(x => projectIds.Any(pid => pid == x.Key))
+                    .SelectMany(x => x.Value.diagnostics, (k, v) => (k.Value.name, v));
             });
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
-                || changeEvent.Kind == WorkspaceChangeKind.ProjectChanged
-                || changeEvent.Kind == WorkspaceChangeKind.ProjectAdded
-                || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
+            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
             {
                 var project = changeEvent.NewSolution.GetProject(changeEvent.ProjectId);
-                ClearCurrentlyEditedFileFromAnalysisIfApplicaple(changeEvent, project);
                 QueueForAnalysis(new[] { project });
-            }
-        }
-
-        // This isn't perfect, but if you make change that add lines etc. for litle moment analyzers only knowns analysis from original file
-        // which can cause warnings in incorrect locations if editor fetches them at that point. For this reason during analysis don't return
-        // any information about that file before new result is available.
-        private void ClearCurrentlyEditedFileFromAnalysisIfApplicaple(WorkspaceChangeEventArgs changeEvent, Project project)
-        {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged && _results.ContainsKey(project.Id.ToString()))
-            {
-                var updatedFilePath = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId).FilePath;
-                var filteredResults = _results[project.Id.ToString()].Where(x => x.Location.GetMappedLineSpan().Path != updatedFilePath);
-                _results.AddOrUpdate(project.Id.ToString(), filteredResults, (_, __) => filteredResults);
             }
         }
 
         private void QueueForAnalysis(IEnumerable<Project> projects)
         {
             projects.ToList()
-                .ForEach(project => _workQueue.AddOrUpdate(project.Id.ToString(), (modified: DateTime.UtcNow, project: project), (_, __) => (modified: DateTime.UtcNow, project: project)));
+                .ForEach(project => _workQueue.AddOrUpdate(project.Id, (modified: DateTime.UtcNow, project: project), (_, __) => (modified: DateTime.UtcNow, project: project)));
         }
 
         private async Task<IEnumerable<Diagnostic>> Analyze(Project project, CancellationToken token)
         {
-            var allAnalyzers = this.providers
+            var allAnalyzers = this._providers
                 .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
                 .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
 
