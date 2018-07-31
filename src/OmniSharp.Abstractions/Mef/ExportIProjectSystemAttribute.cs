@@ -7,11 +7,11 @@ namespace OmniSharp.Mef
 {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class ExportIProjectSystemAttribute: ExportAttribute
+    public class ExportProjectSystemAttribute: ExportAttribute
     {
         public string Name { get; }
         
-        public ExportIProjectSystemAttribute(string name) : base(typeof(IProjectSystem))
+        public ExportProjectSystemAttribute(string name) : base(typeof(IProjectSystem))
         {
             Name = name;
         }

@@ -32,7 +32,7 @@ namespace OmniSharp
             projectEventForwarder.Initialize();
             var projectSystems = compositionHost.GetExports<Lazy<IProjectSystem, ProjectSystemMetadata>>();
             var ps = projectSystems.Select(n => n.Value);
-            var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, ExportIProjectSystemAttribute>(ps, eps => eps.Name);
+            var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, ExportProjectSystemAttribute>(ps, eps => eps.Name);
 
             foreach (var projectSystem in orderedProjectSystems)
             {

@@ -18,7 +18,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Script
 {
-    [ExportIProjectSystem(nameof(ScriptProjectSystem)), Shared]
+    [ExportProjectSystem(nameof(ScriptProjectSystem)), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
         private const string CsxExtension = ".csx";
