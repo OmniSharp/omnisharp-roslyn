@@ -23,25 +23,44 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var updated = originalDiagnostics
                 .Select(item =>
                 {
-                    if (_rules.ContainsKey(projectId) && _rules[projectId].SpecificDiagnosticOptions.Any(x => x.Key == item.Id))
+                    if (IsMatchingDiagnosticRule(projectId, item))
                     {
-                        var newSeverity = _rules[projectId].SpecificDiagnosticOptions.Single(x => x.Key == item.Id).Value;
+                        var newSeverity = GetNewSeverity(projectId, item);
+
+                        if (newSeverity.suppressed)
+                            return null;
 
                         return Diagnostic.Create(
                             item.Descriptor,
                             item.Location,
-                            ConvertReportSeverity(newSeverity),
+                            newSeverity.severity,
                             item.AdditionalLocations,
                             item.Properties,
-                            new object[] {});
+                            new object[] { });
                     }
                     return item;
-                });
+                })
+                // Filter out suppressed diagnostics.
+                .Where(x => x != null)
+                .ToList();
 
             return updated;
         }
 
-        private static DiagnosticSeverity ConvertReportSeverity(ReportDiagnostic reportDiagnostic)
+        private (DiagnosticSeverity severity, bool suppressed) GetNewSeverity(ProjectId projectId, Diagnostic item)
+        {
+            var rule = _rules[projectId].SpecificDiagnosticOptions.Single(x => x.Key == item.Id).Value;
+            return (
+                severity: ConvertReportSeverity(_rules[projectId].SpecificDiagnosticOptions.Single(x => x.Key == item.Id).Value, item.Severity),
+                suppressed: rule == ReportDiagnostic.Suppress);
+        }
+
+        private bool IsMatchingDiagnosticRule(ProjectId projectId, Diagnostic item)
+        {
+            return _rules.ContainsKey(projectId) && _rules[projectId].SpecificDiagnosticOptions.Any(x => x.Key == item.Id);
+        }
+
+        private static DiagnosticSeverity ConvertReportSeverity(ReportDiagnostic reportDiagnostic, DiagnosticSeverity original)
         {
             switch(reportDiagnostic) {
                 case ReportDiagnostic.Error:
@@ -50,8 +69,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     return DiagnosticSeverity.Warning;
                 case ReportDiagnostic.Info:
                     return DiagnosticSeverity.Info;
-                default:
+                case ReportDiagnostic.Hidden:
                     return DiagnosticSeverity.Hidden;
+                default:
+                    return original;
             }
         }
     }

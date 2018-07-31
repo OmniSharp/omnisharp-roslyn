@@ -120,14 +120,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile = new TestFile("testFile.cs", "class SomeClass { int n = true; }");
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
-
             TestHelpers.AddProjectToWorkspace(
                 SharedOmniSharpTestHost.Workspace,
                 "project.csproj",
                 new[] { "netcoreapp2.1" },
                 new[] { testFile });
-
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
@@ -163,11 +160,45 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 testRules.ToImmutableDictionary(),
                 new ImmutableArray<RuleSetInclude>()));
 
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
-
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
             Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId) && f.LogLevel == "Hidden");
         }
+
+        [Fact]
+        // This is important because hidden still allows code fixes to execute, not prevents it, for this reason suppressed analytics should not be returned at all.
+        public async Task When_custom_rule_is_set_to_none_dont_return_results_at_all()
+        {
+            var testFile = new TestFile("testFile.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
+            var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
+
+            const string analyzerId = "TS1101";
+
+            var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
+
+            var projectIds = TestHelpers.AddProjectToWorkspace(
+                SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "netcoreapp2.1" },
+                new[] { testFile },
+                analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
+
+            var testRules = new Dictionary<string, ReportDiagnostic>
+            {
+                { analyzerId, ReportDiagnostic.Suppress }
+            };
+
+            ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                "",
+                new ReportDiagnostic(),
+                testRules.ToImmutableDictionary(),
+                new ImmutableArray<RuleSetInclude>()));
+
+            var result = await codeCheckService.Handle(new CodeCheckRequest());
+
+            Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId));
+        }
+
     }
 }
