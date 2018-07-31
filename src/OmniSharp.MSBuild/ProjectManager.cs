@@ -46,7 +46,7 @@ namespace OmniSharp.MSBuild
         private readonly HashSet<string> _failedToLoadProjectFiles;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly CodeFixesForProjects codeFixesForProject;
+        private readonly CodeFixesForProjects _codeFixesForProject;
         private const int LoopDelay = 100; // milliseconds
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
@@ -66,7 +66,7 @@ namespace OmniSharp.MSBuild
             _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
-            this.codeFixesForProject = codeFixesForProject;
+            _codeFixesForProject = codeFixesForProject;
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
@@ -266,7 +266,7 @@ namespace OmniSharp.MSBuild
 
             var projectInfo = projectFileInfo.CreateProjectInfo();
 
-            codeFixesForProject.LoadFrom(projectInfo.Id.ToString(), projectFileInfo.Analyzers);
+            _codeFixesForProject.LoadFrom(projectInfo.Id.ToString(), projectFileInfo.Analyzers);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
