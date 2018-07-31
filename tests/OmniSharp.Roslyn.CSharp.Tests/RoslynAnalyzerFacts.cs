@@ -45,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
         public class TestDiagnosticAnalyzer : DiagnosticAnalyzer
         {
-            public TestDiagnosticAnalyzer(string id)
+            public TestDiagnosticAnalyzer(string id, bool suppressed = false)
             {
                 this.id = id;
             }
@@ -200,5 +200,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId));
         }
 
+        [Fact]
+        public async Task When_diagnostic_is_disabled_by_default_updating_rule_will_enable_it()
+        {
+            // TODO...
+        }
     }
 }

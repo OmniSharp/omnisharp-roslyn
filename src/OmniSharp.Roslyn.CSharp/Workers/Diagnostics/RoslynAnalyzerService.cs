@@ -26,8 +26,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private readonly IEnumerable<ICodeActionProvider> _providers;
 
-        private readonly int throttlingMs = 500;
-
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
@@ -81,7 +79,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .ForEach(result => _results[result.ProjectId] =
                             (result.ProjectName, _rulesetsForProjects.ApplyRules(result.ProjectId, result.Result)));
 
-                    await Task.Delay(200, token);
+                    await Task.Delay(100, token);
                 }
                 catch (Exception ex)
                 {
@@ -105,9 +103,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             lock (_workQueue)
             {
                 var currentWork = _workQueue
-                    .Where(x => x.Value.modified.AddMilliseconds(this.throttlingMs) < DateTime.UtcNow)
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
-                    .Take(3) // Limit mount of work executed by once. This is needed on large solution...
+                    .Take(2) // Limit mount of work executed by once. This is needed on large solution...
                     .ToList();
 
                 currentWork.Select(x => x.Key).ToList().ForEach(key => _workQueue.TryRemove(key, out _));
