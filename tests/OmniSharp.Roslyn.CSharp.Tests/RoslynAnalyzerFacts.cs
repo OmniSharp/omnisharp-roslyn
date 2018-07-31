@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
@@ -107,8 +109,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new[] { testFile },
                 analyzerRefs: new AnalyzerReference []{ testAnalyzerRef }.ToImmutableArray());
 
-
-
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
             Assert.Contains(result.QuickFixes, f => f.Text.Contains(analyzerId));
@@ -132,6 +132,42 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
             Assert.Contains(result.QuickFixes, f => f.Text.Contains("CS0029"));
+        }
+
+        [Fact]
+        public async Task When_rules_udpate_diagnostic_severity_then_show_them_with_new_severity()
+        {
+            var testFile = new TestFile("testFile.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
+            var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
+
+            const string analyzerId = "TS1100";
+
+            var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
+
+            var projectIds = TestHelpers.AddProjectToWorkspace(
+                SharedOmniSharpTestHost.Workspace,
+                "project.csproj",
+                new[] { "netcoreapp2.1" },
+                new[] { testFile },
+                analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
+
+            var testRules = new Dictionary<string, ReportDiagnostic>
+            {
+                { analyzerId, ReportDiagnostic.Hidden }
+            };
+
+            ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                "",
+                new ReportDiagnostic(),
+                testRules.ToImmutableDictionary(),
+                new ImmutableArray<RuleSetInclude>()));
+
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
+
+            var result = await codeCheckService.Handle(new CodeCheckRequest());
+
+            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId) && f.LogLevel == "Hidden");
         }
     }
 }
