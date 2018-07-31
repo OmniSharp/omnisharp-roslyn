@@ -16,6 +16,7 @@ using OmniSharp.MSBuild.Models;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 
@@ -34,7 +35,8 @@ namespace OmniSharp.MSBuild
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly CodeFixesForProjects codeFixesForProjects;
+        private readonly CodeFixesForProjects _codeFixesForProjects;
+        private readonly RulesetsForProjects _rulesetsForProjects;
         private readonly ILogger _logger;
 
         private readonly object _gate = new object();
@@ -63,7 +65,8 @@ namespace OmniSharp.MSBuild
             IFileSystemWatcher fileSystemWatcher,
             FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory,
-            CodeFixesForProjects codeFixesForProjects)
+            CodeFixesForProjects codeFixesForProjects,
+            RulesetsForProjects rulesetsForProjects)
         {
             _environment = environment;
             _workspace = workspace;
@@ -75,7 +78,8 @@ namespace OmniSharp.MSBuild
             _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _loggerFactory = loggerFactory;
-            this.codeFixesForProjects = codeFixesForProjects;
+            _codeFixesForProjects = codeFixesForProjects;
+            _rulesetsForProjects = rulesetsForProjects;
             _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
         }
@@ -96,7 +100,7 @@ namespace OmniSharp.MSBuild
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
-            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, codeFixesForProjects);
+            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _codeFixesForProjects, _rulesetsForProjects);
 
             var initialProjectPaths = GetInitialProjectPaths();
 

@@ -30,13 +30,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly RulesetsForProjects _rulesetsForProjects;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            DiagnosticEventForwarder forwarder)
+            DiagnosticEventForwarder forwarder,
+            RulesetsForProjects rulesetsForProjects)
         {
             _logger = loggerFactory.CreateLogger<RoslynAnalyzerService>();
             _providers = providers;
@@ -54,6 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             _forwarder = forwarder;
             _workspace = workspace;
+            _rulesetsForProjects = rulesetsForProjects;
         }
 
         private async Task Worker(CancellationToken token)
@@ -75,7 +78,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     analyzerResults
                         .ToList()
-                        .ForEach(result => _results[result.ProjectId] = (result.ProjectName, result.Result));
+                        .ForEach(result => _results[result.ProjectId] =
+                            (result.ProjectName, _rulesetsForProjects.ApplyRules(result.ProjectId, result.Result)));
 
                     await Task.Delay(200, token);
                 }

@@ -16,6 +16,7 @@ using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -54,8 +55,18 @@ namespace OmniSharp.MSBuild
         private bool _processingQueue;
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
+        private readonly RulesetsForProjects _rulesetsForProjects;
 
-        public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace, CodeFixesForProjects codeFixesForProject)
+        public ProjectManager(
+            ILoggerFactory loggerFactory,
+            IEventEmitter eventEmitter,
+            IFileSystemWatcher fileSystemWatcher,
+            MetadataFileReferenceCache metadataFileReferenceCache,
+            PackageDependencyChecker packageDependencyChecker,
+            ProjectLoader projectLoader,
+            OmniSharpWorkspace workspace,
+            CodeFixesForProjects codeFixesForProject,
+            RulesetsForProjects rulesetsForProjects)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _eventEmitter = eventEmitter;
@@ -72,6 +83,7 @@ namespace OmniSharp.MSBuild
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
 
             _onDirectoryFileChanged = OnDirectoryFileChanged;
+            _rulesetsForProjects = rulesetsForProjects;
         }
 
         protected override void DisposeCore(bool disposing)
@@ -267,6 +279,9 @@ namespace OmniSharp.MSBuild
             var projectInfo = projectFileInfo.CreateProjectInfo();
 
             _codeFixesForProject.LoadFrom(projectInfo.Id.ToString(), projectFileInfo.Analyzers);
+
+            if(projectFileInfo.RuleSet != null)
+                _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
