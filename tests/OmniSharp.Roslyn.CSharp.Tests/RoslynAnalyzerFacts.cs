@@ -203,6 +203,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task When_diagnostic_is_disabled_by_default_updating_rule_will_enable_it()
         {
+            await Task.Delay(1);
             // TODO...
         }
     }
