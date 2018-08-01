@@ -31,6 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
         private bool _initializationQueueDone;
+        private int _throttlingMs = 500;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
@@ -82,6 +83,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             lock (_workQueue)
             {
                 var currentWork = _workQueue
+                    .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) < DateTime.UtcNow)
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
                     .Take(2) // Limit mount of work executed by once. This is needed on large solution...
                     .ToList();
@@ -98,10 +100,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var pendingWork = _workQueue
                 .Where(x => projectIds.Any(pid => pid == x.Key))
-                .Select(x => {
-                    _logger.LogInformation($"Starting to wait: {x.Key}");
-                    return x;
-                })
                 .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
                     .ContinueWith(task => LogTimeouts(task, x.Key)));
 
@@ -156,7 +154,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
             finally
             {
-                _logger.LogInformation($"DONE: {project.Id}");
                 workReadySource.Cancel();
             }
         }
