@@ -117,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task Always_return_results_from_net_default_analyzers()
         {
-            var testFile = new TestFile("testFile.cs", "class SomeClass { int n = true; }");
+            var testFile = new TestFile("testFile_1.cs", "class SomeClass { int n = true; }");
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
             TestHelpers.AddProjectToWorkspace(
@@ -128,13 +128,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes, f => f.Text.Contains("CS0029"));
+            Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
         }
 
         [Fact]
         public async Task When_rules_udpate_diagnostic_severity_then_show_them_with_new_severity()
         {
-            var testFile = new TestFile("testFile.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+            var testFile = new TestFile("testFile_2.cs", "class _this_is_invalid_test_class_name { int n = true; }");
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
             var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
 
@@ -169,7 +169,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         // This is important because hidden still allows code fixes to execute, not prevents it, for this reason suppressed analytics should not be returned at all.
         public async Task When_custom_rule_is_set_to_none_dont_return_results_at_all()
         {
-            var testFile = new TestFile("testFile.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+            var testFile = new TestFile("testFile_3.cs", "class _this_is_invalid_test_class_name { int n = true; }");
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
             var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
 
