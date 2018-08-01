@@ -37,8 +37,8 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 {
                     var filePath = AddTestFile(testProject, testfile);
                     await WaitForFileUpdate(filePath, host);
-                    var codeCheckService = host.GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
-                    var actual = await codeCheckService.Handle(new CodeCheckRequest() { FileName = filePath });
+                    var request = new CodeCheckRequest() { FileName = filePath };
+                    var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
                     Assert.Equal("; expected", actual.QuickFixes.First().Text);
                 }
@@ -62,7 +62,6 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 {
                     var filePath = AddTestFile(testProject, testfile);
                     await WaitForFileUpdate(filePath, host);
-                    var service = host.GetRequestHandler<SignatureHelpService>(OmniSharpEndpoints.SignatureHelp);
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new SignatureHelpRequest()
                     {
@@ -72,7 +71,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                         Buffer = testfile.Content.Code
                     };
 
-                    var actual = await service.Handle(request);
+                    var actual = await host.GetResponse<SignatureHelpRequest, SignatureHelpResponse>(OmniSharpEndpoints.SignatureHelp, request);
                     Assert.Single(actual.Signatures);
                     Assert.Equal(0, actual.ActiveParameter);
                     Assert.Equal(0, actual.ActiveSignature);
@@ -100,7 +99,6 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 {
                     var filePath = AddTestFile(testProject, testfile);
                     await WaitForFileUpdate(filePath, host);
-                    var service = host.GetRequestHandler<FindImplementationsService>(OmniSharpEndpoints.FindImplementations);
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new FindImplementationsRequest()
                     {
@@ -110,7 +108,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                         Buffer = testfile.Content.Code
                     };
 
-                    var actual = await service.Handle(request);
+                    var actual = await host.GetResponse<FindImplementationsRequest, QuickFixResponse>(OmniSharpEndpoints.FindImplementations, request);
                     Assert.Single(actual.QuickFixes);
                     Assert.Equal("public void Foo() {}", actual.QuickFixes.First().Text.Trim());
                 }
@@ -142,7 +140,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 {
                     var filePath = AddTestFile(testProject, testfile);
                     await WaitForFileUpdate(filePath, host);
-                    var service = host.GetRequestHandler<FindUsagesService>(OmniSharpEndpoints.FindUsages);
+                   
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new FindUsagesRequest()
                     {
@@ -152,7 +150,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                         Buffer = testfile.Content.Code
                     };
 
-                    var actual = await service.Handle(request);
+                    var actual = await host.GetResponse<FindUsagesRequest, QuickFixResponse>(OmniSharpEndpoints.FindUsages, request);
                     Assert.Equal(2, actual.QuickFixes.Count());
                 }
             }
@@ -190,8 +188,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 {
                     var filePath = AddTestFile(testProject, testfile);
                     await WaitForFileUpdate(filePath, host);
-                    var service = host.GetRequestHandler<FindSymbolsService>(OmniSharpEndpoints.FindSymbols);
-                    var actual = await service.Handle(null);
+                    var actual = await host.GetResponse<FindSymbolsRequest, QuickFixResponse>(OmniSharpEndpoints.FindSymbols, null);
                     var symbols = actual.QuickFixes.Select(q => q.Text);
 
                     var expected = new[]
@@ -257,13 +254,8 @@ namespace OmniSharp
                 {
                     var filePath = AddTestFile(testProject, testfile);
                     await WaitForFileUpdate(filePath, host);
-                    var service = host.GetRequestHandler<FixUsingService>(OmniSharpEndpoints.FixUsings);
-                    var request = new FixUsingsRequest
-                    {
-                        FileName = filePath
-                    };
-
-                    var actual = await service.Handle(request);
+                    var request = new FixUsingsRequest(){ FileName = filePath };
+                    var actual = await host.GetResponse<FixUsingsRequest, FixUsingsResponse>(OmniSharpEndpoints.FixUsings, request);
                     Assert.Equal(expectedCode.Replace("\r\n", "\n"), actual.Buffer.Replace("\r\n", "\n"));
                 }
             }
@@ -289,7 +281,7 @@ namespace OmniSharp
                         Column = point.Offset,
                     };
 
-                    var actual = await service.Handle(request);
+                    var actual = await host.GetResponse<TypeLookupRequest, TypeLookupResponse>(OmniSharpEndpoints.TypeLookup, request);
                     Assert.Equal("Foo", actual.Type);
                 }
             }
