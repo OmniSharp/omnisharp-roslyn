@@ -19,7 +19,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, Project project)> _workQueue = new ConcurrentDictionary<ProjectId, (DateTime modified, Project project)>();
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, Project project, CancellationTokenSource workReadySource)> _workQueue =
+            new ConcurrentDictionary<ProjectId, (DateTime modified, Project project, CancellationTokenSource workReadySource)>();
 
         private readonly ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)> _results =
             new ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)>();
@@ -29,6 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
+        private bool _initializationQueueDone;
 
         [ImportingConstructor]
         public RoslynAnalyzerService(
@@ -49,6 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 while (!workspace.Initialized) Task.Delay(500);
                 QueueForAnalysis(workspace.CurrentSolution.Projects.ToList());
+                _initializationQueueDone = true;
                 _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
             });
 
@@ -61,44 +64,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             while (!token.IsCancellationRequested)
             {
-                var currentWork = GetThrottledWork();
-
                 try
                 {
-                    var analyzerResults = await Task
-                        .WhenAll(currentWork
-                            .Select(async x => new
-                            {
-                                ProjectId = x.Value.Id,
-                                ProjectName = x.Value.Name,
-                                Result = await Analyze(x.Value, token)
-                            }));
-
-                    analyzerResults
-                        .ToList()
-                        .ForEach(result => _results[result.ProjectId] =
-                            (result.ProjectName, _rulesetsForProjects.ApplyRules(result.ProjectId, result.Result)));
-
+                    var currentWork = GetThrottledWork();
+                    await Task.WhenAll(currentWork.Select(x => Analyze(x.project, x.workReadySource, token)).ToList());
                     await Task.Delay(100, token);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError($"Analyzer worker failed: {ex}");
-                    OnErrorInitializeWithEmptyDummyIfNeeded(currentWork);
                 }
             }
         }
 
-        private void OnErrorInitializeWithEmptyDummyIfNeeded(IDictionary<ProjectId, Project> currentWork)
-        {
-            currentWork.ToList().ForEach(x =>
-            {
-                if (!_results.ContainsKey(x.Key))
-                    _results[x.Key] = ($"errored {x.Key}", Enumerable.Empty<Diagnostic>());
-            });
-        }
-
-        private IDictionary<ProjectId, Project> GetThrottledWork()
+        private IEnumerable<(Project project, CancellationTokenSource workReadySource)> GetThrottledWork()
         {
             lock (_workQueue)
             {
@@ -109,33 +88,33 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 currentWork.Select(x => x.Key).ToList().ForEach(key => _workQueue.TryRemove(key, out _));
 
-                return currentWork.ToDictionary(x => x.Key, x => x.Value.project);
+                return currentWork.Select(x => (x.Value.project, x.Value.workReadySource));
             }
         }
 
-        public Task<IEnumerable<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
+        public async Task<IEnumerable<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
         {
-            return Task.Run(() =>
-            {
-                while(!ResultsInitialized(projectIds) || PendingWork(projectIds))
-                {
-                    Task.Delay(100);
-                }
+            while(!_initializationQueueDone) await Task.Delay(100);
 
-                return _results
-                    .Where(x => projectIds.Any(pid => pid == x.Key))
-                    .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)));
-            });
+            var pendingWork = _workQueue
+                .Where(x => projectIds.Any(pid => pid == x.Key))
+                .Select(x => {
+                    _logger.LogInformation($"Starting to wait: {x.Key}");
+                    return x;
+                })
+                .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
+                    .ContinueWith(task => LogTimeouts(task, x.Key)));
+
+            await Task.WhenAll(pendingWork);
+
+            return _results
+                .Where(x => projectIds.Any(pid => pid == x.Key))
+                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)));
         }
 
-        private bool PendingWork(IEnumerable<ProjectId> projectIds)
+        private void LogTimeouts(Task task, ProjectId projectId)
         {
-            return projectIds.Any(x => _workQueue.ContainsKey(x));
-        }
-
-        private bool ResultsInitialized(IEnumerable<ProjectId> projectIds)
-        {
-            return projectIds.All(x => _results.ContainsKey(x));
+            if(!task.IsCanceled) _logger.LogError($"Timeout before work got ready for project {projectId}.");
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
@@ -152,23 +131,34 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private void QueueForAnalysis(IEnumerable<Project> projects)
         {
             projects.ToList()
-                .ForEach(project => _workQueue.AddOrUpdate(project.Id, (modified: DateTime.UtcNow, project: project), (_, __) => (modified: DateTime.UtcNow, project: project)));
+                .ForEach(project => _workQueue.AddOrUpdate(project.Id,
+                    (modified: DateTime.UtcNow, project: project, new CancellationTokenSource()),
+                    (_, oldValue) => (modified: DateTime.UtcNow, project: project, oldValue.workReadySource)));
         }
 
-        private async Task<IEnumerable<Diagnostic>> Analyze(Project project, CancellationToken token)
+        private async Task Analyze(Project project, CancellationTokenSource workReadySource, CancellationToken token)
         {
-            var allAnalyzers = this._providers
-                .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
+            try
+            {
+                var allAnalyzers = this._providers
+                    .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
+                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
 
-            if (!allAnalyzers.Any())
-                return ImmutableArray<Diagnostic>.Empty;
+                var compiled = await project.WithCompilationOptions(
+                    _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(project))
+                    .GetCompilationAsync(token);
 
-            var compiled = await project.GetCompilationAsync(token);
+                var results = await compiled
+                    .WithAnalyzers(allAnalyzers.ToImmutableArray())
+                    .GetAllDiagnosticsAsync(token);
 
-            return await compiled
-                .WithAnalyzers(allAnalyzers.ToImmutableArray())
-                .GetAllDiagnosticsAsync(token);
+                _results[project.Id] = (project.Name, results);
+            }
+            finally
+            {
+                _logger.LogInformation($"DONE: {project.Id}");
+                workReadySource.Cancel();
+            }
         }
     }
 }
