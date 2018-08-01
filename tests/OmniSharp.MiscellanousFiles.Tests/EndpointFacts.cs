@@ -1,8 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Mef;
+using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.FilesChanged;
 using OmniSharp.Models.FindImplementations;
+using OmniSharp.Models.FindSymbols;
 using OmniSharp.Models.FindUsages;
 using OmniSharp.Models.FixUsings;
 using OmniSharp.Models.SignatureHelp;
