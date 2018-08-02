@@ -24,7 +24,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.DotNet
 {
-    [ExportProjectSystem(nameof(DotNetProjectSystem)), Shared]
+    [ExportProjectSystem(ProjectSystemNames.DotNetProjectSystem), Shared]
     public class DotNetProjectSystem : IProjectSystem
     {
         private const string CompilationConfiguration = "Debug";

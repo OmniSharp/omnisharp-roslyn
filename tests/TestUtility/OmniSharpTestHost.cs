@@ -42,7 +42,7 @@ namespace TestUtility
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
-            typeof(MiscellanousFiles).GetTypeInfo().Assembly // OmniSharp.MiscellanousFiles
+            typeof(MiscellanousFilesProjectSystem).GetTypeInfo().Assembly // OmniSharp.MiscellanousFiles
         });
 
         private readonly TestServiceProvider _serviceProvider;

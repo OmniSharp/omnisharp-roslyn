@@ -23,7 +23,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Cake
 {
-    [ExportProjectSystem(nameof(CakeProjectSystem)), Shared]
+    [ExportProjectSystem(ProjectSystemNames.CakeProjectSystem), Shared]
     public class CakeProjectSystem : IProjectSystem
     {
         private readonly OmniSharpWorkspace _workspace;
