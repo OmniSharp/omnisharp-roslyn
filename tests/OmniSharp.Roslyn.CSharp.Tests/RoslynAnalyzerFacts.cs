@@ -216,7 +216,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private IEnumerable<ProjectId> CreateProjectWitFile(TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
         {
-            var analyzerReferences = testAnalyzerRef == null ? new AnalyzerReference[] { }.ToImmutableArray() :
+            var analyzerReferences = testAnalyzerRef == null ? default:
                 new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray();
 
             return TestHelpers.AddProjectToWorkspace(
@@ -224,7 +224,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             "project.csproj",
                             new[] { "netcoreapp2.1" },
                             new[] { testFile },
-                            analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
+                            analyzerRefs: analyzerReferences);
         }
     }
 }
