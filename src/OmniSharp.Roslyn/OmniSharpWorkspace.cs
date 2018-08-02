@@ -86,18 +86,17 @@ namespace OmniSharp
             OnDocumentAdded(documentInfo);
         }
 
-        public void AddMiscellanousFileDocument(ProjectId projectId, string filePath)
+        public DocumentId AddMiscellanousFileDocument(ProjectId projectId, string filePath)
         {
             var documentId = AddDocument(projectId, filePath);
             _miscellanousFiles.Add(documentId);
+            return documentId;
         }
 
-        public void RemoveMiscellanousFileDocument(ProjectId projectId)
+        public void RemoveMiscellanousFileDocument(DocumentId documentId)
         {
-            var project = CurrentSolution.GetProject(projectId);
-            var id = project.DocumentIds.First();
-            _miscellanousFiles.Remove(id);
-            RemoveProject(projectId);
+            _miscellanousFiles.Remove(documentId);
+            RemoveDocument(documentId);
         }
 
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
