@@ -12,7 +12,6 @@ using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
-using OmniSharp.MSBuild;
 using OmniSharp.Services;
 
 namespace OmniSharp.MiscellanousFiles
@@ -31,7 +30,7 @@ namespace OmniSharp.MiscellanousFiles
         private readonly OmniSharpWorkspace _workspace;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
-        private readonly ProjectSystem _projectSystem;
+        private readonly IUpdates _projectSystem;
         private readonly ILogger _logger;
         private ProjectId _projectId;
 
@@ -43,7 +42,7 @@ namespace OmniSharp.MiscellanousFiles
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<MiscellanousFilesProjectSystem>();
-            _projectSystem = (ProjectSystem)projectSystems.Where(ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem).First().Value;
+            _projectSystem = (IUpdates)projectSystems.Where(ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem).First().Value;
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
@@ -68,7 +67,7 @@ namespace OmniSharp.MiscellanousFiles
         private async void AddIfMiscellanousFile(string filePath)
         {
             //wait for the project system to get initialised
-            await _projectSystem.HasCompletedUpdateRequest();
+            await _projectSystem.WaitForUpdatesAsync();
             if (_workspace.GetDocument(filePath) == null)
             {
                 if (this._projectId == null)
