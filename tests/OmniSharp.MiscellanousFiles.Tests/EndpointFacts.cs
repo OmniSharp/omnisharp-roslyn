@@ -32,7 +32,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
         [Fact]
         public async Task Returns_only_syntactic_diagnotics()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
 
                 var testfile = new TestFile("a.cs", "class C { b a = new b(); int n  }");
@@ -59,7 +59,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
     }
 }";
             var testfile = new TestFile("a.cs", source);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
@@ -96,7 +96,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 }";
 
             var testfile = new TestFile("a.cs", source);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
@@ -137,7 +137,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
     }";
 
             var testfile = new TestFile("a.cs", source);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
@@ -185,7 +185,7 @@ namespace OmniSharp.MiscellanousFiles.Tests
                 }";
 
             var testfile = new TestFile("a.cs", source);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
@@ -251,7 +251,7 @@ namespace OmniSharp
 }";
 
             var testfile = new TestFile("a.cs", code);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
@@ -269,7 +269,7 @@ namespace OmniSharp
         {
             const string code = @"class F$$oo {}";
             var testfile = new TestFile("a.cs", code);
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMiscFile"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {

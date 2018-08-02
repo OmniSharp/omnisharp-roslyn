@@ -37,19 +37,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void TestMultipleDirectoryWatchers()
+        public async void TestMultipleDirectoryWatchers()
         {
-            using (var host = CreateEmptyOmniSharpHost())
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var watcher = host.GetExport<IFileSystemWatcher>();
-
+                var filepath = testProject.AddDisposableFile("FileName.cs");
                 bool firstWatcherCalled = false;
                 bool secondWatcherCalled = false;
                 watcher.Watch("", (path, changeType) => { firstWatcherCalled = true; });
                 watcher.Watch("", (path, changeType) => { secondWatcherCalled = true; });
 
                 var handler = GetRequestHandler(host);
-                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
 
                 Assert.True(firstWatcherCalled);
                 Assert.True(secondWatcherCalled);
@@ -57,17 +58,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void TestFileExtensionWatchers()
+        public async void TestFileExtensionWatchers()
         {
-            using (var host = CreateEmptyOmniSharpHost())
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
             {
                 var watcher = host.GetExport<IFileSystemWatcher>();
-
+                var filepath = testProject.AddDisposableFile("FileName.cs");
                 var extensionWatcherCalled = false;
                 watcher.Watch(".cs", (path, changeType) => { extensionWatcherCalled = true; });
-
                 var handler = GetRequestHandler(host);
-                handler.Handle(new[] { new FilesChangedRequest() { FileName = "FileName.cs", ChangeType = FileChangeType.Create } });
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filepath, ChangeType = FileChangeType.Create } });
 
                 Assert.True(extensionWatcherCalled);
             }
