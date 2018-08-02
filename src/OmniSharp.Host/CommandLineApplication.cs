@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Internal;
 
@@ -13,7 +13,7 @@ namespace OmniSharp
 {
     public class CommandLineApplication
     {
-        protected readonly McMaster.Extensions.CommandLineUtils.CommandLineApplication Application;
+        protected readonly Microsoft.Extensions.CommandLineUtils.CommandLineApplication Application;
         private readonly CommandOption _hostPid;
         private readonly CommandOption _zeroBasedIndices;
         private readonly CommandOption _plugin;
@@ -24,7 +24,7 @@ namespace OmniSharp
 
         public CommandLineApplication()
         {
-            Application = new McMaster.Extensions.CommandLineUtils.CommandLineApplication(throwOnUnexpectedArg: false);
+            Application = new Microsoft.Extensions.CommandLineUtils.CommandLineApplication(throwOnUnexpectedArg: false);
             Application.HelpOption("-? | -h | --help");
 
             _applicationRoot = Application.Option("-s | --source", "Solution or directory for OmniSharp to point at (defaults to current directory).", CommandOptionType.SingleValue);

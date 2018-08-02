@@ -14,7 +14,6 @@
     <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.6.1" />
     <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.6.2" />
 
-    <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
     <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.1.1" />
     <PackageReference Update="Microsoft.AspNetCore.Hosting" Version="2.1.1" />
@@ -34,6 +33,7 @@
     <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
 
     <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="2.1.1" />
+    <PackageReference Update="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
     <PackageReference Update="Microsoft.Extensions.Configuration" Version="2.1.1" />
     <PackageReference Update="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
     <PackageReference Update="Microsoft.Extensions.Configuration.CommandLine" Version="2.1.1" />
