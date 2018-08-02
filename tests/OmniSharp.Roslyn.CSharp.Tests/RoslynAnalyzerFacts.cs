@@ -21,10 +21,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public class TestAnalyzerReference : AnalyzerReference
         {
             private readonly string _id;
+            private readonly bool _isEnabledByDefault;
 
-            public TestAnalyzerReference(string testAnalyzerId)
+            public TestAnalyzerReference(string testAnalyzerId, bool isEnabledByDefault = true)
             {
                 _id = testAnalyzerId;
+                _isEnabledByDefault = isEnabledByDefault;
             }
 
             public override string FullPath => null;
@@ -33,21 +35,22 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(string language)
             {
-                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer(Id.ToString()) }.ToImmutableArray();
+                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer(Id.ToString(), _isEnabledByDefault) }.ToImmutableArray();
             }
 
             public override ImmutableArray<DiagnosticAnalyzer> GetAnalyzersForAllLanguages()
             {
-                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer(Id.ToString()) }.ToImmutableArray();
+                return new DiagnosticAnalyzer[] { new TestDiagnosticAnalyzer(Id.ToString(), _isEnabledByDefault) }.ToImmutableArray();
             }
         }
 
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
         public class TestDiagnosticAnalyzer : DiagnosticAnalyzer
         {
-            public TestDiagnosticAnalyzer(string id, bool suppressed = false)
+            public TestDiagnosticAnalyzer(string id, bool isEnabledByDefault)
             {
                 this.id = id;
+                _isEnabledByDefault = isEnabledByDefault;
             }
 
             private DiagnosticDescriptor Rule => new DiagnosticDescriptor(
@@ -56,10 +59,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Type name '{0}' contains lowercase letters",
                 "Naming",
                 DiagnosticSeverity.Warning,
-                isEnabledByDefault: true
+                isEnabledByDefault: _isEnabledByDefault
             );
 
             private readonly string id;
+            private readonly bool _isEnabledByDefault;
 
             public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             {
@@ -102,12 +106,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
 
-            TestHelpers.AddProjectToWorkspace(
-                SharedOmniSharpTestHost.Workspace,
-                "project.csproj",
-                new[] { "netcoreapp2.1" },
-                new[] { testFile },
-                analyzerRefs: new AnalyzerReference []{ testAnalyzerRef }.ToImmutableArray());
+            var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
@@ -120,11 +119,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile = new TestFile("testFile_1.cs", "class SomeClass { int n = true; }");
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
 
-            TestHelpers.AddProjectToWorkspace(
-                SharedOmniSharpTestHost.Workspace,
-                "project.csproj",
-                new[] { "netcoreapp2.1" },
-                new[] { testFile });
+            CreateProjectWitFile(testFile);
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
@@ -142,12 +137,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
 
-            var projectIds = TestHelpers.AddProjectToWorkspace(
-                SharedOmniSharpTestHost.Workspace,
-                "project.csproj",
-                new[] { "netcoreapp2.1" },
-                new[] { testFile },
-                analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
+            var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
             var testRules = new Dictionary<string, ReportDiagnostic>
             {
@@ -177,12 +167,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
 
-            var projectIds = TestHelpers.AddProjectToWorkspace(
-                SharedOmniSharpTestHost.Workspace,
-                "project.csproj",
-                new[] { "netcoreapp2.1" },
-                new[] { testFile },
-                analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
+            var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
             var testRules = new Dictionary<string, ReportDiagnostic>
             {
@@ -203,8 +188,43 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task When_diagnostic_is_disabled_by_default_updating_rule_will_enable_it()
         {
-            await Task.Delay(1);
-            // TODO...
+            var testFile = new TestFile("testFile_3.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+            var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
+            var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
+
+            const string analyzerId = "TS1101";
+
+            var testAnalyzerRef = new TestAnalyzerReference(analyzerId, isEnabledByDefault: false);
+
+            var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
+
+            var testRules = new Dictionary<string, ReportDiagnostic>
+            {
+                { analyzerId, ReportDiagnostic.Error }
+            };
+
+            ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                "",
+                new ReportDiagnostic(),
+                testRules.ToImmutableDictionary(),
+                new ImmutableArray<RuleSetInclude>()));
+
+            var result = await codeCheckService.Handle(new CodeCheckRequest());
+
+            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId));
+        }
+
+        private IEnumerable<ProjectId> CreateProjectWitFile(TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
+        {
+            var analyzerReferences = testAnalyzerRef == null ? new AnalyzerReference[] { }.ToImmutableArray() :
+                new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray();
+
+            return TestHelpers.AddProjectToWorkspace(
+                            SharedOmniSharpTestHost.Workspace,
+                            "project.csproj",
+                            new[] { "netcoreapp2.1" },
+                            new[] { testFile },
+                            analyzerRefs: new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray());
         }
     }
 }
