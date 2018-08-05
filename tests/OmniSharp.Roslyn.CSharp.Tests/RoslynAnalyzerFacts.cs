@@ -102,15 +102,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
-            var analyzerId = "TS1000".ToString();
-
-            var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
+            var testAnalyzerRef = new TestAnalyzerReference("TS1234");
 
             var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes, f => f.Text.Contains(analyzerId));
+            Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
         }
 
         [Fact]
@@ -133,16 +131,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
             var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
 
-            const string analyzerId = "TS1100";
-
-            var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
+            var testAnalyzerRef = new TestAnalyzerReference("TS1100");
 
             var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
-
-            var testRules = new Dictionary<string, ReportDiagnostic>
-            {
-                { analyzerId, ReportDiagnostic.Hidden }
-            };
+            var testRules = CreateRules(testAnalyzerRef, ReportDiagnostic.Hidden);
 
             ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
                 "",
@@ -152,7 +144,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId) && f.LogLevel == "Hidden");
+            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
+        }
+
+        private static Dictionary<string, ReportDiagnostic> CreateRules(TestAnalyzerReference testAnalyzerRef, ReportDiagnostic diagnostic)
+        {
+            return new Dictionary<string, ReportDiagnostic>
+            {
+                { testAnalyzerRef.Id.ToString(), diagnostic }
+            };
         }
 
         [Fact]
@@ -163,16 +163,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
             var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
 
-            const string analyzerId = "TS1101";
-
-            var testAnalyzerRef = new TestAnalyzerReference(analyzerId);
+            var testAnalyzerRef = new TestAnalyzerReference("TS1101");
 
             var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
-            var testRules = new Dictionary<string, ReportDiagnostic>
-            {
-                { analyzerId, ReportDiagnostic.Suppress }
-            };
+            var testRules = CreateRules(testAnalyzerRef, ReportDiagnostic.Suppress);
 
             ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
                 "",
@@ -182,7 +177,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId));
+            Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
         }
 
         [Fact]
@@ -192,16 +187,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var codeCheckService = GetRequestHandler(SharedOmniSharpTestHost);
             var ruleService = SharedOmniSharpTestHost.GetExport<RulesetsForProjects>();
 
-            const string analyzerId = "TS1101";
-
-            var testAnalyzerRef = new TestAnalyzerReference(analyzerId, isEnabledByDefault: false);
+            var testAnalyzerRef = new TestAnalyzerReference("TS1101", isEnabledByDefault: false);
 
             var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
-            var testRules = new Dictionary<string, ReportDiagnostic>
-            {
-                { analyzerId, ReportDiagnostic.Error }
-            };
+            var testRules = CreateRules(testAnalyzerRef, ReportDiagnostic.Error);
 
             ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
                 "",
@@ -211,7 +201,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(analyzerId));
+            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
         }
 
         private IEnumerable<ProjectId> CreateProjectWitFile(TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
