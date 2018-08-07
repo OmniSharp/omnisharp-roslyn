@@ -209,7 +209,6 @@ Task("InstallMonoAssets")
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoFramework}", env.Folders.MonoFramework);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildRuntime}", env.Folders.MonoMSBuildRuntime);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildLib}", env.Folders.MonoMSBuildLib);
 
@@ -221,7 +220,6 @@ Task("InstallMonoAssets")
 
     var frameworkFolder = CombinePaths(env.Folders.Mono, "framework");
     DirectoryHelper.ForceCreate(frameworkFolder);
-    DirectoryHelper.Copy(env.Folders.MonoFramework, frameworkFolder);
 
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "bin", monoRuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
@@ -712,8 +710,6 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     Run("chmod", $"+x '{CombinePaths(outputFolder, "bin", monoRuntime.RuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
-
-    DirectoryHelper.Copy(env.Folders.MonoFramework, CombinePaths(outputFolder, "framework"));
 
     var sourceFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
     var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
