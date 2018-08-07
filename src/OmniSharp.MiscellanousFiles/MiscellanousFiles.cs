@@ -66,8 +66,11 @@ namespace OmniSharp.MiscellanousFiles
 
         private async void AddIfMiscellanousFile(string filePath)
         {
-            //wait for the project system to get initialised
+            //wait for the project system to get initialise
             await _projectSystem.WaitForUpdatesAsync();
+            var absoluteFilePath = new FileInfo(filePath).FullName;
+            if (!File.Exists(absoluteFilePath))
+                return;
             if (_workspace.GetDocument(filePath) == null)
             {
                 if (this._projectId == null)
@@ -86,8 +89,8 @@ namespace OmniSharp.MiscellanousFiles
                     _projectId = projectInfo.Id;
                 }
 
-                _documents[filePath] = _workspace.AddMiscellanousFileDocument(_projectId, filePath);
-                _logger.LogInformation($"Successfully added file '{filePath}' to workspace");
+                _documents[absoluteFilePath] = _workspace.AddMiscellanousFileDocument(_projectId, absoluteFilePath);
+                _logger.LogInformation($"Successfully added file '{absoluteFilePath}' to workspace");
             }
         }
 
