@@ -1,4 +1,4 @@
-using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.CommandLineUtils;
 using OmniSharp.Internal;
 
 namespace OmniSharp.Stdio
