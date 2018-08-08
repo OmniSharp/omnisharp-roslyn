@@ -2,7 +2,7 @@
 
 namespace OmniSharp.Services
 {
-    public interface IUpdates
+    public interface IWaitableProjectSystem: IProjectSystem
     {
         Task WaitForUpdatesAsync();
     }

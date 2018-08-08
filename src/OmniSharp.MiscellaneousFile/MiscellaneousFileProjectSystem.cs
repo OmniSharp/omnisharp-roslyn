@@ -14,15 +14,15 @@ using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
-namespace OmniSharp.MiscellanousFiles
+namespace OmniSharp.MiscellaneousFile
 {
     [ExtensionOrder(After = ProjectSystemNames.MSBuildProjectSystem)]
     [ExtensionOrder(After = ProjectSystemNames.DotNetProjectSystem)]
-    [ExportProjectSystem(ProjectSystemNames.MiscellanousFilesProjectSystem), Shared]
-    public class MiscellanousFilesProjectSystem : IProjectSystem
+    [ExportProjectSystem(ProjectSystemNames.MiscellaneousFilesProjectSystem), Shared]
+    public class MiscellaneousFilesProjectSystem : IProjectSystem
     {
-        private readonly string miscFileExtension = ".cs";
-        public string Key { get; } = "MiscellanousFiles";
+        private const string miscFileExtension = ".cs";
+        public string Key { get; } = "MiscellaneousFiles";
         public string Language { get; } = LanguageNames.CSharp;
         IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };
         public bool EnabledByDefault { get; } = true;
@@ -31,24 +31,23 @@ namespace OmniSharp.MiscellanousFiles
         private readonly OmniSharpWorkspace _workspace;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
-        private readonly List<IUpdates> _projectSystems;
+        private readonly List<IWaitableProjectSystem> _projectSystems;
         private readonly ILogger _logger;
         private ProjectId _projectId;
 
         [ImportingConstructor]
-        public MiscellanousFilesProjectSystem(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper,
+        public MiscellaneousFilesProjectSystem(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory, [ImportMany] IEnumerable<Lazy<IProjectSystem, ProjectSystemMetadata>> projectSystems)
         {
             _workspace = workspace;
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _fileSystemHelper = fileSystemHelper;
-            _logger = loggerFactory.CreateLogger<MiscellanousFilesProjectSystem>();
-            _projectSystems = projectSystems.
-                Where
-                (ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem || 
-                ps.Metadata.Name == ProjectSystemNames.DotNetProjectSystem).
-                Select(ps => ps.Value).
-                Select(ps => ps as IUpdates)
+            _logger = loggerFactory.CreateLogger<MiscellaneousFilesProjectSystem>();
+            _projectSystems = projectSystems
+                .Where(ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem ||
+                ps.Metadata.Name == ProjectSystemNames.DotNetProjectSystem)
+                .Select(ps => ps.Value)
+                .Cast<IWaitableProjectSystem>()
                 .ToList();
         }
 
@@ -66,15 +65,15 @@ namespace OmniSharp.MiscellanousFiles
         {
             var allFiles = _fileSystemHelper.GetFiles("**/*.cs");
             foreach (var filePath in allFiles)
-                AddIfMiscellanousFile(filePath);
+                AddIfMiscellaneousFile(filePath);
 
-            _fileSystemWatcher.Watch(miscFileExtension, OnMiscellanousFileChanged);
+            _fileSystemWatcher.Watch(miscFileExtension, OnMiscellaneousFileChanged);
         }
 
-        private async void AddIfMiscellanousFile(string filePath)
+        private async void AddIfMiscellaneousFile(string filePath)
         {
             //wait for the project systems to finish processing the updates
-            foreach(var projectSystem in _projectSystems)
+            foreach (var projectSystem in _projectSystems)
             {
                 await projectSystem.WaitForUpdatesAsync();
             }
@@ -82,35 +81,40 @@ namespace OmniSharp.MiscellanousFiles
             var absoluteFilePath = new FileInfo(filePath).FullName;
             if (!File.Exists(absoluteFilePath))
                 return;
+
             if (_workspace.GetDocument(filePath) == null)
             {
-                if (this._projectId == null)
+                if (_projectId == null)
                 {
-                    string assemblyName = Guid.NewGuid().ToString("N");
-                    //If not project exists for the Misc files, create one
-                    var projectInfo = ProjectInfo.Create(
-                   id: ProjectId.CreateNewId(),
-                   version: VersionStamp.Create(),
-                   name: "MiscellanousFiles",
-                   metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
-                   assemblyName: assemblyName,
-                   language: Language);
-
+                    var projectInfo = CreateNewProject();
                     _workspace.AddProject(projectInfo);
                     _projectId = projectInfo.Id;
                 }
 
-                _documents[absoluteFilePath] = _workspace.AddMiscellanousFileDocument(_projectId, absoluteFilePath);
+                _documents[absoluteFilePath] = _workspace.AddMiscellaneousFileDocument(_projectId, absoluteFilePath);
                 _logger.LogInformation($"Successfully added file '{absoluteFilePath}' to workspace");
             }
         }
 
-        private void OnMiscellanousFileChanged(string filePath, FileChangeType changeType)
+        private ProjectInfo CreateNewProject()
+        {
+            string assemblyName = Guid.NewGuid().ToString("N");
+            //If not project exists for the Misc files, create one
+            return ProjectInfo.Create(
+           id: ProjectId.CreateNewId(),
+           version: VersionStamp.Create(),
+           name: "MiscellaneousFiles",
+           metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
+           assemblyName: assemblyName,
+           language: Language);
+        }
+
+        private void OnMiscellaneousFileChanged(string filePath, FileChangeType changeType)
         {
             if (changeType == FileChangeType.Unspecified && File.Exists(filePath) ||
                 changeType == FileChangeType.Create)
             {
-                AddIfMiscellanousFile(filePath);
+                AddIfMiscellaneousFile(filePath);
             }
 
             else if (changeType == FileChangeType.Unspecified && !File.Exists(filePath) ||
@@ -124,7 +128,7 @@ namespace OmniSharp.MiscellanousFiles
         {
             if (_documents.TryRemove(filePath, out var documentId))
             {
-                _workspace.RemoveMiscellanousFileDocument(documentId);
+                _workspace.RemoveMiscellaneousFileDocument(documentId);
                 _logger.LogDebug($"Removed file '{filePath}' from the workspace.");
             }
         }

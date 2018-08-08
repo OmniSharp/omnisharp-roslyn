@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.FilesChanged;
@@ -10,17 +9,13 @@ using OmniSharp.Models.FindUsages;
 using OmniSharp.Models.FixUsings;
 using OmniSharp.Models.SignatureHelp;
 using OmniSharp.Models.TypeLookup;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Files;
-using OmniSharp.Roslyn.CSharp.Services.Navigation;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring;
-using OmniSharp.Roslyn.CSharp.Services.Signatures;
 using OmniSharp.Roslyn.CSharp.Services.Types;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace OmniSharp.MiscellanousFiles.Tests
+namespace OmniSharp.MiscellaneousFiles.Tests
 {
     public class EndpointFacts : AbstractTestFixture
     {

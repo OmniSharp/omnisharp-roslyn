@@ -6,6 +6,6 @@
         public const string CakeProjectSystem = "CakeProjectSystem";
         public const string DotNetProjectSystem = "DotNetProjectSystem";
         public const string ScriptProjectSystem = "ScriptProjectSystem";
-        public const string MiscellanousFilesProjectSystem = "MiscellanousFilesProjectSystem";
+        public const string MiscellaneousFilesProjectSystem = "MiscellaneousFilesProjectSystem";
     }
 }
