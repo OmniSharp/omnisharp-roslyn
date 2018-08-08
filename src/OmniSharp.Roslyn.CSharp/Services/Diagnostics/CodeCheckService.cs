@@ -1,14 +1,14 @@
 ﻿using System.Composition;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
-using System.Collections.Generic;
 using OmniSharp.Models.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {

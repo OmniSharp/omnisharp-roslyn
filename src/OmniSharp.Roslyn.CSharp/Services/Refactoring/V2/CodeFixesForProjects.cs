@@ -1,14 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Composition;
+using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Composition;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
