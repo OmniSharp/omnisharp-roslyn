@@ -38,7 +38,7 @@ namespace OmniSharp.MSBuild
         private readonly CodeFixesForProjects _codeFixesForProjects;
         private readonly RulesetsForProjects _rulesetsForProjects;
         private readonly ILogger _logger;
-
+        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private readonly object _gate = new object();
         private readonly Queue<ProjectFileInfo> _projectsToProcess;
 
@@ -66,7 +66,8 @@ namespace OmniSharp.MSBuild
             FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory,
             CodeFixesForProjects codeFixesForProjects,
-            RulesetsForProjects rulesetsForProjects)
+            RulesetsForProjects rulesetsForProjects,
+            IAnalyzerAssemblyLoader assemblyLoader)
         {
             _environment = environment;
             _workspace = workspace;
@@ -82,6 +83,7 @@ namespace OmniSharp.MSBuild
             _rulesetsForProjects = rulesetsForProjects;
             _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
+            _assemblyLoader = assemblyLoader;
         }
 
         public void Initalize(IConfiguration configuration)
@@ -100,7 +102,7 @@ namespace OmniSharp.MSBuild
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
-            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _codeFixesForProjects, _rulesetsForProjects);
+            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _codeFixesForProjects, _rulesetsForProjects, _assemblyLoader);
 
             var initialProjectPaths = GetInitialProjectPaths();
 

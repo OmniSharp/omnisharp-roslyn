@@ -52,6 +52,7 @@ namespace OmniSharp.MSBuild
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
+        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private bool _processingQueue;
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
@@ -66,7 +67,8 @@ namespace OmniSharp.MSBuild
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
             CodeFixesForProjects codeFixesForProject,
-            RulesetsForProjects rulesetsForProjects)
+            RulesetsForProjects rulesetsForProjects,
+            IAnalyzerAssemblyLoader assemblyLoader)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _eventEmitter = eventEmitter;
@@ -81,6 +83,7 @@ namespace OmniSharp.MSBuild
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
+            _assemblyLoader = assemblyLoader;
 
             _onDirectoryFileChanged = OnDirectoryFileChanged;
             _rulesetsForProjects = rulesetsForProjects;
@@ -276,7 +279,7 @@ namespace OmniSharp.MSBuild
 
             _projectFiles.Add(projectFileInfo);
 
-            var projectInfo = projectFileInfo.CreateProjectInfo();
+            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
 
             _codeFixesForProject.LoadFrom(projectInfo.Id.ToString(), projectFileInfo.Analyzers);
 
