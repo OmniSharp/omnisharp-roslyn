@@ -17,6 +17,7 @@ using OmniSharp.Services;
 namespace OmniSharp.MiscellanousFiles
 {
     [ExtensionOrder(After = ProjectSystemNames.MSBuildProjectSystem)]
+    [ExtensionOrder(After = ProjectSystemNames.DotNetProjectSystem)]
     [ExportProjectSystem(ProjectSystemNames.MiscellanousFilesProjectSystem), Shared]
     public class MiscellanousFilesProjectSystem : IProjectSystem
     {
@@ -30,7 +31,7 @@ namespace OmniSharp.MiscellanousFiles
         private readonly OmniSharpWorkspace _workspace;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
-        private readonly IUpdates _projectSystem;
+        private readonly List<IUpdates> _projectSystems;
         private readonly ILogger _logger;
         private ProjectId _projectId;
 
@@ -42,7 +43,13 @@ namespace OmniSharp.MiscellanousFiles
             _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<MiscellanousFilesProjectSystem>();
-            _projectSystem = (IUpdates)projectSystems.Where(ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem).First().Value;
+            _projectSystems = projectSystems.
+                Where
+                (ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem || 
+                ps.Metadata.Name == ProjectSystemNames.DotNetProjectSystem).
+                Select(ps => ps.Value).
+                Select(ps => ps as IUpdates)
+                .ToList();
         }
 
         Task<object> IProjectSystem.GetProjectModelAsync(string filePath)
@@ -66,8 +73,12 @@ namespace OmniSharp.MiscellanousFiles
 
         private async void AddIfMiscellanousFile(string filePath)
         {
-            //wait for the project system to get initialise
-            await _projectSystem.WaitForUpdatesAsync();
+            //wait for the project systems to finish processing the updates
+            foreach(var projectSystem in _projectSystems)
+            {
+                await projectSystem.WaitForUpdatesAsync();
+            }
+
             var absoluteFilePath = new FileInfo(filePath).FullName;
             if (!File.Exists(absoluteFilePath))
                 return;
