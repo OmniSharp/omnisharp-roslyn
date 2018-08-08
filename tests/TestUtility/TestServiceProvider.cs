@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -42,6 +43,7 @@ namespace TestUtility
             );
 
             var assemblyLoader = new AssemblyLoader(loggerFactory);
+            var analyzerAssemblyLoader = new AssemblyLoader(loggerFactory);
             var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader, allowMonoPaths: false);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
             dotNetCliService = dotNetCliService ?? new DotNetCliService(loggerFactory, eventEmitter);
@@ -49,6 +51,7 @@ namespace TestUtility
             _services[typeof(ILoggerFactory)] = loggerFactory;
             _services[typeof(IOmniSharpEnvironment)] = environment;
             _services[typeof(IAssemblyLoader)] = assemblyLoader;
+            _services[typeof(IAnalyzerAssemblyLoader)] = analyzerAssemblyLoader;
             _services[typeof(IMemoryCache)] = memoryCache;
             _services[typeof(ISharedTextWriter)] = sharedTextWriter;
             _services[typeof(IMSBuildLocator)] = msbuildLocator;
