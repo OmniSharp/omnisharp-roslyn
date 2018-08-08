@@ -14,11 +14,9 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using System.IO;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {

@@ -51,7 +51,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             Task.Run(() =>
             {
                 while (!workspace.Initialized) Task.Delay(500);
-                QueueForAnalysis(workspace.CurrentSolution.Projects.ToList());
+                QueueForAnalysis(workspace.CurrentSolution.Projects);
                 _initializationQueueDone = true;
                 _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
             });
@@ -68,7 +68,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 try
                 {
                     var currentWork = GetThrottledWork();
-                    await Task.WhenAll(currentWork.Select(x => Analyze(x.project, x.workReadySource, token)).ToList());
+                    await Task.WhenAll(currentWork.Select(x => Analyze(x.project, x.workReadySource, token)));
                     await Task.Delay(100, token);
                 }
                 catch (Exception ex)
@@ -88,7 +88,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .Take(2) // Limit mount of work executed by once. This is needed on large solution...
                     .ToList();
 
-                currentWork.Select(x => x.Key).ToList().ForEach(key => _workQueue.TryRemove(key, out _));
+                foreach(var workKey in currentWork.Select(x => x.Key))
+                {
+                    _workQueue.TryRemove(workKey, out _);
+                }
 
                 return currentWork.Select(x => (x.Value.project, x.Value.workReadySource));
             }
@@ -132,10 +135,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void QueueForAnalysis(IEnumerable<Project> projects)
         {
-            projects.ToList()
-                .ForEach(project => _workQueue.AddOrUpdate(project.Id,
+            foreach(var project in projects)
+            {
+                _workQueue.AddOrUpdate(project.Id,
                     (modified: DateTime.UtcNow, project: project, new CancellationTokenSource()),
-                    (_, oldValue) => (modified: DateTime.UtcNow, project: project, oldValue.workReadySource)));
+                    (_, oldValue) => (modified: DateTime.UtcNow, project: project, oldValue.workReadySource));
+            }
         }
 
         private async Task Analyze(Project project, CancellationTokenSource workReadySource, CancellationToken token)

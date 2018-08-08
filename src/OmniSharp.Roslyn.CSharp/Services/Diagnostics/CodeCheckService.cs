@@ -30,8 +30,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
             var projects = !string.IsNullOrEmpty(request.FileName)
-                ? _workspace.GetDocuments(request.FileName).Select(x => x.Project).ToList()
-                : _workspace.CurrentSolution.Projects.ToList();
+                ? _workspace.GetDocuments(request.FileName).Select(x => x.Project)
+                : _workspace.CurrentSolution.Projects;
 
             var analyzerResults =
                 await _roslynAnalyzer.GetCurrentDiagnosticResult(projects.Select(x => x.Id));

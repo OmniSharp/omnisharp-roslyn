@@ -239,7 +239,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)
             {
-                var rulesetIfAny = projectInstance.Properties.SingleOrDefault(x => x.Name == "ResolvedCodeAnalysisRuleSet");
+                var rulesetIfAny = projectInstance.Properties.FirstOrDefault(x => x.Name == "ResolvedCodeAnalysisRuleSet");
 
                 if (rulesetIfAny != null)
                     return RuleSet.LoadEffectiveRuleSetFromFile(Path.Combine(projectInstance.Directory, rulesetIfAny.EvaluatedValue));

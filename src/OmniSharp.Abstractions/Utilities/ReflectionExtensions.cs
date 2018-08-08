@@ -113,6 +113,22 @@ namespace OmniSharp.Utilities
             return Activator.CreateInstance(lazyType.Value, args);
         }
 
+        public static T CreateInstance<T>(this Type type) where T : class
+        {
+            try
+            {
+                var defaultCtor = type.GetConstructor(new Type[] { });
+
+                return defaultCtor != null
+                    ? (T)Activator.CreateInstance(type)
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
+            }
+        }
+
         public static T Invoke<T>(this MethodInfo methodInfo, object obj, object[] args)
         {
             if (methodInfo == null)

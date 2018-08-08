@@ -5,6 +5,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Diagnostics;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Services
 {
@@ -31,37 +32,21 @@ namespace OmniSharp.Services
 
             this.CodeRefactoringProviders = types
                 .Where(t => typeof(CodeRefactoringProvider).IsAssignableFrom(t))
-                .Select(type => CreateInstance<CodeRefactoringProvider>(type))
+                .Select(type => type.CreateInstance<CodeRefactoringProvider>())
                 .Where(instance => instance != null)
                 .ToImmutableArray();
 
             this.CodeFixProviders = types
                 .Where(t => typeof(CodeFixProvider).IsAssignableFrom(t))
-                .Select(type => CreateInstance<CodeFixProvider>(type))
+                .Select(type => type.CreateInstance<CodeFixProvider>())
                 .Where(instance => instance != null)
                 .ToImmutableArray();
 
             this.CodeDiagnosticAnalyzerProviders = types
                 .Where(t => typeof(DiagnosticAnalyzer).IsAssignableFrom(t))
-                .Select(type => CreateInstance<DiagnosticAnalyzer>(type))
+                .Select(type => type.CreateInstance<DiagnosticAnalyzer>())
                 .Where(instance => instance != null)
                 .ToImmutableArray();
-        }
-
-        private T CreateInstance<T>(Type type) where T : class
-        {
-            try
-            {
-                var defaultCtor = type.GetConstructor(new Type[] { });
-
-                return defaultCtor != null
-                    ? (T)Activator.CreateInstance(type)
-                    : null;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to create instrance of {type.FullName} in {type.AssemblyQualifiedName}.", ex);
-            }
         }
     }
 }
