@@ -99,7 +99,7 @@ namespace OmniSharp.Services
 
         public Assembly LoadFromPath(string fullPath)
         {
-            throw new NotImplementedException();
+            return LoadFrom(fullPath);
         }
     }
 }
