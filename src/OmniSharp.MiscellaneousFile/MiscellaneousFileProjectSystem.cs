@@ -22,8 +22,8 @@ namespace OmniSharp.MiscellaneousFile
     public class MiscellaneousFilesProjectSystem : IProjectSystem
     {
         private const string miscFileExtension = ".cs";
-        public string Key { get; } = "MiscellaneousFiles";
-        public string Language { get; } = LanguageNames.CSharp;
+        public string Key => "MiscellaneousFiles";
+        public string Language => LanguageNames.CSharp;
         IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };
         public bool EnabledByDefault { get; } = true;
 
