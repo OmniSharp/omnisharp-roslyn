@@ -101,10 +101,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             while(!_initializationQueueDone) await Task.Delay(100);
 
-            // Since results are queried, it's better to return something even if that means litle wait. (this is hack...)
-            if (_workQueue.Count(x => projectIds.Any(pid => pid == x.Key)) == 0)
-                await Task.Delay(250);
-
             var pendingWork = _workQueue
                 .Where(x => projectIds.Any(pid => pid == x.Key))
                 .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
