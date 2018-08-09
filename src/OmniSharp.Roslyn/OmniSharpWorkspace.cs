@@ -23,6 +23,8 @@ namespace OmniSharp
 
         private HashSet<DocumentId> _miscellanousFiles;
 
+        private ProjectInfo MiscFilesProjectInfo;
+
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
             : base(aggregator.CreateHostServices(), "Custom")
@@ -86,11 +88,30 @@ namespace OmniSharp
             OnDocumentAdded(documentInfo);
         }
 
-        public DocumentId AddMiscellaneousFileDocument(ProjectId projectId, string filePath)
+        public DocumentId AddMiscellaneousFileDocument(string filePath, string language)
         {
-            var documentId = AddDocument(projectId, filePath);
+            if (MiscFilesProjectInfo == null)
+            {
+                MiscFilesProjectInfo = CreateMiscFilesProject(language);
+                AddProject(MiscFilesProjectInfo);
+            }
+
+            var documentId = AddDocument(MiscFilesProjectInfo.Id, filePath);
             _miscellanousFiles.Add(documentId);
             return documentId;
+        }
+
+        private ProjectInfo CreateMiscFilesProject(string language)
+        {
+            string assemblyName = Guid.NewGuid().ToString("N");
+            //If not project exists for the Misc files, create one
+            return ProjectInfo.Create(
+           id: ProjectId.CreateNewId(),
+           version: VersionStamp.Create(),
+           name: "MiscellaneousFiles",
+           metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
+           assemblyName: assemblyName,
+           language: language);
         }
 
         public void RemoveMiscellaneousFileDocument(DocumentId documentId)

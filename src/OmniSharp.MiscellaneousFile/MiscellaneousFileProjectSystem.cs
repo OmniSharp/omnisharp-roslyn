@@ -33,7 +33,6 @@ namespace OmniSharp.MiscellaneousFile
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly List<IWaitableProjectSystem> _projectSystems;
         private readonly ILogger _logger;
-        private ProjectId _projectId;
 
         [ImportingConstructor]
         public MiscellaneousFilesProjectSystem(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher, FileSystemHelper fileSystemHelper,
@@ -84,29 +83,9 @@ namespace OmniSharp.MiscellaneousFile
 
             if (_workspace.GetDocument(filePath) == null)
             {
-                if (_projectId == null)
-                {
-                    var projectInfo = CreateNewProject();
-                    _workspace.AddProject(projectInfo);
-                    _projectId = projectInfo.Id;
-                }
-
-                _documents[absoluteFilePath] = _workspace.AddMiscellaneousFileDocument(_projectId, absoluteFilePath);
+                _documents[absoluteFilePath] = _workspace.AddMiscellaneousFileDocument(absoluteFilePath, Language);
                 _logger.LogInformation($"Successfully added file '{absoluteFilePath}' to workspace");
             }
-        }
-
-        private ProjectInfo CreateNewProject()
-        {
-            string assemblyName = Guid.NewGuid().ToString("N");
-            //If not project exists for the Misc files, create one
-            return ProjectInfo.Create(
-           id: ProjectId.CreateNewId(),
-           version: VersionStamp.Create(),
-           name: "MiscellaneousFiles",
-           metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
-           assemblyName: assemblyName,
-           language: Language);
         }
 
         private void OnMiscellaneousFileChanged(string filePath, FileChangeType changeType)
