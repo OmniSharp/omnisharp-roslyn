@@ -98,14 +98,12 @@ namespace OmniSharp.MiscellaneousFile
 
         private ProjectInfo CreateNewProject()
         {
-            string assemblyName = Guid.NewGuid().ToString("N");
-            //If not project exists for the Misc files, create one
             return ProjectInfo.Create(
            id: ProjectId.CreateNewId(),
            version: VersionStamp.Create(),
            name: "MiscellaneousFiles",
            metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
-           assemblyName: assemblyName,
+           assemblyName:  Guid.NewGuid().ToString("N"),
            language: Language);
         }
 
