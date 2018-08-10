@@ -101,7 +101,7 @@ namespace OmniSharp
         public DocumentId TryAddMiscellaneousFileDocument(string filePath, string language)
         {
             if (GetDocument(filePath) != null)
-                return null; //if thw workspace already knows about his document then it is not a miscellaneous document
+                return null; //if the workspace already knows about this document then it is not a miscellaneous document
                
             if (miscFilesProjectInfo == null)
             {
