@@ -21,9 +21,9 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
-        private HashSet<DocumentId> _miscellanousFiles;
+        private HashSet<DocumentId> _miscellaneousFiles;
 
-        private ProjectInfo MiscFilesProjectInfo;
+        private ProjectInfo miscFilesProjectInfo;
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
@@ -31,7 +31,7 @@ namespace OmniSharp
         {
             BufferManager = new BufferManager(this);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
-            _miscellanousFiles = new HashSet<DocumentId>();
+            _miscellaneousFiles = new HashSet<DocumentId>();
         }
 
         public override bool CanOpenDocuments => true;
@@ -86,12 +86,12 @@ namespace OmniSharp
         public void AddDocument(DocumentInfo documentInfo)
         {
             var documentId = GetDocumentId(documentInfo.FilePath);
-            if (documentId != null && _miscellanousFiles.Contains(documentId))
+            if (documentId != null && _miscellaneousFiles.Contains(documentId))
             {
-                //if the file has already been added as a misc file,
-                //because of a possible race condition between the updates of the project systems,
-                //remove the misc file and add it the document as required
-                _miscellanousFiles.Remove(documentId);
+                // if the file has already been added as a misc file,
+                // because of a possible race condition between the updates of the project systems,
+                // remove the misc file and add the document as required
+                _miscellaneousFiles.Remove(documentId);
                 RemoveDocument(documentId);
             }
            
@@ -100,14 +100,14 @@ namespace OmniSharp
 
         public DocumentId AddMiscellaneousFileDocument(string filePath, string language)
         {
-            if (MiscFilesProjectInfo == null)
+            if (miscFilesProjectInfo == null)
             {
-                MiscFilesProjectInfo = CreateMiscFilesProject(language);
-                AddProject(MiscFilesProjectInfo);
+                miscFilesProjectInfo = CreateMiscFilesProject(language);
+                AddProject(miscFilesProjectInfo);
             }
 
-            var documentId = AddDocument(MiscFilesProjectInfo.Id, filePath);
-            _miscellanousFiles.Add(documentId);
+            var documentId = AddDocument(miscFilesProjectInfo.Id, filePath);
+            _miscellaneousFiles.Add(documentId);
             return documentId;
         }
 
@@ -126,7 +126,7 @@ namespace OmniSharp
 
         public void RemoveMiscellaneousFileDocument(DocumentId documentId)
         {
-            _miscellanousFiles.Remove(documentId);
+            _miscellaneousFiles.Remove(documentId);
             RemoveDocument(documentId);
         }
 
@@ -275,7 +275,7 @@ namespace OmniSharp
         public bool IsCapableOfSemanticDiagnostics(Document document)
         {
             var documentId = GetDocumentId(document.FilePath);
-            return !_miscellanousFiles.Contains(documentId);
+            return !_miscellaneousFiles.Contains(documentId);
         }
     }
 }

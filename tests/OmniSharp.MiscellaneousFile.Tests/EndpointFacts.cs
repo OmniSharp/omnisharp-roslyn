@@ -29,7 +29,6 @@ namespace OmniSharp.MiscellaneousFiles.Tests
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
-
                 var testfile = new TestFile("a.cs", "class C { b a = new b(); int n  }");
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {

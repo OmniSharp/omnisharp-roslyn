@@ -22,7 +22,7 @@ namespace OmniSharp.MiscellaneousFile
     public class MiscellaneousFilesProjectSystem : IProjectSystem
     {
         private const string miscFileExtension = ".cs";
-        public string Key => "MiscellaneousFiles";
+        public string Key => ProjectSystemNames.MiscellaneousFilesProjectSystem;
         public string Language => LanguageNames.CSharp;
         IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };
         public bool EnabledByDefault { get; } = true;
@@ -44,7 +44,7 @@ namespace OmniSharp.MiscellaneousFile
             _logger = loggerFactory.CreateLogger<MiscellaneousFilesProjectSystem>();
             _projectSystems = projectSystems
                 .Where(ps => ps.Metadata.Name == ProjectSystemNames.MSBuildProjectSystem ||
-                ps.Metadata.Name == ProjectSystemNames.DotNetProjectSystem)
+                 ps.Metadata.Name == ProjectSystemNames.DotNetProjectSystem)
                 .Select(ps => ps.Value)
                 .Cast<IWaitableProjectSystem>()
                 .ToList();
