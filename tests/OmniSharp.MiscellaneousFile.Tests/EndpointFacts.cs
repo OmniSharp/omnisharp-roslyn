@@ -331,13 +331,34 @@ namespace OmniSharp
             }
         }
 
+        [Fact]
+        public async Task Handles_File_Deletion()
+        {
+            //When the file is deleted the diagnostics must not be returned
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            {
+                var testfile = new TestFile("a.cs", "class C { b a = new b(); int n  }");
+                using (var host = CreateOmniSharpHost(testProject.Directory))
+                {
+                    var filePath = AddTestFile(testProject, testfile);
+                    await WaitForFileUpdate(filePath, host);
+                    var request = new CodeCheckRequest() { FileName = filePath };
+                    var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
+                    Assert.Single(actual.QuickFixes);
+
+                    await WaitForFileUpdate(filePath, host, FileWatching.FileChangeType.Delete);
+                    actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
+                    Assert.Empty(actual.QuickFixes);
+                }
+            }
+        }
 
         private string AddTestFile(ITestProject testProject, TestFile testfile)
         {
             return testProject.AddDisposableFile(testfile.FileName, testfile.Content.Text.ToString());
         }
 
-        private async Task WaitForFileUpdate(string filePath, OmniSharpTestHost host)
+        private async Task WaitForFileUpdate(string filePath, OmniSharpTestHost host, FileWatching.FileChangeType changeType = FileWatching.FileChangeType.Create)
         {
             var fileChangedService = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
             await fileChangedService.Handle(new[]
@@ -345,7 +366,7 @@ namespace OmniSharp
                     new FilesChangedRequest
                     {
                         FileName = filePath,
-                        ChangeType = FileWatching.FileChangeType.Create
+                        ChangeType = changeType
                     }
                 });
 
