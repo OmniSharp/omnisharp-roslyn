@@ -21,8 +21,6 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
-        private HashSet<DocumentId> _miscellaneousFiles;
-
         private ProjectInfo miscFilesProjectInfo;
 
         [ImportingConstructor]
@@ -31,7 +29,6 @@ namespace OmniSharp
         {
             BufferManager = new BufferManager(this);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
-            _miscellaneousFiles = new HashSet<DocumentId>();
         }
 
         public override bool CanOpenDocuments => true;
@@ -86,12 +83,11 @@ namespace OmniSharp
         public void AddDocument(DocumentInfo documentInfo)
         {
             var documentId = GetDocumentId(documentInfo.FilePath);
-            if (documentId != null && _miscellaneousFiles.Contains(documentId))
+            if (documentId != null && IsMiscellaneousDocument(documentId))
             {
                 // if the file has already been added as a misc file,
                 // because of a possible race condition between the updates of the project systems,
                 // remove the misc file and add the document as required
-                _miscellaneousFiles.Remove(documentId);
                 RemoveDocument(documentId);
             }
            
@@ -105,32 +101,25 @@ namespace OmniSharp
                
             if (miscFilesProjectInfo == null)
             {
-                miscFilesProjectInfo = CreateMiscFilesProject(language);
-                AddProject(miscFilesProjectInfo);
+                var projectInfo = CreateMiscFilesProject(language);
+                AddProject(projectInfo);
+                miscFilesProjectInfo = projectInfo;
             }
 
             var documentId = AddDocument(miscFilesProjectInfo.Id, filePath);
-            _miscellaneousFiles.Add(documentId);
             return documentId;
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
         {
             string assemblyName = Guid.NewGuid().ToString("N");
-            //If not project exists for the Misc files, create one
             return ProjectInfo.Create(
-           id: ProjectId.CreateNewId(),
-           version: VersionStamp.Create(),
-           name: "MiscellaneousFiles",
-           metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
-           assemblyName: assemblyName,
-           language: language);
-        }
-
-        public void RemoveMiscellaneousFileDocument(DocumentId documentId)
-        {
-            _miscellaneousFiles.Remove(documentId);
-            RemoveDocument(documentId);
+                   id: ProjectId.CreateNewId(),
+                   version: VersionStamp.Create(),
+                   name: "MiscellaneousFiles",
+                   metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
+                   assemblyName: assemblyName,
+                   language: language);
         }
 
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
@@ -277,8 +266,12 @@ namespace OmniSharp
 
         public bool IsCapableOfSemanticDiagnostics(Document document)
         {
-            var documentId = GetDocumentId(document.FilePath);
-            return !_miscellaneousFiles.Contains(documentId);
+            return !IsMiscellaneousDocument(document.Id);
+        }
+
+        private bool IsMiscellaneousDocument(DocumentId documentId)
+        {
+            return miscFilesProjectInfo!=null && documentId.ProjectId == miscFilesProjectInfo.Id;
         }
     }
 }

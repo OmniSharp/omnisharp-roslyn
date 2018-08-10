@@ -81,10 +81,13 @@ namespace OmniSharp.MiscellaneousFile
             if (!File.Exists(absoluteFilePath))
                 return;
 
-            var documentId = _workspace.TryAddMiscellaneousFileDocument(absoluteFilePath, Language);
-            if (documentId!= null)
+            var documentId = _documents.GetOrAdd(absoluteFilePath, _workspace.TryAddMiscellaneousFileDocument(absoluteFilePath, Language));
+            if (documentId == null)
             {
-                _documents[absoluteFilePath] = documentId;
+                _documents.TryRemove(absoluteFilePath, out var id);
+            }
+            else
+            {
                 _logger.LogInformation($"Successfully added file '{absoluteFilePath}' to workspace");
             }
         }
@@ -108,7 +111,7 @@ namespace OmniSharp.MiscellaneousFile
         {
             if (_documents.TryRemove(filePath, out var documentId))
             {
-                _workspace.RemoveMiscellaneousFileDocument(documentId);
+                _workspace.RemoveDocument(documentId);
                 _logger.LogDebug($"Removed file '{filePath}' from the workspace.");
             }
         }
