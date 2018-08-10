@@ -284,6 +284,53 @@ namespace OmniSharp
             }
         }
 
+        [Fact]
+        public async Task Adds_Multiple_Misc_Files_To_Same_project()
+        {
+            const string source1 =
+@"class Program
+{
+    public static void Main(){
+        A a = new A(4, $$5);
+    }
+}";
+
+            const string source2 =
+@"class A
+{
+    A(int a, int b)
+    {
+    }
+}";
+            var testfile1 = new TestFile("file1.cs", source1);
+            var testfile2 = new TestFile("file2.cs", source2);
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
+            {
+                using (var host = CreateOmniSharpHost(testProject.Directory))
+                {
+                    var filePath1 = AddTestFile(testProject, testfile1);
+                    var filePath2 = AddTestFile(testProject, testfile2);
+                    await WaitForFileUpdate(filePath1, host);
+                    await WaitForFileUpdate(filePath2, host);
+                    var point = testfile1.Content.GetPointFromPosition();
+                    var request = new SignatureHelpRequest()
+                    {
+                        FileName = filePath1,
+                        Line = point.Line,
+                        Column = point.Offset,
+                        Buffer = testfile1.Content.Code
+                    };
+
+                    var actual = await host.GetResponse<SignatureHelpRequest, SignatureHelpResponse>(OmniSharpEndpoints.SignatureHelp, request);
+                    Assert.Single(actual.Signatures);
+                    Assert.Equal(1, actual.ActiveParameter);
+                    Assert.Equal(0, actual.ActiveSignature);
+                    Assert.Equal("A", actual.Signatures.ElementAt(0).Name);
+                    Assert.Equal(2, actual.Signatures.ElementAt(0).Parameters.Count());
+                }
+            }
+        }
+
 
         private string AddTestFile(ITestProject testProject, TestFile testfile)
         {
