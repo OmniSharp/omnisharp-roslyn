@@ -18,15 +18,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class RoslynAnalyzerService
     {
         private readonly ILogger<RoslynAnalyzerService> _logger;
-
         private readonly ConcurrentDictionary<ProjectId, (DateTime modified, Project project, CancellationTokenSource workReadySource)> _workQueue =
             new ConcurrentDictionary<ProjectId, (DateTime modified, Project project, CancellationTokenSource workReadySource)>();
-
         private readonly ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)> _results =
             new ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)>();
-
         private readonly IEnumerable<ICodeActionProvider> _providers;
-
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
@@ -45,7 +41,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _providers = providers;
 
             workspace.WorkspaceChanged += OnWorkspaceChanged;
-
 
             _forwarder = forwarder;
             _workspace = workspace;
