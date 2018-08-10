@@ -30,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
-        private bool _initializationQueueDone;
+        private CancellationTokenSource _initializationQueueDoneSource = new CancellationTokenSource();
         private int _throttlingMs = 500;
 
         [ImportingConstructor]
@@ -46,19 +46,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
-            Task.Factory.StartNew(() => Worker(CancellationToken.None), TaskCreationOptions.LongRunning);
-
-            Task.Run(() =>
-            {
-                while (!workspace.Initialized) Task.Delay(500);
-                QueueForAnalysis(workspace.CurrentSolution.Projects);
-                _initializationQueueDone = true;
-                _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
-            });
 
             _forwarder = forwarder;
             _workspace = workspace;
             _rulesetsForProjects = rulesetsForProjects;
+
+            Task.Run(() =>
+            {
+                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) Task.Delay(500);
+                QueueForAnalysis(workspace.CurrentSolution.Projects);
+                _initializationQueueDoneSource.Cancel();
+                _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
+            });
+
+            Task.Factory.StartNew(() => Worker(CancellationToken.None), TaskCreationOptions.LongRunning);
         }
 
         private async Task Worker(CancellationToken token)
@@ -99,12 +100,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<IEnumerable<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
         {
-            while(!_initializationQueueDone) await Task.Delay(100);
+            await Task.Delay(10 * 1000, _initializationQueueDoneSource.Token)
+                    .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
 
             var pendingWork = _workQueue
                 .Where(x => projectIds.Any(pid => pid == x.Key))
                 .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
-                    .ContinueWith(task => LogTimeouts(task, x.Key)));
+                    .ContinueWith(task => LogTimeouts(task, x.Key.ToString())));
 
             await Task.WhenAll(pendingWork);
 
@@ -113,9 +115,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)));
         }
 
-        private void LogTimeouts(Task task, ProjectId projectId)
-        {
-            if(!task.IsCanceled) _logger.LogError($"Timeout before work got ready for project {projectId}.");
+        private void LogTimeouts(Task task, string description)        {
+            if(!task.IsCanceled) _logger.LogError($"Timeout before work got ready for {description}.");
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
