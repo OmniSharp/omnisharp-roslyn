@@ -39,7 +39,7 @@ namespace OmniSharp.MiscellaneousFile
             ILoggerFactory loggerFactory, [ImportMany] IEnumerable<Lazy<IProjectSystem, ProjectSystemMetadata>> projectSystems)
         {
             _workspace = workspace;
-            _fileSystemWatcher = fileSystemWatcher ?? throw new ArgumentNullException(nameof(fileSystemWatcher));
+            _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<MiscellaneousFilesProjectSystem>();
             _projectSystems = projectSystems
@@ -81,9 +81,10 @@ namespace OmniSharp.MiscellaneousFile
             if (!File.Exists(absoluteFilePath))
                 return;
 
-            if (_workspace.GetDocument(filePath) == null)
+            var documentId = _workspace.TryAddMiscellaneousFileDocument(absoluteFilePath, Language);
+            if (documentId!= null)
             {
-                _documents[absoluteFilePath] = _workspace.AddMiscellaneousFileDocument(absoluteFilePath, Language);
+                _documents[absoluteFilePath] = documentId;
                 _logger.LogInformation($"Successfully added file '{absoluteFilePath}' to workspace");
             }
         }
