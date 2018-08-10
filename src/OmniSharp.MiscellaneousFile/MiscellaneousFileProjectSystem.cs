@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -27,7 +26,6 @@ namespace OmniSharp.MiscellaneousFile
         IEnumerable<string> IProjectSystem.Extensions => new[] { miscFileExtension };
         public bool EnabledByDefault { get; } = true;
 
-        private readonly ConcurrentDictionary<string, DocumentId> _documents = new ConcurrentDictionary<string, DocumentId>();
         private readonly OmniSharpWorkspace _workspace;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
@@ -64,12 +62,12 @@ namespace OmniSharp.MiscellaneousFile
         {
             var allFiles = _fileSystemHelper.GetFiles("**/*.cs");
             foreach (var filePath in allFiles)
-                AddIfMiscellaneousFile(filePath);
+                TryAddMiscellaneousFile(filePath);
 
             _fileSystemWatcher.Watch(miscFileExtension, OnMiscellaneousFileChanged);
         }
 
-        private async void AddIfMiscellaneousFile(string filePath)
+        private async void TryAddMiscellaneousFile(string filePath)
         {
             //wait for the project systems to finish processing the updates
             foreach (var projectSystem in _projectSystems)
@@ -81,12 +79,7 @@ namespace OmniSharp.MiscellaneousFile
             if (!File.Exists(absoluteFilePath))
                 return;
 
-            var documentId = _documents.GetOrAdd(absoluteFilePath, _workspace.TryAddMiscellaneousFileDocument(absoluteFilePath, Language));
-            if (documentId == null)
-            {
-                _documents.TryRemove(absoluteFilePath, out var id);
-            }
-            else
+            if (_workspace.TryAddMiscellaneousDocument(absoluteFilePath, Language) != null)
             {
                 _logger.LogInformation($"Successfully added file '{absoluteFilePath}' to workspace");
             }
@@ -97,7 +90,7 @@ namespace OmniSharp.MiscellaneousFile
             if (changeType == FileChangeType.Unspecified && File.Exists(filePath) ||
                 changeType == FileChangeType.Create)
             {
-                AddIfMiscellaneousFile(filePath);
+                TryAddMiscellaneousFile(filePath);
             }
 
             else if (changeType == FileChangeType.Unspecified && !File.Exists(filePath) ||
@@ -109,9 +102,8 @@ namespace OmniSharp.MiscellaneousFile
 
         private void RemoveFromWorkspace(string filePath)
         {
-            if (_documents.TryRemove(filePath, out var documentId))
+            if (_workspace.TryRemoveMiscellaneousDocument(filePath))
             {
-                _workspace.RemoveDocument(documentId);
                 _logger.LogDebug($"Removed file '{filePath}' from the workspace.");
             }
         }

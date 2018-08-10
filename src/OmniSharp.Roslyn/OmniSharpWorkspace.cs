@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -21,7 +22,7 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
-        private ProjectInfo miscFilesProjectInfo;
+        private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
 
         [ImportingConstructor]
         public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
@@ -90,36 +91,43 @@ namespace OmniSharp
                 // remove the misc file and add the document as required
                 RemoveDocument(documentId);
             }
-           
+
             OnDocumentAdded(documentInfo);
         }
 
-        public DocumentId TryAddMiscellaneousFileDocument(string filePath, string language)
+        public DocumentId TryAddMiscellaneousDocument(string filePath, string language)
         {
             if (GetDocument(filePath) != null)
                 return null; //if the workspace already knows about this document then it is not a miscellaneous document
-               
-            if (miscFilesProjectInfo == null)
-            {
-                var projectInfo = CreateMiscFilesProject(language);
-                AddProject(projectInfo);
-                miscFilesProjectInfo = projectInfo;
-            }
 
-            var documentId = AddDocument(miscFilesProjectInfo.Id, filePath);
+            var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, CreateMiscFilesProject(language));
+            var documentId = AddDocument(projectInfo.Id, filePath);
             return documentId;
+        }
+
+        public bool TryRemoveMiscellaneousDocument(string filePath)
+        {
+            var documentId = GetDocumentId(filePath);
+            if (documentId == null || !IsMiscellaneousDocument(documentId))
+                return false;
+
+            RemoveDocument(documentId);
+            return true;
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
         {
             string assemblyName = Guid.NewGuid().ToString("N");
-            return ProjectInfo.Create(
+            var projectInfo = ProjectInfo.Create(
                    id: ProjectId.CreateNewId(),
                    version: VersionStamp.Create(),
                    name: "MiscellaneousFiles",
                    metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
                    assemblyName: assemblyName,
                    language: language);
+
+            AddProject(projectInfo);
+            return projectInfo;
         }
 
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
@@ -271,7 +279,7 @@ namespace OmniSharp
 
         private bool IsMiscellaneousDocument(DocumentId documentId)
         {
-            return miscFilesProjectInfo!=null && documentId.ProjectId == miscFilesProjectInfo.Id;
+            return miscDocumentsProjectInfos.Where(p => p.Value.Id == documentId.ProjectId).Any();
         }
     }
 }
