@@ -83,14 +83,10 @@ namespace OmniSharp
 
         public void AddDocument(DocumentInfo documentInfo)
         {
-            var documentId = GetDocumentId(documentInfo.FilePath);
-            if (documentId != null && IsMiscellaneousDocument(documentId))
-            {
-                // if the file has already been added as a misc file,
-                // because of a possible race condition between the updates of the project systems,
-                // remove the misc file and add the document as required
-                RemoveDocument(documentId);
-            }
+            // if the file has already been added as a misc file,
+            // because of a possible race condition between the updates of the project systems,
+            // remove the misc file and add the document as required
+            TryRemoveMiscellaneousDocument(documentInfo.FilePath);
 
             OnDocumentAdded(documentInfo);
         }
