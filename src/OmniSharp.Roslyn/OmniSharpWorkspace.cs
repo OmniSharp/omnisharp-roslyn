@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
 
 namespace OmniSharp
@@ -118,7 +119,8 @@ namespace OmniSharp
                    id: ProjectId.CreateNewId(),
                    version: VersionStamp.Create(),
                    name: "MiscellaneousFiles",
-                   metadataReferences: new MetadataReference[] { MetadataReference.CreateFromFile((typeof(object).Assembly).Location) },
+                   metadataReferences: DefaultMetadataReferencesHelper.GetDefaultMetadataReferencesLocations()
+                                       .Select(loc => MetadataReference.CreateFromFile(loc)),
                    assemblyName: assemblyName,
                    language: language);
 
