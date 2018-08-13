@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace OmniSharp.Roslyn.Utilities
 {
-    public static class DefaultMetadataReferencesHelper
+    public static class DefaultMetadataReferenceHelper
     {
-        public static IEnumerable<string> GetDefaultMetadataReferencesLocations()
+        public static IEnumerable<string> GetDefaultMetadataReferenceLocations()
         {
             var assemblies = new[]
             {

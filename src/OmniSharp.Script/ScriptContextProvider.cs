@@ -117,7 +117,7 @@ namespace OmniSharp.Script
 
         private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences, HashSet<string> assemblyReferences)
         {
-            var references = DefaultMetadataReferencesHelper.GetDefaultMetadataReferencesLocations()
+            var references = DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
                 .Select(l =>
                 {
                     assemblyReferences.Add(l);
