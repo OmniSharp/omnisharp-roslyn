@@ -151,48 +151,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
-            var nodesList = new List<ProviderNode<CodeFixProvider>>();
-            var providerList = new List<CodeFixProvider>();
-
-            foreach (var provider in this.Providers)
-            {
-                foreach (var codeFixProvider in provider.CodeFixProviders)
-                {
-                    providerList.Add(codeFixProvider);
-                    nodesList.Add(ProviderNode<CodeFixProvider>.From(codeFixProvider));
-                }
-            }
-
-            var graph = Graph<CodeFixProvider>.GetGraph(nodesList);
-            if (graph.HasCycles())
-            {
-                return providerList;
-            }
-
-            return graph.TopologicalSort();
+            var providerList = this.Providers.SelectMany(provider => provider.CodeFixProviders);
+            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(providerList, attribute => attribute.Name).ToList();
         }
 
         private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
-            var nodesList = new List<ProviderNode<CodeRefactoringProvider>>();
-            var providerList = new List<CodeRefactoringProvider>();
-
-            foreach (var provider in this.Providers)
-            {
-                foreach (var codeRefactoringProvider in provider.CodeRefactoringProviders)
-                {
-                    providerList.Add(codeRefactoringProvider);
-                    nodesList.Add(ProviderNode<CodeRefactoringProvider>.From(codeRefactoringProvider));
-                }
-            }
-
-            var graph = Graph<CodeRefactoringProvider>.GetGraph(nodesList);
-            if (graph.HasCycles())
-            {
-                return providerList;
-            }
-
-            return graph.TopologicalSort();
+            var providerList = this.Providers.SelectMany(provider => provider.CodeRefactoringProviders);
+            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeRefactoringProvider, ExportCodeRefactoringProviderAttribute>(providerList, attribute => attribute.Name).ToList();
         }
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)

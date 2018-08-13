@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 ? _workspace.GetDocuments(request.FileName)
                 : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
-            var quickFixes = await documents.FindDiagnosticLocationsAsync();
+            var quickFixes = await documents.FindDiagnosticLocationsAsync(_workspace);
             return new QuickFixResponse(quickFixes);
         }
     }
