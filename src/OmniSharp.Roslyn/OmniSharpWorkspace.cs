@@ -97,7 +97,7 @@ namespace OmniSharp
             if (GetDocument(filePath) != null)
                 return null; //if the workspace already knows about this document then it is not a miscellaneous document
 
-            var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, CreateMiscFilesProject(language));
+            var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
             var documentId = AddDocument(projectInfo.Id, filePath);
             return documentId;
         }
