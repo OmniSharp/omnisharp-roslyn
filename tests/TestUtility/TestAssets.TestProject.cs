@@ -32,7 +32,7 @@ namespace TestUtility
 
             public string AddDisposableFile(string fileName, string contents = null)
             {
-                var filePath = Path.Combine(BaseDirectory, fileName);
+                var filePath = Path.Combine(Directory, fileName);
                 File.WriteAllText(filePath, contents ?? string.Empty);
                 _disposableFiles.Add(filePath);
 
@@ -59,7 +59,7 @@ namespace TestUtility
                     foreach (var filePath in _disposableFiles)
                     {
                         RunWithRetry(() => File.Delete(filePath));
-                        if (System.IO.Directory.Exists(this.BaseDirectory))
+                        if (System.IO.File.Exists(filePath))
                         {
                             throw new InvalidOperationException($"{nameof(ITestProject)} file still exists: '{filePath}'");
                         }
