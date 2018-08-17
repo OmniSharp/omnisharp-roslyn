@@ -168,7 +168,7 @@ namespace OmniSharp.Script
                 return Task.FromResult<object>(null);
             }
 
-            return Task.FromResult<object>(new ScriptContextModel(filePath, projectInfo, _scriptContext.Value.AssemblyReferences));
+            return Task.FromResult<object>(new ScriptContextModel(filePath, projectInfo));
         }
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
@@ -176,7 +176,7 @@ namespace OmniSharp.Script
             var scriptContextModels = new List<ScriptContextModel>();
             foreach (var project in _projects)
             {
-                scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value, _scriptContext.Value.AssemblyReferences));
+                scriptContextModels.Add(new ScriptContextModel(project.Key, project.Value));
             }
             return Task.FromResult<object>(new ScriptContextModelCollection(scriptContextModels));
         }
