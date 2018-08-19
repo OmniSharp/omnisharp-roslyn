@@ -12,12 +12,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.Script
 {
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportProjectSystem(ProjectSystemNames.ScriptProjectSystem), Shared]
     public class ScriptProjectSystem : IProjectSystem
     {
         private const string CsxExtension = ".csx";

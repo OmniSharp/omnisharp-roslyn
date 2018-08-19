@@ -53,6 +53,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             return new QuickFixResponse(
                 groupedByProjectWhenMultipleFrameworksAreUsed.Where(x => x.FileName != null));
+            //var quickFixes = await documents.FindDiagnosticLocationsAsync(_workspace);
+            //return new QuickFixResponse(quickFixes);
         }
     }
 }

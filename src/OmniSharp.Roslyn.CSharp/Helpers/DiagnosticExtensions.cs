@@ -24,15 +24,24 @@ namespace OmniSharp.Helpers
             };
         }
 
-        internal static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(this IEnumerable<Document> documents)
+        internal static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(this IEnumerable<Document> documents, OmniSharpWorkspace workspace)
         {
             if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
 
             var items = new List<DiagnosticLocation>();
             foreach (var document in documents)
             {
-                var semanticModel = await document.GetSemanticModelAsync();
-                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
+                IEnumerable<Diagnostic> diagnostics;
+                if (workspace.IsCapableOfSemanticDiagnostics(document))
+                {
+                    var semanticModel = await document.GetSemanticModelAsync();
+                    diagnostics = semanticModel.GetDiagnostics();
+                }
+                else
+                {
+                    var syntaxModel = await document.GetSyntaxTreeAsync();
+                    diagnostics = syntaxModel.GetDiagnostics();
+                }
 
                 foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
                 {

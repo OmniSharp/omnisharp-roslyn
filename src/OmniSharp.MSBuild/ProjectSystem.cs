@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Models;
@@ -22,8 +23,8 @@ using OmniSharp.Services;
 
 namespace OmniSharp.MSBuild
 {
-    [Export(typeof(IProjectSystem)), Shared]
-    public class ProjectSystem : IProjectSystem
+    [ExportProjectSystem(ProjectSystemNames.MSBuildProjectSystem), Shared]
+    public class ProjectSystem : IWaitableProjectSystem
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
@@ -217,6 +218,11 @@ namespace OmniSharp.MSBuild
             }
 
             return new MSBuildProjectInfo(projectFileInfo);
+        }
+
+        public async Task WaitForUpdatesAsync()
+        {
+            await _manager.WaitForQueueEmptyAsync();
         }
     }
 }
