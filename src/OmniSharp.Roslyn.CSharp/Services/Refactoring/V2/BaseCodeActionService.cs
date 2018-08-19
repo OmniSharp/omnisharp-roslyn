@@ -124,7 +124,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
-            foreach (var codeFixProvider in GetSortedCodeFixProviders(document))
+            foreach (var codeFixProvider in GetSortedCodeFixProviders())
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
 
@@ -144,16 +144,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private List<CodeFixProvider> GetSortedCodeFixProviders(Document document)
+        private List<CodeFixProvider> GetSortedCodeFixProviders()
         {
             var providerList = this.Providers.SelectMany(provider => provider.CodeFixProviders);
             return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(providerList, attribute => attribute.Name).ToList();
         }
 
-        private List<T> SortByTopologyIfPossibleOrReturnAsItWas<T>(IEnumerable<T> source)
+        private List<CodeRefactoringProvider> GetSortedCodeRefactoringProviders()
         {
             var providerList = this.Providers.SelectMany(provider => provider.CodeRefactoringProviders);
-            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeRefactoringProvider, ExportCodeRefactoringProviderAttribute>(providerList, attribute => attribute.Name).ToList();
+            return ExtensionOrderer.GetOrderedOrUnorderedList<CodeRefactoringProvider, ExportCodeFixProviderAttribute>(providerList, attribute => attribute.Name).ToList();
         }
 
         private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
