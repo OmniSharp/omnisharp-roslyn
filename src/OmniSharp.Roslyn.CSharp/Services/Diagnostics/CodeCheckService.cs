@@ -31,17 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 ? new[] { _workspace.GetDocument(request.FileName).Project }
                 : _workspace.CurrentSolution.Projects;
 
-            return await AnalyzerProjects(request, projectsForAnalysis);
-
-            // SAVPEK TODO: Merge single file analysis and roslyn analysis before master.
-            //var quickFixes = await documents.FindDiagnosticLocationsAsync(_workspace);
-            //return new QuickFixResponse(quickFixes);
-        }
-
-        private async Task<QuickFixResponse> AnalyzerProjects(CodeCheckRequest request, System.Collections.Generic.IEnumerable<Project> projects)
-        {
-            var analyzerResults =
-                            await _roslynAnalyzer.GetCurrentDiagnosticResult(projects.Select(x => x.Id));
+            var analyzerResults = await _roslynAnalyzer.GetCurrentDiagnosticResult(projectsForAnalysis.Select(x => x.Id));
 
             var locations = analyzerResults
                 .Where(x => (string.IsNullOrEmpty(request.FileName) || x.diagnostic.Location.GetLineSpan().Path == request.FileName))

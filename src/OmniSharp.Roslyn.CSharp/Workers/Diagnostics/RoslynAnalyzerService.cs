@@ -150,7 +150,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             try
             {
-                var allAnalyzers = this._providers
+                // Only basic syntax check is available if file is miscellanous like orphan .cs file.
+                // Todo: Where this magic string should be moved?
+                if(project.Name == "MiscellaneousFiles")
+                {
+                    await AnalyzeSingleMiscFilesProject(project);
+                    return;
+                }
+
+                var allAnalyzers = _providers
                     .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
                     .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
 
@@ -168,6 +176,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 workReadySource.Cancel();
             }
+        }
+
+        private async Task AnalyzeSingleMiscFilesProject(Project project)
+        {
+            var syntaxTrees = await Task.WhenAll(project.Documents
+                                    .Select(async document => await document.GetSyntaxTreeAsync()));
+
+            var results = syntaxTrees
+                .Select(x => x.GetDiagnostics())
+                .SelectMany(x => x);
+
+            _results[project.Id] = (project.Name, results);
         }
     }
 }
