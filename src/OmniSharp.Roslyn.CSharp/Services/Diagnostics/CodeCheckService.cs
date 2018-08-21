@@ -27,12 +27,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
-            var projects = !string.IsNullOrEmpty(request.FileName)
+            var projectsForAnalysis = !string.IsNullOrEmpty(request.FileName)
                 ? new[] { _workspace.GetDocument(request.FileName).Project }
                 : _workspace.CurrentSolution.Projects;
 
+            return await AnalyzerProjects(request, projectsForAnalysis);
+
+            // SAVPEK TODO: Merge single file analysis and roslyn analysis before master.
+            //var quickFixes = await documents.FindDiagnosticLocationsAsync(_workspace);
+            //return new QuickFixResponse(quickFixes);
+        }
+
+        private async Task<QuickFixResponse> AnalyzerProjects(CodeCheckRequest request, System.Collections.Generic.IEnumerable<Project> projects)
+        {
             var analyzerResults =
-                await _roslynAnalyzer.GetCurrentDiagnosticResult(projects.Select(x => x.Id));
+                            await _roslynAnalyzer.GetCurrentDiagnosticResult(projects.Select(x => x.Id));
 
             var locations = analyzerResults
                 .Where(x => (string.IsNullOrEmpty(request.FileName) || x.diagnostic.Location.GetLineSpan().Path == request.FileName))
@@ -53,8 +62,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             return new QuickFixResponse(
                 groupedByProjectWhenMultipleFrameworksAreUsed.Where(x => x.FileName != null));
-            //var quickFixes = await documents.FindDiagnosticLocationsAsync(_workspace);
-            //return new QuickFixResponse(quickFixes);
         }
     }
 }
