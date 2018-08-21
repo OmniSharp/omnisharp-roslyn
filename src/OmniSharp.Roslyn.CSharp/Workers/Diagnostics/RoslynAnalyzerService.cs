@@ -46,9 +46,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspace = workspace;
             _rulesetsForProjects = rulesetsForProjects;
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) Task.Delay(500);
+                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
+
                 QueueForAnalysis(workspace.CurrentSolution.Projects);
                 _initializationQueueDoneSource.Cancel();
                 _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
