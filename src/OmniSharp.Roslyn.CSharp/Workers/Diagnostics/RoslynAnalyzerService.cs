@@ -96,19 +96,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<IEnumerable<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
         {
-            await Task.Delay(10 * 1000, _initializationQueueDoneSource.Token)
-                    .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
+            await WaitForInitialStartupWorkIfAny();
 
-            var pendingWork = _workQueue
-                .Where(x => projectIds.Any(pid => pid == x.Key))
-                .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
-                    .ContinueWith(task => LogTimeouts(task, x.Key.ToString())));
+            var pendingWork = WaitForPendingWorkIfNeededAndGetIt(projectIds);
 
             await Task.WhenAll(pendingWork);
 
             return _results
                 .Where(x => projectIds.Any(pid => pid == x.Key))
                 .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)));
+        }
+
+        private IEnumerable<Task> WaitForPendingWorkIfNeededAndGetIt(IEnumerable<ProjectId> projectIds)
+        {
+            return _workQueue
+                            .Where(x => projectIds.Any(pid => pid == x.Key))
+                            .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
+                                .ContinueWith(task => LogTimeouts(task, x.Key.ToString())));
+        }
+
+        private Task WaitForInitialStartupWorkIfAny()
+        {
+            return Task.Delay(10 * 1000, _initializationQueueDoneSource.Token)
+                                .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
         }
 
         private void LogTimeouts(Task task, string description)        {
