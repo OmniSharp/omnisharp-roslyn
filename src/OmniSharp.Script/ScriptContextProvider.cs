@@ -117,20 +117,7 @@ namespace OmniSharp.Script
 
         private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences, HashSet<string> assemblyReferences)
         {
-            var assemblies = new[]
-            {
-                typeof(object).GetTypeInfo().Assembly,
-                typeof(Enumerable).GetTypeInfo().Assembly,
-                typeof(Stack<>).GetTypeInfo().Assembly,
-                typeof(Lazy<,>).GetTypeInfo().Assembly,
-                FromName("System.Runtime"),
-                FromName("mscorlib")
-            };
-
-            var references = assemblies
-                .Where(a => a != null)
-                .Select(a => a.Location)
-                .Distinct()
+            var references = DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
                 .Select(l =>
                 {
                     assemblyReferences.Add(l);
@@ -140,18 +127,6 @@ namespace OmniSharp.Script
             foreach (var reference in references)
             {
                 commonReferences.Add(reference);
-            }
-
-            Assembly FromName(string assemblyName)
-            {
-                try
-                {
-                    return Assembly.Load(new AssemblyName(assemblyName));
-                }
-                catch
-                {
-                    return null;
-                }
             }
         }
 

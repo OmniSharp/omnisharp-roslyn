@@ -17,14 +17,15 @@ using OmniSharp.DotNet.Tools;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNet
 {
-    [Export(typeof(IProjectSystem)), Shared]
-    public class DotNetProjectSystem : IProjectSystem
+    [ExportProjectSystem(ProjectSystemNames.DotNetProjectSystem), Shared]
+    public class DotNetProjectSystem : IWaitableProjectSystem
     {
         private const string CompilationConfiguration = "Debug";
 
@@ -422,6 +423,11 @@ namespace OmniSharp.DotNet
             }
 
             return languageVersion;
+        }
+
+        async Task IWaitableProjectSystem.WaitForUpdatesAsync()
+        {
+            await ((IProjectSystem)this).GetWorkspaceModelAsync(new WorkspaceInformationRequest());
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Composition.Hosting.Core;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.Mef;
+using OmniSharp.MiscellaneousFile;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
@@ -40,6 +42,7 @@ namespace TestUtility
             typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, // OmniSharp.Roslyn
             typeof(RoslynFeaturesHostServicesProvider).GetTypeInfo().Assembly, // OmniSharp.Roslyn.CSharp
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
+            typeof(MiscellaneousFilesProjectSystem).GetTypeInfo().Assembly // OmniSharp.MiscellanousFiles
         });
 
         private readonly TestServiceProvider _serviceProvider;
@@ -213,6 +216,13 @@ namespace TestUtility
             {
                 Workspace.RemoveProject(projectId);
             }
+        }
+
+        public Task<TResponse> GetResponse<TRequest, TResponse>(
+           string endpoint, TRequest request)
+        {
+            var service = GetRequestHandler<IRequestHandler<TRequest, TResponse>>(endpoint);
+            return service.Handle(request);
         }
     }
 }

@@ -1,13 +1,16 @@
 using System;
 using System.Composition.Hosting;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OmniSharp.Mef;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Options;
 using OmniSharp.Services;
+using OmniSharp.Utilities;
 
 namespace OmniSharp
 {
@@ -24,9 +27,11 @@ namespace OmniSharp
 
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
+            var projectSystems = compositionHost.GetExports<Lazy<IProjectSystem, ProjectSystemMetadata>>();
+            var ps = projectSystems.Select(n => n.Value);
+            var orderedProjectSystems = ExtensionOrderer.GetOrderedOrUnorderedList<IProjectSystem, ExportProjectSystemAttribute>(ps, eps => eps.Name);
 
-            // Initialize all the project systems
-            foreach (var projectSystem in compositionHost.GetExports<IProjectSystem>())
+            foreach (var projectSystem in orderedProjectSystems)
             {
                 try
                 {
