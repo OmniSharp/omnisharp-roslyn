@@ -17,7 +17,7 @@ namespace OmniSharp.MiscellaneousFile
 {
     [ExtensionOrder(After = ProjectSystemNames.MSBuildProjectSystem)]
     [ExtensionOrder(After = ProjectSystemNames.DotNetProjectSystem)]
-    [ExportProjectSystem(ProjectSystemNames.MiscellaneousFilesProjectSystem), Shared]
+    //[ExportProjectSystem(ProjectSystemNames.MiscellaneousFilesProjectSystem), Shared]
     public class MiscellaneousFilesProjectSystem : IProjectSystem
     {
         private const string miscFileExtension = ".cs";

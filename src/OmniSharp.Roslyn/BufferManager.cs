@@ -128,32 +128,35 @@ namespace OmniSharp.Roslyn
             var projects = FindProjectsByFileName(fileName);
             if (!projects.Any())
             {
-                return false;
+                //todo: deal with the deletion of the misc files
+                _workspace.TryAddMiscellaneousDocument(fileName, LanguageNames.CSharp);
             }
-
-            var sourceText = SourceText.From(fileContent);
-            var documentInfos = new List<DocumentInfo>();
-            foreach (var project in projects)
+            else
             {
-                var id = DocumentId.CreateNewId(project.Id);
-                var version = VersionStamp.Create();
-                var documentInfo = DocumentInfo.Create(
-                    id, fileName, filePath: fileName,
-                    loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
+                var sourceText = SourceText.From(fileContent);
+                var documentInfos = new List<DocumentInfo>();
+                foreach (var project in projects)
+                {
+                    var id = DocumentId.CreateNewId(project.Id);
+                    var version = VersionStamp.Create();
+                    var documentInfo = DocumentInfo.Create(
+                        id, fileName, filePath: fileName,
+                        loader: TextLoader.From(TextAndVersion.Create(sourceText, version)));
 
-                documentInfos.Add(documentInfo);
-            }
+                    documentInfos.Add(documentInfo);
+                }
 
-            lock (_lock)
-            {
-                var documentIds = documentInfos.Select(document => document.Id);
-                _transientDocuments.Add(fileName, documentIds);
-                _transientDocumentIds.UnionWith(documentIds);
-            }
+                lock (_lock)
+                {
+                    var documentIds = documentInfos.Select(document => document.Id);
+                    _transientDocuments.Add(fileName, documentIds);
+                    _transientDocumentIds.UnionWith(documentIds);
+                }
 
-            foreach (var documentInfo in documentInfos)
-            {
-                _workspace.AddDocument(documentInfo);
+                foreach (var documentInfo in documentInfos)
+                {
+                    _workspace.AddDocument(documentInfo);
+                }
             }
 
             return true;
