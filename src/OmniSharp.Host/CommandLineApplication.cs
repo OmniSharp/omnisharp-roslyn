@@ -21,6 +21,7 @@ namespace OmniSharp
         private readonly CommandOption _logLevel;
         private readonly CommandOption _applicationRoot;
         private readonly CommandOption _debug;
+        private readonly CommandOption _minFindSymbolsFilterLength;
 
         public CommandLineApplication()
         {
@@ -34,6 +35,7 @@ namespace OmniSharp
             _zeroBasedIndices = Application.Option("-z | --zero-based-indices", "Use zero based indices in request/responses (defaults to 'false').", CommandOptionType.NoValue);
             _plugin = Application.Option("-pl | --plugin", "Plugin name(s).", CommandOptionType.MultipleValue);
             _debug = Application.Option("-d | --debug", "Wait for debugger to attach", CommandOptionType.NoValue);
+            _minFindSymbolsFilterLength = Application.Option("-fsl | --min-find-symbols-filter-length", "FindSymbolsRequest.Filter minimum length", CommandOptionType.SingleValue);
         }
 
         public int Execute(IEnumerable<string> args)
@@ -75,6 +77,8 @@ namespace OmniSharp
         public string ApplicationRoot => CommandOptionExtensions.GetValueOrDefault(_applicationRoot, Directory.GetCurrentDirectory());
 
         public bool Debug => _debug.HasValue();
+
+        public int MinFindSymbolsFilterLength => CommandOptionExtensions.GetValueOrDefault(_minFindSymbolsFilterLength, 0);
 
         private void DebugAttach()
         {

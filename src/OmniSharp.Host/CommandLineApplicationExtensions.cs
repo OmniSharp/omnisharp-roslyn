@@ -12,6 +12,7 @@ namespace OmniSharp
                 application.ApplicationRoot,
                 application.HostPid,
                 application.LogLevel,
+                application.MinFindSymbolsFilterLength,
                 application.OtherArgs.ToArray<string>());
         }
 

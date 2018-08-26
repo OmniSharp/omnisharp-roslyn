@@ -9,6 +9,7 @@ namespace OmniSharp
         string TargetDirectory { get; }
         string SolutionFilePath { get; }
         string SharedDirectory { get; }
+        int MinFindSymbolsFilterLength { get; }
         string[] AdditionalArguments { get; }
     }
 }

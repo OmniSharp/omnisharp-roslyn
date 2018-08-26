@@ -13,6 +13,7 @@ namespace OmniSharp.Services
 
         public int HostProcessId { get; }
         public LogLevel LogLevel { get; }
+        public int MinFindSymbolsFilterLength { get; }
 
         public string[] AdditionalArguments { get; }
 
@@ -20,6 +21,7 @@ namespace OmniSharp.Services
             string path = null,
             int hostPid = -1,
             LogLevel logLevel = LogLevel.None,
+            int minFindSymbolsFilterLength = 0,
             string[] additionalArguments = null)
         {
             if (string.IsNullOrEmpty(path))
@@ -44,6 +46,7 @@ namespace OmniSharp.Services
             HostProcessId = hostPid;
             LogLevel = logLevel;
             AdditionalArguments = additionalArguments;
+            MinFindSymbolsFilterLength = minFindSymbolsFilterLength;
 
             // On Windows: %USERPROFILE%\.omnisharp\omnisharp.json
             // On Mac/Linux: ~/.omnisharp/omnisharp.json
