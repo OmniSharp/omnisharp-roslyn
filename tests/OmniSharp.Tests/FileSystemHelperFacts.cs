@@ -93,7 +93,7 @@ namespace OmniSharp.Tests
 
         private FileSystemHelper CreateFileSystemHelper(params string[] excludePatterns)
         {
-            var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, 0, null);
+            var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);
             var options = new OmniSharpOptions();
             options.FileOptions.ExcludeSearchPatterns = excludePatterns;
             var helper = new FileSystemHelper(options, environment);
@@ -102,7 +102,7 @@ namespace OmniSharp.Tests
 
         private FileSystemHelper CreateFileSystemHelper(string[] excludePatterns, string[] systemExcludePatterns)
         {
-            var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, 0, null);
+            var environment = new OmniSharpEnvironment(TestAssets.Instance.TestAssetsFolder, 1000, LogLevel.Information, null);
             var options = new OmniSharpOptions();
             options.FileOptions.ExcludeSearchPatterns = excludePatterns;
             options.FileOptions.SystemExcludeSearchPatterns = systemExcludePatterns;

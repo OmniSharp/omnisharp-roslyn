@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
-using OmniSharp;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
@@ -16,15 +15,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     [OmniSharpHandler(OmniSharpEndpoints.FindSymbols, LanguageNames.CSharp)]
     public class FindSymbolsService : IRequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
-        IOmniSharpEnvironment _environment;
         private OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public FindSymbolsService(
-            IOmniSharpEnvironment environment,
-            OmniSharpWorkspace workspace)
+        public FindSymbolsService(OmniSharpWorkspace workspace)
         {
-            _environment = environment;
             _workspace = workspace;
         }
 
