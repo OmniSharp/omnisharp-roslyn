@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.FileWatching;
 using OmniSharp.Models;
 using OmniSharp.Models.ChangeBuffer;
 using OmniSharp.Models.UpdateBuffer;
@@ -17,11 +18,13 @@ namespace OmniSharp.Roslyn
         private readonly IDictionary<string, IEnumerable<DocumentId>> _transientDocuments = new Dictionary<string, IEnumerable<DocumentId>>(StringComparer.OrdinalIgnoreCase);
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
+        private readonly IFileSystemWatcher _fileSystemWatcher;
 
-        public BufferManager(OmniSharpWorkspace workspace)
+        public BufferManager(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher)
         {
             _workspace = workspace;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _fileSystemWatcher = fileSystemWatcher;
         }
 
         public async Task UpdateBufferAsync(Request request)
@@ -129,7 +132,13 @@ namespace OmniSharp.Roslyn
             if (!projects.Any())
             {
                 //todo: deal with the deletion of the misc files
-                _workspace.TryAddMiscellaneousDocument(fileName, LanguageNames.CSharp);
+                if (fileName.EndsWith(".cs") && _workspace.TryAddMiscellaneousDocument(fileName, LanguageNames.CSharp) != null)
+                {
+                    _fileSystemWatcher.Watch(fileName, OnMiscFileChanged);
+                    return true;
+                }
+
+                return false;
             }
             else
             {
@@ -160,6 +169,14 @@ namespace OmniSharp.Roslyn
             }
 
             return true;
+        }
+
+        private void OnMiscFileChanged(string filePath, FileChangeType changeType)
+        {
+            if(changeType == FileChangeType.Unspecified && !File.Exists(filePath) || changeType == FileChangeType.Delete)
+            {
+                _workspace.TryRemoveMiscellaneousDocument(filePath);
+            }
         }
 
         private IEnumerable<Project> FindProjectsByFileName(string fileName)
