@@ -42,12 +42,12 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
+        public async Task UpdateBufferIgnoresNonCsFilePathsThatDontMatchAProjectPath()
         {
             var workspace = GetWorkspaceWithProjects();
 
-            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
-            var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("some", " path.fs"), Buffer = "enum E {}" });
+            var documents = workspace.GetDocuments(Path.Combine("some", "path.fs"));
             Assert.Empty(documents);
         }
 
