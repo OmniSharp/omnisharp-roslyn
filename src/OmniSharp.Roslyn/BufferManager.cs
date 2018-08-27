@@ -19,12 +19,14 @@ namespace OmniSharp.Roslyn
         private readonly ISet<DocumentId> _transientDocumentIds = new HashSet<DocumentId>();
         private readonly object _lock = new object();
         private readonly IFileSystemWatcher _fileSystemWatcher;
+        private readonly Action<string, FileChangeType> _onFileChanged;
 
         public BufferManager(OmniSharpWorkspace workspace, IFileSystemWatcher fileSystemWatcher)
         {
             _workspace = workspace;
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
             _fileSystemWatcher = fileSystemWatcher;
+            _onFileChanged = OnFileChanged;
         }
 
         public async Task UpdateBufferAsync(Request request)
@@ -131,10 +133,9 @@ namespace OmniSharp.Roslyn
             var projects = FindProjectsByFileName(fileName);
             if (!projects.Any())
             {
-                //todo: deal with the deletion of the misc files
                 if (fileName.EndsWith(".cs") && _workspace.TryAddMiscellaneousDocument(fileName, LanguageNames.CSharp) != null)
                 {
-                    _fileSystemWatcher.Watch(fileName, OnMiscFileChanged);
+                    _fileSystemWatcher.Watch(fileName, OnFileChanged);
                     return true;
                 }
 
@@ -171,9 +172,9 @@ namespace OmniSharp.Roslyn
             return true;
         }
 
-        private void OnMiscFileChanged(string filePath, FileChangeType changeType)
+        private void OnFileChanged(string filePath, FileChangeType changeType)
         {
-            if(changeType == FileChangeType.Unspecified && !File.Exists(filePath) || changeType == FileChangeType.Delete)
+            if (changeType == FileChangeType.Unspecified && !File.Exists(filePath) || changeType == FileChangeType.Delete)
             {
                 _workspace.TryRemoveMiscellaneousDocument(filePath);
             }
