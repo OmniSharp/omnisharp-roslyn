@@ -7,13 +7,15 @@ using Microsoft.CodeAnalysis;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using System.Collections.Generic;
+using OmniSharp.Options;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class FindSymbolsFacts : AbstractSingleRequestHandlerTestFixture<FindSymbolsService>
     {
-        public FindSymbolsFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        public FindSymbolsFacts(ITestOutputHelper output)
+            : base(output)
         {
         }
 
@@ -44,22 +46,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Select(q => q.Text);
-
-            var expected = new[]
+            using (var testHost = CreateOmniSharpHost())
             {
-                "Foo",
-                "_field",
-                "AutoProperty",
-                "Property",
-                "Method()",
-                "Method(string param)",
-                "Nested",
-                "NestedMethod()"
-            };
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            Assert.Equal(expected, symbols);
+                var expected = new[]
+                {
+                    "Foo",
+                    "_field",
+                    "AutoProperty",
+                    "Property",
+                    "Method()",
+                    "Method(string param)",
+                    "Nested",
+                    "NestedMethod()"
+                };
+
+                Assert.Equal(expected, symbols);
+            }
         }
 
         [Fact]
@@ -71,16 +76,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public static event GameEvent GameResumed;
                 }";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Select(q => q.Text);
-
-            var expected = new[]
+            using (var testHost = CreateOmniSharpHost())
             {
-                "Game",
-                "GameResumed"
-            };
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            Assert.Equal(expected, symbols);
+                var expected = new[]
+                {
+                    "Game",
+                    "GameResumed"
+                };
+
+                Assert.Equal(expected, symbols);
+            }
         }
 
         [Fact]
@@ -108,22 +116,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
                 }";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-
-            var expected = new[]
+            using (var testHost = CreateOmniSharpHost())
             {
-                "Class",
-                "Field",
-                "Property",
-                "Property",
-                "Method",
-                "Method",
-                "Class",
-                "Method"
-            };
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
 
-            Assert.Equal(expected, symbols);
+                var expected = new[]
+                {
+                    "Class",
+                    "Field",
+                    "Property",
+                    "Property",
+                    "Method",
+                    "Method",
+                    "Class",
+                    "Method"
+                };
+
+                Assert.Equal(expected, symbols);
+            }
         }
 
         [Fact]
@@ -131,9 +142,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string code = @"public interface Foo {}";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-            Assert.Equal("Interface", symbols.First());
+            using (var testHost = CreateOmniSharpHost())
+            {
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+                Assert.Equal("Interface", symbols.First());
+            }
         }
 
         [Fact]
@@ -141,9 +155,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string code = @"public enum Foo {}";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-            Assert.Equal("Enum", symbols.First());
+            using (var testHost = CreateOmniSharpHost())
+            {
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+                Assert.Equal("Enum", symbols.First());
+            }
         }
 
         [Fact]
@@ -151,9 +168,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string code = @"public struct Foo {}";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-            Assert.Equal("Struct", symbols.First());
+            using (var testHost = CreateOmniSharpHost())
+            {
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+                Assert.Equal("Struct", symbols.First());
+            }
         }
 
         [Fact]
@@ -161,9 +181,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string code = @"public delegate void Foo();";
 
-            var usages = await FindSymbolsAsync(code);
-            var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
-            Assert.Equal("Delegate", symbols.First());
+            using (var testHost = CreateOmniSharpHost())
+            {
+                var usages = await FindSymbolsAsync(code, testHost);
+                var symbols = usages.QuickFixes.Cast<SymbolLocation>().Select(q => q.Kind);
+                Assert.Equal("Delegate", symbols.First());
+            }
         }
 
         [Fact]
@@ -183,11 +206,14 @@ public partial class MyClass
     }
 }";
 
-            var usages = await FindSymbolsAsync(code);
-            var methodSymbol = usages.QuickFixes.Cast<SymbolLocation>().First(x => x.Kind == SymbolKind.Method.ToString());
+            using (var testHost = CreateOmniSharpHost())
+            {
+                var usages = await FindSymbolsAsync(code, testHost);
+                var methodSymbol = usages.QuickFixes.Cast<SymbolLocation>().First(x => x.Kind == SymbolKind.Method.ToString());
 
-            // should find the occurrance with body
-            Assert.Equal(8, methodSymbol.Line);
+                // should find the occurrance with body
+                Assert.Equal(8, methodSymbol.Line);
+            }
         }
 
         [Fact]
@@ -215,17 +241,20 @@ public partial class MyClass
                     }
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "meth");
-            var symbols = usages.QuickFixes.Select(q => q.Text);
-
-            var expected = new[]
+            using (var testHost = CreateOmniSharpHost())
             {
-                "Method()",
-                "Method(string param)",
-                "NestedMethod()"
-            };
+                var usages = await FindSymbolsWithFilterAsync(code, "meth", testHost);
+                var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            Assert.Equal(expected, symbols);
+                var expected = new[]
+                {
+                    "Method()",
+                    "Method(string param)",
+                    "NestedMethod()"
+                };
+
+                Assert.Equal(expected, symbols);
+            }
         }
 
         [Fact]
@@ -240,34 +269,85 @@ public partial class MyClass
                     public class ConfigurationOptions : IConfigurationOptions { }
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "opti");
-            var symbols = usages.QuickFixes.Select(q => q.Text);
-
-            var expected = new[]
+            using (var testHost = CreateOmniSharpHost())
             {
-                "Options",
-                "IConfigurationOptions",
-                "ConfigurationOptions"
-            };
+                var usages = await FindSymbolsWithFilterAsync(code, "opti", testHost);
+                var symbols = usages.QuickFixes.Select(q => q.Text);
 
-            Assert.Equal(expected, symbols);
+                var expected = new[]
+                {
+                    "Options",
+                    "IConfigurationOptions",
+                    "ConfigurationOptions"
+                };
+
+                Assert.Equal(expected, symbols);
+            }
         }
 
+        [Fact]
+        public async Task no_symbols_returned_when_filter_too_short()
+        {
+            const string code = @"
+                namespace Some.Namespace
+                {
+                    public class Options {}
+                }";
 
-        private async Task<QuickFixResponse> FindSymbolsAsync(string code)
+            var configData  = new Dictionary<string, string>
+            {
+                [$"{nameof(OmniSharpOptions.FindSymbols)}:{nameof(FindSymbolsOptions.MinFilterLength)}"] = "3"
+            };
+
+            using (var testHost = CreateOmniSharpHost(configurationData: configData))
+            {
+                var usages = await FindSymbolsWithFilterAsync(code, "op", testHost);
+                var symbols = usages.QuickFixes.Select(q => q.Text);
+
+                Assert.Empty(symbols);
+            }
+        }
+
+        [Fact]
+        public async Task limit_number_of_returned_symbols()
+        {
+            const string code = @"
+                namespace Some.Namespace
+                {
+                    public class Options1 {}
+                    public class Options2 {}
+                    public class Options3 {}
+                }";
+
+            var configData = new Dictionary<string, string>
+            {
+                [$"{nameof(OmniSharpOptions.FindSymbols)}:{nameof(FindSymbolsOptions.MaxItemsToReturn)}"] = "2"
+            };
+
+            using (var testHost = CreateOmniSharpHost(configurationData: configData))
+            {
+                var usages = await FindSymbolsWithFilterAsync(code, "op", testHost);
+                var symbols = usages.QuickFixes.Select(q => q.Text);
+
+                Assert.Equal(2, symbols.Count());
+            }
+        }
+
+        private async Task<QuickFixResponse> FindSymbolsAsync(string code, OmniSharpTestHost testHost)
         {
             var testFile = new TestFile("dummy.cs", code);
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+
+            testHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(testHost);
 
             return await requestHandler.Handle(null);
         }
 
-        private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filter)
+        private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filter, OmniSharpTestHost testHost)
         {
             var testFile = new TestFile("dummy.cs", code);
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
+            testHost.AddFilesToWorkspace(testFile);
+            var requestHandler = GetRequestHandler(testHost);
 
             return await requestHandler.Handle(new FindSymbolsRequest { Filter = filter });
         }

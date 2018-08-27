@@ -9,5 +9,7 @@ namespace OmniSharp.Options
         public FormattingOptions FormattingOptions { get; } = new FormattingOptions();
 
         public FileOptions FileOptions { get; } = new FileOptions();
+
+        public FindSymbolsOptions FindSymbols { get; } = new FindSymbolsOptions();
     }
 }
