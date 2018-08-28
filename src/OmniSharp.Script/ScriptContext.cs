@@ -7,11 +7,10 @@ namespace OmniSharp.Script
 {
     public class ScriptContext
     {
-        public ScriptContext(ScriptProjectProvider scriptProjectProvider, HashSet<MetadataReference> metadataReferences, HashSet<string> assemblyReferences, CompilationDependency[] compilationDependencies, Type globalsType)
+        public ScriptContext(ScriptProjectProvider scriptProjectProvider, HashSet<MetadataReference> metadataReferences, CompilationDependency[] compilationDependencies, Type globalsType)
         {
             ScriptProjectProvider = scriptProjectProvider;
             MetadataReferences = metadataReferences;
-            AssemblyReferences = assemblyReferences;
             CompilationDependencies = compilationDependencies;
             GlobalsType = globalsType;
         }
@@ -19,8 +18,6 @@ namespace OmniSharp.Script
         public ScriptProjectProvider ScriptProjectProvider { get; }
 
         public HashSet<MetadataReference> MetadataReferences { get; }
-
-        public HashSet<string> AssemblyReferences { get; }
 
         public CompilationDependency[] CompilationDependencies { get; }
 
