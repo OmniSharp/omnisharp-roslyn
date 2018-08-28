@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class RoslynAnalyzerFacts : AbstractSingleRequestHandlerTestFixture<CodeCheckService>
+    public class CustomRoslynAnalyzerFacts : AbstractSingleRequestHandlerTestFixture<CodeCheckService>
     {
         protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
 
@@ -89,7 +89,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        public RoslynAnalyzerFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
+        public CustomRoslynAnalyzerFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
             : base(output, sharedOmniSharpHostFixture)
         {
         }

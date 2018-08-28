@@ -25,7 +25,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
-        private readonly RoslynAnalyzerService analyzers;
+        private readonly CSharpDiagnosticService analyzers;
         private readonly CodeFixesForProjects codeFixesForProject;
         private readonly MethodInfo _getNestedCodeActions;
 
@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             { "CS8019", "RemoveUnnecessaryImportsFixable" }
         };
 
-        protected BaseCodeActionService(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILogger logger, RoslynAnalyzerService analyzers, CodeFixesForProjects codeFixesForProject)
+        protected BaseCodeActionService(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILogger logger, CSharpDiagnosticService analyzers, CodeFixesForProjects codeFixesForProject)
         {
             this.Workspace = workspace;
             this.Providers = providers;
@@ -104,14 +104,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var semanticModel = await document.GetSemanticModelAsync();
-
             var analyzers = await this.analyzers.GetCurrentDiagnosticResult(new [] { document.Project.Id });
 
-            var groupedBySpan = semanticModel.GetDiagnostics()
-                .Concat(analyzers.Select(x => x.diagnostic))
-                .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
-                .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
+            var groupedBySpan =
+                analyzers.Select(x => x.diagnostic)
+                    .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
+                    .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 
             foreach (var diagnosticGroupedBySpan in groupedBySpan)
             {

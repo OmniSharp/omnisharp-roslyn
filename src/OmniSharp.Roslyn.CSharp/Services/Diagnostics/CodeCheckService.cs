@@ -14,11 +14,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
-        private readonly RoslynAnalyzerService _roslynAnalyzer;
+        private readonly CSharpDiagnosticService _roslynAnalyzer;
         private readonly ILogger<CodeCheckService> _logger;
 
         [ImportingConstructor]
-        public CodeCheckService(OmniSharpWorkspace workspace, RoslynAnalyzerService roslynAnalyzer, ILoggerFactory loggerFactory)
+        public CodeCheckService(OmniSharpWorkspace workspace, CSharpDiagnosticService roslynAnalyzer, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _roslynAnalyzer = roslynAnalyzer;
@@ -37,23 +37,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var locations = analyzerResults
                 .Where(x => (string.IsNullOrEmpty(request.FileName)
                     || x.diagnostic.Location.GetLineSpan().Path == request.FileName))
-                .Select(x => new
-                {
-                    location = x.diagnostic.ToDiagnosticLocation(),
-                    project = x.projectName
-                });
-
-            var groupedByProjectWhenMultipleFrameworksAreUsed = locations
-                .GroupBy(x => x.location)
-                .Select(x =>
-                {
-                    var location = x.First().location;
-                    location.Projects = x.Select(a => a.project).ToList();
-                    return location;
-                });
+                .DistinctDiagnosticLocationsByProject();
 
             return new QuickFixResponse(
-                groupedByProjectWhenMultipleFrameworksAreUsed.Where(x => x.FileName != null));
+                locations.Where(x => x.FileName != null));
         }
     }
 }

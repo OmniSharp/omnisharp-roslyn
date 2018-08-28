@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using OmniSharp.Eventing;
 using OmniSharp.Models.Diagnostics;
@@ -9,21 +10,33 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private class DiagnosticTestEmitter : IEventEmitter
         {
-            private readonly IList<DiagnosticMessage> _messages;
+            public readonly List<DiagnosticMessage> Messages = new List<DiagnosticMessage>();
             private readonly TaskCompletionSource<object> _tcs;
 
-            public Task Emitted => _tcs.Task;
-
-            public DiagnosticTestEmitter(IList<DiagnosticMessage> messages)
+            public async Task WaitForEmitted(int expectedCount = 1)
             {
-                _messages = messages;
+                // May seem hacky but nothing is more painfull to debug than infinite hanging test ...
+                for(int i = 0; i < 100; i++)
+                {
+                    if(Messages.Count == expectedCount)
+                    {
+                        return;
+                    }
+
+                    await Task.Delay(50);
+                }
+
+                throw new InvalidOperationException($"Timeout reached before expected event count reached, expected '{expectedCount}' got '{Messages.Count}' ");
+            }
+
+            public DiagnosticTestEmitter()
+            {
                 _tcs = new TaskCompletionSource<object>();
             }
 
             public void Emit(string kind, object args)
             {
-                _messages.Add((DiagnosticMessage)args);
-                _tcs.TrySetResult(null);
+                Messages.Add((DiagnosticMessage)args);
             }
         }
     }

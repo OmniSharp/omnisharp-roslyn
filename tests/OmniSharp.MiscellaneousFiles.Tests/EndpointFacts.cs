@@ -37,7 +37,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
                     var request = new CodeCheckRequest() { FileName = filePath };
                     var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
-                    Assert.Equal("; expected", actual.QuickFixes.First().Text);
+                    Assert.Equal("; expected (CS1002)", actual.QuickFixes.First().Text);
                 }
             }
         }

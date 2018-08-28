@@ -24,41 +24,21 @@ namespace OmniSharp.Helpers
             };
         }
 
-        internal static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(this IEnumerable<Document> documents, OmniSharpWorkspace workspace)
+        internal static IEnumerable<DiagnosticLocation> DistinctDiagnosticLocationsByProject(this IEnumerable<(string projectName, Diagnostic diagnostic)> analyzerResults)
         {
-            if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
-
-            var items = new List<DiagnosticLocation>();
-            foreach (var document in documents)
-            {
-                IEnumerable<Diagnostic> diagnostics;
-                if (workspace.IsCapableOfSemanticDiagnostics(document))
+            return analyzerResults
+                .Select(x => new
                 {
-                    var semanticModel = await document.GetSemanticModelAsync();
-                    diagnostics = semanticModel.GetDiagnostics();
-                }
-                else
+                    location = x.diagnostic.ToDiagnosticLocation(),
+                    project = x.projectName
+                })
+                .GroupBy(x => x.location)
+                .Select(x =>
                 {
-                    var syntaxModel = await document.GetSyntaxTreeAsync();
-                    diagnostics = syntaxModel.GetDiagnostics();
-                }
-
-                foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
-                {
-                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
-                    if (existingQuickFix == null)
-                    {
-                        quickFix.Projects.Add(document.Project.Name);
-                        items.Add(quickFix);
-                    }
-                    else
-                    {
-                        existingQuickFix.Projects.Add(document.Project.Name);
-                    }
-                }
-            }
-
-            return items;
+                    var location = x.First().location;
+                    location.Projects = x.Select(a => a.project).ToList();
+                    return location;
+                });
         }
     }
 }
