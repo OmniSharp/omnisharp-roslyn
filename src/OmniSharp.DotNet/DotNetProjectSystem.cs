@@ -25,7 +25,7 @@ using OmniSharp.Services;
 namespace OmniSharp.DotNet
 {
     [ExportProjectSystem(ProjectSystemNames.DotNetProjectSystem), Shared]
-    public class DotNetProjectSystem : IWaitableProjectSystem
+    public class DotNetProjectSystem : IProjectSystem
     {
         private const string CompilationConfiguration = "Debug";
 
@@ -423,11 +423,6 @@ namespace OmniSharp.DotNet
             }
 
             return languageVersion;
-        }
-
-        async Task IWaitableProjectSystem.WaitForUpdatesAsync()
-        {
-            await ((IProjectSystem)this).GetWorkspaceModelAsync(new WorkspaceInformationRequest());
         }
     }
 }

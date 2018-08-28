@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.33.0] - Not yet released
 * Added support for files without a project. (PR: [#1252](https://github.com/OmniSharp/omnisharp-roslyn/pull/1252))
+* Fixed a bug where `*.rsp`-based scripting references where not exposed in the Workspace information endpoint (PR: [#1272](https://github.com/OmniSharp/omnisharp-roslyn/pull/1272))
 
 ## [1.32.2] - 2018-08-07
 * OmniSharp now targets **net461**, instead of **net46** (PR: [#1237](https://github.com/OmniSharp/omnisharp-roslyn/pull/1237))
