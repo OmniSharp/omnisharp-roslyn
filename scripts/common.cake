@@ -1,5 +1,5 @@
 #addin "Newtonsoft.Json"
-#tool "nuget:?package=GitVersion.CommandLine&prerelease"
+#tool "nuget:?package=GitVersion.CommandLine&prerelease&version=4.0.0-beta0012"
 
 #load "platform.cake"
 
