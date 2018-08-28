@@ -47,6 +47,33 @@ namespace OmniSharp.Script.Tests
         }
 
         [Fact]
+        public async Task SingleCsiScriptWithCustomRspNamespacesAndReferences()
+        {
+            using (var testProject = TestAssets.Instance.GetTestScript("SingleCsiScriptWithCustomRsp"))
+            using (var host = CreateOmniSharpHost(testProject.Directory, new Dictionary<string, string>
+            {
+                ["script:rspFilePath"] = Path.Combine(testProject.Directory, "test.rsp")
+            }))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                var project = Assert.Single(workspaceInfo.Projects);
+
+                Assert.Equal("main.csx", Path.GetFileName(project.Path));
+
+                // should have reference to mscorlib
+                VerifyCorLib(project);
+
+                // default globals object
+                Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
+
+                // should have RSP inherited settings
+                VerifyAssemblyReference(project, "system.web");
+                var commonUsingStatement = Assert.Single(project.CommonUsings);
+                Assert.Equal("System.Web", commonUsingStatement);
+            }
+        }
+
+        [Fact]
         public async Task CsiScriptWithFileCreatedAfterStartingServer()
         {
             using (var testProject = TestAssets.Instance.GetTestScript("EmptyScript"))
@@ -163,12 +190,12 @@ namespace OmniSharp.Script.Tests
 
         private void VerifyCorLib(ScriptContextModel project, bool expected = true)
         {
-            var corLibFound = project.ImplicitAssemblyReferences.Any(r => r == GetMsCorlibPath());
+            var corLibFound = project.AssemblyReferences.Any(r => r == GetMsCorlibPath());
             Assert.True(corLibFound == expected, $"{(expected ? "Missing" : "Unnecessary")} reference to mscorlib");
         }
 
         private void VerifyAssemblyReference(ScriptContextModel project, string partialName) =>
-            Assert.True(project.ImplicitAssemblyReferences.Any(r => r.IndexOf(partialName, StringComparison.OrdinalIgnoreCase) > 0), $"Missing reference to {partialName}");
+            Assert.True(project.AssemblyReferences.Any(r => r.IndexOf(partialName, StringComparison.OrdinalIgnoreCase) > 0), $"Missing reference to {partialName}");
 
         private static async Task<ScriptContextModelCollection> GetWorkspaceInfoAsync(OmniSharpTestHost host)
         {

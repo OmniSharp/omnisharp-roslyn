@@ -15,25 +15,24 @@ using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace OmniSharp.MiscellaneousFiles.Tests
+namespace OmniSharp.Tests
 {
-    public class EndpointFacts : AbstractTestFixture
+    public class BufferManagerMiscFilesFacts : AbstractTestFixture
     {
-        public EndpointFacts(ITestOutputHelper output)
+        public BufferManagerMiscFilesFacts(ITestOutputHelper output)
             : base(output)
         {
         }
 
         [Fact]
-        public async Task Returns_only_syntactic_diagnotics()
+        public async Task Adds_Misc_Document_Which_Supports_Only_syntactic_diagnostics()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
             {
                 var testfile = new TestFile("a.cs", "class C { b a = new b(); int n  }");
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var request = new CodeCheckRequest() { FileName = filePath };
                     var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
@@ -43,7 +42,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
         }
 
         [Fact]
-        public async Task Returns_Signature_help()
+        public async Task Adds_Misc_Document_Which_Supports_Signature_help()
         {
             const string source =
 @"class Program
@@ -57,8 +56,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new SignatureHelpRequest()
                     {
@@ -79,13 +77,12 @@ namespace OmniSharp.MiscellaneousFiles.Tests
         }
 
         [Fact]
-        public async Task Returns_Implementations()
+        public async Task Adds_Misc_Document_Which_Supports_Implementations()
         {
             const string source = @"
                 public class MyClass 
                 { 
                     public MyClass() { Fo$$o(); }
-
                     public void Foo() {}
                 }";
 
@@ -94,8 +91,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new FindImplementationsRequest()
                     {
@@ -113,14 +109,13 @@ namespace OmniSharp.MiscellaneousFiles.Tests
         }
 
         [Fact]
-        public async Task Returns_Usages()
+        public async Task Adds_Misc_Document_Which_Supports_Usages()
         {
             const string source = @"
     public class F$$oo
     {
         public string prop { get; set; }
     }
-
     public class FooConsumer
     {
         public FooConsumer()
@@ -135,9 +130,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
-                   
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new FindUsagesRequest()
                     {
@@ -154,7 +147,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
         }
 
         [Fact]
-        public async Task Returns_Symbols()
+        public async Task Adds_Misc_Document_Which_Supports_Symbols()
         {
             const string source = @"
     namespace Some.Long.Namespace
@@ -170,7 +163,6 @@ namespace OmniSharp.MiscellaneousFiles.Tests
                         }
                         private string Method() {}
                         private string Method(string param) {}
-
                         private class Nested
                         {
                             private string NestedMethod() {}
@@ -183,8 +175,7 @@ namespace OmniSharp.MiscellaneousFiles.Tests
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var actual = await host.GetResponse<FindSymbolsRequest, QuickFixResponse>(OmniSharpEndpoints.FindSymbols, null);
                     var symbols = actual.QuickFixes.Select(q => q.Text);
 
@@ -206,14 +197,13 @@ namespace OmniSharp.MiscellaneousFiles.Tests
         }
 
         [Fact]
-        public async Task Returns_FixUsings()
+        public async Task Adds_Misc_Document_Which_Supports_FixUsings()
         {
             const string code = @"
 namespace nsA
 {
     public class classX{}
 }
-
 namespace OmniSharp
 {
     public class class1
@@ -232,7 +222,6 @@ namespace nsA
 {
     public class classX{}
 }
-
 namespace OmniSharp
 {
     public class class1
@@ -249,9 +238,8 @@ namespace OmniSharp
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
-                    var request = new FixUsingsRequest(){ FileName = filePath };
+                    var filePath = await AddTestFile(host, testProject, testfile);
+                    var request = new FixUsingsRequest() { FileName = filePath };
                     var actual = await host.GetResponse<FixUsingsRequest, FixUsingsResponse>(OmniSharpEndpoints.FixUsings, request);
                     Assert.Equal(expectedCode.Replace("\r\n", "\n"), actual.Buffer.Replace("\r\n", "\n"));
                 }
@@ -259,7 +247,7 @@ namespace OmniSharp
         }
 
         [Fact]
-        public async Task Returns_TypeLookup()
+        public async Task Adds_Misc_Document_Which_Supports_TypeLookup()
         {
             const string code = @"class F$$oo {}";
             var testfile = new TestFile("a.cs", code);
@@ -267,8 +255,7 @@ namespace OmniSharp
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var service = host.GetRequestHandler<TypeLookupService>(OmniSharpEndpoints.TypeLookup);
                     var point = testfile.Content.GetPointFromPosition();
                     var request = new TypeLookupRequest
@@ -308,10 +295,8 @@ namespace OmniSharp
             {
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath1 = AddTestFile(testProject, testfile1);
-                    var filePath2 = AddTestFile(testProject, testfile2);
-                    await WaitForFileUpdate(filePath1, host);
-                    await WaitForFileUpdate(filePath2, host);
+                    var filePath1 = await AddTestFile(host, testProject, testfile1);
+                    var filePath2 = await AddTestFile(host, testProject, testfile2);
                     var point = testfile1.Content.GetPointFromPosition();
                     var request = new SignatureHelpRequest()
                     {
@@ -332,7 +317,7 @@ namespace OmniSharp
         }
 
         [Fact]
-        public async Task Handles_File_Deletion()
+        public async Task Handles_Misc_File_Deletion()
         {
             //When the file is deleted the diagnostics must not be returned
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("EmptyProject"))
@@ -340,8 +325,7 @@ namespace OmniSharp
                 var testfile = new TestFile("a.cs", "class C { b a = new b(); int n  }");
                 using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    var filePath = AddTestFile(testProject, testfile);
-                    await WaitForFileUpdate(filePath, host);
+                    var filePath = await AddTestFile(host, testProject, testfile);
                     var request = new CodeCheckRequest() { FileName = filePath };
                     var actual = await host.GetResponse<CodeCheckRequest, QuickFixResponse>(OmniSharpEndpoints.CodeCheck, request);
                     Assert.Single(actual.QuickFixes);
@@ -353,9 +337,11 @@ namespace OmniSharp
             }
         }
 
-        private string AddTestFile(ITestProject testProject, TestFile testfile)
+        private async Task<string> AddTestFile(OmniSharpTestHost host, ITestProject testProject, TestFile testfile)
         {
-            return testProject.AddDisposableFile(testfile.FileName, testfile.Content.Text.ToString());
+            var filePath = testProject.AddDisposableFile(testfile.FileName, testfile.Content.Text.ToString());
+            await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = filePath, Buffer = testfile.Content.Text.ToString() });
+            return filePath;
         }
 
         private async Task WaitForFileUpdate(string filePath, OmniSharpTestHost host, FileWatching.FileChangeType changeType = FileWatching.FileChangeType.Create)
