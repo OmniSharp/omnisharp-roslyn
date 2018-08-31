@@ -122,7 +122,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
         {
-            foreach (var codeFixProvider in GetSortedCodeFixProviders())
+            foreach (var codeFixProvider in GetSortedCodeFixProviders(document))
             {
                 var fixableDiagnostics = diagnostics.Where(d => HasFix(codeFixProvider, d.Id)).ToImmutableArray();
 
@@ -142,9 +142,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
         }
 
-        private List<CodeFixProvider> GetSortedCodeFixProviders()
+        private List<CodeFixProvider> GetSortedCodeFixProviders(Document document)
         {
-            var providerList = this.Providers.SelectMany(provider => provider.CodeFixProviders);
+            var providerList =
+                this.Providers.SelectMany(provider => provider.CodeFixProviders)
+                    .Concat(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id.ToString()));
+
             return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(providerList, attribute => attribute.Name).ToList();
         }
 
