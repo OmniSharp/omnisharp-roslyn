@@ -18,9 +18,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Theory]
-        [InlineData("a.cs", 2)]
-        [InlineData("a.csx", 1)]
-        public async Task CodeCheckSpecifiedFileOnly(string filename, int compilationTargetsCount)
+        [InlineData("a.cs")]
+        [InlineData("a.csx")]
+        public async Task CodeCheckSpecifiedFileOnly(string filename)
         {
             SharedOmniSharpTestHost.ClearWorkspace();
 
@@ -38,14 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest { FileName = testFile.FileName });
 
-            await emitter.WaitForEmitted(expectedCount: compilationTargetsCount);
-
-            Assert.Equal(compilationTargetsCount, emitter.Messages.Count());
-            var message = emitter.Messages.First();
-            Assert.Single(message.Results);
-            var result = message.Results.First();
-            Assert.Single(result.QuickFixes);
-            Assert.Equal(filename, result.FileName);
+            await emitter.ExpectForEmitted(msg => msg.Results.Any(m => m.FileName == filename));
         }
 
         private CSharpDiagnosticService CreateDiagnosticService(DiagnosticEventForwarder forwarder)
@@ -54,9 +47,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Theory]
-        [InlineData("a.cs", "b.cs", 2)]
-        [InlineData("a.csx", "b.csx", 2)]
-        public async Task CheckAllFiles(string filename1, string filename2, int compilationTargetsCount)
+        [InlineData("a.cs", "b.cs")]
+        [InlineData("a.csx", "b.csx")]
+        public async Task CheckAllFiles(string filename1, string filename2)
         {
             SharedOmniSharpTestHost.ClearWorkspace();
 
@@ -71,12 +64,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
-            await emitter.WaitForEmitted(expectedCount: compilationTargetsCount);
-
-            Assert.Equal(compilationTargetsCount, emitter.Messages.Count());
-            Assert.Equal(2, emitter.Messages.First().Results.Count());
-            Assert.Single(emitter.Messages.First().Results.First().QuickFixes);
-            Assert.Single(emitter.Messages.First().Results.Skip(1).First().QuickFixes);
+            await emitter.ExpectForEmitted(msg => msg.Results
+                .Any(r => r.FileName == filename1 && r.QuickFixes.Count() == 1));
+            await emitter.ExpectForEmitted(msg => msg.Results
+                .Any(r => r.FileName == filename2 && r.QuickFixes.Count() == 1));
         }
 
         [Theory]
