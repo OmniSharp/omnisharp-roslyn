@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileWatching;
 using OmniSharp.Models;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Services;
@@ -41,12 +42,12 @@ namespace OmniSharp.Tests
         }
 
         [Fact]
-        public async Task UpdateBufferIgnoresFilePathsThatDontMatchAProjectPath()
+        public async Task UpdateBufferIgnoresNonCsFilePathsThatDontMatchAProjectPath()
         {
             var workspace = GetWorkspaceWithProjects();
 
-            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("some", " path.cs"), Buffer = "enum E {}" });
-            var documents = workspace.GetDocuments(Path.Combine("some", "path.cs"));
+            await workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = Path.Combine("some", " path.fs"), Buffer = "enum E {}" });
+            var documents = workspace.GetDocuments(Path.Combine("some", "path.fs"));
             Assert.Empty(documents);
         }
 
@@ -97,7 +98,7 @@ namespace OmniSharp.Tests
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
-                new LoggerFactory());
+                new LoggerFactory(), new ManualFileSystemWatcher());
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "root", "foo.csproj"),
@@ -164,7 +165,7 @@ namespace OmniSharp.Tests
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
-                new LoggerFactory());
+                new LoggerFactory(), new ManualFileSystemWatcher());
 
             TestHelpers.AddProjectToWorkspace(workspace,
                 filePath: Path.Combine("src", "project.json"),

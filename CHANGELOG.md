@@ -1,7 +1,12 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.32.0] - _Not Yet Released_
+## [1.32.3] - 2018-08-28
+* Added support for files without a project. (PR: [#1252](https://github.com/OmniSharp/omnisharp-roslyn/pull/1252))
+* Fixed a bug where `*.rsp`-based scripting references where not exposed in the Workspace information endpoint (PR: [#1272](https://github.com/OmniSharp/omnisharp-roslyn/pull/1272))
+
+## [1.32.2] - 2018-08-07
+* OmniSharp now targets **net461**, instead of **net46** (PR: [#1237](https://github.com/OmniSharp/omnisharp-roslyn/pull/1237))
 * Added new `/codestructure` endpoint which serves a replacement for the `/currentfilemembersastree` endpoint. The new endpoint has a cleaner design, properly supports all C# types and members, and supports more information, such as accessibility, static vs. instance, etc. (PRs: [#1211](https://github.com/OmniSharp/omnisharp-roslyn/pull/1211) [#1217](https://github.com/OmniSharp/omnisharp-roslyn/pull/1217))
 * Fixed a bug where language services for newly created CSX files were not provided if no CSX files existed at the moment OmniSharp was started ([#1199](https://github.com/OmniSharp/omnisharp-roslyn/issues/1199), PR: [#1210](https://github.com/OmniSharp/omnisharp-roslyn/pull/1210))
 * The legacy project.json support is now disabled by default, allowing OmniSharp to start up a bit faster for common scenarios. If you wish to enable project.json support, add the following setting to your `omnisharp.json` file. (PR: [#1194](https://github.com/OmniSharp/omnisharp-roslyn/pull/1194))
@@ -14,10 +19,16 @@ All changes to the project will be documented in this file.
     }
     ```
 * Added support for code actions in `.cake` files. ([#1205](https://github.com/OmniSharp/omnisharp-roslyn/issues/1205), PR: [#1212](https://github.com/OmniSharp/omnisharp-roslyn/pull/1212))
-* Added a new `/blockstructure` endpoint that returns the spans of the C# code blocks (usings, namespaces, methods, etc.) in a file. (PR: [#1209](https://github.com/OmniSharp/omnisharp-roslyn/pull/1209))
+* Added a new `/blockstructure` endpoint that returns the spans of the C# code blocks (usings, namespaces, methods, etc.) in a file. (PRs: [#1209](https://github.com/OmniSharp/omnisharp-roslyn/pull/1209) [#1231](https://github.com/OmniSharp/omnisharp-roslyn/pull/1231))
 * Fixed bug where find usages returned usages from loaded `.cake` files even though `OnlyThisFile` was set to `true` in the request. ([#1204](https://github.com/OmniSharp/omnisharp-roslyn/issues/1204), PR: [#1213](https://github.com/OmniSharp/omnisharp-roslyn/pull/1213))
 * Performance improvements for line mappings when working with `.cake` files. (PR: [#1226](https://github.com/OmniSharp/omnisharp-roslyn/pull/1226))
 * Fixed a bug where a new debug session could not be started after a previous one failed due to build error. (PR: [#1239](https://github.com/OmniSharp/omnisharp-roslyn/pull/1239))
+* Upgraded dependencies (PR: [#1237](https://github.com/OmniSharp/omnisharp-roslyn/pull/1237))
+  * Upgraded to .NET Core SDK 2.1.301
+  * Upgraded to Microsoft.AspNetCore.* version 2.1.1
+  * Upgraded to Microsoft.Extensions.* version 2.1.1
+  * Upgraded to MSBuild 15.7
+  * Upgraded to Roslyn 2.8.2
 
 ## [1.31.1] - 2018-05-28
 * Fixed bug where diagnostics from loaded `.cake` files was shown in the current file. (PR: [#1201](https://github.com/OmniSharp/omnisharp-roslyn/pull/1201))

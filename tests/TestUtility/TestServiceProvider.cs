@@ -31,10 +31,14 @@ namespace TestUtility
             _logger = loggerFactory.CreateLogger<TestServiceProvider>();
 
             _services[typeof(IOptionsMonitor<OmniSharpOptions>)] = new OptionsMonitor<OmniSharpOptions>(
-                new IConfigureOptions<OmniSharpOptions>[] {
-                    new ConfigureOptions<OmniSharpOptions>(c => ConfigurationBinder.Bind(configuration, c))
-                },
-                Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>()
+                new OptionsFactory<OmniSharpOptions>(
+                    new IConfigureOptions<OmniSharpOptions>[] {
+                        new ConfigureOptions<OmniSharpOptions>(c => ConfigurationBinder.Bind(configuration, c))
+                    },
+                    Enumerable.Empty<IPostConfigureOptions<OmniSharpOptions>>()
+                ),
+                Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>(),
+                new OptionsCache<OmniSharpOptions>()
             );
 
             var assemblyLoader = new AssemblyLoader(loggerFactory);

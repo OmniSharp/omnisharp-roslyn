@@ -5,6 +5,7 @@ using System.Composition.Hosting.Core;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,7 @@ using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -48,6 +50,7 @@ namespace TestUtility
 
         public ILoggerFactory LoggerFactory { get; }
         public OmniSharpWorkspace Workspace { get; }
+        public ILogger<OmniSharpTestHost> Logger { get; }
 
         private OmniSharpTestHost(
             TestServiceProvider serviceProvider,
@@ -60,6 +63,7 @@ namespace TestUtility
 
             this.LoggerFactory = loggerFactory;
             this.Workspace = workspace;
+            this.Logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
         }
 
         ~OmniSharpTestHost()
@@ -184,6 +188,11 @@ namespace TestUtility
             return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
         }
 
+        public CodeCheckService GetCodeCheckServiceService()
+        {
+            return GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
+        }
+
         public void AddFilesToWorkspace(params TestFile[] testFiles)
         {
             TestHelpers.AddProjectToWorkspace(
@@ -205,6 +214,13 @@ namespace TestUtility
             {
                 Workspace.RemoveProject(projectId);
             }
+        }
+
+        public Task<TResponse> GetResponse<TRequest, TResponse>(
+           string endpoint, TRequest request)
+        {
+            var service = GetRequestHandler<IRequestHandler<TRequest, TResponse>>(endpoint);
+            return service.Handle(request);
         }
     }
 }

@@ -1,5 +1,5 @@
 #addin "Newtonsoft.Json"
-#tool "nuget:?package=GitVersion.CommandLine&prerelease"
+#tool "nuget:?package=GitVersion.CommandLine&prerelease&version=4.0.0-beta0012"
 
 #load "platform.cake"
 
@@ -152,7 +152,6 @@ public class Folders
     public string MonoRuntimeMacOS { get; }
     public string MonoRuntimeLinux32 { get; }
     public string MonoRuntimeLinux64 { get; }
-    public string MonoFramework { get; }
     public string MonoMSBuildRuntime { get; }
     public string MonoMSBuildLib { get; }
 
@@ -179,7 +178,6 @@ public class Folders
         this.MonoRuntimeMacOS = PathHelper.Combine(this.Tools, "Mono.Runtime.MacOS");
         this.MonoRuntimeLinux32 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x86");
         this.MonoRuntimeLinux64 = PathHelper.Combine(this.Tools, "Mono.Runtime.Linux-x64");
-        this.MonoFramework = PathHelper.Combine(this.Tools, "Mono.Framework");
         this.MonoMSBuildRuntime = PathHelper.Combine(this.Tools, "Microsoft.Build.Runtime.Mono");
         this.MonoMSBuildLib = PathHelper.Combine(this.Tools, "Microsoft.Build.Lib.Mono");
     }
@@ -235,9 +233,9 @@ public class BuildEnvironment
 
         this.MonoRuntimes = new []
         {
-            new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono.osx"),
-            new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinux32, "mono.linux-x86"),
-            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinux64, "mono.linux-x86_64")
+            new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono"),
+            new MonoRuntime("linux-x86", this.Folders.MonoRuntimeLinux32, "mono"),
+            new MonoRuntime("linux-x64", this.Folders.MonoRuntimeLinux64, "mono")
         };
 
         if (Platform.Current.IsMacOS)
@@ -272,7 +270,6 @@ public class BuildPlan
     public string MonoRuntimeMacOS { get; set; }
     public string MonoRuntimeLinux32 { get; set; }
     public string MonoRuntimeLinux64 { get; set; }
-    public string MonoFramework { get; set; }
     public string MonoMSBuildRuntime { get; set; }
     public string MonoMSBuildLib { get; set; }
     public string[] HostProjects { get; set; }

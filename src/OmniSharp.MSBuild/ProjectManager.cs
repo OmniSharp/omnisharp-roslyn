@@ -331,7 +331,7 @@ namespace OmniSharp.MSBuild
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
-            UpdateReferences(project, projectFileInfo.References);
+            UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
@@ -477,7 +477,7 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private void UpdateReferences(Project project, ImmutableArray<string> referencePaths)
+        private void UpdateReferences(Project project, ImmutableArray<string> projectReferencePaths, ImmutableArray<string> referencePaths)
         {
             var referencesToRemove = new HashSet<MetadataReference>(project.MetadataReferences, MetadataReferenceEqualityComparer.Instance);
             var referencesToAdd = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
@@ -487,22 +487,31 @@ namespace OmniSharp.MSBuild
                 if (!File.Exists(referencePath))
                 {
                     _logger.LogWarning($"Unable to resolve assembly '{referencePath}'");
+                    continue;
                 }
-                else
+
+                // There is no need to explicitly add assembly to workspace when the assembly is produced by a project reference.
+                // Doing so actually can cause /codecheck request to return errors like below for types in the referenced project if it is for example signed:
+                // The type 'TestClass' exists in both 'SignedLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null' and 'ClassLibrary1, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a5d85a5baa39a6a6'
+                if (TryFindLoadedProjectReferenceWithTargetPath(referencePath, projectReferencePaths, project.Name, out ProjectFileInfo projectReferenceWithTarget))
                 {
-                    var reference = _metadataFileReferenceCache.GetMetadataReference(referencePath);
+                    _logger.LogDebug($"Skipped reference {referencePath} of project {project.Name} because it is already represented as a target " +
+                        $"of loaded project reference {projectReferenceWithTarget.Name}");
+                    continue;
+                }
 
-                    if (referencesToRemove.Remove(reference))
-                    {
-                        continue;
-                    }
+                var reference = _metadataFileReferenceCache.GetMetadataReference(referencePath);
 
-                    if (!referencesToAdd.Contains(reference))
-                    {
-                        _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
-                        _workspace.AddMetadataReference(project.Id, reference);
-                        referencesToAdd.Add(reference);
-                    }
+                if (referencesToRemove.Remove(reference))
+                {
+                    continue;
+                }
+
+                if (!referencesToAdd.Contains(reference))
+                {
+                    _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
+                    _workspace.AddMetadataReference(project.Id, reference);
+                    referencesToAdd.Add(reference);
                 }
             }
 
@@ -510,6 +519,33 @@ namespace OmniSharp.MSBuild
             {
                 _workspace.RemoveMetadataReference(project.Id, reference);
             }
+        }
+
+        /// <summary> Attempts to locate a referenced project with particular target path i.e. the path of the assembly that the referenced project produces. /// </summary>
+        /// <param name="targetPath">Target path to look for.</param>
+        /// <param name="projectReferencePaths">List of projects referenced by <see cref="projectName"/></param>
+        /// <param name="projectName">Name of the project for which the search is initiated</param>
+        /// <param name="projectReferenceWithTarget">If found, contains project reference with the <see cref="targetPath"/>; null otherwise</param>
+        /// <returns></returns>
+        private bool TryFindLoadedProjectReferenceWithTargetPath(string targetPath, ImmutableArray<string> projectReferencePaths, string projectName, out ProjectFileInfo projectReferenceWithTarget)
+        {
+            projectReferenceWithTarget = null;
+            foreach (string projectReferencePath in projectReferencePaths)
+            {
+                if (!_projectFiles.TryGetValue(projectReferencePath, out ProjectFileInfo referencedProject))
+                {
+                    _logger.LogWarning($"Expected project reference {projectReferencePath} to be already loaded for project {projectName}");
+                    continue;
+                }
+
+                if (referencedProject.TargetPath != null && referencedProject.TargetPath.Equals(targetPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    projectReferenceWithTarget = referencedProject;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

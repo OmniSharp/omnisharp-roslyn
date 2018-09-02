@@ -59,7 +59,7 @@ namespace OmniSharp.Cake.Tests
             var workspace = new OmniSharpWorkspace(
                 new HostServicesAggregator(
                     Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()),
-                new LoggerFactory());
+                new LoggerFactory(), null);
 
             var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(),
                 "ProjectNameVal", "AssemblyNameVal", LanguageNames.CSharp);

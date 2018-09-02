@@ -16,13 +16,14 @@ using OmniSharp.Cake.Services;
 using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Cake
 {
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportProjectSystem(ProjectSystemNames.CakeProjectSystem), Shared]
     public class CakeProjectSystem : IProjectSystem
     {
         private readonly OmniSharpWorkspace _workspace;

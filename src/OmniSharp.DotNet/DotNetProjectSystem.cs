@@ -17,13 +17,14 @@ using OmniSharp.DotNet.Tools;
 using OmniSharp.Eventing;
 using OmniSharp.FileWatching;
 using OmniSharp.Helpers;
+using OmniSharp.Mef;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.Services;
 
 namespace OmniSharp.DotNet
 {
-    [Export(typeof(IProjectSystem)), Shared]
+    [ExportProjectSystem(ProjectSystemNames.DotNetProjectSystem), Shared]
     public class DotNetProjectSystem : IProjectSystem
     {
         private const string CompilationConfiguration = "Debug";

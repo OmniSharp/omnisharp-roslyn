@@ -209,7 +209,6 @@ Task("InstallMonoAssets")
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeMacOS}", env.Folders.MonoRuntimeMacOS);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux32}", env.Folders.MonoRuntimeLinux32);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoRuntimeLinux64}", env.Folders.MonoRuntimeLinux64);
-    DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoFramework}", env.Folders.MonoFramework);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildRuntime}", env.Folders.MonoMSBuildRuntime);
     DownloadFileAndUnzip($"{buildPlan.DownloadURL}/{buildPlan.MonoMSBuildLib}", env.Folders.MonoMSBuildLib);
 
@@ -221,7 +220,6 @@ Task("InstallMonoAssets")
 
     var frameworkFolder = CombinePaths(env.Folders.Mono, "framework");
     DirectoryHelper.ForceCreate(frameworkFolder);
-    DirectoryHelper.Copy(env.Folders.MonoFramework, frameworkFolder);
 
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "bin", monoRuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(env.Folders.Mono, "run")}'");
@@ -366,7 +364,7 @@ Task("CreateMSBuildFolder")
     foreach (var nugetPackage in nugetPackages)
     {
         var binaryName = nugetPackage + ".dll";
-        
+
         FileHelper.Copy(
             source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net46", binaryName),
             destination: CombinePaths(msbuild15BinTargetFolder, binaryName));
@@ -618,7 +616,7 @@ Task("Test")
         {
             PrintBlankLine();
 
-            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net46");
+            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net461");
 
             // Copy xunit executable to test folder to solve path errors
             var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
@@ -632,7 +630,7 @@ Task("Test")
             if (Platform.Current.IsWindows)
             {
                 Run(xunitInstancePath, arguments, instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net46");
+                    .ExceptionOnError($"Test {testProject} failed for net461");
             }
             else
             {
@@ -647,7 +645,7 @@ Task("Test")
                 // By default, the run script launches OmniSharp. To launch our Mono runtime
                 // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
                 Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net46");
+                    .ExceptionOnError($"Test {testProject} failed for net461");
             }
         }
     }
@@ -693,7 +691,7 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     var outputFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
 
-    var buildFolder = CombinePaths(env.Folders.Bin, configuration, project, "net46");
+    var buildFolder = CombinePaths(env.Folders.Bin, configuration, project, "net461");
 
     CopyMonoBuild(env, buildFolder, outputFolder);
 
@@ -712,8 +710,6 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
 
     Run("chmod", $"+x '{CombinePaths(outputFolder, "bin", monoRuntime.RuntimeFile)}'");
     Run("chmod", $"+x '{CombinePaths(outputFolder, "run")}'");
-
-    DirectoryHelper.Copy(env.Folders.MonoFramework, CombinePaths(outputFolder, "framework"));
 
     var sourceFolder = CombinePaths(env.Folders.ArtifactsPublish, project, "mono");
     var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");

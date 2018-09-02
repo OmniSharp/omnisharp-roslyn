@@ -186,6 +186,31 @@ namespace OmniSharp.Cake.Extensions
             return response;
         }
 
+        public static async Task<BlockStructureResponse> TranslateAsync(this BlockStructureResponse response, OmniSharpWorkspace workspace, SimpleFileRequest request)
+        {
+            if (response?.Spans == null)
+            {
+                return response;
+            }
+
+            var spans = new List<CodeFoldingBlock>();
+
+            foreach (var span in response.Spans)
+            {
+                var range = await span.Range.TranslateAsync(workspace, request);
+
+                if (range.Start.Line < 0)
+                {
+                    continue;
+                }
+
+                spans.Add(new CodeFoldingBlock(range, span.Kind));
+            }
+
+            response.Spans = spans;
+            return response;
+        }
+
         private static async Task<CodeElement> TranslateAsync(this CodeElement element, OmniSharpWorkspace workspace, SimpleFileRequest request)
         {
             var builder = new CodeElement.Builder

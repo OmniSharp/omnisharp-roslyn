@@ -1,4 +1,4 @@
-using Microsoft.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using OmniSharp.Internal;
 
 namespace OmniSharp.Http

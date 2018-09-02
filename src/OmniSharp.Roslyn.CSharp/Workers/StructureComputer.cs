@@ -68,6 +68,7 @@ namespace OmniSharp
             ret.Location = new QuickFix()
             {
                 Text = text,
+                FileName = lineSpan.Path,
                 Line = lineSpan.StartLinePosition.Line,
                 Column = lineSpan.StartLinePosition.Character,
                 EndLine = lineSpan.EndLinePosition.Line,

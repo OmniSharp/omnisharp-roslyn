@@ -8,6 +8,7 @@ env:
   - secure: UYglcVukRlhS09V7MXwMQ5pU6gZZZ+bsaKnCSlPV+CQyh+ExabEYYmF7NBJirF/RDK30tbuI6mlSYagjX18PpLZ3390WI3WkKRbP0F1SfylHKlMh5MDcKNTsSwYMcQ0BX7teg7kpYmxbigP7jing8LPehP/QdQAhnkhpdXe1P/o=
   - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
   - DOTNET_CLI_TELEMETRY_OPTOUT=true
+  - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
 mono: latest
 os:
 - linux
@@ -59,7 +60,16 @@ after_success: |
     sudo apt-get install apt-transport-https
     sudo apt-get update && sudo apt-get install azure-cli
 
-    az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
+    # Only update "latest" version if we have all of the builds
+    $deploymentDir = "artifacts/deployment"
+    if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
+       [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
+       [ -e $deploymentDir/"omnisharp-linux-x64.zip" ] && \
+       [ -e $deploymentDir/"omnisharp-win-x86.zip" ] && \
+       [ -e $deploymentDir/"omnisharp-win-x64.zip" ]; then
+      
+      az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
+    fi  
   fi
 notifications:
   slack:

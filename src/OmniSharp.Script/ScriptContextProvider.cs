@@ -76,7 +76,6 @@ namespace OmniSharp.Script
             }
 
             var metadataReferences = new HashSet<MetadataReference>(MetadataReferenceEqualityComparer.Instance);
-            var assemblyReferences = new HashSet<string>();
 
             var isDesktopClr = true;
             // if we have no compilation dependencies
@@ -86,7 +85,7 @@ namespace OmniSharp.Script
             if (!compilationDependencies.Any())
             {
                 _logger.LogInformation("Unable to find dependency context for CSX files. Will default to non-context usage (Desktop CLR scripts).");
-                AddDefaultClrMetadataReferences(metadataReferences, assemblyReferences);
+                AddDefaultClrMetadataReferences(metadataReferences);
             }
             else
             {
@@ -98,7 +97,7 @@ namespace OmniSharp.Script
                     if (loadedFiles.Add(Path.GetFileName(compilationAssembly)))
                     {
                         _logger.LogDebug("Discovered script compilation assembly reference: " + compilationAssembly);
-                        AddMetadataReference(metadataReferences, assemblyReferences, compilationAssembly);
+                        AddMetadataReference(metadataReferences, compilationAssembly);
                     }
                 }
             }
@@ -107,55 +106,26 @@ namespace OmniSharp.Script
             foreach (var inheritedCompileLib in inheritedCompileLibraries)
             {
                 _logger.LogDebug("Adding implicit reference: " + inheritedCompileLib);
-                AddMetadataReference(metadataReferences, assemblyReferences, inheritedCompileLib.Location);
+                AddMetadataReference(metadataReferences, inheritedCompileLib.Location);
             }
 
             var scriptProjectProvider = new ScriptProjectProvider(scriptOptions, _env, _loggerFactory, isDesktopClr);
 
-            return new ScriptContext(scriptProjectProvider, metadataReferences, assemblyReferences, compilationDependencies, _defaultGlobalsType);
+            return new ScriptContext(scriptProjectProvider, metadataReferences, compilationDependencies, _defaultGlobalsType);
         }
 
-        private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences, HashSet<string> assemblyReferences)
+        private void AddDefaultClrMetadataReferences(HashSet<MetadataReference> commonReferences)
         {
-            var assemblies = new[]
-            {
-                typeof(object).GetTypeInfo().Assembly,
-                typeof(Enumerable).GetTypeInfo().Assembly,
-                typeof(Stack<>).GetTypeInfo().Assembly,
-                typeof(Lazy<,>).GetTypeInfo().Assembly,
-                FromName("System.Runtime"),
-                FromName("mscorlib")
-            };
-
-            var references = assemblies
-                .Where(a => a != null)
-                .Select(a => a.Location)
-                .Distinct()
-                .Select(l =>
-                {
-                    assemblyReferences.Add(l);
-                    return _metadataFileReferenceCache.GetMetadataReference(l);
-                });
+            var references = DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
+                .Select(l => _metadataFileReferenceCache.GetMetadataReference(l));
 
             foreach (var reference in references)
             {
                 commonReferences.Add(reference);
             }
-
-            Assembly FromName(string assemblyName)
-            {
-                try
-                {
-                    return Assembly.Load(new AssemblyName(assemblyName));
-                }
-                catch
-                {
-                    return null;
-                }
-            }
         }
 
-        private void AddMetadataReference(ISet<MetadataReference> referenceCollection, HashSet<string> assemblyReferences, string fileReference)
+        private void AddMetadataReference(ISet<MetadataReference> referenceCollection, string fileReference)
         {
             if (!File.Exists(fileReference))
             {
@@ -171,7 +141,6 @@ namespace OmniSharp.Script
             }
 
             referenceCollection.Add(metadataReference);
-            assemblyReferences.Add(fileReference);
             _logger.LogDebug($"Added reference to '{fileReference}'");
         }
     }
