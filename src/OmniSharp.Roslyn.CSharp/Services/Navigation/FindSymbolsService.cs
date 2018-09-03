@@ -60,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     symbolLocations.Add(ConvertSymbol(symbol, location));
                 }
 
-                if (_options.MaxItemsToReturn != FindSymbolsOptions.Unlimited && symbolLocations.Count >= _options.MaxItemsToReturn)
+                if (_options.MaxItemsToReturn > 0 && symbolLocations.Count >= _options.MaxItemsToReturn)
                 {
                     break;
                 }
