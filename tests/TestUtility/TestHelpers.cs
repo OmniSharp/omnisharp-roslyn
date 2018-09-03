@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
+using OmniSharp.FileWatching;
 using OmniSharp.Script;
 using OmniSharp.Services;
 
@@ -15,7 +16,7 @@ namespace TestUtility
     {
         public static OmniSharpWorkspace CreateCsxWorkspace(TestFile testFile)
         {
-            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()), new LoggerFactory());
+            var workspace = new OmniSharpWorkspace(new HostServicesAggregator(Enumerable.Empty<IHostServicesProvider>(), new LoggerFactory()), new LoggerFactory(), new ManualFileSystemWatcher());
             AddCsxProjectToWorkspace(workspace, testFile);
             return workspace;
         }

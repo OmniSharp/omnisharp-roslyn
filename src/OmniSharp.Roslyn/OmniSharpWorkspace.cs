@@ -9,6 +9,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileWatching;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Utilities;
@@ -26,10 +27,10 @@ namespace OmniSharp
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
 
         [ImportingConstructor]
-        public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory)
+        public OmniSharpWorkspace(HostServicesAggregator aggregator, ILoggerFactory loggerFactory, IFileSystemWatcher fileSystemWatcher)
             : base(aggregator.CreateHostServices(), "Custom")
         {
-            BufferManager = new BufferManager(this);
+            BufferManager = new BufferManager(this, fileSystemWatcher);
             _logger = loggerFactory.CreateLogger<OmniSharpWorkspace>();
         }
 
