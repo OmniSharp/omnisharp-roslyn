@@ -184,9 +184,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
-        private CodeElement CreateCodeElement(EnumMemberDeclarationSyntax enumDeclaration, SourceText text, SemanticModel semanticModel)
+        private CodeElement CreateCodeElement(EnumMemberDeclarationSyntax enumMemberDeclaration, SourceText text, SemanticModel semanticModel)
         {
-            var symbol = semanticModel.GetDeclaredSymbol(enumDeclaration);
+            var symbol = semanticModel.GetDeclaredSymbol(enumMemberDeclaration);
             if (symbol == null)
             {
                 return null;
@@ -199,7 +199,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat),
             };
 
-            AddRanges(builder, enumDeclaration.AttributeLists.Span, enumDeclaration.Span, enumDeclaration.Identifier.Span, text);
+            AddRanges(builder, enumMemberDeclaration.AttributeLists.Span, enumMemberDeclaration.Span, enumMemberDeclaration.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
