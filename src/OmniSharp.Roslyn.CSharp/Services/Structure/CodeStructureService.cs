@@ -83,6 +83,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 case EnumDeclarationSyntax enumDeclaration:
                     yield return CreateCodeElement(enumDeclaration, text, semanticModel);
                     break;
+                case EnumMemberDeclarationSyntax enumMemberDeclarationSyntax:
+                    yield return CreateCodeElement(enumMemberDeclarationSyntax, text, semanticModel);
+                    break;
                 case NamespaceDeclarationSyntax namespaceDeclaration:
                     yield return CreateCodeElement(namespaceDeclaration, text, semanticModel);
                     break;
@@ -177,6 +180,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     builder.AddChild(childElement);
                 }
             }
+
+            return builder.ToCodeElement();
+        }
+
+        private CodeElement CreateCodeElement(EnumMemberDeclarationSyntax enumDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(enumDeclaration);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var builder = new CodeElement.Builder
+            {
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortTypeFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat),
+            };
+
+            AddRanges(builder, enumDeclaration.AttributeLists.Span, enumDeclaration.Span, enumDeclaration.Identifier.Span, text);
+            AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
         }
@@ -305,7 +329,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     return default;
             }
         }
-        
+
         private static void AddRanges(CodeElement.Builder builder, TextSpan attributesSpan, TextSpan fullSpan, TextSpan nameSpan, SourceText text)
         {
             if (attributesSpan != default)
