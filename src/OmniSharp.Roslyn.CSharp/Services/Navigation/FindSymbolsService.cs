@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 : true;
 
             return await _workspace.CurrentSolution.FindSymbols(isMatch,
-                p => !p.Name.EndsWith(".cake", StringComparison.OrdinalIgnoreCase));
+                p => p.Name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase));
         }
     }
 }
