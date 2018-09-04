@@ -83,9 +83,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                 case EnumDeclarationSyntax enumDeclaration:
                     yield return CreateCodeElement(enumDeclaration, text, semanticModel);
                     break;
-                case EnumMemberDeclarationSyntax enumMemberDeclarationSyntax:
-                    yield return CreateCodeElement(enumMemberDeclarationSyntax, text, semanticModel);
-                    break;
                 case NamespaceDeclarationSyntax namespaceDeclaration:
                     yield return CreateCodeElement(namespaceDeclaration, text, semanticModel);
                     break;
@@ -101,6 +98,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                         yield return CreateCodeElement(variableDeclarator, baseFieldDeclaration, text, semanticModel);
                     }
 
+                    break;
+                case EnumMemberDeclarationSyntax enumMemberDeclarationSyntax:
+                    yield return CreateCodeElement(enumMemberDeclarationSyntax, text, semanticModel);
                     break;
             }
         }
@@ -180,27 +180,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     builder.AddChild(childElement);
                 }
             }
-
-            return builder.ToCodeElement();
-        }
-
-        private CodeElement CreateCodeElement(EnumMemberDeclarationSyntax enumMemberDeclaration, SourceText text, SemanticModel semanticModel)
-        {
-            var symbol = semanticModel.GetDeclaredSymbol(enumMemberDeclaration);
-            if (symbol == null)
-            {
-                return null;
-            }
-
-            var builder = new CodeElement.Builder
-            {
-                Kind = symbol.GetKindString(),
-                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortTypeFormat),
-                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.TypeFormat),
-            };
-
-            AddRanges(builder, enumMemberDeclaration.AttributeLists.Span, enumMemberDeclaration.Span, enumMemberDeclaration.Identifier.Span, text);
-            AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
         }
@@ -291,6 +270,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             };
 
             AddRanges(builder, baseFieldDeclaration.AttributeLists.Span, variableDeclarator.Span, variableDeclarator.Identifier.Span, text);
+            AddSymbolProperties(symbol, builder);
+
+            return builder.ToCodeElement();
+        }
+
+        private CodeElement CreateCodeElement(EnumMemberDeclarationSyntax enumMemberDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(enumMemberDeclaration);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var builder = new CodeElement.Builder
+            {
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.MemberFormat),
+            };
+
+            AddRanges(builder, enumMemberDeclaration.AttributeLists.Span, enumMemberDeclaration.Span, enumMemberDeclaration.Identifier.Span, text);
             AddSymbolProperties(symbol, builder);
 
             return builder.ToCodeElement();
