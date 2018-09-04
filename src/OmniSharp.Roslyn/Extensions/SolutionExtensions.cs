@@ -12,9 +12,9 @@ namespace OmniSharp.Extensions
     {
         public static async Task<QuickFixResponse> FindSymbols(this Solution solution,
             Func<string, bool> predicate,
-            Func<Project, bool> projectFilter)
+            string projectFileExtension)
         {
-            var projects = solution.Projects.Where(p => projectFilter(p));
+            var projects = solution.Projects.Where(p => p.Name.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase));
 
             var symbolLocations = new List<QuickFix>();
 

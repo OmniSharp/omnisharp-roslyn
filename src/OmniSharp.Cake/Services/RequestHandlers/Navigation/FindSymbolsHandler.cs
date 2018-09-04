@@ -26,8 +26,7 @@ namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
-            return  Workspace.CurrentSolution.FindSymbols(isMatch,
-                p => p.Name.EndsWith(LanguageNames.Cake, StringComparison.OrdinalIgnoreCase));
+            return Workspace.CurrentSolution.FindSymbols(isMatch, LanguageNames.Cake);
         }
 
         protected override Task<QuickFixResponse> TranslateResponse(QuickFixResponse response, FindSymbolsRequest request)

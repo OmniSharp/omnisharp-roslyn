@@ -27,8 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
-            return await _workspace.CurrentSolution.FindSymbols(isMatch,
-                p => p.Name.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase));
+            return await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj");
         }
     }
 }
