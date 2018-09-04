@@ -1,5 +1,6 @@
 using System;
 using System.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Extensions;
@@ -27,7 +28,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
-            return await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj");
+            var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj");
+            var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".json");
+            return new QuickFixResponse()
+            {
+                QuickFixes = csprojSymbols.QuickFixes.Concat(projectJsonSymbols.QuickFixes)
+            };
         }
     }
 }

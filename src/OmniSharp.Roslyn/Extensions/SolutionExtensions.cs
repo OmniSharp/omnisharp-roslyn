@@ -38,7 +38,7 @@ namespace OmniSharp.Extensions
                 }
             }
 
-            return new QuickFixResponse(symbolLocations.Distinct());
+            return new QuickFixResponse(symbolLocations.Distinct().ToList());
         }
 
         private static QuickFix ConvertSymbol(Solution solution, ISymbol symbol, Location location)
