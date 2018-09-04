@@ -6,6 +6,7 @@ using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
+using static OmniSharp.Cake.Constants;
 
 namespace OmniSharp.Cake.Services.RequestHandlers.Navigation
 {
