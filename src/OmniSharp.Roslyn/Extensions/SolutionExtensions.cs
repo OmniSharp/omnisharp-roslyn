@@ -14,7 +14,7 @@ namespace OmniSharp.Extensions
             Func<string, bool> predicate,
             string projectFileExtension)
         {
-            var projects = solution.Projects.Where(p => p.Name.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase));
+            var projects = solution.Projects.Where(p => p.FilePath.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase));
 
             var symbolLocations = new List<QuickFix>();
 
