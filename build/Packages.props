@@ -2,9 +2,9 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <MSBuildPackageVersion>15.7.179</MSBuildPackageVersion>
-    <NuGetPackageVersion>4.7.0</NuGetPackageVersion>
-    <RoslynPackageVersion>2.8.2</RoslynPackageVersion>
+    <MSBuildPackageVersion>15.8.166</MSBuildPackageVersion>
+    <NuGetPackageVersion>4.8.0</NuGetPackageVersion>
+    <RoslynPackageVersion>2.9.0</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
