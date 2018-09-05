@@ -119,7 +119,7 @@ namespace OmniSharp
             var projectInfo = ProjectInfo.Create(
                    id: ProjectId.CreateNewId(),
                    version: VersionStamp.Create(),
-                   name: "MiscellaneousFiles",
+                   name: "MiscellaneousFiles.csproj",
                    metadataReferences: DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
                                        .Select(loc => MetadataReference.CreateFromFile(loc)),
                    assemblyName: assemblyName,
