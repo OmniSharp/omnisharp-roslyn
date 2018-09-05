@@ -15,8 +15,8 @@ namespace OmniSharp.Extensions
             string projectFileExtension)
         {
             var projects = solution.Projects.Where(p =>
-                p.FilePath.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase)
-                || p.Name.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase));
+                p.FilePath.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase) ||
+                p.Name.EndsWith(projectFileExtension, StringComparison.OrdinalIgnoreCase));
 
             var symbolLocations = new List<QuickFix>();
 
