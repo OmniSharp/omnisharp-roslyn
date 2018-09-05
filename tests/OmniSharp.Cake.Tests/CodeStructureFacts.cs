@@ -42,6 +42,9 @@ struct S { }
             AssertElement(response.Elements[0], SymbolKinds.Class, "C", "C");
             AssertElement(response.Elements[1], SymbolKinds.Delegate, "D", "D");
             AssertElement(response.Elements[2], SymbolKinds.Enum, "E", "E");
+            AssertElement(response.Elements[2].Children[0], SymbolKinds.EnumMember, "One", "One");
+            AssertElement(response.Elements[2].Children[1], SymbolKinds.EnumMember, "Two", "Two");
+            AssertElement(response.Elements[2].Children[2], SymbolKinds.EnumMember, "Three", "Three");
             AssertElement(response.Elements[3], SymbolKinds.Interface, "I", "I");
             AssertElement(response.Elements[4], SymbolKinds.Struct, "S", "S");
         }
