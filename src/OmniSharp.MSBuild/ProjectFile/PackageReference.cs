@@ -3,7 +3,7 @@ using NuGet.Packaging.Core;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
-    public class PackageReference : IEquatable<PackageReference>
+    internal class PackageReference : IEquatable<PackageReference>
     {
         public PackageDependency Dependency { get; }
         public bool IsImplicitlyDefined { get; }

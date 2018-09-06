@@ -2,7 +2,7 @@ using System.Linq;
 
 namespace OmniSharp.MSBuild
 {
-    public static class SolutionSelector
+    internal static class SolutionSelector
     {
         public static Result Pick(string[] solutionFilePaths, string path)
         {
