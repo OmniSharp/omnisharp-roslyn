@@ -8,7 +8,6 @@ using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -32,9 +31,21 @@ namespace OmniSharp.MSBuild.Tests
 
                 Assert.Equal("ProjectAndSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
-                Assert.Equal(".NETCoreApp,Version=v1.1", workspaceInfo.Projects[0].TargetFramework);
-                Assert.Equal("netcoreapp1.1", workspaceInfo.Projects[0].TargetFrameworks[0].ShortName);
+                var project = Assert.Single(workspaceInfo.Projects);
+
+                Assert.Equal("ProjectAndSolution", project.AssemblyName);
+                Assert.Equal("bin/Debug/netcoreapp1.1/", project.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp1.1/", project.IntermediateOutputPath.EnsureForwardSlashes());
+                var expectedTargetPath = $"{testProject.Directory}/{project.OutputPath}ProjectAndSolution.dll".EnsureForwardSlashes();
+                Assert.Equal(expectedTargetPath, project.TargetPath.EnsureForwardSlashes());
+                Assert.Equal("Debug", project.Configuration);
+                Assert.Equal("AnyCPU", project.Platform);
+                Assert.True(project.IsExe);
+                Assert.False(project.IsUnityProject);
+
+                Assert.Equal(".NETCoreApp,Version=v1.1", project.TargetFramework);
+                var targetFramework = Assert.Single(project.TargetFrameworks);
+                Assert.Equal("netcoreapp1.1", targetFramework.ShortName);
             }
         }
 
@@ -48,9 +59,9 @@ namespace OmniSharp.MSBuild.Tests
 
                 Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
-                Assert.Equal(".NETCoreApp,Version=v1.1", workspaceInfo.Projects[0].TargetFramework);
-                Assert.Equal("netcoreapp1.1", workspaceInfo.Projects[0].TargetFrameworks[0].ShortName);
+                var project = Assert.Single(workspaceInfo.Projects);
+                Assert.Equal(".NETCoreApp,Version=v1.1", project.TargetFramework);
+                Assert.Equal("netcoreapp1.1", project.TargetFrameworks[0].ShortName);
             }
         }
 
@@ -87,9 +98,8 @@ namespace OmniSharp.MSBuild.Tests
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
+                var project = Assert.Single(workspaceInfo.Projects);
 
-                var project = workspaceInfo.Projects[0];
                 Assert.Equal("ProjectWithGeneratedFile.csproj", Path.GetFileName(project.Path));
                 Assert.Equal(4, project.SourceFiles.Count);
             }
@@ -104,9 +114,8 @@ namespace OmniSharp.MSBuild.Tests
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
+                var project = Assert.Single(workspaceInfo.Projects);
 
-                var project = workspaceInfo.Projects[0];
                 Assert.Equal("ProjectWithSdkProperty.csproj", Path.GetFileName(project.Path));
                 Assert.Equal(3, project.SourceFiles.Count);
             }
@@ -121,9 +130,8 @@ namespace OmniSharp.MSBuild.Tests
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
+                var project = Assert.Single(workspaceInfo.Projects);
 
-                var project = workspaceInfo.Projects[0];
                 Assert.Equal("csharp-console.csproj", Path.GetFileName(project.Path));
                 Assert.Equal(3, project.SourceFiles.Count);
             }
@@ -151,16 +159,16 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task TestProjectWithSignedReferencedProject()
         {
-            using (ITestProject testProject = await TestAssets.Instance.GetTestProjectAsync("SolutionWithSignedProject"))
-            using (OmniSharpTestHost host = CreateOmniSharpHost(Path.Combine(testProject.Directory)))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("SolutionWithSignedProject"))
+            using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory)))
             {
-                MSBuildWorkspaceInfo workspaceInfo = await GetWorkspaceInfoAsync(host);
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
                 Assert.NotNull(workspaceInfo.Projects);
                 Assert.Equal(2, workspaceInfo.Projects.Count);
 
                 // For the test to validate that assemblies representing targets of loaded projects are being skipped,
                 // the assemblies must be present on disk.
-                foreach (MSBuildProjectInfo loadedProject in workspaceInfo.Projects)
+                foreach (var loadedProject in workspaceInfo.Projects)
                 {
                     Assert.True(File.Exists(loadedProject.TargetPath),
                         $"Project target assembly is not found {loadedProject.TargetPath}. " +
@@ -169,19 +177,19 @@ namespace OmniSharp.MSBuild.Tests
 
                 // The callee assembly must be signed to ensure that in case of a bug the assembly is loaded
                 // "The type 'Callee' exists in both ..." is present as a code check (which is validated below).
-                MSBuildProjectInfo signedProject = workspaceInfo.Projects.SingleOrDefault(p => p.AssemblyName.Equals("CalleeLib", StringComparison.OrdinalIgnoreCase));
+                var signedProject = workspaceInfo.Projects.SingleOrDefault(p => p.AssemblyName.Equals("CalleeLib", StringComparison.OrdinalIgnoreCase));
                 Assert.NotNull(signedProject);
-                string token = BitConverter.ToString(AssemblyName.GetAssemblyName(signedProject.TargetPath).GetPublicKeyToken());
+                var token = BitConverter.ToString(AssemblyName.GetAssemblyName(signedProject.TargetPath).GetPublicKeyToken());
                 Assert.Equal("A5-D8-5A-5B-AA-39-A6-A6", token, ignoreCase: true);
 
-                QuickFixResponse quickFixResponse = await GetCodeChecksync(host, Path.Combine(testProject.Directory, "CallerLib\\Caller.cs"));
+                var response = await GetCodeChecksync(host, Path.Combine(testProject.Directory, "CallerLib\\Caller.cs"));
                 // Log result to easier debugging of the test should it fail during automated valdiation
-                foreach (QuickFix fix in quickFixResponse.QuickFixes)
+                foreach (var fix in response.QuickFixes)
                 {
                     host.Logger.LogInformation($"Unexpected QuickFix returned for {fix.FileName}: {fix.Text}");
                 }
 
-                Assert.Empty(quickFixResponse.QuickFixes);
+                Assert.Empty(response.QuickFixes);
             }
         }
 
@@ -215,9 +223,8 @@ namespace OmniSharp.MSBuild.Tests
                 var workspaceInfo = await GetWorkspaceInfoAsync(host);
 
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(1, workspaceInfo.Projects.Count);
+                var project = Assert.Single(workspaceInfo.Projects);
 
-                var project = workspaceInfo.Projects[0];
                 Assert.Equal(6, project.SourceFiles.Count);
                 Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
             }    
@@ -239,7 +246,7 @@ namespace OmniSharp.MSBuild.Tests
 
         private static async Task<QuickFixResponse> GetCodeChecksync(OmniSharpTestHost host, string filePath)
         {
-            CodeCheckService service = host.GetCodeCheckServiceService();
+            var service = host.GetCodeCheckServiceService();
 
             var request = new CodeCheckRequest { FileName = filePath };
 

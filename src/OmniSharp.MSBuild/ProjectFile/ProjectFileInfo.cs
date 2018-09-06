@@ -24,8 +24,11 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string AssemblyName => _data.AssemblyName;
         public string TargetPath => _data.TargetPath;
         public string OutputPath => _data.OutputPath;
+        public string IntermediateOutputPath => _data.IntermediateOutputPath;
         public string ProjectAssetsFile => _data.ProjectAssetsFile;
 
+        public string Configuration => _data.Configuration;
+        public string Platform => _data.Platform;
         public FrameworkName TargetFramework => _data.TargetFramework;
         public ImmutableArray<string> TargetFrameworks => _data.TargetFrameworks;
 
