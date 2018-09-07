@@ -4,8 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Models;
-using OmniSharp.Models.CodeCheck;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -25,7 +23,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.Equal("ProjectAndSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
@@ -53,7 +51,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolutionWithProjectSection"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.Equal("ProjectAndSolutionWithProjectSection.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
@@ -69,7 +67,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.Equal("TwoProjectsWithSolution.sln", Path.GetFileName(workspaceInfo.SolutionPath));
                 Assert.NotNull(workspaceInfo.Projects);
@@ -93,7 +91,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithGeneratedFile"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
@@ -109,7 +107,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithSdkProperty"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
@@ -125,7 +123,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CSharpAndFSharp"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);
@@ -141,7 +139,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
             using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory, "App")))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 Assert.Equal(2, workspaceInfo.Projects.Count);
@@ -160,7 +158,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("SolutionWithSignedProject"))
             using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory)))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
                 Assert.NotNull(workspaceInfo.Projects);
                 Assert.Equal(2, workspaceInfo.Projects.Count);
 
@@ -180,7 +178,7 @@ namespace OmniSharp.MSBuild.Tests
                 var token = BitConverter.ToString(AssemblyName.GetAssemblyName(signedProject.TargetPath).GetPublicKeyToken());
                 Assert.Equal("A5-D8-5A-5B-AA-39-A6-A6", token, ignoreCase: true);
 
-                var response = await host.CodeCheckRequestAsync(Path.Combine(testProject.Directory, "CallerLib", "Caller.cs"));
+                var response = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "CallerLib", "Caller.cs"));
                 // Log result to easier debugging of the test should it fail during automated valdiation
                 foreach (var fix in response.QuickFixes)
                 {
@@ -197,7 +195,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib"))
             using (var host = CreateOmniSharpHost(Path.Combine(testProject.Directory, "App")))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 Assert.Equal(2, workspaceInfo.Projects.Count);
@@ -218,7 +216,7 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("AntlrGeneratedFiles"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await host.GetMSBuildWorkspaceInfoAsync();
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
                 Assert.NotNull(workspaceInfo.Projects);
                 var project = Assert.Single(workspaceInfo.Projects);

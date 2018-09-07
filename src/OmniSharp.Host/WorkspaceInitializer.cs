@@ -1,11 +1,9 @@
 using System;
 using System.Composition.Hosting;
-using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OmniSharp.Mef;
 using OmniSharp.Options;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Options;
@@ -16,14 +14,14 @@ namespace OmniSharp
 {
     public class WorkspaceInitializer
     {
-        public static void Initialize(
-            IServiceProvider serviceProvider,
-            CompositionHost compositionHost,
-            IConfiguration configuration,
-            ILogger logger)
+        public static void Initialize(IServiceProvider serviceProvider, CompositionHost compositionHost)
         {
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger<WorkspaceInitializer>();
+
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
+            var configuration = serviceProvider.GetRequiredService<IConfigurationRoot>();
 
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
