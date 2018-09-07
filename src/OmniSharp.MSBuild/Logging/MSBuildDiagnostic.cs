@@ -1,6 +1,6 @@
 ﻿namespace OmniSharp.MSBuild.Logging
 {
-    internal class MSBuildDiagnostic
+    public class MSBuildDiagnostic
     {
         public MSBuildDiagnosticSeverity Severity { get; }
         public string Message { get; }

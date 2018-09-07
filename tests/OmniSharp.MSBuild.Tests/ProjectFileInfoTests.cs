@@ -32,7 +32,7 @@ namespace OmniSharp.MSBuild.Tests
                 loggerFactory: LoggerFactory,
                 sdksPathResolver: sdksPathResolver);
 
-            var (projectFileInfo, _) = ProjectFileInfo.Load(projectFilePath, loader);
+            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, loader);
 
             return projectFileInfo;
         }
