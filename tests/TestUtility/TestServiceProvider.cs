@@ -74,6 +74,29 @@ namespace TestUtility
                 msbuildLocator, eventEmitter, dotNetCliService, configuration, optionsMonitor);
         }
 
+        public static IServiceProvider Create(
+            ITestOutputHelper testOutput,
+            IOmniSharpEnvironment environment,
+            ILoggerFactory loggerFactory,
+            IAssemblyLoader assemblyLoader,
+            IMSBuildLocator msbuildLocator,
+            IEnumerable<KeyValuePair<string, string>> configurationData = null,
+            DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
+            IEventEmitter eventEmitter = null)
+        {
+            eventEmitter = eventEmitter ?? NullEventEmitter.Instance;
+
+            var dotNetCliService = CreateDotNetCliService(dotNetCliVersion, loggerFactory, eventEmitter);
+            var configuration = CreateConfiguration(configurationData, dotNetCliService);
+            var memoryCache = CreateMemoryCache();
+            var optionsMonitor = CreateOptionsMonitor(configuration);
+            var sharedTextWriter = CreateSharedTextWriter(testOutput);
+
+            return new TestServiceProvider(
+                environment, loggerFactory, assemblyLoader, memoryCache, sharedTextWriter,
+                msbuildLocator, eventEmitter, dotNetCliService, configuration, optionsMonitor);
+        }
+
         private static IAssemblyLoader CreateAssemblyLoader(ILoggerFactory loggerFactory)
             => new AssemblyLoader(loggerFactory);
 
