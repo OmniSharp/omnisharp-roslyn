@@ -6,6 +6,7 @@ using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.MSBuild.Logging;
+using OmniSharp.MSBuild.Notification;
 
 namespace OmniSharp.MSBuild.ProjectFile
 {
@@ -24,8 +25,11 @@ namespace OmniSharp.MSBuild.ProjectFile
         public string AssemblyName => _data.AssemblyName;
         public string TargetPath => _data.TargetPath;
         public string OutputPath => _data.OutputPath;
+        public string IntermediateOutputPath => _data.IntermediateOutputPath;
         public string ProjectAssetsFile => _data.ProjectAssetsFile;
 
+        public string Configuration => _data.Configuration;
+        public string Platform => _data.Platform;
         public FrameworkName TargetFramework => _data.TargetFramework;
         public ImmutableArray<string> TargetFrameworks => _data.TargetFrameworks;
 
@@ -73,38 +77,40 @@ namespace OmniSharp.MSBuild.ProjectFile
             return new ProjectFileInfo(id, filePath, data);
         }
 
-        public static (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Load(string filePath, ProjectLoader loader)
+        public static (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Load(string filePath, ProjectLoader loader)
         {
             if (!File.Exists(filePath))
             {
-                return (null, ImmutableArray<MSBuildDiagnostic>.Empty);
+                return (null, ImmutableArray<MSBuildDiagnostic>.Empty, null);
             }
 
             var (projectInstance, diagnostics) = loader.BuildProject(filePath);
             if (projectInstance == null)
             {
-                return (null, diagnostics);
+                return (null, diagnostics, null);
             }
 
             var id = ProjectId.CreateNewId(debugName: filePath);
             var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(id, filePath, data);
+            var eventArgs = new ProjectLoadedEventArgs(id, projectInstance, diagnostics, isReload: false);
 
-            return (projectFileInfo, diagnostics);
+            return (projectFileInfo, diagnostics, eventArgs);
         }
 
-        public (ProjectFileInfo projectFileInfo, ImmutableArray<MSBuildDiagnostic> diagnostics) Reload(ProjectLoader loader)
+        public (ProjectFileInfo, ImmutableArray<MSBuildDiagnostic>, ProjectLoadedEventArgs) Reload(ProjectLoader loader)
         {
             var (projectInstance, diagnostics) = loader.BuildProject(FilePath);
             if (projectInstance == null)
             {
-                return (null, diagnostics);
+                return (null, diagnostics, null);
             }
 
             var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(Id, FilePath, data);
+            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true);
 
-            return (projectFileInfo, diagnostics);
+            return (projectFileInfo, diagnostics, eventArgs);
         }
 
         public bool IsUnityProject()

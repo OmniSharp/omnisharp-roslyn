@@ -15,6 +15,7 @@
         public const string DefineConstants = nameof(DefineConstants);
         public const string DesignTimeBuild = nameof(DesignTimeBuild);
         public const string DocumentationFile = nameof(DocumentationFile);
+        public const string IntermediateOutputPath = nameof(IntermediateOutputPath);
         public const string LangVersion = nameof(LangVersion);
         public const string OutputType = nameof(OutputType);
         public const string MSBuildExtensionsPath = nameof(MSBuildExtensionsPath);

@@ -28,7 +28,7 @@ namespace OmniSharp.DotNet.Tests
                 directoryPath = directoryPath.Substring(baseDirectory.Length);
             }
 
-            directoryPath = directoryPath.Replace(Path.DirectorySeparatorChar, '/');
+            directoryPath = directoryPath.EnsureForwardSlashes();
 
             if (directoryPath.Length > 0 && directoryPath[0] == '/')
             {

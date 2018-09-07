@@ -22,7 +22,6 @@ namespace OmniSharp.Stdio.Tests
             var cancelationTokenSource = new CancellationTokenSource();
             var host = new Host(reader, writer,
                 environment,
-                configuration,
                 serviceProvider,
                 new CompositionHostBuilder(serviceProvider),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
