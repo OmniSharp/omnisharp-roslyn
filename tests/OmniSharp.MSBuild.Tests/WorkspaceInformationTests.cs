@@ -1,46 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Composition.Hosting.Core;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OmniSharp.MSBuild.Discovery;
-using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {
-    public class WorkspaceInformationTests : AbstractTestFixture, IDisposable
+    public class WorkspaceInformationTests : AbstractMSBuildTestFixture
     {
-        private readonly IAssemblyLoader _assemblyLoader;
-        private readonly IMSBuildLocator _msbuildLocator;
-
         public WorkspaceInformationTests(ITestOutputHelper output)
             : base(output)
         {
-            _assemblyLoader = new AssemblyLoader(this.LoggerFactory);
-            _msbuildLocator = MSBuildLocator.CreateStandAlone(this.LoggerFactory, _assemblyLoader, allowMonoPaths: false);
-
-            // Some tests require MSBuild to be discovered early
-            // to ensure that the Microsoft.Build.* assemblies can be located
-            _msbuildLocator.RegisterDefaultInstance(this.LoggerFactory.CreateLogger<WorkspaceInformationTests>());
-        }
-
-        public void Dispose()
-        {
-            (_msbuildLocator as IDisposable)?.Dispose();
-        }
-
-        private OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null)
-        {
-            var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
-            var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _msbuildLocator);
-
-            return OmniSharpTestHost.Create(serviceProvider, additionalExports);
         }
 
         [Fact]
