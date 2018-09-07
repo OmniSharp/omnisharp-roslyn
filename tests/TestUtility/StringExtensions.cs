@@ -9,6 +9,6 @@ namespace TestUtility
         /// are replaced with a forward slash (/) character.
         /// </summary>
         public static string EnsureForwardSlashes(this string path)
-            => path.Replace(Path.DirectorySeparatorChar, '/');
+            => path.Replace('\\', '/');
     }
 }
