@@ -12,7 +12,7 @@ namespace OmniSharp.MSBuild.Models.Events
         public int EndLine { get; set; }
         public int EndColumn { get; set; }
 
-        public static MSBuildDiagnosticsMessage FromDiagnostic(MSBuildDiagnostic diagnostic)
+        internal static MSBuildDiagnosticsMessage FromDiagnostic(MSBuildDiagnostic diagnostic)
             => new MSBuildDiagnosticsMessage()
             {
                 LogLevel = diagnostic.Severity.ToString(),

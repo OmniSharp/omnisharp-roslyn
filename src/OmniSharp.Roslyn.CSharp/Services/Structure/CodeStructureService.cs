@@ -99,6 +99,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     }
 
                     break;
+                case EnumMemberDeclarationSyntax enumMemberDeclarationSyntax:
+                    yield return CreateCodeElement(enumMemberDeclarationSyntax, text, semanticModel);
+                    break;
             }
         }
 
@@ -272,6 +275,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
             return builder.ToCodeElement();
         }
 
+        private CodeElement CreateCodeElement(EnumMemberDeclarationSyntax enumMemberDeclaration, SourceText text, SemanticModel semanticModel)
+        {
+            var symbol = semanticModel.GetDeclaredSymbol(enumMemberDeclaration);
+            if (symbol == null)
+            {
+                return null;
+            }
+
+            var builder = new CodeElement.Builder
+            {
+                Kind = symbol.GetKindString(),
+                Name = symbol.ToDisplayString(SymbolDisplayFormats.ShortMemberFormat),
+                DisplayName = symbol.ToDisplayString(SymbolDisplayFormats.MemberFormat),
+            };
+
+            AddRanges(builder, enumMemberDeclaration.AttributeLists.Span, enumMemberDeclaration.Span, enumMemberDeclaration.Identifier.Span, text);
+            AddSymbolProperties(symbol, builder);
+
+            return builder.ToCodeElement();
+        }
+
         private static TextSpan GetNameSpan(BaseMethodDeclarationSyntax baseMethodDeclaration)
         {
             switch (baseMethodDeclaration)
@@ -305,7 +329,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
                     return default;
             }
         }
-        
+
         private static void AddRanges(CodeElement.Builder builder, TextSpan attributesSpan, TextSpan fullSpan, TextSpan nameSpan, SourceText text)
         {
             if (attributesSpan != default)

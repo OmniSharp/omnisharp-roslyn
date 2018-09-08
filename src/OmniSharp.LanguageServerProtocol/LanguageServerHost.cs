@@ -28,7 +28,6 @@ namespace OmniSharp.LanguageServerProtocol
         private readonly LanguageServerLoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private IConfiguration _configuration;
         private IServiceProvider _serviceProvider;
         private RequestHandlers _handlers;
         private OmniSharpEnvironment _environment;
@@ -85,9 +84,9 @@ namespace OmniSharp.LanguageServerProtocol
             _loggerFactory.AddProvider(_server, _environment);
             _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
 
-            _configuration = new ConfigurationBuilder(_environment).Build();
+            var configurationRoot = new ConfigurationBuilder(_environment).Build();
             var eventEmitter = new LanguageServerEventEmitter(_server);
-            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, _configuration, eventEmitter, _services);
+            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, eventEmitter, _services);
 
             var plugins = _application.CreatePluginAssemblies();
 
@@ -184,11 +183,11 @@ namespace OmniSharp.LanguageServerProtocol
             });
 
             var logger = _loggerFactory.CreateLogger(typeof(LanguageServerHost));
-            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, logger);
+            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
 
             // Kick on diagnostics
             var diagnosticHandler = _handlers.GetAll()
-                .OfType<Mef.IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>>();
+                .OfType<IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>>();
 
             foreach (var handler in diagnosticHandler)
                 await handler.Handle(new DiagnosticsRequest());

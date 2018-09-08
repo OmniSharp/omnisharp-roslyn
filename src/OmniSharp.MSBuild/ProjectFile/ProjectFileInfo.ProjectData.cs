@@ -21,9 +21,12 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             public string AssemblyName { get; }
             public string TargetPath { get; }
-            public string OutputPath { get;  }
+            public string OutputPath { get; }
+            public string IntermediateOutputPath { get; }
             public string ProjectAssetsFile { get; }
 
+            public string Configuration { get; }
+            public string Platform { get; }
             public FrameworkName TargetFramework { get; }
             public ImmutableArray<string> TargetFrameworks { get; }
 
@@ -59,7 +62,9 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             private ProjectData(
                 Guid guid, string name,
-                string assemblyName, string targetPath, string outputPath, string projectAssetsFile,
+                string assemblyName, string targetPath, string outputPath, string intermediateOutputPath,
+                string projectAssetsFile,
+                string configuration, string platform,
                 FrameworkName targetFramework,
                 ImmutableArray<string> targetFrameworks,
                 OutputKind outputKind,
@@ -78,8 +83,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                 AssemblyName = assemblyName;
                 TargetPath = targetPath;
                 OutputPath = outputPath;
+                IntermediateOutputPath = intermediateOutputPath;
                 ProjectAssetsFile = projectAssetsFile;
 
+                Configuration = configuration;
+                Platform = platform;
                 TargetFramework = targetFramework;
                 TargetFrameworks = targetFrameworks.EmptyIfDefault();
 
@@ -96,7 +104,9 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             private ProjectData(
                 Guid guid, string name,
-                string assemblyName, string targetPath, string outputPath, string projectAssetsFile,
+                string assemblyName, string targetPath, string outputPath, string intermediateOutputPath,
+                string projectAssetsFile,
+                string configuration, string platform,
                 FrameworkName targetFramework,
                 ImmutableArray<string> targetFrameworks,
                 OutputKind outputKind,
@@ -112,8 +122,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> references,
                 ImmutableArray<PackageReference> packageReferences,
                 ImmutableArray<string> analyzers)
-                : this(guid, name, assemblyName, targetPath, outputPath, projectAssetsFile,
-                      targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
+                : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
+                      configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
@@ -130,7 +140,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var assemblyName = project.GetPropertyValue(PropertyNames.AssemblyName);
                 var targetPath = project.GetPropertyValue(PropertyNames.TargetPath);
                 var outputPath = project.GetPropertyValue(PropertyNames.OutputPath);
+                var intermediateOutputPath = project.GetPropertyValue(PropertyNames.IntermediateOutputPath);
                 var projectAssetsFile = project.GetPropertyValue(PropertyNames.ProjectAssetsFile);
+                var configuration = project.GetPropertyValue(PropertyNames.Configuration);
+                var platform = project.GetPropertyValue(PropertyNames.Platform);
 
                 var targetFramework = new FrameworkName(project.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
 
@@ -152,8 +165,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var assemblyOriginatorKeyFile = project.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
 
                 return new ProjectData(
-                    guid, name, assemblyName, targetPath, outputPath, projectAssetsFile,
-                    targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
+                    guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
+                    configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
                     documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile);
             }
 
@@ -164,7 +177,10 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var assemblyName = projectInstance.GetPropertyValue(PropertyNames.AssemblyName);
                 var targetPath = projectInstance.GetPropertyValue(PropertyNames.TargetPath);
                 var outputPath = projectInstance.GetPropertyValue(PropertyNames.OutputPath);
+                var intermediateOutputPath = projectInstance.GetPropertyValue(PropertyNames.IntermediateOutputPath);
                 var projectAssetsFile = projectInstance.GetPropertyValue(PropertyNames.ProjectAssetsFile);
+                var configuration = projectInstance.GetPropertyValue(PropertyNames.Configuration);
+                var platform = projectInstance.GetPropertyValue(PropertyNames.Platform);
 
                 var targetFramework = new FrameworkName(projectInstance.GetPropertyValue(PropertyNames.TargetFrameworkMoniker));
 
@@ -223,8 +239,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
 
                 return new ProjectData(guid, name,
-                    assemblyName, targetPath, outputPath, projectAssetsFile,
-                    targetFramework, targetFrameworks,
+                    assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
+                    configuration, platform, targetFramework, targetFrameworks,
                     outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
                     sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers);

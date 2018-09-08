@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.FindSymbols;
 using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -38,6 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
+<<<<<<< HEAD
             return await FindSymbols(isMatch);
         }
 
@@ -83,17 +82,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
             format = format.WithKindOptions(SymbolDisplayKindOptions.None);
 
             return new SymbolLocation
+=======
+            var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj");
+            var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".json");
+            return new QuickFixResponse()
+>>>>>>> origin/master
             {
-                Text = symbol.ToDisplayString(format),
-                Kind = symbol.GetKind(),
-                FileName = path,
-                Line = lineSpan.StartLinePosition.Line,
-                Column = lineSpan.StartLinePosition.Character,
-                EndLine = lineSpan.EndLinePosition.Line,
-                EndColumn = lineSpan.EndLinePosition.Character,
-                Projects = documents.Select(document => document.Project.Name).ToArray()
+                QuickFixes = csprojSymbols.QuickFixes.Concat(projectJsonSymbols.QuickFixes)
             };
         }
-
     }
 }

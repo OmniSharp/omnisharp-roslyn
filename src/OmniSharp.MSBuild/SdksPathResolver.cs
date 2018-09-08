@@ -7,7 +7,7 @@ using OmniSharp.Services;
 namespace OmniSharp.MSBuild
 {
     [Export, Shared]
-    public class SdksPathResolver
+    internal class SdksPathResolver
     {
         private const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
         private const string Sdks = nameof(Sdks);

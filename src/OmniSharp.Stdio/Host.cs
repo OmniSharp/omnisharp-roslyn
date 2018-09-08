@@ -24,7 +24,6 @@ namespace OmniSharp.Stdio
 {
     internal class Host : IDisposable
     {
-        private readonly IConfiguration _configuration;
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
         private readonly IServiceProvider _serviceProvider;
@@ -37,14 +36,13 @@ namespace OmniSharp.Stdio
         private readonly CachedStringBuilder _cachedStringBuilder;
 
         public Host(
-            TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment, IConfiguration configuration,
+            TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment,
             IServiceProvider serviceProvider, CompositionHostBuilder compositionHostBuilder, ILoggerFactory loggerFactory, CancellationTokenSource cancellationTokenSource)
         {
             _cancellationTokenSource = cancellationTokenSource;
             _input = input;
             _writer = writer;
             _environment = environment;
-            _configuration = configuration;
             _serviceProvider = serviceProvider;
             _loggerFactory = loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
             _logger = loggerFactory.CreateLogger<Host>();
@@ -136,7 +134,7 @@ namespace OmniSharp.Stdio
 
         public void Start()
         {
-            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, _logger);
+            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
 
             Task.Factory.StartNew(async () =>
             {
