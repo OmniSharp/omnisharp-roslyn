@@ -7,7 +7,6 @@ using OmniSharp.Extensions;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FindSymbols;
-using OmniSharp.Options;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
@@ -15,20 +14,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class FindSymbolsService : IRequestHandler<FindSymbolsRequest, QuickFixResponse>
     {
         private OmniSharpWorkspace _workspace;
-        private FindSymbolsOptions _options;
 
         [ImportingConstructor]
-        public FindSymbolsService(OmniSharpWorkspace workspace, OmniSharpOptions omniSharpOptions)
+        public FindSymbolsService(OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
-            _options = omniSharpOptions.FindSymbols;
         }
 
         public async Task<QuickFixResponse> Handle(FindSymbolsRequest request = null)
         {
-            if (request != null && request.Filter != null && request.Filter.Length < _options.MinFilterLength)
+            if (request != null && request.Filter != null && request.Filter.Length < request.MinFilterLength)
             {
-                return new QuickFixResponse();
+                return new QuickFixResponse { QuickFixes = Array.Empty<QuickFix>() };
             }
 
             Func<string, bool> isMatch =
@@ -36,8 +33,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
-            var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj");
-            var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".json");
+            int maxItemsToReturn = request == null ? 0 : request.MaxItemsToReturn;
+            var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj", maxItemsToReturn);
+            var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".json", maxItemsToReturn);
             return new QuickFixResponse()
             {
                 QuickFixes = csprojSymbols.QuickFixes.Concat(projectJsonSymbols.QuickFixes)
