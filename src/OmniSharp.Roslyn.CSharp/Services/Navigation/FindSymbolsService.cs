@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         {
             if (request != null && request.Filter != null && request.Filter.Length < _options.MinFilterLength)
             {
-                return new QuickFixResponse(new List<QuickFix>());
+                return new QuickFixResponse();
             }
 
             Func<string, bool> isMatch =
