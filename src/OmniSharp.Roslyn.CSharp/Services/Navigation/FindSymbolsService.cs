@@ -36,57 +36,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
-<<<<<<< HEAD
-            return await FindSymbols(isMatch);
-        }
-
-        private async Task<QuickFixResponse> FindSymbols(Func<string, bool> predicate)
-        {
-            var symbols = await SymbolFinder.FindSourceDeclarationsAsync(_workspace.CurrentSolution, predicate, SymbolFilter.TypeAndMember);
-
-            var symbolLocations = new List<QuickFix>();
-            foreach(var symbol in symbols)
-            {
-                // for partial methods, pick the one with body
-                var s = symbol;
-                if (s is IMethodSymbol method)
-                {
-                    s = method.PartialImplementationPart ?? symbol;
-                }
-
-                foreach (var location in s.Locations)
-                {
-                    symbolLocations.Add(ConvertSymbol(symbol, location));
-                }
-
-                if (_options.MaxItemsToReturn > 0 && symbolLocations.Count >= _options.MaxItemsToReturn)
-                {
-                    break;
-                }
-            }
-
-            return new QuickFixResponse(symbolLocations.Distinct());
-        }
-
-        private QuickFix ConvertSymbol(ISymbol symbol, Location location)
-        {
-            var lineSpan = location.GetLineSpan();
-            var path = lineSpan.Path;
-            var documents = _workspace.GetDocuments(path);
-
-            var format = SymbolDisplayFormat.MinimallyQualifiedFormat;
-            format = format.WithMemberOptions(format.MemberOptions
-                                              ^ SymbolDisplayMemberOptions.IncludeContainingType
-                                              ^ SymbolDisplayMemberOptions.IncludeType);
-
-            format = format.WithKindOptions(SymbolDisplayKindOptions.None);
-
-            return new SymbolLocation
-=======
             var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj");
             var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".json");
             return new QuickFixResponse()
->>>>>>> origin/master
             {
                 QuickFixes = csprojSymbols.QuickFixes.Concat(projectJsonSymbols.QuickFixes)
             };
