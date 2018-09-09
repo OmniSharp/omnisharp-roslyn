@@ -733,6 +733,40 @@ class B : A
             Assert.Equal(4, actual.Signatures.Count());
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task LiteralContextMethod(string filename)
+        {
+            const string source =
+@"class A
+{
+    static void M()
+    {
+        string three = 3.ToString($$);
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.NotEmpty(actual.Signatures);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task TypeOfContextMethod(string filename)
+        {
+            const string source =
+@"class A
+{
+    static void M()
+    {
+        string a = typeof(A).GetMembers($$);
+    }
+}";
+            var actual = await GetSignatureHelp(filename, source);
+            Assert.NotEmpty(actual.Signatures);
+        }
+
         [Fact]
         public async Task OverloadedExtensionMethods1()
         {

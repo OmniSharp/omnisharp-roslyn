@@ -69,7 +69,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Signatures
                     var throughExpression = ((MemberAccessExpressionSyntax)invocation.Receiver).Expression;
                     throughSymbol = invocation.SemanticModel.GetSpeculativeSymbolInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsExpression).Symbol;
                     throughType = invocation.SemanticModel.GetSpeculativeTypeInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
-                    var includeInstance = throughSymbol != null && !(throughSymbol is ITypeSymbol);
+                    var includeInstance = (throughSymbol != null && !(throughSymbol is ITypeSymbol)) ||
+                        throughExpression is LiteralExpressionSyntax ||
+                        throughExpression is TypeOfExpressionSyntax;
                     var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType != null;
                     methodGroup = methodGroup.Where(m => (m.IsStatic && includeStatic) || (!m.IsStatic && includeInstance));
                 }
