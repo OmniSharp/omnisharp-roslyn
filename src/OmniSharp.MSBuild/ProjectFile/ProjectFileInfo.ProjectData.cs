@@ -125,7 +125,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> projectReferences,
                 ImmutableArray<string> references,
                 ImmutableArray<PackageReference> packageReferences,
-                ImmutableArray<string> analyzers)
+                ImmutableArray<string> analyzers,
+                RuleSet ruleset)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, ruleset)

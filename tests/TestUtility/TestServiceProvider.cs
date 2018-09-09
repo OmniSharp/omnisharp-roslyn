@@ -48,6 +48,7 @@ namespace TestUtility
             AddService(dotNetCliService);
             AddService(configuration);
             AddService(optionsMonitor);
+            _services[typeof(IAnalyzerAssemblyLoader)] = assemblyLoader;
         }
 
         public static IServiceProvider Create(
@@ -165,22 +166,6 @@ namespace TestUtility
                 postConfigures: Enumerable.Empty<IPostConfigureOptions<OmniSharpOptions>>()
             );
 
-            var assemblyLoader = new AssemblyLoader(loggerFactory);
-            var analyzerAssemblyLoader = new AssemblyLoader(loggerFactory);
-            var msbuildLocator = MSBuildLocator.CreateStandAlone(loggerFactory, assemblyLoader, allowMonoPaths: false);
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
-            dotNetCliService = dotNetCliService ?? new DotNetCliService(loggerFactory, eventEmitter);
-
-            _services[typeof(ILoggerFactory)] = loggerFactory;
-            _services[typeof(IOmniSharpEnvironment)] = environment;
-            _services[typeof(IAssemblyLoader)] = assemblyLoader;
-            _services[typeof(IAnalyzerAssemblyLoader)] = analyzerAssemblyLoader;
-            _services[typeof(IMemoryCache)] = memoryCache;
-            _services[typeof(ISharedTextWriter)] = sharedTextWriter;
-            _services[typeof(IMSBuildLocator)] = msbuildLocator;
-            _services[typeof(IEventEmitter)] = eventEmitter;
-            _services[typeof(IDotNetCliService)] = dotNetCliService;
-            
             return new OptionsMonitor<OmniSharpOptions>(
                 factory,
                 sources: Enumerable.Empty<IOptionsChangeTokenSource<OmniSharpOptions>>(),

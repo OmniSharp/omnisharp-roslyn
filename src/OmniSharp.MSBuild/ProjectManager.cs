@@ -89,7 +89,6 @@ namespace OmniSharp.MSBuild
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
             _assemblyLoader = assemblyLoader;
-
             _onDirectoryFileChanged = OnDirectoryFileChanged;
             _rulesetsForProjects = rulesetsForProjects;
         }
