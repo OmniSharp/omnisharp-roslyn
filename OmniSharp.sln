@@ -10,6 +10,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.cake = build.cake
 		build.json = build.json
 		global.json = global.json
+		NuGet.Config = NuGet.Config
+		tools\packages.config = tools\packages.config
+		build\Packages.props = build\Packages.props
+		build\Settings.props = build\Settings.props
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
 		global_1json__JSONSchema = http://json.schemastore.org/global

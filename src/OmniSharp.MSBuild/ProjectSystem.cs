@@ -14,6 +14,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.Models;
+using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
@@ -24,7 +25,7 @@ using OmniSharp.Services;
 namespace OmniSharp.MSBuild
 {
     [ExportProjectSystem(ProjectSystemNames.MSBuildProjectSystem), Shared]
-    public class ProjectSystem : IProjectSystem
+    internal class ProjectSystem : IProjectSystem
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
@@ -40,6 +41,7 @@ namespace OmniSharp.MSBuild
         private readonly RulesetsForProjects _rulesetsForProjects;
         private readonly ILogger _logger;
         private readonly IAnalyzerAssemblyLoader _assemblyLoader;
+        private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
         private readonly object _gate = new object();
         private readonly Queue<ProjectFileInfo> _projectsToProcess;
 
@@ -68,7 +70,8 @@ namespace OmniSharp.MSBuild
             ILoggerFactory loggerFactory,
             CodeFixCacheForProjects codeFixesForProjects,
             RulesetsForProjects rulesetsForProjects,
-            IAnalyzerAssemblyLoader assemblyLoader)
+            IAnalyzerAssemblyLoader assemblyLoader,
+            [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks)
         {
             _environment = environment;
             _workspace = workspace;
@@ -82,6 +85,8 @@ namespace OmniSharp.MSBuild
             _loggerFactory = loggerFactory;
             _codeFixesForProjects = codeFixesForProjects;
             _rulesetsForProjects = rulesetsForProjects;
+            _eventSinks = eventSinks.ToImmutableArray();
+
             _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
             _assemblyLoader = assemblyLoader;
@@ -104,6 +109,7 @@ namespace OmniSharp.MSBuild
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
             _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _codeFixesForProjects, _rulesetsForProjects, _assemblyLoader);
+            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _eventSinks);
 
             var initialProjectPaths = GetInitialProjectPaths();
 

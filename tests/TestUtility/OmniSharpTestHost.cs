@@ -2,28 +2,23 @@
 using System.Collections.Generic;
 using System.Composition.Hosting;
 using System.Composition.Hosting.Core;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.Cake;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
-using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
-using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Script;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
-using TestUtility.Logging;
 using Xunit.Abstractions;
 
 namespace TestUtility
@@ -43,27 +38,25 @@ namespace TestUtility
             typeof(CakeProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Cake
         });
 
-        private readonly TestServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
         private readonly CompositionHost _compositionHost;
 
         private Dictionary<(string name, string language), Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> _handlers;
 
-        public ILoggerFactory LoggerFactory { get; }
         public OmniSharpWorkspace Workspace { get; }
+        public ILoggerFactory LoggerFactory { get; }
         public ILogger<OmniSharpTestHost> Logger { get; }
 
         private OmniSharpTestHost(
-            TestServiceProvider serviceProvider,
-            ILoggerFactory loggerFactory,
-            OmniSharpWorkspace workspace,
+            IServiceProvider serviceProvider,
             CompositionHost compositionHost)
         {
             _serviceProvider = serviceProvider;
             _compositionHost = compositionHost;
 
-            this.LoggerFactory = loggerFactory;
-            this.Workspace = workspace;
-            this.Logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
+            this.Workspace = compositionHost.GetExport<OmniSharpWorkspace>();
+            this.LoggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+            this.Logger = this.LoggerFactory.CreateLogger<OmniSharpTestHost>();
         }
 
         ~OmniSharpTestHost()
@@ -73,22 +66,29 @@ namespace TestUtility
 
         protected override void DisposeCore(bool disposing)
         {
-            _serviceProvider.Dispose();
+            (_serviceProvider as IDisposable)?.Dispose();
             _compositionHost.Dispose();
 
             this.LoggerFactory.Dispose();
             this.Workspace.Dispose();
         }
 
-        private static string GetDotNetCliFolderName(DotNetCliVersion dotNetCliVersion)
+        public static OmniSharpTestHost Create(
+            IServiceProvider serviceProvider,
+            IEnumerable<ExportDescriptorProvider> additionalExports = null)
         {
-            switch (dotNetCliVersion)
-            {
-                case DotNetCliVersion.Current: return ".dotnet";
-                case DotNetCliVersion.Legacy: return ".dotnet-legacy";
-                case DotNetCliVersion.Future: throw new InvalidOperationException("Test infrastructure does not support a future .NET Core SDK yet.");
-                default: throw new ArgumentException($"Unknown {nameof(dotNetCliVersion)}: {dotNetCliVersion}", nameof(dotNetCliVersion));
-            }
+            var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
+                .Build();
+
+            WorkspaceInitializer.Initialize(serviceProvider, compositionHost);
+
+            var host = new OmniSharpTestHost(serviceProvider, compositionHost);
+
+            // Force workspace to be updated
+            var service = host.GetWorkspaceInformationService();
+            service.Handle(new WorkspaceInformationRequest()).Wait();
+
+            return host;
         }
 
         public static OmniSharpTestHost Create(
@@ -99,76 +99,13 @@ namespace TestUtility
             IEnumerable<ExportDescriptorProvider> additionalExports = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
-            var loggerFactory = new LoggerFactory().AddXunit(testOutput);
-            var logger = loggerFactory.CreateLogger<OmniSharpTestHost>();
-            var sharedTextWriter = new TestSharedTextWriter(testOutput);
+            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
 
-            var dotNetCliService = CreateTestDotNetCliService(dotNetCliVersion, loggerFactory);
-
-            var info = dotNetCliService.GetInfo();
-            logger.LogInformation($"Using .NET CLI: {info.Version}");
-
-            var builder = new Microsoft.Extensions.Configuration.ConfigurationBuilder();
-            builder.AddInMemoryCollection(configurationData);
-
-            // We need to set the "UseLegacySdkResolver" for tests because
-            // MSBuild's SDK resolver will not be able to locate the .NET Core SDKs
-            // that we install locally in the ".dotnet" and ".dotnet-legacy" directories.
-            // This property will cause the MSBuild project loader to set the
-            // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
-            // within the appropriate .NET Core SDK.
-            var msbuildProperties = new Dictionary<string, string>()
-            {
-                [$"MSBuild:{nameof(MSBuildOptions.UseLegacySdkResolver)}"] = "true",
-                [$"MSBuild:{nameof(MSBuildOptions.MSBuildSDKsPath)}"] = Path.Combine(info.BasePath, "Sdks")
-            };
-
-            builder.AddInMemoryCollection(msbuildProperties);
-
-            var configuration = builder.Build();
-
-            var serviceProvider = new TestServiceProvider(environment, loggerFactory, sharedTextWriter, configuration, NullEventEmitter.Instance, dotNetCliService);
-
-            var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
-                .Build();
-
-            var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
-
-            WorkspaceInitializer.Initialize(serviceProvider, compositionHost, configuration, logger);
-
-            var host = new OmniSharpTestHost(serviceProvider, loggerFactory, workspace, compositionHost);
-
-            // Force workspace to be updated
-            var service = host.GetWorkspaceInformationService();
-            service.Handle(new WorkspaceInformationRequest()).Wait();
-
-            return host;
-        }
-
-        private static DotNetCliService CreateTestDotNetCliService(DotNetCliVersion dotNetCliVersion, ILoggerFactory loggerFactory)
-        {
-            var dotnetPath = Path.Combine(
-                TestAssets.Instance.RootFolder,
-                GetDotNetCliFolderName(dotNetCliVersion),
-                "dotnet");
-
-            if (!File.Exists(dotnetPath))
-            {
-                dotnetPath = Path.ChangeExtension(dotnetPath, ".exe");
-            }
-
-            if (!File.Exists(dotnetPath))
-            {
-                throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
-            }
-
-            return new DotNetCliService(loggerFactory, NullEventEmitter.Instance, dotnetPath);
+            return Create(serviceProvider, additionalExports);
         }
 
         public T GetExport<T>()
-        {
-            return this._compositionHost.GetExport<T>();
-        }
+            => this._compositionHost.GetExport<T>();
 
         public THandler GetRequestHandler<THandler>(string name, string languageName = LanguageNames.CSharp) where THandler : IRequestHandler
         {
@@ -181,16 +118,6 @@ namespace TestUtility
             }
 
             return (THandler)_handlers[(name, languageName)].Value;
-        }
-
-        public WorkspaceInformationService GetWorkspaceInformationService()
-        {
-            return GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
-        }
-
-        public CodeCheckService GetCodeCheckServiceService()
-        {
-            return GetRequestHandler<CodeCheckService>(OmniSharpEndpoints.CodeCheck);
         }
 
         public void AddFilesToWorkspace(params TestFile[] testFiles)

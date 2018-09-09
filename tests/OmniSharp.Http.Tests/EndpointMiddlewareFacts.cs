@@ -94,10 +94,10 @@ namespace OmniSharp.Http.Tests
 
         private class PlugInHost : DisposableObject
         {
-            private readonly TestServiceProvider _serviceProvider;
+            private readonly IServiceProvider _serviceProvider;
             public CompositionHost CompositionHost { get; }
 
-            public PlugInHost(TestServiceProvider serviceProvider, CompositionHost compositionHost)
+            public PlugInHost(IServiceProvider serviceProvider, CompositionHost compositionHost)
             {
                 this._serviceProvider = serviceProvider;
                 this.CompositionHost = compositionHost;
@@ -105,7 +105,7 @@ namespace OmniSharp.Http.Tests
 
             protected override void DisposeCore(bool disposing)
             {
-                this._serviceProvider.Dispose();
+                (this._serviceProvider as IDisposable)?.Dispose();
                 this.CompositionHost.Dispose();
             }
         }
@@ -117,9 +117,7 @@ namespace OmniSharp.Http.Tests
 
         private PlugInHost CreatePlugInHost(params Assembly[] assemblies)
         {
-            var environment = new OmniSharpEnvironment();
-            var sharedTextWriter = new TestSharedTextWriter(this.TestOutput);
-            var serviceProvider = new TestServiceProvider(environment, this.LoggerFactory, sharedTextWriter, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(), NullEventEmitter.Instance);
+            var serviceProvider = TestServiceProvider.Create(this.TestOutput, new OmniSharpEnvironment());
             var compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithAssemblies(assemblies)
                 .Build();
