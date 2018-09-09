@@ -36,7 +36,7 @@ namespace OmniSharp.MSBuild
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly CodeFixesForProjects _codeFixesForProjects;
+        private readonly CodeFixCacheForProjects _codeFixesForProjects;
         private readonly RulesetsForProjects _rulesetsForProjects;
         private readonly ILogger _logger;
         private readonly IAnalyzerAssemblyLoader _assemblyLoader;
@@ -66,7 +66,7 @@ namespace OmniSharp.MSBuild
             IFileSystemWatcher fileSystemWatcher,
             FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory,
-            CodeFixesForProjects codeFixesForProjects,
+            CodeFixCacheForProjects codeFixesForProjects,
             RulesetsForProjects rulesetsForProjects,
             IAnalyzerAssemblyLoader assemblyLoader)
         {

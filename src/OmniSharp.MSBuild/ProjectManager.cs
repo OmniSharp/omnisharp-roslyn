@@ -47,7 +47,7 @@ namespace OmniSharp.MSBuild
         private readonly HashSet<string> _failedToLoadProjectFiles;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly CodeFixesForProjects _codeFixesForProject;
+        private readonly CodeFixCacheForProjects _codeFixesForProject;
         private const int LoopDelay = 100; // milliseconds
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
@@ -66,7 +66,7 @@ namespace OmniSharp.MSBuild
             PackageDependencyChecker packageDependencyChecker,
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
-            CodeFixesForProjects codeFixesForProject,
+            CodeFixCacheForProjects codeFixesForProject,
             RulesetsForProjects rulesetsForProjects,
             IAnalyzerAssemblyLoader assemblyLoader)
         {

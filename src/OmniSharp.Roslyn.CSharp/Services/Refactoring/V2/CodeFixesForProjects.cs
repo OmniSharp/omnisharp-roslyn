@@ -11,14 +11,14 @@ using OmniSharp.Utilities;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     [Shared]
-    [Export(typeof(CodeFixesForProjects))]
-    public class CodeFixesForProjects
+    [Export(typeof(CodeFixCacheForProjects))]
+    public class CodeFixCacheForProjects
     {
         private readonly ConcurrentDictionary<string, IEnumerable<CodeFixProvider>> _codeFixCache = new ConcurrentDictionary<string, IEnumerable<CodeFixProvider>>();
         private readonly IAssemblyLoader _assemblyLoader;
 
         [ImportingConstructor]
-        public CodeFixesForProjects(IAssemblyLoader assemblyLoader)
+        public CodeFixCacheForProjects(IAssemblyLoader assemblyLoader)
         {
             _assemblyLoader = assemblyLoader;
         }
