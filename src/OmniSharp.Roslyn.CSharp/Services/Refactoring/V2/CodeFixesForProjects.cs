@@ -11,22 +11,22 @@ using OmniSharp.Utilities;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 {
     [Shared]
-    [Export(typeof(CodeFixCacheForProjects))]
-    public class CodeFixCacheForProjects
+    [Export(typeof(CachingCodeFixProviderForProjects))]
+    public class CachingCodeFixProviderForProjects
     {
-        private readonly ConcurrentDictionary<string, IEnumerable<CodeFixProvider>> _codeFixCache = new ConcurrentDictionary<string, IEnumerable<CodeFixProvider>>();
+        private readonly ConcurrentDictionary<string, IEnumerable<CodeFixProvider>> _cache = new ConcurrentDictionary<string, IEnumerable<CodeFixProvider>>();
         private readonly IAssemblyLoader _assemblyLoader;
 
         [ImportingConstructor]
-        public CodeFixCacheForProjects(IAssemblyLoader assemblyLoader)
+        public CachingCodeFixProviderForProjects(IAssemblyLoader assemblyLoader)
         {
             _assemblyLoader = assemblyLoader;
         }
 
         public IEnumerable<CodeFixProvider> GetAllCodeFixesForProject(string projectId)
         {
-            if (_codeFixCache.ContainsKey(projectId))
-                return _codeFixCache[projectId];
+            if (_cache.ContainsKey(projectId))
+                return _cache[projectId];
             return Enumerable.Empty<CodeFixProvider>();
         }
 
@@ -46,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         .Where(instance => instance != null);
                 });
 
-            _codeFixCache.AddOrUpdate(projectId, codeFixes, (_, __) => codeFixes);
+            _cache.AddOrUpdate(projectId, codeFixes, (_, __) => codeFixes);
         }
     }
 }

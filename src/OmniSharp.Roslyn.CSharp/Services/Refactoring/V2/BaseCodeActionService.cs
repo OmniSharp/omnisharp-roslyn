@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
         private readonly CSharpDiagnosticService analyzers;
-        private readonly CodeFixCacheForProjects codeFixesForProject;
+        private readonly CachingCodeFixProviderForProjects codeFixesForProject;
         private readonly MethodInfo _getNestedCodeActions;
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             { "CS8019", "RemoveUnnecessaryImportsFixable" }
         };
 
-        protected BaseCodeActionService(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILogger logger, CSharpDiagnosticService analyzers, CodeFixCacheForProjects codeFixesForProject)
+        protected BaseCodeActionService(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILogger logger, CSharpDiagnosticService analyzers, CachingCodeFixProviderForProjects codeFixesForProject)
         {
             this.Workspace = workspace;
             this.Providers = providers;

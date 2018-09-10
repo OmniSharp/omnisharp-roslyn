@@ -130,7 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private Task WaitForInitialStartupWorkIfAny()
         {
             return Task.Delay(10 * 1000, _initializationQueueDoneSource.Token)
-                                .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
+                        .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
         }
 
         private void LogTimeouts(Task task, string description)
@@ -163,7 +163,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 var allAnalyzers = _providers
                     .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzersForAllLanguages()));
+                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)));
 
                 var compiled = await project.WithCompilationOptions(
                     _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(project))
