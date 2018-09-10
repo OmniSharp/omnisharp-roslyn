@@ -299,7 +299,7 @@ namespace OmniSharp.MSBuild
 
             var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
 
-            _codeFixesForProject.LoadFrom(projectInfo.Id.ToString(), projectFileInfo.Analyzers);
+            _codeFixesForProject.LoadFrom(projectInfo);
 
             if(projectFileInfo.RuleSet != null)
                 _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);

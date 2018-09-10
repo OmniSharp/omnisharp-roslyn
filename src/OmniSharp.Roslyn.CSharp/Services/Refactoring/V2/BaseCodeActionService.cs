@@ -146,7 +146,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             var providerList =
                 this.Providers.SelectMany(provider => provider.CodeFixProviders)
-                    .Concat(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id.ToString()));
+                    .Concat(codeFixesForProject.GetAllCodeFixesForProject(document.Project.Id));
 
             return ExtensionOrderer.GetOrderedOrUnorderedList<CodeFixProvider, ExportCodeFixProviderAttribute>(providerList, attribute => attribute.Name).ToList();
         }
