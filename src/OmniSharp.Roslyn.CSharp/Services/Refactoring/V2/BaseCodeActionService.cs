@@ -104,7 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var analyzers = await this.analyzers.GetCurrentDiagnosticResult(new [] { document.Project.Id });
+            var analyzers = await this.analyzers.GetCurrentDiagnosticResult(ImmutableArray.Create(document.Project.Id));
 
             var groupedBySpan =
                 analyzers.Select(x => x.diagnostic)

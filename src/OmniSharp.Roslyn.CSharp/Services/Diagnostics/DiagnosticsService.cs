@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,7 +34,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 ? new[] { _workspace.GetDocument(request.FileName)?.Project }
                 : _workspace.CurrentSolution.Projects;
 
-            _diagnostics.QueueForAnalysis(projectsForAnalysis.Where(x => x != null));
+            _diagnostics.QueueForAnalysis(projectsForAnalysis
+                .Where(x => x != null)
+                .Select(x => x.Id)
+                .ToImmutableArray());
 
             return Task.FromResult(new DiagnosticsResponse());
         }

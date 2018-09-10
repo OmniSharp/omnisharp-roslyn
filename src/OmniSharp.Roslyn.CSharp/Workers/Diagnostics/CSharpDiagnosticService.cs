@@ -20,11 +20,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class CSharpDiagnosticService
     {
         private readonly ILogger<CSharpDiagnosticService> _logger;
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, Project project, CancellationTokenSource workReadySource)> _workQueue =
-            new ConcurrentDictionary<ProjectId, (DateTime modified, Project project, CancellationTokenSource workReadySource)>();
-        private readonly ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)> _results =
-            new ConcurrentDictionary<ProjectId, (string name, IEnumerable<Diagnostic> diagnostics)>();
-        private readonly IEnumerable<ICodeActionProvider> _providers;
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workReadySource)> _workQueue =
+            new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workReadySource)>();
+        private readonly ConcurrentDictionary<ProjectId, (string name, ImmutableArray<Diagnostic> diagnostics)> _results =
+            new ConcurrentDictionary<ProjectId, (string name, ImmutableArray<Diagnostic> diagnostics)>();
+        private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
@@ -40,7 +40,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             RulesetsForProjects rulesetsForProjects)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
-            _providers = providers;
+            _providers = providers.ToImmutableArray();
 
             workspace.WorkspaceChanged += OnWorkspaceChanged;
 
@@ -52,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
 
-                QueueForAnalysis(workspace.CurrentSolution.Projects);
+                QueueForAnalysis(workspace.CurrentSolution.Projects.Select(x => x.Id).ToImmutableArray());
                 _initializationQueueDoneSource.Cancel();
                 _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
             });
@@ -77,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private IEnumerable<(Project project, CancellationTokenSource workReadySource)> GetThrottledWork()
+        private ImmutableArray<(Project project, CancellationTokenSource workReadySource)> GetThrottledWork()
         {
             lock (_workQueue)
             {
@@ -85,18 +85,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) < DateTime.UtcNow)
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
                     .Take(2) // Limit mount of work executed by once. This is needed on large solution...
-                    .ToList();
+                    .Select(x => (project: _workspace.CurrentSolution.GetProject(x.Value.projectId), x.Value.workReadySource))
+                    .ToImmutableArray();
 
-                foreach (var workKey in currentWork.Select(x => x.Key))
+                foreach (var workKey in currentWork.Select(x => x.project.Id))
                 {
                     _workQueue.TryRemove(workKey, out _);
                 }
 
-                return currentWork.Select(x => (x.Value.project, x.Value.workReadySource));
+                return currentWork;
             }
         }
 
-        public async Task<IEnumerable<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(IEnumerable<ProjectId> projectIds)
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(ImmutableArray<ProjectId> projectIds)
         {
             await WaitForInitialStartupWorkIfAny();
 
@@ -106,25 +107,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             return _results
                 .Where(x => projectIds.Any(pid => pid == x.Key))
-                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)));
+                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)))
+                .ToImmutableArray();
         }
 
-        public void QueueForAnalysis(IEnumerable<Project> projects)
+        public void QueueForAnalysis(ImmutableArray<ProjectId> projects)
         {
-            foreach (var project in projects)
+            foreach (var projectId in projects)
             {
-                _workQueue.AddOrUpdate(project.Id,
-                    (modified: DateTime.UtcNow, project: project, new CancellationTokenSource()),
-                    (_, oldValue) => (modified: DateTime.UtcNow, project: project, oldValue.workReadySource));
+                _workQueue.AddOrUpdate(projectId,
+                    (modified: DateTime.UtcNow, projectId: projectId, new CancellationTokenSource()),
+                    (_, oldValue) => (modified: DateTime.UtcNow, projectId: projectId, oldValue.workReadySource));
             }
         }
 
-        private IEnumerable<Task> WaitForPendingWorkIfNeededAndGetIt(IEnumerable<ProjectId> projectIds)
+        private ImmutableArray<Task> WaitForPendingWorkIfNeededAndGetIt(ImmutableArray<ProjectId> projectIds)
         {
             return _workQueue
                 .Where(x => projectIds.Any(pid => pid == x.Key))
                 .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
-                    .ContinueWith(task => LogTimeouts(task, x.Key.ToString())));
+                    .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
+                .ToImmutableArray();
         }
 
         private Task WaitForInitialStartupWorkIfAny()
@@ -144,8 +147,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
                 || changeEvent.Kind == WorkspaceChangeKind.ProjectAdded)
             {
-                var project = changeEvent.NewSolution.GetProject(changeEvent.ProjectId);
-                QueueForAnalysis(new[] { project });
+                QueueForAnalysis(ImmutableArray.Create(changeEvent.ProjectId));
             }
         }
 
@@ -163,7 +165,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 var allAnalyzers = _providers
                     .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)));
+                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
+                    .ToImmutableArray();
 
                 var compiled = await project.WithCompilationOptions(
                     _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(project))
@@ -171,10 +174,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 ImmutableArray<Diagnostic> results = ImmutableArray<Diagnostic>.Empty;
 
-                if (allAnalyzers.ToImmutableArray().Any())
+                if (allAnalyzers.Any())
                 {
                     results = await compiled
-                        .WithAnalyzers(allAnalyzers.ToImmutableArray()) // This cannot be invoked with empty analyzers list.
+                        .WithAnalyzers(allAnalyzers) // This cannot be invoked with empty analyzers list.
                         .GetAllDiagnosticsAsync(token);
                 }
                 else
@@ -216,7 +219,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .Select(x => x.GetDiagnostics())
                 .SelectMany(x => x);
 
-            _results[project.Id] = (project.Name, results);
+            _results[project.Id] = (project.Name, results.ToImmutableArray());
         }
     }
 }

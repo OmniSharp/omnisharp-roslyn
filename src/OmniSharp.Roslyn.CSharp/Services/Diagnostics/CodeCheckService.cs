@@ -1,4 +1,5 @@
-﻿using System.Composition;
+﻿using System.Collections.Immutable;
+using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -32,7 +33,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 : _workspace.CurrentSolution.Projects;
 
             var analyzerResults = await _roslynAnalyzer.GetCurrentDiagnosticResult(
-                projectsForAnalysis.Where(x => x != null).Select(x => x.Id));
+                projectsForAnalysis
+                    .Where(x => x != null)
+                    .Select(x => x.Id)
+                    .ToImmutableArray());
 
             var locations = analyzerResults
                 .Where(x => (string.IsNullOrEmpty(request.FileName)
