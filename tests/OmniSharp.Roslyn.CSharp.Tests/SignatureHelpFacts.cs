@@ -177,21 +177,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             const string source =
 @"using System;
 [MyTest($$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute(int value)
     {
     }
 }";
-            var actual = await GetSignatureHelp(filename, source);    
+            var actual = await GetSignatureHelp(filename, source);
             Assert.Equal(0, actual.ActiveParameter);
-       
+
             var signature = actual.Signatures.ElementAt(0);
             Assert.Single(signature.Parameters);
             Assert.Equal("value", signature.Parameters.ElementAt(0).Name);
@@ -206,13 +206,13 @@ public class MyTestAttribute : Attribute
             const string source =
 @"using System;
 [MyTest($$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute(int value1,double value2)
     {
@@ -238,13 +238,13 @@ public class MyTestAttribute : Attribute
             const string source =
 @"using System;
 [MyTest(2,$$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute(int value1,double value2)
     {
@@ -263,13 +263,13 @@ public class MyTestAttribute : Attribute
             const string source =
 @"using System;
 [MyTest($$)]
-public class TestClass 
+public class TestClass
 {
     public static void Main()
     {
     }
 }
-public class MyTestAttribute : Attribute 
+public class MyTestAttribute : Attribute
 {
     public MyTestAttribute()
     {
@@ -760,7 +760,7 @@ class B : A
 {
     static void M()
     {
-        string a = typeof(A).GetMembers($$);
+        var members = typeof(A).GetMembers($$);
     }
 }";
             var actual = await GetSignatureHelp(filename, source);
@@ -916,7 +916,7 @@ class Program
         var flag = Compare($$);
     }
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
     public static bool Compare(GameObject gameObject, string tagName)
@@ -948,7 +948,7 @@ class Program
         var flag = Compare($$);
     }
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.It has the default value as <c>null</c></param>
     /// <returns>Returns <c> true</c> if object is tagged with tag.</returns>
     public static bool Compare(GameObject gameObject, string tagName = null)
@@ -977,7 +977,7 @@ class Program
         var flag = Compare($$);
     }
     ///<summary>Checks if object is tagged with the tag.</summary>
-    /// <param name=""gameObject"">The game object.</param> 
+    /// <param name=""gameObject"">The game object.</param>
     /// <param name=""tagName"">Name of the tag.</param>
     /// <returns>Returns <c>true</c> if object is tagged with tag.</returns>
     public static bool Compare(GameObject gameObject, string tagName)
