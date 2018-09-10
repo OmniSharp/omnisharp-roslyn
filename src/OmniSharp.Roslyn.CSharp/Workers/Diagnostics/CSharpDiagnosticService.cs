@@ -155,7 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Todo: Where this magic string should be moved?
-                if (project.Name == "MiscellaneousFiles")
+                if (project.Name == "MiscellaneousFiles.csproj")
                 {
                     await AnalyzeSingleMiscFilesProject(project);
                     return;
