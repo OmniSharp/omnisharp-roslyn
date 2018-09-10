@@ -29,25 +29,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         public void LoadFrom(ProjectInfo project)
         {
             var codeFixes = project.AnalyzerReferences
-                .Where(x => x is AnalyzerFileReference)
-                .Cast<AnalyzerFileReference>()
-                .SelectMany(analyzerFileReference => {
-                    return analyzerFileReference.GetAssembly().DefinedTypes
-                        .Where(x => x.IsSubclassOf(typeof(CodeFixProvider)))
-                        .Select(x =>
-                        {
-                            var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>();
+                .OfType<AnalyzerFileReference>()
+                .SelectMany(analyzerFileReference => analyzerFileReference.GetAssembly().DefinedTypes)
+                .Where(x => x.IsSubclassOf(typeof(CodeFixProvider)))
+                .Select(x =>
+                {
+                    var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>();
 
-                            if (attribute?.Languages != null && attribute.Languages.Contains(project.Language))
-                            {
-                                return (CodeFixProvider)Activator.CreateInstance(x.AsType());
-                            }
+                    if (attribute?.Languages != null && attribute.Languages.Contains(project.Language))
+                    {
+                        return (CodeFixProvider)Activator.CreateInstance(x.AsType());
+                    }
 
-                            return null;
-                        })
-                        .Where(x => x != null)
-                        .ToImmutableArray();
-                });
+                    return null;
+                })
+                .Where(x => x != null)
+                .ToImmutableArray();
 
             _cache.AddOrUpdate(project.Id, codeFixes, (_, __) => codeFixes);
         }
