@@ -147,7 +147,7 @@ namespace OmniSharp
                         !category.Equals(workspaceInformationServiceName, StringComparison.OrdinalIgnoreCase) &&
                         !category.Equals(projectEventForwarder, StringComparison.OrdinalIgnoreCase));
 
-                configureLogging(builder);
+                configureLogging?.Invoke(builder);
             });
 
             return services.BuildServiceProvider();
