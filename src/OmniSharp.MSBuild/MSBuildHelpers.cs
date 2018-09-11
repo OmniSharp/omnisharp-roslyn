@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Execution;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.MSBuild
 {
-    public static class MSBuildHelpers
+    internal static class MSBuildHelpers
     {
         private static Assembly s_MicrosoftBuildAssembly;
 

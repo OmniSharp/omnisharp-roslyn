@@ -16,19 +16,19 @@ namespace OmniSharp.Http
     {
         private readonly IOmniSharpEnvironment _environment;
         private readonly IEventEmitter _eventEmitter;
-        private readonly IConfigurationRoot _configuration;
         private CompositionHost _compositionHost;
 
         public Startup(IOmniSharpEnvironment environment, IEventEmitter eventEmitter, ISharedTextWriter writer)
         {
             _environment = environment;
             _eventEmitter = eventEmitter;
-            _configuration = new ConfigurationBuilder(environment).Build();
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, _configuration, _eventEmitter, services);
+            var configuration = new ConfigurationBuilder(_environment).Build();
+            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configuration, _eventEmitter, services);
+
             _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
                 .Build();
@@ -65,7 +65,7 @@ namespace OmniSharp.Http
             app.UseMiddleware<StatusMiddleware>(workspace);
             app.UseMiddleware<StopServerMiddleware>();
 
-            WorkspaceInitializer.Initialize(serviceProvider, _compositionHost, _configuration, logger);
+            WorkspaceInitializer.Initialize(serviceProvider, _compositionHost);
 
             logger.LogInformation($"Omnisharp server running on port '{httpEnvironment.Port}' at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
         }
