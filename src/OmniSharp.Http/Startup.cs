@@ -27,7 +27,15 @@ namespace OmniSharp.Http
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var configuration = new ConfigurationBuilder(_environment).Build();
-            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configuration, _eventEmitter, services);
+            var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configuration, _eventEmitter, services,
+                configureLogging: builder =>
+                {
+                    builder.AddConsole();
+
+                    var exceptionHandlerMiddlewareName = typeof(ExceptionHandlerMiddleware).FullName;
+                    builder.AddFilter(
+                        (category, logLevel) => category.Equals(exceptionHandlerMiddlewareName, StringComparison.OrdinalIgnoreCase));
+                });
 
             _compositionHost = new CompositionHostBuilder(serviceProvider)
                 .WithOmniSharpAssemblies()
@@ -44,18 +52,6 @@ namespace OmniSharp.Http
         {
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
             var logger = loggerFactory.CreateLogger<Startup>();
-
-            loggerFactory.AddConsole((category, level) =>
-            {
-                if (HostHelpers.LogFilter(category, level, _environment)) return true;
-
-                if (string.Equals(category, typeof(ExceptionHandlerMiddleware).FullName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-
-                return false;
-            });
 
             logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
 
