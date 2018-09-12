@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using OmniSharp.LanguageServerProtocol;
 using OmniSharp.Services;
 using OmniSharp.Stdio.Eventing;
+using OmniSharp.Stdio.Logging;
 
 namespace OmniSharp.Stdio.Driver
 {
@@ -50,11 +51,14 @@ namespace OmniSharp.Stdio.Driver
                     Configuration.ZeroBasedIndices = application.ZeroBasedIndices;
                     var configuration = new ConfigurationBuilder(environment).Build();
                     var writer = new SharedTextWriter(output);
-                    var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(environment, configuration, new StdioEventEmitter(writer));
+                    var serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(environment, configuration, new StdioEventEmitter(writer),
+                        configureLogging: builder => builder.AddStdio(writer));
+
                     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+                    var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
+
                     var plugins = application.CreatePluginAssemblies();
 
-                    var assemblyLoader = serviceProvider.GetRequiredService<IAssemblyLoader>();
                     var compositionHostBuilder = new CompositionHostBuilder(serviceProvider)
                         .WithOmniSharpAssemblies()
                         .WithAssemblies(assemblyLoader.LoadByAssemblyNameOrPath(plugins.AssemblyNames).ToArray());

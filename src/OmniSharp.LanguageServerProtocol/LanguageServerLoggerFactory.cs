@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using OmniSharp.Extensions.LanguageServer;
 using OmniSharp.LanguageServerProtocol.Logging;
+using OmniSharp.Roslyn;
 using OmniSharp.Services;
 
 namespace OmniSharp.LanguageServerProtocol
@@ -21,7 +22,7 @@ namespace OmniSharp.LanguageServerProtocol
             if (environment.LogLevel <= LogLevel.Debug)
                 _provider.SetProvider(server, (category, level) => true);
             else
-                _provider.SetProvider(server, (category, level) => HostHelpers.LogFilter(category, level, environment));
+                _provider.SetProvider(server, (category, level) => LogFilter(category, level, environment));
         }
 
         public ILogger CreateLogger(string categoryName)
@@ -32,6 +33,31 @@ namespace OmniSharp.LanguageServerProtocol
         public void Dispose()
         {
             throw new NotImplementedException();
+        }
+
+        private static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
+        {
+            if (environment.LogLevel > level)
+            {
+                return false;
+            }
+
+            if (!category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (string.Equals(category, typeof(WorkspaceInformationService).FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (string.Equals(category, typeof(ProjectEventForwarder).FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

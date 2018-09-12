@@ -106,7 +106,12 @@ namespace OmniSharp
             }
         }
 
-        public static IServiceProvider CreateDefaultServiceProvider(IOmniSharpEnvironment environment, IConfigurationRoot configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
+        public static IServiceProvider CreateDefaultServiceProvider(
+            IOmniSharpEnvironment environment,
+            IConfigurationRoot configuration,
+            IEventEmitter eventEmitter,
+            IServiceCollection services = null,
+            Action<ILoggingBuilder> configureLogging = null)
         {
             services = services ?? new ServiceCollection();
 
@@ -130,7 +135,20 @@ namespace OmniSharp
             services.Configure<OmniSharpOptions>(configuration);
             services.AddSingleton(configuration);
 
-            services.AddLogging();
+            services.AddLogging(builder =>
+            {
+                var workspaceInformationServiceName = typeof(WorkspaceInformationService).FullName;
+                var projectEventForwarder = typeof(ProjectEventForwarder).FullName;
+
+                builder.AddFilter(
+                    (category, logLevel) =>
+                        environment.LogLevel <= logLevel &&
+                        category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) &&
+                        !category.Equals(workspaceInformationServiceName, StringComparison.OrdinalIgnoreCase) &&
+                        !category.Equals(projectEventForwarder, StringComparison.OrdinalIgnoreCase));
+
+                configureLogging?.Invoke(builder);
+            });
 
             return services.BuildServiceProvider();
         }
