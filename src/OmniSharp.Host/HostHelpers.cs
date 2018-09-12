@@ -7,31 +7,6 @@ namespace OmniSharp
 {
     public class HostHelpers
     {
-        public static bool LogFilter(string category, LogLevel level, IOmniSharpEnvironment environment)
-        {
-            if (environment.LogLevel > level)
-            {
-                return false;
-            }
-
-            if (!category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (string.Equals(category, typeof(WorkspaceInformationService).FullName, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (string.Equals(category, typeof(ProjectEventForwarder).FullName, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
         public static int Start(Func<int> action)
         {
             try

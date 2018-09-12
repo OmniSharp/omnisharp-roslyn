@@ -1,15 +1,14 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OmniSharp.Stdio.Services;
 
 namespace OmniSharp.Stdio.Logging
 {
     static class StdioLoggerExtensions
     {
-        public static ILoggerFactory AddStdio(this ILoggerFactory factory, ISharedTextWriter writer, Func<string, LogLevel, bool> filter)
+        public static ILoggingBuilder AddStdio(this ILoggingBuilder builder, ISharedTextWriter writer)
         {
-            factory.AddProvider(new StdioLoggerProvider(writer, filter));
-            return factory;
+            builder.AddProvider(new StdioLoggerProvider(writer));
+            return builder;
         }
     }
 }
