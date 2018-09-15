@@ -89,11 +89,6 @@ namespace OmniSharp.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            if (!IsEnabled(logLevel))
-            {
-                return;
-            }
-
             var messageText = formatter(state, exception);
             if (!string.IsNullOrEmpty(messageText) || exception != null)
             {
@@ -102,10 +97,7 @@ namespace OmniSharp.Logging
             }
         }
 
-        public bool IsEnabled(LogLevel logLevel) =>
-            _filter != null
-                ? _filter(this.CategoryName, logLevel)
-                : true;
+        public bool IsEnabled(LogLevel logLevel) => true;
 
         public IDisposable BeginScope<TState>(TState state) => new NoopDisposable();
 
