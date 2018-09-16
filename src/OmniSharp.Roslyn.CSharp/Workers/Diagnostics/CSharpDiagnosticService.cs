@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
@@ -28,6 +30,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
+
+        // This is workaround.
+        // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
+        // This options gives certain IDE analysis access for services that are not yet publicly available.
+        private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
+
         private CancellationTokenSource _initializationQueueDoneSource = new CancellationTokenSource();
         private int _throttlingMs = 500;
 
@@ -47,6 +55,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _forwarder = forwarder;
             _workspace = workspace;
             _rulesetsForProjects = rulesetsForProjects;
+
+            _workspaceAnalyzerOptionsConstructor = Assembly
+                .Load("Microsoft.CodeAnalysis.Features")
+                .GetType("Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions")
+                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution)});
 
             Task.Run(async () =>
             {
@@ -181,8 +194,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 if (allAnalyzers.Any())
                 {
+                    var workspaceAnalyzerOptions =
+                        (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] {project.AnalyzerOptions, project.Solution.Options, project.Solution});
+
                     results = await compiled
-                        .WithAnalyzers(allAnalyzers) // This cannot be invoked with empty analyzers list.
+                        .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions) // This cannot be invoked with empty analyzers list.
                         .GetAllDiagnosticsAsync(token);
                 }
                 else
