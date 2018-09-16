@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
+    <ProjectReference Include="..\OmniSharp.Configuration\OmniSharp.ConfigurationManager.csproj" />
     <ProjectReference Include="..\OmniSharp.Plugins\OmniSharp.Plugins.csproj" />
     <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />
   </ItemGroup>
@@ -26,6 +27,12 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.SDK.EmbedInteropTypes" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

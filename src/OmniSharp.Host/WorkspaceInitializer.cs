@@ -9,6 +9,9 @@ using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Options;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
+using OmniSharp.ConfigurationManager;
+using System.Reflection;
+using System.IO;
 
 namespace OmniSharp
 {
@@ -61,6 +64,10 @@ namespace OmniSharp
             {
                 ProvideWorkspaceOptions(compositionHost, workspace, options, logger);
             });
+
+            string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string configLocation = Path.Combine(executableLocation, "config.json");
+            ConfigurationLoader.Load(configLocation: configLocation);
 
             logger.LogInformation("Configuration finished.");
         }
