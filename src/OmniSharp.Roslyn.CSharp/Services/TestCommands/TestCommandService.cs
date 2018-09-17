@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.IO;
@@ -7,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using OmniSharp.ConfigurationManager;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.TestCommand;
@@ -31,8 +33,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
         {
             var quickFixes = new List<QuickFix>();
 
-            var document = _workspace.GetDocument(request.FileName);
+            var document2 = _workspace.CurrentSolution.Projects.SelectMany(p => p.Documents)
+                .GroupBy(x => x.FilePath).Select(f => f.FirstOrDefault());
+            var document = _workspace.GetDocument(document2.Where(doc => Path.GetFileName(doc.Name).ToLower() == Path.GetFileName(request.FileName).ToLower()).FirstOrDefault().Name);
             var response = new GetTestCommandResponse();
+
+            var testCommands = ConfigurationLoader.Config.TestCommands;
+            string testCommand = testCommands.All;
+
             if (document != null)
             {
                 var semanticModel = await document.GetSemanticModelAsync();
@@ -56,7 +64,26 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
                     .Select(t => t.GetTestCommand(context))
                     .FirstOrDefault(c => c != null);
 
-                var directory = Path.GetDirectoryName(document.Project.FilePath);
+                switch (request.Type)
+                {
+                    case TestCommandType.All:
+                        testCommand = testCommands.All;
+                        break;
+                    case TestCommandType.Fixture:
+                        testCommand = testCommands.Fixture;
+                        break;
+                    case TestCommandType.Single:
+                        testCommand = testCommands.Single;
+                        break;
+                }
+
+                testCommand = testCommand.Replace("{{AssemblyPath}}", document.Project.OutputFilePath)
+                    .Replace("{{TypeName}}", response.TestCommand);
+                    //.Replace("{{MethodName}}", context.Symbol.OriginalDefinition.Locations.ToString());
+
+                response.TestCommand = testCommand;
+
+                var directory = Path.GetDirectoryName(document.Project.OutputFilePath);
                 response.Directory = directory;
             }
 

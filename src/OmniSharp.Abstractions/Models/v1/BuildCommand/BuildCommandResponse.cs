@@ -1,17 +1,16 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OmniSharp.Models.TestCommand
+namespace OmniSharp.Models.BuildCommand
 {
-    public class GetTestCommandResponse : IAggregateResponse
+    public class BuildCommandResponse : IAggregateResponse
     {
-        public string Directory { get; set; }
-        public string TestCommand { get; set; }
+        //public string Command { get; set; }
 
         #region IAggregateResponse
 
         public IEnumerable<QuickFix> QuickFixes { get; set; }
-
+        
         public IAggregateResponse Merge(IAggregateResponse response)
         {
             var quickFixResponse = (QuickFixResponse)response;
