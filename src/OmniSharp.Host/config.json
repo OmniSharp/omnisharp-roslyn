@@ -33,11 +33,11 @@
   "TestCommands": {
     "All": "nunit3-console.exe --noresult --noh {{AssemblyPath}}",
     "Fixture": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}",
-    "Single": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}.{{MethodName}}"
+    "Single": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}"
   },
 
   "MSBuildPath": {
-    "Path": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\MSBuild\\15.0\\Bin"
+    "Path": "C:\\tools\\Enterprise\\MSBuild\\15.0\\Bin"
   },
 
   "TextEditorOptions": {

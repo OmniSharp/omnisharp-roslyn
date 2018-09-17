@@ -27,6 +27,7 @@ namespace OmniSharp
         public const string MembersTree = "/currentfilemembersastree";
         public const string MembersFlat = "/currentfilemembersasflat";
         public const string TestCommand = "/gettestcontext";
+        public const string BuildCommand = "/buildcommand";
         public const string Metadata = "/metadata";
         public const string PackageSource = "/packagesource";
         public const string PackageSearch = "/packagesearch";

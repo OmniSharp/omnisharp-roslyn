@@ -33,10 +33,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
         {
             var quickFixes = new List<QuickFix>();
 
-            //var document = _workspace.GetDocument(request.FileName);
             var document2 = _workspace.CurrentSolution.Projects.SelectMany(p => p.Documents)
                 .GroupBy(x => x.FilePath).Select(f => f.FirstOrDefault());
-            var document = _workspace.GetDocument(document2.Where(doc => Path.GetFileName(doc.Name).ToLower() == "tests.cs").FirstOrDefault().Name);
+            var document = _workspace.GetDocument(document2.Where(doc => Path.GetFileName(doc.Name).ToLower() == Path.GetFileName(request.FileName).ToLower()).FirstOrDefault().Name);
             var response = new GetTestCommandResponse();
 
             var testCommands = ConfigurationLoader.Config.TestCommands;
@@ -79,8 +78,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
                 }
 
                 testCommand = testCommand.Replace("{{AssemblyPath}}", document.Project.OutputFilePath)
-                    .Replace("{{TypeName}}", context.TestCommandType.ToString())
-                    .Replace("{{MethodName}}", context.Symbol.OriginalDefinition.Locations.ToString());
+                    .Replace("{{TypeName}}", response.TestCommand);
+                    //.Replace("{{MethodName}}", context.Symbol.OriginalDefinition.Locations.ToString());
 
                 response.TestCommand = testCommand;
 
