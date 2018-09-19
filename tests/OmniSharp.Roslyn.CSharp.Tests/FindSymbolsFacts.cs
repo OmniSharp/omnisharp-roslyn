@@ -215,7 +215,7 @@ public partial class MyClass
                     }
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "meth", 0, 0);
+            var usages = await FindSymbolsWithFilterAsync(code, "meth", null, null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             var expected = new[]
@@ -294,7 +294,7 @@ public partial class MyClass
             return await requestHandler.Handle(null);
         }
 
-        private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filter, int minFilterLength, int maxItemsToReturn)
+        private async Task<QuickFixResponse> FindSymbolsWithFilterAsync(string code, string filter, int? minFilterLength, int? maxItemsToReturn)
         {
             var testFile = new TestFile("dummy.cs", code);
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);

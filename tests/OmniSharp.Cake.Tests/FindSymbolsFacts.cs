@@ -24,7 +24,7 @@ namespace OmniSharp.Cake.Tests
         [Fact]
         public async Task ShouldFindSymbolsInCakeProjects()
         {
-            var symbols = await FindSymbols("CakeProject", 0, 0);
+            var symbols = await FindSymbols("CakeProject", null, null);
             Assert.NotEmpty(symbols.QuickFixes);
         }
 
@@ -49,7 +49,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Empty(symbols.QuickFixes);
         }
 
-        private async Task<QuickFixResponse> FindSymbols(string projectName, int minFilterLength, int maxItemsToReturn)
+        private async Task<QuickFixResponse> FindSymbols(string projectName, int? minFilterLength, int? maxItemsToReturn)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync(projectName, shadowCopy : false))
             using (var host = CreateOmniSharpHost(testProject.Directory))

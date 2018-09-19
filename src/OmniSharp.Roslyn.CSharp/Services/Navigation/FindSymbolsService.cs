@@ -23,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
         public async Task<QuickFixResponse> Handle(FindSymbolsRequest request = null)
         {
-            if (request != null && request.Filter != null && request.Filter.Length < request.MinFilterLength)
+            if (request?.Filter?.Length < request?.MinFilterLength.GetValueOrDefault())
             {
                 return new QuickFixResponse { QuickFixes = Array.Empty<QuickFix>() };
             }
@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 ? candidate.IsValidCompletionFor(request.Filter)
                 : true;
 
-            int maxItemsToReturn = request == null ? 0 : request.MaxItemsToReturn;
+            int maxItemsToReturn = (request?.MaxItemsToReturn).GetValueOrDefault();
             var csprojSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".csproj", maxItemsToReturn);
             var projectJsonSymbols = await _workspace.CurrentSolution.FindSymbols(isMatch, ".json", maxItemsToReturn);
             return new QuickFixResponse()
