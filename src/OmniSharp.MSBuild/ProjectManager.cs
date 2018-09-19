@@ -196,7 +196,14 @@ namespace OmniSharp.MSBuild
                         {
                             foreach (var eventSink in _eventSinks)
                             {
-                                eventSink.ProjectLoaded(project.LoadedEventArgs);
+                                try
+                                {
+                                    eventSink.ProjectLoaded(project.LoadedEventArgs);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Exception thrown while calling event sinks");
+                                }
                             }
                         }
                     }
