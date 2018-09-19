@@ -57,3 +57,6 @@ launchSettings.json
 
 # Rider
 .idea/
+
+# Packages
+packages/
