@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.BuildCommand
     public class BuildCommandService : IRequestHandler<BuildCommandRequest, QuickFixResponse>//BuildCommandResponse>
     {
         private OmniSharpWorkspace _workspace;
-        private OmniSharpConfiguration _config;
+        public OmniSharpConfiguration _config;
 
         public string Executable
         {
