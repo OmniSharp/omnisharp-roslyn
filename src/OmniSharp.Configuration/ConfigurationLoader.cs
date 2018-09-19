@@ -10,16 +10,21 @@ namespace OmniSharp.ConfigurationManager
 
         public static OmniSharpConfiguration Load(string configLocation)
         {
-            if (string.IsNullOrEmpty(configLocation))
+            try
             {
-                string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                configLocation = Path.Combine(executableLocation, "config.json");
-            }
-            var config = StripComments(File.ReadAllText(configLocation));
-            _config = new Nancy.Json.JavaScriptSerializer().Deserialize<OmniSharpConfiguration>(config);
-            _config.ConfigFileLocation = configLocation;
+                if (string.IsNullOrEmpty(configLocation))
+                {
+                    string executableLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    configLocation = Path.Combine(executableLocation, "config.json");
+                }
+                var config = StripComments(File.ReadAllText(configLocation));
+                _config = new Nancy.Json.JavaScriptSerializer().Deserialize<OmniSharpConfiguration>(config);
+                _config.ConfigFileLocation = configLocation;
 
-            return _config;
+                return _config;
+            }
+            catch { }
+            return null;
         }
 
         private static string StripComments(string json)
