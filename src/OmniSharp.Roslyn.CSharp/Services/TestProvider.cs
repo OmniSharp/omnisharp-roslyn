@@ -1,4 +1,6 @@
-﻿using OmniSharp.Services;
+﻿using OmniSharp.ConfigurationManager;
+using OmniSharp.Models.TestCommand;
+using OmniSharp.Services;
 using System.Composition;
 
 namespace OmniSharp.Roslyn.CSharp.Services
@@ -6,6 +8,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
     [Export(typeof(ITestCommandProvider))]
     class TestProvider : ITestCommandProvider
     {
+        public OmniSharpConfiguration config { get => ConfigurationLoader.Config; set => throw new System.NotImplementedException(); }
+        public TestCommandType testCommands { get; set; }
+
         public string GetTestCommand(TestContext testContext)
         {
             string test = string.Empty;

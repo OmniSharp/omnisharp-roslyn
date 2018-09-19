@@ -70,7 +70,6 @@ namespace TestApp.Tests
             var testFile = new TestFile("dummy.cs", source);
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
             var rh = SharedOmniSharpTestHost.GetRequestHandler<BuildCommandService>(OmniSharpEndpoints.BuildCommand);
-            var a = rh.Arguments;
             var cc = rh._config.MSBuildPath = new BuildPath()
             {
                 Path = "path\\to\\msbuild"

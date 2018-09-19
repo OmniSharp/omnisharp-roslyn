@@ -20,7 +20,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
     public class TestCommandService : IRequestHandler<TestCommandRequest, GetTestCommandResponse>
     {
         private OmniSharpWorkspace _workspace;
-        private IEnumerable<ITestCommandProvider> _testCommandProviders;
+        public IEnumerable<ITestCommandProvider> _testCommandProviders;
+        public OmniSharpConfiguration _config;
 
         [ImportingConstructor]
         public TestCommandService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ITestCommandProvider> testCommandProviders)
@@ -38,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.TestCommands
             var document = _workspace.GetDocument(document2.Where(doc => Path.GetFileName(doc.Name).ToLower() == Path.GetFileName(request.FileName).ToLower()).FirstOrDefault().Name);
             var response = new GetTestCommandResponse();
 
-            var testCommands = ConfigurationLoader.Config.TestCommands;
+            var testCommands = ConfigurationLoader.Config.TestCommands != null ? ConfigurationLoader.Config.TestCommands : _config.TestCommands;
             string testCommand = testCommands.All;
 
             if (document != null)
