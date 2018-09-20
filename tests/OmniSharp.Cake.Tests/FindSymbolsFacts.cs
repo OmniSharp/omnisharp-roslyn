@@ -24,28 +24,28 @@ namespace OmniSharp.Cake.Tests
         [Fact]
         public async Task ShouldFindSymbolsInCakeProjects()
         {
-            var symbols = await FindSymbols("CakeProject", null, null);
+            var symbols = await FindSymbols("CakeProject", minFilterLength: null, maxItemsToReturn: null);
             Assert.NotEmpty(symbols.QuickFixes);
         }
 
         [Fact]
         public async Task ShouldNotFindSymbolsInCakeProjectsDueToEmptyFilter()
         {
-            var symbols = await FindSymbols("CakeProject", 1, 0);
+            var symbols = await FindSymbols("CakeProject", minFilterLength: 1, maxItemsToReturn: 0);
             Assert.Empty(symbols.QuickFixes);
         }
 
         [Fact]
         public async Task ShouldFindLimitedNumberOfSymbolsInCakeProjects()
         {
-            var symbols = await FindSymbols("CakeProject", 0, 100);
+            var symbols = await FindSymbols("CakeProject", minFilterLength: 0, maxItemsToReturn: 100);
             Assert.Equal(100, symbols.QuickFixes.Count());
         }
 
         [Fact]
         public async Task ShouldNotFindSymbolsInCSharpProjects()
         {
-            var symbols = await FindSymbols("ProjectAndSolution", 0, 0);
+            var symbols = await FindSymbols("ProjectAndSolution", minFilterLength: 0, maxItemsToReturn: 0);
             Assert.Empty(symbols.QuickFixes);
         }
 

@@ -215,7 +215,7 @@ public partial class MyClass
                     }
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "meth", null, null);
+            var usages = await FindSymbolsWithFilterAsync(code, "meth", minFilterLength: null, maxItemsToReturn: null);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             var expected = new[]
@@ -240,7 +240,7 @@ public partial class MyClass
                     public class ConfigurationOptions : IConfigurationOptions { }
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "opti", 0, 0);
+            var usages = await FindSymbolsWithFilterAsync(code, "opti", minFilterLength: 0, maxItemsToReturn: 0);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             var expected = new[]
@@ -262,7 +262,7 @@ public partial class MyClass
                     public class Options {}
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "op", 3, 0);
+            var usages = await FindSymbolsWithFilterAsync(code, "op", minFilterLength: 3, maxItemsToReturn: 0);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             Assert.Empty(symbols);
@@ -279,7 +279,7 @@ public partial class MyClass
                     public class Options3 {}
                 }";
 
-            var usages = await FindSymbolsWithFilterAsync(code, "op", 0, 2);
+            var usages = await FindSymbolsWithFilterAsync(code, "op", minFilterLength: 0, maxItemsToReturn: 2);
             var symbols = usages.QuickFixes.Select(q => q.Text);
 
             Assert.Equal(2, symbols.Count());
