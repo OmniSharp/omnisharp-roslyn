@@ -144,7 +144,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
+            Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
         }
 
         private static Dictionary<string, ReportDiagnostic> CreateRules(TestAnalyzerReference testAnalyzerRef, ReportDiagnostic diagnostic)
@@ -177,7 +177,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.DoesNotContain(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+            Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
         }
 
         [Fact]
@@ -201,7 +201,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+            Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
         }
 
         private IEnumerable<ProjectId> CreateProjectWitFile(TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
