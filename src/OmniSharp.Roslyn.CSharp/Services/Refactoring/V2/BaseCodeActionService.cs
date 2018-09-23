@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
 
-        // For some (probably visual studio specific?) reason diagnostic and fix codes doesn't match in every case.
+        // CS8019 isn't directly used (via roslyn) but has an analyzer that report different diagnostic based on CS8019 to improve user experience.
         private readonly Dictionary<string, string> customDiagVsFixMap = new Dictionary<string, string>
         {
             { "CS8019", "RemoveUnnecessaryImportsFixable" }
