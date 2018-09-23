@@ -144,7 +144,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
 
-            Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
+            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
         }
 
         private static Dictionary<string, ReportDiagnostic> CreateRules(TestAnalyzerReference testAnalyzerRef, ReportDiagnostic diagnostic)
