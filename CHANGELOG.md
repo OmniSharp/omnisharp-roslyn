@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.33.0] - Not yet released
 * Fixed issue where `/codestructure` endpoint did not return enum members. (PR: [#1285](https://github.com/OmniSharp/omnisharp-roslyn/pull/1285))
+* Fixed issue where `/findimplemenations` endpoint did not return overridden members in derived types (PR: [#1302](https://github.com/OmniSharp/omnisharp-roslyn/pull/1302))
 
 ## [1.32.3] - 2018-08-28
 * Added support for files without a project. (PR: [#1252](https://github.com/OmniSharp/omnisharp-roslyn/pull/1252))
