@@ -747,7 +747,7 @@ class B : A
     }
 }";
             var actual = await GetSignatureHelp(filename, source);
-            Assert.NotEmpty(actual.Signatures);
+            Assert.Contains(actual.Signatures, signature => signature.Name == "ToString" && signature.Parameters.Count() == 0);
         }
 
         [Theory]
@@ -764,7 +764,7 @@ class B : A
     }
 }";
             var actual = await GetSignatureHelp(filename, source);
-            Assert.NotEmpty(actual.Signatures);
+            Assert.Contains(actual.Signatures, signature => signature.Name == "GetMembers" && signature.Parameters.Count() == 0);
         }
 
         [Fact]
@@ -793,7 +793,7 @@ class Program
             Assert.Single(actual.Signatures);
 
             var signature = actual.Signatures.ElementAt(0);
-            Assert.Equal("void string.MyMethod(int number)",signature.Label);
+            Assert.Equal("void string.MyMethod(int number)", signature.Label);
             Assert.Single(signature.Parameters);
             Assert.Equal("number", signature.Parameters.ElementAt(0).Name);
         }
