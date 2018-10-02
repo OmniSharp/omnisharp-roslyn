@@ -19,7 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         protected override string EndpointName => OmniSharpEndpoints.FilesChanged;
 
         [Fact]
-        public async Task TestFileAddedToMSBuildWorkspaceOnCreation()
+        public async Task TestFileAddedToMSBuildWorkspaceOnCreationAndRemovedOnDeletion()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
             using (var host = CreateOmniSharpHost(testProject.Directory))
@@ -28,10 +28,21 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var path = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
                 var filePath = Path.Combine(path, "FileName.cs");
-                File.WriteAllText(filePath, "text");
                 var handler = GetRequestHandler(host);
-                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
 
+                // test add
+                File.WriteAllText(filePath, "text");
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+
+                // test delete
+                File.Delete(filePath);
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
+                Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+
+                // second creation on the same file path. Checks if omnisharp properly removed deleted document.
+                File.WriteAllText(filePath, "text");
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
                 Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
             }
         }
