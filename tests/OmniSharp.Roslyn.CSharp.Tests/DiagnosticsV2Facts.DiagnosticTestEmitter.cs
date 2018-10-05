@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,7 +13,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private class DiagnosticTestEmitter : IEventEmitter
         {
-            public readonly List<DiagnosticMessage> Messages = new List<DiagnosticMessage>();
+            public readonly ConcurrentBag<DiagnosticMessage> Messages = new ConcurrentBag<DiagnosticMessage>();
+
             private readonly TaskCompletionSource<object> _tcs;
 
             public async Task ExpectForEmitted(Expression<Predicate<DiagnosticMessage>> predicate)
