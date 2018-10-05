@@ -59,7 +59,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspaceAnalyzerOptionsConstructor = Assembly
                 .Load("Microsoft.CodeAnalysis.Features")
                 .GetType("Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions")
-                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution)});
+                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution)})
+                ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
             Task.Run(async () =>
             {
