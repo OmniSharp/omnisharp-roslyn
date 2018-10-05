@@ -139,7 +139,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             return _workQueue
                 .Where(x => projectIds.Any(pid => pid == x.Key))
-                .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
+                .Select(x => Task.Delay(30 * 1000, x.Value.workReadySource.Token)
                     .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
                 .Concat(new [] { Task.Delay(250)}) // Workaround for issue where information about updates from workspace are not at sync with calls.
                 .ToImmutableArray();
@@ -156,6 +156,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
         }
 
+        // This is basically asserting mechanism for hanging analysis if any. If this doesn't exist tracking
+        // down why results doesn't come up (for example in situation when theres bad analyzer that takes ages to complete).
         private void LogTimeouts(Task task, string description)
         {
             if (!task.IsCanceled) _logger.LogError($"Timeout before work got ready for {description}.");
