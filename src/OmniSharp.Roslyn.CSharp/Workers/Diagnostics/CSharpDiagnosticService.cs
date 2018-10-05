@@ -152,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         // solution but hopefully works until event based diagnostics are published.
         private Task WaitForInitialStartupWorkIfAny()
         {
-            return Task.Delay(10 * 1000, _initializationQueueDoneSource.Token)
+            return Task.Delay(30 * 1000, _initializationQueueDoneSource.Token)
                         .ContinueWith(task => LogTimeouts(task, nameof(_initializationQueueDoneSource)));
         }
 
