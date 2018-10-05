@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         return;
                     }
 
-                    await Task.Delay(50);
+                    await Task.Delay(250);
                 }
 
                 throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{String.Join(";", Messages.SelectMany(x => x.Results))}'");
