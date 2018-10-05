@@ -34,8 +34,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             var analyzerResults = await _roslynAnalyzer.GetCurrentDiagnosticResult(
                 projectsForAnalysis
-                    .Where(x => x != null)
-                    .Select(x => x.Id)
+                    .Where(project => project != null)
+                    .Select(project => project.Id)
                     .ToImmutableArray());
 
             var locations = analyzerResults
