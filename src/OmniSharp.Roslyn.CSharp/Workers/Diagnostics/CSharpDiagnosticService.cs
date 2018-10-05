@@ -37,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
 
         private CancellationTokenSource _initializationQueueDoneSource = new CancellationTokenSource();
-        private int _throttlingMs = 500;
+        private readonly int _throttlingMs = 300;
 
         [ImportingConstructor]
         public CSharpDiagnosticService(
@@ -140,6 +140,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .Where(x => projectIds.Any(pid => pid == x.Key))
                 .Select(x => Task.Delay(10 * 1000, x.Value.workReadySource.Token)
                     .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
+                .Concat(new [] { Task.Delay(250)}) // Workaround for issue where information about updates from workspace are not at sync with calls.
                 .ToImmutableArray();
         }
 
@@ -162,6 +163,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
+                || changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
                 || changeEvent.Kind == WorkspaceChangeKind.ProjectAdded)
             {
