@@ -149,7 +149,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         // and when this happens initially api returns nothing. This causes nothing
         // to show until user action causes editor to re-fetch all diagnostics from api again.
         // For this reason initially api waits for results for moment. This isn't perfect
-        // solution but hopefully works until event based diagnostics are published.
+        // solution but hopefully works until event based diagnostics are published. 
         private Task WaitForInitialStartupWorkIfAny()
         {
             return Task.Delay(30 * 1000, _initializationQueueDoneSource.Token)
