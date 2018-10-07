@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -11,6 +12,7 @@ using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -106,9 +108,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
-            var result = await codeCheckService.Handle(new CodeCheckRequest());
-
-            Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+            await RetryOn<ContainsException>(async () =>
+            {
+                var result = await codeCheckService.Handle(new CodeCheckRequest());
+                Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+            });
         }
 
         [Fact]
@@ -119,9 +123,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             CreateProjectWitFile(testFile);
 
-            var result = await codeCheckService.Handle(new CodeCheckRequest());
-
-            Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
+            await RetryOn<ContainsException>(async () =>
+            {
+                var result = await codeCheckService.Handle(new CodeCheckRequest());
+                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
+            });
         }
 
         [Fact]
@@ -142,9 +148,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 testRules.ToImmutableDictionary(),
                 new ImmutableArray<RuleSetInclude>()));
 
-            var result = await codeCheckService.Handle(new CodeCheckRequest());
-
-            Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
+            await RetryOn<ContainsException>(async () =>
+            {
+                var result = await codeCheckService.Handle(new CodeCheckRequest());
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
+            });
         }
 
         private static Dictionary<string, ReportDiagnostic> CreateRules(TestAnalyzerReference testAnalyzerRef, ReportDiagnostic diagnostic)
@@ -176,7 +184,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 new ImmutableArray<RuleSetInclude>()));
 
             var result = await codeCheckService.Handle(new CodeCheckRequest());
-
             Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
         }
 
@@ -199,14 +206,40 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 testRules.ToImmutableDictionary(),
                 new ImmutableArray<RuleSetInclude>()));
 
-            var result = await codeCheckService.Handle(new CodeCheckRequest());
+            await RetryOn<ContainsException>(async () =>
+            {
+                var result = await codeCheckService.Handle(new CodeCheckRequest());
+                Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+            });
+        }
 
-            Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+        // On 99% cases asserts should not require retry, however build systems are very slow sometimes with unpredictable ways.
+        // This should be replaced with emitted events listener aproach after LSP is mainstream.
+        private static Task RetryOn<TException>(Func<Task> action, int maxAttemptCount = 5) where TException : Exception
+        {
+            var exceptions = new List<Exception>();
+
+            for (int attempted = 0; attempted < maxAttemptCount; attempted++)
+            {
+                try
+                {
+                    if (attempted > 0)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                    }
+                    return action();
+                }
+                catch (TException ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+            throw new AggregateException(exceptions);
         }
 
         private IEnumerable<ProjectId> CreateProjectWitFile(TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
         {
-            var analyzerReferences = testAnalyzerRef == null ? default:
+            var analyzerReferences = testAnalyzerRef == null ? default :
                 new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray();
 
             return TestHelpers.AddProjectToWorkspace(
