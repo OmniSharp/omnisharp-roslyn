@@ -9,6 +9,7 @@ using OmniSharp.Models.UpdateBuffer;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace OmniSharp.Cake.Tests
 {
@@ -28,8 +29,12 @@ namespace OmniSharp.Cake.Tests
         {
             const string input = @"zzz";
 
-            var diagnostics = await FindDiagnostics(input, includeFileName: true);
-            Assert.NotEmpty(diagnostics.QuickFixes);
+            // Remove this retry once rare issue with missing update is handled or system is replaced with LSP event
+            // based approach.
+            await RetryAssert.On<NotEmptyException>(async () => {
+                var diagnostics = await FindDiagnostics(input, includeFileName: true);
+                Assert.NotEmpty(diagnostics.QuickFixes);
+            });
         }
 
         [Fact]

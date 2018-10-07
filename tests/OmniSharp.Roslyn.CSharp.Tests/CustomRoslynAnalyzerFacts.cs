@@ -108,7 +108,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var projectIds = CreateProjectWitFile(testFile, testAnalyzerRef);
 
-            await RetryOn<ContainsException>(async () =>
+            // This retry should be replaced with emitted events listener aproach after LSP is mainstream.
+            // Retry is required when build system greatly slows down some times, another issue is that
+            // it feels that some of update events from workspace get lost and it requires further investigation.
+            // If missing events are true then same issue will happen with LSP version too.
+            await RetryAssert.On<ContainsException>(async () =>
             {
                 var result = await codeCheckService.Handle(new CodeCheckRequest());
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -123,7 +127,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             CreateProjectWitFile(testFile);
 
-            await RetryOn<ContainsException>(async () =>
+            await RetryAssert.On<ContainsException>(async () =>
             {
                 var result = await codeCheckService.Handle(new CodeCheckRequest());
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
@@ -148,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 testRules.ToImmutableDictionary(),
                 new ImmutableArray<RuleSetInclude>()));
 
-            await RetryOn<ContainsException>(async () =>
+            await RetryAssert.On<ContainsException>(async () =>
             {
                 var result = await codeCheckService.Handle(new CodeCheckRequest());
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
@@ -206,35 +210,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 testRules.ToImmutableDictionary(),
                 new ImmutableArray<RuleSetInclude>()));
 
-            await RetryOn<ContainsException>(async () =>
+            await RetryAssert.On<ContainsException>(async () =>
             {
                 var result = await codeCheckService.Handle(new CodeCheckRequest());
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
             });
-        }
-
-        // On 99% cases asserts should not require retry, however build systems are very slow sometimes with unpredictable ways.
-        // This should be replaced with emitted events listener aproach after LSP is mainstream.
-        private static Task RetryOn<TException>(Func<Task> action, int maxAttemptCount = 5) where TException : Exception
-        {
-            var exceptions = new List<Exception>();
-
-            for (int attempted = 0; attempted < maxAttemptCount; attempted++)
-            {
-                try
-                {
-                    if (attempted > 0)
-                    {
-                        Thread.Sleep(TimeSpan.FromSeconds(10));
-                    }
-                    return action();
-                }
-                catch (TException ex)
-                {
-                    exceptions.Add(ex);
-                }
-            }
-            throw new AggregateException(exceptions);
         }
 
         private IEnumerable<ProjectId> CreateProjectWitFile(TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
