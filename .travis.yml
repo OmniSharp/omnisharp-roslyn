@@ -61,13 +61,13 @@ after_success: |
     sudo apt-get update && sudo apt-get install azure-cli
 
     # Only update "latest" version if we have all of the builds
-    deploymentDir="artifacts/deployment"
-    if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
-       [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
-       [ -e $deploymentDir/"omnisharp-linux-x64.zip" ]; then
+    #deploymentDir="artifacts/deployment"
+    #if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
+    #   [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
+    #   [ -e $deploymentDir/"omnisharp-linux-x64.zip" ]; then
       
       az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
-    fi
+    #fi
   fi
 notifications:
   slack:
