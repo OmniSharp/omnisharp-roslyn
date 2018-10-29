@@ -285,6 +285,24 @@ public partial class MyClass
             Assert.Equal(2, symbols.Count());
         }
 
+        [Fact]
+        public async Task fuzzy_search()
+        {
+            const string code = @"
+                namespace Some.Namespace
+                {
+                    public class ProjectManager {}
+                    public class CoolProjectManager {}
+                    public class ProbabilityManager {}
+                }";
+
+            var usages = await FindSymbolsWithFilterAsync(code, "ProjMana", minFilterLength: 0, maxItemsToReturn: 0);
+            var symbols = usages.QuickFixes.Select(q => q.Text);
+            Assert.Contains("ProjectManager", symbols);
+            Assert.Contains("CoolProjectManager", symbols);
+            Assert.DoesNotContain("ProbabilityManager", symbols);
+        }
+
         private async Task<QuickFixResponse> FindSymbolsAsync(string code)
         {
             var testFile = new TestFile("dummy.cs", code);
