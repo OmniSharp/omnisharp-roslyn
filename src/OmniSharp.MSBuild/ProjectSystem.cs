@@ -137,7 +137,25 @@ namespace OmniSharp.MSBuild
             return _fileSystemHelper.GetFiles("**/*.csproj");
         }
 
-        private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
+        // enumerating project file paths in MSBuild.SolutionSdk project.
+        private IEnumerable<string> GetProjectPathsFromSolutionBySolutionSdk(string solutionFilePath)
+        {
+            IEnumerable<string> CollectFunc(string slnproj)
+            {
+                // to avoid enumrating unsupported project.
+                foreach (var path in SolutionSdkFileUtil.GetEvaluatedProjectFilePaths(slnproj, _propertyOverrides, new string[] { ".csproj", ".fsproj", ".vbproj" }))
+                {
+                    yield return Path.IsPathRooted(path) ? path : Path.Combine(Path.GetDirectoryName(slnproj), path);
+                }
+            };
+            using (_sdksPathResolver.SetSdksPathEnvironmentVariable(solutionFilePath))
+            {
+                // to avoid delay iterator evaluation.
+                return CollectFunc(solutionFilePath).ToImmutableArray();
+            }
+        }
+
+        private IEnumerable<string> GetProjectPathsFromSolutionDefault(string solutionFilePath)
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
@@ -172,6 +190,20 @@ namespace OmniSharp.MSBuild
             }
 
             return result;
+        }
+
+        private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
+        {
+            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
+
+            if(solutionFilePath.EndsWith(".slnproj"))
+            {
+                return GetProjectPathsFromSolutionBySolutionSdk(solutionFilePath);
+            }
+            else
+            {
+                return GetProjectPathsFromSolutionDefault(solutionFilePath);
+            }
         }
 
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
