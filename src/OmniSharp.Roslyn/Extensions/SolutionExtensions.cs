@@ -11,7 +11,7 @@ namespace OmniSharp.Extensions
     public static class SolutionExtensions
     {
         public static async Task<QuickFixResponse> FindSymbols(this Solution solution,
-            Func<string, bool> predicate,
+            string pattern,
             string projectFileExtension,
             int maxItemsToReturn)
         {
@@ -23,7 +23,9 @@ namespace OmniSharp.Extensions
 
             foreach (var project in projects)
             {
-                var symbols = await SymbolFinder.FindSourceDeclarationsAsync(project, predicate, SymbolFilter.TypeAndMember);
+                var symbols = !string.IsNullOrEmpty(pattern) ?
+                    await SymbolFinder.FindSourceDeclarationsWithPatternAsync(project, pattern, SymbolFilter.TypeAndMember) :
+                    await SymbolFinder.FindSourceDeclarationsAsync(project, candidate => true, SymbolFilter.TypeAndMember);
 
                 foreach (var symbol in symbols)
                 {
