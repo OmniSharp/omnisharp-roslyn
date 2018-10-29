@@ -10,6 +10,7 @@ using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.FindUsages;
+using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 {
@@ -17,16 +18,22 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
     public class FindUsagesService : IRequestHandler<FindUsagesRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
-        public FindUsagesService(OmniSharpWorkspace workspace)
+        public FindUsagesService(OmniSharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems)
         {
             _workspace = workspace;
+            _projectSystems = projectSystems;
         }
 
         public async Task<QuickFixResponse> Handle(FindUsagesRequest request)
         {
+            // Waiting until all projects relevant to the document are fully loaded (for project systems that have this ability) 
+            // helps to produce more complete list of usages for a symbol.
+            await _projectSystems.WaitForAllProjectsToLoadForFileAsync(request.FileName);
             var document = _workspace.GetDocument(request.FileName);
+
             var response = new QuickFixResponse();
             if (document != null)
             {

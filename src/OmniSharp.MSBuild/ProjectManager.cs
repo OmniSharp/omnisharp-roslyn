@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -17,6 +18,7 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -39,12 +41,15 @@ namespace OmniSharp.MSBuild
         }
 
         private readonly ILogger _logger;
+        private readonly IOmniSharpEnvironment _environment;
+        private readonly MSBuildOptions _options;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly PackageDependencyChecker _packageDependencyChecker;
         private readonly ProjectFileInfoCollection _projectFiles;
         private readonly HashSet<string> _failedToLoadProjectFiles;
+        private readonly ConcurrentDictionary<string, int/*unused*/> _projectsRequestedOnDemand;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
@@ -57,15 +62,27 @@ namespace OmniSharp.MSBuild
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
-        public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace, ImmutableArray<IMSBuildEventSink> eventSinks)
+        public ProjectManager(IOmniSharpEnvironment environment,
+            ILoggerFactory loggerFactory, 
+            MSBuildOptions options, 
+            IEventEmitter eventEmitter, 
+            IFileSystemWatcher fileSystemWatcher, 
+            MetadataFileReferenceCache metadataFileReferenceCache, 
+            PackageDependencyChecker packageDependencyChecker, 
+            ProjectLoader projectLoader, 
+            OmniSharpWorkspace workspace, 
+            ImmutableArray<IMSBuildEventSink> eventSinks)
         {
+            _environment = environment;
             _logger = loggerFactory.CreateLogger<ProjectManager>();
+            _options = options ?? new MSBuildOptions();
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _packageDependencyChecker = packageDependencyChecker;
             _projectFiles = new ProjectFileInfoCollection();
             _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _projectsRequestedOnDemand = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
             _eventSinks = eventSinks;
@@ -75,6 +92,33 @@ namespace OmniSharp.MSBuild
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
 
             _onDirectoryFileChanged = OnDirectoryFileChanged;
+
+            if (_options.OnDemandProjectsLoad)
+            {
+                _workspace.DocumentRequested += OnWorkspaceDocumentRequested;
+            }
+        }
+
+        private void OnWorkspaceDocumentRequested(object sender, DocumentRequestedEventArgs args)
+        {
+            // Search and queue for loading C# projects that are likely to reference the requested file
+            string projectDir = Path.GetDirectoryName(args.DocumentPath);
+            while(projectDir != null && projectDir.StartsWith(_environment.TargetDirectory.TrimEnd(Path.DirectorySeparatorChar)))
+            {
+                List<string> csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
+                if (csProjFiles.Count > 0)
+                {
+                    foreach(string csProjFile in csProjFiles)
+                    {
+                        if (_projectsRequestedOnDemand.TryAdd(csProjFile, 0 /*unused*/))
+                        {
+                            QueueProjectUpdate(csProjFile, allowAutoRestore:true);
+                        }
+                    }
+                    return;
+                }
+                projectDir = Path.GetDirectoryName(projectDir);
+            }
         }
 
         protected override void DisposeCore(bool disposing)
@@ -93,7 +137,6 @@ namespace OmniSharp.MSBuild
 
         public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore)
         {
-            _logger.LogInformation($"Queue project update for '{projectFilePath}'");
             _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore));
         }
 

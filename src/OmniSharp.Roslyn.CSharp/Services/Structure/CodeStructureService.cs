@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
+using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Models.V2.CodeStructure;
@@ -20,18 +21,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEnumerable<ICodeElementPropertyProvider> _propertyProviders;
+        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
         public CodeStructureService(
             OmniSharpWorkspace workspace,
-            [ImportMany] IEnumerable<ICodeElementPropertyProvider> propertyProviders)
+            [ImportMany] IEnumerable<ICodeElementPropertyProvider> propertyProviders,
+            [ImportMany] IEnumerable<IProjectSystem> projectSystems)
         {
             _workspace = workspace;
             _propertyProviders = propertyProviders;
+            _projectSystems = projectSystems;
         }
 
         public async Task<CodeStructureResponse> Handle(CodeStructureRequest request)
         {
+            // Waiting until the document is fully formed in memory (for project systems that have this ability) 
+            // helps to reduce chances of returning invalid/incomplete document code structure while compilation is still in progress.
+            await _projectSystems.WaitForAllProjectsToLoadForFileAsync(request.FileName);
             var document = _workspace.GetDocument(request.FileName);
             if (document == null)
             {

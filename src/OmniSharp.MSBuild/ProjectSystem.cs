@@ -98,7 +98,14 @@ namespace OmniSharp.MSBuild
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
-            _manager = new ProjectManager(_loggerFactory, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _eventSinks);
+            _manager = new ProjectManager(_environment, _loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, 
+                _loader, _workspace, _eventSinks);
+
+            if (_options.OnDemandProjectsLoad)
+            {
+                _logger.LogInformation($"Skip loading projects listed in solution file or under target directory because {Key}:{nameof(MSBuildOptions.OnDemandProjectsLoad)} is true.");
+                return;
+            }
 
             var initialProjectPaths = GetInitialProjectPaths();
 
@@ -213,6 +220,18 @@ namespace OmniSharp.MSBuild
             }
 
             return new MSBuildProjectInfo(projectFileInfo);
+        }
+
+        public async Task WaitForProjectsToLoadForFileAsync(string filePath)
+        {
+            if (_options.OnDemandProjectsLoad)
+            {
+                // Request the document only to make sure that projects referencing it are queued for loading by the project system.
+                _workspace.GetDocument(filePath);
+                // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
+                // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
+                await _manager.WaitForQueueEmptyAsync();
+            }
         }
     }
 }

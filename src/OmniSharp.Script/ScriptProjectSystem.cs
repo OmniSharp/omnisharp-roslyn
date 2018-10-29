@@ -180,5 +180,11 @@ namespace OmniSharp.Script
             }
             return Task.FromResult<object>(new ScriptContextModelCollection(scriptContextModels));
         }
+
+        public Task WaitForProjectsToLoadForFileAsync(string filePath)
+        {
+            // At the moment this project system doesn't support on demand projects loading
+            return Task.CompletedTask;
+        }
     }
 }

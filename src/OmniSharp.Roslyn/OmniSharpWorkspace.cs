@@ -24,7 +24,7 @@ namespace OmniSharp
         public BufferManager BufferManager { get; private set; }
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
-
+        public event EventHandler<DocumentRequestedEventArgs> DocumentRequested;
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
 
         [ImportingConstructor]
@@ -209,12 +209,14 @@ namespace OmniSharp
 
         public DocumentId GetDocumentId(string filePath)
         {
+            OnDocumentRequested(filePath);
             var documentIds = CurrentSolution.GetDocumentIdsWithFilePath(filePath);
             return documentIds.FirstOrDefault();
         }
 
         public IEnumerable<Document> GetDocuments(string filePath)
         {
+            OnDocumentRequested(filePath);
             return CurrentSolution
                 .GetDocumentIdsWithFilePath(filePath)
                 .Select(id => CurrentSolution.GetDocument(id));
@@ -362,6 +364,30 @@ namespace OmniSharp
 
                 return textAndVersion;
             }
+        }
+
+        private void OnDocumentRequested(string filePath)
+        {
+            EventHandler<DocumentRequestedEventArgs> handler = DocumentRequested;
+            if (handler != null)
+            {
+                handler(this, new DocumentRequestedEventArgs(filePath));
+            }
+        }  
+    }
+
+    public class DocumentRequestedEventArgs : EventArgs
+    {
+        public string DocumentPath { get; }
+
+        public DocumentRequestedEventArgs(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentNullException(nameof(filePath));
+            }
+
+            DocumentPath = filePath;
         }
     }
 }

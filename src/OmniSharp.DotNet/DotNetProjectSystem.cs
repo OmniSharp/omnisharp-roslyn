@@ -152,6 +152,12 @@ namespace OmniSharp.DotNet
             }
         }
 
+        public Task WaitForProjectsToLoadForFileAsync(string filePath)
+        {
+            // At the moment this project system doesn't support on demand projects loading
+            return Task.CompletedTask;
+        }
+
         private void UpdateProject(string projectDirectory)
         {
             _logger.LogInformation($"Update project {projectDirectory}");

@@ -8,6 +8,12 @@ namespace OmniSharp.Options
         public string Platform { get; set; }
         public bool EnablePackageAutoRestore { get; set; }
 
+        /// <summary> 
+        /// If true, MSBuild project system will only be loading projects for files that were opened in the editor
+        /// as well as referenced projects, recursively.
+        /// </summary>
+        public bool OnDemandProjectsLoad { get; set; }
+
         /// <summary>
         /// When set to true, the MSBuild project system will attempt to resolve the path to the MSBuild
         /// SDKs for a project by running 'dotnet --info' and retrieving the path. This is only needed
