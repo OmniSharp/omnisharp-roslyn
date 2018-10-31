@@ -58,6 +58,27 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task CanFindInterfaceMethodOverride(string filename)
+        {
+            const string code = @"
+                public interface SomeInterface { void Some$$Method(); }
+                public class SomeClass : SomeInterface {
+                    public virtual void SomeMethod() {}
+                }
+                public class SomeChildClass : SomeClass {
+                    public override void SomeMethod() {}
+                }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+
+            Assert.Equal(2, implementations.Count());
+            Assert.True(implementations.Any(x => x.ContainingType.Name == "SomeClass" && x.Name == "SomeMethod"), "Couldn't find SomeClass.SomeMethod in the discovered implementations");
+            Assert.True(implementations.Any(x => x.ContainingType.Name == "SomeChildClass" && x.Name == "SomeMethod"), "Couldn't find SomeChildClass.SomeMethod in the discovered implementations");
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task CanFindOverride(string filename)
         {
             const string code = @"
