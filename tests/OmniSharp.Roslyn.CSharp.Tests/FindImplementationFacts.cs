@@ -152,7 +152,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal(SymbolKind.Method, implementation.Kind);
         }
 
-
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
