@@ -4,6 +4,7 @@ All changes to the project will be documented in this file.
 ## [1.32.7] - not yet released
 * It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317)) 
 * OmniSharp no longer searches for `config.json` in its source directory to load configuration (PR: [#1319](https://github.com/OmniSharp/omnisharp-roslyn/pull/1319))
+* Fixed a regression introduced in 1.32.4, that prevented find symbol endpoint from working for CSX projects (PR: [#1321](https://github.com/OmniSharp/omnisharp-roslyn/pull/1321))
 
 ## [1.32.6] - 2018-10-02
 * Fixed a bug where virtual C# documents would not get promoted to be a part of a project. (PR: [#1306](https://github.com/OmniSharp/omnisharp-roslyn/pull/1306)).
