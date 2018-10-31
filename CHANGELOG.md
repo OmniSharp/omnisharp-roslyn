@@ -10,6 +10,7 @@ All changes to the project will be documented in this file.
 * Fixed a bug where virtual C# documents would not get promoted to be a part of a project. (PR: [#1306](https://github.com/OmniSharp/omnisharp-roslyn/pull/1306)).
 * Added MinFilterLength to configure the number of characters a user must type in for FindSymbolRequest command to return any results (default is 0 to preserve existing behavior). Additionally added MaxItemsToReturn for configuring maximum number of items returned by the FindSymbolsRequestAPI.(PR: [#1284](https://github.com/OmniSharp/omnisharp-roslyn/pull/1284)).
 * Fixed issue where `/codestructure` endpoint did not return enum members. (PR: [#1285](https://github.com/OmniSharp/omnisharp-roslyn/pull/1285))
+* Fixed issue where `/findimplemenations` endpoint did not return overridden members in derived types (PR: [#1302](https://github.com/OmniSharp/omnisharp-roslyn/pull/1302))
 
 ## [1.32.3] - 2018-08-28
 * Added support for files without a project. (PR: [#1252](https://github.com/OmniSharp/omnisharp-roslyn/pull/1252))
