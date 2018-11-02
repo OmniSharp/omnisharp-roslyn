@@ -98,7 +98,7 @@ namespace OmniSharp.MSBuild
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
-            _manager = new ProjectManager(_environment, _loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, 
+            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, 
                 _loader, _workspace, _eventSinks);
 
             if (_options.OnDemandProjectsLoad)

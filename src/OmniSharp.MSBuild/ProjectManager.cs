@@ -41,7 +41,6 @@ namespace OmniSharp.MSBuild
         }
 
         private readonly ILogger _logger;
-        private readonly IOmniSharpEnvironment _environment;
         private readonly MSBuildOptions _options;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
@@ -62,8 +61,7 @@ namespace OmniSharp.MSBuild
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
-        public ProjectManager(IOmniSharpEnvironment environment,
-            ILoggerFactory loggerFactory, 
+        public ProjectManager(ILoggerFactory loggerFactory, 
             MSBuildOptions options, 
             IEventEmitter eventEmitter, 
             IFileSystemWatcher fileSystemWatcher, 
@@ -73,7 +71,6 @@ namespace OmniSharp.MSBuild
             OmniSharpWorkspace workspace, 
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
-            _environment = environment;
             _logger = loggerFactory.CreateLogger<ProjectManager>();
             _options = options ?? new MSBuildOptions();
             _eventEmitter = eventEmitter;
@@ -101,9 +98,12 @@ namespace OmniSharp.MSBuild
 
         private void OnWorkspaceDocumentRequested(object sender, DocumentRequestedEventArgs args)
         {
-            // Search and queue for loading C# projects that are likely to reference the requested file
+            // Search and queue for loading C# projects that are likely to reference the requested file.
+            // C# source files are located pretty much always in the same folder with project file that is referencing them or in a subfolder.
+            // Do not limit search by OmniSharpEnvironment.TargetDirectory to allow for loading on demand projects that are outside of it,
+            // i.e. in VSCode case potentially outside of the folder opened in the IDE.
             string projectDir = Path.GetDirectoryName(args.DocumentPath);
-            while(projectDir != null && projectDir.StartsWith(_environment.TargetDirectory.TrimEnd(Path.DirectorySeparatorChar)))
+            while(projectDir != null)
             {
                 List<string> csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
                 if (csProjFiles.Count > 0)
@@ -137,6 +137,7 @@ namespace OmniSharp.MSBuild
 
         public void QueueProjectUpdate(string projectFilePath, bool allowAutoRestore)
         {
+            _logger.LogInformation($"Queue project update for '{projectFilePath}'");
             _queue.Post(new ProjectToUpdate(projectFilePath, allowAutoRestore));
         }
 
