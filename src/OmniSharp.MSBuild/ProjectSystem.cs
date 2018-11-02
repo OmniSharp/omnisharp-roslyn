@@ -137,17 +137,19 @@ namespace OmniSharp.MSBuild
             return _fileSystemHelper.GetFiles("**/*.csproj");
         }
 
-        // enumerating project file paths in MSBuild.SolutionSdk project.
+
+        /// <summary>enumerating project file paths in MSBuild.SolutionSdk project.</summary>
         private IEnumerable<string> GetProjectPathsFromSolutionBySolutionSdk(string solutionFilePath)
         {
             IEnumerable<string> CollectFunc(string slnproj)
             {
-                // to avoid enumrating unsupported project.
-                foreach (var path in SolutionSdkFileUtil.GetEvaluatedProjectFilePaths(slnproj, _propertyOverrides, new string[] { ".csproj", ".fsproj", ".vbproj" }))
+                // to avoid enumerating unsupported project.
+                foreach (var path in SolutionSdkFileUtil.GetEvaluatedProjectFilePaths(slnproj, _propertyOverrides, new string[] { ".csproj" }))
                 {
                     yield return Path.IsPathRooted(path) ? path : Path.Combine(Path.GetDirectoryName(slnproj), path);
                 }
-            };
+            }
+
             using (_sdksPathResolver.SetSdksPathEnvironmentVariable(solutionFilePath))
             {
                 // to avoid delay iterator evaluation.
@@ -157,7 +159,7 @@ namespace OmniSharp.MSBuild
 
         private IEnumerable<string> GetProjectPathsFromSolutionDefault(string solutionFilePath)
         {
-            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
+            _logger.LogInformation($"Detecting projects in '{solutionFilePath}' .");
 
             var solutionFile = SolutionFile.ParseFile(solutionFilePath);
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -196,7 +198,7 @@ namespace OmniSharp.MSBuild
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
-            if(solutionFilePath.EndsWith(".slnproj"))
+            if (solutionFilePath.EndsWith(".slnproj", StringComparison.OrdinalIgnoreCase))
             {
                 return GetProjectPathsFromSolutionBySolutionSdk(solutionFilePath);
             }
