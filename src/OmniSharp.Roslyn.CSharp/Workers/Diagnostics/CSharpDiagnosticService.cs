@@ -217,6 +217,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 EmitDiagnostics(results);
             }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Analysis of project {project.Id} ({project.Name}) failed, underlaying error: {ex}");
+            }
             finally
             {
                 workReadySource.Cancel();
