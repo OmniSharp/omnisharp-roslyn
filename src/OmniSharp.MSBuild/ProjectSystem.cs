@@ -158,8 +158,6 @@ namespace OmniSharp.MSBuild
 
         private IEnumerable<string> GetProjectPathsFromSolutionDefault(string solutionFilePath)
         {
-            _logger.LogInformation($"Detecting projects in '{solutionFilePath}' .");
-
             var solutionFile = SolutionFile.ParseFile(solutionFilePath);
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var result = new List<string>();
@@ -195,7 +193,7 @@ namespace OmniSharp.MSBuild
 
         private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
         {
-            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
+            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'. ");
 
             if (solutionFilePath.EndsWith(".slnproj", StringComparison.OrdinalIgnoreCase))
             {
