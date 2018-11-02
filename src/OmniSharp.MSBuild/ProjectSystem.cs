@@ -137,7 +137,6 @@ namespace OmniSharp.MSBuild
             return _fileSystemHelper.GetFiles("**/*.csproj");
         }
 
-
         /// <summary>enumerating project file paths in MSBuild.SolutionSdk project.</summary>
         private IEnumerable<string> GetProjectPathsFromSolutionBySolutionSdk(string solutionFilePath)
         {

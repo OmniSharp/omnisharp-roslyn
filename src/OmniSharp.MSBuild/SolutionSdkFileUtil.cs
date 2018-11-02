@@ -1,8 +1,8 @@
-using MSB = Microsoft.Build;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using MSB = Microsoft.Build;
 
 namespace OmniSharp.MSBuild
 {
