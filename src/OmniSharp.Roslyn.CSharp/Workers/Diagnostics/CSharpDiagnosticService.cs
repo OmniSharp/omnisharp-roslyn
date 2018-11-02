@@ -98,16 +98,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var currentWork = _workQueue
                     .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) < DateTime.UtcNow)
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
-                    .Take(2) // Limit mount of work executed by once. This is needed on large solution... 
-                    .Select(x => (project: _workspace.CurrentSolution.GetProject(x.Value.projectId), x.Value.workReadySource))
+                    .Take(2) // Limit mount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
 
-                foreach (var workKey in currentWork.Select(x => x.project.Id))
+                foreach (var workKey in currentWork.Select(x => x.Key))
                 {
                     _workQueue.TryRemove(workKey, out _);
                 }
 
-                return currentWork;
+                return currentWork
+                    .Select(x => (project: _workspace?.CurrentSolution?.GetProject(x.Value.projectId), x.Value.workReadySource))
+                    .Where(x => x.project != null) // This may occur if project removed middle of analysis.
+                    .ToImmutableArray();
             }
         }
 
