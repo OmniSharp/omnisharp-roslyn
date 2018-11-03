@@ -174,7 +174,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             const string code = @"
                 public partial class SomeClass { partial void Some$$Method(); }
-                public partial class SomeClass { partial void SomeMethod() { /* this is implementation of the partial method */ }";
+                public partial class SomeClass { partial void SomeMethod() { /* this is implementation of the partial method */ } }";
 
             var implementations = await FindImplementationsAsync(code, filename);
 
@@ -182,6 +182,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var implementation = implementations.First();
             Assert.Equal("SomeMethod", implementation.Name);
+
+            // Assert that the actual implementation part is returned.
+            Assert.True(implementation is IMethodSymbol method && method.PartialDefinitionPart != null && method.PartialImplementationPart == null);
         }
 
         private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)

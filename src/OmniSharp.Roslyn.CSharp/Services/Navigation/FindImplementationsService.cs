@@ -71,8 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                     // for partial methods, pick the one with body
                     if (symbol is IMethodSymbol method && method.PartialImplementationPart != null)
                     {
-                        var implementationPart = method.Locations.First();
-                        quickFixes.Add(implementationPart, _workspace);
+                        quickFixes.Add(method.PartialImplementationPart, _workspace);
                     }
                     else
                     {
