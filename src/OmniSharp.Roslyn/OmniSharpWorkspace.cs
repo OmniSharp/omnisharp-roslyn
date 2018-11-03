@@ -368,11 +368,7 @@ namespace OmniSharp
 
         private void OnDocumentRequested(string filePath)
         {
-            EventHandler<DocumentRequestedEventArgs> handler = DocumentRequested;
-            if (handler != null)
-            {
-                handler(this, new DocumentRequestedEventArgs(filePath));
-            }
+            DocumentRequested?.Invoke(this, new DocumentRequestedEventArgs(filePath));
         }  
     }
 
