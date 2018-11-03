@@ -69,13 +69,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 if (!symbol.IsAbstract)
                 {
                     // for partial methods, pick the one with body
-                    if (symbol is IMethodSymbol method)
+                    if (symbol is IMethodSymbol method && method.PartialImplementationPart != null)
                     {
-                        symbol = method.PartialImplementationPart ?? symbol;
+                        quickFixes.Add(method.PartialImplementationPart, _workspace);
                     }
-
-                    var location = symbol.Locations.First();
-                    quickFixes.Add(location, _workspace);
+                    else
+                    {
+                        quickFixes.Add(symbol, _workspace);
+                    }
                 }
 
                 response = new QuickFixResponse(quickFixes.OrderBy(q => q.FileName)
