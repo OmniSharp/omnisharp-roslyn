@@ -116,13 +116,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindTypeDeclaration(string filename)
         {
             const string code = @"
-                public class MyClass 
-                { 
+                public class MyClass
+                {
                     public MyClass() { var other = new Other$$Class(); }
                 }
 
-                public class OtherClass 
-                { 
+                public class OtherClass
+                {
                 }";
 
             var implementations = await FindImplementationsAsync(code, filename);
@@ -137,8 +137,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task CanFindMethodDeclaration(string filename)
         {
             const string code = @"
-                public class MyClass 
-                { 
+                public class MyClass
+                {
                     public MyClass() { Fo$$o(); }
 
                     public void Foo() {}
@@ -150,6 +150,41 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Equal("Foo", implementation.Name);
             Assert.Equal("MyClass", implementation.ContainingType.Name);
             Assert.Equal(SymbolKind.Method, implementation.Kind);
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindPartialClass(string filename)
+        {
+            const string code = @"
+                public partial class Some$$Class { void SomeMethod() {} }
+                public partial class SomeClass { void AnotherMethod() {} }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+
+            Assert.Equal(2, implementations.Count());
+            Assert.True(implementations.All(x => x.Name == "SomeClass"));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task CanFindPartialMethod(string filename)
+        {
+            const string code = @"
+                public partial class SomeClass { partial void Some$$Method(); }
+                public partial class SomeClass { partial void SomeMethod() { /* this is implementation of the partial method */ } }";
+
+            var implementations = await FindImplementationsAsync(code, filename);
+
+            Assert.Single(implementations);
+
+            var implementation = implementations.First();
+            Assert.Equal("SomeMethod", implementation.Name);
+
+            // Assert that the actual implementation part is returned.
+            Assert.True(implementation is IMethodSymbol method && method.PartialDefinitionPart != null && method.PartialImplementationPart == null);
         }
 
         private async Task<IEnumerable<ISymbol>> FindImplementationsAsync(string code, string filename)
