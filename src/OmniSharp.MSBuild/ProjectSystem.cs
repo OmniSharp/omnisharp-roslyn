@@ -209,9 +209,14 @@ namespace OmniSharp.MSBuild
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
             // currently, Directory.GetFiles collects files that the file extension has 'sln' prefix.
-            // this causes collecting unexpected files like 'x.slnx', or 'x.slnproj'.
+            // this causes collecting unexpected files like 'x.slnx'.
             // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
-            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln")
+                .Where(x =>
+                {
+                    var ext = Path.GetExtension(x);
+                    return ext.Equals(".sln", StringComparison.OrdinalIgnoreCase) || ext.Equals(".slnproj", StringComparison.OrdinalIgnoreCase);
+                }).ToArray();
             var result = SolutionSelector.Pick(solutionsFilePaths, rootPath);
 
             if (result.Message != null)
