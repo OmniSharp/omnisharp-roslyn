@@ -194,7 +194,7 @@ namespace OmniSharp.MSBuild
 
         private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
         {
-            _logger.LogInformation($"Detecting projects in '{solutionFilePath}'. ");
+            _logger.LogInformation($"Detecting projects in '{solutionFilePath}' .");
 
             if (solutionFilePath.EndsWith(".slnproj", StringComparison.OrdinalIgnoreCase))
             {
