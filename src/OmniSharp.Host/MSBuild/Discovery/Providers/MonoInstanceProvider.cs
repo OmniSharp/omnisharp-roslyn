@@ -76,7 +76,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             }
 
             var toolsPath = FindMSBuildToolsPath(path);
-            if (toolsPath != null)
+            if (toolsPath == null)
             {
                 Logger.LogDebug($"Mono MSBuild could not be used because an MSBuild tools path could not be found.");
                 return NoInstances;
