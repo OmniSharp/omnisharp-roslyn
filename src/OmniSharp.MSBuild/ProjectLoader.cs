@@ -135,13 +135,19 @@ namespace OmniSharp.MSBuild
             }
         }
 
-        private static string GetLegalToolsetVersion(string toolsVersion, ICollection<MSB.Evaluation.Toolset> toolsets)
+        private string GetLegalToolsetVersion(string toolsVersion, ICollection<MSB.Evaluation.Toolset> toolsets)
         {
-            // It's entirely possible the the toolset specified does not exist. In that case, we'll try to use
-            // the highest version available.
-            var version = new Version(toolsVersion);
+            // Does the expected tools version exist? If so, use it.
+            foreach (var toolset in toolsets)
+            {
+                if (toolset.ToolsVersion == toolsVersion)
+                {
+                    return toolsVersion;
+                }
+            }
 
-            bool exists = false;
+            // If not, try to find the highest version available and use that instead.
+
             Version highestVersion = null;
 
             var legalToolsets = new SortedList<Version, MSB.Evaluation.Toolset>(toolsets.Count);
@@ -159,25 +165,20 @@ namespace OmniSharp.MSBuild
                     {
                         highestVersion = toolsetVersion;
                     }
-
-                    if (toolsetVersion == version)
-                    {
-                        exists = true;
-                    }
                 }
             }
 
-            if (highestVersion == null)
+            if (legalToolsets.Count == 0 || highestVersion == null)
             {
-                throw new InvalidOperationException("No legal MSBuild toolsets available.");
+                _logger.LogError($"No legal MSBuild tools available, defaulting to {toolsVersion}.");
+                return toolsVersion;
             }
 
-            if (!exists)
-            {
-                toolsVersion = legalToolsets[highestVersion].ToolsPath;
-            }
+            var result = legalToolsets[highestVersion].ToolsVersion;
 
-            return toolsVersion;
+            _logger.LogInformation($"Using MSBuild tools version: {result}");
+
+            return result;
         }
     }
 }
