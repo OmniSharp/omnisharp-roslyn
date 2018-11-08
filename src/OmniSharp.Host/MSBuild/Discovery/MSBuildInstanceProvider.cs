@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.MSBuild.Discovery
@@ -35,14 +36,28 @@ namespace OmniSharp.MSBuild.Discovery
 
             bool TryGetToolsPath(string versionPath, string binPath, out string toolsPath)
             {
-                toolsPath = Path.Combine(basePath, "MSBuild", versionPath, binPath);
-                if (Directory.Exists(toolsPath))
+                toolsPath = null;
+
+                var baseDir = new DirectoryInfo(basePath);
+                if (!baseDir.Exists)
                 {
-                    return true;
+                    return false;
                 }
 
-                toolsPath = null;
-                return false;
+                var versionDir = baseDir.EnumerateDirectories().FirstOrDefault(di => di.Name == versionPath);
+                if (versionDir == null)
+                {
+                    return false;
+                }
+
+                var binDir = versionDir.EnumerateDirectories().FirstOrDefault(di => di.Name == binPath);
+                if (binDir == null)
+                {
+                    return false;
+                }
+
+                toolsPath = binDir.FullName;
+                return true;
             }
         }
 
