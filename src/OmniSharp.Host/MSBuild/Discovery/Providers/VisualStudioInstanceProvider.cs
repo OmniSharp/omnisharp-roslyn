@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
@@ -48,25 +47,36 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                     var instance = (ISetupInstance2)instances[0];
                     var state = instance.GetState();
 
-                    if (!Version.TryParse(instance.GetInstallationVersion(), out var version))
+                    var installVersion = instance.GetInstallationVersion();
+                    var installPath = instance.GetInstallationPath();
+
+                    if (!Version.TryParse(installVersion, out var version))
                     {
+                        Logger.LogDebug($"Found Visual Studio installation with strange version number: {installVersion} ({installPath})");
                         continue;
                     }
 
-                    if (state == InstanceState.Complete &&
-                       instance.GetPackages().Any(package => package.GetId() == "Microsoft.VisualStudio.Component.Roslyn.Compiler"))
+                    if (state != InstanceState.Complete)
                     {
-                        // Note: The code below will likely fail if MSBuild's version increments.
-                        var toolsPath = Path.Combine(instance.GetInstallationPath(), "MSBuild", "15.0", "Bin");
-                        if (Directory.Exists(toolsPath))
-                        {
-                            builder.Add(
-                                new MSBuildInstance(
-                                    instance.GetDisplayName(),
-                                    toolsPath,
-                                    version,
-                                    DiscoveryType.VisualStudioSetup));
-                        }
+                        Logger.LogDebug($"Found incomplete Visual Studio installation ({installPath})");
+                        continue;
+                    }
+
+                    if (!instance.GetPackages().Any(package => package.GetId() == "Microsoft.VisualStudio.Component.Roslyn.Compiler"))
+                    {
+                        Logger.LogDebug($"Found Visual Studio installation with no C# package installed ({installPath})");
+                        continue;
+                    }
+
+                    var toolsPath = FindMSBuildToolsPath(installPath);
+                    if (toolsPath != null)
+                    {
+                        builder.Add(
+                            new MSBuildInstance(
+                                instance.GetDisplayName(),
+                                toolsPath,
+                                version,
+                                DiscoveryType.VisualStudioSetup));
                     }
                 }
                 while (fetched > 0);

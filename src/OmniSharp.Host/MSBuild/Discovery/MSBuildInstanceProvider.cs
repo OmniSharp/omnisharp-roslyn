@@ -17,6 +17,35 @@ namespace OmniSharp.MSBuild.Discovery
 
         public abstract ImmutableArray<MSBuildInstance> GetInstances();
 
+        /// <summary>
+        /// Handles locating the MSBuild tools path given a base path (typically a Visual Studio install path).
+        /// </summary>
+        protected string FindMSBuildToolsPath(string basePath)
+        {
+            if (TryGetToolsPath("Current", "Bin", out var result) ||
+                TryGetToolsPath("Current", "bin", out result) ||
+                TryGetToolsPath("15.0", "Bin", out result) ||
+                TryGetToolsPath("15.0", "bin", out result))
+            {
+                return result;
+            }
+
+            Logger.LogDebug($"Could not locate MSBuild tools path within {basePath}");
+            return null;
+
+            bool TryGetToolsPath(string versionPath, string binPath, out string toolsPath)
+            {
+                toolsPath = Path.Combine(basePath, "MSBuild", versionPath, binPath);
+                if (Directory.Exists(toolsPath))
+                {
+                    return true;
+                }
+
+                toolsPath = null;
+                return false;
+            }
+        }
+
         protected static string FindLocalMSBuildDirectory()
         {
             // If OmniSharp is running normally, MSBuild is located in an 'msbuild' folder beneath OmniSharp.exe.
