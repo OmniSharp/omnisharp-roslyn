@@ -22,6 +22,12 @@ namespace OmniSharp.Options
         public string CscToolPath { get; set; }
         public string CscToolExe { get; set; }
 
+        /// <summary>
+        /// When set to true, the MSBuild project system will generate binary logs for each project that
+        /// it loads.
+        /// </summary>
+        public bool GenerateBinaryLogs { get; set; }
+
         // TODO: Allow loose properties
         // public IConfiguration Properties { get; set; }
     }

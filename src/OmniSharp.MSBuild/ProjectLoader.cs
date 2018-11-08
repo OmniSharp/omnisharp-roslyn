@@ -77,9 +77,27 @@ namespace OmniSharp.MSBuild
 
                 var projectInstance = evaluatedProject.CreateProjectInstance();
                 var msbuildLogger = new MSBuildLogger(_logger);
+
+                var loggers = new List<MSB.Framework.ILogger>()
+                {
+                    msbuildLogger
+                };
+
+                if (_options.GenerateBinaryLogs)
+                {
+                    var binlogPath = Path.ChangeExtension(projectInstance.FullPath, ".binlog");
+                    var binaryLogger = new MSB.Logging.BinaryLogger()
+                    {
+                        CollectProjectImports = MSB.Logging.BinaryLogger.ProjectImportsCollectionMode.Embed,
+                        Parameters = binlogPath
+                    };
+
+                    loggers.Add(binaryLogger);
+                }
+
                 var buildResult = projectInstance.Build(
                     targets: new string[] { TargetNames.Compile, TargetNames.CoreCompile },
-                    loggers: new[] { msbuildLogger });
+                    loggers);
 
                 var diagnostics = msbuildLogger.GetDiagnostics();
 
