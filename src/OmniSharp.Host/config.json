@@ -37,7 +37,7 @@
   },
 
   "MSBuildPath": {
-    "Path": "C://tools//MSBuild//15.0//Bin"
+    "Path": "C://Tools//dotnet//"
   },
 
   "TextEditorOptions": {
