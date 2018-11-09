@@ -30,11 +30,11 @@
     ".* should not separate words with an underscore.*"
   ],
 
-  "TestCommands": {
-    "All": "dotnet build {{ProjectPath}}",
-    "Fixture": "dotnet build {{ProjectPath}} --filter={{TypeName}}",
-    "Single": "dotnet build {{ProjectPath}} --filter={{TypeName}}"
-  },
+    "TestCommands": {
+        "All": "nunit3-console.exe --noresult --noh {{AssemblyPath}}",
+        "Fixture": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}",
+        "Single": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}"
+    },
 
   "MSBuildPath": {
     "Path": "C://Tools//dotnet//"
