@@ -31,9 +31,9 @@
   ],
 
   "TestCommands": {
-    "All": "nunit3-console.exe --noresult --noh {{AssemblyPath}}",
-    "Fixture": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}",
-    "Single": "nunit3-console.exe --noresult --noh {{AssemblyPath}} --test={{TypeName}}"
+    "All": "dotnet build {{ProjectPath}}",
+    "Fixture": "dotnet build {{ProjectPath}} --filter={{TypeName}}",
+    "Single": "dotnet build {{ProjectPath}} --filter={{TypeName}}"
   },
 
   "MSBuildPath": {
