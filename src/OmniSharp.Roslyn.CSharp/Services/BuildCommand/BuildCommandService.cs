@@ -66,7 +66,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.BuildCommand
             quickFix.Add(new QuickFix()
             {
                 //Text = this.Executable.ApplyPathReplacementsForClient() + " " + this.Arguments + " /target:" + request.Type.ToString()
-                Text = this.Executable.ApplyPathReplacementsForClient() + " " + this.Arguments
+                Text = this.Executable.ApplyPathReplacementsForClient() + " " + this.Arguments + " " + ProjectFile
             });
             var response = new QuickFixResponse(quickFix);
             return response;
