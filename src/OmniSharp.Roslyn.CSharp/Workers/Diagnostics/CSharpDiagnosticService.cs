@@ -50,7 +50,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
             _providers = providers.ToImmutableArray();
 
-            workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             _forwarder = forwarder;
             _workspace = workspace;
@@ -61,6 +60,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .GetType("Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions")
                 .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution)})
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
+
+            _workspace.WorkspaceChanged += OnWorkspaceChanged;
 
             Task.Run(async () =>
             {

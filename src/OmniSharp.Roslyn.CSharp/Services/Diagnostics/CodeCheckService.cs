@@ -59,22 +59,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 locations.Where(x => x.FileName != null));
         }
 
-        private static DiagnosticLocation ToDiagnosticLocation(Diagnostic diagnostic)
-        {
-            var span = diagnostic.Location.GetMappedLineSpan();
-            return new DiagnosticLocation
-            {
-                FileName = span.Path,
-                Line = span.StartLinePosition.Line,
-                Column = span.StartLinePosition.Character,
-                EndLine = span.EndLinePosition.Line,
-                EndColumn = span.EndLinePosition.Character,
-                Text = diagnostic.GetMessage(),
-                LogLevel = diagnostic.Severity.ToString(),
-                Id = diagnostic.Id
-            };
-        }
-
         private static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(IEnumerable<Document> documents)
         {
             if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
@@ -85,7 +69,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var semanticModel = await document.GetSemanticModelAsync();
                 IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
 
-                foreach (var quickFix in diagnostics.Select(d => ToDiagnosticLocation(d)))
+                foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
                 {
                     var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
                     if (existingQuickFix == null)
