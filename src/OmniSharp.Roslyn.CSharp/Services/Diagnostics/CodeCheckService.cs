@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
@@ -28,6 +30,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
+            // if(true)
+            // {
+            //     var documents = request.FileName != null
+            //         ? _workspace.GetDocuments(request.FileName)
+            //         : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
+
+            //     var quickFixes = await FindDiagnosticLocationsAsync(documents);
+            //     return new QuickFixResponse(quickFixes);
+            // }
+
             var projectsForAnalysis = !string.IsNullOrEmpty(request.FileName)
                 ? new[] { _workspace.GetDocument(request.FileName)?.Project }
                 : _workspace.CurrentSolution.Projects;
@@ -45,6 +57,50 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             return new QuickFixResponse(
                 locations.Where(x => x.FileName != null));
+        }
+
+        private static DiagnosticLocation ToDiagnosticLocation(Diagnostic diagnostic)
+        {
+            var span = diagnostic.Location.GetMappedLineSpan();
+            return new DiagnosticLocation
+            {
+                FileName = span.Path,
+                Line = span.StartLinePosition.Line,
+                Column = span.StartLinePosition.Character,
+                EndLine = span.EndLinePosition.Line,
+                EndColumn = span.EndLinePosition.Character,
+                Text = diagnostic.GetMessage(),
+                LogLevel = diagnostic.Severity.ToString(),
+                Id = diagnostic.Id
+            };
+        }
+
+        private static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(IEnumerable<Document> documents)
+        {
+            if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
+
+            var items = new List<DiagnosticLocation>();
+            foreach (var document in documents)
+            {
+                var semanticModel = await document.GetSemanticModelAsync();
+                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
+
+                foreach (var quickFix in diagnostics.Select(d => ToDiagnosticLocation(d)))
+                {
+                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
+                    if (existingQuickFix == null)
+                    {
+                        quickFix.Projects.Add(document.Project.Name);
+                        items.Add(quickFix);
+                    }
+                    else
+                    {
+                        existingQuickFix.Projects.Add(document.Project.Name);
+                    }
+                }
+            }
+
+            return items;
         }
     }
 }
