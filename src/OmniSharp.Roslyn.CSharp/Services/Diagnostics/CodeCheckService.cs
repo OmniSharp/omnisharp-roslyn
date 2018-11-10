@@ -39,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     ? _workspace.GetDocuments(request.FileName)
                     : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
-                var quickFixes = await FindDiagnosticLocationsAsync(documents);
+                var quickFixes = await documents.FindDiagnosticLocationsAsync();
                 return new QuickFixResponse(quickFixes);
             }
 
@@ -60,34 +60,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             return new QuickFixResponse(
                 locations.Where(x => x.FileName != null));
-        }
-
-        private static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(IEnumerable<Document> documents)
-        {
-            if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
-
-            var items = new List<DiagnosticLocation>();
-            foreach (var document in documents)
-            {
-                var semanticModel = await document.GetSemanticModelAsync();
-                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
-
-                foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
-                {
-                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
-                    if (existingQuickFix == null)
-                    {
-                        quickFix.Projects.Add(document.Project.Name);
-                        items.Add(quickFix);
-                    }
-                    else
-                    {
-                        existingQuickFix.Projects.Add(document.Project.Name);
-                    }
-                }
-            }
-
-            return items;
         }
     }
 }

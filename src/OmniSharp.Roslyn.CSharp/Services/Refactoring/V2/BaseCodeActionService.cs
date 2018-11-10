@@ -12,8 +12,10 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
+using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -27,6 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly ILogger Logger;
         private readonly CSharpDiagnosticService analyzers;
         private readonly CachingCodeFixProviderForProjects codeFixesForProject;
+        private readonly OmniSharpOptions options;
         private readonly MethodInfo _getNestedCodeActions;
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
@@ -37,14 +40,20 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             { "CS8019", "RemoveUnnecessaryImportsFixable" }
         };
 
-        protected BaseCodeActionService(OmniSharpWorkspace workspace, IEnumerable<ICodeActionProvider> providers, ILogger logger, CSharpDiagnosticService analyzers, CachingCodeFixProviderForProjects codeFixesForProject)
+        protected BaseCodeActionService(
+            OmniSharpWorkspace workspace,
+            IEnumerable<ICodeActionProvider> providers,
+            ILogger logger,
+            CSharpDiagnosticService analyzers,
+            CachingCodeFixProviderForProjects codeFixesForProject,
+            OmniSharpOptions options)
         {
             this.Workspace = workspace;
             this.Providers = providers;
             this.Logger = logger;
             this.analyzers = analyzers;
             this.codeFixesForProject = codeFixesForProject;
-
+            this.options = options;
             OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
@@ -104,10 +113,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var analyzers = await this.analyzers.GetCurrentDiagnosticResult(ImmutableArray.Create(document.Project.Id));
+            var diagnostics = this.options.RoslynExtensionsOptions.EnableExpiremantalCodeAnalysis
+                ? await GetDiagnosticsWithAnalyzers(document)
+                : (await document.GetSemanticModelAsync()).GetDiagnostics();
 
-            var groupedBySpan =
-                analyzers.Select(x => x.diagnostic)
+            var groupedBySpan = diagnostics
                     .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
                     .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 
@@ -118,6 +128,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                 await AppendFixesAsync(document, diagnosticSpan, diagnosticsWithSameSpan, codeActions);
             }
+        }
+
+        private async Task<IEnumerable<Diagnostic>> GetDiagnosticsWithAnalyzers(Document document)
+        {
+            return (await this.analyzers.GetCurrentDiagnosticResult(ImmutableArray.Create(document.Project.Id))).Select(x => x.diagnostic);
         }
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)
