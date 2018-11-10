@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Options;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
@@ -45,7 +46,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
             DiagnosticEventForwarder forwarder,
-            RulesetsForProjects rulesetsForProjects)
+            RulesetsForProjects rulesetsForProjects,
+            OmniSharpOptions options)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
             _providers = providers.ToImmutableArray();
@@ -58,21 +60,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _workspaceAnalyzerOptionsConstructor = Assembly
                 .Load("Microsoft.CodeAnalysis.Features")
                 .GetType("Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions")
-                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution)})
+                .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution) })
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
-            _workspace.WorkspaceChanged += OnWorkspaceChanged;
-
-            Task.Run(async () =>
+            if (options.RoslynExtensionsOptions.EnableExpiremantalCodeAnalysis)
             {
-                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
+                _workspace.WorkspaceChanged += OnWorkspaceChanged;
 
-                QueueForAnalysis(workspace.CurrentSolution.Projects.Select(x => x.Id).ToImmutableArray());
-                _initializationQueueDoneSource.Cancel();
-                _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
-            });
+                Task.Run(async () =>
+                {
+                    while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
 
-            Task.Factory.StartNew(() => Worker(CancellationToken.None), TaskCreationOptions.LongRunning);
+                    QueueForAnalysis(workspace.CurrentSolution.Projects.Select(x => x.Id).ToImmutableArray());
+                    _initializationQueueDoneSource.Cancel();
+                    _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
+                });
+
+                Task.Factory.StartNew(() => Worker(CancellationToken.None), TaskCreationOptions.LongRunning);
+            }
         }
 
         private async Task Worker(CancellationToken token)
@@ -144,7 +149,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .Where(x => projectIds.Any(pid => pid == x.Key))
                 .Select(x => Task.Delay(30 * 1000, x.Value.workReadySource.Token)
                     .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
-                .Concat(new [] { Task.Delay(250)}) // Workaround for issue where information about updates from workspace are not at sync with calls.
+                .Concat(new[] { Task.Delay(250) }) // Workaround for issue where information about updates from workspace are not at sync with calls.
                 .ToImmutableArray();
         }
 
@@ -203,7 +208,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 if (allAnalyzers.Any())
                 {
                     var workspaceAnalyzerOptions =
-                        (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] {project.AnalyzerOptions, project.Solution.Options, project.Solution});
+                        (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution.Options, project.Solution });
 
                     results = await compiled
                         .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions) // This cannot be invoked with empty analyzers list.
@@ -218,7 +223,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 EmitDiagnostics(results);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"Analysis of project {project.Id} ({project.Name}) failed, underlaying error: {ex}");
             }
