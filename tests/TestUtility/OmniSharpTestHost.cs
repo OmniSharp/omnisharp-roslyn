@@ -105,6 +105,13 @@ namespace TestUtility
             [CallerMemberName] string callerName = "")
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
+
+            // During testing new analysis service is used as default.
+            if(configurationData == null)
+            {
+                configurationData = new [] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableExpiremantalCodeAnalysis", "true") };
+            }
+
             var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
 
             return Create(serviceProvider, additionalExports, callerName);
