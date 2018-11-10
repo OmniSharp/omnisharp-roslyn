@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Services;
 using TestUtility;
@@ -43,7 +44,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private CSharpDiagnosticService CreateDiagnosticService(DiagnosticEventForwarder forwarder)
         {
-            return new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects());
+            var options = new OmniSharpOptions();
+            options.RoslynExtensionsOptions.EnableExpiremantalCodeAnalysis = true;
+            return new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects(), options);
         }
 
         [Theory]
