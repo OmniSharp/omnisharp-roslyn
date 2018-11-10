@@ -109,7 +109,7 @@ namespace TestUtility
             // During testing new analysis service is used as default.
             if(configurationData == null)
             {
-                configurationData = new [] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableExpiremantalCodeAnalysis", "true") };
+                configurationData = new [] { new KeyValuePair<string, string>("RoslynExtensionsOptions:EnableCodeAnalysis", "true") };
             }
 
             var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
