@@ -113,7 +113,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnostics = this.options.RoslynExtensionsOptions.EnableExpiremantalCodeAnalysis
+            var diagnostics = this.options.RoslynExtensionsOptions.EnableCodeAnalysis
                 ? await GetDiagnosticsWithAnalyzers(document)
                 : (await document.GetSemanticModelAsync()).GetDiagnostics();
 

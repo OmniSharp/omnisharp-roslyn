@@ -45,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         private CSharpDiagnosticService CreateDiagnosticService(DiagnosticEventForwarder forwarder)
         {
             var options = new OmniSharpOptions();
-            options.RoslynExtensionsOptions.EnableExpiremantalCodeAnalysis = true;
+            options.RoslynExtensionsOptions.EnableCodeAnalysis = true;
             return new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects(), options);
         }
 

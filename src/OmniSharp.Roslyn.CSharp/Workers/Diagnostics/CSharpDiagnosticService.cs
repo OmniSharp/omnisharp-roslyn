@@ -63,7 +63,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution) })
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
-            if (options.RoslynExtensionsOptions.EnableExpiremantalCodeAnalysis)
+            if (options.RoslynExtensionsOptions.EnableCodeAnalysis)
             {
                 _workspace.WorkspaceChanged += OnWorkspaceChanged;
 
