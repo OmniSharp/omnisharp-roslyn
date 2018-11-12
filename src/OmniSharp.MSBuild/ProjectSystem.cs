@@ -19,6 +19,7 @@ using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
 using OmniSharp.Services;
+using System.Linq;
 
 namespace OmniSharp.MSBuild
 {
@@ -176,7 +177,10 @@ namespace OmniSharp.MSBuild
 
         private static string FindSolutionFilePath(string rootPath, ILogger logger)
         {
-            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln");
+            // currently, Directory.GetFiles collects files that the file extension has 'sln' prefix.
+            // this causes collecting unexpected files like 'x.slnx', or 'x.slnproj'.
+            // see https://docs.microsoft.com/en-us/dotnet/api/system.io.directory.getfiles?view=netframework-4.7.2 ('Note' description)
+            var solutionsFilePaths = Directory.GetFiles(rootPath, "*.sln").Where(x => Path.GetExtension(x).Equals(".sln", StringComparison.OrdinalIgnoreCase)).ToArray();
             var result = SolutionSelector.Pick(solutionsFilePaths, rootPath);
 
             if (result.Message != null)
