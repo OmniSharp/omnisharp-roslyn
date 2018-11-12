@@ -8,7 +8,7 @@ All changes to the project will be documented in this file.
 * Improved MSBuild discovery for future scenarios (PR: [#1328](https://github.com/OmniSharp/omnisharp-roslyn/pull/1328))
 * Enabled setting customer OmniSharp home directory (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317))
 * Made detection of .sln files more accurate  _(Contributed by [@itn3000](https://github.com/itn3000))_ (PR: [#1320](https://github.com/OmniSharp/omnisharp-roslyn/pull/1320))
-* Improved reliability of document management subsystem _(Contributed by [@NTyalorMullen](https://github.com/NTaylorMullen))_ (PR: [#1330](https://github.com/OmniSharp/omnisharp-roslyn/pull/1330))
+* Improved reliability of document management subsystem _(Contributed by [@NTaylorMullen](https://github.com/NTaylorMullen))_ (PR: [#1330](https://github.com/OmniSharp/omnisharp-roslyn/pull/1330))
 * Use Roslyn's new `FindSourceDeclarationsWithPatternAsync` API in symbol finder _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1304](https://github.com/OmniSharp/omnisharp-roslyn/pull/1304))
 * Fix `FindImplementationService` not finding all implementations of the partial class _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1318](https://github.com/OmniSharp/omnisharp-roslyn/pull/1318))
 
