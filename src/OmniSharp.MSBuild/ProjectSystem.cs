@@ -144,7 +144,7 @@ namespace OmniSharp.MSBuild
             IEnumerable<string> CollectFunc(string slnproj)
             {
                 // to avoid enumerating unsupported project.
-                foreach (var path in SolutionSdkFileUtil.GetEvaluatedProjectFilePaths(slnproj, _propertyOverrides, new string[] { ".csproj" }))
+                foreach (var path in SolutionSdkFileUtil.GetEvaluatedProjectFilePaths(slnproj, _loader, _propertyOverrides, new string[] { ".csproj" }))
                 {
                     yield return Path.IsPathRooted(path) ? path : Path.Combine(Path.GetDirectoryName(slnproj), path);
                 }

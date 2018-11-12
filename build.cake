@@ -491,6 +491,16 @@ Task("PrepareTestAssets:CakeTestAssets")
         });
     });
 
+Task("PrepareTestAssets:CopyNuGetSdkResolver")
+    .IsDependeeOf("PrepareTestAssets")
+    .Does(() =>
+    {
+       var nugetSdkBuildPath =  CombinePaths(env.Folders.Bin, configuration, "Nuget.MSBuildSdkResolver", "net46", "NuGet.MSBuildSdkResolver.dll");
+       var destdir = CombinePaths(env.Folders.MSBuild, "15.0", "Bin", "SdkResolvers", "NuGet.MSBuildSdkResolver");
+       DirectoryHelper.Create(destdir);
+       FileHelper.Copy(nugetSdkBuildPath, CombinePaths(destdir, "NuGet.MSBuildSdkResolver.dll"));
+    });
+
 void BuildWithDotNetCli(BuildEnvironment env, string configuration)
 {
     Information("Building OmniSharp.sln with .NET Core CLI...");

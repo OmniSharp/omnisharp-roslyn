@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Commands" Version="4.6.2" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.8.166" />
+    <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
+    <Compile Remove="Compat/*.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+      <DefineConstants>$(DefineConstants);STANDALONEBUILD;FEATURE_APPDOMAIN</DefineConstants>
+  </PropertyGroup>
+  <!-- <ItemGroup>
+    <None Include="Resources\xlf\Strings.cs.xlf" />
+    <None Include="Resources\xlf\Strings.de.xlf" />
+    <None Include="Resources\xlf\Strings.es.xlf" />
+    <None Include="Resources\xlf\Strings.fr.xlf" />
+    <None Include="Resources\xlf\Strings.it.xlf" />
+    <None Include="Resources\xlf\Strings.ja.xlf" />
+    <None Include="Resources\xlf\Strings.ko.xlf" />
+    <None Include="Resources\xlf\Strings.pl.xlf" />
+    <None Include="Resources\xlf\Strings.pt-BR.xlf" />
+    <None Include="Resources\xlf\Strings.ru.xlf" />
+    <None Include="Resources\xlf\Strings.tr.xlf" />
+    <None Include="Resources\xlf\Strings.xlf" />
+    <None Include="Resources\xlf\Strings.zh-Hans.xlf" />
+    <None Include="Resources\xlf\Strings.zh-Hant.xlf" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Strings.resx">
+      <LogicalName>$(AssemblyName).Strings.resources</LogicalName>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup> -->
+
+</Project>
