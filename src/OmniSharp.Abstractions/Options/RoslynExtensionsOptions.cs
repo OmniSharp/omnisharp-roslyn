@@ -7,7 +7,7 @@ namespace OmniSharp.Options
 {
     public class RoslynExtensionsOptions
     {
-        public bool EnableCodeAnalysis { get; set; }
+        public bool EnableAnalyzersSupport { get; set; }
 
         public string[] LocationPaths { get; set; }
 

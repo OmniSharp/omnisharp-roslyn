@@ -33,7 +33,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
-            if(!_options.RoslynExtensionsOptions.EnableCodeAnalysis)
+            if(!_options.RoslynExtensionsOptions.EnableAnalyzersSupport)
             {
                 var documents = request.FileName != null
                     ? _workspace.GetDocuments(request.FileName)
