@@ -21,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                     test = testContext.Symbol.ContainingAssembly.MetadataName;
                     break;
                 case OmniSharp.Models.TestCommand.TestCommandType.Fixture:
-                    test = testContext.Symbol.GetDocumentationCommentId().Substring(2);
+                    test = testContext.Symbol.GetDocumentationCommentId().Substring(2, testContext.Symbol.GetDocumentationCommentId().Substring(2).LastIndexOf('.'));
                     break;
                 case OmniSharp.Models.TestCommand.TestCommandType.Single:
                     test = testContext.Symbol.GetDocumentationCommentId().Substring(2);
