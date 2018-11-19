@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
@@ -68,7 +69,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                         continue;
                     }
 
-                    var toolsPath = FindMSBuildToolsPath(installPath);
+                    var msbuildPath = Path.Combine(installPath, "MSBuild");
+
+                    var toolsPath = FindMSBuildToolsPath(msbuildPath);
                     if (toolsPath != null)
                     {
                         builder.Add(
