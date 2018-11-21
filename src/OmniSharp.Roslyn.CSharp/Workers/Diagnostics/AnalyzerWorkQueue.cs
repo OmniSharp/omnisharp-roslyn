@@ -17,11 +17,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId)>();
 
         private readonly ConcurrentDictionary<ProjectId, CancellationTokenSource> _blockingWork = new ConcurrentDictionary<ProjectId, CancellationTokenSource>();
+        private readonly int _timeoutForPendingWorkMs;
         private ILogger<AnalyzerWorkQueue> _logger;
 
-        public AnalyzerWorkQueue(ILoggerFactory loggerFactory)
+        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, int throttleWorkMs = 300, int timeoutForPendingWorkMs = 60*1000)
         {
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
+            _throttlingMs = throttleWorkMs;
+            _timeoutForPendingWorkMs = timeoutForPendingWorkMs;
         }
 
         public void PushWork(ProjectId projectId)
@@ -67,7 +70,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             await Task.WhenAll(_blockingWork
                 .Where(x => projectIds.Any(pid => pid == x.Key))
-                .Select(x => Task.Delay(30 * 1000, x.Value.Token)
+                .Select(x => Task.Delay(_timeoutForPendingWorkMs, x.Value.Token)
                     .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
                 .ToImmutableArray());
         }
