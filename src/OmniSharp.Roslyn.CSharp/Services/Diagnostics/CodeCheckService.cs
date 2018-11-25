@@ -11,6 +11,7 @@ using OmniSharp.Models;
 using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
@@ -18,48 +19,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
-        private readonly CSharpDiagnosticWorkerWithAnalyzers _roslynAnalyzer;
         private readonly OmniSharpOptions _options;
+        private readonly ICsDiagnosticWorker _diagWorker;
         private readonly ILogger<CodeCheckService> _logger;
 
         [ImportingConstructor]
-        public CodeCheckService(OmniSharpWorkspace workspace, CSharpDiagnosticWorkerWithAnalyzers roslynAnalyzer, ILoggerFactory loggerFactory, OmniSharpOptions options)
+        public CodeCheckService(
+            OmniSharpWorkspace workspace,
+            ILoggerFactory loggerFactory,
+            OmniSharpOptions options,
+            ICsDiagnosticWorker diagWorker)
         {
             _workspace = workspace;
-            _roslynAnalyzer = roslynAnalyzer;
             _options = options;
+            _diagWorker = diagWorker;
             _logger = loggerFactory.CreateLogger<CodeCheckService>();
         }
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
-            if(!_options.RoslynExtensionsOptions.EnableAnalyzersSupport)
-            {
-                var documents = request.FileName != null
-                    ? _workspace.GetDocuments(request.FileName)
-                    : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
+            var documents = request.FileName != null
+                ? _workspace.GetDocuments(request.FileName)
+                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
-                var quickFixes = await documents.FindDiagnosticLocationsAsync();
-                return new QuickFixResponse(quickFixes);
-            }
+            var diagnostics = await _diagWorker.GetDiagnostics(documents.ToImmutableArray());
 
-            var projectsForAnalysis = !string.IsNullOrEmpty(request.FileName)
-                ? new[] { _workspace.GetDocument(request.FileName)?.Project }
-                : _workspace.CurrentSolution.Projects;
-
-            var analyzerResults = await _roslynAnalyzer.GetCurrentDiagnosticResult(
-                projectsForAnalysis
-                    .Where(project => project != null)
-                    .Select(project => project.Id)
-                    .ToImmutableArray());
-
-            var locations = analyzerResults
+            var locations = diagnostics
                 .Where(x => (string.IsNullOrEmpty(request.FileName)
                     || x.diagnostic.Location.GetLineSpan().Path == request.FileName))
-                .DistinctDiagnosticLocationsByProject();
+                .DistinctDiagnosticLocationsByProject()
+                .Where(x => x.FileName != null);
 
-            return new QuickFixResponse(
-                locations.Where(x => x.FileName != null));
+            return new QuickFixResponse(locations);
         }
     }
 }

@@ -17,6 +17,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -27,9 +28,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
-        private readonly CSharpDiagnosticWorkerWithAnalyzers analyzers;
+        private readonly ICsDiagnosticWorker diagnostics;
         private readonly CachingCodeFixProviderForProjects codeFixesForProject;
-        private readonly OmniSharpOptions options;
         private readonly MethodInfo _getNestedCodeActions;
 
         protected Lazy<List<CodeRefactoringProvider>> OrderedCodeRefactoringProviders;
@@ -44,16 +44,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             OmniSharpWorkspace workspace,
             IEnumerable<ICodeActionProvider> providers,
             ILogger logger,
-            CSharpDiagnosticWorkerWithAnalyzers analyzers,
-            CachingCodeFixProviderForProjects codeFixesForProject,
-            OmniSharpOptions options)
+            ICsDiagnosticWorker diagnostics,
+            CachingCodeFixProviderForProjects codeFixesForProject)
         {
             this.Workspace = workspace;
             this.Providers = providers;
             this.Logger = logger;
-            this.analyzers = analyzers;
+            this.diagnostics = diagnostics;
             this.codeFixesForProject = codeFixesForProject;
-            this.options = options;
             OrderedCodeRefactoringProviders = new Lazy<List<CodeRefactoringProvider>>(() => GetSortedCodeRefactoringProviders());
 
             // Sadly, the CodeAction.NestedCodeActions property is still internal.
@@ -113,11 +111,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnostics = this.options.RoslynExtensionsOptions.EnableAnalyzersSupport
-                ? await GetDiagnosticsWithAnalyzers(document)
-                : (await document.GetSemanticModelAsync()).GetDiagnostics();
+            var diagnosticsWithProjects = await this.diagnostics.GetDiagnostics(ImmutableArray.Create(document));
 
-            var groupedBySpan = diagnostics
+            var groupedBySpan = diagnosticsWithProjects
+                    .Select(x => x.diagnostic)
                     .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
                     .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 
@@ -128,11 +125,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                 await AppendFixesAsync(document, diagnosticSpan, diagnosticsWithSameSpan, codeActions);
             }
-        }
-
-        private async Task<IEnumerable<Diagnostic>> GetDiagnosticsWithAnalyzers(Document document)
-        {
-            return (await this.analyzers.GetCurrentDiagnosticResult(ImmutableArray.Create(document.Project.Id))).Select(x => x.diagnostic);
         }
 
         private async Task AppendFixesAsync(Document document, TextSpan span, IEnumerable<Diagnostic> diagnostics, List<CodeAction> codeActions)

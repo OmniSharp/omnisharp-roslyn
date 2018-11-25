@@ -18,9 +18,8 @@ using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
 
-namespace OmniSharp.Workers.Diagnostics
+namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    [Export, Shared]
     public class CSharpDiagnosticWorker: ICsDiagnosticWorker
     {
         private readonly ILogger _logger;
@@ -30,7 +29,6 @@ namespace OmniSharp.Workers.Diagnostics
         private bool _queueRunning = false;
         private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
 
-        [ImportingConstructor]
         public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;

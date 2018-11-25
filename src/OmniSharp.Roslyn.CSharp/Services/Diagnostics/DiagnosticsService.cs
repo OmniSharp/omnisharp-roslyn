@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
@@ -13,14 +14,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly CSharpDiagnosticWorkerWithAnalyzers _diagnostics;
+        private readonly ICsDiagnosticWorker _diagWorker;
 
         [ImportingConstructor]
-        public DiagnosticsService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticWorkerWithAnalyzers diagnostics)
+        public DiagnosticsService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ICsDiagnosticWorker diagWorker)
         {
             _forwarder = forwarder;
             _workspace = workspace;
-            _diagnostics = diagnostics;
+            _diagWorker = diagWorker;
         }
 
         public Task<DiagnosticsResponse> Handle(DiagnosticsRequest request)
@@ -30,14 +31,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _forwarder.IsEnabled = true;
             }
 
-            var projectsForAnalysis = !string.IsNullOrEmpty(request.FileName)
-                ? new[] { _workspace.GetDocument(request.FileName)?.Project }
-                : _workspace.CurrentSolution.Projects;
+            var documents = request.FileName != null
+                ? _workspace.GetDocuments(request.FileName)
+                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
 
-            _diagnostics.QueueForAnalysis(projectsForAnalysis
-                .Where(x => x != null)
-                .Select(x => x.Id)
-                .ToImmutableArray());
+            _diagWorker.QueueForDiagnosis(documents.ToImmutableArray());
 
             return Task.FromResult(new DiagnosticsResponse());
         }

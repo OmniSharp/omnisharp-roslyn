@@ -19,8 +19,6 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    [Shared]
-    [Export(typeof(CSharpDiagnosticWorkerWithAnalyzers))]
     public class CSharpDiagnosticWorkerWithAnalyzers: ICsDiagnosticWorker
     {
         private readonly AnalyzerWorkQueue _workQueue;
@@ -40,14 +38,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         // This options gives certain IDE analysis access for services that are not yet publicly available.
         private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
 
-        [ImportingConstructor]
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
             DiagnosticEventForwarder forwarder,
-            RulesetsForProjects rulesetsForProjects,
-            OmniSharpOptions options)
+            RulesetsForProjects rulesetsForProjects)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
@@ -63,19 +59,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .GetConstructor(new Type[] { typeof(AnalyzerOptions), typeof(OptionSet), typeof(Solution) })
                 ?? throw new InvalidOperationException("Could not resolve 'Microsoft.CodeAnalysis.Diagnostics.WorkspaceAnalyzerOptions' for IDE analyzers.");
 
-            if (options.RoslynExtensionsOptions.EnableAnalyzersSupport)
+            _workspace.WorkspaceChanged += OnWorkspaceChanged;
+
+            Task.Run(async () =>
             {
-                _workspace.WorkspaceChanged += OnWorkspaceChanged;
+                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
+                QueueForAnalysis(workspace.CurrentSolution.Projects.Select(x => x.Id).ToImmutableArray());
+                _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
+            });
 
-                Task.Run(async () =>
-                {
-                    while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
-                    QueueForAnalysis(workspace.CurrentSolution.Projects.Select(x => x.Id).ToImmutableArray());
-                    _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
-                });
-
-                Task.Factory.StartNew(Worker, TaskCreationOptions.LongRunning);
-            }
+            Task.Factory.StartNew(Worker, TaskCreationOptions.LongRunning);
         }
 
         private async Task Worker()

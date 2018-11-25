@@ -44,9 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private CSharpDiagnosticWorkerWithAnalyzers CreateDiagnosticService(DiagnosticEventForwarder forwarder)
         {
-            var options = new OmniSharpOptions();
-            options.RoslynExtensionsOptions.EnableAnalyzersSupport = true;
-            return new CSharpDiagnosticWorkerWithAnalyzers(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects(), options);
+            return new CSharpDiagnosticWorkerWithAnalyzers(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects());
         }
 
         [Theory]
@@ -83,7 +81,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
-            
+
             var emitter = new DiagnosticTestEmitter();
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
