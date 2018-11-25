@@ -23,17 +23,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
             {
             }
+
+            public ImmutableArray<string> RecordedMessages { get; set; }
         }
 
         private class LoggerFactory : ILoggerFactory
         {
+            public ILogger _logger = new Logger();
             public void AddProvider(ILoggerProvider provider)
             {
             }
 
             public ILogger CreateLogger(string categoryName)
             {
-                return NullLogger.Instance;
+                return _logger;
             }
 
             public void Dispose()
@@ -94,8 +97,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.False(pendingTask.IsCompleted);
 
-            queue.PopWork();
+            var work = queue.PopWork();
             queue.AckWork(projectId);
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }
 

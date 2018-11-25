@@ -13,10 +13,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     {
         private readonly int _throttlingMs = 300;
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId)> _workQueue =
-            new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId)>();
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _workQueue =
+            new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)>();
 
-        private readonly ConcurrentDictionary<ProjectId, CancellationTokenSource> _blockingWork = new ConcurrentDictionary<ProjectId, CancellationTokenSource>();
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _currentWork = 
+            new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)>();
         private readonly int _timeoutForPendingWorkMs;
         private ILogger<AnalyzerWorkQueue> _logger;
 
@@ -30,8 +31,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         public void PushWork(ProjectId projectId)
         {
             _workQueue.AddOrUpdate(projectId,
-                (modified: DateTime.UtcNow, projectId: projectId),
-                (_, oldValue) => (modified: DateTime.UtcNow, projectId: projectId));
+                (modified: DateTime.UtcNow, projectId: projectId, new CancellationTokenSource()),
+                (_, oldValue) => (modified: DateTime.UtcNow, projectId: projectId, workDoneSource: oldValue.workDoneSource));
         }
 
         public ImmutableArray<ProjectId> PopWork()
@@ -44,10 +45,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     .Take(1) // Limit mount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
 
-                foreach (var workKey in currentWork.Select(x => x.Key))
+                foreach (var work in currentWork)
                 {
-                    _workQueue.TryRemove(workKey, out _);
-                    _blockingWork.TryAdd(workKey, new CancellationTokenSource());
+                    _workQueue.TryRemove(work.Key, out _);
+                    _currentWork.TryAdd(work.Key, work.Value);
                 }
 
                 return currentWork.Select(x => x.Key).ToImmutableArray();
@@ -56,10 +57,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public void AckWork(ProjectId projectId)
         {
-            if(_blockingWork.TryGetValue(projectId, out var tokenSource))
+            if(_currentWork.TryGetValue(projectId, out var work))
             {
-                tokenSource.Cancel();
-                _blockingWork.TryRemove(projectId, out _);
+                work.workDoneSource.Cancel();
+                _currentWork.TryRemove(projectId, out _);
             }
         }
 
@@ -68,11 +69,17 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // like it's syncronous even that actual analysis may take a while.
         public async Task WaitForPendingWork(ImmutableArray<ProjectId> projectIds)
         {
-            await Task.WhenAll(_blockingWork
+            var currentWorkMatches = _currentWork.Where(x => projectIds.Any(pid => pid == x.Key));
+
+            var pendingWorkThatDoesntExistInCurrentWork = _workQueue
                 .Where(x => projectIds.Any(pid => pid == x.Key))
-                .Select(x => Task.Delay(_timeoutForPendingWorkMs, x.Value.Token)
-                    .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
-                .ToImmutableArray());
+                .Where(x => !currentWorkMatches.Any(currentWork => currentWork.Key == x.Key));
+
+            await Task.WhenAll(
+                currentWorkMatches.Concat(pendingWorkThatDoesntExistInCurrentWork)
+                    .Select(x => Task.Delay(_timeoutForPendingWorkMs, x.Value.workDoneSource.Token)
+                        .ContinueWith(task => LogTimeouts(task, x.Key.ToString())))
+                    .ToImmutableArray());
         }
 
         // This is basically asserting mechanism for hanging analysis if any. If this doesn't exist tracking
