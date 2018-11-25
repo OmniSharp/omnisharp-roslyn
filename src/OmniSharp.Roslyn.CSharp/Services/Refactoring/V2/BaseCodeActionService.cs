@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         protected readonly OmniSharpWorkspace Workspace;
         protected readonly IEnumerable<ICodeActionProvider> Providers;
         protected readonly ILogger Logger;
-        private readonly CSharpDiagnosticService analyzers;
+        private readonly CSharpDiagnosticWorkerWithAnalyzers analyzers;
         private readonly CachingCodeFixProviderForProjects codeFixesForProject;
         private readonly OmniSharpOptions options;
         private readonly MethodInfo _getNestedCodeActions;
@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             OmniSharpWorkspace workspace,
             IEnumerable<ICodeActionProvider> providers,
             ILogger logger,
-            CSharpDiagnosticService analyzers,
+            CSharpDiagnosticWorkerWithAnalyzers analyzers,
             CachingCodeFixProviderForProjects codeFixesForProject,
             OmniSharpOptions options)
         {

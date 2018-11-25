@@ -20,11 +20,11 @@ using OmniSharp.Services;
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
     [Shared]
-    [Export(typeof(CSharpDiagnosticService))]
-    public class CSharpDiagnosticService
+    [Export(typeof(CSharpDiagnosticWorkerWithAnalyzers))]
+    public class CSharpDiagnosticWorkerWithAnalyzers: ICsDiagnosticWorker
     {
         private readonly AnalyzerWorkQueue _workQueue;
-        private readonly ILogger<CSharpDiagnosticService> _logger;
+        private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
 
         private readonly ConcurrentDictionary<ProjectId, (string name, ImmutableArray<Diagnostic> diagnostics)> _results =
             new ConcurrentDictionary<ProjectId, (string name, ImmutableArray<Diagnostic> diagnostics)>();
@@ -41,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
 
         [ImportingConstructor]
-        public CSharpDiagnosticService(
+        public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
@@ -49,7 +49,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             RulesetsForProjects rulesetsForProjects,
             OmniSharpOptions options)
         {
-            _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
+            _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
             _workQueue = new AnalyzerWorkQueue(loggerFactory);
 
@@ -208,6 +208,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .SelectMany(x => x);
 
             _results[project.Id] = (project.Name, results.ToImmutableArray());
+        }
+
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void QueueForDiagnosis(ImmutableArray<Document> documents)
+        {
+            throw new NotImplementedException();
         }
     }
 }

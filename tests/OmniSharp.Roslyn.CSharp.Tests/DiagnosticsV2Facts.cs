@@ -42,11 +42,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             await emitter.ExpectForEmitted(msg => msg.Results.Any(m => m.FileName == filename));
         }
 
-        private CSharpDiagnosticService CreateDiagnosticService(DiagnosticEventForwarder forwarder)
+        private CSharpDiagnosticWorkerWithAnalyzers CreateDiagnosticService(DiagnosticEventForwarder forwarder)
         {
             var options = new OmniSharpOptions();
             options.RoslynExtensionsOptions.EnableAnalyzersSupport = true;
-            return new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects(), options);
+            return new CSharpDiagnosticWorkerWithAnalyzers(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects(), options);
         }
 
         [Theory]

@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            CSharpDiagnosticService analyzers,
+            CSharpDiagnosticWorkerWithAnalyzers analyzers,
             CachingCodeFixProviderForProjects codeFixesForProjects,
             OmniSharpOptions options)
             : base(workspace, providers, loggerFactory.CreateLogger<GetCodeActionsService>(), analyzers, codeFixesForProjects, options)

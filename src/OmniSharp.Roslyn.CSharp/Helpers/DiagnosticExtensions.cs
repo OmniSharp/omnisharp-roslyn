@@ -24,9 +24,9 @@ namespace OmniSharp.Helpers
             };
         }
 
-        internal static IEnumerable<DiagnosticLocation> DistinctDiagnosticLocationsByProject(this IEnumerable<(string projectName, Diagnostic diagnostic)> analyzerResults)
+        internal static IEnumerable<DiagnosticLocation> DistinctDiagnosticLocationsByProject(this IEnumerable<(string projectName, Diagnostic diagnostic)> diagnostics)
         {
-            return analyzerResults
+            return diagnostics
                 .Select(x => new
                 {
                     location = x.diagnostic.ToDiagnosticLocation(),
@@ -39,34 +39,6 @@ namespace OmniSharp.Helpers
                     location.Projects = x.Select(a => a.project).ToList();
                     return location;
                 });
-        }
-
-        internal static async Task<IEnumerable<DiagnosticLocation>> FindDiagnosticLocationsAsync(this IEnumerable<Document> documents)
-        {
-            if (documents == null || !documents.Any()) return Enumerable.Empty<DiagnosticLocation>();
-
-            var items = new List<DiagnosticLocation>();
-            foreach (var document in documents)
-            {
-                var semanticModel = await document.GetSemanticModelAsync();
-                IEnumerable<Diagnostic> diagnostics = semanticModel.GetDiagnostics();
-
-                foreach (var quickFix in diagnostics.Select(d => d.ToDiagnosticLocation()))
-                {
-                    var existingQuickFix = items.FirstOrDefault(q => q.Equals(quickFix));
-                    if (existingQuickFix == null)
-                    {
-                        quickFix.Projects.Add(document.Project.Name);
-                        items.Add(quickFix);
-                    }
-                    else
-                    {
-                        existingQuickFix.Projects.Add(document.Project.Name);
-                    }
-                }
-            }
-
-            return items;
         }
     }
 }
