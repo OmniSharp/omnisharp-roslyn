@@ -82,16 +82,57 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public void WhenWorkIsTakenThenItWillBlockWhenWorkIsWaited()
+        public void WhenWorkIsAddedThenWaitNextIterationOfItReady()
         {
-            // var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
-            // var projectId = ProjectId.CreateNewId();
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
+            var projectId = ProjectId.CreateNewId();
 
-            // queue.PushWork(projectId);
+            queue.PushWork(projectId);
 
-            // var work = queue.PopWork();
+            var pendingTask = queue.WaitForPendingWork(new [] { projectId }.ToImmutableArray());
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
-            // queue.WaitForPendingWork(work).Wait(TimeSpan.FromMilliseconds(50));
+            Assert.False(pendingTask.IsCompleted);
+
+            queue.PopWork();
+            queue.AckWork(projectId);
+            Assert.True(pendingTask.IsCompleted);
+        }
+
+        [Fact]
+        public void WhenWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
+        {
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
+            var projectId = ProjectId.CreateNewId();
+
+            queue.PushWork(projectId);
+
+            var work = queue.PopWork();
+
+            var pendingTask = queue.WaitForPendingWork(work);
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+
+            Assert.False(pendingTask.IsCompleted);
+
+            queue.AckWork(projectId);
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            Assert.True(pendingTask.IsCompleted);
+        }
+
+        [Fact]
+        public void WhenWorkIsWaitedButTimeoutForWaitIsExceededAllowContinue()
+        {
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 50);
+            var projectId = ProjectId.CreateNewId();
+
+            queue.PushWork(projectId);
+
+            var work = queue.PopWork();
+
+            var pendingTask = queue.WaitForPendingWork(work);
+            pendingTask.Wait(TimeSpan.FromMilliseconds(100));
+
+            Assert.True(pendingTask.IsCompleted);
         }
     }
 }

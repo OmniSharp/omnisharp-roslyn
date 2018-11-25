@@ -39,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             lock (_workQueue)
             {
                 var currentWork = _workQueue
-                    .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) < DateTime.UtcNow)
+                    .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) <= DateTime.UtcNow)
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
                     .Take(1) // Limit mount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
