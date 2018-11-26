@@ -106,7 +106,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .ToImmutableArray();
         }
 
-        public void QueueForAnalysis(ImmutableArray<ProjectId> projects)
+        private void QueueForAnalysis(ImmutableArray<ProjectId> projects)
         {
             foreach (var projectId in projects)
             {
@@ -203,14 +203,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _results[project.Id] = (project.Name, results.ToImmutableArray());
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
         {
-            throw new NotImplementedException();
+            var projectIds = GetProjectIdsFromDocuments(documents);
+
+            await _workQueue.WaitForPendingWork(projectIds);
+
+            return _results
+                .Where(x => projectIds.Any(pid => pid == x.Key))
+                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)))
+                .ToImmutableArray();
+        }
+
+        private static ImmutableArray<ProjectId> GetProjectIdsFromDocuments(ImmutableArray<Document> documents)
+        {
+            return documents
+                .Select(x => x.Project?.Id)
+                .Where(x => x != null)
+                .ToImmutableArray();
         }
 
         public void QueueForDiagnosis(ImmutableArray<Document> documents)
         {
-            throw new NotImplementedException();
+            QueueForAnalysis(GetProjectIdsFromDocuments(documents));
         }
     }
 }

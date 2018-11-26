@@ -23,12 +23,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     // Theres several implementation of worker currently based on configuration.
     // This will handle switching between them.
     [Export(typeof(ICsDiagnosticWorker)), Shared]
-    public class CsharpDiagnosticWorkerStragedy: ICsDiagnosticWorker
+    public class CsharpDiagnosticWorkerComposer: ICsDiagnosticWorker
     {
         private readonly ICsDiagnosticWorker _implementation;
 
         [ImportingConstructor]
-        public CsharpDiagnosticWorkerStragedy(
+        public CsharpDiagnosticWorkerComposer(
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
