@@ -23,12 +23,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly AnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
-
         private readonly ConcurrentDictionary<ProjectId, (string name, ImmutableArray<Diagnostic> diagnostics)> _results =
             new ConcurrentDictionary<ProjectId, (string name, ImmutableArray<Diagnostic> diagnostics)>();
-
         private readonly ImmutableArray<ICodeActionProvider> _providers;
-
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
         private readonly RulesetsForProjects _rulesetsForProjects;
@@ -63,12 +60,29 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             Task.Run(async () =>
             {
-                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(500);
+                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(200);
                 QueueForAnalysis(workspace.CurrentSolution.Projects.Select(x => x.Id).ToImmutableArray());
                 _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
             });
 
             Task.Factory.StartNew(Worker, TaskCreationOptions.LongRunning);
+        }
+
+        public void QueueForDiagnosis(ImmutableArray<Document> documents)
+        {
+            QueueForAnalysis(GetProjectIdsFromDocuments(documents));
+        }
+
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        {
+            var projectIds = GetProjectIdsFromDocuments(documents);
+
+            await _workQueue.WaitForPendingWork(projectIds);
+
+            return _results
+                .Where(x => projectIds.Any(pid => pid == x.Key))
+                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)))
+                .ToImmutableArray();
         }
 
         private async Task Worker()
@@ -90,19 +104,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private ImmutableArray<Project> GetWorkerProjects()
         {
-            return _workQueue.PopWork()
+            return _workQueue.TakeWork()
                 .Select(projectId => _workspace?.CurrentSolution?.GetProject(projectId))
                 .Where(project => project != null) // This may occur if project removed middle of analysis from solution.
-                .ToImmutableArray();
-        }
-
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetCurrentDiagnosticResult(ImmutableArray<ProjectId> projectIds)
-        {
-            await _workQueue.WaitForPendingWork(projectIds);
-
-            return _results
-                .Where(x => projectIds.Any(pid => pid == x.Key))
-                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)))
                 .ToImmutableArray();
         }
 
@@ -110,7 +114,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             foreach (var projectId in projects)
             {
-                _workQueue.PushWork(projectId);
+                _workQueue.PutWork(projectId);
             }
         }
 
@@ -172,7 +176,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
             finally
             {
-                _workQueue.AckWork(project.Id);
+                _workQueue.AckWorkAsDone(project.Id);
             }
         }
 
@@ -203,29 +207,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             _results[project.Id] = (project.Name, results.ToImmutableArray());
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
-        {
-            var projectIds = GetProjectIdsFromDocuments(documents);
-
-            await _workQueue.WaitForPendingWork(projectIds);
-
-            return _results
-                .Where(x => projectIds.Any(pid => pid == x.Key))
-                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.name, v)))
-                .ToImmutableArray();
-        }
-
         private static ImmutableArray<ProjectId> GetProjectIdsFromDocuments(ImmutableArray<Document> documents)
         {
             return documents
                 .Select(x => x.Project?.Id)
                 .Where(x => x != null)
                 .ToImmutableArray();
-        }
-
-        public void QueueForDiagnosis(ImmutableArray<Document> documents)
-        {
-            QueueForAnalysis(GetProjectIdsFromDocuments(documents));
         }
     }
 }

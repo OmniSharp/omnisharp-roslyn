@@ -28,14 +28,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _timeoutForPendingWorkMs = timeoutForPendingWorkMs;
         }
 
-        public void PushWork(ProjectId projectId)
+        public void PutWork(ProjectId projectId)
         {
             _workQueue.AddOrUpdate(projectId,
                 (modified: DateTime.UtcNow, projectId: projectId, new CancellationTokenSource()),
                 (_, oldValue) => (modified: DateTime.UtcNow, projectId: projectId, workDoneSource: oldValue.workDoneSource));
         }
 
-        public ImmutableArray<ProjectId> PopWork()
+        public ImmutableArray<ProjectId> TakeWork()
         {
             lock (_workQueue)
             {
@@ -55,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        public void AckWork(ProjectId projectId)
+        public void AckWorkAsDone(ProjectId projectId)
         {
             if(_currentWork.TryGetValue(projectId, out var work))
             {

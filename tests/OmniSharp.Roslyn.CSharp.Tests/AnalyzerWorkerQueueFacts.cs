@@ -50,8 +50,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 500);
             var projectId = ProjectId.CreateNewId();
 
-            queue.PushWork(projectId);
-            Assert.Empty(queue.PopWork());
+            queue.PutWork(projectId);
+            Assert.Empty(queue.TakeWork());
         }
 
         [Fact]
@@ -60,10 +60,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0);
             var projectId = ProjectId.CreateNewId();
 
-            queue.PushWork(projectId);
+            queue.PutWork(projectId);
 
-            Assert.Contains(projectId, queue.PopWork());
-            Assert.Empty(queue.PopWork());
+            Assert.Contains(projectId, queue.TakeWork());
+            Assert.Empty(queue.TakeWork());
         }
 
         [Fact]
@@ -72,16 +72,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 20);
             var projectId = ProjectId.CreateNewId();
 
-            queue.PushWork(projectId);
-            queue.PushWork(projectId);
-            queue.PushWork(projectId);
+            queue.PutWork(projectId);
+            queue.PutWork(projectId);
+            queue.PutWork(projectId);
 
-            Assert.Empty(queue.PopWork());
+            Assert.Empty(queue.TakeWork());
 
             await Task.Delay(TimeSpan.FromMilliseconds(40));
 
-            Assert.Contains(projectId, queue.PopWork());
-            Assert.Empty(queue.PopWork());
+            Assert.Contains(projectId, queue.TakeWork());
+            Assert.Empty(queue.TakeWork());
         }
 
         [Fact]
@@ -90,15 +90,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
             var projectId = ProjectId.CreateNewId();
 
-            queue.PushWork(projectId);
+            queue.PutWork(projectId);
 
             var pendingTask = queue.WaitForPendingWork(new [] { projectId }.ToImmutableArray());
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
 
-            var work = queue.PopWork();
-            queue.AckWork(projectId);
+            var work = queue.TakeWork();
+            queue.AckWorkAsDone(projectId);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }
@@ -109,16 +109,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
             var projectId = ProjectId.CreateNewId();
 
-            queue.PushWork(projectId);
+            queue.PutWork(projectId);
 
-            var work = queue.PopWork();
+            var work = queue.TakeWork();
 
             var pendingTask = queue.WaitForPendingWork(work);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
 
-            queue.AckWork(projectId);
+            queue.AckWorkAsDone(projectId);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }
@@ -129,9 +129,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 50);
             var projectId = ProjectId.CreateNewId();
 
-            queue.PushWork(projectId);
+            queue.PutWork(projectId);
 
-            var work = queue.PopWork();
+            var work = queue.TakeWork();
 
             var pendingTask = queue.WaitForPendingWork(work);
             pendingTask.Wait(TimeSpan.FromMilliseconds(100));
