@@ -8,6 +8,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -18,6 +19,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     public class CachingCodeFixProviderForProjects
     {
         private readonly ConcurrentDictionary<ProjectId, IEnumerable<CodeFixProvider>> _cache = new ConcurrentDictionary<ProjectId, IEnumerable<CodeFixProvider>>();
+        private readonly ILogger<CachingCodeFixProviderForProjects> _logger;
+
+        [ImportingConstructor]
+        public CachingCodeFixProviderForProjects(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<CachingCodeFixProviderForProjects>();
+        }
 
         public IEnumerable<CodeFixProvider> GetAllCodeFixesForProject(ProjectId projectId)
         {
@@ -34,14 +42,25 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 .Where(x => x.IsSubclassOf(typeof(CodeFixProvider)))
                 .Select(x =>
                 {
-                    var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>();
-
-                    if (attribute?.Languages != null && attribute.Languages.Contains(project.Language))
+                    try
                     {
-                        return (CodeFixProvider)Activator.CreateInstance(x.AsType());
-                    }
+                        var attribute = x.GetCustomAttribute<ExportCodeFixProviderAttribute>();
 
-                    return null;
+                        if (attribute?.Languages != null && attribute.Languages.Contains(project.Language))
+                        {
+                            return (CodeFixProvider)Activator.CreateInstance(x.AsType());
+                        }
+
+                        _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because it's language doesn't match '{project.Language}'.");
+
+                        return null;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Creating instance of code fix provider '{x.AsType()}' failed, error: {ex}");
+
+                        return null;
+                    }
                 })
                 .Where(x => x != null)
                 .ToImmutableArray();

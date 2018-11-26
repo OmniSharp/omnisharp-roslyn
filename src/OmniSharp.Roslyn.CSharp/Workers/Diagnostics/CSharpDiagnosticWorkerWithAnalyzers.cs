@@ -91,7 +91,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 try
                 {
-                    var currentWork = GetWorkerProjects();
+                    var currentWork = TakeNextBatchOfProjectsForAnalysisIfAny();
                     await Task.WhenAll(currentWork.Select(x => Analyze(x)));
                     await Task.Delay(100);
                 }
@@ -102,7 +102,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private ImmutableArray<Project> GetWorkerProjects()
+        private ImmutableArray<Project> TakeNextBatchOfProjectsForAnalysisIfAny()
         {
             return _workQueue.TakeWork()
                 .Select(projectId => _workspace?.CurrentSolution?.GetProject(projectId))
