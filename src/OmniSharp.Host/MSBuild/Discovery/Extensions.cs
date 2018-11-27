@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace OmniSharp.MSBuild.Discovery
 {
@@ -18,7 +19,9 @@ namespace OmniSharp.MSBuild.Discovery
                 else
                 {
                     instanceToRegister = instance;
-                    break;
+
+                    if (instance.HasDotNetSdksResolvers())
+                        break;
                 }
             }
 
@@ -41,6 +44,19 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             }
         }
 
+
+        public static bool HasDotNetSdksResolvers(this MSBuildInstance instance)
+        {
+            const string dotnetSdkResolver = "Microsoft.DotNet.MSBuildSdkResolver";
+            return File.Exists(
+                Path.Combine(
+                    instance.MSBuildPath,
+                    "SdkResolvers",
+                    dotnetSdkResolver,
+                    dotnetSdkResolver + ".dll"
+                )
+            );
+        }
 
         public static bool IsInvalidVisualStudio(this MSBuildInstance instance)
             // MSBuild from Visual Studio 2017 RTM cannot be used.
