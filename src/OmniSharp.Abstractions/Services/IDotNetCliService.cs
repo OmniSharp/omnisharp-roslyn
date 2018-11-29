@@ -13,7 +13,7 @@ namespace OmniSharp.Services
         string DotNetPath { get; }
 
         /// <summary>
-        /// Launches "dotnet --info" in the given wotking directory and returns a
+        /// Launches "dotnet --info" in the given working directory and returns a
         /// <see cref="DotNetInfo"/> representing the returned information text.
         /// </summary>
         DotNetInfo GetInfo(string workingDirectory = null);
