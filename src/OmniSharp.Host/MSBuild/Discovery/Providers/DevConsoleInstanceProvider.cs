@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Utilities;
 
@@ -26,7 +27,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            var toolsPath = FindMSBuildToolsPath(path);
+            var msbuildPath = Path.Combine(path, "MSBuild");
+            var toolsPath = FindMSBuildToolsPath(msbuildPath);
+
             if (toolsPath == null)
             {
                 return NoInstances;
