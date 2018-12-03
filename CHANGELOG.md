@@ -1,6 +1,12 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.9] - not yet released
+* Updated to Roslyn 2.10.0 (PR: [#1344](https://github.com/OmniSharp/omnisharp-roslyn/pull/1344))
+
+## [1.32.8] - 2018-11-14
+* Fixed MSBuild discovery path (1.32.7 regression) (PR: [#1337](https://github.com/OmniSharp/omnisharp-roslyn/pull/1337))
+
 ## [1.32.7] - 2018-11-12
 * It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317)) 
 * OmniSharp no longer searches for `config.json` in its source directory to load configuration (PR: [#1319](https://github.com/OmniSharp/omnisharp-roslyn/pull/1319))
