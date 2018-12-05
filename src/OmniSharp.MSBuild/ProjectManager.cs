@@ -92,17 +92,17 @@ namespace OmniSharp.MSBuild
 
             if (_options.OnDemandProjectsLoad)
             {
-                _workspace.DocumentRequested += OnWorkspaceDocumentRequested;
+                _workspace.AddWaitForProjectModelReadyEventHandler(WaitForProjectModelReadyAsync);
             }
         }
 
-        private void OnWorkspaceDocumentRequested(object sender, DocumentRequestedEventArgs args)
+        private async Task WaitForProjectModelReadyAsync(string documentPath)
         {
             // Search and queue for loading C# projects that are likely to reference the requested file.
             // C# source files are located pretty much always in the same folder with project file that is referencing them or in a subfolder.
             // Do not limit search by OmniSharpEnvironment.TargetDirectory to allow for loading on demand projects that are outside of it,
             // i.e. in VSCode case potentially outside of the folder opened in the IDE.
-            string projectDir = Path.GetDirectoryName(args.DocumentPath);
+            string projectDir = Path.GetDirectoryName(documentPath);
             while(projectDir != null)
             {
                 List<string> csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
@@ -115,10 +115,35 @@ namespace OmniSharp.MSBuild
                             QueueProjectUpdate(csProjFile, allowAutoRestore:true);
                         }
                     }
-                    return;
+
+                    break;
                 }
+
+                bool foundStopAtItem = false;
+                foreach (string stopAtItemName in _options.OnDemandProjectsLoadSearchStopsAt)
+                {
+                    string itemPath = Path.Combine(projectDir, stopAtItemName);
+                    if (File.Exists(itemPath) || Directory.Exists(itemPath))
+                    {
+                        foundStopAtItem = true;
+                        break;
+                    }
+                }
+
+                if (foundStopAtItem)
+                {
+                    _logger.LogTrace($"Couldn't find project to load for '{documentPath}'");
+                    break;
+                }
+
                 projectDir = Path.GetDirectoryName(projectDir);
             }
+            
+            // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
+            // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
+            _logger.LogTrace($"Started waiting for projects queue to be empty when requested '{documentPath}'");
+            await WaitForQueueEmptyAsync();
+            _logger.LogTrace($"Stopped waiting for projects queue to be empty when requested '{documentPath}'");
         }
 
         protected override void DisposeCore(bool disposing)

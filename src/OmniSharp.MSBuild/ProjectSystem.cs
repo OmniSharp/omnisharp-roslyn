@@ -225,17 +225,5 @@ namespace OmniSharp.MSBuild
 
             return new MSBuildProjectInfo(projectFileInfo);
         }
-
-        public async Task WaitForProjectsToLoadForFileAsync(string filePath)
-        {
-            if (_options.OnDemandProjectsLoad)
-            {
-                // Request the document only to make sure that projects referencing it are queued for loading by the project system.
-                _workspace.GetDocument(filePath);
-                // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
-                // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
-                await _manager.WaitForQueueEmptyAsync();
-            }
-        }
     }
 }

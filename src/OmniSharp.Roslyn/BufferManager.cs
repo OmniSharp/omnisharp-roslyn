@@ -29,7 +29,17 @@ namespace OmniSharp.Roslyn
             _onFileChanged = OnFileChanged;
         }
 
-        public async Task UpdateBufferAsync(Request request)
+        public Task UpdateBufferInFullProjectModelAsync(Request request)
+        {
+            return UpdateBufferCoreAsync(request, inFullProjectModel: true);
+        }
+
+        public Task UpdateBufferAsync(Request request)
+        {
+            return UpdateBufferCoreAsync(request, inFullProjectModel: false);
+        }
+
+        private async Task UpdateBufferCoreAsync(Request request, bool inFullProjectModel)
         {
             var buffer = request.Buffer;
             var changes = request.Changes;
@@ -46,8 +56,12 @@ namespace OmniSharp.Roslyn
 
             var solution = _workspace.CurrentSolution;
 
-            var documentIds = solution.GetDocumentIdsWithFilePath(request.FileName);
-            if (!documentIds.IsEmpty)
+            // To properly update the buffer wait until all projects are loaded.
+            var documentIds = inFullProjectModel ? 
+                await _workspace.GetDocumentIdsWithFilePathFromFullProjectModelAsync(request.FileName) :
+                solution.GetDocumentIdsWithFilePath(request.FileName); 
+            
+            if (documentIds.Any())
             {
                 if (changes == null)
                 {

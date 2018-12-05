@@ -115,11 +115,5 @@ namespace OmniSharp.Plugins
             // TODO: Call out to process
             return Task.FromResult<object>(null);
         }
-
-        public Task WaitForProjectsToLoadForFileAsync(string filePath)
-        {
-            // TODO: Call out to process
-            return Task.CompletedTask;
-        }
     }
 }

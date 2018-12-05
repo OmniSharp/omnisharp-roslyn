@@ -24,7 +24,9 @@ namespace OmniSharp
         public BufferManager BufferManager { get; private set; }
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
-        public event EventHandler<DocumentRequestedEventArgs> DocumentRequested;
+
+        private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyEventHandlers = new ConcurrentBag<Func<string, Task>>();
+
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
 
         [ImportingConstructor]
@@ -36,6 +38,11 @@ namespace OmniSharp
         }
 
         public override bool CanOpenDocuments => true;
+
+        public void AddWaitForProjectModelReadyEventHandler(Func<string, Task> eventHandler)
+        {
+            _waitForProjectModelReadyEventHandlers.Add(eventHandler);
+        }
 
         public override void OpenDocument(DocumentId documentId, bool activate = true)
         {
@@ -209,14 +216,12 @@ namespace OmniSharp
 
         public DocumentId GetDocumentId(string filePath)
         {
-            OnDocumentRequested(filePath);
             var documentIds = CurrentSolution.GetDocumentIdsWithFilePath(filePath);
             return documentIds.FirstOrDefault();
         }
 
         public IEnumerable<Document> GetDocuments(string filePath)
         {
-            OnDocumentRequested(filePath);
             return CurrentSolution
                 .GetDocumentIdsWithFilePath(filePath)
                 .Select(id => CurrentSolution.GetDocument(id));
@@ -233,6 +238,24 @@ namespace OmniSharp
             }
 
             return CurrentSolution.GetDocument(documentId);
+        }
+
+        public async Task<IEnumerable<Document>> GetDocumentsFromFullProjectModelAsync(string filePath)
+        {
+            await OnWaitForProjectModelReadyAsync(filePath);
+            return GetDocuments(filePath);
+        }
+
+        public async Task<Document> GetDocumentFromFullProjectModelAsync(string filePath)
+        {
+            await OnWaitForProjectModelReadyAsync(filePath);
+            return GetDocument(filePath);
+        }
+
+        public async Task<IEnumerable<DocumentId>> GetDocumentIdsWithFilePathFromFullProjectModelAsync(string filePath)
+        {
+            await OnWaitForProjectModelReadyAsync(filePath);
+            return CurrentSolution.GetDocumentIdsWithFilePath(filePath);
         }
 
         public override bool CanApplyChange(ApplyChangesKind feature)
@@ -366,24 +389,9 @@ namespace OmniSharp
             }
         }
 
-        private void OnDocumentRequested(string filePath)
+        private Task OnWaitForProjectModelReadyAsync(string filePath)
         {
-            DocumentRequested?.Invoke(this, new DocumentRequestedEventArgs(filePath));
+            return Task.WhenAll(_waitForProjectModelReadyEventHandlers.Select(h => h(filePath)));
         }  
-    }
-
-    public class DocumentRequestedEventArgs : EventArgs
-    {
-        public string DocumentPath { get; }
-
-        public DocumentRequestedEventArgs(string filePath)
-        {
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                throw new ArgumentNullException(nameof(filePath));
-            }
-
-            DocumentPath = filePath;
-        }
     }
 }

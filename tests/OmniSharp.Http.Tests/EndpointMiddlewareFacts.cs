@@ -89,11 +89,6 @@ namespace OmniSharp.Http.Tests
                 throw new NotImplementedException();
             }
 
-            public Task WaitForProjectsToLoadForFileAsync(string filePath)
-            {
-                throw new NotImplementedException();
-            }
-
             public void Initalize(IConfiguration configuration) { }
         }
 

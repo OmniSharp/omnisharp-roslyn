@@ -8,11 +8,16 @@ namespace OmniSharp.Options
         public string Platform { get; set; }
         public bool EnablePackageAutoRestore { get; set; }
 
-        /// <summary> 
+        /// <summary>
         /// If true, MSBuild project system will only be loading projects for files that were opened in the editor
         /// as well as referenced projects, recursively.
         /// </summary>
         public bool OnDemandProjectsLoad { get; set; }
+
+        /// <summary>
+        /// Search for a .csproj to load on demand is stopped after a folder containing a file or folder from the list is encountered.
+        /// </summary>
+        public string[] OnDemandProjectsLoadSearchStopsAt { get; set; } = new[] { ".git" };
 
         /// <summary>
         /// When set to true, the MSBuild project system will attempt to resolve the path to the MSBuild

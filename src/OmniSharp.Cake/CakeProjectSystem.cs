@@ -258,12 +258,6 @@ namespace OmniSharp.Cake
             return Task.FromResult<object>(new CakeContextModel(filePath));
         }
 
-        public Task WaitForProjectsToLoadForFileAsync(string filePath)
-        {
-            // At the moment this project system doesn't support on demand projects loading
-            return Task.CompletedTask;
-        }
-
         private ProjectInfo GetProjectFileInfo(string path)
         {
             return !_projects.TryGetValue(path, out ProjectInfo projectFileInfo) ? null : projectFileInfo;

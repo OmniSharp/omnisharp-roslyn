@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Extensions;
-using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2;
 using OmniSharp.Services;
@@ -30,15 +29,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
         private readonly MethodInfo _getTextSpan;
         private readonly MethodInfo _getType;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
-        public BlockStructureService(IAssemblyLoader loader, OmniSharpWorkspace workspace, [ImportMany] IEnumerable<IProjectSystem> projectSystems)
+        public BlockStructureService(IAssemblyLoader loader, OmniSharpWorkspace workspace)
         {
             _workspace = workspace;
             _loader = loader;
             _featureAssembly = _loader.LazyLoad(Configuration.RoslynFeatures);
-            _projectSystems = projectSystems;
 
             _blockStructureService = _featureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockStructureService");
             _blockStructure = _featureAssembly.LazyGetType("Microsoft.CodeAnalysis.Structure.BlockStructure");
@@ -53,13 +50,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Structure
 
         public async Task<BlockStructureResponse> Handle(BlockStructureRequest request)
         {
-            // Waiting until the document is fully formed in memory (for project systems that have this ability) 
-            // helps to reduce chances of returning invalid document block structure while compilation is still in progress.
-            await _projectSystems.WaitForAllProjectsToLoadForFileAsync(request.FileName);
-            var document = _workspace.GetDocument(request.FileName);
+            // To provide complete code structure for the document wait until all projects are loaded.
+            var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
-                return new BlockStructureResponse();
+                return null;
             }
 
             var text = await document.GetTextAsync();

@@ -29,11 +29,5 @@ namespace OmniSharp.Services
         /// <param name="filePath">The file path to the project to retrieve. Alternatively,
         /// a file path to a document within a proejct may be specified.</param>
         Task<object> GetProjectModelAsync(string filePath);
-
-        /// <summary>
-        /// This project system will try to locate projects that reference given file and will wait until the projects and their references are fully loaded.
-        /// </summary>
-        /// <param name="filePath">File for which to locate and load projects.</param>
-        Task WaitForProjectsToLoadForFileAsync(string filePath);
     }
 }
