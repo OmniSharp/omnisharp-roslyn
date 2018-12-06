@@ -47,7 +47,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public void WhenProjectsAreAddedButThrotlingIsntOverNoProjectsShouldBeReturned()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 500);
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var projectId = ProjectId.CreateNewId();
 
             queue.PutWork(projectId);
@@ -57,19 +58,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public void WhenProjectsAreAddedToQueueThenTheyWillBeReturned()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0);
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var projectId = ProjectId.CreateNewId();
 
             queue.PutWork(projectId);
+
+            now = PassOverThrotlingPeriod(now);
 
             Assert.Contains(projectId, queue.TakeWork());
             Assert.Empty(queue.TakeWork());
         }
 
         [Fact]
-        public async Task WhenSameProjectIsAddedMultipleTimesInRowThenThrottleProjectsAsOne()
+        public void WhenSameProjectIsAddedMultipleTimesInRowThenThrottleProjectsAsOne()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 20);
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var projectId = ProjectId.CreateNewId();
 
             queue.PutWork(projectId);
@@ -78,16 +83,19 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.Empty(queue.TakeWork());
 
-            await Task.Delay(TimeSpan.FromMilliseconds(40));
+            now = PassOverThrotlingPeriod(now);
 
             Assert.Contains(projectId, queue.TakeWork());
             Assert.Empty(queue.TakeWork());
         }
+
+        private static DateTime PassOverThrotlingPeriod(DateTime now) => now.AddSeconds(1);
 
         [Fact]
         public void WhenWorkIsAddedThenWaitNextIterationOfItReady()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
             var projectId = ProjectId.CreateNewId();
 
             queue.PutWork(projectId);
@@ -106,7 +114,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public void WhenWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 500);
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
             var projectId = ProjectId.CreateNewId();
 
             queue.PutWork(projectId);
@@ -126,7 +135,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public void WhenWorkIsWaitedButTimeoutForWaitIsExceededAllowContinue()
         {
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), throttleWorkMs: 0, timeoutForPendingWorkMs: 50);
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 50);
             var projectId = ProjectId.CreateNewId();
 
             queue.PutWork(projectId);

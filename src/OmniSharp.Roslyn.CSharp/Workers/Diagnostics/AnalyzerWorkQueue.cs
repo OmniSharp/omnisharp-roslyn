@@ -16,15 +16,19 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _workQueue =
             new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)>();
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _currentWork = 
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _currentWork =
             new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)>();
+        private readonly Func<DateTime> _utcNow;
         private readonly int _timeoutForPendingWorkMs;
         private ILogger<AnalyzerWorkQueue> _logger;
 
-        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, int throttleWorkMs = 300, int timeoutForPendingWorkMs = 60*1000)
+        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 60*1000)
         {
+            if(utcNow == null)
+                utcNow = () => DateTime.UtcNow;
+
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
-            _throttlingMs = throttleWorkMs;
+            _utcNow = utcNow;
             _timeoutForPendingWorkMs = timeoutForPendingWorkMs;
         }
 
@@ -39,8 +43,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             lock (_workQueue)
             {
+                var now = _utcNow();
                 var currentWork = _workQueue
-                    .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) <= DateTime.UtcNow)
+                    .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) <= now)
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
                     .Take(1) // Limit mount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
