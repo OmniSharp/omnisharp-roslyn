@@ -100,10 +100,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(projectId);
 
-            var pendingTask = queue.WaitForPendingWork(new [] { projectId }.ToImmutableArray());
+            var pendingTask = queue.WaitForPendingWorkDoneEvent(new [] { projectId }.ToImmutableArray());
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
+
+            now = PassOverThrotlingPeriod(now);
 
             var work = queue.TakeWork();
             queue.AckWorkAsDone(projectId);
@@ -120,9 +122,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(projectId);
 
+            now = PassOverThrotlingPeriod(now);
+
             var work = queue.TakeWork();
 
-            var pendingTask = queue.WaitForPendingWork(work);
+            var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
@@ -141,9 +145,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(projectId);
 
+            now = PassOverThrotlingPeriod(now);
             var work = queue.TakeWork();
 
-            var pendingTask = queue.WaitForPendingWork(work);
+            var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
             pendingTask.Wait(TimeSpan.FromMilliseconds(100));
 
             Assert.True(pendingTask.IsCompleted);

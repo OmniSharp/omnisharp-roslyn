@@ -77,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             var projectIds = GetProjectIdsFromDocuments(documents);
 
-            await _workQueue.WaitForPendingWork(projectIds);
+            await _workQueue.WaitForPendingWorkDoneEvent(projectIds);
 
             return _results
                 .Where(x => projectIds.Any(pid => pid == x.Key))

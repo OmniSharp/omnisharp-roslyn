@@ -45,7 +45,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 var now = _utcNow();
                 var currentWork = _workQueue
-                    .Where(x => x.Value.modified.AddMilliseconds(_throttlingMs) <= now)
+                    .Where(x => ThrottlingPeriodNotActive(x.Value.modified, now))
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
                     .Take(1) // Limit mount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
@@ -60,6 +60,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
+        private bool ThrottlingPeriodNotActive(DateTime modified, DateTime now)
+        {
+            return (now - modified).TotalMilliseconds >= _throttlingMs;
+        }
+
         public void AckWorkAsDone(ProjectId projectId)
         {
             if(_currentWork.TryGetValue(projectId, out var work))
@@ -72,7 +77,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
-        public async Task WaitForPendingWork(ImmutableArray<ProjectId> projectIds)
+        public async Task WaitForPendingWorkDoneEvent(ImmutableArray<ProjectId> projectIds)
         {
             var currentWorkMatches = _currentWork.Where(x => projectIds.Any(pid => pid == x.Key));
 
