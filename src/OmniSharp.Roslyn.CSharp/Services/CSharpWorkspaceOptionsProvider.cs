@@ -46,6 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
                 .WithChangedOption(CSharpFormattingOptions.IndentBlock, formattingOptions.IndentBlock)
                 .WithChangedOption(CSharpFormattingOptions.IndentSwitchSection, formattingOptions.IndentSwitchSection)
                 .WithChangedOption(CSharpFormattingOptions.IndentSwitchCaseSection, formattingOptions.IndentSwitchCaseSection)
+                .WithChangedOption(CSharpFormattingOptions.IndentSwitchCaseSectionWhenBlock, formattingOptions.IndentSwitchCaseSectionWhenBlock)
                 .WithChangedOption(CSharpFormattingOptions.LabelPositioning, LabelPositionOptionForStringValue(formattingOptions.LabelPositioning))
                 .WithChangedOption(CSharpFormattingOptions.WrappingPreserveSingleLine, formattingOptions.WrappingPreserveSingleLine)
                 .WithChangedOption(CSharpFormattingOptions.WrappingKeepStatementsOnSingleLine, formattingOptions.WrappingKeepStatementsOnSingleLine)
