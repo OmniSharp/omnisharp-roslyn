@@ -19,8 +19,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Buffer
 
         public async Task<object> Handle(UpdateBufferRequest request)
         {
-            // To properly handle the request wait until all projects are loaded.
-            await _workspace.BufferManager.UpdateBufferInFullProjectModelAsync(request);
+            await _workspace.BufferManager.UpdateBufferAsync(request);
             return true;
         }
     }

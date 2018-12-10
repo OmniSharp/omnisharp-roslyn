@@ -252,12 +252,6 @@ namespace OmniSharp
             return GetDocument(filePath);
         }
 
-        public async Task<IEnumerable<DocumentId>> GetDocumentIdsWithFilePathFromFullProjectModelAsync(string filePath)
-        {
-            await OnWaitForProjectModelReadyAsync(filePath);
-            return CurrentSolution.GetDocumentIdsWithFilePath(filePath);
-        }
-
         public override bool CanApplyChange(ApplyChangesKind feature)
         {
             return true;
