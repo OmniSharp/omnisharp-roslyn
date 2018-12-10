@@ -411,7 +411,7 @@ namespace OmniSharp.MSBuild
         {
             if (!_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
             {
-                _logger.LogError($"Attemped to update project that is not loaded: {projectFilePath}");
+                _logger.LogError($"Attempted to update project that is not loaded: {projectFilePath}");
                 return;
             }
 
