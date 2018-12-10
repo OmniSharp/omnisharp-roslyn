@@ -353,11 +353,11 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
-            _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
+            _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
