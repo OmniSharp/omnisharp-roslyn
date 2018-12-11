@@ -3,7 +3,7 @@ resources:
     - repository: rsg
       type: github
       name: RocketSurgeonsGuild/AzureDevopsTemplates
-      ref: refs/tags/v0.2.8
+      # ref: refs/tags/v0.2.8
       endpoint: github
 
 variables:
@@ -39,6 +39,7 @@ jobs:
       DotNetVersion: $(DotNetVersion)
       NuGetVersion: $(NuGetVersion)
       Script: build.cake
+      RestorePackageConfig: true
 
   - template: pipeline/cake-job.yml@rsg
     parameters:
@@ -52,6 +53,7 @@ jobs:
       DotNetVersion: $(DotNetVersion)
       NuGetVersion: $(NuGetVersion)
       Script: build.cake
+      RestorePackageConfig: true
 
   - template: pipeline/cake-job.yml@rsg
     parameters:
@@ -65,3 +67,4 @@ jobs:
       DotNetVersion: $(DotNetVersion)
       NuGetVersion: $(NuGetVersion)
       Script: build.cake
+      RestorePackageConfig: true
