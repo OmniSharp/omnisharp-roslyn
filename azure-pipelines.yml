@@ -8,7 +8,7 @@ resources:
 
 variables:
   Configuration: Release
-  Verbosity: Normal
+  Verbosity: Diagnostic
   DotNetVersion: "2.1.500"
   CakeVersion: "0.30.0"
   NuGetVersion: '4.7.1'
