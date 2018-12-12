@@ -75,10 +75,10 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            var toolsPath = Path.Combine(path, "15.0", "bin");
-            if (!Directory.Exists(toolsPath))
+            var toolsPath = FindMSBuildToolsPath(path);
+            if (toolsPath == null)
             {
-                Logger.LogDebug($"Mono MSBuild could not be used because '{toolsPath}' does not exist.");
+                Logger.LogDebug($"Mono MSBuild could not be used because an MSBuild tools path could not be found.");
                 return NoInstances;
             }
 

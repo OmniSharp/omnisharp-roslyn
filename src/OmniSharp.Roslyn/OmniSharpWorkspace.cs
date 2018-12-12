@@ -101,6 +101,7 @@ namespace OmniSharp
 
             var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
             var documentId = AddDocument(projectInfo.Id, filePath);
+            _logger.LogInformation($"Miscellaneous file: {filePath} added to workspace");
             return documentId;
         }
 
@@ -111,6 +112,7 @@ namespace OmniSharp
                 return false;
 
             RemoveDocument(documentId);
+            _logger.LogDebug($"Miscellaneous file: {filePath} removed from workspace");
             return true;
         }
 
