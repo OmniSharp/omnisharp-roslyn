@@ -7,8 +7,8 @@ namespace TestUtility
         public static string GetRandomTempFolderPath()
         {
             var path = Path.Combine(
-                Path.GetTempPath()
-                , Path.GetRandomFileName()
+                Path.GetTempPath(),
+                Path.GetRandomFileName()
             );
 
             Directory.CreateDirectory(path);

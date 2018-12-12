@@ -99,9 +99,9 @@ namespace TestUtility
             const string dotnetSdkResolver = "Microsoft.DotNet.MSBuildSdkResolver";
 
             var directory = Path.Combine(
-                instance.MSBuildPath
-                , "SdkResolvers"
-                , dotnetSdkResolver
+                instance.MSBuildPath,
+                "SdkResolvers",
+                dotnetSdkResolver
             );
 
             Directory.CreateDirectory(directory);
