@@ -15,8 +15,6 @@ namespace OmniSharp.MSBuild.Tests
 {
     public class SolutionSdkUtilTest : AbstractMSBuildTestFixture
     {
-        const string CsProjectTemplate = @"<Project Sdk=""Microsoft.NET.Sdk""><PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup></Project>";
-
         public SolutionSdkUtilTest(ITestOutputHelper output) : base(output)
         {
         }
