@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace OmniSharp.Stdio.Protocol
+namespace OmniSharp.Protocol
 {
     public class Packet
     {

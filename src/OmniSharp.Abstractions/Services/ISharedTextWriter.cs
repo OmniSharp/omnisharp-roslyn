@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace OmniSharp.Stdio.Services
+namespace OmniSharp.Services
 {
     public interface ISharedTextWriter
     {

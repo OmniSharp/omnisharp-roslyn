@@ -4,8 +4,8 @@ using OmniSharp.Extensions.LanguageServer;
 using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Logging;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Protocol;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.LanguageServerProtocol.Logging

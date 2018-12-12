@@ -8,8 +8,8 @@ using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Protocol;
+using OmniSharp.Services;
 
 namespace OmniSharp.LanguageServerProtocol.Eventing
 {
