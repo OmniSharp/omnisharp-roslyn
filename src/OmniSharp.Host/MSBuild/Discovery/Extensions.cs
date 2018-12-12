@@ -35,17 +35,18 @@ namespace OmniSharp.MSBuild.Discovery
 
             return File.Exists(
                 Path.Combine(
-                    instance.MSBuildPath
-                    , "SdkResolvers"
-                    , dotnetSdkResolver
-                    , dotnetSdkResolver + ".dll"
+                    instance.MSBuildPath,
+                    "SdkResolvers",
+                    dotnetSdkResolver,
+                    dotnetSdkResolver + ".dll"
                 )
             );
         }
 
+        /// <summary>
+        /// Checks if it is MSBuild from Visual Studio 2017 RTM that cannot be used.
+        /// </summary>
         public static bool IsInvalidVisualStudio(this MSBuildInstance instance)
-
-            // MSBuild from Visual Studio 2017 RTM cannot be used.
             => instance.Version.Major == 15
                 && instance.Version.Minor == 0
                 && (instance.DiscoveryType == DiscoveryType.DeveloperConsole
@@ -55,16 +56,7 @@ namespace OmniSharp.MSBuild.Discovery
         {
             invalidVSFound = false;
             MSBuildInstance bestMatchInstance = null;
-            var bestMatchScore = -1;
-
-            // same as (without so many allocations)
-            // var bestMatchInstance =  msbuildLocator
-            //     .GetInstances()
-            //     .Select(i => (instance: i, featureScore: GetFeatureScore(i)))
-            //     .OrderByDescending(i => i.featureScore)
-            //     .ThenByDescending(i => i.instance.Version.Major)
-            //     .Select(i => i.instance)
-            //     .FirstOrDefault();
+            var bestMatchScore = 0;
 
             foreach (var instance in msbuildLocator.GetInstances())
             {

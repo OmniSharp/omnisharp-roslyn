@@ -6,9 +6,9 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {
-    public class ExtensionsTests : AbstractTestFixture
+    public class MSBuildSelectionTests : AbstractTestFixture
     {
-        public ExtensionsTests(ITestOutputHelper output)
+        public MSBuildSelectionTests(ITestOutputHelper output)
             : base(output)
         {
         }
@@ -18,16 +18,15 @@ namespace OmniSharp.MSBuild.Tests
         {
             var msBuildInstances = new[]
             {
-                GetInvalidMsBuildInstance()
-
+                GetInvalidMsBuildInstance(),
                 // Valid
-                , new MSBuildInstance(
-                    "Test Instance"
-                    , TestIO.GetRandomTempFolderPath()
-                    , Version.Parse("15.1.2.3")
-                    , DiscoveryType.VisualStudioSetup
-                ).AddDotNetCoreToFakeInstance()
-                , GetStandAloneMSBuildInstance()
+                new MSBuildInstance(
+                    "Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("15.1.2.3"),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
@@ -49,21 +48,21 @@ namespace OmniSharp.MSBuild.Tests
             var msBuildInstances = new[]
             {
                 new MSBuildInstance(
-                    "Valid Test Instance"
-                    , TestIO.GetRandomTempFolderPath()
-                    , Version.Parse("15.3.2.1")
-                    , DiscoveryType.VisualStudioSetup
-                )
-                , GetInvalidMsBuildInstance()
+                    "Valid Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("15.3.2.1"),
+                    DiscoveryType.VisualStudioSetup
+                ),
+                GetInvalidMsBuildInstance(),
 
                 // Valid + Dotnet Core
-                , new MSBuildInstance(
-                    "Another Valid Test Instance"
-                    , TestIO.GetRandomTempFolderPath()
-                    , Version.Parse("15.1.2.3")
-                    , DiscoveryType.VisualStudioSetup
-                ).AddDotNetCoreToFakeInstance()
-                , GetStandAloneMSBuildInstance()
+                new MSBuildInstance(
+                    "Another Valid Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("15.1.2.3"),
+                    DiscoveryType.VisualStudioSetup
+                ).AddDotNetCoreToFakeInstance(),
+                GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
@@ -88,12 +87,12 @@ namespace OmniSharp.MSBuild.Tests
             var msBuildInstances = new[]
             {
                 new MSBuildInstance(
-                    "Test Instance"
-                    , TestIO.GetRandomTempFolderPath()
-                    , Version.Parse("15.1.2.3")
-                    , DiscoveryType.VisualStudioSetup
-                )
-                , GetStandAloneMSBuildInstance()
+                    "Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("15.1.2.3"),
+                    DiscoveryType.VisualStudioSetup
+                ),
+                GetStandAloneMSBuildInstance()
             };
 
             var msbuildLocator = new MSFakeLocator(msBuildInstances);
@@ -112,20 +111,20 @@ namespace OmniSharp.MSBuild.Tests
         private static MSBuildInstance GetStandAloneMSBuildInstance()
         {
             return new MSBuildInstance(
-                "Stand Alone :("
-                , TestIO.GetRandomTempFolderPath()
-                , Version.Parse("99.0.0.0")
-                , DiscoveryType.StandAlone
+                "Stand Alone :(",
+                TestIO.GetRandomTempFolderPath(),
+                Version.Parse("99.0.0.0"),
+                DiscoveryType.StandAlone
             );
         }
 
         private static MSBuildInstance GetInvalidMsBuildInstance()
         {
             return new MSBuildInstance(
-                "Invalid Instance"
-                , TestIO.GetRandomTempFolderPath()
-                , Version.Parse("15.0.4.2")
-                , DiscoveryType.VisualStudioSetup
+                "Invalid Instance",
+                TestIO.GetRandomTempFolderPath(),
+                Version.Parse("15.0.4.2"),
+                DiscoveryType.VisualStudioSetup
             );
         }
     }
