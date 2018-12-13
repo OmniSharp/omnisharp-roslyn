@@ -27,7 +27,9 @@ namespace OmniSharp.Services
             {
                 TargetDirectory = path;
             }
-            else if (File.Exists(path) && Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase))
+            else if (File.Exists(path) &&
+                Path.GetExtension(path).Equals(".sln", StringComparison.OrdinalIgnoreCase) &&
+                Path.GetExtension(path).Equals(".slnproj", StringComparison.OrdinalIgnoreCase))
             {
                 SolutionFilePath = path;
                 TargetDirectory = Path.GetDirectoryName(path);
