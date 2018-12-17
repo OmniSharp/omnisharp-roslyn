@@ -15,17 +15,17 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.MSBuild.Tests
 {
-    public class OnDemandProjectsLoadTests : AbstractMSBuildTestFixture
+    public class LoadProjectsOnDemandTests : AbstractMSBuildTestFixture
     {
-        public OnDemandProjectsLoadTests(ITestOutputHelper output)
+        public LoadProjectsOnDemandTests(ITestOutputHelper output)
             : base(output)
         {
         }
 
         [Fact]
-        public async Task LoadProjectsOnDemandOneByOne()
+        public async Task LoadOnDemandProjectsOneByOne()
         {
-            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.OnDemandProjectsLoad)}"] = "true" };
+            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" };
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
             {
@@ -62,9 +62,9 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task LoadProjectAndItsReferenceOnDemand()
+        public async Task LoadOnDemandProjectAndItsReference()
         {
-            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.OnDemandProjectsLoad)}"] = "true" };
+            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" };
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
             {
@@ -91,10 +91,10 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task OnDemandProjectsLoadSearchStopsAtFile()
+        public async Task LoadOnDemandProjectWithTwoLevelsOfTransitiveReferences()
         {
-            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.OnDemandProjectsLoad)}"] = "true" };
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
+            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.LoadProjectsOnDemand)}"] = "true" };
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("DeepProjectTransitiveReference"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
             {
                 MSBuildWorkspaceInfo workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
@@ -104,58 +104,19 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(workspaceInfo.Projects);
                 Assert.Equal(0, workspaceInfo.Projects.Count);
 
-                // Create a subfolder containing both "stop-search-at" marker file ('.git') and the file to load
-                string stopAtFolder = Path.Combine(testProject.Directory, "App", "StopHere");
-                Directory.CreateDirectory(stopAtFolder);
-                string fileToRequest = Path.Combine(stopAtFolder, "Empty.cs");
-                File.WriteAllText(fileToRequest, "class empty {}");
-                File.WriteAllText(Path.Combine(stopAtFolder, ".git"), string.Empty);
-
-                // Requesting a file should should stop search since it will find stop-search at file in the same folder
-                CodeStructureService service = host.GetRequestHandler<CodeStructureService>(OmniSharpEndpoints.V2.CodeStructure);
-                var request = new CodeStructureRequest { FileName = fileToRequest };
-                CodeStructureResponse response = await service.Handle(request);
+                // Requesting the document should load project App, its reference Lib1 and Lib2 that is referenced by Lib1
+                MembersAsTreeService membersAsTreeService = host.GetRequestHandler<MembersAsTreeService>(OmniSharpEndpoints.MembersTree);
+                var request = new MembersTreeRequest { FileName = Path.Combine(testProject.Directory, "App", "Program.cs") };
+                FileMemberTree response = await membersAsTreeService.Handle(request);
                 workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
 
-                // No project is expected to be found/loaded
+                Assert.NotNull(request);
                 Assert.Null(workspaceInfo.SolutionPath);
                 Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(0, workspaceInfo.Projects.Count);
-            }
-        }
-
-        [Fact]
-        public async Task OnDemandProjectsLoadSearchStopsAtFolder()
-        {
-            var configData = new Dictionary<string, string> { [$"MsBuild:{nameof(MSBuildOptions.OnDemandProjectsLoad)}"] = "true" };
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("TwoProjectsWithSolution"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: configData))
-            {
-                MSBuildWorkspaceInfo workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-                // Expect empty workspace initially since no documents have been requested yet
-                Assert.Null(workspaceInfo.SolutionPath);
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(0, workspaceInfo.Projects.Count);
-
-                // Create a subfolder containing "stop-search-at" marker folder '.git'
-                Directory.CreateDirectory(Path.Combine(testProject.Directory, "App", "StopHere", ".git"));
-
-                string fileToRequestFolder = Path.Combine(testProject.Directory, "App", "StopHere", "EmptyClassLib");
-                Directory.CreateDirectory(fileToRequestFolder);
-                string fileToRequest = Path.Combine(fileToRequestFolder, "Empty.cs");
-                File.WriteAllText(fileToRequest, "class empty {}");
-
-                // Requesting a file should should stop search since it will find stop-search at file in the same folder
-                CodeStructureService service = host.GetRequestHandler<CodeStructureService>(OmniSharpEndpoints.V2.CodeStructure);
-                var request = new CodeStructureRequest { FileName = fileToRequest };
-                CodeStructureResponse response = await service.Handle(request);
-                workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
-
-                // No project is expected to be found/loaded
-                Assert.Null(workspaceInfo.SolutionPath);
-                Assert.NotNull(workspaceInfo.Projects);
-                Assert.Equal(0, workspaceInfo.Projects.Count);
+                Assert.Equal(3, workspaceInfo.Projects.Count);
+                Assert.Equal("App.csproj", Path.GetFileName(workspaceInfo.Projects[0].Path));
+                Assert.Equal("Lib1.csproj", Path.GetFileName(workspaceInfo.Projects[1].Path));
+                Assert.Equal("Lib2.csproj", Path.GetFileName(workspaceInfo.Projects[2].Path));
             }
         }
     }

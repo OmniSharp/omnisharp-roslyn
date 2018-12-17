@@ -25,7 +25,7 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
-        private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyEventHandlers = new ConcurrentBag<Func<string, Task>>();
+        private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
 
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
 
@@ -39,9 +39,9 @@ namespace OmniSharp
 
         public override bool CanOpenDocuments => true;
 
-        public void AddWaitForProjectModelReadyEventHandler(Func<string, Task> eventHandler)
+        public void AddWaitForProjectModelReadyHandler(Func<string, Task> handler)
         {
-            _waitForProjectModelReadyEventHandlers.Add(eventHandler);
+            _waitForProjectModelReadyHandlers.Add(handler);
         }
 
         public override void OpenDocument(DocumentId documentId, bool activate = true)
@@ -385,7 +385,7 @@ namespace OmniSharp
 
         private Task OnWaitForProjectModelReadyAsync(string filePath)
         {
-            return Task.WhenAll(_waitForProjectModelReadyEventHandlers.Select(h => h(filePath)));
+            return Task.WhenAll(_waitForProjectModelReadyHandlers.Select(h => h(filePath)));
         }  
     }
 }

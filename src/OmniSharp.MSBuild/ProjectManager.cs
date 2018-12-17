@@ -68,7 +68,7 @@ namespace OmniSharp.MSBuild
             MetadataFileReferenceCache metadataFileReferenceCache, 
             PackageDependencyChecker packageDependencyChecker, 
             ProjectLoader projectLoader, 
-            OmniSharpWorkspace workspace, 
+            OmniSharpWorkspace workspace,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
@@ -90,22 +90,24 @@ namespace OmniSharp.MSBuild
 
             _onDirectoryFileChanged = OnDirectoryFileChanged;
 
-            if (_options.OnDemandProjectsLoad)
+            if (_options.LoadProjectsOnDemand)
             {
-                _workspace.AddWaitForProjectModelReadyEventHandler(WaitForProjectModelReadyAsync);
+                _workspace.AddWaitForProjectModelReadyHandler(WaitForProjectModelReadyAsync);
             }
         }
 
         private async Task WaitForProjectModelReadyAsync(string documentPath)
         {
             // Search and queue for loading C# projects that are likely to reference the requested file.
-            // C# source files are located pretty much always in the same folder with project file that is referencing them or in a subfolder.
-            // Do not limit search by OmniSharpEnvironment.TargetDirectory to allow for loading on demand projects that are outside of it,
-            // i.e. in VSCode case potentially outside of the folder opened in the IDE.
+            // C# source files are located pretty much always in the same folder with their project file or in a subfolder below.
+            // Search up the root folder to enable on-demand project load in additional scenarios like the following:
+            // - A subfolder in a big codebase was opened in VSCode and then a document was opened that is located outside of the subfoler.
+            // - A workspace was opened in VSCode that includes multiple subfolders from a big codebase.
+            // - Documents from different codebases are opened in the same VSCode workspace.
             string projectDir = Path.GetDirectoryName(documentPath);
-            while(projectDir != null)
+            do
             {
-                List<string> csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
+                var csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
                 if (csProjFiles.Count > 0)
                 {
                     foreach(string csProjFile in csProjFiles)
@@ -119,25 +121,8 @@ namespace OmniSharp.MSBuild
                     break;
                 }
 
-                bool foundStopAtItem = false;
-                foreach (string stopAtItemName in _options.OnDemandProjectsLoadSearchStopsAt)
-                {
-                    string itemPath = Path.Combine(projectDir, stopAtItemName);
-                    if (File.Exists(itemPath) || Directory.Exists(itemPath))
-                    {
-                        foundStopAtItem = true;
-                        break;
-                    }
-                }
-
-                if (foundStopAtItem)
-                {
-                    _logger.LogTrace($"Couldn't find project to load for '{documentPath}'");
-                    break;
-                }
-
                 projectDir = Path.GetDirectoryName(projectDir);
-            }
+            } while(projectDir != null);
             
             // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
             // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
