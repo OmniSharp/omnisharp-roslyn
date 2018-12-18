@@ -83,7 +83,7 @@ namespace OmniSharp.MSBuild.Discovery
                 score++;
 
             if (i.IsInvalidVisualStudio())
-                score--;
+                return int.MinValue;
             else
                 score++;
 
