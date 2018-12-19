@@ -443,6 +443,9 @@ namespace OmniSharp.MSBuild
             {
                 _workspace.RemoveDocument(currentDocument.Value);
             }
+
+            // Finally, recursively watch the project's directory for file changes
+            _fileSystemWatcher.WatchRecursively(new DirectoryInfo(Path.GetDirectoryName(project.FilePath)), _onDirectoryFileChanged);
         }
 
         private void OnDirectoryFileChanged(string path, FileChangeType changeType)
