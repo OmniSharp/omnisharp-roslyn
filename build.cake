@@ -685,6 +685,12 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     DeleteUnnecessaryAssemblies(outputFolder);
 }
 
+void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
+{
+    // copy license
+    FileHelper.Copy(CombinePaths(env.WorkingDirectory, "license.md"), CombinePaths(outputFolder, "license.md"), overwrite: true);
+}
+
 string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration)
 {
     Information($"Publishing Mono build for {project}...");
@@ -694,6 +700,8 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
     var buildFolder = CombinePaths(env.Folders.Bin, configuration, project, "net461");
 
     CopyMonoBuild(env, buildFolder, outputFolder);
+
+    CopyExtraDependencies(env, outputFolder);
 
     Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
@@ -715,6 +723,8 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
     var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
 
     CopyMonoBuild(env, sourceFolder, omnisharpFolder);
+
+    CopyExtraDependencies(env, outputFolder);
 
     Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
@@ -775,6 +785,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 
     // Copy MSBuild to output
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
+
+    CopyExtraDependencies(env, outputFolder);
 
     Package(project, rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
