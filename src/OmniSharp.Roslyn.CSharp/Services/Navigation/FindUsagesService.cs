@@ -39,10 +39,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var usages = request.OnlyThisFile
                     ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
                     : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
-                var ignoreCanBeReferencedByName = symbol is IMethodSymbol method &&
+                var dontRequireReferenceByName = symbol is IMethodSymbol method &&
                     (method.MethodKind == MethodKind.Constructor || method.MethodKind == MethodKind.UserDefinedOperator);
 
-                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || ignoreCanBeReferencedByName))
+                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || dontRequireReferenceByName))
                 {
                     foreach (var location in usage.Locations)
                     {
