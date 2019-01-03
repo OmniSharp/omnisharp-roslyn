@@ -62,7 +62,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         protected async Task<IEnumerable<AvailableCodeAction>> GetAvailableCodeActions(ICodeActionRequest request)
         {
-            var document = this.Workspace.GetDocument(request.FileName);
+            // To produce a complete list of code actions for the document wait until all projects are loaded.
+            var document = await this.Workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             if (document == null)
             {
                 return Array.Empty<AvailableCodeAction>();

@@ -30,10 +30,12 @@ namespace OmniSharp.MSBuild.Tests
             (_msbuildLocator as IDisposable)?.Dispose();
         }
 
-        protected OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null)
+        protected OmniSharpTestHost CreateMSBuildTestHost(string path, IEnumerable<ExportDescriptorProvider> additionalExports = null,
+            IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
-            var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _msbuildLocator);
+            var serviceProvider = TestServiceProvider.Create(this.TestOutput, environment, this.LoggerFactory, _assemblyLoader, _msbuildLocator,
+                configurationData);
 
             return OmniSharpTestHost.Create(serviceProvider, additionalExports);
         }
