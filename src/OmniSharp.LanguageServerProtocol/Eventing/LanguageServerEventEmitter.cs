@@ -1,23 +1,18 @@
-using System;
 using System.Linq;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using OmniSharp.Eventing;
-using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Extensions.LanguageServer.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Models.Events;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using ILanguageServer = OmniSharp.Extensions.LanguageServer.Server.ILanguageServer;
 
 namespace OmniSharp.LanguageServerProtocol.Eventing
 {
     public class LanguageServerEventEmitter : IEventEmitter
     {
-        private readonly LanguageServer _server;
+        private ILanguageServer _server;
 
-        public LanguageServerEventEmitter(LanguageServer server)
+        public void SetLanguageServer(ILanguageServer server)
         {
             _server = server;
         }
@@ -34,7 +29,7 @@ namespace OmniSharp.LanguageServerProtocol.Eventing
 
                         foreach (var group in groups)
                         {
-                            _server.PublishDiagnostics(new PublishDiagnosticsParams()
+                            _server.Document.PublishDiagnostics(new PublishDiagnosticsParams()
                             {
                                 Uri = group.Key,
                                 Diagnostics = group

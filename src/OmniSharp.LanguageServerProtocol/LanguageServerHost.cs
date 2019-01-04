@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Extensions.LanguageServer;
-using OmniSharp.Extensions.LanguageServer.Models;
-using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
+using OmniSharp.Extensions.LanguageServer.Server;
 using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Mef;
@@ -22,12 +22,13 @@ namespace OmniSharp.LanguageServerProtocol
 {
     internal class LanguageServerHost : IDisposable
     {
-        private readonly ServiceCollection _services;
-        private readonly LanguageServer _server;
-        private CompositionHost _compositionHost;
-        private readonly LanguageServerLoggerFactory _loggerFactory;
+        private readonly LanguageServerOptions _options;
+        private IServiceCollection _services;
+        private readonly LoggerFactory _loggerFactory;
         private readonly CommandLineApplication _application;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private CompositionHost _compositionHost;
+        private LanguageServerEventEmitter _eventEmitter;
         private IServiceProvider _serviceProvider;
         private RequestHandlers _handlers;
         private OmniSharpEnvironment _environment;
@@ -39,11 +40,16 @@ namespace OmniSharp.LanguageServerProtocol
             CommandLineApplication application,
             CancellationTokenSource cancellationTokenSource)
         {
-            _services = new ServiceCollection();
-            _loggerFactory = new LanguageServerLoggerFactory();
-            _services.AddSingleton<ILoggerFactory>(_loggerFactory);
-            _server = new LanguageServer(input, output, _loggerFactory);
-            _server.OnInitialize(Initialize);
+            _loggerFactory = new LoggerFactory();
+            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
+            _options = new LanguageServerOptions()
+                .WithInput(input)
+                .WithOutput(output)
+                .WithLoggerFactory(_loggerFactory)
+                .AddDefaultLoggingProvider()
+                .OnInitialize(Initialize)
+                .WithMinimumLogLevel(application.LogLevel)
+                .WithServices(services => _services = services);
             _application = application;
             _cancellationTokenSource = cancellationTokenSource;
         }
@@ -59,13 +65,13 @@ namespace OmniSharp.LanguageServerProtocol
         {
             switch (initializeTrace)
             {
-                case InitializeTrace.verbose:
+                case InitializeTrace.Verbose:
                     return LogLevel.Trace;
 
-                case InitializeTrace.off:
+                case InitializeTrace.Off:
                     return LogLevel.Warning;
 
-                case InitializeTrace.messages:
+                case InitializeTrace.Messages:
                 default:
                     return LogLevel.Information;
             }
@@ -79,14 +85,9 @@ namespace OmniSharp.LanguageServerProtocol
                 GetLogLevel(initializeParams.Trace),
                 _application.OtherArgs.ToArray());
 
-            // TODO: Make this work with logger factory differently
-            // Maybe create a child logger factory?
-            _loggerFactory.AddProvider(_server, _environment);
-            _logger = _loggerFactory.CreateLogger<LanguageServerHost>();
-
             var configurationRoot = new ConfigurationBuilder(_environment).Build();
-            var eventEmitter = new LanguageServerEventEmitter(_server);
-            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, eventEmitter, _services);
+            _eventEmitter = new LanguageServerEventEmitter();
+            _serviceProvider = CompositionHostBuilder.CreateDefaultServiceProvider(_environment, configurationRoot, _eventEmitter, _services);
 
             var plugins = _application.CreatePluginAssemblies();
 
@@ -142,47 +143,39 @@ namespace OmniSharp.LanguageServerProtocol
             _logger.LogTrace("--- Handler Definitions ---");
         }
 
-        private Task Initialize(InitializeParams initializeParams)
+        private Task Initialize(Extensions.LanguageServer.Server.ILanguageServer server, InitializeParams initializeParams)
         {
             CreateCompositionHost(initializeParams);
 
             // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
 
-            _server.AddHandlers(TextDocumentSyncHandler.Enumerate(_handlers, workspace));
-            _server.AddHandlers(DefinitionHandler.Enumerate(_handlers));
-            _server.AddHandlers(HoverHandler.Enumerate(_handlers));
-            _server.AddHandlers(CompletionHandler.Enumerate(_handlers));
-            _server.AddHandlers(SignatureHelpHandler.Enumerate(_handlers));
-            _server.AddHandlers(RenameHandler.Enumerate(_handlers));
-            _server.AddHandlers(DocumentSymbolHandler.Enumerate(_handlers));
-
-            _server.LogMessage(new LogMessageParams()
+            foreach (var handler in TextDocumentSyncHandler.Enumerate(_handlers, workspace)
+                .Concat(DefinitionHandler.Enumerate(_handlers))
+                .Concat(HoverHandler.Enumerate(_handlers))
+                .Concat(CompletionHandler.Enumerate(_handlers))
+                .Concat(SignatureHelpHandler.Enumerate(_handlers))
+                .Concat(RenameHandler.Enumerate(_handlers))
+                .Concat(DocumentSymbolHandler.Enumerate(_handlers)))
             {
-                Message = "Added handlers... waiting for initialize...",
-                Type = MessageType.Log
-            });
+                server.AddHandlers(handler);
+            }
 
             return Task.CompletedTask;
         }
 
         public async Task Start()
         {
-            _server.LogMessage(new LogMessageParams()
-            {
-                Message = "Starting server...",
-                Type = MessageType.Log
-            });
+            var server = await LanguageServer.From(_options);
 
-            await _server.Initialize();
+            _eventEmitter.SetLanguageServer(server);
 
-            _server.LogMessage(new LogMessageParams()
+            server.Window.LogMessage(new LogMessageParams()
             {
                 Message = "initialized...",
                 Type = MessageType.Log
             });
 
-            var logger = _loggerFactory.CreateLogger(typeof(LanguageServerHost));
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
 
             // Kick on diagnostics
@@ -192,7 +185,7 @@ namespace OmniSharp.LanguageServerProtocol
             foreach (var handler in diagnosticHandler)
                 await handler.Handle(new DiagnosticsRequest());
 
-            logger.LogInformation($"Omnisharp server running using Lsp at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
+            _logger.LogInformation($"Omnisharp server running using Lsp at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
 
             Console.CancelKeyPress += (sender, e) =>
             {

@@ -1,5 +1,5 @@
 using System;
-using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
 
