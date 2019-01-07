@@ -16,9 +16,9 @@ namespace OmniSharp.Stdio
             _encoding = Application.Option("-e | --encoding", "Input / output encoding for STDIO protocol.", CommandOptionType.SingleValue);
         }
 
-        public bool Stdio => _stdio.GetValueOrDefault(true);
+        public bool Stdio => true;
 
-        public bool Lsp => _lsp.GetValueOrDefault(false);
+        public bool Lsp => _lsp.HasValue();
 
         public string Encoding => _encoding.GetValueOrDefault<string>(null);
     }

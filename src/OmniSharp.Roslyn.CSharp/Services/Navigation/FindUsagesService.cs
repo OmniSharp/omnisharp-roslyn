@@ -26,7 +26,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
         public async Task<QuickFixResponse> Handle(FindUsagesRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
+            // To produce complete list of usages for symbols in the document wait until all projects are loaded.
+            var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             var response = new QuickFixResponse();
             if (document != null)
             {
