@@ -1,5 +1,4 @@
 ﻿using OmniSharp.Models.FilesChanged;
-using System.IO;
 
 namespace OmniSharp.FileWatching
 {

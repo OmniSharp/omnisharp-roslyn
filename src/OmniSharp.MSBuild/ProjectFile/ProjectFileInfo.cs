@@ -49,8 +49,6 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<PackageReference> PackageReferences => _data.PackageReferences;
         public ImmutableArray<string> Analyzers => _data.Analyzers;
 
-        public string RootNamespace { get; internal set; }
-
         private ProjectFileInfo(
             ProjectId id,
             string filePath,
