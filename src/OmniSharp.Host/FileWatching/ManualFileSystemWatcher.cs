@@ -9,12 +9,10 @@ namespace OmniSharp.FileWatching
     {
         private readonly object _gate = new object();
         private readonly Dictionary<string, Callbacks> _callbacksMap;
-        private readonly Dictionary<DirectoryInfo, Callbacks> _recursiveCallbacksMap;
 
         public ManualFileSystemWatcher()
         {
             _callbacksMap = new Dictionary<string, Callbacks>(StringComparer.OrdinalIgnoreCase);
-            _recursiveCallbacksMap = new Dictionary<DirectoryInfo, Callbacks>();
         }
 
         public void Notify(string filePath, FileChangeType changeType = FileChangeType.Unspecified)
@@ -67,30 +65,6 @@ namespace OmniSharp.FileWatching
                 {
                     callbacks = new Callbacks();
                     _callbacksMap.Add(pathOrExtension, callbacks);
-                }
-
-                callbacks.Add(callback);
-            }
-        }
-
-        public void WatchRecursively(DirectoryInfo directory, FileSystemNotificationCallback callback)
-        {
-            if (directory == null)
-            {
-                throw new ArgumentNullException(nameof(directory));
-            }
-
-            if (callback == null)
-            {
-                throw new ArgumentNullException(nameof(callback));
-            }
-
-            lock (_gate)
-            {
-                if (!_recursiveCallbacksMap.TryGetValue(directory, out var callbacks))
-                {
-                    callbacks = new Callbacks();
-                    _recursiveCallbacksMap.Add(directory, callbacks);
                 }
 
                 callbacks.Add(callback);
