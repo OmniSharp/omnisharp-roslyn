@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace OmniSharp.FileWatching
 {
@@ -28,14 +27,6 @@ namespace OmniSharp.FileWatching
                 if (_callbacksMap.TryGetValue(directoryPath, out var directoryCallbacks))
                 {
                     directoryCallbacks.Invoke(filePath, changeType);
-                }
-
-                var parentDirectory = _recursiveCallbacksMap.Keys.FirstOrDefault(
-                    k => filePath.StartsWith(k.FullName));
-
-                if (parentDirectory != null)
-                {
-                    _recursiveCallbacksMap[parentDirectory].Invoke(filePath, changeType);
                 }
 
                 var extension = Path.GetExtension(filePath);
