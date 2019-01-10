@@ -46,9 +46,6 @@ install:
     popd
     sudo rm -rf /usr/local/src/libuv-1.14.0
     sudo ldconfig
-  elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    # On OSX, we install libuv via Homebrew
-    brew install libuv
   fi
 - export PATH="$PWD/.dotnet:$PATH"
 after_success: |
