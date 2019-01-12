@@ -38,6 +38,7 @@ namespace OmniSharp.Options
             IndentBlock = true;
             IndentSwitchSection = true;
             IndentSwitchCaseSection = true;
+            IndentSwitchCaseSectionWhenBlock = true;
             LabelPositioning = "oneLess";
             WrappingPreserveSingleLine = true;
             WrappingKeepStatementsOnSingleLine = true;
@@ -121,6 +122,8 @@ namespace OmniSharp.Options
         public bool IndentSwitchSection { get; set; }
 
         public bool IndentSwitchCaseSection { get; set; }
+
+        public bool IndentSwitchCaseSectionWhenBlock { get; set; }
 
         public string LabelPositioning { get; set; }
 

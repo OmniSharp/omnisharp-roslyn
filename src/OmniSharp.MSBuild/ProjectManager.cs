@@ -364,7 +364,7 @@ namespace OmniSharp.MSBuild
         {
             if (!_projectFiles.TryGetValue(projectFilePath, out var projectFileInfo))
             {
-                _logger.LogError($"Attemped to update project that is not loaded: {projectFilePath}");
+                _logger.LogError($"Attempted to update project that is not loaded: {projectFilePath}");
                 return;
             }
 
@@ -375,11 +375,11 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
-            _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
+            _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
