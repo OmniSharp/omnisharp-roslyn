@@ -4,7 +4,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>15.8.166</MSBuildPackageVersion>
     <NuGetPackageVersion>4.8.0</NuGetPackageVersion>
-    <RoslynPackageVersion>2.10.0</RoslynPackageVersion>
+    <RoslynPackageVersion>2.11.0-beta1-final</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
@@ -60,7 +60,9 @@
     <PackageReference Update="Nuget.ProjectModel" Version="$(NuGetPackageVersion)" />
     <PackageReference Update="Nuget.Versioning" Version="$(NuGetPackageVersion)" />
 
+    <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
+    <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
     <PackageReference Update="System.Composition" Version="1.0.31" />
     <PackageReference Update="System.Reflection.Metadata" Version="1.4.2" />
     <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.5.24" />
