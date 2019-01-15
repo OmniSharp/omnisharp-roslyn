@@ -275,6 +275,8 @@ namespace OmniSharp.MSBuild
             {
                 _processingQueue = false;
             }
+
+            _fileSystemWatcher.Watch(".cs", _onDirectoryFileChanged);
         }
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) LoadProject(string projectFilePath)
@@ -421,8 +423,6 @@ namespace OmniSharp.MSBuild
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
             {
-                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), _onDirectoryFileChanged);
-
                 // If a document for this source file already exists in the project, carry on.
                 if (currentDocuments.Remove(sourceFile))
                 {

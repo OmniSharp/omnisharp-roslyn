@@ -13,7 +13,7 @@ mono: latest
 os:
 - linux
 - osx
-osx_image: xcode9.2
+osx_image: xcode9.4
 script:
 - git fetch --unshallow
 - git fetch origin '+refs/heads/*:refs/heads/*'
@@ -48,6 +48,7 @@ install:
     sudo ldconfig
   elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
     # On OSX, we install libuv via Homebrew
+    brew update
     brew install libuv
   fi
 - export PATH="$PWD/.dotnet:$PATH"
