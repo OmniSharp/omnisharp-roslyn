@@ -4,6 +4,7 @@ All changes to the project will be documented in this file.
 ## [1.32.9] - not yet released
 * Updated to Roslyn 2.10.0 (PR: [#1344](https://github.com/OmniSharp/omnisharp-roslyn/pull/1344))
 * Incorporate *IndentSwitchCaseSectionWhenBlock* into OmniSharp's formatting options. This fixes the default formatting behavior, as the setting is set to *true* by default, and still allows users to disable it if needed. ([#1351](https://github.com/OmniSharp/omnisharp-roslyn/issues/1351), PR: [#1353](https://github.com/OmniSharp/omnisharp-roslyn/pull/1353))
+* Removed unused `-stdio` flag from the `StdioCommandLineApplication` (PR: [#1362](https://github.com/OmniSharp/omnisharp-roslyn/pull/1362))
 * Fixed finding references to operator overloads _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1371](https://github.com/OmniSharp/omnisharp-roslyn/pull/1371))
 
 ## [1.32.8] - 2018-11-14
