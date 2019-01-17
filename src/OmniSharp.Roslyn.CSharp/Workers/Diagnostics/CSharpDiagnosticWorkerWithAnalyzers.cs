@@ -176,7 +176,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
             finally
             {
-                _workQueue.AckWorkAsDone(project.Id);
+                _workQueue.MarkWorkAsCompleteForProject(project.Id);
             }
         }
 

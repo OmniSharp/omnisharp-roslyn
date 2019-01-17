@@ -108,7 +108,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             now = PassOverThrotlingPeriod(now);
 
             var work = queue.TakeWork();
-            queue.AckWorkAsDone(projectId);
+            queue.MarkWorkAsCompleteForProject(projectId);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }
@@ -131,7 +131,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             Assert.False(pendingTask.IsCompleted);
 
-            queue.AckWorkAsDone(projectId);
+            queue.MarkWorkAsCompleteForProject(projectId);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }

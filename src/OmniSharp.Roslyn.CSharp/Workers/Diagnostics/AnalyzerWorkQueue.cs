@@ -65,7 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return (now - modified).TotalMilliseconds >= _throttlingMs;
         }
 
-        public void AckWorkAsDone(ProjectId projectId)
+        public void MarkWorkAsCompleteForProject(ProjectId projectId)
         {
             if(_currentWork.TryGetValue(projectId, out var work))
             {
