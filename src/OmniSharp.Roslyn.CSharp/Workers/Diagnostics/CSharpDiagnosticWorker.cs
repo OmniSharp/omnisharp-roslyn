@@ -145,8 +145,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             var semanticModels = await Task.WhenAll(documents.Select(doc => doc.GetSemanticModelAsync()));
 
             var items = semanticModels
-                .Select(sm => sm.GetDiagnostics())
-                .SelectMany(x => x);
+                .SelectMany(sm => sm.GetDiagnostics());
 
             return new DiagnosticResult()
             {
