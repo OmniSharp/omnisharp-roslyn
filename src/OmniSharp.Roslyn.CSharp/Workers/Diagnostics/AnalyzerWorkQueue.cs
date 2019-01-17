@@ -13,11 +13,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     {
         private readonly int _throttlingMs = 300;
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _workQueue =
-            new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)>();
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)> _workQueue =
+            new ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)>();
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)> _currentWork =
-            new ConcurrentDictionary<ProjectId, (DateTime modified, ProjectId projectId, CancellationTokenSource workDoneSource)>();
+        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)> _currentWork =
+            new ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)>();
         private readonly Func<DateTime> _utcNow;
         private readonly int _timeoutForPendingWorkMs;
         private ILogger<AnalyzerWorkQueue> _logger;
@@ -35,8 +35,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         public void PutWork(ProjectId projectId)
         {
             _workQueue.AddOrUpdate(projectId,
-                (modified: DateTime.UtcNow, projectId: projectId, new CancellationTokenSource()),
-                (_, oldValue) => (modified: DateTime.UtcNow, projectId: projectId, workDoneSource: oldValue.workDoneSource));
+                (modified: DateTime.UtcNow, new CancellationTokenSource()),
+                (_, oldValue) => (modified: DateTime.UtcNow, oldValue.workDoneSource));
         }
 
         public ImmutableArray<ProjectId> TakeWork()
