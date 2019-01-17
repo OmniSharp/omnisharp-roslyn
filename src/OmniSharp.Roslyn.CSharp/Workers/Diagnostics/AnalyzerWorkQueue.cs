@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 var currentWork = _workQueue
                     .Where(x => ThrottlingPeriodNotActive(x.Value.modified, now))
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
-                    .Take(1) // Limit mount of work executed by once. This is needed on large solution...
+                    .Take(1) // Limit amount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
 
                 foreach (var work in currentWork)
