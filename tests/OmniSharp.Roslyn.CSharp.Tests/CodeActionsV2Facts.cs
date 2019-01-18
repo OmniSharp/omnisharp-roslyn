@@ -124,6 +124,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
+                "Fix formatting",
                 "Extract Method"
             };
             Assert.Equal(expected, refactorings);
