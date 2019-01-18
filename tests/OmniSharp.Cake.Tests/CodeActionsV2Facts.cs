@@ -64,6 +64,7 @@ namespace OmniSharp.Cake.Tests
             {
                 "using System.Text.RegularExpressions;",
                 "System.Text.RegularExpressions.Regex",
+                "Fix formatting",
                 "Extract Method"
             };
             Assert.Equal(expected, refactorings);
