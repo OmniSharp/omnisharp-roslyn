@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -130,7 +131,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
-
             queue.MarkWorkAsCompleteForProject(projectId);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
@@ -152,6 +152,34 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             pendingTask.Wait(TimeSpan.FromMilliseconds(100));
 
             Assert.True(pendingTask.IsCompleted);
+        }
+
+        [Fact]
+        public async Task WhenMultipleThreadsAreConsumingAnalyzerWorkerQueueItWorksAsExpected()
+        {
+            var now = DateTime.UtcNow;
+
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 50);
+
+            var parallelQueues =
+                Enumerable.Range(0, 10)
+                    .Select(_ =>
+                        Task.Run(() => {
+                            var projectId = ProjectId.CreateNewId();
+
+                            queue.PutWork(projectId);
+
+                            PassOverThrotlingPeriod(now);
+                            var work = queue.TakeWork();
+
+                            var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
+                            pendingTask.Wait(TimeSpan.FromMilliseconds(5));
+
+                            Assert.True(pendingTask.IsCompleted);
+                    }))
+                    .ToArray();
+
+            await Task.WhenAll(parallelQueues);
         }
     }
 }
