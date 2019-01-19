@@ -109,15 +109,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AddProjectWitFile(host, testFile, testAnalyzerRef);
 
-                // This retry should be replaced with emitted events listener aproach after LSP is mainstream.
-                // Retry is required when build system greatly slows down some times, another issue is that
-                // it feels that some of update events from workspace get lost and it requires further investigation.
-                // If missing events are true then same issue will happen with LSP version too.
-                // await RetryAssert.On<ContainsException>(async () =>
-                // {
                 var result = await host.RequestCodeCheckAsync("testFile.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
-                // });
             }
         }
 
@@ -135,11 +128,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AddProjectWitFile(host, testFile);
 
-                // await RetryAssert.On<ContainsException>(async () =>
-                // {
                 var result = await host.RequestCodeCheckAsync();
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
-                // });
             }
         }
 
@@ -162,11 +152,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     testRules.ToImmutableDictionary(),
                     new ImmutableArray<RuleSetInclude>()));
 
-                // await RetryAssert.On<ContainsException>(async () =>
-                // {
                 var result = await host.RequestCodeCheckAsync("testFile_2.cs");
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
-                // });
             }
         }
 
@@ -225,11 +212,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     testRules.ToImmutableDictionary(),
                     new ImmutableArray<RuleSetInclude>()));
 
-                // await RetryAssert.On<ContainsException>(async () =>
-                // {
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
-                // });
             }
         }
 

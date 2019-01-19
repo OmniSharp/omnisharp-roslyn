@@ -29,12 +29,8 @@ namespace OmniSharp.Cake.Tests
         {
             const string input = @"zzz";
 
-            // Remove this retry once rare issue with missing update is handled or system is replaced with LSP event
-            // based approach.
-            await RetryAssert.On<NotEmptyException>(async () => {
-                var diagnostics = await FindDiagnostics(input, includeFileName: true);
-                Assert.NotEmpty(diagnostics.QuickFixes);
-            });
+            var diagnostics = await FindDiagnostics(input, includeFileName: true);
+            Assert.NotEmpty(diagnostics.QuickFixes);
         }
 
         [Fact]
