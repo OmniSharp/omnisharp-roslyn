@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -9,50 +10,65 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class DiagnosticsFacts : AbstractSingleRequestHandlerTestFixture<CodeCheckService>
+    public class DiagnosticsFacts
     {
-        public DiagnosticsFacts(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
-            : base(output, sharedOmniSharpHostFixture)
+        private readonly ITestOutputHelper _testOutput;
+
+        public DiagnosticsFacts(ITestOutputHelper testOutput)
         {
+            _testOutput = testOutput;
         }
 
-        protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
 
-        [Fact]
-        public async Task CodeCheckSpecifiedFileOnly()
+        [Theory]
+        [InlineData("true")]
+        [InlineData("false")]
+        public async Task CodeCheckSpecifiedFileOnly(string roslynAnalyzersEnabled)
         {
-            SharedOmniSharpTestHost.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
-            var requestHandler = GetRequestHandler(SharedOmniSharpTestHost);
-            var quickFixes = await requestHandler.Handle(new CodeCheckRequest() { FileName = "a.cs" });
+            using (var host = GetHost(roslynAnalyzersEnabled))
+            {
+                host.AddFilesToWorkspace(new TestFile("a.cs", "class C { int n = true; }"));
+                var quickFixes = await host.RequestCodeCheckAsync("a.cs");
 
-            Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0029"));
-            Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
+                Assert.Contains(quickFixes.QuickFixes.Select(x => x.ToString()), x => x.Contains("CS0029"));
+                Assert.Equal("a.cs", quickFixes.QuickFixes.First().FileName);
+            }
         }
 
-        [Fact]
-        public async Task CheckAllFiles()
+        private OmniSharpTestHost GetHost(string roslynAnalyzersEnabled)
         {
-            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled } });
+        }
 
-            SharedOmniSharpTestHost.AddFilesToWorkspace(
-                new TestFile("a.cs", "class C1 { int n = true; }"),
-                new TestFile("b.cs", "class C2 { int n = true; }"));
+        [Theory]
+        [InlineData("true")]
+        [InlineData("false")]
+        public async Task CheckAllFiles(string roslynAnalyzersEnabled)
+        {
+            using(var host = GetHost(roslynAnalyzersEnabled))
+            {
+                host.AddFilesToWorkspace(
+                    new TestFile("a.cs", "class C1 { int n = true; }"),
+                    new TestFile("b.cs", "class C2 { int n = true; }"));
 
-            var quickFixes = await handler.Handle(new CodeCheckRequest());
-            Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
-            Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+                var quickFixes = await host.RequestCodeCheckAsync();
+
+                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
+                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "b.cs");
+            }
         }
 
         [Fact]
         public async Task AnalysisSupportBuiltInIDEAnalysers()
         {
-            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+            using(var host = GetHost(roslynAnalyzersEnabled: "true"))
+            {
+                host.AddFilesToWorkspace(
+                    new TestFile("a.cs", "class C1 { int n = true; }"));
 
-            SharedOmniSharpTestHost.AddFilesToWorkspace(
-                new TestFile("a.cs", "class C1 { int n = true; }"));
-
-            var quickFixes = await handler.Handle(new CodeCheckRequest());
-            Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0040"));
+                var quickFixes = await host.RequestCodeCheckAsync("a.cs");
+                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0040"));
+            }
         }
     }
 }
