@@ -15,6 +15,7 @@ using OmniSharp.LanguageServerProtocol.Eventing;
 using OmniSharp.LanguageServerProtocol.Handlers;
 using OmniSharp.Mef;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Roslyn;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 
@@ -149,6 +150,7 @@ namespace OmniSharp.LanguageServerProtocol
 
             // TODO: Make it easier to resolve handlers from MEF (without having to add more attributes to the services if we can help it)
             var workspace = _compositionHost.GetExport<OmniSharpWorkspace>();
+            _compositionHost.GetExport<DiagnosticEventForwarder>().IsEnabled = true;
 
             foreach (var handler in TextDocumentSyncHandler.Enumerate(_handlers, workspace)
                 .Concat(DefinitionHandler.Enumerate(_handlers))
@@ -177,13 +179,6 @@ namespace OmniSharp.LanguageServerProtocol
             });
 
             WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
-
-            // Kick on diagnostics
-            var diagnosticHandler = _handlers.GetAll()
-                .OfType<IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>>();
-
-            foreach (var handler in diagnosticHandler)
-                await handler.Handle(new DiagnosticsRequest());
 
             _logger.LogInformation($"Omnisharp server running using Lsp at location '{_environment.TargetDirectory}' on host {_environment.HostProcessId}.");
 
