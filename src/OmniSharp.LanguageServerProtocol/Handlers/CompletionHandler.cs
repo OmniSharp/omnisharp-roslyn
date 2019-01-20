@@ -127,7 +127,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         {
             return new CompletionRegistrationOptions()
             {
-                DocumentSelector = _documentSelector
+                DocumentSelector = _documentSelector,
+                TriggerCharacters = new[] { "." },
             };
         }
 
