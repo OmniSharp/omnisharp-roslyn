@@ -37,6 +37,37 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task TestFileMovedToPreviouslyEmptyDirectory()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateOmniSharpHost(testProject.Directory))
+            {
+                var watcher = host.GetExport<IFileSystemWatcher>();
+
+                var projectDirectory = Path.GetDirectoryName(host.Workspace.CurrentSolution.Projects.First().FilePath);
+                const string filename = "FileName.cs";
+                var filePath = Path.Combine(projectDirectory, filename);
+                File.WriteAllText(filePath, "text");
+                var handler = GetRequestHandler(host);
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Create } });
+
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+
+                var nestedDirectory = Path.Combine(projectDirectory, "Nested");
+                Directory.CreateDirectory(nestedDirectory);
+
+                var destinationPath = Path.Combine(nestedDirectory, filename);
+                File.Move(filePath, destinationPath);
+
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = filePath, ChangeType = FileChangeType.Delete } });
+                await handler.Handle(new[] { new FilesChangedRequest() { FileName = destinationPath, ChangeType = FileChangeType.Create } });
+
+                Assert.Contains(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == destinationPath);
+                Assert.DoesNotContain(host.Workspace.CurrentSolution.Projects.First().Documents, d => d.Name == filePath);
+            }
+        }
+
+        [Fact]
         public void TestMultipleDirectoryWatchers()
         {
             using (var host = CreateEmptyOmniSharpHost())
