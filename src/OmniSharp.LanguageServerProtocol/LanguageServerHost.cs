@@ -157,6 +157,11 @@ namespace OmniSharp.LanguageServerProtocol
             _server.AddHandlers(RenameHandler.Enumerate(_handlers));
             _server.AddHandlers(DocumentSymbolHandler.Enumerate(_handlers));
 
+            _server.Exit += (sender) =>
+            {
+            	_cancellationTokenSource.Cancel();
+            };
+
             _server.LogMessage(new LogMessageParams()
             {
                 Message = "Added handlers... waiting for initialize...",
