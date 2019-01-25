@@ -3,6 +3,7 @@ using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -169,6 +170,7 @@ namespace OmniSharp.LanguageServerProtocol
         public async Task Start()
         {
             var server = await LanguageServer.From(_options);
+            server.Exit.Subscribe(Observer.Create<int>(i => _cancellationTokenSource.Cancel()));
 
             _eventEmitter.SetLanguageServer(server);
 
