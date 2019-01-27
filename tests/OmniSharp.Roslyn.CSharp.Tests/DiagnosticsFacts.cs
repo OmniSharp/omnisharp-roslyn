@@ -21,9 +21,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
 
         [Theory]
-        [InlineData("true")]
-        [InlineData("false")]
-        public async Task CodeCheckSpecifiedFileOnly(string roslynAnalyzersEnabled)
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CodeCheckSpecifiedFileOnly(bool roslynAnalyzersEnabled)
         {
             using (var host = GetHost(roslynAnalyzersEnabled))
             {
@@ -35,15 +35,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        private OmniSharpTestHost GetHost(string roslynAnalyzersEnabled)
+        private OmniSharpTestHost GetHost(bool roslynAnalyzersEnabled)
         {
-            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled } });
+            return OmniSharpTestHost.Create(testOutput: _testOutput, configurationData: new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } });
         }
 
         [Theory]
-        [InlineData("true")]
-        [InlineData("false")]
-        public async Task CheckAllFiles(string roslynAnalyzersEnabled)
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task CheckAllFiles(bool roslynAnalyzersEnabled)
         {
             using(var host = GetHost(roslynAnalyzersEnabled))
             {
@@ -61,7 +61,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task AnalysisSupportBuiltInIDEAnalysers()
         {
-            using(var host = GetHost(roslynAnalyzersEnabled: "true"))
+            using(var host = GetHost(roslynAnalyzersEnabled: true))
             {
                 host.AddFilesToWorkspace(
                     new TestFile("a.cs", "class C1 { int n = true; }"));
