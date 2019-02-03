@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -17,6 +18,7 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -39,12 +41,14 @@ namespace OmniSharp.MSBuild
         }
 
         private readonly ILogger _logger;
+        private readonly MSBuildOptions _options;
         private readonly IEventEmitter _eventEmitter;
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly MetadataFileReferenceCache _metadataFileReferenceCache;
         private readonly PackageDependencyChecker _packageDependencyChecker;
         private readonly ProjectFileInfoCollection _projectFiles;
         private readonly HashSet<string> _failedToLoadProjectFiles;
+        private readonly ConcurrentDictionary<string, int/*unused*/> _projectsRequestedOnDemand;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
@@ -57,15 +61,25 @@ namespace OmniSharp.MSBuild
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
-        public ProjectManager(ILoggerFactory loggerFactory, IEventEmitter eventEmitter, IFileSystemWatcher fileSystemWatcher, MetadataFileReferenceCache metadataFileReferenceCache, PackageDependencyChecker packageDependencyChecker, ProjectLoader projectLoader, OmniSharpWorkspace workspace, ImmutableArray<IMSBuildEventSink> eventSinks)
+        public ProjectManager(ILoggerFactory loggerFactory, 
+            MSBuildOptions options, 
+            IEventEmitter eventEmitter, 
+            IFileSystemWatcher fileSystemWatcher, 
+            MetadataFileReferenceCache metadataFileReferenceCache, 
+            PackageDependencyChecker packageDependencyChecker, 
+            ProjectLoader projectLoader, 
+            OmniSharpWorkspace workspace,
+            ImmutableArray<IMSBuildEventSink> eventSinks)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
+            _options = options ?? new MSBuildOptions();
             _eventEmitter = eventEmitter;
             _fileSystemWatcher = fileSystemWatcher;
             _metadataFileReferenceCache = metadataFileReferenceCache;
             _packageDependencyChecker = packageDependencyChecker;
             _projectFiles = new ProjectFileInfoCollection();
             _failedToLoadProjectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _projectsRequestedOnDemand = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
             _eventSinks = eventSinks;
@@ -75,6 +89,46 @@ namespace OmniSharp.MSBuild
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
 
             _onDirectoryFileChanged = OnDirectoryFileChanged;
+
+            if (_options.LoadProjectsOnDemand)
+            {
+                _workspace.AddWaitForProjectModelReadyHandler(WaitForProjectModelReadyAsync);
+            }
+        }
+
+        private async Task WaitForProjectModelReadyAsync(string documentPath)
+        {
+            // Search and queue for loading C# projects that are likely to reference the requested file.
+            // C# source files are located pretty much always in the same folder with their project file or in a subfolder below.
+            // Search up the root folder to enable on-demand project load in additional scenarios like the following:
+            // - A subfolder in a big codebase was opened in VSCode and then a document was opened that is located outside of the subfoler.
+            // - A workspace was opened in VSCode that includes multiple subfolders from a big codebase.
+            // - Documents from different codebases are opened in the same VSCode workspace.
+            string projectDir = Path.GetDirectoryName(documentPath);
+            do
+            {
+                var csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
+                if (csProjFiles.Count > 0)
+                {
+                    foreach(string csProjFile in csProjFiles)
+                    {
+                        if (_projectsRequestedOnDemand.TryAdd(csProjFile, 0 /*unused*/))
+                        {
+                            QueueProjectUpdate(csProjFile, allowAutoRestore:true);
+                        }
+                    }
+
+                    break;
+                }
+
+                projectDir = Path.GetDirectoryName(projectDir);
+            } while(projectDir != null);
+            
+            // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
+            // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
+            _logger.LogTrace($"Started waiting for projects queue to be empty when requested '{documentPath}'");
+            await WaitForQueueEmptyAsync();
+            _logger.LogTrace($"Stopped waiting for projects queue to be empty when requested '{documentPath}'");
         }
 
         protected override void DisposeCore(bool disposing)
@@ -221,6 +275,8 @@ namespace OmniSharp.MSBuild
             {
                 _processingQueue = false;
             }
+
+            _fileSystemWatcher.Watch(".cs", _onDirectoryFileChanged);
         }
 
         private (ProjectFileInfo, ProjectLoadedEventArgs) LoadProject(string projectFilePath)
@@ -367,8 +423,6 @@ namespace OmniSharp.MSBuild
             // Add source files to the project.
             foreach (var sourceFile in sourceFiles)
             {
-                _fileSystemWatcher.Watch(Path.GetDirectoryName(sourceFile), _onDirectoryFileChanged);
-
                 // If a document for this source file already exists in the project, carry on.
                 if (currentDocuments.Remove(sourceFile))
                 {

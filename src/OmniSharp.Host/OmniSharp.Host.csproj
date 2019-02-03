@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.SDK.EmbedInteropTypes" PrivateAssets="all" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
