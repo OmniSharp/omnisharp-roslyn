@@ -40,17 +40,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var usages = request.OnlyThisFile
                     ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
                     : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
-                var dontRequireReferenceByName = symbol is IMethodSymbol method &&
-                    (method.MethodKind == MethodKind.Constructor || method.MethodKind == MethodKind.UserDefinedOperator);
 
-                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || dontRequireReferenceByName))
+                foreach (var usage in usages)
                 {
                     foreach (var location in usage.Locations)
                     {
                         locations.Add(location.Location);
                     }
 
-                    if (!request.ExcludeDefinition)
+                    if (!request.ExcludeDefinition && usage.Definition == symbol)
                     {
                         var definitionLocations = usage.Definition.Locations
                             .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
