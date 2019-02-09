@@ -1,9 +1,14 @@
-﻿using System;
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,8 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly OmniSharpWorkspace _workspace;
         private readonly object _lock = new object();
         private readonly DiagnosticEventForwarder _forwarder;
-        private bool _queueRunning = false;
-        private readonly ConcurrentQueue<string> _openDocuments = new ConcurrentQueue<string>();
+        private readonly IObserver<string> _openDocuments;
 
         public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
@@ -35,108 +39,95 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _forwarder = forwarder;
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorker>();
 
+            var openDocumentsSubject = new Subject<string>();
+            _openDocuments = openDocumentsSubject;
+
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
+            _workspace.DocumentOpened += OnDocumentOpened;
+            _workspace.DocumentClosed += OnDocumentOpened;
+
+            openDocumentsSubject
+                .GroupByUntil(x => true, group => Observable.Amb(
+                    group.Throttle(TimeSpan.FromMilliseconds(200)),
+                    group.Distinct().Skip(99))
+                )
+                .Select(x => x.ToArray())
+                .Merge()
+                .SubscribeOn(TaskPoolScheduler.Default)
+                .Select(ProcessQueue)
+                .Merge()
+                .Subscribe();
         }
 
-        private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
+        private void OnDocumentOpened(object sender, DocumentEventArgs args)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged)
+            if (!_forwarder.IsEnabled)
             {
-                var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
-
-                this.EmitDiagnostics(newDocument.FilePath);
-                foreach (var document in _workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x)))
-                {
-                    this.EmitDiagnostics(document.FilePath);
-                }
+                return;
             }
         }
 
         private void EmitDiagnostics(params string[] documents)
         {
-            if (_forwarder.IsEnabled)
-            {
-                foreach (var document in documents)
-                {
-                    if (!_openDocuments.Contains(document))
-                    {
-                        _openDocuments.Enqueue(document);
-                    }
-                }
+            EmitDiagnostics(args.Document.FilePath);
+            EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
+        }
 
-                if (!_queueRunning && !_openDocuments.IsEmpty)
-                {
-                    this.ProcessQueue();
-                }
+        private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
+        {
+            if (!_forwarder.IsEnabled)
+            {
+                return;
+            }
+
+            if (changeEvent.Kind == WorkspaceChangeKind.DocumentAdded || changeEvent.Kind == WorkspaceChangeKind.DocumentChanged || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded)
+            {
+                var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
+
+                EmitDiagnostics(newDocument.FilePath);
+                EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
+            }
+            else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
+            {
+                EmitDiagnostics(changeEvent.NewSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.FilePath).ToArray());
             }
         }
 
-        private void ProcessQueue()
+        public void QueueDiagnostics(params string[] documents)
         {
-            lock (_lock)
+            if (!_forwarder.IsEnabled)
             {
-                _queueRunning = true;
+                return;
             }
 
-            Task.Factory.StartNew(async () =>
-            {
-                await Task.Delay(100);
-                await Dequeue();
-
-                if (_openDocuments.IsEmpty)
-                {
-                    lock (_lock)
-                    {
-                        _queueRunning = false;
-                    }
-                }
-                else
-                {
-                    this.ProcessQueue();
-                }
-            });
+            this.EmitDiagnostics(documents);
         }
 
-        private async Task Dequeue()
+        private void EmitDiagnostics(params string[] documents)
         {
-            var tasks = new List<Task<DiagnosticResult>>();
-            for (var i = 0; i < 50; i++)
+            if (!_forwarder.IsEnabled)
             {
-                if (_openDocuments.IsEmpty)
-                {
-                    break;
-                }
-
-                if (_openDocuments.TryDequeue(out var filePath))
-                {
-                    tasks.Add(this.ProcessNextItem(filePath));
-                }
+                return;
             }
 
-            if (!tasks.Any()) return;
-
-            var diagnosticResults = await Task.WhenAll(tasks.ToArray());
-            if (diagnosticResults.Any())
+            foreach (var document in documents)
             {
+                _openDocuments.OnNext(document);
+            }
+        }
+
+        private IObservable<Unit> ProcessQueue(IEnumerable<string> filePaths)
+        {
+            return Observable.FromAsync(async () =>
+            {
+                var results = await Task.WhenAll(filePaths.Distinct().Select(ProcessNextItem));
                 var message = new DiagnosticMessage()
                 {
-                    Results = diagnosticResults
+                    Results = results
                 };
 
-                this._forwarder.Forward(message);
-            }
-
-            if (_openDocuments.IsEmpty)
-            {
-                lock (_lock)
-                {
-                    _queueRunning = false;
-                }
-            }
-            else
-            {
-                this.ProcessQueue();
-            }
+                _forwarder.Forward(message);
+            });
         }
 
         private async Task<DiagnosticResult> ProcessNextItem(string filePath)
