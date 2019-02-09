@@ -67,12 +67,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        private void EmitDiagnostics(params string[] documents)
-        {
-            EmitDiagnostics(args.Document.FilePath);
-            EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
-        }
-
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
             if (!_forwarder.IsEnabled)
@@ -84,7 +78,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
 
-                EmitDiagnostics(newDocument.FilePath);
                 EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
             }
             else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
