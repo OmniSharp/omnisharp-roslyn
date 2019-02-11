@@ -28,47 +28,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
         {
             // To produce complete list of usages for symbols in the document wait until all projects are loaded.
             var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
-            var response = new QuickFixResponse();
-            if (document != null)
+            if (document == null)
             {
-                var locations = new List<Location>();
-                var semanticModel = await document.GetSemanticModelAsync();
-                var sourceText = await document.GetTextAsync();
-                var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-                var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
-                var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
-                var usages = request.OnlyThisFile
-                    ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
-                    : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
-
-                foreach (var usage in usages)
-                {
-                    foreach (var location in usage.Locations)
-                    {
-                        locations.Add(location.Location);
-                    }
-
-                    if (!request.ExcludeDefinition && usage.Definition == symbol)
-                    {
-                        var definitionLocations = usage.Definition.Locations
-                            .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
-
-                        foreach (var location in definitionLocations)
-                        {
-                            locations.Add(location);
-                        }
-                    }
-                }
-
-                var quickFixes = locations.Distinct().Select(l => l.GetQuickFix(_workspace));
-
-                response = new QuickFixResponse(quickFixes.Distinct()
-                                                .OrderBy(q => q.FileName)
-                                                .ThenBy(q => q.Line)
-                                                .ThenBy(q => q.Column));
+                return new QuickFixResponse();
             }
 
-            return response;
+            var semanticModel = await document.GetSemanticModelAsync();
+            var sourceText = await document.GetTextAsync();
+            var position = sourceText.Lines.GetPosition(new LinePosition(request.Line, request.Column));
+            var symbol = await SymbolFinder.FindSymbolAtPositionAsync(semanticModel, position, _workspace);
+            var definition = await SymbolFinder.FindSourceDefinitionAsync(symbol, _workspace.CurrentSolution);
+            var usages = request.OnlyThisFile
+                ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
+                : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+            var locations = usages.SelectMany(u => u.Locations).Select(l => l.Location).ToList();
+
+            if (!request.ExcludeDefinition)
+            {
+                // always skip get/set methods of properties from the list of definition locations.
+                var definitionLocations = usages.Select(u => u.Definition)
+                    .Where(def => !(def is IMethodSymbol method && method.AssociatedSymbol is IPropertySymbol))
+                    .SelectMany(def => def.Locations)
+                    .Where(loc => loc.IsInSource && (!request.OnlyThisFile || loc.SourceTree.FilePath == request.FileName));
+
+                locations.AddRange(definitionLocations);
+            }
+
+            var quickFixes = locations.Distinct().Select(l => l.GetQuickFix(_workspace));
+
+            return new QuickFixResponse(quickFixes.Distinct()
+                                            .OrderBy(q => q.FileName)
+                                            .ThenBy(q => q.Line)
+                                            .ThenBy(q => q.Column));
         }
     }
 }
