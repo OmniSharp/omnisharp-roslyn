@@ -13,14 +13,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     {
         private readonly int _throttlingMs = 300;
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)> _workQueue =
-            new ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)>();
+        private readonly ConcurrentDictionary<DocumentId, (DateTime modified, Document document, CancellationTokenSource workDoneSource)> _workQueue =
+            new ConcurrentDictionary<DocumentId, (DateTime modified, Document document, CancellationTokenSource workDoneSource)>();
 
-        private readonly ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)> _currentWork =
-            new ConcurrentDictionary<ProjectId, (DateTime modified, CancellationTokenSource workDoneSource)>();
+        private readonly ConcurrentDictionary<DocumentId, (DateTime modified, Document document,  CancellationTokenSource workDoneSource)> _currentWork =
+            new ConcurrentDictionary<DocumentId, (DateTime modified, Document document, CancellationTokenSource workDoneSource)>();
         private readonly Func<DateTime> _utcNow;
         private readonly int _timeoutForPendingWorkMs;
-        private ILogger<AnalyzerWorkQueue> _logger;
+        private readonly ILogger<AnalyzerWorkQueue> _logger;
 
         public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 60*1000)
         {
@@ -32,14 +32,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _timeoutForPendingWorkMs = timeoutForPendingWorkMs;
         }
 
-        public void PutWork(ProjectId projectId)
+        public void PutWork(Document document)
         {
-            _workQueue.AddOrUpdate(projectId,
-                (modified: DateTime.UtcNow, new CancellationTokenSource()),
-                (_, oldValue) => (modified: DateTime.UtcNow, oldValue.workDoneSource));
+            _workQueue.AddOrUpdate(document.Id,
+                (modified: DateTime.UtcNow, document, new CancellationTokenSource()),
+                (_, oldValue) => (modified: DateTime.UtcNow, document, oldValue.workDoneSource));
         }
 
-        public ImmutableArray<ProjectId> TakeWork()
+        public ImmutableArray<Document> TakeWork()
         {
             lock (_workQueue)
             {
@@ -47,7 +47,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 var currentWork = _workQueue
                     .Where(x => ThrottlingPeriodNotActive(x.Value.modified, now))
                     .OrderByDescending(x => x.Value.modified) // If you currently edit project X you want it will be highest priority and contains always latest possible analysis.
-                    .Take(1) // Limit amount of work executed by once. This is needed on large solution...
+                    .Take(30) // Limit amount of work executed by once. This is needed on large solution...
                     .ToImmutableArray();
 
                 foreach (var work in currentWork)
@@ -56,7 +56,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     _currentWork.TryAdd(work.Key, work.Value);
                 }
 
-                return currentWork.Select(x => x.Key).ToImmutableArray();
+                return currentWork.Select(x => x.Value.document).ToImmutableArray();
             }
         }
 
@@ -65,24 +65,24 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return (now - modified).TotalMilliseconds >= _throttlingMs;
         }
 
-        public void MarkWorkAsCompleteForProject(ProjectId projectId)
+        public void MarkWorkAsCompleteForDocument(Document document)
         {
-            if(_currentWork.TryGetValue(projectId, out var work))
+            if(_currentWork.TryGetValue(document.Id, out var work))
             {
                 work.workDoneSource.Cancel();
-                _currentWork.TryRemove(projectId, out _);
+                _currentWork.TryRemove(document.Id, out _);
             }
         }
 
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
-        public async Task WaitForPendingWorkDoneEvent(ImmutableArray<ProjectId> projectIds)
+        public async Task WaitForPendingWorkDoneEvent(ImmutableArray<Document> documents)
         {
-            var currentWorkMatches = _currentWork.Where(x => projectIds.Any(pid => pid == x.Key));
+            var currentWorkMatches = _currentWork.Where(x => documents.Any(doc => doc.Id == x.Key));
 
             var pendingWorkThatDoesntExistInCurrentWork = _workQueue
-                .Where(x => projectIds.Any(pid => pid == x.Key))
+                .Where(x => documents.Any(doc => doc.Id == x.Key))
                 .Where(x => !currentWorkMatches.Any(currentWork => currentWork.Key == x.Key));
 
             await Task.WhenAll(

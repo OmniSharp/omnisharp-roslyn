@@ -67,7 +67,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     new TestFile("a.cs", "class C1 { int n = true; }"));
 
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
-                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0040"));
+                Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0044"));
             }
         }
     }
