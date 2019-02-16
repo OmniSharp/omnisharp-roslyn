@@ -162,20 +162,30 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
 
+                var diagnostics = ImmutableArray<Diagnostic>.Empty;
+
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
-                if (allAnalyzers.Any() && project.Name != "MiscellaneousFiles.csproj")
+                if(project.Name == "MiscellaneousFiles.csproj")
                 {
-                    var diagnosticsWithAnalyzers = await compiled
+                    var syntaxTree = await document.GetSyntaxTreeAsync();
+                    diagnostics = syntaxTree.GetDiagnostics().ToImmutableArray();
+                }
+                else if (allAnalyzers.Any())
+                {
+                    // Analyzers cannot be called with empty analyzer list.
+                    var diagnosticsFromAnalyzers = await compiled
                         .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
-                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token); // This cannot be invoked with empty analyzers list.
+                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token); 
 
-                    UpdateCurrentDiagnostics(project, document, diagnosticsWithAnalyzers.Concat(documentSemanticModel.GetDiagnostics()).ToImmutableArray());
+                    diagnostics = diagnosticsFromAnalyzers.Concat(documentSemanticModel.GetDiagnostics()).ToImmutableArray();
                 }
                 else
                 {
-                    UpdateCurrentDiagnostics(project, document, documentSemanticModel.GetDiagnostics());
+                    diagnostics = documentSemanticModel.GetDiagnostics().ToImmutableArray();
                 }
+
+                UpdateCurrentDiagnostics(project, document, diagnostics);
             }
             catch (Exception ex)
             {

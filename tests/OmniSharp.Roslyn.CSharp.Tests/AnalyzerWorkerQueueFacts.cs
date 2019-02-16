@@ -3,9 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using Xunit;
 
@@ -69,8 +67,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             queue.PutWork(document);
 
             now = PassOverThrotlingPeriod(now);
+            var work = queue.TakeWork();
 
-            Assert.Contains(document, queue.TakeWork());
+            Assert.Contains(document, work);
             Assert.Empty(queue.TakeWork());
         }
 
@@ -93,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.Empty(queue.TakeWork());
         }
 
-        private static DateTime PassOverThrotlingPeriod(DateTime now) => now.AddSeconds(1);
+        private static DateTime PassOverThrotlingPeriod(DateTime now) => now.AddSeconds(30);
 
         [Fact]
         public void WhenWorkIsAddedThenWaitNextIterationOfItReady()
@@ -156,7 +155,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             pendingTask.Wait(TimeSpan.FromMilliseconds(100));
 
             Assert.True(pendingTask.IsCompleted);
-            Assert.Contains("Timeout before work got ready for", loggerFactory.Logger.RecordedMessages.Single());
+            Assert.Contains("Timeout before work got ready", loggerFactory.Logger.RecordedMessages.Single());
         }
 
         [Fact]
@@ -174,11 +173,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                             queue.PutWork(document);
 
-                            PassOverThrotlingPeriod(now);
+                            now = PassOverThrotlingPeriod(now);
                             var work = queue.TakeWork();
 
                             var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
-                            pendingTask.Wait(TimeSpan.FromMilliseconds(5));
+                            queue.MarkWorkAsCompleteForDocument(document);
+
+                            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
                             Assert.True(pendingTask.IsCompleted);
                     }))
@@ -231,10 +232,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             tempWorkspace.AddProject(projectInfo);
             return tempWorkspace.AddDocument(DocumentInfo.Create(
                 id: DocumentId.CreateNewId(projectInfo.Id),
-                name: "testFile.cs",
-                sourceCodeKind: SourceCodeKind.Regular,
-                loader: TextLoader.From(TextAndVersion.Create(SourceText.From(""), VersionStamp.Create())),
-                filePath: @"c:\testFile.cs"));
+                name: "testFile.cs"));
 
         }
     }
