@@ -184,12 +184,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             }
 
                             pendingTask.Wait(TimeSpan.FromMilliseconds(300));
-
-                            Assert.True(pendingTask.IsCompleted);
                     }))
                     .ToArray();
 
             await Task.WhenAll(parallelQueues);
+
+            Assert.Empty(queue.TakeWork());
         }
 
         [Fact]
