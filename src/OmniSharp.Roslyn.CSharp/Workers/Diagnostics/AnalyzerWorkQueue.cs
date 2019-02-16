@@ -75,28 +75,31 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
-        public void WaitForPendingWorkDoneEvent(ImmutableArray<Document> documents)
+        public Task WaitForPendingWorkDoneEvent(ImmutableArray<Document> documents)
         {
-            var currentWorkMatches = _currentWork.Where(x => documents.Any(doc => doc.Id == x.Key));
-
-            var pendingWorkThatDoesntExistInCurrentWork = _workQueue
-                .Where(x => documents.Any(doc => doc.Id == x.Key))
-                .Where(x => !currentWorkMatches.Any(currentWork => currentWork.Key == x.Key));
-
-            // Not perfect but WaitAll only accepts up to 64 handles at once.
-            var workToWait = currentWorkMatches.Concat(pendingWorkThatDoesntExistInCurrentWork).Take(60);
-
-            if(workToWait.Any())
+            return Task.Run(() =>
             {
-                var waitComplete = WaitHandle.WaitAll(
-                    workToWait.Select(x => x.Value.manualResetEvent).ToArray(),
-                    _timeoutForPendingWorkMs);
+                var currentWorkMatches = _currentWork.Where(x => documents.Any(doc => doc.Id == x.Key));
 
-                if(!waitComplete)
+                var pendingWorkThatDoesntExistInCurrentWork = _workQueue
+                    .Where(x => documents.Any(doc => doc.Id == x.Key))
+                    .Where(x => !currentWorkMatches.Any(currentWork => currentWork.Key == x.Key));
+
+                // Not perfect but WaitAll only accepts up to 64 handles at once.
+                var workToWait = currentWorkMatches.Concat(pendingWorkThatDoesntExistInCurrentWork).Take(60);
+
+                if (workToWait.Any())
                 {
-                    _logger.LogError($"Timeout before work got ready. Documents waited {String.Join(",", workToWait.Select(x => x.Value.document.Name))}.");
+                    var waitComplete = WaitHandle.WaitAll(
+                        workToWait.Select(x => x.Value.manualResetEvent).ToArray(),
+                        _timeoutForPendingWorkMs);
+
+                    if (!waitComplete)
+                    {
+                        _logger.LogError($"Timeout before work got ready. Documents waited {String.Join(",", workToWait.Select(x => x.Value.document.Name))}.");
+                    }
                 }
-            }
+            });
         }
     }
 }

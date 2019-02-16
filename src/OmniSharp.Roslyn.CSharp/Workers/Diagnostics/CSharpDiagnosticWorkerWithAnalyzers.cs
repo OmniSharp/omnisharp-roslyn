@@ -73,17 +73,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             QueueForAnalysis(documents);
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
         {
-            return Task.Run(() =>
-            {
-                _workQueue.WaitForPendingWorkDoneEvent(documents);
+            await _workQueue.WaitForPendingWorkDoneEvent(documents);
 
-                return _results
-                    .Where(x => documents.Any(doc => doc.Id == x.Key))
-                    .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
-                    .ToImmutableArray();
-            });
+            return _results
+                .Where(x => documents.Any(doc => doc.Id == x.Key))
+                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
+                .ToImmutableArray();
         }
 
         private async Task Worker()
@@ -160,15 +157,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             try
             {
+                // Theres real possibility that bug in analyzer causes analysis hang or end to infinite loop.
+                var perDocumentTimeout = new CancellationTokenSource(10 * 1000);
+
+                var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
+
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
                 if (allAnalyzers.Any() && project.Name != "MiscellaneousFiles.csproj")
                 {
-                    // Theres real possibility that bug in analyzer causes analysis hang or end to infinite loop.
-                    var perDocumentTimeout = new CancellationTokenSource(10 * 1000);
-
-                    var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
-
                     var diagnosticsWithAnalyzers = await compiled
                         .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
                         .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token); // This cannot be invoked with empty analyzers list.
@@ -177,7 +174,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 }
                 else
                 {
-                    UpdateCurrentDiagnostics(project, document, compiled.GetDiagnostics());
+                    UpdateCurrentDiagnostics(project, document, documentSemanticModel.GetDiagnostics());
                 }
             }
             catch (Exception ex)
