@@ -96,7 +96,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
                     if (!waitComplete)
                     {
-                        _logger.LogError($"Timeout before work got ready. Documents waited {String.Join(",", workToWait.Select(x => x.Value.document.Name))}.");
+                        _logger.LogError($"Timeout before work got ready. Documents waited {String.Join(",", workToWait.Select(x => x.Value.document.Name).Take(5))}...");
                     }
                 }
             });
