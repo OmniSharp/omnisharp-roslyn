@@ -19,7 +19,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
-    public class CSharpDiagnosticWorkerWithAnalyzers: ICsDiagnosticWorker
+    public class CSharpDiagnosticWorkerWithAnalyzers : ICsDiagnosticWorker
     {
         private readonly AnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
@@ -73,14 +73,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             QueueForAnalysis(documents);
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
         {
-            await _workQueue.WaitForPendingWorkDoneEvent(documents);
+            return Task.Run(() =>
+            {
+                _workQueue.WaitForPendingWorkDoneEvent(documents);
 
-            return _results
-                .Where(x => documents.Any(doc => doc.Id == x.Key))
-                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
-                .ToImmutableArray();
+                return _results
+                    .Where(x => documents.Any(doc => doc.Id == x.Key))
+                    .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
+                    .ToImmutableArray();
+            });
         }
 
         private async Task Worker()
@@ -94,8 +97,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         .GroupBy(x => x.Project)
                         .ToImmutableArray();
 
-                    await Task.WhenAll(currentWorkGroupedByProjects.Select(x => Analyze(x.Key, x.ToImmutableArray())));
-                    await Task.Delay(100);
+                    foreach (var projectGroup in currentWorkGroupedByProjects)
+                    {
+                        await Analyze(projectGroup.Key, projectGroup.ToImmutableArray());
+                    }
+
+                    await Task.Delay(50);
                 }
                 catch (Exception ex)
                 {
@@ -135,31 +142,48 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(project))
                     .GetCompilationAsync();
 
-                foreach(var document in projectDocuments)
+                var workspaceAnalyzerOptions =
+                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution.Options, project.Solution });
+
+                foreach (var document in projectDocuments)
                 {
-                    // Only basic syntax check is available if file is miscellanous like orphan .cs file.
-                    if (allAnalyzers.Any() && project.Name != "MiscellaneousFiles.csproj")
-                    {
-                        var workspaceAnalyzerOptions =
-                            (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution.Options, project.Solution });
-
-                        var documentSemanticModel = await document.GetSemanticModelAsync();
-
-                        var diagnosticsWithAnalyzers = await compiled
-                            .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
-                            .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, CancellationToken.None); // This cannot be invoked with empty analyzers list.
-
-                        UpdateCurrentDiagnostics(project, document, diagnosticsWithAnalyzers.Concat(documentSemanticModel.GetDiagnostics()).ToImmutableArray());
-                    }
-                    else
-                    {
-                        UpdateCurrentDiagnostics(project, document, compiled.GetDiagnostics());
-                    }
+                    await AnalyzeDocument(project, allAnalyzers, compiled, workspaceAnalyzerOptions, document);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Analysis of project {project.Id} ({project.Name}) failed, underlaying error: {ex}");
+            }
+        }
+
+        private async Task AnalyzeDocument(Project project, ImmutableArray<DiagnosticAnalyzer> allAnalyzers, Compilation compiled, AnalyzerOptions workspaceAnalyzerOptions, Document document)
+        {
+            try
+            {
+                // Only basic syntax check is available if file is miscellanous like orphan .cs file.
+                // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
+                if (allAnalyzers.Any() && project.Name != "MiscellaneousFiles.csproj")
+                {
+                    // Theres real possibility that bug in analyzer causes analysis hang or end to infinite loop.
+                    var perDocumentTimeout = new CancellationTokenSource(10 * 1000);
+
+                    var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
+
+                    var diagnosticsWithAnalyzers = await compiled
+                        .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
+                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token); // This cannot be invoked with empty analyzers list.
+
+                    UpdateCurrentDiagnostics(project, document, diagnosticsWithAnalyzers.Concat(documentSemanticModel.GetDiagnostics()).ToImmutableArray());
+                }
+                else
+                {
+                    UpdateCurrentDiagnostics(project, document, compiled.GetDiagnostics());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}");
+                _workQueue.MarkWorkAsCompleteForDocument(document);
             }
         }
 
