@@ -86,7 +86,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     .Where(x => !currentWorkMatches.Any(currentWork => currentWork.Key == x.Key));
 
                 // Not perfect but WaitAll only accepts up to 64 handles at once.
-                var workToWait = currentWorkMatches.Concat(pendingWorkThatDoesntExistInCurrentWork).Take(60);
+                var workToWait = currentWorkMatches.Concat(pendingWorkThatDoesntExistInCurrentWork)
+                    .Take(60)
+                    .ToArray();
 
                 if (workToWait.Any())
                 {
