@@ -103,7 +103,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(document);
 
-            var pendingTask = queue.WaitForPendingWorkDoneEvent(new [] { document }.ToImmutableArray());
+            var pendingTask = queue.WaitWorkReadyForDocuments(new [] { document }.ToImmutableArray());
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
@@ -129,7 +129,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var work = queue.TakeWork();
 
-            var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
+            var pendingTask = queue.WaitWorkReadyForDocuments(work);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
@@ -151,7 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             now = PassOverThrotlingPeriod(now);
             var work = queue.TakeWork();
 
-            var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
+            var pendingTask = queue.WaitWorkReadyForDocuments(work);
             pendingTask.Wait(TimeSpan.FromMilliseconds(100));
 
             Assert.True(pendingTask.IsCompleted);
@@ -176,7 +176,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             now = PassOverThrotlingPeriod(now);
                             var work = queue.TakeWork();
 
-                            var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
+                            var pendingTask = queue.WaitWorkReadyForDocuments(work);
 
                             foreach (var workDoc in work)
                             {
@@ -205,7 +205,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             now = PassOverThrotlingPeriod(now);
 
             var work = queue.TakeWork();
-            var waitingCall = Task.Run(async () => await queue.WaitForPendingWorkDoneEvent(work));
+            var waitingCall = Task.Run(async () => await queue.WaitWorkReadyForDocuments(work));
             await Task.Delay(50);
 
             // User updates code -> document is queued again during period when theres already api call waiting

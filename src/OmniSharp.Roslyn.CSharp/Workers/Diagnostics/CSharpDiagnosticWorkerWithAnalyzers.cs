@@ -75,7 +75,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
         {
-            await _workQueue.WaitForPendingWorkDoneEvent(documents);
+            await _workQueue.WaitWorkReadyForDocuments(documents);
 
             return _results
                 .Where(x => documents.Any(doc => doc.Id == x.Key))
