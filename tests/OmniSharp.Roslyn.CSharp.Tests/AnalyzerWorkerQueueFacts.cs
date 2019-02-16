@@ -163,7 +163,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var now = DateTime.UtcNow;
 
-            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 50);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 1000);
 
             var parallelQueues =
                 Enumerable.Range(0, 10)
@@ -177,9 +177,13 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             var work = queue.TakeWork();
 
                             var pendingTask = queue.WaitForPendingWorkDoneEvent(work);
-                            queue.MarkWorkAsCompleteForDocument(document);
 
-                            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+                            foreach (var workDoc in work)
+                            {
+                                queue.MarkWorkAsCompleteForDocument(workDoc);
+                            }
+
+                            pendingTask.Wait(TimeSpan.FromMilliseconds(300));
 
                             Assert.True(pendingTask.IsCompleted);
                     }))
