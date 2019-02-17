@@ -40,7 +40,7 @@ RunTarget(target);";
 
         protected override string EndpointName => OmniSharpEndpoints.UpdateBuffer;
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldSupportIncrementalChanges()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))

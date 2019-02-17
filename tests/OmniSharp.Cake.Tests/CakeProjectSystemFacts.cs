@@ -20,7 +20,7 @@ namespace OmniSharp.Cake.Tests
         {
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldGetProjects()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
@@ -35,7 +35,7 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldAddAndRemoveProjects()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy : false))
@@ -58,7 +58,7 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task AllProjectsShouldUseLatestLanguageVersion()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))

@@ -19,7 +19,7 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.FindUsages;
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldNotIncludeUsagesFromLoadedFilesWhenOnlyThisFileIsTrue()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
@@ -55,7 +55,7 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldIncludeUsagesFromLoadedFiles()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))

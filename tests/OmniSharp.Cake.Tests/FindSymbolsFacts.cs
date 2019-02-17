@@ -21,28 +21,28 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.FindSymbols;
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldFindSymbolsInCakeProjects()
         {
             var symbols = await FindSymbols("CakeProject", minFilterLength: null, maxItemsToReturn: null);
             Assert.NotEmpty(symbols.QuickFixes);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldNotFindSymbolsInCakeProjectsDueToEmptyFilter()
         {
             var symbols = await FindSymbols("CakeProject", minFilterLength: 1, maxItemsToReturn: 0);
             Assert.Empty(symbols.QuickFixes);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldFindLimitedNumberOfSymbolsInCakeProjects()
         {
             var symbols = await FindSymbols("CakeProject", minFilterLength: 0, maxItemsToReturn: 100);
             Assert.Equal(100, symbols.QuickFixes.Count());
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldNotFindSymbolsInCSharpProjects()
         {
             var symbols = await FindSymbols("ProjectAndSolution", minFilterLength: 0, maxItemsToReturn: 0);
