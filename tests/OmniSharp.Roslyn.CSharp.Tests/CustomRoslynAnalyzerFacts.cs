@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
@@ -116,7 +113,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private OmniSharpTestHost GetHost()
         {
-            return OmniSharpTestHost.Create(testOutput: _testOutput);
+            return OmniSharpTestHost.Create(testOutput: _testOutput,
+                configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true));
         }
 
         [Fact]
@@ -129,6 +127,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 AddProjectWitFile(host, testFile);
 
                 var result = await host.RequestCodeCheckAsync();
+
+                result = await host.RequestCodeCheckAsync();
+
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
             }
         }

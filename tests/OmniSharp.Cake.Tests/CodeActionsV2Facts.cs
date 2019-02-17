@@ -31,7 +31,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Contains("using System.Text.RegularExpressions;", refactorings);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task Can_get_ranged_code_action()
         {
             const string code =
@@ -47,7 +47,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Contains("Extract Method", refactorings);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task Returns_ordered_code_actions()
         {
             const string code =
@@ -69,7 +69,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Equal(expected, refactorings);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task Can_extract_method()
         {
             const string code =
@@ -99,7 +99,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Equal(expected, modifiedFile.Changes.FirstOrDefault());
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task Should_Not_Find_Rename_File()
         {
             const string code =

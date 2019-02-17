@@ -62,10 +62,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 { "RoslynExtensionsOptions:LocationPaths:0", TestAssets.Instance.TestBinariesFolder },
             };
 
-            GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled).ToList()
-                .ForEach(item => configuration.Add(item.Key, item.Value));
-
-            var refactorings = await FindRefactoringsAsync(code, configuration);
+            var refactorings = await FindRefactoringsAsync(code,
+                TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled, existingConfiguration: configuration));
 
             Assert.NotEmpty(refactorings);
             Assert.Contains("Add ConfigureAwait(false)", refactorings.Select(x => x.Name));
@@ -181,7 +179,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_generate_type_and_return_name_of_new_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
@@ -222,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_send_rename_and_fileOpen_responses_when_codeAction_renames_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMismatchedFileName"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
@@ -261,7 +259,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false, bool roslynAnalyzersEnabled = false)
         {
-            var refactorings = await FindRefactoringsAsync(code, configurationData: GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
+            var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
             Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
 
             var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
@@ -270,14 +268,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code, bool roslynAnalyzersEnabled = false)
         {
-            var codeActions = await FindRefactoringsAsync(code, configurationData: GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
+            var codeActions = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
 
             return codeActions.Select(a => a.Name);
-        }
-
-        private Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(bool roslynAnalyzersEnabled)
-        {
-            return new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } };
         }
 
         private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IDictionary<string, string> configurationData = null)

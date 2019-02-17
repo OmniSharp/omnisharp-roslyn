@@ -34,6 +34,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
         // This options gives certain IDE analysis access for services that are not yet publicly available.
         private readonly ConstructorInfo _workspaceAnalyzerOptionsConstructor;
+        private bool _initialSolutionAnalysisInvoked = false;
 
         public CSharpDiagnosticWorkerWithAnalyzers(
             OmniSharpWorkspace workspace,
@@ -58,14 +59,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
 
-            Task.Run(async () =>
-            {
-                while (!workspace.Initialized || workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(200);
-                QueueForAnalysis(workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).ToImmutableArray());
-                _logger.LogInformation("Solution initialized -> queue all projects for code analysis.");
-            });
-
             Task.Factory.StartNew(Worker, TaskCreationOptions.LongRunning);
+        }
+
+        private Task InitializeWithWorkspaceDocumentsIfNotYetDone()
+        {
+            if (_initialSolutionAnalysisInvoked)
+                return Task.CompletedTask;
+
+            _initialSolutionAnalysisInvoked = true;
+
+            return Task.Run(async () =>
+            {
+                while (!_workspace.Initialized || _workspace.CurrentSolution.Projects.Count() == 0) await Task.Delay(50);
+            })
+            .ContinueWith(_ => Task.Delay(50))
+            .ContinueWith(_ =>
+            {
+                var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).ToImmutableArray();
+                QueueForAnalysis(documents);
+                _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documents.Length}.");
+            });
         }
 
         public void QueueForDiagnosis(ImmutableArray<Document> documents)
@@ -75,6 +89,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
         {
+            await InitializeWithWorkspaceDocumentsIfNotYetDone();
+
             await _workQueue.WaitWorkReadyForDocuments(documents);
 
             return _results
@@ -166,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                 // Only basic syntax check is available if file is miscellanous like orphan .cs file.
                 // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
-                if(project.Name == "MiscellaneousFiles.csproj")
+                if (project.Name == "MiscellaneousFiles.csproj")
                 {
                     var syntaxTree = await document.GetSyntaxTreeAsync();
                     diagnostics = syntaxTree.GetDiagnostics().ToImmutableArray();
