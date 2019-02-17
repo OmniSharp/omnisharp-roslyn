@@ -22,7 +22,7 @@ namespace OmniSharp.Cake.Tests
         {
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task Can_get_code_actions_from_roslyn()
         {
             const string code = "var regex = new Reg[||]ex();";
