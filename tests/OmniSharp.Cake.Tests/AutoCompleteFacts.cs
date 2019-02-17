@@ -24,7 +24,7 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.AutoComplete;
 
-        [Fact]
+        [Fact(Skip ="Testing it really is cake tests that hangs.")]
         public async Task ShouldGenerateFromHostObject()
         {
             const string input = @"Task$$";

@@ -19,7 +19,7 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.V2.BlockStructure;
 
-        [Fact]
+        [Fact(Skip = "Testing it really is cake tests that hangs.")]
         public async Task UsesRoslynBlockStructureService()
         {
             const string code = @"class Foo[|
