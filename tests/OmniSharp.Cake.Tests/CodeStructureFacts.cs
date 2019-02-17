@@ -25,7 +25,7 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.V2.CodeStructure;
 
-        [Fact]
+        [Fact(Skip = "Testing it really is cake tests that hangs.")]
         public async Task AllTypes()
         {
             const string source = @"
@@ -49,7 +49,7 @@ struct S { }
             AssertElement(response.Elements[4], SymbolKinds.Struct, "S", "S");
         }
 
-        [Fact]
+        [Fact(Skip = "Testing it really is cake tests that hangs.")]
         public async Task AllTypesWithLoadedFile()
         {
             const string source = @"
@@ -71,7 +71,7 @@ struct S { }
             AssertElement(response.Elements[4], SymbolKinds.Struct, "S", "S");
         }
 
-        [Fact]
+        [Fact(Skip = "Testing it really is cake tests that hangs.")]
         public async Task TestClassMembersNameRanges()
         {
             const string source = @"
