@@ -47,7 +47,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Contains("Extract Method", refactorings);
         }
 
-        [Fact]
+        [Fact(Skip = "Testing it really is cake tests that hangs.")]
         public async Task Returns_ordered_code_actions()
         {
             const string code =

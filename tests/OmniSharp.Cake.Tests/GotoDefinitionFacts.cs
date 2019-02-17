@@ -19,7 +19,7 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.GotoDefinition;
 
-        [Fact]
+        [Fact(Skip = "Testing it really is cake tests that hangs.")]
         public async Task ShouldSupportLoadedFiles()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
