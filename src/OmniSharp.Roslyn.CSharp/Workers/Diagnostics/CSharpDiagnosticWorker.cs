@@ -151,14 +151,28 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             foreach(var document in documents)
             {
-                var semanticModel = await document.GetSemanticModelAsync();
-                var diagnostics = semanticModel.GetDiagnostics();
                 var projectName = document.Project.Name;
-
+                var diagnostics = await GetDiagnosticsForDocument(document, projectName);
                 results.AddRange(diagnostics.Select(x => (projectName: document.Project.Name, diagnostic: x)));
             }
 
             return results.ToImmutableArray();
+        }
+
+        private static async Task<ImmutableArray<Diagnostic>> GetDiagnosticsForDocument(Document document, string projectName)
+        {
+            // Only basic syntax check is available if file is miscellanous like orphan .cs file.
+            // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
+            if (projectName == "MiscellaneousFiles.csproj")
+            {
+                var syntaxTree = await document.GetSyntaxTreeAsync();
+                return syntaxTree.GetDiagnostics().ToImmutableArray();
+            }
+            else
+            {
+                var semanticModel = await document.GetSemanticModelAsync();
+                return semanticModel.GetDiagnostics();
+            }
         }
     }
 }
