@@ -176,7 +176,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     // Analyzers cannot be called with empty analyzer list.
                     var diagnosticsFromAnalyzers = await compiled
                         .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
-                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token); 
+                        .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token);
 
                     diagnostics = diagnosticsFromAnalyzers.Concat(documentSemanticModel.GetDiagnostics()).ToImmutableArray();
                 }
