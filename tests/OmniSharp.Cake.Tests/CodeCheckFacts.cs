@@ -24,7 +24,7 @@ namespace OmniSharp.Cake.Tests
 
         protected override string EndpointName => OmniSharpEndpoints.CodeCheck;
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldProvideDiagnosticsIfRequestContainsCakeFileName()
         {
             const string input = @"zzz";
@@ -33,7 +33,7 @@ namespace OmniSharp.Cake.Tests
             Assert.NotEmpty(diagnostics.QuickFixes);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldNotCallCodeCheckServiceIfRequestDoesNotSpecifyFileName()
         {
             const string input = @"zzz$$";
@@ -42,7 +42,7 @@ namespace OmniSharp.Cake.Tests
             Assert.Null(diagnostics);
         }
 
-        [Fact(Skip = "Testing it really is cake tests that hangs.")]
+        [Fact]
         public async Task ShouldNotIncludeDiagnosticsFromLoadedFilesIfFileNameIsSpecified()
         {
             const string input = @"
