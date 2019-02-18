@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -7,6 +8,7 @@ using Microsoft.CodeAnalysis.Scripting.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.FileWatching;
+using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Script;
 using OmniSharp.Services;
 
@@ -24,7 +26,7 @@ namespace TestUtility
         public static void AddCsxProjectToWorkspace(OmniSharpWorkspace workspace, TestFile testFile)
         {
             var references = GetReferences();
-            var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true);            
+            var scriptHelper = new ScriptProjectProvider(new ScriptOptions(), new OmniSharpEnvironment(), new LoggerFactory(), true);
             var project = scriptHelper.CreateProject(testFile.FileName, references.Union(new[] { MetadataReference.CreateFromFile(typeof(CommandLineScriptGlobals).GetTypeInfo().Assembly.Location) }), testFile.FileName, typeof(CommandLineScriptGlobals), Enumerable.Empty<string>());
             workspace.AddProject(project);
 
@@ -90,6 +92,23 @@ namespace TestUtility
                 .Select(l => MetadataReference.CreateFromFile(l));
 
             return references;
+        }
+
+        public static MSBuildInstance AddDotNetCoreToFakeInstance(this MSBuildInstance instance)
+        {
+            const string dotnetSdkResolver = "Microsoft.DotNet.MSBuildSdkResolver";
+
+            var directory = Path.Combine(
+                instance.MSBuildPath,
+                "SdkResolvers",
+                dotnetSdkResolver
+            );
+
+            Directory.CreateDirectory(directory);
+
+            TestIO.TouchFakeFile(Path.Combine(directory, dotnetSdkResolver + ".dll"));
+
+            return instance;
         }
     }
 }
