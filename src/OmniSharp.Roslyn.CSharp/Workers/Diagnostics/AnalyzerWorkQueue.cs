@@ -90,11 +90,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                     .ToImmutableArray());
         }
 
-        // This is basically asserting mechanism for hanging analysis if any. If this doesn't exist tracking
-        // down why results doesn't come up (for example in situation when theres bad analyzer that takes ages to complete).
+        // This logs wait's for document diagnostics that continue without getting current version from analyzer.
+        // This happens on larger solutions during initial load or situations where analysis slows down remarkably.
         private void LogTimeouts(Task task, string description)
         {
-            if (!task.IsCanceled) _logger.LogWarning($"Timeout before work got ready for {description}.");
+            if (!task.IsCanceled) _logger.LogDebug($"Timeout before work got ready for {description}.");
         }
     }
 
