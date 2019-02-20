@@ -4,7 +4,7 @@ using Castle.DynamicProxy;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Host.Mef;
 
-namespace OmniSharp.Roslyn.WorkspaceServices
+namespace OmniSharp
 {
     [Shared]
     [ExportWorkspaceServiceFactoryWithAssemblyQualifiedName("Microsoft.CodeAnalysis.Features", "Microsoft.CodeAnalysis.ExtractInterface.IExtractInterfaceOptionsService")]

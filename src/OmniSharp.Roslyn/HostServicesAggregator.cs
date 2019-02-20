@@ -6,7 +6,6 @@ using System.Reflection;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Roslyn.WorkspaceServices;
 using OmniSharp.Services;
 
 namespace OmniSharp
@@ -53,7 +52,7 @@ namespace OmniSharp
                 }
             }
 
-            builder.Add(typeof(PickMemberWorkspaceServiceFactory).Assembly);
+            builder.Add(typeof(PickMemberWorkspaceService).Assembly);
 
             _assemblies = builder.ToImmutableArray();
         }

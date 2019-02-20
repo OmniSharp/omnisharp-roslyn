@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Microsoft.CodeAnalysis;
 
-namespace OmniSharp.Roslyn.WorkspaceServices
+namespace OmniSharp
 {
     public class ExtractInterfaceWorkspaceService : IInterceptor
     {

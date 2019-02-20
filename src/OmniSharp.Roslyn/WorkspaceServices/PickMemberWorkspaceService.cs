@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using Castle.DynamicProxy;
 
-namespace OmniSharp.Roslyn.WorkspaceServices
+namespace OmniSharp
 {
     public class PickMemberWorkspaceService : IInterceptor
     {

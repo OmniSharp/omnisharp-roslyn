@@ -1,9 +1,9 @@
 ﻿using System;
-using System.ComponentModel.Composition;
+using System.Composition;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Host.Mef;
 
-namespace OmniSharp.Roslyn.WorkspaceServices
+namespace OmniSharp
 {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class)]
