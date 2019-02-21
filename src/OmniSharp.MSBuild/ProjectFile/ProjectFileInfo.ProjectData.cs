@@ -45,6 +45,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<string> References { get; }
             public ImmutableArray<PackageReference> PackageReferences { get; }
             public ImmutableArray<string> Analyzers { get; }
+            public ImmutableDictionary<string, string> ReferenceAliases { get; }
 
             private ProjectData()
             {
@@ -58,6 +59,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 References = ImmutableArray<string>.Empty;
                 PackageReferences = ImmutableArray<PackageReference>.Empty;
                 Analyzers = ImmutableArray<string>.Empty;
+                ReferenceAliases = ImmutableDictionary<string, string>.Empty;
             }
 
             private ProjectData(
@@ -121,7 +123,8 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> projectReferences,
                 ImmutableArray<string> references,
                 ImmutableArray<PackageReference> packageReferences,
-                ImmutableArray<string> analyzers)
+                ImmutableArray<string> analyzers,
+                ImmutableDictionary<string, string> referenceAliases)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile)
@@ -131,6 +134,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 References = references.EmptyIfDefault();
                 PackageReferences = packageReferences.EmptyIfDefault();
                 Analyzers = analyzers.EmptyIfDefault();
+                ReferenceAliases = referenceAliases;
             }
 
             public static ProjectData Create(MSB.Evaluation.Project project)
@@ -208,6 +212,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     projectInstance.GetItems(ItemNames.ProjectReference), filter: IsCSharpProject);
 
                 var references = ImmutableArray.CreateBuilder<string>();
+                var referenceAliases = ImmutableDictionary.CreateBuilder<string, string>();
                 foreach (var referencePathItem in projectInstance.GetItems(ItemNames.ReferencePath))
                 {
                     var referenceSourceTarget = referencePathItem.GetMetadataValue(MetadataNames.ReferenceSourceTarget);
@@ -233,8 +238,13 @@ namespace OmniSharp.MSBuild.ProjectFile
                     {
                         references.Add(fullPath);
                     }
+                    var aliases = referencePathItem.GetMetadataValue("Aliases");
+                    if(!string.IsNullOrEmpty(aliases))
+                    {
+                        referenceAliases[referencePathItem.EvaluatedInclude] = aliases;
+                    }
                 }
-            
+
                 var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
                 var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
 
@@ -243,7 +253,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     configuration, platform, targetFramework, targetFrameworks,
                     outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers);
+                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, referenceAliases.ToImmutableDictionary());
             }
 
             private static bool IsCSharpProject(string filePath)
