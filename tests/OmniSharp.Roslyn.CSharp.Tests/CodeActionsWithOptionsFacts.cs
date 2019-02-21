@@ -22,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task Can_generate_constructor()
+        public async Task Can_generate_constructor_with_default_arguments()
         {
             const string code =
                 @"public class Class1[||]
@@ -30,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public string PropertyHere { get; set; }
                 }";
             const string expected =
-                @"public class Class1[||]
+                @"public class Class1
                 {
                     public Class1(string propertyHere)
                     {
@@ -44,6 +44,119 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
+        [Fact]
+        public async Task Can_generate_overrides()
+        {
+            const string code =
+                @"public class Class1[||]
+                {
+                }";
+            const string expected =
+                @"public class Class1
+                {
+                    public override bool Equals(object obj)
+                    {
+                        return base.Equals(obj);
+                    }
+
+                    public override int GetHashCode()
+                    {
+                        return base.GetHashCode();
+                    }
+
+                    public override string ToString()
+                    {
+                        return base.ToString();
+                    }
+                }
+                ";
+            var response = await RunRefactoringAsync(code, "Generate overrides...");
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_generate_equals_for_object()
+        {
+            const string code =
+                @"public class Class1[||]
+                {
+                    public string PropertyHere { get; set; }
+                }";
+            const string expected =
+                @"public class Class1
+                {
+                    public string PropertyHere { get; set; }
+
+                    public override bool Equals(object obj)
+                    {
+                        return obj is Class1 @class &&
+                               PropertyHere == @class.PropertyHere;
+                    }
+                }
+                ";
+            var response = await RunRefactoringAsync(code, "Generate Equals(object)...");
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public async Task Can_generate_equals_and_hashcode_for_object()
+        {
+            const string code =
+                @"public class Class1[||]
+                {
+                    public string PropertyHere { get; set; }
+                }";
+
+            // Be aware that if used with newer .NET framework than omnisharp uses (4.6).
+            // this will result more modern result with HashCode.Combine(PropertyHere);
+            const string expected =
+                @"
+                using System.Collections.Generic;
+                public class Class1
+                {
+                    public string PropertyHere { get; set; }
+                    public override bool Equals(object obj)
+                    {
+                        return obj is Class1 @class &&
+                           PropertyHere == @class.PropertyHere;
+                    }
+                    public override int GetHashCode()
+                    {
+                        return 1887327142 + EqualityComparer<string>.Default.GetHashCode(PropertyHere);
+                    }
+                }
+                ";
+            var response = await RunRefactoringAsync(code, "Generate Equals and GetHashCode...");
+
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact(Skip = "This feature isn't available before roslyn analyzers are available, extract interface is action to one of analysis.")]
+        public async Task Can_extract_interface()
+        {
+            const string code =
+                @"public class Class1[||]
+                {
+                    public string PropertyHere { get; set; }
+                }";
+
+            const string expected =
+                @"
+                public interface IClass1
+                {
+                    string PropertyHere { get; set; }
+                }
+
+                public class Class1
+                {
+                    public string PropertyHere { get; set; }
+                }
+                ";
+            var response = await RunRefactoringAsync(code, "Extract interface...");
+
+            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
         private static void AssertIgnoringIndent(string expected, string actual)
         {
             Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
@@ -51,7 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private static string TrimLines(string source)
         {
-            return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
+            return string.Join("\n", source.Split('\n').Select(s => s.Trim())).Replace("\n","").Replace("\r","");
         }
 
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false)
