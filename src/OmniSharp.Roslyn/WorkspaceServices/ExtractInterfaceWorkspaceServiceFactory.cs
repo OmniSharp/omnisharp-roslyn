@@ -12,9 +12,7 @@ namespace OmniSharp
     {
         public IWorkspaceService CreateService(HostWorkspaceServices workspaceServices)
         {
-            // IExtractInterfaceOptions service and result types are internal -> workaround with proxy.
-            // This service simply passes all members through as selected and doesn't try show UI.
-            // When roslyn exposes this interface and members -> remove this workaround.
+            // Generates proxy class to get around issue that IExtractInterfaceOptionsService is internal at this point.
             ProxyGenerator generator = new ProxyGenerator();
             var internalType = Assembly.Load("Microsoft.CodeAnalysis.Features").GetType("Microsoft.CodeAnalysis.ExtractInterface.IExtractInterfaceOptionsService");
             return (IWorkspaceService)generator.CreateInterfaceProxyWithoutTarget(internalType, new[] { typeof(IWorkspaceService)}, new ExtractInterfaceWorkspaceService());

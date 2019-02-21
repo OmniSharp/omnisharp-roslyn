@@ -12,6 +12,8 @@ namespace OmniSharp
         public string ServiceType { get; }
         public string Layer { get; }
 
+        // Theres builtin public attribute for this, but since we target internal types
+        // this is needed to build service. MEF doesn't care is it internal or not.
         public ExportWorkspaceServiceFactoryWithAssemblyQualifiedNameAttribute(string typeAssembly, string typeName, string layer = ServiceLayer.Host)
             : base(typeof(IWorkspaceServiceFactory))
         {
