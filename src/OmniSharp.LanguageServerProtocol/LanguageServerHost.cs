@@ -160,6 +160,7 @@ namespace OmniSharp.LanguageServerProtocol
                 .Concat(SignatureHelpHandler.Enumerate(_handlers))
                 .Concat(RenameHandler.Enumerate(_handlers))
                 .Concat(DocumentSymbolHandler.Enumerate(_handlers))
+                .Concat(ReferencesHandler.Enumerate(_handlers))
                 .Concat(CodeLensHandler.Enumerate(_handlers)))
             {
                 server.AddHandlers(handler);
