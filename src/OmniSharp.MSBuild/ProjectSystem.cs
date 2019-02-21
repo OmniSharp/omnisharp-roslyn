@@ -18,6 +18,8 @@ using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
 using OmniSharp.MSBuild.SolutionParsing;
 using OmniSharp.Options;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Services;
 using System.Linq;
 
@@ -36,9 +38,11 @@ namespace OmniSharp.MSBuild
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly FileSystemHelper _fileSystemHelper;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly CachingCodeFixProviderForProjects _codeFixesForProjects;
+        private readonly RulesetsForProjects _rulesetsForProjects;
         private readonly ILogger _logger;
+        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
-
         private readonly object _gate = new object();
         private readonly Queue<ProjectFileInfo> _projectsToProcess;
 
@@ -65,6 +69,9 @@ namespace OmniSharp.MSBuild
             IFileSystemWatcher fileSystemWatcher,
             FileSystemHelper fileSystemHelper,
             ILoggerFactory loggerFactory,
+            CachingCodeFixProviderForProjects codeFixesForProjects,
+            RulesetsForProjects rulesetsForProjects,
+            IAnalyzerAssemblyLoader assemblyLoader,
             [ImportMany] IEnumerable<IMSBuildEventSink> eventSinks)
         {
             _environment = environment;
@@ -77,10 +84,13 @@ namespace OmniSharp.MSBuild
             _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _loggerFactory = loggerFactory;
+            _codeFixesForProjects = codeFixesForProjects;
+            _rulesetsForProjects = rulesetsForProjects;
             _eventSinks = eventSinks.ToImmutableArray();
 
             _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
+            _assemblyLoader = assemblyLoader;
         }
 
         public void Initalize(IConfiguration configuration)
@@ -99,8 +109,8 @@ namespace OmniSharp.MSBuild
 
             _packageDependencyChecker = new PackageDependencyChecker(_loggerFactory, _eventEmitter, _dotNetCli, _options);
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
-            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, 
-                _loader, _workspace, _eventSinks);
+
+            _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _codeFixesForProjects, _rulesetsForProjects, _assemblyLoader, _eventSinks);
 
             if (_options.LoadProjectsOnDemand)
             {

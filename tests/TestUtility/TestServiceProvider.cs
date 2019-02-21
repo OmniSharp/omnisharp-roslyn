@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -47,6 +48,7 @@ namespace TestUtility
             AddService(dotNetCliService);
             AddService(configuration);
             AddService(optionsMonitor);
+            _services[typeof(IAnalyzerAssemblyLoader)] = assemblyLoader;
         }
 
         public static IServiceProvider Create(

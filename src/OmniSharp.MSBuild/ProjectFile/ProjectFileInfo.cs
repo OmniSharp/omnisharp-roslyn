@@ -42,6 +42,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public bool SignAssembly => _data.SignAssembly;
         public string AssemblyOriginatorKeyFile => _data.AssemblyOriginatorKeyFile;
+        public RuleSet RuleSet => _data.RuleSet;
 
         public ImmutableArray<string> SourceFiles => _data.SourceFiles;
         public ImmutableArray<string> References => _data.References;

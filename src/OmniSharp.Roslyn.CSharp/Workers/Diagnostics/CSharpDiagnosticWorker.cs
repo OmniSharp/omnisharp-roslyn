@@ -1,25 +1,31 @@
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reactive.Threading;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Options;
 using OmniSharp.Roslyn;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
+using OmniSharp.Services;
 
-namespace OmniSharp.Workers.Diagnostics
+namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
-    [Export, Shared]
-    public class CSharpDiagnosticService
+    public class CSharpDiagnosticWorker: ICsDiagnosticWorker
     {
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
@@ -27,12 +33,11 @@ namespace OmniSharp.Workers.Diagnostics
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly IObserver<string> _openDocuments;
 
-        [ImportingConstructor]
-        public CSharpDiagnosticService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
+        public CSharpDiagnosticWorker(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _forwarder = forwarder;
-            _logger = loggerFactory.CreateLogger<CSharpDiagnosticService>();
+            _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorker>();
 
             var openDocumentsSubject = new Subject<string>();
             _openDocuments = openDocumentsSubject;
@@ -60,9 +65,6 @@ namespace OmniSharp.Workers.Diagnostics
             {
                 return;
             }
-
-            EmitDiagnostics(args.Document.FilePath);
-            EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
@@ -76,7 +78,6 @@ namespace OmniSharp.Workers.Diagnostics
             {
                 var newDocument = changeEvent.NewSolution.GetDocument(changeEvent.DocumentId);
 
-                EmitDiagnostics(newDocument.FilePath);
                 EmitDiagnostics(_workspace.GetOpenDocumentIds().Select(x => _workspace.CurrentSolution.GetDocument(x).FilePath).ToArray());
             }
             else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
@@ -125,13 +126,53 @@ namespace OmniSharp.Workers.Diagnostics
         private async Task<DiagnosticResult> ProcessNextItem(string filePath)
         {
             var documents = _workspace.GetDocuments(filePath);
-            var items = await documents.FindDiagnosticLocationsAsync(_workspace);
+            var semanticModels = await Task.WhenAll(documents.Select(doc => doc.GetSemanticModelAsync()));
+
+            var items = semanticModels
+                .SelectMany(sm => sm.GetDiagnostics());
 
             return new DiagnosticResult()
             {
                 FileName = filePath,
-                QuickFixes = items
+                QuickFixes = items.Select(x => x.ToDiagnosticLocation()).Distinct().ToArray()
             };
+        }
+
+        public void QueueForDiagnosis(ImmutableArray<Document> documents)
+        {
+            this.EmitDiagnostics(documents.Select(x => x.FilePath).ToArray());
+        }
+
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        {
+            if (documents == null || !documents.Any()) return ImmutableArray<(string projectName, Diagnostic diagnostic)>.Empty;
+
+            var results = new List<(string projectName, Diagnostic diagnostic)>();
+
+            foreach(var document in documents)
+            {
+                var projectName = document.Project.Name;
+                var diagnostics = await GetDiagnosticsForDocument(document, projectName);
+                results.AddRange(diagnostics.Select(x => (projectName: document.Project.Name, diagnostic: x)));
+            }
+
+            return results.ToImmutableArray();
+        }
+
+        private static async Task<ImmutableArray<Diagnostic>> GetDiagnosticsForDocument(Document document, string projectName)
+        {
+            // Only basic syntax check is available if file is miscellanous like orphan .cs file.
+            // Those projects are on hard coded virtual project named 'MiscellaneousFiles.csproj'.
+            if (projectName == "MiscellaneousFiles.csproj")
+            {
+                var syntaxTree = await document.GetSyntaxTreeAsync();
+                return syntaxTree.GetDiagnostics().ToImmutableArray();
+            }
+            else
+            {
+                var semanticModel = await document.GetSemanticModelAsync();
+                return semanticModel.GetDiagnostics();
+            }
         }
     }
 }
