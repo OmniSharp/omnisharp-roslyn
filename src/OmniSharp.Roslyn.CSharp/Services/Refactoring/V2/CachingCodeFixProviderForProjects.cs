@@ -31,6 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             if (_cache.ContainsKey(projectId))
                 return _cache[projectId];
+
             return Enumerable.Empty<CodeFixProvider>();
         }
 
@@ -48,7 +49,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
                         if (attribute?.Languages != null && attribute.Languages.Contains(project.Language))
                         {
-                            return (CodeFixProvider)Activator.CreateInstance(x.AsType());
+                            return x.AsType().CreateInstance<CodeFixProvider>();
                         }
 
                         _logger.LogInformation($"Skipping code fix provider '{x.AsType()}' because it's language doesn't match '{project.Language}'.");
