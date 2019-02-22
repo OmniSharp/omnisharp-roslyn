@@ -238,7 +238,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     {
                         references.Add(fullPath);
                     }
-                    var aliases = referencePathItem.GetMetadataValue("Aliases");
+                    var aliases = referencePathItem.GetMetadataValue(MetadataNames.Aliases);
                     if(!string.IsNullOrEmpty(aliases))
                     {
                         referenceAliases[referencePathItem.EvaluatedInclude] = aliases;
