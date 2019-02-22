@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -77,17 +78,25 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // like it's syncronous even that actual analysis may take a while.
         public async Task WaitWorkReadyForDocuments(ImmutableArray<Document> documents)
         {
-            var currentWorkMatches = _currentWork.Where(x => documents.Any(doc => doc.Id == x.Key));
+            List<(DateTime modified, Document document, CancellationTokenSource workDoneSource)> items =
+                new List<(DateTime modified, Document document, CancellationTokenSource workDoneSource)>();
 
-            var pendingWorkThatDoesntExistInCurrentWork = _workQueue
-                .Where(x => documents.Any(doc => doc.Id == x.Key))
-                .Where(x => !currentWorkMatches.Any(currentWork => currentWork.Key == x.Key));
+            foreach (var document in documents)
+            {
+                var id = document.Id;
+                if (_currentWork.ContainsKey(id))
+                {
+                    items.Add(_currentWork[id]);
+                }
+                else if (_workQueue.ContainsKey(id))
+                {
+                    items.Add(_workQueue[id]);
+                }
+            }
 
-            await Task.WhenAll(
-                currentWorkMatches.Concat(pendingWorkThatDoesntExistInCurrentWork)
-                    .Select(x => Task.Delay(_timeoutForPendingWorkMs, x.Value.workDoneSource.Token)
-                        .ContinueWith(task => LogTimeouts(task, x.Value.document.Name)))
-                    .ToImmutableArray());
+            await Task.WhenAll(items.Select(item =>
+                                Task.Delay(_timeoutForPendingWorkMs, item.workDoneSource.Token)
+                                .ContinueWith(task => LogTimeouts(task, item.document.Name))));
         }
 
         // This logs wait's for document diagnostics that continue without getting current version from analyzer.
