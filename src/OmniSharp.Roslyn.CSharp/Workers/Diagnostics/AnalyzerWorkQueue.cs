@@ -20,17 +20,15 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly ConcurrentDictionary<DocumentId, (DateTime modified, Document document,  CancellationTokenSource workDoneSource)> _currentWork =
             new ConcurrentDictionary<DocumentId, (DateTime modified, Document document, CancellationTokenSource workDoneSource)>();
         private readonly Func<DateTime> _utcNow;
-        private readonly int _timeoutForPendingWorkMs;
+        private readonly int _maximumDelayWhenWaitingForResults;
         private readonly ILogger<AnalyzerWorkQueue> _logger;
 
         public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15*1000)
         {
-            if(utcNow == null)
-                utcNow = () => DateTime.UtcNow;
-
+            utcNow = utcNow ?? (() => DateTime.UtcNow);
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
             _utcNow = utcNow;
-            _timeoutForPendingWorkMs = timeoutForPendingWorkMs;
+            _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
         }
 
         public void PutWork(Document document)
@@ -76,10 +74,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
-        public async Task WaitWorkReadyForDocuments(ImmutableArray<Document> documents)
+        public async Task WaitForResultsAsync(ImmutableArray<Document> documents)
         {
-            List<(DateTime modified, Document document, CancellationTokenSource workDoneSource)> items =
-                new List<(DateTime modified, Document document, CancellationTokenSource workDoneSource)>();
+            var items = new List<(DateTime modified, Document document, CancellationTokenSource workDoneSource)>();
 
             foreach (var document in documents)
             {
@@ -95,7 +92,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
 
             await Task.WhenAll(items.Select(item =>
-                                Task.Delay(_timeoutForPendingWorkMs, item.workDoneSource.Token)
+                                Task.Delay(_maximumDelayWhenWaitingForResults, item.workDoneSource.Token)
                                 .ContinueWith(task => LogTimeouts(task, item.document.Name))));
         }
 

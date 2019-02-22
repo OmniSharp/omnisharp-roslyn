@@ -91,7 +91,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             await InitializeWithWorkspaceDocumentsIfNotYetDone();
 
-            await _workQueue.WaitWorkReadyForDocuments(documents);
+            await _workQueue.WaitForResultsAsync(documents);
 
             return _results
                 .Where(x => documents.Any(doc => doc.Id == x.Key))
