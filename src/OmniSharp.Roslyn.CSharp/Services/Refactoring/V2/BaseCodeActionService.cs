@@ -79,7 +79,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             var availableActions = ConvertToAvailableCodeAction(codeActions);
 
-            return availableActions;
+            return FilterBlacklistedCodeActions(availableActions);
+        }
+
+        private static IEnumerable<AvailableCodeAction> FilterBlacklistedCodeActions(IEnumerable<AvailableCodeAction> codeActions)
+        {
+            // Most of actions with UI works fine with defaults, however there's few exceptions:
+            return codeActions.Where(x =>
+                x.CodeAction.Title != "Generate new type..." &&     // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
+                x.CodeAction.Title != "Change signature..."         // Blacklisted because cannot be used without proper UI.
+            );
         }
 
         private TextSpan GetTextSpan(ICodeActionRequest request, SourceText sourceText)
