@@ -26,7 +26,7 @@ namespace OmniSharp
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
             var projectSystems = compositionHost.GetExports<IProjectSystem>();
-            
+
             foreach (var projectSystem in projectSystems)
             {
                 try

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
 using OmniSharp.Models.V2;
@@ -155,6 +156,24 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var response = await RunRefactoringAsync(code, "Extract interface...");
 
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+        }
+
+        [Fact]
+        public void Check_better_alternative_available_for_codeaction_with_options()
+        {
+            // This keeps record is Microsoft.CodeAnalysis.PickMembers.IPickMembersService public or not
+            // and should fail on case where interface is exposed. Which likely means that this is officially
+            // supported scenario by roslyn.
+            //
+            // In case it's exposed by roslyn team these services can be simplified.
+            // Steps are likely following:
+            // - Remove Castle.Core (proxies not needed)
+            // - Replace ExportWorkspaceServiceFactoryWithAssemblyQualifiedName with Microsoft.CodeAnalysis.Host.Mef.ExportWorkspaceServiceAttribute
+            // - Fix proxy classes to implement IPickMembersService / IExtractInterfaceOptionsService ... instead of proxy and reflection.
+            // - Remove all factories using ExportWorkspaceServiceFactoryWithAssemblyQualifiedName and factory itself.
+            // Following issue may have additional information: https://github.com/dotnet/roslyn/issues/33277
+            var pickMemberServiceType = Assembly.Load("Microsoft.CodeAnalysis.Features").GetType("Microsoft.CodeAnalysis.PickMembers.IPickMembersService");
+            Assert.False(pickMemberServiceType.IsPublic);
         }
 
         private static void AssertIgnoringIndent(string expected, string actual)
