@@ -132,6 +132,56 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
+        [Fact]
+        // How to implement this witout proper UI?
+        public async Task Blacklists_Change_signature()
+        {
+            const string code =
+                @"public class Class1
+                {
+                    public void Foo(string a[||], string b)
+                    {
+                    }
+                }";
+
+            var response = await FindRefactoringNamesAsync(code);
+
+            Assert.DoesNotContain("Change signature...", response);
+        }
+
+        [Fact]
+        // Theres generate type without options that gives ~same result with default ui. No point to bring this.
+        public async Task Blacklists_generate_type_with_UI()
+        {
+            const string code =
+                @"public class Class1: NonExistentBaseType[||]
+                {
+                }";
+
+            var response = await FindRefactoringNamesAsync(code);
+
+            Assert.DoesNotContain("Generate type 'NonExistentBaseType' -> Generate new type...", response);
+        }
+
+        [Fact]
+        // Theres generate type without options that gives ~same result with default ui. No point to bring this.
+        public async Task Blacklists_pull_members_up_with_UI()
+        {
+            const string code =
+                @"
+                public class Class1: BaseClass
+                {
+                    public string Foo[||] { get; set; }
+                }
+
+                public class BaseClass {}
+";
+
+            var response = await FindRefactoringNamesAsync(code);
+
+            Assert.DoesNotContain("Pull 'Foo' up -> Pull members up to base type...", response);
+        }
+
         [Fact(Skip = "This feature isn't available before roslyn analyzers are available, extract interface is action to one of analysis.")]
         public async Task Can_extract_interface()
         {
