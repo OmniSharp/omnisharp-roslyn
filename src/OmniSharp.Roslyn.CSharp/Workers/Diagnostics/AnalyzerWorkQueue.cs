@@ -45,6 +45,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 var now = _utcNow();
                 var currentWork = _workQueue
                     .Where(x => ThrottlingPeriodNotActive(x.Value.modified, now))
+                    .OrderByDescending(x => x.Value.modified)
+                    .Take(50)
                     .ToImmutableArray();
 
                 foreach (var work in currentWork)
