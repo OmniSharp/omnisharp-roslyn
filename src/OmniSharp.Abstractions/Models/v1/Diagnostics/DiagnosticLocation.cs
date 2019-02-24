@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace OmniSharp.Models.Diagnostics
+﻿namespace OmniSharp.Models.Diagnostics
 {
     public class DiagnosticLocation : QuickFix
     {
