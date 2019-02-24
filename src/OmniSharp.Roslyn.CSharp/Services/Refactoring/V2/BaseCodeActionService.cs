@@ -86,9 +86,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             // Most of actions with UI works fine with defaults, however there's few exceptions:
             return codeActions.Where(x =>
-                x.CodeAction.Title != "Generate new type..." &&     // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
-                x.CodeAction.Title != "Change signature..." &&      // Blacklisted because cannot be used without proper UI.
-                x.CodeAction.Title != "Pull members up to base type..."
+                x.CodeAction.Title != "Generate new type..." &&         // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
+                x.CodeAction.Title != "Change signature..." &&          // Blacklisted because cannot be used without proper UI.
+                x.CodeAction.Title != "Pull members up to base type..." // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
             );
         }
 
