@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
@@ -40,6 +41,45 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var quickFixes = await handler.Handle(new CodeCheckRequest());
 
             Assert.Equal(2, quickFixes.QuickFixes.Count());
+        }
+
+        [Fact]
+        public async Task WhenUnusedImportExistsWithoutAnalyzersEnabled_ThenReturnEmptyTags()
+        {
+            SharedOmniSharpTestHost.AddFilesToWorkspace(
+                new TestFile("returnemptytags.cs", @"
+                    using System.IO;
+                "));
+
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+            var quickFixes = await handler.Handle(new CodeCheckRequest()
+            {
+                FileName = "returnemptytags.cs"
+            });
+
+            Assert.Empty(quickFixes.QuickFixes.OfType<DiagnosticLocation>().Single().Tags);
+        }
+
+        [Fact(Skip="Placeholder, requires analyzers to be implemented.")]
+        public async Task WhenUnusedImportIsFoundAndAnalyzersEnabled_ThenReturnUnnecessaryTag()
+        {
+            SharedOmniSharpTestHost.AddFilesToWorkspace(
+                new TestFile("returnidetags.cs", @"
+                    using System.IO;
+                "));
+
+            // TODO: Enable analyzers for this test, should return IDE analyzer with Unnesessary tag.
+            var handler = GetRequestHandler(SharedOmniSharpTestHost);
+            var quickFixes = await handler.Handle(new CodeCheckRequest()
+            {
+                FileName = "returnidetags.cs"
+            });
+
+            Assert.Contains("Unnecessary", quickFixes
+                .QuickFixes
+                .OfType<DiagnosticLocation>()
+                .Single(x => x.Id == "IDE0xxx")
+                .Tags);
         }
     }
 }
