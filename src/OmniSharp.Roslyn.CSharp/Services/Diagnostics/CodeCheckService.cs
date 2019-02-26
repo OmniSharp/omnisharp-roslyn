@@ -38,20 +38,26 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
-            var documents = request.FileName != null
-                // To properly handle the request wait until all projects are loaded.
-                ? await _workspace.GetDocumentsFromFullProjectModelAsync(request.FileName)
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
+            if (request.FileName == null)
+            {
+                var allDiagnostics = await _diagWorker.GetAllDiagnostics();
+                return GetResponseFromDiagnostics(allDiagnostics, fileName: null);
+            }
 
-            var diagnostics = await _diagWorker.GetDiagnostics(documents.ToImmutableArray());
+            var diagnostics = await _diagWorker.GetDiagnostics(new [] { request.FileName }.ToImmutableArray());
 
-            var locations = diagnostics
-                .Where(x => (string.IsNullOrEmpty(request.FileName)
-                    || x.diagnostic.Location.GetLineSpan().Path == request.FileName))
+            return GetResponseFromDiagnostics(diagnostics, request.FileName);
+        }
+
+        private static QuickFixResponse GetResponseFromDiagnostics(ImmutableArray<(string projectName, Diagnostic diagnostic)> diagnostics, string fileName)
+        {
+            var diagnosticLocations = diagnostics
+                .Where(x => (string.IsNullOrEmpty(fileName)
+                    || x.diagnostic.Location.GetLineSpan().Path == fileName))
                 .DistinctDiagnosticLocationsByProject()
                 .Where(x => x.FileName != null);
 
-            return new QuickFixResponse(locations);
+            return new QuickFixResponse(diagnosticLocations);
         }
     }
 }

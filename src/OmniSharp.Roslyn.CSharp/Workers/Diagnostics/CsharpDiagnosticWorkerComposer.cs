@@ -26,6 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     public class CsharpDiagnosticWorkerComposer: ICsDiagnosticWorker
     {
         private readonly ICsDiagnosticWorker _implementation;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
         public CsharpDiagnosticWorkerComposer(
@@ -44,16 +45,28 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             {
                 _implementation = new CSharpDiagnosticWorker(workspace, forwarder, loggerFactory);
             }
+
+            _workspace = workspace;
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnostics()
         {
-            return _implementation.GetDiagnostics(documents);
+            return _implementation.GetAllDiagnostics();
         }
 
-        public void QueueForDiagnosis(ImmutableArray<Document> documents)
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            _implementation.QueueForDiagnosis(documents);
+            return _implementation.GetDiagnostics(documentPaths);
+        }
+
+        public ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics()
+        {
+            return _implementation.QueueAllDocumentsForDiagnostics();
+        }
+
+        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
+        {
+            return _implementation.QueueForDiagnosis(documentPaths);
         }
     }
 }

@@ -13,14 +13,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     public class DiagnosticsService : IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>
     {
         private readonly DiagnosticEventForwarder _forwarder;
-        private readonly OmniSharpWorkspace _workspace;
         private readonly ICsDiagnosticWorker _diagWorker;
 
         [ImportingConstructor]
-        public DiagnosticsService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, ICsDiagnosticWorker diagWorker)
+        public DiagnosticsService(DiagnosticEventForwarder forwarder, ICsDiagnosticWorker diagWorker)
         {
             _forwarder = forwarder;
-            _workspace = workspace;
             _diagWorker = diagWorker;
         }
 
@@ -31,11 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _forwarder.IsEnabled = true;
             }
 
-            var documents = request.FileName != null
-                ? _workspace.GetDocuments(request.FileName)
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents);
-
-            _diagWorker.QueueForDiagnosis(documents.ToImmutableArray());
+            _diagWorker.QueueAllDocumentsForDiagnostics();
 
             return Task.FromResult(new DiagnosticsResponse());
         }

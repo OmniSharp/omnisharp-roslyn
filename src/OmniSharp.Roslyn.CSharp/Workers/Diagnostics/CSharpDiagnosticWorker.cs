@@ -138,19 +138,21 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             };
         }
 
-        public void QueueForDiagnosis(ImmutableArray<Document> documents)
+        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
         {
-            this.EmitDiagnostics(documents.Select(x => x.FilePath).ToArray());
+            this.EmitDiagnostics(documentPaths.ToArray());
+            return ImmutableArray<DocumentId>.Empty;
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<Document> documents)
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
-            if (documents == null || !documents.Any()) return ImmutableArray<(string projectName, Diagnostic diagnostic)>.Empty;
+            if (!documentPaths.Any()) return ImmutableArray<(string projectName, Diagnostic diagnostic)>.Empty;
 
             var results = new List<(string projectName, Diagnostic diagnostic)>();
 
-            foreach(var document in documents)
+            foreach(var documentPath in documentPaths)
             {
+                var document = _workspace.GetDocument(documentPath);
                 var projectName = document.Project.Name;
                 var diagnostics = await GetDiagnosticsForDocument(document, projectName);
                 results.AddRange(diagnostics.Select(x => (projectName: document.Project.Name, diagnostic: x)));
@@ -173,6 +175,18 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
                 var semanticModel = await document.GetSemanticModelAsync();
                 return semanticModel.GetDiagnostics();
             }
+        }
+
+        public ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics()
+        {
+            var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).ToImmutableArray();
+            QueueForDiagnosis(documents.Select(x => x.FilePath).ToImmutableArray());
+            return documents.Select(x => x.Id).ToImmutableArray();
+        }
+
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnostics()
+        {
+            throw new NotImplementedException();
         }
     }
 }

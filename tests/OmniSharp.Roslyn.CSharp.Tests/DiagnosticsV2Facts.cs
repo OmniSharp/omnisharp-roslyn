@@ -36,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var service = CreateDiagnosticService(forwarder);
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
-            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest { FileName = testFile.FileName });
 
             await emitter.ExpectForEmitted(msg => msg.Results.Any(m => m.FileName == filename));
@@ -62,7 +62,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
 
-            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
             await emitter.ExpectForEmitted(msg => msg.Results
@@ -86,7 +86,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
 
-            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
             Assert.True(forwarder.IsEnabled);
