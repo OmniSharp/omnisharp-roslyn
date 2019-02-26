@@ -29,7 +29,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     {
         private readonly ILogger _logger;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly object _lock = new object();
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly IObserver<string> _openDocuments;
 
@@ -184,9 +183,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return documents.Select(x => x.Id).ToImmutableArray();
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnostics()
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
         {
-            throw new NotImplementedException();
+            var documents = _workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).Select(x => x.FilePath).ToImmutableArray();
+            return GetDiagnostics(documents);
         }
     }
 }

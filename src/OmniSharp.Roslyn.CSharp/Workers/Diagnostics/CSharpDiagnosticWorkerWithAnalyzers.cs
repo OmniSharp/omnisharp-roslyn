@@ -110,8 +110,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private ImmutableArray<DocumentId> GetDocumentIdsFromPaths(ImmutableArray<string> documentPaths)
         {
             return documentPaths
-                            .Select(docPath => _workspace.GetDocumentId(docPath))
-                            .ToImmutableArray();
+                .Select(docPath => _workspace.GetDocumentId(docPath))
+                .ToImmutableArray();
         }
 
         private async Task Worker()
@@ -140,7 +140,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                         var projectDocuments = projectGroup.Select(docId => projectWithOptions.GetDocument(docId)).ToImmutableArray();
 
-                        await Analyze(projectWithOptions, projectDocuments);
+                        await AnalyzeProject(projectWithOptions, projectDocuments);
                     }
 
                     await Task.Delay(50);
@@ -164,13 +164,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded)
+                || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
+                || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded
+                || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged )
             {
                 QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
             }
         }
 
-        private async Task Analyze(Project project, ImmutableArray<Document> projectDocuments)
+        private async Task AnalyzeProject(Project project, ImmutableArray<Document> projectDocuments)
         {
             try
             {
@@ -275,10 +277,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return documentIds;
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnostics()
+        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
         {
+            await InitializeWithWorkspaceDocumentsIfNotYetDone();
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
-            return GetDiagnosticsByDocumentIds(allDocumentsIds);
+            return await GetDiagnosticsByDocumentIds(allDocumentsIds);
         }
     }
 }

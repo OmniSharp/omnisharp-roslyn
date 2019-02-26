@@ -49,9 +49,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             _workspace = workspace;
         }
 
-        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnostics()
+        public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
         {
-            return _implementation.GetAllDiagnostics();
+            return _implementation.GetAllDiagnosticsAsync();
         }
 
         public Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)

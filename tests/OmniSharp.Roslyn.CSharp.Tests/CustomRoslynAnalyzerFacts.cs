@@ -55,7 +55,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Testtitle",
                 "Type name '{0}' contains lowercase letters",
                 "Naming",
-                DiagnosticSeverity.Warning,
+                DiagnosticSeverity.Error,
                 isEnabledByDefault: _isEnabledByDefault
             );
 
@@ -102,11 +102,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 host.AddFilesToWorkspace(testFile);
 
-                var testAnalyzerRef = new TestAnalyzerReference("TS1234");
+                var testAnalyzerRef = new TestAnalyzerReference("TS1234", isEnabledByDefault: true);
 
                 AddProjectWitFile(host, testFile, testAnalyzerRef);
 
-                var result = await host.RequestCodeCheckAsync("testFile.cs");
+                var result = await host.RequestCodeCheckAsync();
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
             }
         }
@@ -127,8 +127,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 AddProjectWitFile(host, testFile);
 
                 var result = await host.RequestCodeCheckAsync();
-
-                result = await host.RequestCodeCheckAsync();
 
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("CS"));
             }

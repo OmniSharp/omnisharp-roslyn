@@ -126,7 +126,20 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var refactorings = await FindRefactoringNamesAsync(code, roslynAnalyzersEnabled);
 
-            List<string> expected = new List<string>
+            List<string> expected = roslynAnalyzersEnabled ? new List<string>
+            {
+                "Fix formatting",
+                "using System;",
+                "System.Console",
+                "Generate variable 'Console' -> Generate property 'Class1.Console'",
+                "Generate variable 'Console' -> Generate field 'Class1.Console'",
+                "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
+                "Generate variable 'Console' -> Generate local 'Console'",
+                "Generate type 'Console' -> Generate class 'Console' in new file",
+                "Generate type 'Console' -> Generate class 'Console'",
+                "Generate type 'Console' -> Generate nested class 'Console'",
+                "Extract Method"
+            } : new List<string>
             {
                 "using System;",
                 "System.Console",

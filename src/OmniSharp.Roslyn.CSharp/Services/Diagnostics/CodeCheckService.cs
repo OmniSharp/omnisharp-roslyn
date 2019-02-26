@@ -18,8 +18,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     [OmniSharpHandler(OmniSharpEndpoints.CodeCheck, LanguageNames.CSharp)]
     public class CodeCheckService : IRequestHandler<CodeCheckRequest, QuickFixResponse>
     {
-        private readonly OmniSharpWorkspace _workspace;
-        private readonly OmniSharpOptions _options;
         private readonly ICsDiagnosticWorker _diagWorker;
         private readonly ILogger<CodeCheckService> _logger;
 
@@ -30,17 +28,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             OmniSharpOptions options,
             ICsDiagnosticWorker diagWorker)
         {
-            _workspace = workspace;
-            _options = options;
             _diagWorker = diagWorker;
             _logger = loggerFactory.CreateLogger<CodeCheckService>();
         }
 
         public async Task<QuickFixResponse> Handle(CodeCheckRequest request)
         {
-            if (request.FileName == null)
+            if (string.IsNullOrEmpty(request.FileName))
             {
-                var allDiagnostics = await _diagWorker.GetAllDiagnostics();
+                var allDiagnostics = await _diagWorker.GetAllDiagnosticsAsync();
                 return GetResponseFromDiagnostics(allDiagnostics, fileName: null);
             }
 
