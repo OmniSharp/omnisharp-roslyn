@@ -133,6 +133,40 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task Rulesets_should_work_with_syntax_analyzers()
+        {
+            using (var host = GetHost())
+            {
+                var testFile = new TestFile("testFile_9.cs", @"
+                    class Program
+                    {
+                        static void Main(string[] args)
+                        {
+                            return;
+                            Console.WriteLine(null); // This is CS0162, unreachable code.
+                        }
+                    }");
+                var ruleService = host.GetExport<RulesetsForProjects>();
+
+                var projectIds = AddProjectWitFile(host, testFile);
+
+                var testRules = CreateRules("CS0162", ReportDiagnostic.Hidden);
+
+                ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                    "",
+                    new ReportDiagnostic(),
+                    testRules.ToImmutableDictionary(),
+                    new ImmutableArray<RuleSetInclude>()));
+
+                var result = await host.RequestCodeCheckAsync();
+
+                var foo = result.QuickFixes.ToList();
+
+                Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains("CS0162") && f.LogLevel == "Hidden");
+            }
+        }
+
+        [Fact]
         public async Task When_rules_udpate_diagnostic_severity_then_show_them_with_new_severity()
         {
             using (var host = GetHost())
@@ -143,7 +177,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var testAnalyzerRef = new TestAnalyzerReference("TS1100");
 
                 var projectIds = AddProjectWitFile(host, testFile, testAnalyzerRef);
-                var testRules = CreateRules(testAnalyzerRef, ReportDiagnostic.Hidden);
+                var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
 
                 ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
                     "",
@@ -156,11 +190,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
-        private static Dictionary<string, ReportDiagnostic> CreateRules(TestAnalyzerReference testAnalyzerRef, ReportDiagnostic diagnostic)
+        private static Dictionary<string, ReportDiagnostic> CreateRules(string analyzerId, ReportDiagnostic diagnostic)
         {
             return new Dictionary<string, ReportDiagnostic>
             {
-                { testAnalyzerRef.Id.ToString(), diagnostic }
+                { analyzerId, diagnostic }
             };
         }
 
@@ -178,7 +212,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var projectIds = AddProjectWitFile(host, testFile, testAnalyzerRef);
 
-                var testRules = CreateRules(testAnalyzerRef, ReportDiagnostic.Suppress);
+                var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
 
                 ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
                     "",
@@ -203,7 +237,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var projectIds = AddProjectWitFile(host, testFile, testAnalyzerRef);
 
-                var testRules = CreateRules(testAnalyzerRef, ReportDiagnostic.Error);
+                var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
 
                 ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
                     "",
