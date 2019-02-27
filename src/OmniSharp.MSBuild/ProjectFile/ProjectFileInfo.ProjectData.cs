@@ -32,6 +32,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             public OutputKind OutputKind { get; }
             public LanguageVersion LanguageVersion { get; }
+            public NullableContextOptions NullableContextOptions { get; }
             public bool AllowUnsafeCode { get; }
             public string DocumentationFile { get; }
             public ImmutableArray<string> PreprocessorSymbolNames { get; }
@@ -69,6 +70,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> targetFrameworks,
                 OutputKind outputKind,
                 LanguageVersion languageVersion,
+                NullableContextOptions nullableContextOptions,
                 bool allowUnsafeCode,
                 string documentationFile,
                 ImmutableArray<string> preprocessorSymbolNames,
@@ -93,6 +95,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 OutputKind = outputKind;
                 LanguageVersion = languageVersion;
+                NullableContextOptions = nullableContextOptions;
                 AllowUnsafeCode = allowUnsafeCode;
                 DocumentationFile = documentationFile;
                 PreprocessorSymbolNames = preprocessorSymbolNames.EmptyIfDefault();
@@ -111,6 +114,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> targetFrameworks,
                 OutputKind outputKind,
                 LanguageVersion languageVersion,
+                NullableContextOptions nullableContextOptions,
                 bool allowUnsafeCode,
                 string documentationFile,
                 ImmutableArray<string> preprocessorSymbolNames,
@@ -123,7 +127,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<PackageReference> packageReferences,
                 ImmutableArray<string> analyzers)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                      configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
+                      configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode,
                       documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
@@ -158,6 +162,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var languageVersion = PropertyConverter.ToLanguageVersion(project.GetPropertyValue(PropertyNames.LangVersion));
                 var allowUnsafeCode = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
                 var outputKind = PropertyConverter.ToOutputKind(project.GetPropertyValue(PropertyNames.OutputType));
+                var nullableContextOptions = PropertyConverter.ToNullableContextOptions(project.GetPropertyValue(PropertyNames.NullableContextOptions));
                 var documentationFile = project.GetPropertyValue(PropertyNames.DocumentationFile);
                 var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(project.GetPropertyValue(PropertyNames.DefineConstants));
                 var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(project.GetPropertyValue(PropertyNames.NoWarn));
@@ -166,7 +171,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 return new ProjectData(
                     guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
-                    configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, allowUnsafeCode,
+                    configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode,
                     documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile);
             }
 
@@ -195,6 +200,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var languageVersion = PropertyConverter.ToLanguageVersion(projectInstance.GetPropertyValue(PropertyNames.LangVersion));
                 var allowUnsafeCode = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.AllowUnsafeBlocks), defaultValue: false);
                 var outputKind = PropertyConverter.ToOutputKind(projectInstance.GetPropertyValue(PropertyNames.OutputType));
+                var nullableContextOptions = PropertyConverter.ToNullableContextOptions(projectInstance.GetPropertyValue(PropertyNames.NullableContextOptions));
                 var documentationFile = projectInstance.GetPropertyValue(PropertyNames.DocumentationFile);
                 var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
                 var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
@@ -241,7 +247,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 return new ProjectData(guid, name,
                     assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks,
-                    outputKind, languageVersion, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
+                    outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
                     sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers);
             }

@@ -104,5 +104,26 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
             }
         }
+
+        [Fact]
+        public async Task CSharp8AndNullableContext_has_correct_property_values()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("CSharp8AndNullableContext"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "CSharp8AndNullableContext.csproj");
+
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+
+                Assert.NotNull(projectFileInfo);
+                Assert.Equal(projectFilePath, projectFileInfo.FilePath);
+                var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
+                Assert.Equal("netcoreapp2.1", targetFramework);
+                Assert.Equal(LanguageVersion.CSharp8, projectFileInfo.LanguageVersion);
+                Assert.Equal(NullableContextOptions.Enable, projectFileInfo.NullableContextOptions);
+                Assert.Equal("Debug", projectFileInfo.Configuration);
+                Assert.Equal("AnyCPU", projectFileInfo.Platform);
+            }
+        }
     }
 }
