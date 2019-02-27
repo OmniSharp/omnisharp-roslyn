@@ -151,7 +151,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             foreach(var documentPath in documentPaths)
             {
-                var document = _workspace.GetDocument(documentPath);
+                // To properly handle the request wait until all projects are loaded
+                var documents = await _workspace.GetDocumentsFromFullProjectModelAsync(documentPath);
+
+                var document = documents.SingleOrDefault();
+
+                if(document?.Project?.Name == null)
+                    continue;
+
                 var projectName = document.Project.Name;
                 var diagnostics = await GetDiagnosticsForDocument(document, projectName);
                 results.AddRange(diagnostics.Select(x => (projectName: document.Project.Name, diagnostic: x)));
