@@ -132,6 +132,19 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
         }
 
+        public static NullableContextOptions ToNullableContextOptions(string propertyValue)
+        {
+            switch (propertyValue?.ToLowerInvariant())
+            {
+                case "disable": return NullableContextOptions.Disable;
+                case "enable": return NullableContextOptions.Enable;
+                case "safeonly": return NullableContextOptions.SafeOnly;
+                case "warnings": return NullableContextOptions.Warnings;
+                case "safeonlywarnings": return NullableContextOptions.SafeOnlyWarnings;
+                default: return NullableContextOptions.Disable;
+            }
+        }
+
         public static VersionRange ToVersionRange(string propertyValue)
         {
             if (VersionRange.TryParse(propertyValue.Trim(), out var version))

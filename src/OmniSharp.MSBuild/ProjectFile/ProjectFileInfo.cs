@@ -35,6 +35,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
         public OutputKind OutputKind => _data.OutputKind;
         public LanguageVersion LanguageVersion => _data.LanguageVersion;
+        public NullableContextOptions NullableContextOptions => _data.NullableContextOptions;
         public bool AllowUnsafeCode => _data.AllowUnsafeCode;
         public string DocumentationFile => _data.DocumentationFile;
         public ImmutableArray<string> PreprocessorSymbolNames => _data.PreprocessorSymbolNames;
