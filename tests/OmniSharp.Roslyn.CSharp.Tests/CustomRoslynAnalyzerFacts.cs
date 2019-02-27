@@ -160,8 +160,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var result = await host.RequestCodeCheckAsync();
 
-                var foo = result.QuickFixes.ToList();
-
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains("CS0162") && f.LogLevel == "Hidden");
             }
         }
