@@ -218,9 +218,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var syntaxTree = await document.GetSyntaxTreeAsync();
                     diagnostics = syntaxTree.GetDiagnostics().ToImmutableArray();
                 }
-                else if (allAnalyzers.Any())
+                else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
                 {
-                    // Analyzers cannot be called with empty analyzer list.
                     var semanticDiagnosticsWithAnalyzers = await compiled
                         .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
                         .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token);
