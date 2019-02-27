@@ -242,7 +242,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}");
+                _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
                 _workQueue.MarkWorkAsCompleteForDocumentId(document.Id);
             }
         }
