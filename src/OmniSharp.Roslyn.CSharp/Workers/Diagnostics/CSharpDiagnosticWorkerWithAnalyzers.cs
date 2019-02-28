@@ -130,17 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     foreach (var projectGroup in currentWorkGroupedByProjects)
                     {
-                        // TODO: This should be moved that project rulesets are updated
-                        // to workspace projects itself when project is updated/loaded/manipulated and so on.
-                        // It also causes these inderictions and multiple steps to collect work with projects / documents.
-                        var projectOriginal = solution.GetProject(projectGroup.Key);
-
-                        var projectWithOptions = projectOriginal.WithCompilationOptions(
-                                _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(projectOriginal));
-
-                        var projectDocuments = projectGroup.Select(docId => projectWithOptions.GetDocument(docId)).ToImmutableArray();
-
-                        await AnalyzeProject(projectWithOptions, projectDocuments);
+                        await AnalyzeProject(solution, projectGroup);
                     }
 
                     await Task.Delay(50);
@@ -172,29 +162,38 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private async Task AnalyzeProject(Project project, ImmutableArray<Document> projectDocuments)
+        private async Task AnalyzeProject(Solution solution, IGrouping<ProjectId, DocumentId> documentsGroupedByProject)
         {
             try
             {
+                // TODO: This should be moved that project rulesets are updated
+                // to workspace projects itself when project is updated/loaded/manipulated and so on.
+                // It also causes these inderictions and multiple steps to collect work with projects / documents.
+                var projectOriginal = solution.GetProject(documentsGroupedByProject.Key);
+
+                var projectWithOptions = projectOriginal.WithCompilationOptions(
+                        _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(projectOriginal));
+
                 var allAnalyzers = _providers
                     .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
+                    .Concat(projectWithOptions.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(projectWithOptions.Language)))
                     .ToImmutableArray();
 
-                var compiled = await project
+                var compiled = await projectWithOptions
                     .GetCompilationAsync();
 
                 var workspaceAnalyzerOptions =
-                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution.Options, project.Solution });
+                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { projectWithOptions.AnalyzerOptions, projectWithOptions.Solution.Options, projectWithOptions.Solution });
 
-                foreach (var document in projectDocuments)
+                foreach (var documentId in documentsGroupedByProject)
                 {
-                    await AnalyzeDocument(project, allAnalyzers, compiled, workspaceAnalyzerOptions, document);
+                    var document = projectWithOptions.GetDocument(documentId);
+                    await AnalyzeDocument(projectWithOptions, allAnalyzers, compiled, workspaceAnalyzerOptions, document);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Analysis of project {project.Id} ({project.Name}) failed, underlaying error: {ex}");
+                _logger.LogError($"Analysis of project {documentsGroupedByProject.Key} failed, underlaying error: {ex}");
             }
         }
 
