@@ -105,6 +105,7 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
         public async Task CSharp8AndNullableContext_has_correct_property_values()
         {
             using (var host = CreateOmniSharpHost())
