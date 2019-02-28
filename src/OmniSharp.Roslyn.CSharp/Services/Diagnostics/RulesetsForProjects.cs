@@ -26,7 +26,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 return project.CompilationOptions;
 
             var existingRules = project.CompilationOptions.SpecificDiagnosticOptions;
-            return project.CompilationOptions.WithSpecificDiagnosticOptions(existingRules.Concat(GetRules(project.Id)));
+            var projectRules = GetRules(project.Id);
+
+            var distinctRulesWithProjectSpecificRules = projectRules.Concat(existingRules.Where( x=> !projectRules.Keys.Contains(x.Key)));
+
+            return project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules);
         }
 
         public void AddOrUpdateRuleset(ProjectId projectId, RuleSet ruleset)
