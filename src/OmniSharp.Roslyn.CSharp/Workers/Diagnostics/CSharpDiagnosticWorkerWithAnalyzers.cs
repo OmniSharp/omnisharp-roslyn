@@ -201,9 +201,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             try
             {
-                var semantic = await document.GetSemanticModelAsync();
-
-                // Theres real possibility that bug in analyzer causes analysis hang or end to infinite loop.
+                // There's real possibility that bug in analyzer causes analysis hang at document.
                 var perDocumentTimeout = new CancellationTokenSource(10 * 1000);
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
@@ -229,7 +227,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     diagnostics = semanticDiagnosticsWithAnalyzers
                         .Concat(syntaxDiagnosticsWithAnalyzers)
-                        .Concat(semantic.GetDiagnostics())
+                        .Concat(documentSemanticModel.GetDiagnostics())
                         .ToImmutableArray();
                 }
                 else
