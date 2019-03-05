@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using OmniSharp.Models.Events;
+using OmniSharp;
+using OmniSharp.Models;
+using System.Linq;
 
 namespace OmniSharp.Eventing
 {
@@ -40,6 +43,20 @@ namespace OmniSharp.Eventing
                     FileName = projectFilePath,
                     UnresolvedDependencies = unresolvedDependencies
                 });
+        }
+
+        public static void ProjectInformation(this IEventEmitter emitter, HashedString projectFilePath, IEnumerable<HashedString> targetFrameworks, IEnumerable<HashedString> references)
+        {
+            var projectConfiguration = new ProjectConfigurationMessage()
+            {
+                TargetFrameworks = targetFrameworks.Select(hashed => hashed.Value),
+                ProjectFilePath = projectFilePath.Value,
+                References = references.Select(hashed => hashed.Value)
+            };
+
+            emitter.Emit(
+                EventTypes.ProjectConfiguration,
+                projectConfiguration);
         }
     }
 }
