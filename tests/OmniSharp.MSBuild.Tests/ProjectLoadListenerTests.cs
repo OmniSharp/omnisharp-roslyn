@@ -1,10 +1,12 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Models.Events;
 using OmniSharp.MSBuild.Notification;
+using OmniSharp.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -137,7 +139,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task The_references_are_emitted()
+        public async Task Given_a_restored_project_the_references_are_emitted()
         {
             // Arrange
             var messages = new List<ProjectConfigurationMessage>();
@@ -150,11 +152,16 @@ namespace OmniSharp.MSBuild.Tests
             };
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
             {
-                Assert.Single(messages);
-                Assert.NotEmpty(messages[0].References.Where(reference => reference ==_referenceHashingAlgorithm.HashInput("mscorlib.dll").Value));
+                var dotnetCliService = new DotNetCliService(LoggerFactory, emitter);
+                await dotnetCliService.RestoreAsync(testProject.Directory);
+                using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+                {
+                    Assert.Single(messages);
+                    Assert.NotEmpty(messages[0].References.Where(reference => reference == _referenceHashingAlgorithm.HashInput("mscorlib.dll").Value));
+                }
             }
+            
         }
 
         [Fact]
@@ -174,8 +181,10 @@ namespace OmniSharp.MSBuild.Tests
             using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
             {
                 Assert.Single(messages);
-                var tfm = messages[0].TargetFrameworks;
+                var tfm = messages[0].TargetFrameworks.ToArray();
                 Assert.Equal(2, tfm.Count());
+                Assert.Equal(tfm[0], GetHashedTargetFramework("netstandard1.3"));
+                Assert.Equal(tfm[1], GetHashedTargetFramework("netstandard2.0"));
             }
         }
 

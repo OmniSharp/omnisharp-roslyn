@@ -110,7 +110,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(Id, FilePath, data);
-            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true);
+            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true, data.References);
 
             return (projectFileInfo, diagnostics, eventArgs);
         }

@@ -17,7 +17,10 @@ namespace OmniSharp.MSBuild.Tests
 
             public void Emit(string kind, object args)
             {
-                _messages.Add((ProjectConfigurationMessage)args);
+                if(args is ProjectConfigurationMessage)
+                {
+                    _messages.Add((ProjectConfigurationMessage)args);
+                }
             }
         }
     }

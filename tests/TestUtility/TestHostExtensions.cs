@@ -4,6 +4,7 @@ using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Services;
 using System.Threading.Tasks;
 
 namespace TestUtility
@@ -37,6 +38,13 @@ namespace TestUtility
             var request = new CodeCheckRequest { FileName = filePath };
 
             return await service.Handle(request);
+        }
+
+        public static async Task DotnetRestore(this OmniSharpTestHost host, string workingDirectory)
+        {
+            var service = host.GetRequiredService<IDotNetCliService>();
+
+            await service.RestoreAsync(workingDirectory);
         }
     }
 }
