@@ -143,9 +143,6 @@ namespace TestUtility
             }
         }
 
-        public T GetRequiredService<T>()
-            => this._serviceProvider.GetRequiredService<T>();
-
         public Task<TResponse> GetResponse<TRequest, TResponse>(
            string endpoint, TRequest request)
         {

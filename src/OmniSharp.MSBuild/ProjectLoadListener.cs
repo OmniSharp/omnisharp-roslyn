@@ -55,7 +55,7 @@ namespace OmniSharp.MSBuild
 
         private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)
         {
-            var referenceNames = args.References.Select(reference => Path.GetFileName(reference));
+            var referenceNames = args.References.Select(reference => Path.GetFileNameWithoutExtension(reference).ToLower());
             return referenceNames.Select(reference => _referenceHashingAlgorithm.HashInput(reference));
         }
 
@@ -76,6 +76,7 @@ namespace OmniSharp.MSBuild
             {
                 return targetFrameworks.Split(';')
                     .Where(tfm => !string.IsNullOrWhiteSpace(tfm))
+                    .Select(tfm => tfm.ToLower())
                     .Select(tfm => _tfmAndFileHashingAlgorithm.HashInput(tfm));
             }
 

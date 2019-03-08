@@ -98,7 +98,7 @@ namespace OmniSharp.MSBuild.Tests
         public async Task The_target_framework_is_emitted()
         {
             // Arrange
-            var expectedTFM = GetHashedTargetFramework("netcoreapp1.0");
+            var expectedTFM = GetHashedTargetFramework("netcoreapp2.1");
             var messages = new List<ProjectConfigurationMessage>();
             var emitter = new ProjectLoadTestEventEmitter(messages);
 
@@ -150,7 +150,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 MefValueProvider.From<IMSBuildEventSink>(listener)
             };
-
+            
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             {
                 var dotnetCliService = new DotNetCliService(LoggerFactory, emitter);
@@ -158,7 +158,7 @@ namespace OmniSharp.MSBuild.Tests
                 using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
                 {
                     Assert.Single(messages);
-                    Assert.NotEmpty(messages[0].References.Where(reference => reference == _referenceHashingAlgorithm.HashInput("mscorlib.dll").Value));
+                    Assert.NotEmpty(messages[0].References.Where(reference => reference == _referenceHashingAlgorithm.HashInput("system.core").Value));
                 }
             }
             

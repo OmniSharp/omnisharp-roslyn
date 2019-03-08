@@ -39,12 +39,5 @@ namespace TestUtility
 
             return await service.Handle(request);
         }
-
-        public static async Task DotnetRestore(this OmniSharpTestHost host, string workingDirectory)
-        {
-            var service = host.GetRequiredService<IDotNetCliService>();
-
-            await service.RestoreAsync(workingDirectory);
-        }
     }
 }
