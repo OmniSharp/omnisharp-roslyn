@@ -149,16 +149,13 @@ namespace OmniSharp.MSBuild.Tests
                 MefValueProvider.From<IMSBuildEventSink>(listener)
             };
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithReference"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
             {
                 Assert.Single(messages);
-                Assert.NotEmpty(messages[0].References);
-                Console.WriteLine(messages[0].References);
-                //Assert.NotEmpty(messages[0].References.Where(reference => reference ==_referenceHashingAlgorithm.HashInput("System.Core.dll").Value));
+                Assert.NotEmpty(messages[0].References.Where(reference => reference ==_referenceHashingAlgorithm.HashInput("mscorlib.dll").Value));
             }
         }
-
 
         [Fact]
         public async Task If_there_are_multiple_target_frameworks_they_are_returned()
@@ -173,7 +170,7 @@ namespace OmniSharp.MSBuild.Tests
                 MefValueProvider.From<IMSBuildEventSink>(listener)
             };
 
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithReference"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib/Lib"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
             {
                 Assert.Single(messages);
