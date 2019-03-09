@@ -50,9 +50,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp1.0", targetFramework);
-                Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp1.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("netcoreapp2.1", targetFramework);
+                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
