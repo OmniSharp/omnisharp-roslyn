@@ -61,13 +61,13 @@ namespace OmniSharp.MSBuild
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
 
-        public ProjectManager(ILoggerFactory loggerFactory, 
-            MSBuildOptions options, 
-            IEventEmitter eventEmitter, 
-            IFileSystemWatcher fileSystemWatcher, 
-            MetadataFileReferenceCache metadataFileReferenceCache, 
-            PackageDependencyChecker packageDependencyChecker, 
-            ProjectLoader projectLoader, 
+        public ProjectManager(ILoggerFactory loggerFactory,
+            MSBuildOptions options,
+            IEventEmitter eventEmitter,
+            IFileSystemWatcher fileSystemWatcher,
+            MetadataFileReferenceCache metadataFileReferenceCache,
+            PackageDependencyChecker packageDependencyChecker,
+            ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
@@ -123,7 +123,7 @@ namespace OmniSharp.MSBuild
 
                 projectDir = Path.GetDirectoryName(projectDir);
             } while(projectDir != null);
-            
+
             // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
             // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
             _logger.LogTrace($"Started waiting for projects queue to be empty when requested '{documentPath}'");
@@ -585,6 +585,21 @@ namespace OmniSharp.MSBuild
 
                 if (!referencesToAdd.Contains(reference))
                 {
+                    if (_projectFiles.TryGetValue(project.FilePath, out var projectFileInfo))
+                    {
+                        if (projectFileInfo.ReferenceAliases != null && projectFileInfo.ReferenceAliases.TryGetValue(referencePath, out var aliases))
+                        {
+                            if (!string.IsNullOrEmpty(aliases))
+                            {
+                                reference = reference.WithAliases(aliases.Split(';'));
+                                _logger.LogDebug($"setting aliases: {referencePath}, {aliases} ");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogDebug($"failed to get project info:{project.FilePath}");
+                    }
                     _logger.LogDebug($"Adding reference '{referencePath}' to '{project.Name}'.");
                     _workspace.AddMetadataReference(project.Id, reference);
                     referencesToAdd.Add(reference);

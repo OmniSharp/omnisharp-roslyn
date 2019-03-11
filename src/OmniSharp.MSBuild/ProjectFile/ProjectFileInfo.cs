@@ -49,6 +49,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<string> ProjectReferences => _data.ProjectReferences;
         public ImmutableArray<PackageReference> PackageReferences => _data.PackageReferences;
         public ImmutableArray<string> Analyzers => _data.Analyzers;
+        public ImmutableDictionary<string, string> ReferenceAliases => _data.ReferenceAliases;
 
         private ProjectFileInfo(
             ProjectId id,

@@ -125,5 +125,25 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
             }
         }
+
+        [Fact]
+        public async Task ExternAlias()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("ExternAlias"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "ExternAlias.App", "ExternAlias.App.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.Single(projectFileInfo.ReferenceAliases);
+                foreach(var kv in projectFileInfo.ReferenceAliases)
+                {
+                    this.TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
+                }
+                // reference path should be same as evaluated HintPath("$(ProjectDir)../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll")
+                var libpath = string.Format($"{Path.Combine(testProject.Directory, "ExternAlias.App")}{Path.DirectorySeparatorChar}../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll");
+                Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
+                Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
+            }
+        }
     }
 }
