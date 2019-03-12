@@ -45,7 +45,6 @@ namespace OmniSharp.MSBuild
                 var hashedReferences = GetHashedReferences(args);
                 var hashedFileExtensions = GetUniqueHashedFileExtensions(args);
 
-                _logger.LogInformation("Sending the configuration", hashedFileExtensions);
                 _eventEmitter.ProjectInformation(projectGuid, hashedTargetFrameworks, hashedReferences, hashedFileExtensions);
             }
             catch (Exception ex)
@@ -62,15 +61,16 @@ namespace OmniSharp.MSBuild
 
         private static HashedString GetProjectId(ProjectLoadedEventArgs args)
         {
-            //to do: determine what is the hashing story here
             if (args.HasProjectIdGeneratedFromSolution)
             {
+                //If we are getting a raw guid we should not hash it
                 return new HashedString(args.Id.Id.ToString());
             }
 
             var projectFilePath = args.ProjectInstance.GetPropertyValue(MSBuildProjectFullPathPropertyName);
             var content = File.ReadAllText(projectFilePath);
-            return _tfmAndFileHashingAlgorithm.HashInput(content);
+            //create a hash from the filename and the content
+            return _referenceHashingAlgorithm.HashInput($"Filename: {Path.GetFileName(projectFilePath)}\n{content}");
         }
 
         private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)

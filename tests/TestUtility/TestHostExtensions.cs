@@ -4,7 +4,6 @@ using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild.Models;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Services;
 using System.Threading.Tasks;
 
 namespace TestUtility
