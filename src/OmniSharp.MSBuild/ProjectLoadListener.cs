@@ -17,10 +17,10 @@ namespace OmniSharp.MSBuild
         internal const string TargetFrameworkPropertyName = "TargetFramework";
         internal const string TargetFrameworkVersionPropertyName = "TargetFrameworkVersion";
         internal const string TargetFrameworksPropertyName = "TargetFrameworks";
+        private const string MSBuildProjectFullPathPropertyName = "MSBuildProjectFullPath";
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
         private static readonly VsTfmAndFileExtHashingAlgorithm _tfmAndFileHashingAlgorithm = new VsTfmAndFileExtHashingAlgorithm();
-        private const string MSBuildProjectFullPathPropertyName = "MSBuildProjectFullPath";
         private static readonly VsReferenceHashingAlgorithm _referenceHashingAlgorithm = new VsReferenceHashingAlgorithm();
 
         [ImportingConstructor]
@@ -34,8 +34,7 @@ namespace OmniSharp.MSBuild
         {
             try
             {
-                var projectFilePath = args.ProjectInstance.GetPropertyValue(MSBuildProjectFullPathPropertyName);
-                var hashedProjectFilePath = _tfmAndFileHashingAlgorithm.HashInput(projectFilePath);
+                var projectId = GetProjectId(args);
                 var hashedTargetFrameworks = GetHashedTargetFrameworks(args.ProjectInstance);
 
                 if (args.References == null)
@@ -45,12 +44,25 @@ namespace OmniSharp.MSBuild
 
                 var hashedReferences = GetHashedReferences(args);
 
-                _eventEmitter.ProjectInformation(hashedProjectFilePath, hashedTargetFrameworks, hashedReferences);
+                _eventEmitter.ProjectInformation(projectId, hashedTargetFrameworks, hashedReferences);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Unexpected exception got thrown from project load listener: " + ex);
             }
+        }
+
+        private static HashedString GetProjectId(ProjectLoadedEventArgs args)
+        {
+            //to do: determine what is the hashing story here
+            if (args.HasProjectIdGeneratedFromSolution)
+            {
+                return new HashedString(args.Id.Id.ToString());
+            }
+
+            var projectFilePath = args.ProjectInstance.GetPropertyValue(MSBuildProjectFullPathPropertyName);
+            var content = File.ReadAllText(projectFilePath);
+            return _tfmAndFileHashingAlgorithm.HashInput(content);
         }
 
         private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)

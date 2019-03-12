@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
@@ -32,7 +33,8 @@ namespace OmniSharp.MSBuild.Tests
                 loggerFactory: LoggerFactory,
                 sdksPathResolver: sdksPathResolver);
 
-            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, loader);
+            var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(), false);
+            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader);
 
             return projectFileInfo;
         }

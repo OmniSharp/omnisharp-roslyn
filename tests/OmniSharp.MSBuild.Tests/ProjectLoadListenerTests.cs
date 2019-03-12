@@ -117,7 +117,29 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task The_project_file_path_is_emitted()
+        public async Task If_there_is_a_solution_file_the_project_guid_present_in_it_is_emitted()
+        {
+            // Arrange
+            var messages = new List<ProjectConfigurationMessage>();
+            var emitter = new ProjectLoadTestEventEmitter(messages);
+
+            var listener = new ProjectLoadListener(LoggerFactory, emitter);
+            var exports = new ExportDescriptorProvider[]
+            {
+                MefValueProvider.From<IMSBuildEventSink>(listener)
+            };
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            {
+                var expectedGuid = GetHashedTargetFramework("A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower());
+                Assert.Single(messages);
+                Assert.Equal(messages[0].ProjectGuid, expectedGuid);
+            }
+        }
+
+        [Fact]
+        public async Task If_there_is_no_solution_file_the_hash_of_project_file_content_and_name_is_emitted()
         {
             // Arrange
             var messages = new List<ProjectConfigurationMessage>();
@@ -132,16 +154,15 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
             {
-                var expectedPath = GetHashedTargetFramework(Directory.GetFiles(testProject.Directory, "*.csproj").SingleOrDefault());
+                var expectedGuid = GetHashedTargetFramework("A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower());
                 Assert.Single(messages);
-                Assert.Equal(messages[0].ProjectFilePath, expectedPath);
+                Assert.Equal(messages[0].ProjectGuid, expectedGuid);
             }
         }
 
         [Fact]
         public async Task Given_a_restored_project_the_references_are_emitted()
         {
-            // Arrange
             var messages = new List<ProjectConfigurationMessage>();
             var emitter = new ProjectLoadTestEventEmitter(messages);
 
@@ -161,11 +182,10 @@ namespace OmniSharp.MSBuild.Tests
                     Assert.NotEmpty(messages[0].References.Where(reference => reference == _referenceHashingAlgorithm.HashInput("system.core").Value));
                 }
             }
-            
         }
 
         [Fact]
-        public async Task If_there_are_multiple_target_frameworks_they_are_returned()
+        public async Task If_there_are_multiple_target_frameworks_they_are_emitted()
         {
             // Arrange
             var messages = new List<ProjectConfigurationMessage>();

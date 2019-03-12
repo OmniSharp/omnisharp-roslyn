@@ -13,18 +13,21 @@ namespace OmniSharp.MSBuild.Notification
         public ImmutableArray<MSBuildDiagnostic> Diagnostics { get; }
         public bool IsReload { get; }
         public IEnumerable<string> References { get; }
+        public bool HasProjectIdGeneratedFromSolution { get; }
 
         public ProjectLoadedEventArgs(
             ProjectId id,
             MSB.Execution.ProjectInstance projectInstance,
             ImmutableArray<MSBuildDiagnostic> diagnostics,
             bool isReload,
+            bool hasProjectIdGeneratedFromSolution,
             IEnumerable<string> references = null)
         {
             Id = id;
             ProjectInstance = projectInstance;
             Diagnostics = diagnostics;
             IsReload = isReload;
+            HasProjectIdGeneratedFromSolution = hasProjectIdGeneratedFromSolution;
             References = references;
         }
     }
