@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.12] - not released yet
+* Include constant values in `/typelookup` responses ([omnisharp-vscode#2857](https://github.com/OmniSharp/omnisharp-vscode/issues/2857), PR: [#1420](https://github.com/OmniSharp/omnisharp-roslyn/pull/1420))
+
 ## [1.32.11] - 2019-02-27
 * Updated to Roslyn `3.0.0-beta4-19126-05` to match VS 16.0p4 ([#1413](https://github.com/OmniSharp/omnisharp-roslyn/issues/1413), PR: [#1414](https://github.com/OmniSharp/omnisharp-roslyn/pull/1414))
 * Added support for reading C# 8.0 `NullableContextOptions` from csproj files ([#1396](https://github.com/OmniSharp/omnisharp-roslyn/issues/1396), PR: [#1404](https://github.com/OmniSharp/omnisharp-roslyn/pull/1404))
