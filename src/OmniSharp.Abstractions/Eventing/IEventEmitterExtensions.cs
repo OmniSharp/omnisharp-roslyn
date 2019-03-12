@@ -45,13 +45,18 @@ namespace OmniSharp.Eventing
                 });
         }
 
-        public static void ProjectInformation(this IEventEmitter emitter, HashedString projectGuid, IEnumerable<HashedString> targetFrameworks, IEnumerable<HashedString> references)
+        public static void ProjectInformation(this IEventEmitter emitter,
+                                              HashedString projectGuid,
+                                              IEnumerable<HashedString> targetFrameworks,
+                                              IEnumerable<HashedString> references,
+                                              IEnumerable<HashedString> fileExtensions)
         {
             var projectConfiguration = new ProjectConfigurationMessage()
             {
                 TargetFrameworks = targetFrameworks.Select(hashed => hashed.Value),
                 ProjectGuid = projectGuid.Value,
-                References = references.Select(hashed => hashed.Value)
+                References = references.Select(hashed => hashed.Value),
+                FileExtensions = fileExtensions.Select(hashed => hashed.Value)
             };
 
             emitter.Emit(

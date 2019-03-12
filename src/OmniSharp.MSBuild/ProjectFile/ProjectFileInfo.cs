@@ -103,6 +103,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                                                        diagnostics,
                                                        isReload: false,
                                                        projectIdInfo.IsObtainedFromSolution,
+                                                       projectFileInfo.SourceFiles,
                                                        data.References);
 
             return (projectFileInfo, diagnostics, eventArgs);

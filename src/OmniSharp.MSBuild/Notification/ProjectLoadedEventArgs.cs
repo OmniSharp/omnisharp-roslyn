@@ -13,6 +13,7 @@ namespace OmniSharp.MSBuild.Notification
         public ImmutableArray<MSBuildDiagnostic> Diagnostics { get; }
         public bool IsReload { get; }
         public IEnumerable<string> References { get; }
+        public ImmutableArray<string> SourceFiles { get; }
         public bool HasProjectIdGeneratedFromSolution { get; }
 
         public ProjectLoadedEventArgs(
@@ -21,6 +22,7 @@ namespace OmniSharp.MSBuild.Notification
             ImmutableArray<MSBuildDiagnostic> diagnostics,
             bool isReload,
             bool hasProjectIdGeneratedFromSolution,
+            ImmutableArray<string> sourceFiles,
             IEnumerable<string> references = null)
         {
             Id = id;
@@ -29,6 +31,7 @@ namespace OmniSharp.MSBuild.Notification
             IsReload = isReload;
             HasProjectIdGeneratedFromSolution = hasProjectIdGeneratedFromSolution;
             References = references;
+            SourceFiles = sourceFiles;
         }
     }
 }

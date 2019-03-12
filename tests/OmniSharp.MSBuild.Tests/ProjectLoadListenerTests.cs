@@ -154,7 +154,8 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
             {
-                var expectedGuid = GetHashedTargetFramework("A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower());
+                var projectFileContent = File.ReadAllText(Directory.GetFiles(testProject.Directory, "*.csproj").Single());
+                var expectedGuid = GetHashedTargetFramework(projectFileContent);
                 Assert.Single(messages);
                 Assert.Equal(messages[0].ProjectGuid, expectedGuid);
             }
@@ -208,9 +209,36 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task The_hashed_references_of_the_source_files_are_emitted()
+        {
+            // Arrange
+            var messages = new List<ProjectConfigurationMessage>();
+            var emitter = new ProjectLoadTestEventEmitter(messages);
+
+            var listener = new ProjectLoadListener(LoggerFactory, emitter);
+            var exports = new ExportDescriptorProvider[]
+            {
+                MefValueProvider.From<IMSBuildEventSink>(listener)
+            };
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            {
+                Assert.Single(messages);
+                Assert.Single(messages[0].FileExtensions);
+                Assert.Equal(messages[0].FileExtensions.First(), GetHashedFileExtension(".cs"));
+            }
+        }
+
         private string GetHashedTargetFramework(string targetFramework)
         {
             return _tfmAndFileHashingAlgorithm.HashInput(targetFramework).Value;
+        }
+
+        private string GetHashedFileExtension(string fileExtension)
+        {
+            return _tfmAndFileHashingAlgorithm.HashInput(fileExtension).Value;
         }
     }
 }

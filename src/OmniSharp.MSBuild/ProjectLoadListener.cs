@@ -34,7 +34,7 @@ namespace OmniSharp.MSBuild
         {
             try
             {
-                var projectId = GetProjectId(args);
+                var projectGuid = GetProjectId(args);
                 var hashedTargetFrameworks = GetHashedTargetFrameworks(args.ProjectInstance);
 
                 if (args.References == null)
@@ -43,13 +43,21 @@ namespace OmniSharp.MSBuild
                 }
 
                 var hashedReferences = GetHashedReferences(args);
+                var hashedFileExtensions = GetUniqueHashedFileExtensions(args);
 
-                _eventEmitter.ProjectInformation(projectId, hashedTargetFrameworks, hashedReferences);
+                _logger.LogInformation("Sending the configuration", hashedFileExtensions);
+                _eventEmitter.ProjectInformation(projectGuid, hashedTargetFrameworks, hashedReferences, hashedFileExtensions);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Unexpected exception got thrown from project load listener: " + ex);
             }
+        }
+
+        private static IEnumerable<HashedString> GetUniqueHashedFileExtensions(ProjectLoadedEventArgs args)
+        {
+            IEnumerable<string> sourceFileExtensions = args.SourceFiles.Select(file => Path.GetExtension(file)).Distinct();
+            return sourceFileExtensions.Select(ext => _tfmAndFileHashingAlgorithm.HashInput(ext));
         }
 
         private static HashedString GetProjectId(ProjectLoadedEventArgs args)
