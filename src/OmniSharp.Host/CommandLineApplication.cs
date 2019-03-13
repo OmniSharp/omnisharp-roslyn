@@ -80,7 +80,7 @@ namespace OmniSharp
         {
             if (Debug)
             {
-                //Console.WriteLine($"Attach debugger to process {Process.GetCurrentProcess().Id} to continue...");
+                Console.WriteLine($"Attach debugger to process {Process.GetCurrentProcess().Id} to continue...");
                 while (!Debugger.IsAttached)
                 {
                     Thread.Sleep(100);

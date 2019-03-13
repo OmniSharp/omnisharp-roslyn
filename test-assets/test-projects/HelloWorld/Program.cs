@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 
-namespace ConsoleApplication
+namespace HelloWorld
 {
-    public class Program
+    class Program
     {
-        public static void Main(string[] args)
+        static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
         }
