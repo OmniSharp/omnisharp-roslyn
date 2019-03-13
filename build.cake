@@ -662,6 +662,12 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
 
 }
 
+void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
+{
+    // copy license
+    FileHelper.Copy(CombinePaths(env.WorkingDirectory, "license.md"), CombinePaths(outputFolder, "license.md"), overwrite: true);
+}
+
 string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, string configuration)
 {
     Information($"Publishing Mono build for {project}...");
@@ -672,7 +678,30 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyMonoBuild(env, buildFolder, outputFolder);
 
+    CopyExtraDependencies(env, outputFolder);
+
     Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
+
+    // Copy dependencies of Mono build
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
+        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_green.dll"),
+        overwrite: true);
 
     return outputFolder;
 }
@@ -692,6 +721,8 @@ string PublishMonoBuildForPlatform(string project, MonoRuntime monoRuntime, Buil
     var omnisharpFolder = CombinePaths(outputFolder, "omnisharp");
 
     CopyMonoBuild(env, sourceFolder, omnisharpFolder);
+
+    CopyExtraDependencies(env, outputFolder);
 
     Package(project, monoRuntime.PlatformName, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
@@ -752,6 +783,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 
     // Copy MSBuild to output
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
+
+    CopyExtraDependencies(env, outputFolder);
 
     Package(project, rid, outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 

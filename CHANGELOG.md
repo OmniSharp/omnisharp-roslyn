@@ -1,9 +1,22 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.32.9] - not yet released
-* Updated to Roslyn 2.10.0 (PR: [#1344](https://github.com/OmniSharp/omnisharp-roslyn/pull/1344))
+## [1.32.11] - 2019-02-27
+* Updated to Roslyn `3.0.0-beta4-19126-05` to match VS 16.0p4 ([#1413](https://github.com/OmniSharp/omnisharp-roslyn/issues/1413), PR: [#1414](https://github.com/OmniSharp/omnisharp-roslyn/pull/1414))
+* Added support for reading C# 8.0 `NullableContextOptions` from csproj files ([#1396](https://github.com/OmniSharp/omnisharp-roslyn/issues/1396), PR: [#1404](https://github.com/OmniSharp/omnisharp-roslyn/pull/1404))
+
+## [1.32.10] - 2019-01-25
+* Updated to Roslyn 3.0 to match [VS 2019](https://docs.microsoft.com/en-us/visualstudio/releases/2019/release-notes-preview#VS2019_Preview2) (PR: [#1391](https://github.com/OmniSharp/omnisharp-roslyn/pull/1391))
+* Fixed shutdown event handling for LSP _(Contributed by [@LoneBoco](https://github.com/LoneBoco))_ ([#1113](https://github.com/OmniSharp/omnisharp-roslyn/issues/1113), PR: [#1345](https://github.com/OmniSharp/omnisharp-roslyn/pull/1345))
+
+## [1.32.9] - 2019-1-22
+* Updated to Roslyn `2.11.0-beta1-final` and initial support for C# 8 (PR: [#1365](https://github.com/OmniSharp/omnisharp-roslyn/pull/1365))
 * Incorporate *IndentSwitchCaseSectionWhenBlock* into OmniSharp's formatting options. This fixes the default formatting behavior, as the setting is set to *true* by default, and still allows users to disable it if needed. ([#1351](https://github.com/OmniSharp/omnisharp-roslyn/issues/1351), PR: [#1353](https://github.com/OmniSharp/omnisharp-roslyn/pull/1353))
+* Removed unused `-stdio` flag from the `StdioCommandLineApplication` (PR: [#1362](https://github.com/OmniSharp/omnisharp-roslyn/pull/1362))
+* Fixed finding references to operator overloads _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1371](https://github.com/OmniSharp/omnisharp-roslyn/pull/1371))
+* Fixed a 1.29.0 regression that caused LSP not to work with `StdioCommandLineApplication` ([#1269](https://github.com/OmniSharp/omnisharp-roslyn/issues/1269), PR: [#1346](https://github.com/OmniSharp/omnisharp-roslyn/pull/1346))
+* Improved handling of files moving on disk (PR: [#1368](https://github.com/OmniSharp/omnisharp-roslyn/pull/1368))
+* Improved detection of MSBuild when multiple instances are available _(Contributed by [@johnnyasantoss ](https://github.com/johnnyasantoss))_ (PR: [#1349](https://github.com/OmniSharp/omnisharp-roslyn/pull/1349))
 
 ## [1.32.8] - 2018-11-14
 * Fixed MSBuild discovery path (1.32.7 regression) (PR: [#1337](https://github.com/OmniSharp/omnisharp-roslyn/pull/1337))

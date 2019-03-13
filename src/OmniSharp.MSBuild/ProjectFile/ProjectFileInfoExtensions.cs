@@ -18,6 +18,11 @@ namespace OmniSharp.MSBuild.ProjectFile
                 result = result.WithAllowUnsafe(true);
             }
 
+            if (projectFileInfo.NullableContextOptions != result.NullableContextOptions)
+            {
+                result = result.WithNullableContextOptions(projectFileInfo.NullableContextOptions);
+            }
+
             result = result.WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds));
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))

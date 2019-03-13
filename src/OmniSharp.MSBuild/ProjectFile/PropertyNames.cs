@@ -21,6 +21,7 @@
         public const string MSBuildExtensionsPath = nameof(MSBuildExtensionsPath);
         public const string MSBuildSDKsPath = nameof(MSBuildSDKsPath);
         public const string NoWarn = nameof(NoWarn);
+        public const string NullableContextOptions = nameof(NullableContextOptions);
         public const string OutputPath = nameof(OutputPath);
         public const string Platform = nameof(Platform);
         public const string ProjectAssetsFile = nameof(ProjectAssetsFile);

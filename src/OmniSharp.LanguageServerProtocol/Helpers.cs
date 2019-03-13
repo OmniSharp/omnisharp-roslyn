@@ -1,5 +1,5 @@
 using System;
-using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
 
@@ -16,6 +16,7 @@ namespace OmniSharp.LanguageServerProtocol
                 Message = location.Text,
                 Range = location.ToRange(),
                 Severity = ToDiagnosticSeverity(location.LogLevel),
+                Code = location.Id,
                 // TODO: We need to forward this type though if we add something like Vb Support
                 Source = "csharp",
             };
