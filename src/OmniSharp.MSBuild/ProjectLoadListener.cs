@@ -14,10 +14,10 @@ namespace OmniSharp.MSBuild
     [Export(typeof(IMSBuildEventSink))]
     public class ProjectLoadListener : IMSBuildEventSink
     {
-        internal const string TargetFrameworkPropertyName = "TargetFramework";
-        internal const string TargetFrameworkVersionPropertyName = "TargetFrameworkVersion";
-        internal const string TargetFrameworksPropertyName = "TargetFrameworks";
-        private const string MSBuildProjectFullPathPropertyName = "MSBuildProjectFullPath";
+        internal const string TargetFramework = nameof(TargetFramework);
+        internal const string TargetFrameworkVersion = nameof(TargetFrameworkVersion);
+        internal const string TargetFrameworks = nameof(TargetFrameworks);
+        private const string MSBuildProjectFullPath = nameof(MSBuildProjectFullPath);
         private readonly ILogger _logger;
         private readonly IEventEmitter _eventEmitter;
         private static readonly VsTfmAndFileExtHashingAlgorithm _tfmAndFileHashingAlgorithm = new VsTfmAndFileExtHashingAlgorithm();
@@ -56,18 +56,18 @@ namespace OmniSharp.MSBuild
         private static IEnumerable<HashedString> GetUniqueHashedFileExtensions(ProjectLoadedEventArgs args)
         {
             IEnumerable<string> sourceFileExtensions = args.SourceFiles.Select(file => Path.GetExtension(file)).Distinct();
-            return sourceFileExtensions.Select(ext => _tfmAndFileHashingAlgorithm.HashInput(ext));
+            return sourceFileExtensions.Select(_tfmAndFileHashingAlgorithm.HashInput);
         }
 
         private static HashedString GetProjectId(ProjectLoadedEventArgs args)
         {
-            if (args.HasProjectIdGeneratedFromSolution)
+            if (args.ProjectIdIsDefinedInSolution)
             {
                 //If we are getting a raw guid we should not hash it
                 return new HashedString(args.Id.Id.ToString());
             }
 
-            var projectFilePath = args.ProjectInstance.GetPropertyValue(MSBuildProjectFullPathPropertyName);
+            var projectFilePath = args.ProjectInstance.GetPropertyValue(MSBuildProjectFullPath);
             var content = File.ReadAllText(projectFilePath);
             //create a hash from the filename and the content
             return _referenceHashingAlgorithm.HashInput($"Filename: {Path.GetFileName(projectFilePath)}\n{content}");
@@ -76,20 +76,20 @@ namespace OmniSharp.MSBuild
         private static IEnumerable<HashedString> GetHashedReferences(ProjectLoadedEventArgs args)
         {
             var referenceNames = args.References.Select(reference => Path.GetFileNameWithoutExtension(reference).ToLower());
-            return referenceNames.Select(reference => _referenceHashingAlgorithm.HashInput(reference));
+            return referenceNames.Select(_referenceHashingAlgorithm.HashInput);
         }
 
         // Internal for testing
         internal static IEnumerable<HashedString> GetHashedTargetFrameworks(ProjectInstance projectInstance)
         {
-            var targetFrameworks = projectInstance.GetPropertyValue(TargetFrameworksPropertyName);
+            var targetFrameworks = projectInstance.GetPropertyValue(TargetFrameworks);
             if (string.IsNullOrEmpty(targetFrameworks))
             {
-                targetFrameworks = projectInstance.GetPropertyValue(TargetFrameworkPropertyName);
+                targetFrameworks = projectInstance.GetPropertyValue(TargetFramework);
             }
             if (string.IsNullOrEmpty(targetFrameworks))
             {
-                targetFrameworks = projectInstance.GetPropertyValue(TargetFrameworkVersionPropertyName);
+                targetFrameworks = projectInstance.GetPropertyValue(TargetFrameworkVersion);
             }
 
             if (!string.IsNullOrEmpty(targetFrameworks))
@@ -97,7 +97,7 @@ namespace OmniSharp.MSBuild
                 return targetFrameworks.Split(';')
                     .Where(tfm => !string.IsNullOrWhiteSpace(tfm))
                     .Select(tfm => tfm.ToLower())
-                    .Select(tfm => _tfmAndFileHashingAlgorithm.HashInput(tfm));
+                    .Select(_tfmAndFileHashingAlgorithm.HashInput);
             }
 
             return new List<HashedString>();

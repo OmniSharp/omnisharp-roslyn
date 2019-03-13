@@ -142,15 +142,12 @@ namespace OmniSharp.MSBuild
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
             _solutionFileOrRootPath = _environment.TargetDirectory;
-            var projectFilePaths = _fileSystemHelper.GetFiles("**/*.csproj");
-            var result = new List<(string, ProjectIdInfo)>();
-            foreach(var filePath in projectFilePaths)
+            return _fileSystemHelper.GetFiles("**/*.csproj")
+                .Select(filepath =>
             {
-                var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(debugName: filePath), false);
-                result.Add((filePath, projectIdInfo));
-            }
-
-            return result;
+                var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(debugName: filepath), isDefinedInSolution: false);
+                return (filepath, projectIdInfo);
+            });
         }
 
         private IEnumerable<(string, ProjectIdInfo)> GetProjectPathsAndIdsFromSolution(string solutionFilePath)
@@ -234,18 +231,5 @@ namespace OmniSharp.MSBuild
 
             return new MSBuildProjectInfo(projectFileInfo);
         }
-    }
-
-    public class ProjectIdInfo
-    {
-        public ProjectIdInfo(ProjectId id, bool isObtainedFromSolution)
-        {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            IsObtainedFromSolution = isObtainedFromSolution;
-        }
-
-        public ProjectId Id { get; set; }
-        public bool IsObtainedFromSolution { get; set; }
-
     }
 }

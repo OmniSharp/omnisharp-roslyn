@@ -39,7 +39,7 @@ namespace OmniSharp.MSBuild.Tests
             const string targetFramework = "net461";
             var expectedTFM = GetHashedTargetFramework(targetFramework);
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkPropertyName, targetFramework);
+            projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
 
             // Act
             var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);
@@ -55,7 +55,7 @@ namespace OmniSharp.MSBuild.Tests
             const string targetFramework = "v4.6.1";
             var expectedTFM = GetHashedTargetFramework(targetFramework);
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersionPropertyName, targetFramework);
+            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, targetFramework);
 
             // Act
             var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);
@@ -71,8 +71,8 @@ namespace OmniSharp.MSBuild.Tests
             const string targetFramework = "v4.6.1";
             var expectedTFM = GetHashedTargetFramework(targetFramework);
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkPropertyName, targetFramework);
-            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersionPropertyName, "Unexpected");
+            projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
+            projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, "Unexpected");
 
             // Act
             var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);

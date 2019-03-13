@@ -14,14 +14,14 @@ namespace OmniSharp.MSBuild.Notification
         public bool IsReload { get; }
         public IEnumerable<string> References { get; }
         public ImmutableArray<string> SourceFiles { get; }
-        public bool HasProjectIdGeneratedFromSolution { get; }
+        public bool ProjectIdIsDefinedInSolution { get; }
 
         public ProjectLoadedEventArgs(
             ProjectId id,
             MSB.Execution.ProjectInstance projectInstance,
             ImmutableArray<MSBuildDiagnostic> diagnostics,
             bool isReload,
-            bool hasProjectIdGeneratedFromSolution,
+            bool projectIdIsDefinedInSolution,
             ImmutableArray<string> sourceFiles,
             IEnumerable<string> references = null)
         {
@@ -29,7 +29,7 @@ namespace OmniSharp.MSBuild.Notification
             ProjectInstance = projectInstance;
             Diagnostics = diagnostics;
             IsReload = isReload;
-            HasProjectIdGeneratedFromSolution = hasProjectIdGeneratedFromSolution;
+            ProjectIdIsDefinedInSolution = projectIdIsDefinedInSolution;
             References = references;
             SourceFiles = sourceFiles;
         }

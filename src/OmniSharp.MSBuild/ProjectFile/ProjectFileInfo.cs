@@ -69,7 +69,7 @@ namespace OmniSharp.MSBuild.ProjectFile
         {
             var id = ProjectId.CreateNewId(debugName: filePath);
 
-            return new ProjectFileInfo(new ProjectIdInfo(id, false), filePath, data: null);
+            return new ProjectFileInfo(new ProjectIdInfo(id, isDefinedInSolution:false), filePath, data: null);
         }
 
         internal static ProjectFileInfo CreateNoBuild(string filePath, ProjectLoader loader)
@@ -78,7 +78,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var project = loader.EvaluateProjectFile(filePath);
             var data = ProjectData.Create(project);
             //we are not reading the solution here 
-            var projectIdInfo = new ProjectIdInfo(id, false);
+            var projectIdInfo = new ProjectIdInfo(id, isDefinedInSolution: false);
 
             return new ProjectFileInfo(projectIdInfo, filePath, data);
         }
@@ -102,7 +102,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                                                        projectInstance,
                                                        diagnostics,
                                                        isReload: false,
-                                                       projectIdInfo.IsObtainedFromSolution,
+                                                       projectIdInfo.IsDefinedInSolution,
                                                        projectFileInfo.SourceFiles,
                                                        data.References);
 
@@ -119,7 +119,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             var data = ProjectData.Create(projectInstance);
             var projectFileInfo = new ProjectFileInfo(ProjectIdInfo, FilePath, data);
-            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true, ProjectIdInfo.IsObtainedFromSolution,data.References);
+            var eventArgs = new ProjectLoadedEventArgs(Id, projectInstance, diagnostics, isReload: true, ProjectIdInfo.IsDefinedInSolution,data.References);
 
             return (projectFileInfo, diagnostics, eventArgs);
         }
