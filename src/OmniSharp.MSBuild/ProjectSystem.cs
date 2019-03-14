@@ -118,9 +118,9 @@ namespace OmniSharp.MSBuild
                 return;
             }
 
-            var initialProjectPaths = GetInitialProjectPaths();
+            var initialProjectPathsAndIds = GetInitialProjectPathsAndIds();
 
-            foreach (var projectFilePath in initialProjectPaths)
+            foreach (var (projectFilePath, projectIdInfo) in initialProjectPathsAndIds)
             {
                 if (!File.Exists(projectFilePath))
                 {
@@ -128,17 +128,17 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true);
+                _manager.QueueProjectUpdate(projectFilePath, allowAutoRestore: true, projectIdInfo);
             }
         }
 
-        private IEnumerable<string> GetInitialProjectPaths()
+        private IEnumerable<(string, ProjectIdInfo)> GetInitialProjectPathsAndIds()
         {
             // If a solution was provided, use it.
             if (!string.IsNullOrEmpty(_environment.SolutionFilePath))
             {
                 _solutionFileOrRootPath = _environment.SolutionFilePath;
-                return GetProjectPathsFromSolution(_environment.SolutionFilePath);
+                return GetProjectPathsAndIdsFromSolution(_environment.SolutionFilePath);
             }
 
             // Otherwise, assume that the path provided is a directory and look for a solution there.
@@ -146,22 +146,27 @@ namespace OmniSharp.MSBuild
             if (!string.IsNullOrEmpty(solutionFilePath))
             {
                 _solutionFileOrRootPath = solutionFilePath;
-                return GetProjectPathsFromSolution(solutionFilePath);
+                return GetProjectPathsAndIdsFromSolution(solutionFilePath);
             }
 
             // Finally, if there isn't a single solution immediately available,
             // Just process all of the projects beneath the root path.
             _solutionFileOrRootPath = _environment.TargetDirectory;
-            return _fileSystemHelper.GetFiles("**/*.csproj");
+            return _fileSystemHelper.GetFiles("**/*.csproj")
+                .Select(filepath =>
+            {
+                var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(debugName: filepath), isDefinedInSolution: false);
+                return (filepath, projectIdInfo);
+            });
         }
 
-        private IEnumerable<string> GetProjectPathsFromSolution(string solutionFilePath)
+        private IEnumerable<(string, ProjectIdInfo)> GetProjectPathsAndIdsFromSolution(string solutionFilePath)
         {
             _logger.LogInformation($"Detecting projects in '{solutionFilePath}'.");
 
             var solutionFile = SolutionFile.ParseFile(solutionFilePath);
             var processedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var result = new List<string>();
+            var result = new List<(string, ProjectIdInfo)>();
 
             foreach (var project in solutionFile.Projects)
             {
@@ -183,7 +188,8 @@ namespace OmniSharp.MSBuild
 
                 if (string.Equals(Path.GetExtension(projectFilePath), ".csproj", StringComparison.OrdinalIgnoreCase))
                 {
-                    result.Add(projectFilePath);
+                    var projectIdInfo = new ProjectIdInfo(ProjectId.CreateFromSerialized(new Guid(project.ProjectGuid)), true);
+                    result.Add((projectFilePath, projectIdInfo));
                 }
 
                 processedProjects.Add(projectFilePath);
