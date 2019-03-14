@@ -58,6 +58,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task WhenFileIsDeletedFromWorkSpaceThenResultsAreNotReturnedAnyMore(bool roslynAnalyzersEnabled)
+        {
+            using(var host = GetHost(roslynAnalyzersEnabled))
+            {
+                host.AddFilesToWorkspace(new TestFile("a.cs", "class C1 { int n = true; }"));
+                await host.RequestCodeCheckAsync();
+
+                foreach (var doc in host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents))
+                {
+                    // Theres document for each targeted framework, lets delete all.
+                    host.Workspace.RemoveDocument(doc.Id);
+                }
+
+                var quickFixes = await host.RequestCodeCheckAsync();
+
+                Assert.DoesNotContain(quickFixes.QuickFixes, x => x.Text.Contains("CS0029") && x.FileName == "a.cs");
+            }
+        }
+
         [Fact]
         public async Task AnalysisSupportBuiltInIDEAnalysers()
         {

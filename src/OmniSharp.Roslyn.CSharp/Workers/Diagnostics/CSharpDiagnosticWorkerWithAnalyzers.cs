@@ -23,7 +23,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly AnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
-        private readonly ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)> _results =
+        private readonly ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)> _currentDiagnosticResults =
             new ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)>();
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
@@ -101,7 +101,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             await _workQueue.WaitForResultsAsync(documentIds);
 
-            return _results
+            return _currentDiagnosticResults
                 .Where(x => documentIds.Any(docId => docId == x.Key))
                 .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
                 .ToImmutableArray();
@@ -124,7 +124,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     var currentWorkGroupedByProjects = _workQueue
                         .TakeWork()
-                        .Select(documentId => (projectId: solution.GetDocument(documentId).Project.Id, documentId))
+                        .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
+                        .Where(x => x.projectId != null)
                         .GroupBy(x => x.projectId, x => x.documentId)
                         .ToImmutableArray();
 
@@ -153,12 +154,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged )
             {
                 QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
+            }
+            else if(changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved)
+            {
+                _currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _);
             }
         }
 
@@ -246,9 +250,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
         {
-            _results[document.Id] = (project.Name, diagnosticsWithAnalyzers);
+            _currentDiagnosticResults[document.Id] = (project.Name, diagnosticsWithAnalyzers);
             _workQueue.MarkWorkAsCompleteForDocumentId(document.Id);
-            EmitDiagnostics(_results[document.Id].diagnostics);
+            EmitDiagnostics(_currentDiagnosticResults[document.Id].diagnostics);
         }
 
         private void EmitDiagnostics(ImmutableArray<Diagnostic> results)
