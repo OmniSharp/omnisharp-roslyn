@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Eventing;
 using OmniSharp.Plugins;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Http

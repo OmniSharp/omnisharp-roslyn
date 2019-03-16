@@ -1,4 +1,4 @@
-﻿namespace OmniSharp.Stdio.Protocol
+﻿namespace OmniSharp.Protocol
 {
     public class EventPacket : Packet
     {

@@ -11,7 +11,6 @@ using OmniSharp.Eventing;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Services;
 using OmniSharp.Utilities;
 using TestUtility.Logging;
 using Xunit.Abstractions;

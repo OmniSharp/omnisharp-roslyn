@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.Http.Middleware;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Http
