@@ -1,6 +1,13 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.12] - not released yet
+* Include constant values in `/typelookup` responses ([omnisharp-vscode#2857](https://github.com/OmniSharp/omnisharp-vscode/issues/2857), PR: [#1420](https://github.com/OmniSharp/omnisharp-roslyn/pull/1420))
+
+## [1.32.11] - 2019-02-27
+* Updated to Roslyn `3.0.0-beta4-19126-05` to match VS 16.0p4 ([#1413](https://github.com/OmniSharp/omnisharp-roslyn/issues/1413), PR: [#1414](https://github.com/OmniSharp/omnisharp-roslyn/pull/1414))
+* Added support for reading C# 8.0 `NullableContextOptions` from csproj files ([#1396](https://github.com/OmniSharp/omnisharp-roslyn/issues/1396), PR: [#1404](https://github.com/OmniSharp/omnisharp-roslyn/pull/1404))
+
 ## [1.32.10] - 2019-01-25
 * Updated to Roslyn 3.0 to match [VS 2019](https://docs.microsoft.com/en-us/visualstudio/releases/2019/release-notes-preview#VS2019_Preview2) (PR: [#1391](https://github.com/OmniSharp/omnisharp-roslyn/pull/1391))
 * Fixed shutdown event handling for LSP _(Contributed by [@LoneBoco](https://github.com/LoneBoco))_ ([#1113](https://github.com/OmniSharp/omnisharp-roslyn/issues/1113), PR: [#1345](https://github.com/OmniSharp/omnisharp-roslyn/pull/1345))
