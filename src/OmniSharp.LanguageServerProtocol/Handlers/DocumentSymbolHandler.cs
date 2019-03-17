@@ -52,7 +52,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _documentSelector = documentSelector;
         }
 
-        public async Task<DocumentSymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
+        public async Task<SymbolInformationOrDocumentSymbolContainer> Handle(DocumentSymbolParams request, CancellationToken token)
         {
             var omnisharpRequest = new CodeStructureRequest()
             {
@@ -60,10 +60,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             };
 
             var omnisharpResponse = await _codeStructureHandler.Handle(omnisharpRequest);
-            var symbolInformationContainer = new List<DocumentSymbolInformation>();
 
             return omnisharpResponse.Elements?.Select(ToDocumentSymbolInformationOrDocumentSymbol).ToArray() ??
-                Array.Empty<DocumentSymbolInformationOrDocumentSymbol>();
+                Array.Empty<SymbolInformationOrDocumentSymbol>();
         }
 
         public TextDocumentRegistrationOptions GetRegistrationOptions()
@@ -79,9 +78,9 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             _capability = capability;
         }
 
-        private static DocumentSymbolInformationOrDocumentSymbol ToDocumentSymbolInformationOrDocumentSymbol(CodeElement node)
+        private static SymbolInformationOrDocumentSymbol ToDocumentSymbolInformationOrDocumentSymbol(CodeElement node)
         {
-            return new DocumentSymbolInformationOrDocumentSymbol(ToDocumentSymbol(node));
+            return new SymbolInformationOrDocumentSymbol(ToDocumentSymbol(node));
         }
 
         private static DocumentSymbol ToDocumentSymbol(CodeElement node)
