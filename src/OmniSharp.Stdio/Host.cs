@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -15,38 +14,32 @@ using OmniSharp.Mef;
 using OmniSharp.Models.UpdateBuffer;
 using OmniSharp.Plugins;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Logging;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
+using OmniSharp.Protocol;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Stdio
 {
     internal class Host : IDisposable
     {
-        private readonly IConfiguration _configuration;
         private readonly TextReader _input;
         private readonly ISharedTextWriter _writer;
         private readonly IServiceProvider _serviceProvider;
         private readonly IDictionary<string, Lazy<EndpointHandler>> _endpointHandlers;
         private readonly CompositionHost _compositionHost;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IOmniSharpEnvironment _environment;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly CachedStringBuilder _cachedStringBuilder;
 
         public Host(
-            TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment, IConfiguration configuration,
+            TextReader input, ISharedTextWriter writer, IOmniSharpEnvironment environment,
             IServiceProvider serviceProvider, CompositionHostBuilder compositionHostBuilder, ILoggerFactory loggerFactory, CancellationTokenSource cancellationTokenSource)
         {
             _cancellationTokenSource = cancellationTokenSource;
             _input = input;
             _writer = writer;
             _environment = environment;
-            _configuration = configuration;
             _serviceProvider = serviceProvider;
-            _loggerFactory = loggerFactory.AddStdio(_writer, (category, level) => HostHelpers.LogFilter(category, level, _environment));
             _logger = loggerFactory.CreateLogger<Host>();
 
             _logger.LogInformation($"Starting OmniSharp on {Platform.Current}");
@@ -130,13 +123,12 @@ namespace OmniSharp.Stdio
         public void Dispose()
         {
             _compositionHost?.Dispose();
-            _loggerFactory?.Dispose();
             _cancellationTokenSource?.Dispose();
         }
 
         public void Start()
         {
-            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost, _configuration, _logger);
+            WorkspaceInitializer.Initialize(_serviceProvider, _compositionHost);
 
             Task.Factory.StartNew(async () =>
             {

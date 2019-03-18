@@ -175,6 +175,8 @@ namespace OmniSharp.Extensions
                 : SymbolKinds.Property;
         }
 
+        public static bool IsOverridable(this ISymbol symbol) => symbol?.ContainingType?.TypeKind == TypeKind.Class && !symbol.IsSealed && (symbol.IsVirtual || symbol.IsAbstract || symbol.IsOverride);
+
         /// <summary>
         /// Do not use this API in new OmniSharp endpoints. Use <see cref="GetKindString(ISymbol)"/> instead.
         /// </summary>

@@ -26,7 +26,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
 
         public async Task<QuickFixResponse> Handle(FindUsagesRequest request)
         {
-            var document = _workspace.GetDocument(request.FileName);
+            // To produce complete list of usages for symbols in the document wait until all projects are loaded.
+            var document = await _workspace.GetDocumentFromFullProjectModelAsync(request.FileName);
             var response = new QuickFixResponse();
             if (document != null)
             {
@@ -39,8 +40,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Navigation
                 var usages = request.OnlyThisFile
                     ? await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution, ImmutableHashSet.Create(document))
                     : await SymbolFinder.FindReferencesAsync(definition ?? symbol, _workspace.CurrentSolution);
+                var dontRequireReferenceByName = symbol is IMethodSymbol method &&
+                    (method.MethodKind == MethodKind.Constructor || method.MethodKind == MethodKind.UserDefinedOperator);
 
-                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || (symbol as IMethodSymbol)?.MethodKind == MethodKind.Constructor))
+                foreach (var usage in usages.Where(u => u.Definition.CanBeReferencedByName || dontRequireReferenceByName))
                 {
                     foreach (var location in usage.Locations)
                     {

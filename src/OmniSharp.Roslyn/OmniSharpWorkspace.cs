@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,8 @@ namespace OmniSharp
 
         private readonly ILogger<OmniSharpWorkspace> _logger;
 
+        private readonly ConcurrentBag<Func<string, Task>> _waitForProjectModelReadyHandlers = new ConcurrentBag<Func<string, Task>>();
+
         private readonly ConcurrentDictionary<string, ProjectInfo> miscDocumentsProjectInfos = new ConcurrentDictionary<string, ProjectInfo>();
 
         [ImportingConstructor]
@@ -35,6 +38,11 @@ namespace OmniSharp
         }
 
         public override bool CanOpenDocuments => true;
+
+        public void AddWaitForProjectModelReadyHandler(Func<string, Task> handler)
+        {
+            _waitForProjectModelReadyHandlers.Add(handler);
+        }
 
         public override void OpenDocument(DocumentId documentId, bool activate = true)
         {
@@ -100,6 +108,7 @@ namespace OmniSharp
 
             var projectInfo = miscDocumentsProjectInfos.GetOrAdd(language, (lang) => CreateMiscFilesProject(lang));
             var documentId = AddDocument(projectInfo.Id, filePath);
+            _logger.LogInformation($"Miscellaneous file: {filePath} added to workspace");
             return documentId;
         }
 
@@ -110,7 +119,41 @@ namespace OmniSharp
                 return false;
 
             RemoveDocument(documentId);
+            _logger.LogDebug($"Miscellaneous file: {filePath} removed from workspace");
             return true;
+        }
+
+        public void TryPromoteMiscellaneousDocumentsToProject(Project project)
+        {
+            if (project == null)
+            {
+                throw new ArgumentNullException(nameof(project));
+            }
+
+            var miscProjectInfos = miscDocumentsProjectInfos.Values.ToArray();
+            for (var i = 0; i < miscProjectInfos.Length; i++)
+            {
+                var miscProject = CurrentSolution.GetProject(miscProjectInfos[i].Id);
+                var documents = miscProject.Documents.ToArray();
+
+                for (var j = 0; j < documents.Length; j++)
+                {
+                    var document = documents[j];
+                    if (FileBelongsToProject(document.FilePath, project))
+                    {
+                        var textLoader = new DelegatingTextLoader(document);
+                        var documentId = DocumentId.CreateNewId(project.Id);
+                        var documentInfo = DocumentInfo.Create(
+                            documentId,
+                            document.FilePath,
+                            filePath: document.FilePath,
+                            loader: textLoader);
+
+                        // This transitively will remove the document from the misc project.
+                        AddDocument(documentInfo);
+                    }
+                }
+            }
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
@@ -119,7 +162,7 @@ namespace OmniSharp
             var projectInfo = ProjectInfo.Create(
                    id: ProjectId.CreateNewId(),
                    version: VersionStamp.Create(),
-                   name: "MiscellaneousFiles",
+                   name: "MiscellaneousFiles.csproj",
                    metadataReferences: DefaultMetadataReferenceHelper.GetDefaultMetadataReferenceLocations()
                                        .Select(loc => MetadataReference.CreateFromFile(loc)),
                    assemblyName: assemblyName,
@@ -197,9 +240,46 @@ namespace OmniSharp
             return CurrentSolution.GetDocument(documentId);
         }
 
+        public async Task<IEnumerable<Document>> GetDocumentsFromFullProjectModelAsync(string filePath)
+        {
+            await OnWaitForProjectModelReadyAsync(filePath);
+            return GetDocuments(filePath);
+        }
+
+        public async Task<Document> GetDocumentFromFullProjectModelAsync(string filePath)
+        {
+            await OnWaitForProjectModelReadyAsync(filePath);
+            return GetDocument(filePath);
+        }
+
         public override bool CanApplyChange(ApplyChangesKind feature)
         {
             return true;
+        }
+
+        internal bool FileBelongsToProject(string fileName, Project project)
+        {
+            if (string.IsNullOrWhiteSpace(project.FilePath) ||
+                string.IsNullOrWhiteSpace(fileName))
+            {
+                return false;
+            }
+
+            var fileDirectory = new FileInfo(fileName).Directory;
+            var projectPath = project.FilePath;
+            var projectDirectory = new FileInfo(projectPath).Directory.FullName;
+
+            while (fileDirectory != null)
+            {
+                if (string.Equals(fileDirectory.FullName, projectDirectory, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                fileDirectory = fileDirectory.Parent;
+            }
+
+            return false;
         }
 
         protected override void ApplyDocumentRemoved(DocumentId documentId)
@@ -280,5 +360,32 @@ namespace OmniSharp
         {
             return miscDocumentsProjectInfos.Where(p => p.Value.Id == documentId.ProjectId).Any();
         }
+
+        private class DelegatingTextLoader : TextLoader
+        {
+            private readonly Document _fromDocument;
+
+            public DelegatingTextLoader(Document fromDocument)
+            {
+                _fromDocument = fromDocument ?? throw new ArgumentNullException(nameof(fromDocument));
+            }
+
+            public override async Task<TextAndVersion> LoadTextAndVersionAsync(
+                Workspace workspace,
+                DocumentId documentId,
+                CancellationToken cancellationToken)
+            {
+                var sourceText = await _fromDocument.GetTextAsync();
+                var version = await _fromDocument.GetTextVersionAsync();
+                var textAndVersion = TextAndVersion.Create(sourceText, version);
+
+                return textAndVersion;
+            }
+        }
+
+        private Task OnWaitForProjectModelReadyAsync(string filePath)
+        {
+            return Task.WhenAll(_waitForProjectModelReadyHandlers.Select(h => h(filePath)));
+        }  
     }
 }

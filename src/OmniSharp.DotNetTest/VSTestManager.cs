@@ -221,13 +221,15 @@ namespace OmniSharp.DotNetTest
 
                         case MessageType.TestRunStatsChange:
                             var testRunChange = message.DeserializePayload<TestRunChangedEventArgs>();
-
                             testResults.AddRange(testRunChange.NewTestResults);
                             break;
 
                         case MessageType.ExecutionComplete:
                             var payload = message.DeserializePayload<TestRunCompletePayload>();
-
+                            if (payload.LastRunTests != null && payload.LastRunTests.NewTestResults != null)
+                            {
+                                testResults.AddRange(payload.LastRunTests.NewTestResults);
+                            }
                             done = true;
                             break;
                     }
@@ -286,33 +288,38 @@ namespace OmniSharp.DotNetTest
                         break;
 
                     case MessageType.TestCasesFound:
-                        foreach (var testCase in message.DeserializePayload<TestCase[]>())
-                        {
-                            var testName = testCase.FullyQualifiedName;
-
-                            var testNameEnd = testName.IndexOf('(');
-                            if (testNameEnd >= 0)
-                            {
-                                testName = testName.Substring(0, testNameEnd);
-                            }
-
-                            testName = testName.Trim();
-
-                            if (hashset.Contains(testName, StringComparer.Ordinal))
-                            {
-                                testCases.Add(testCase);
-                            }
-                        }
-
+                        var foundTestCases = message.DeserializePayload<TestCase[]>();
+                        testCases.AddRange(foundTestCases.Where(isInRequestedMethods));
                         break;
 
                     case MessageType.DiscoveryComplete:
+                        var lastDiscoveredTests = message.DeserializePayload<DiscoveryCompletePayload>().LastDiscoveredTests;
+                        if (lastDiscoveredTests != null)
+                        {
+                            testCases.AddRange(lastDiscoveredTests.Where(isInRequestedMethods));
+                        }
+
                         done = true;
                         break;
                 }
             }
 
             return testCases.ToArray();
+
+            // checks whether a discovered test case is matched with the list of the requested method names.
+            bool isInRequestedMethods(TestCase testCase)
+            {
+                var testName = testCase.FullyQualifiedName;
+
+                var testNameEnd = testName.IndexOf('(');
+                if (testNameEnd >= 0)
+                {
+                    testName = testName.Substring(0, testNameEnd);
+                }
+
+                testName = testName.Trim();
+                return hashset.Contains(testName, StringComparer.Ordinal);
+            };
         }
 
         private TestCase[] DiscoverTests(string[] methodNames, string targetFrameworkVersion)

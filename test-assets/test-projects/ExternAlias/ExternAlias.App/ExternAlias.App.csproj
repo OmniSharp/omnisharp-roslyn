@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ExternAlias.Lib/ExternAlias.Lib.csproj">
+        <!-- do not reference by ProjectReference for reference with alias -->
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <Reference Include="ExternAlias.Lib">
+        <HintPath>$(ProjectDir)../ExternAlias.Lib/bin/$(Configuration)/netstandard2.0/ExternAlias.Lib.dll</HintPath>
+        <Aliases>abc</Aliases>
+    </Reference>
+  </ItemGroup>
+
+</Project>

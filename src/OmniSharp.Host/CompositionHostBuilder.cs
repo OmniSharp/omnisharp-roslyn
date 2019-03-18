@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Eventing;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Mef;
 using OmniSharp.MSBuild.Discovery;
@@ -56,7 +57,12 @@ namespace OmniSharp
             // our AssemblyResolve event is hooked up first.
             var msbuildLocator = _serviceProvider.GetRequiredService<IMSBuildLocator>();
 
-            RegisterMSBuildInstance(msbuildLocator, logger);
+            // Don't register the default instance if an instance is already registered!
+            // This is for tests, where the MSBuild instance may be registered early.
+            if (msbuildLocator.RegisteredInstance == null)
+            {
+                msbuildLocator.RegisterDefaultInstance(logger);
+            }
 
             config = config
                 .WithProvider(MefValueProvider.From(_serviceProvider))
@@ -79,7 +85,7 @@ namespace OmniSharp
             }
 
             var parts = _assemblies
-                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly })
+                .Concat(new[] { typeof(OmniSharpWorkspace).GetTypeInfo().Assembly, typeof(IRequest).GetTypeInfo().Assembly, typeof(FileSystemHelper).GetTypeInfo().Assembly })
                 .Distinct()
                 .SelectMany(a => SafeGetTypes(a))
                 .ToArray();
@@ -87,43 +93,6 @@ namespace OmniSharp
             config = config.WithParts(parts);
 
             return config.CreateContainer();
-        }
-
-        private static void RegisterMSBuildInstance(IMSBuildLocator msbuildLocator, ILogger logger)
-        {
-            MSBuildInstance instanceToRegister = null;
-            var invalidVSFound = false;
-
-            foreach (var instance in msbuildLocator.GetInstances())
-            {
-                if (instance.IsInvalidVisualStudio())
-                {
-                    invalidVSFound = true;
-                }
-                else
-                {
-                    instanceToRegister = instance;
-                    break;
-                }
-            }
-
-
-            if (instanceToRegister != null)
-            {
-                // Did we end up choosing the standalone MSBuild because there was an invalid Visual Studio?
-                // If so, provide a helpful message to the user.
-                if (invalidVSFound && instanceToRegister.DiscoveryType == DiscoveryType.StandAlone)
-                {
-                    logger.LogWarning(@"It looks like you have Visual Studio 2017 RTM installed.
-Try updating Visual Studio 2017 to the most recent release to enable better MSBuild support.");
-                }
-
-                msbuildLocator.RegisterInstance(instanceToRegister);
-            }
-            else
-            {
-                logger.LogError("Could not locate MSBuild instance to register with OmniSharp");
-            }
         }
 
         private static IEnumerable<Type> SafeGetTypes(Assembly a)
@@ -138,7 +107,12 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             }
         }
 
-        public static IServiceProvider CreateDefaultServiceProvider(IOmniSharpEnvironment environment, IConfiguration configuration, IEventEmitter eventEmitter, IServiceCollection services = null)
+        public static IServiceProvider CreateDefaultServiceProvider(
+            IOmniSharpEnvironment environment,
+            IConfigurationRoot configuration,
+            IEventEmitter eventEmitter,
+            IServiceCollection services = null,
+            Action<ILoggingBuilder> configureLogging = null)
         {
             services = services ?? new ServiceCollection();
 
@@ -160,7 +134,22 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
 
             // Setup the options from configuration
             services.Configure<OmniSharpOptions>(configuration);
-            services.AddLogging();
+            services.AddSingleton(configuration);
+
+            services.AddLogging(builder =>
+            {
+                var workspaceInformationServiceName = typeof(WorkspaceInformationService).FullName;
+                var projectEventForwarder = typeof(ProjectEventForwarder).FullName;
+
+                builder.AddFilter(
+                    (category, logLevel) =>
+                        environment.LogLevel <= logLevel &&
+                        category.StartsWith("OmniSharp", StringComparison.OrdinalIgnoreCase) &&
+                        !category.Equals(workspaceInformationServiceName, StringComparison.OrdinalIgnoreCase) &&
+                        !category.Equals(projectEventForwarder, StringComparison.OrdinalIgnoreCase));
+
+                configureLogging?.Invoke(builder);
+            });
 
             return services.BuildServiceProvider();
         }
@@ -221,6 +210,7 @@ Try updating Visual Studio 2017 to the most recent release to enable better MSBu
             foreach (var dependency in runtimeLibrary.Dependencies)
             {
                 if (dependency.Name == "OmniSharp.Abstractions" ||
+                    dependency.Name == "OmniSharp.Shared" ||
                     dependency.Name == "OmniSharp.Roslyn")
                 {
                     return true;

@@ -5,9 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OmniSharp.Eventing;
+using OmniSharp.Protocol;
 using OmniSharp.Services;
-using OmniSharp.Stdio.Protocol;
-using OmniSharp.Stdio.Services;
 using Xunit;
 
 namespace OmniSharp.Stdio.Tests
@@ -22,7 +21,6 @@ namespace OmniSharp.Stdio.Tests
             var cancelationTokenSource = new CancellationTokenSource();
             var host = new Host(reader, writer,
                 environment,
-                configuration,
                 serviceProvider,
                 new CompositionHostBuilder(serviceProvider),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),

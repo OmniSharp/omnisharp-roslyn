@@ -1,6 +1,46 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.12] - not released yet
+* Include constant values in `/typelookup` responses ([omnisharp-vscode#2857](https://github.com/OmniSharp/omnisharp-vscode/issues/2857), PR: [#1420](https://github.com/OmniSharp/omnisharp-roslyn/pull/1420))
+
+## [1.32.11] - 2019-02-27
+* Updated to Roslyn `3.0.0-beta4-19126-05` to match VS 16.0p4 ([#1413](https://github.com/OmniSharp/omnisharp-roslyn/issues/1413), PR: [#1414](https://github.com/OmniSharp/omnisharp-roslyn/pull/1414))
+* Added support for reading C# 8.0 `NullableContextOptions` from csproj files ([#1396](https://github.com/OmniSharp/omnisharp-roslyn/issues/1396), PR: [#1404](https://github.com/OmniSharp/omnisharp-roslyn/pull/1404))
+
+## [1.32.10] - 2019-01-25
+* Updated to Roslyn 3.0 to match [VS 2019](https://docs.microsoft.com/en-us/visualstudio/releases/2019/release-notes-preview#VS2019_Preview2) (PR: [#1391](https://github.com/OmniSharp/omnisharp-roslyn/pull/1391))
+* Fixed shutdown event handling for LSP _(Contributed by [@LoneBoco](https://github.com/LoneBoco))_ ([#1113](https://github.com/OmniSharp/omnisharp-roslyn/issues/1113), PR: [#1345](https://github.com/OmniSharp/omnisharp-roslyn/pull/1345))
+
+## [1.32.9] - 2019-1-22
+* Updated to Roslyn `2.11.0-beta1-final` and initial support for C# 8 (PR: [#1365](https://github.com/OmniSharp/omnisharp-roslyn/pull/1365))
+* Incorporate *IndentSwitchCaseSectionWhenBlock* into OmniSharp's formatting options. This fixes the default formatting behavior, as the setting is set to *true* by default, and still allows users to disable it if needed. ([#1351](https://github.com/OmniSharp/omnisharp-roslyn/issues/1351), PR: [#1353](https://github.com/OmniSharp/omnisharp-roslyn/pull/1353))
+* Removed unused `-stdio` flag from the `StdioCommandLineApplication` (PR: [#1362](https://github.com/OmniSharp/omnisharp-roslyn/pull/1362))
+* Fixed finding references to operator overloads _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1371](https://github.com/OmniSharp/omnisharp-roslyn/pull/1371))
+* Fixed a 1.29.0 regression that caused LSP not to work with `StdioCommandLineApplication` ([#1269](https://github.com/OmniSharp/omnisharp-roslyn/issues/1269), PR: [#1346](https://github.com/OmniSharp/omnisharp-roslyn/pull/1346))
+* Improved handling of files moving on disk (PR: [#1368](https://github.com/OmniSharp/omnisharp-roslyn/pull/1368))
+* Improved detection of MSBuild when multiple instances are available _(Contributed by [@johnnyasantoss ](https://github.com/johnnyasantoss))_ (PR: [#1349](https://github.com/OmniSharp/omnisharp-roslyn/pull/1349))
+
+## [1.32.8] - 2018-11-14
+* Fixed MSBuild discovery path (1.32.7 regression) (PR: [#1337](https://github.com/OmniSharp/omnisharp-roslyn/pull/1337))
+
+## [1.32.7] - 2018-11-12
+* It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317)) 
+* OmniSharp no longer searches for `config.json` in its source directory to load configuration (PR: [#1319](https://github.com/OmniSharp/omnisharp-roslyn/pull/1319))
+* Fixed a regression introduced in 1.32.4, that prevented find symbol endpoint from working for CSX projects (PR: [#1321](https://github.com/OmniSharp/omnisharp-roslyn/pull/1321))
+* Improved MSBuild discovery for future scenarios (PR: [#1328](https://github.com/OmniSharp/omnisharp-roslyn/pull/1328))
+* Enabled setting customer OmniSharp home directory (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317))
+* Made detection of .sln files more accurate  _(Contributed by [@itn3000](https://github.com/itn3000))_ (PR: [#1320](https://github.com/OmniSharp/omnisharp-roslyn/pull/1320))
+* Improved reliability of document management subsystem _(Contributed by [@NTaylorMullen](https://github.com/NTaylorMullen))_ (PR: [#1330](https://github.com/OmniSharp/omnisharp-roslyn/pull/1330))
+* Use Roslyn's new `FindSourceDeclarationsWithPatternAsync` API in symbol finder _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1304](https://github.com/OmniSharp/omnisharp-roslyn/pull/1304))
+* Fix `FindImplementationService` not finding all implementations of the partial class _(Contributed by [@SirIntruder](https://github.com/SirIntruder))_ (PR: [#1318](https://github.com/OmniSharp/omnisharp-roslyn/pull/1318))
+
+## [1.32.6] - 2018-10-02
+* Fixed a bug where virtual C# documents would not get promoted to be a part of a project. (PR: [#1306](https://github.com/OmniSharp/omnisharp-roslyn/pull/1306)).
+* Added MinFilterLength to configure the number of characters a user must type in for FindSymbolRequest command to return any results (default is 0 to preserve existing behavior). Additionally added MaxItemsToReturn for configuring maximum number of items returned by the FindSymbolsRequestAPI.(PR: [#1284](https://github.com/OmniSharp/omnisharp-roslyn/pull/1284)).
+* Fixed issue where `/codestructure` endpoint did not return enum members. (PR: [#1285](https://github.com/OmniSharp/omnisharp-roslyn/pull/1285))
+* Fixed issue where `/findimplemenations` endpoint did not return overridden members in derived types (PR: [#1302](https://github.com/OmniSharp/omnisharp-roslyn/pull/1302))
+
 ## [1.32.3] - 2018-08-28
 * Added support for files without a project. (PR: [#1252](https://github.com/OmniSharp/omnisharp-roslyn/pull/1252))
 * Fixed a bug where `*.rsp`-based scripting references where not exposed in the Workspace information endpoint (PR: [#1272](https://github.com/OmniSharp/omnisharp-roslyn/pull/1272))

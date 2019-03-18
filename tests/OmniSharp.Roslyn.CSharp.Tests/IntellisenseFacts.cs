@@ -282,7 +282,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ";
 
             var completions = await FindCompletionsAsync(filename, source);
-            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "text:");
+            ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "text");
         }
 
         [Theory]
@@ -462,6 +462,27 @@ class C
 
             var completions = await FindCompletionsAsync("dummy.csx", source);
             ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "myValue" });
+        }
+
+        [Fact]
+        public async Task Scripting_by_default_returns_completions_for_CSharp8_0()
+        {
+            const string source =
+                @"
+                  class Point {
+                    public Point(int x, int y) {
+                      PositionX = x;
+                      PositionY = y;
+                    }
+                    public int PositionX { get; }
+                    public int PositionY { get; }
+                  }
+                  Point[] points = { new (1, 2), new (3, 4) };
+                  points[0].Po$$
+                ";
+
+            var completions = await FindCompletionsAsync("dummy.csx", source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), new[] { "PositionX", "PositionY" });
         }
 
         private void ContainsCompletions(IEnumerable<string> completions, params string[] expected)

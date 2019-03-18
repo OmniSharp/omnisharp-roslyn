@@ -167,7 +167,7 @@ namespace OmniSharp.Roslyn
                 lock (_lock)
                 {
                     var documentIds = documentInfos.Select(document => document.Id);
-                    _transientDocuments.Add(fileName, documentIds);
+                    _transientDocuments[fileName] = documentIds;
                     _transientDocumentIds.UnionWith(documentIds);
                 }
 

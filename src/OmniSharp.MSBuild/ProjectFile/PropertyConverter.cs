@@ -48,6 +48,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "7.1": return LanguageVersion.CSharp7_1;
                 case "7.2": return LanguageVersion.CSharp7_2;
                 case "7.3": return LanguageVersion.CSharp7_3;
+                case "8.0": return LanguageVersion.CSharp8;
                 default: return LanguageVersion.Default;
             }
         }
@@ -128,6 +129,19 @@ namespace OmniSharp.MSBuild.ProjectFile
                 case "WinExe": return OutputKind.WindowsApplication;
                 case "Exe": return OutputKind.ConsoleApplication;
                 default: return OutputKind.ConsoleApplication;
+            }
+        }
+
+        public static NullableContextOptions ToNullableContextOptions(string propertyValue)
+        {
+            switch (propertyValue?.ToLowerInvariant())
+            {
+                case "disable": return NullableContextOptions.Disable;
+                case "enable": return NullableContextOptions.Enable;
+                case "safeonly": return NullableContextOptions.SafeOnly;
+                case "warnings": return NullableContextOptions.Warnings;
+                case "safeonlywarnings": return NullableContextOptions.SafeOnlyWarnings;
+                default: return NullableContextOptions.Disable;
             }
         }
 

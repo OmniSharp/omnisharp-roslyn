@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Script\OmniSharp.Script.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Cake\OmniSharp.Cake.csproj" />
+    <ProjectReference Include="..\..\src\OmniSharp.Shared\OmniSharp.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

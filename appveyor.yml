@@ -5,7 +5,7 @@ image: Visual Studio 2017
 environment:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
-test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing
+test: off # this turns of AppVeyor automatic searching for test-assemblies, not the actual testing 
 build_script:
   - ps: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
 after_build:
