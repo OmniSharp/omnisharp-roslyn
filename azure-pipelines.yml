@@ -3,7 +3,7 @@ resources:
     - repository: rsg
       type: github
       name: RocketSurgeonsGuild/AzureDevopsTemplates
-      # ref: refs/tags/v0.4.5
+      ref: refs/tags/v0.4.5
       endpoint: github
 
 variables:
@@ -27,44 +27,49 @@ jobs:
         parameters:
           NuGetVersion: $(NuGetVersion)
 
-  - template: pipeline/cake-job.yml@rsg
-    parameters:
-      name: 'macOS'
-      dependsOn: GitVersion
+  - job: macOS
+    pool: 
       vmImage: "macOS-10.13"
-      pushNuget: false
-      Configuration: $(Configuration)
-      Verbosity: $(Verbosity)
-      CakeVersion: $(CakeVersion)
-      DotNetVersion: $(DotNetVersion)
-      NuGetVersion: $(NuGetVersion)
-      Script: build.cake
-      RestorePackageConfig: true
+    dependsOn: GitVersion
+    steps:
+      - template: ./.pipelines/init.yml
+        parameters:
+          Configuration: $(Configuration)
+          Verbosity: $(Verbosity)
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          NuGetVersion: $(NuGetVersion)
+          pushNuget: false
+      - script: chmod 755 ./build.sh
+      - script: ./build.sh
 
-  - template: pipeline/cake-job.yml@rsg
-    parameters:
-      name: 'Linux'
-      dependsOn: GitVersion
+  - job: Linux
+    pool: 
       vmImage: "Ubuntu-16.04"
-      pushNuget: false
-      Configuration: $(Configuration)
-      Verbosity: $(Verbosity)
-      CakeVersion: $(CakeVersion)
-      DotNetVersion: $(DotNetVersion)
-      NuGetVersion: $(NuGetVersion)
-      Script: build.cake
-      RestorePackageConfig: true
+    dependsOn: GitVersion
+    steps:
+      - template: ./.pipelines/init.yml
+        parameters:
+          Configuration: $(Configuration)
+          Verbosity: $(Verbosity)
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          NuGetVersion: $(NuGetVersion)
+          pushNuget: false
+      - script: chmod 755 ./build.sh
+      - script: ./build.sh
 
-  - template: pipeline/cake-job.yml@rsg
-    parameters:
-      name: 'Windows'
-      dependsOn: GitVersion
+  - job: Windows
+    pool: 
       vmImage: "VS2017-Win2016"
-      pushNuget: true
-      Configuration: $(Configuration)
-      Verbosity: $(Verbosity)
-      CakeVersion: $(CakeVersion)
-      DotNetVersion: $(DotNetVersion)
-      NuGetVersion: $(NuGetVersion)
-      Script: build.cake
-      RestorePackageConfig: true
+    dependsOn: GitVersion
+    steps:
+      - template: ./.pipelines/init.yml
+        parameters:
+          Configuration: $(Configuration)
+          Verbosity: $(Verbosity)
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          NuGetVersion: $(NuGetVersion)
+          pushNuget: false
+      - script: ./build.ps1
