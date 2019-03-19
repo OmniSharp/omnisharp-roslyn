@@ -53,7 +53,7 @@ jobs:
       - script: |
           echo $PATH
           chmod 755 ./build.sh
-          ./build.sh
+          ./build.sh --configuration Release --verbosity Verbose --target All --publish-all --archive
         displayName: 'Build'
 
   - job: Linux
@@ -86,9 +86,8 @@ jobs:
         displayName: Use Mono $(MONO_VERSION)
       - script: |
           chmod 755 ./build.sh
-          ./build.sh
+          ./build.sh --configuration Release --verbosity Verbose --target All --publish-all --archive
         displayName: 'Build'
-      
 
   - job: Windows
     pool: 
@@ -103,5 +102,5 @@ jobs:
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
           pushNuget: false
-      - powershell: .\build.ps1
+      - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
         displayName: 'Build'
