@@ -4,6 +4,7 @@ using System.Composition.Hosting;
 using System.Composition.Hosting.Core;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,7 @@ namespace TestUtility
         private readonly CompositionHost _compositionHost;
 
         private Dictionary<(string name, string language), Lazy<IRequestHandler, OmniSharpRequestHandlerMetadata>> _handlers;
+        private readonly string _originalCreatorToTrackDownMissedDisposes;
 
         public OmniSharpWorkspace Workspace { get; }
         public ILoggerFactory LoggerFactory { get; }
@@ -49,7 +51,8 @@ namespace TestUtility
 
         private OmniSharpTestHost(
             IServiceProvider serviceProvider,
-            CompositionHost compositionHost)
+            CompositionHost compositionHost,
+            string originalCreatorToTrackDownMissedDisposes)
         {
             _serviceProvider = serviceProvider;
             _compositionHost = compositionHost;
@@ -57,11 +60,12 @@ namespace TestUtility
             this.Workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             this.LoggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
             this.Logger = this.LoggerFactory.CreateLogger<OmniSharpTestHost>();
+            _originalCreatorToTrackDownMissedDisposes = originalCreatorToTrackDownMissedDisposes;
         }
 
         ~OmniSharpTestHost()
         {
-            throw new InvalidOperationException($"{nameof(OmniSharpTestHost)}.{nameof(Dispose)}() not called.");
+            throw new InvalidOperationException($"{nameof(OmniSharpTestHost)}.{nameof(Dispose)}() not called, creation of object originated from {_originalCreatorToTrackDownMissedDisposes}.");
         }
 
         protected override void DisposeCore(bool disposing)
@@ -75,14 +79,15 @@ namespace TestUtility
 
         public static OmniSharpTestHost Create(
             IServiceProvider serviceProvider,
-            IEnumerable<ExportDescriptorProvider> additionalExports = null)
+            IEnumerable<ExportDescriptorProvider> additionalExports = null,
+            [CallerMemberName] string callerName = "")
         {
             var compositionHost = new CompositionHostBuilder(serviceProvider, s_lazyAssemblies.Value, additionalExports)
                 .Build();
 
             WorkspaceInitializer.Initialize(serviceProvider, compositionHost);
 
-            var host = new OmniSharpTestHost(serviceProvider, compositionHost);
+            var host = new OmniSharpTestHost(serviceProvider, compositionHost, callerName);
 
             // Force workspace to be updated
             var service = host.GetWorkspaceInformationService();
@@ -96,12 +101,14 @@ namespace TestUtility
             ITestOutputHelper testOutput = null,
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
-            IEnumerable<ExportDescriptorProvider> additionalExports = null)
+            IEnumerable<ExportDescriptorProvider> additionalExports = null,
+            [CallerMemberName] string callerName = "")
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
+
             var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
 
-            return Create(serviceProvider, additionalExports);
+            return Create(serviceProvider, additionalExports, callerName);
         }
 
         public T GetExport<T>()

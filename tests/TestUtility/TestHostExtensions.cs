@@ -30,11 +30,11 @@ namespace TestUtility
             return (MSBuildWorkspaceInfo)response["MsBuild"];
         }
 
-        public static async Task<QuickFixResponse> RequestCodeCheckAsync(this OmniSharpTestHost host, string filePath)
+        public static async Task<QuickFixResponse> RequestCodeCheckAsync(this OmniSharpTestHost host, string filePath = null)
         {
             var service = host.GetCodeCheckService();
 
-            var request = new CodeCheckRequest { FileName = filePath };
+            var request = filePath == null ? new CodeCheckRequest() : new CodeCheckRequest { FileName = filePath };
 
             return await service.Handle(request);
         }
