@@ -335,7 +335,7 @@ namespace OmniSharp
             try
             {
                 var dir = Path.GetDirectoryName(fullPath);
-                if (!Directory.Exists(dir))
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
                 }
