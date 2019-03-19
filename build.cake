@@ -14,7 +14,7 @@ var configuration = Argument("configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
-var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk");
+var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk") || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD"));
 
 Log.Context = Context;
 
