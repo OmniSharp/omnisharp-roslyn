@@ -129,12 +129,12 @@ namespace TestUtility
         {
             var dotnetPath = dotNetCliVersion.GetFolderName(TestAssets.Instance.RootFolder);
 
-            if (!File.Exists(dotnetPath))
+            if (!string.IsNullOrWhiteSpace(dotnetPath) && !File.Exists(dotnetPath))
             {
                 dotnetPath = Path.ChangeExtension(dotnetPath, ".exe");
             }
 
-            if (!File.Exists(dotnetPath))
+            if (!string.IsNullOrWhiteSpace(dotnetPath) && !File.Exists(dotnetPath))
             {
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
             }

@@ -105,3 +105,4 @@ jobs:
           NuGetVersion: $(NuGetVersion)
           pushNuget: false
       - script: .\build.ps1
+        displayName: 'Build'
