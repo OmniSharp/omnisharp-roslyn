@@ -3,15 +3,15 @@ resources:
     - repository: rsg
       type: github
       name: RocketSurgeonsGuild/AzureDevopsTemplates
-      # ref: refs/tags/v0.2.8
+      ref: refs/tags/v0.4.5
       endpoint: github
 
 variables:
   Configuration: Release
   Verbosity: Diagnostic
-  DotNetVersion: "2.1.500"
-  CakeVersion: "0.30.0"
-  NuGetVersion: '4.7.1'
+  DotNetVersion: "2.1.301"
+  CakeVersion: "0.32.1"
+  NuGetVersion: "4.9.2"
   Coverage: "$(Agent.BuildDirectory)/c"
   VstsCoverage: "$(Coverage)"
   Artifacts: $(Build.ArtifactStagingDirectory)
