@@ -7,7 +7,7 @@
             "taskName": "build",
             "type": "process",
             "windows": {
-                "command": "dotnet.exe",
+                "command": "${workspaceRoot}\\.dotnet\\dotnet.exe",
                 "args": [
                     "build",
                     "OmniSharp.sln",
@@ -42,13 +42,13 @@
             "taskName": "restore",
             "type": "process",
             "windows": {
-                "command": "dotnet.exe"
+                "command": "${workspaceRoot}\\.dotnet\\dotnet.exe"
             },
             "osx": {
-                "command": "dotnet"
+                "command": "${workspaceRoot}/.dotnet/dotnet"
             },
             "linux": {
-                "command": "dotnet"
+                "command": "${workspaceRoot}/.dotnet/dotnet"
             },
             "args": [
                 "restore",

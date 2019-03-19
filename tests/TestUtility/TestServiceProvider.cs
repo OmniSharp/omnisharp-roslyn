@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,7 @@ namespace TestUtility
             AddService(dotNetCliService);
             AddService(configuration);
             AddService(optionsMonitor);
+            _services[typeof(IAnalyzerAssemblyLoader)] = assemblyLoader;
         }
 
         public static IServiceProvider Create(
@@ -127,14 +129,17 @@ namespace TestUtility
 
         private static IDotNetCliService CreateDotNetCliService(DotNetCliVersion dotNetCliVersion, ILoggerFactory loggerFactory, IEventEmitter eventEmitter)
         {
-            var dotnetPath = dotNetCliVersion.GetFolderName(TestAssets.Instance.RootFolder);
+            var dotnetPath = Path.Combine(
+                TestAssets.Instance.RootFolder,
+                dotNetCliVersion.GetFolderName(),
+                "dotnet");
 
-            if (!string.IsNullOrWhiteSpace(dotnetPath) && !File.Exists(dotnetPath))
+            if (!File.Exists(dotnetPath))
             {
                 dotnetPath = Path.ChangeExtension(dotnetPath, ".exe");
             }
 
-            if (!string.IsNullOrWhiteSpace(dotnetPath) && !File.Exists(dotnetPath))
+            if (!File.Exists(dotnetPath))
             {
                 throw new InvalidOperationException($"Local .NET CLI path does not exist. Did you run build.(ps1|sh) from the command line?");
             }
