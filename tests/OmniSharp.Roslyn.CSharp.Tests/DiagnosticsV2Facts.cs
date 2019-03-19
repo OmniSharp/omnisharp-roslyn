@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
-using OmniSharp.Workers.Diagnostics;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,27 +23,28 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData("a.csx")]
         public async Task CodeCheckSpecifiedFileOnly(string filename)
         {
+            SharedOmniSharpTestHost.ClearWorkspace();
+
             var testFile = new TestFile(filename, "class C { int n = true; }");
 
-            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
-            var messages = new List<DiagnosticMessage>();
-            var emitter = new DiagnosticTestEmitter(messages);
+            var emitter = new DiagnosticTestEmitter();
             var forwarder = new DiagnosticEventForwarder(emitter)
             {
                 IsEnabled = true
             };
 
-            var service = new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, forwarder, this.LoggerFactory);
-            service.QueueDiagnostics(filename);
+            var service = CreateDiagnosticService(forwarder);
+            SharedOmniSharpTestHost.AddFilesToWorkspace(testFile);
 
-            await emitter.Emitted;
+            var controller = new DiagnosticsService(forwarder, service);
+            var response = await controller.Handle(new DiagnosticsRequest { FileName = testFile.FileName });
 
-            Assert.Single(messages);
-            var message = messages.First();
-            Assert.Single(message.Results);
-            var result = message.Results.First();
-            Assert.Single(result.QuickFixes);
-            Assert.Equal(filename, result.FileName);
+            await emitter.ExpectForEmitted(msg => msg.Results.Any(m => m.FileName == filename));
+        }
+
+        private CSharpDiagnosticWorkerWithAnalyzers CreateDiagnosticService(DiagnosticEventForwarder forwarder)
+        {
+            return new CSharpDiagnosticWorkerWithAnalyzers(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects());
         }
 
         [Theory(Skip = "Test needs to be updated for service changes")]
@@ -50,31 +52,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData("a.csx", "b.csx")]
         public async Task CheckAllFiles(string filename1, string filename2)
         {
+            SharedOmniSharpTestHost.ClearWorkspace();
+
             var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
-            var messages = new List<DiagnosticMessage>();
-            var emitter = new DiagnosticTestEmitter(messages);
+            var emitter = new DiagnosticTestEmitter();
             var forwarder = new DiagnosticEventForwarder(emitter);
-            var service = new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, forwarder, this.LoggerFactory);
+            var service = CreateDiagnosticService(forwarder);
 
-            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
-            await emitter.Emitted;
-
-            Assert.Single(messages);
-            var message = messages.First();
-            Assert.Equal(2, message.Results.Count());
-
-            var a = message.Results.First(x => x.FileName == filename1);
-            Assert.Single(a.QuickFixes);
-            Assert.Equal(filename1, a.FileName);
-
-            var b = message.Results.First(x => x.FileName == filename2);
-            Assert.Single(b.QuickFixes);
-            Assert.Equal(filename2, b.FileName);
+            await emitter.ExpectForEmitted(msg => msg.Results
+                .Any(r => r.FileName == filename1 && r.QuickFixes.Count() == 1));
+            await emitter.ExpectForEmitted(msg => msg.Results
+                .Any(r => r.FileName == filename2 && r.QuickFixes.Count() == 1));
         }
 
         [Theory(Skip = "Test needs to be updated for service changes")]
@@ -82,15 +76,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData("a.csx", "b.csx")]
         public async Task EnablesWhenEndPointIsHit(string filename1, string filename2)
         {
+            SharedOmniSharpTestHost.ClearWorkspace();
+
             var testFile1 = new TestFile(filename1, "class C1 { int n = true; }");
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
-            var messages = new List<DiagnosticMessage>();
-            var emitter = new DiagnosticTestEmitter(messages);
-            var forwarder = new DiagnosticEventForwarder(emitter);
-            var service = new CSharpDiagnosticService(SharedOmniSharpTestHost.Workspace, forwarder, this.LoggerFactory);
 
-            var controller = new DiagnosticsService(SharedOmniSharpTestHost.Workspace, forwarder, service);
+            var emitter = new DiagnosticTestEmitter();
+            var forwarder = new DiagnosticEventForwarder(emitter);
+            var service = CreateDiagnosticService(forwarder);
+
+            var controller = new DiagnosticsService(forwarder, service);
             var response = await controller.Handle(new DiagnosticsRequest());
 
             Assert.True(forwarder.IsEnabled);
