@@ -103,5 +103,5 @@ jobs:
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
           pushNuget: false
-      - script: .\build.ps1
+      - powershell: .\build.ps1
         displayName: 'Build'
