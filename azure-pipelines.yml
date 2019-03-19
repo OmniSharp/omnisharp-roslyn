@@ -7,7 +7,7 @@ resources:
       endpoint: github
 
 variables:
-  Configuration: Release
+  # Configuration: Release
   Verbosity: Diagnostic
   DotNetVersion: "2.1.505"
   CakeVersion: "0.32.1"
