@@ -10,9 +10,11 @@ OmniSharp-Roslyn is a .NET development platform based on [Roslyn](https://github
 
 OmniSharp-Roslyn is built with the [.NET Core SDK](https://dot.net/) on Windows and [Mono](http://www.mono-project.com/) on OSX/Linux. It targets the __net461__ target framework. OmniSharp requires __mono__ (>=5.2.0) if it is run on a platform other than Windows.
 
-For Arch Linux users, need package [msbuild-stable](https://aur.archlinux.org/packages/msbuild-stable/) (>= 15.0)
+For Arch Linux users, need package [msbuild-stable](https://aur.archlinux.org/packages/msbuild-stable/) (>= 15.0).
 
 In addition, if you need the HTTP interface and you want to run on Linux, you'll also need to make sure that you have [libuv](http://libuv.org) installed.
+
+See also https://github.com/OmniSharp/omnisharp-roslyn/issues/1202#issuecomment-421543905 .
 
 ## What's new
 

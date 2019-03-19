@@ -38,7 +38,8 @@
     "CSharpAndFSharp",
     "ProjectWithMismatchedFileName",
     "SolutionWithSignedProject",
-    "ProjectWithMultiTFMLib"
+    "ProjectWithMultiTFMLib",
+    "ExternAlias"
   ],
   "LegacyTestAssets": [
     "LegacyNUnitTestProject",
