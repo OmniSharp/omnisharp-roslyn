@@ -1,10 +1,3 @@
-resources:
-  repositories:
-    - repository: rsg
-      type: github
-      name: RocketSurgeonsGuild/AzureDevopsTemplates
-      ref: refs/tags/v0.4.5
-      endpoint: github
 parameters:
   Configuration: Release
   Verbosity: Normal
@@ -13,7 +6,18 @@ parameters:
   NuGetVersion: "4.9.2"
   pushNuget: false
 steps:
-  - template: gitversion/restore.yml@rsg
+  - task: DownloadBuildArtifacts@0
+    displayName: "Download GitVersion Variables"
+    inputs:
+      specificBuildWithTriggering: true
+      downloadType: single
+      artifactName: gitversion
+      pipelineId: GitVersion
+      targetPath: "$(Build.ArtifactStagingDirectory)/gitversion/"
+  - task: RocketSurgeonsGuild.variable-tools.DeserializeVariables.DeserializeVariables@1
+    displayName: 'Deserialize GitVersion'
+    inputs:
+      jsonfiles: ${{ format('{0}/**/gitversion.json', "$(Build.ArtifactStagingDirectory)/gitversion/") }}
   - task: DotNetCoreInstaller@0
     displayName: Install dotnet $(DotNetVersion)
     inputs:
