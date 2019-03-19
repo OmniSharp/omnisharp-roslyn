@@ -1,5 +1,5 @@
 parameters:
-  Configuration: Release
+  # Configuration: Release
   Verbosity: Normal
   DotNetVersion: "2.2.103"
   CakeVersion: "0.32.1"

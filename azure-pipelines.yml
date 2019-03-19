@@ -36,7 +36,7 @@ jobs:
     steps:
       - template: ./.pipelines/init.yml
         parameters:
-          Configuration: $(Configuration)
+          # Configuration: $(Configuration)
           Verbosity: $(Verbosity)
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
@@ -65,7 +65,7 @@ jobs:
     steps:
       - template: ./.pipelines/init.yml
         parameters:
-          Configuration: $(Configuration)
+          # Configuration: $(Configuration)
           Verbosity: $(Verbosity)
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
@@ -96,7 +96,7 @@ jobs:
     steps:
       - template: ./.pipelines/init.yml
         parameters:
-          Configuration: $(Configuration)
+          # Configuration: $(Configuration)
           Verbosity: $(Verbosity)
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
