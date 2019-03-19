@@ -29,6 +29,14 @@ namespace OmniSharp.Roslyn
             _onFileChanged = OnFileChanged;
         }
 
+        public bool IsTransientDocument(DocumentId documentId)
+        {
+            lock(_lock)
+            {
+                return _transientDocumentIds.Contains(documentId);
+            }
+        }
+
         public async Task UpdateBufferAsync(Request request)
         {
             var buffer = request.Buffer;

@@ -48,7 +48,7 @@ bool AllowLegacyTests()
 
     if (platform.IsLinux)
     {
-        var version = platform.Version.ToString();
+        var version = platform.Version?.ToString();
 
         // Taken from https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh
         switch (platform.DistroName)
@@ -638,8 +638,6 @@ Task("Test")
                 // This is necessary to work around a Mono bug that is exasperated by xUnit.
                 DirectoryHelper.Copy($"{env.Folders.MonoMSBuildLib}", instanceFolder);
 
-                DeleteUnnecessaryAssemblies(instanceFolder);
-
                 var runScript = CombinePaths(env.Folders.Mono, "run");
 
                 // By default, the run script launches OmniSharp. To launch our Mono runtime
@@ -655,25 +653,6 @@ Task("Test")
     }
 });
 
-/// <summary>
-/// Delete assemblies that are included in our Mono package.
-/// </summary>
-void DeleteUnnecessaryAssemblies(string folder)
-{
-    FileHelper.Delete(CombinePaths(folder, "System.AppContext.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Numerics.Vectors.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Runtime.InteropServices.RuntimeInformation.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.ComponentModel.Primitives.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.ComponentModel.TypeConverter.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Console.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.IO.FileSystem.Primitives.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.IO.FileSystem.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Security.Cryptography.Encoding.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Security.Cryptography.Primitives.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Security.Cryptography.X509Certificates.dll"));
-    FileHelper.Delete(CombinePaths(folder, "System.Threading.Thread.dll"));
-}
-
 void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
 {
     DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
@@ -681,8 +660,6 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     // Copy MSBuild runtime and libraries
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
 
-    // Included in Mono
-    DeleteUnnecessaryAssemblies(outputFolder);
 }
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
