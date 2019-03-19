@@ -160,6 +160,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
+        public async Task CanFindReferencesOfPublicIndexerProperty()
+        {
+            const string code = @"
+                public class Foo
+                {
+                    int prop;
+
+                    public int th$$is[int index]
+                    {
+                        get { return prop; }
+                        set { prop = value; }
+                    }
+                }
+
+                public class FooConsumer
+                {
+                    public FooConsumer()
+                    {
+                        var foo = new Foo();
+                        var prop = foo[0];
+                        foo[0] = prop;
+                    }
+                }";
+
+            var usages = await FindUsagesAsync(code);
+            Assert.Equal(3, usages.QuickFixes.Count());
+        }
+
+        [Fact]
         public async Task CanFindReferencesOfClass()
         {
             const string code = @"
@@ -174,6 +203,36 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     {
                         var temp = new Foo();
                         var prop = foo.prop;
+                    }
+                }";
+
+            var usages = await FindUsagesAsync(code);
+            Assert.Equal(2, usages.QuickFixes.Count());
+        }
+
+        [Fact]
+        public async Task CanFindReferencesOfOperatorOverloads()
+        {
+            const string code = @"
+                public struct Vector2
+                {
+                    public float x;
+                    public float y;
+
+                    public static Vector2 operator $$+(Vector2 lhs, Vector2 rhs) => new Vector2()
+                    {
+                        x = lhs.x + rhs.x,
+                        y = lhs.y + rhs.y,
+                    };
+                }
+
+                public class Vector2Consumer
+                {
+                    public Vector2Consumer()
+                    {
+                        var a = new Vector2();
+                        var b = new Vector2();
+                        var c = a + b;
                     }
                 }";
 

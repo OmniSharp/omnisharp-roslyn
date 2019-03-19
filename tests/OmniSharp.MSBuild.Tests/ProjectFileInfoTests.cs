@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.MSBuild.ProjectFile;
@@ -32,7 +33,8 @@ namespace OmniSharp.MSBuild.Tests
                 loggerFactory: LoggerFactory,
                 sdksPathResolver: sdksPathResolver);
 
-            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, loader);
+            var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(), false);
+            var (projectFileInfo, _, _) = ProjectFileInfo.Load(projectFilePath, projectIdInfo, loader);
 
             return projectFileInfo;
         }
@@ -50,9 +52,9 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.NotNull(projectFileInfo);
                 Assert.Equal(projectFilePath, projectFileInfo.FilePath);
                 var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
-                Assert.Equal("netcoreapp1.0", targetFramework);
-                Assert.Equal("bin/Debug/netcoreapp1.0/", projectFileInfo.OutputPath.EnsureForwardSlashes());
-                Assert.Equal("obj/Debug/netcoreapp1.0/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
+                Assert.Equal("netcoreapp2.1", targetFramework);
+                Assert.Equal("bin/Debug/netcoreapp2.1/", projectFileInfo.OutputPath.EnsureForwardSlashes());
+                Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
@@ -102,6 +104,47 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
+            }
+        }
+
+        [Fact]
+        public async Task CSharp8AndNullableContext_has_correct_property_values()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("CSharp8AndNullableContext"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "CSharp8AndNullableContext.csproj");
+
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+
+                Assert.NotNull(projectFileInfo);
+                Assert.Equal(projectFilePath, projectFileInfo.FilePath);
+                var targetFramework = Assert.Single(projectFileInfo.TargetFrameworks);
+                Assert.Equal("netcoreapp2.1", targetFramework);
+                Assert.Equal(LanguageVersion.CSharp8, projectFileInfo.LanguageVersion);
+                Assert.Equal(NullableContextOptions.Enable, projectFileInfo.NullableContextOptions);
+                Assert.Equal("Debug", projectFileInfo.Configuration);
+                Assert.Equal("AnyCPU", projectFileInfo.Platform);
+            }
+        }
+
+        [Fact]
+        public async Task ExternAlias()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("ExternAlias"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "ExternAlias.App", "ExternAlias.App.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.Single(projectFileInfo.ReferenceAliases);
+                foreach(var kv in projectFileInfo.ReferenceAliases)
+                {
+                    this.TestOutput.WriteLine($"{kv.Key} = {kv.Value}");
+                }
+                // reference path should be same as evaluated HintPath("$(ProjectDir)../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll")
+                var libpath = string.Format($"{Path.Combine(testProject.Directory, "ExternAlias.App")}{Path.DirectorySeparatorChar}../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll");
+                Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
+                Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
             }
         }
     }

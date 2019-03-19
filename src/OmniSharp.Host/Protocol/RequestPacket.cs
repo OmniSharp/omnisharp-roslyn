@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
-namespace OmniSharp.Stdio.Protocol
+namespace OmniSharp.Protocol
 {
     public class RequestPacket : Packet
     {
