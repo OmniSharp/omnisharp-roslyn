@@ -6,7 +6,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
@@ -19,8 +22,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             OmniSharpWorkspace workspace,
             CodeActionHelper helper,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
-            ILoggerFactory loggerFactory)
-            : base(workspace, helper, providers, loggerFactory.CreateLogger<GetCodeActionsService>())
+            ILoggerFactory loggerFactory,
+            ICsDiagnosticWorker diagnostics,
+            CachingCodeFixProviderForProjects codeFixesForProjects)
+            : base(workspace, providers, loggerFactory.CreateLogger<GetCodeActionsService>(), diagnostics, codeFixesForProjects)
         {
         }
 

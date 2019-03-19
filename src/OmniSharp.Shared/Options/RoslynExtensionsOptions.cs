@@ -7,6 +7,8 @@ namespace OmniSharp.Options
 {
     public class RoslynExtensionsOptions
     {
+        public bool EnableAnalyzersSupport { get; set; }
+
         public string[] LocationPaths { get; set; }
 
         public IEnumerable<string> GetNormalizedLocationPaths(IOmniSharpEnvironment env)

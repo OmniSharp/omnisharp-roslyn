@@ -18,6 +18,8 @@ using OmniSharp.MSBuild.Logging;
 using OmniSharp.MSBuild.Models.Events;
 using OmniSharp.MSBuild.Notification;
 using OmniSharp.MSBuild.ProjectFile;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
@@ -53,17 +55,20 @@ namespace OmniSharp.MSBuild
         private readonly ConcurrentDictionary<string, int/*unused*/> _projectsRequestedOnDemand;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
-
         private const int LoopDelay = 100; // milliseconds
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
+        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private bool _processingQueue;
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
+        private readonly RulesetsForProjects _rulesetsForProjects;
 
-        public ProjectManager(ILoggerFactory loggerFactory,
+        public ProjectManager(
+            ILoggerFactory loggerFactory,
             MSBuildOptions options,
             IEventEmitter eventEmitter,
             IFileSystemWatcher fileSystemWatcher,
@@ -71,6 +76,9 @@ namespace OmniSharp.MSBuild
             PackageDependencyChecker packageDependencyChecker,
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
+            CachingCodeFixProviderForProjects codeFixesForProject,
+            RulesetsForProjects rulesetsForProjects,
+            IAnalyzerAssemblyLoader assemblyLoader,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
@@ -84,13 +92,14 @@ namespace OmniSharp.MSBuild
             _projectsRequestedOnDemand = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
+            _codeFixesForProject = codeFixesForProject;
             _eventSinks = eventSinks;
-
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
-
+            _assemblyLoader = assemblyLoader;
             _onDirectoryFileChanged = OnDirectoryFileChanged;
+            _rulesetsForProjects = rulesetsForProjects;
 
             if (_options.LoadProjectsOnDemand)
             {
@@ -347,7 +356,13 @@ namespace OmniSharp.MSBuild
 
             _projectFiles.Add(projectFileInfo);
 
-            var projectInfo = projectFileInfo.CreateProjectInfo();
+            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
+
+            _codeFixesForProject.LoadFrom(projectInfo);
+
+            if(projectFileInfo.RuleSet != null)
+                _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
+
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
             if (!_workspace.TryApplyChanges(newSolution))
