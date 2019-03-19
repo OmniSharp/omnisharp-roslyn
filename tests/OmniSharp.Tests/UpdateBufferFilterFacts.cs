@@ -6,6 +6,8 @@ using OmniSharp.Models;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using System;
+using System.Threading;
 
 namespace OmniSharp.Tests
 {
@@ -70,7 +72,7 @@ namespace OmniSharp.Tests
             }
         }
 
-        [Fact(Skip = "Fails on line 95 because there are 3 documents, not 2, named 'transient.cs'")]
+        [Fact]
         public async Task UpdateBuffer_TransientDocumentsDisappearWhenProjectAddsThem()
         {
             var testFile = new TestFile("test.cs", "class C {}");
@@ -88,11 +90,29 @@ namespace OmniSharp.Tests
                     loader: TextLoader.From(TextAndVersion.Create(SourceText.From("enum E{}"), VersionStamp.Create())),
                     filePath: "transient.cs");
 
+                // apply changes - this raises workspaceChanged event asynchronously.
                 var newSolution = host.Workspace.CurrentSolution.AddDocument(document);
                 host.Workspace.TryApplyChanges(newSolution);
 
-                docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
-                Assert.Equal(2, docIds.Length);
+                // wait for workspaceChange event to be raised.
+                var cts = new CancellationTokenSource();
+                cts.CancelAfter(TimeSpan.FromSeconds(10));
+                while (!cts.IsCancellationRequested)
+                {
+                    await Task.Yield();
+                    docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
+                    if (docIds.Count() <= 1) break;
+                }
+
+                // assert that only one document with "transient.cs" filePath remains 
+                Assert.Single(docIds);
+
+                // assert that the remaining document is part of project1
+                project1 = host.Workspace.CurrentSolution.GetProject(project1.Id);
+                Assert.Contains(docIds[0], project1.DocumentIds);
+
+                // assert that the remaining document is not transient.
+                Assert.False(host.Workspace.BufferManager.IsTransientDocument(docIds[0]));                
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "transient.cs", Buffer = "enum E {}" });
                 var sourceText = await host.Workspace.CurrentSolution.GetDocument(docIds.First()).GetTextAsync();
