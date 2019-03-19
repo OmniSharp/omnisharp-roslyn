@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using OmniSharp.Eventing;
 using OmniSharp.Models.Diagnostics;
@@ -9,21 +13,36 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     {
         private class DiagnosticTestEmitter : IEventEmitter
         {
-            private readonly IList<DiagnosticMessage> _messages;
+            public readonly ConcurrentBag<DiagnosticMessage> Messages = new ConcurrentBag<DiagnosticMessage>();
+
             private readonly TaskCompletionSource<object> _tcs;
 
-            public Task Emitted => _tcs.Task;
-
-            public DiagnosticTestEmitter(IList<DiagnosticMessage> messages)
+            public async Task ExpectForEmitted(Expression<Predicate<DiagnosticMessage>> predicate)
             {
-                _messages = messages;
+                var asCompiledPredicate = predicate.Compile();
+
+                // May seem hacky but nothing is more painfull to debug than infinite hanging test ...
+                for(int i = 0; i < 100; i++)
+                {
+                    if(Messages.Any(m => asCompiledPredicate(m)))
+                    {
+                        return;
+                    }
+
+                    await Task.Delay(250);
+                }
+
+                throw new InvalidOperationException($"Timeout reached before expected event count reached before prediction {predicate} came true, current diagnostics '{String.Join(";", Messages.SelectMany(x => x.Results))}'");
+            }
+
+            public DiagnosticTestEmitter()
+            {
                 _tcs = new TaskCompletionSource<object>();
             }
 
             public void Emit(string kind, object args)
             {
-                _messages.Add((DiagnosticMessage)args);
-                _tcs.TrySetResult(null);
+                Messages.Add((DiagnosticMessage)args);
             }
         }
     }
