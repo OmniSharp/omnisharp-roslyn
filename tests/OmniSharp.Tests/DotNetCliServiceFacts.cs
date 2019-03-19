@@ -55,7 +55,7 @@ namespace OmniSharp.Tests
 
                 Assert.Equal(2, version.Major);
                 Assert.Equal(1, version.Minor);
-                Assert.Equal(301, version.Patch);
+                Assert.Equal(505, version.Patch);
                 Assert.Equal("", version.Release);
             }
         }
@@ -71,7 +71,7 @@ namespace OmniSharp.Tests
 
                 Assert.Equal(2, info.Version.Major);
                 Assert.Equal(1, info.Version.Minor);
-                Assert.Equal(301, info.Version.Patch);
+                Assert.Equal(505, info.Version.Patch);
                 Assert.Equal("", info.Version.Release);
             }
         }

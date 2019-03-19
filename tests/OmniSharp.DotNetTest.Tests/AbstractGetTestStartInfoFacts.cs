@@ -42,7 +42,7 @@ namespace OmniSharp.DotNetTest.Tests
 
                 var dotNetCli = host.GetExport<IDotNetCliService>();
 
-                Assert.Equal(dotNetCli.DotNetPath, response.Executable);
+                Assert.Equal(dotNetCli.DotNetPath, isLegacy ? response.Executable : "dotnet");
             }
         }
     }
