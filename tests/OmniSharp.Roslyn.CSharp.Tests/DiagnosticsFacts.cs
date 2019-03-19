@@ -100,9 +100,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             using (var host = GetHost(roslynAnalyzersEnabled: false))
             {
                 host.AddFilesToWorkspace(
-                    new TestFile("returnemptytags.cs", @"
-                    using System.IO;
-                "));
+                    new TestFile("returnemptytags.cs", @"using System.IO;"));
 
                 var quickFixResponse = await host.RequestCodeCheckAsync("returnemptytags.cs");
 
@@ -118,9 +116,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             using (var host = GetHost(roslynAnalyzersEnabled: true))
             {
                 host.AddFilesToWorkspace(
-                    new TestFile("returnidetags.cs", @"
-                        using System.IO;
-                    "));
+                    new TestFile("returnidetags.cs", @"using System.IO;"));
 
                 var quickFixResponse = await host.RequestCodeCheckAsync("returnidetags.cs");
 
