@@ -17,6 +17,9 @@ variables:
   Artifacts: $(Build.ArtifactStagingDirectory)
   VstsArtifacts: "$(Artifacts)"
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  Script: build.cake
+  Target: 'Default'
+  RestorePackageConfig: true
 
 jobs:
   - job: GitVersion
@@ -27,44 +30,72 @@ jobs:
         parameters:
           NuGetVersion: $(NuGetVersion)
 
-  - template: pipeline/cake-job.yml@rsg
-    parameters:
-      name: 'macOS'
-      dependsOn: GitVersion
+  - job: macOS
+    dependsOn: GitVersion
+    pool:
       vmImage: "macOS-10.13"
-      pushNuget: false
-      Configuration: $(Configuration)
-      Verbosity: $(Verbosity)
-      CakeVersion: $(CakeVersion)
-      DotNetVersion: $(DotNetVersion)
-      NuGetVersion: $(NuGetVersion)
-      Script: build.cake
-      RestorePackageConfig: true
+    steps:
+      - template: gitversion/restore.yml@rsg
+      - template: cake/install.yml@rsg
+        parameters:
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          RestorePackageConfig: $(RestorePackageConfig)
+      - template: cake/run.yml@rsg
+        parameters:
+          Configuration: $(Configuration)
+          Verbosity: $(Verbosity)
+          Script: $(Script)
+          Target: $(Target)
+      - template: publish-artifacts.yml@rsg
+        parameters:
+          Configuration: $(Configuration)
+      # - ${{ if eq(parameters.pushNuget, 'true') }}:
+        # - template: standard/nuget-push.yml@rsg
 
-  - template: pipeline/cake-job.yml@rsg
-    parameters:
-      name: 'Linux'
-      dependsOn: GitVersion
+  - job: Linux
+    dependsOn: GitVersion
+    pool:
       vmImage: "Ubuntu-16.04"
-      pushNuget: false
-      Configuration: $(Configuration)
-      Verbosity: $(Verbosity)
-      CakeVersion: $(CakeVersion)
-      DotNetVersion: $(DotNetVersion)
-      NuGetVersion: $(NuGetVersion)
-      Script: build.cake
-      RestorePackageConfig: true
+    steps:
+      - template: gitversion/restore.yml@rsg
+      - template: cake/install.yml@rsg
+        parameters:
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          RestorePackageConfig: $(RestorePackageConfig)
+      - template: cake/run.yml@rsg
+        parameters:
+          Configuration: $(Configuration)
+          Verbosity: $(Verbosity)
+          Script: $(Script)
+          Target: $(Target)
+      - template: publish-artifacts.yml@rsg
+        parameters:
+          Configuration: $(Configuration)
+      # - ${{ if eq(parameters.pushNuget, 'true') }}:
+        # - template: standard/nuget-push.yml@rsg
 
-  - template: pipeline/cake-job.yml@rsg
-    parameters:
-      name: 'Windows'
-      dependsOn: GitVersion
+  - job: Windows
+    dependsOn: GitVersion
+    pool:
       vmImage: "VS2017-Win2016"
-      pushNuget: true
-      Configuration: $(Configuration)
-      Verbosity: $(Verbosity)
-      CakeVersion: $(CakeVersion)
-      DotNetVersion: $(DotNetVersion)
-      NuGetVersion: $(NuGetVersion)
-      Script: build.cake
-      RestorePackageConfig: true
+    steps:
+      - template: gitversion/restore.yml@rsg
+      - template: cake/install.yml@rsg
+        parameters:
+          CakeVersion: $(CakeVersion)
+          DotNetVersion: $(DotNetVersion)
+          RestorePackageConfig: $(RestorePackageConfig)
+      - template: cake/run.yml@rsg
+        parameters:
+          Configuration: $(Configuration)
+          Verbosity: $(Verbosity)
+          Script: $(Script)
+          Target: $(Target)
+      - template: publish-artifacts.yml@rsg
+        parameters:
+          Configuration: $(Configuration)
+      # - ${{ if eq(parameters.pushNuget, 'true') }}:
+        # - template: standard/nuget-push.yml@rsg
+
