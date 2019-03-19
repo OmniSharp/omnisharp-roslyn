@@ -17,7 +17,7 @@ steps:
   - task: RocketSurgeonsGuild.variable-tools.DeserializeVariables.DeserializeVariables@1
     displayName: 'Deserialize GitVersion'
     inputs:
-      jsonfiles: ${{ format('{0}/**/gitversion.json', "$(Build.ArtifactStagingDirectory)/gitversion/") }}
+      jsonfiles: $(Build.ArtifactStagingDirectory)/gitversion/**/gitversion.json
   - task: DotNetCoreInstaller@0
     displayName: Install dotnet $(DotNetVersion)
     inputs:
