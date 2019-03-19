@@ -14,11 +14,10 @@ var configuration = Argument("configuration", "Debug");
 var installFolder = Argument("install-path",
     CombinePaths(Environment.GetEnvironmentVariable(Platform.Current.IsWindows ? "USERPROFILE" : "HOME"), ".omnisharp"));
 var publishAll = HasArgument("publish-all");
-var useGlobalDotNetSdk = HasArgument("use-global-dotnet-sdk") || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TF_BUILD"));
 
 Log.Context = Context;
 
-var env = new BuildEnvironment(useGlobalDotNetSdk, Context);
+var env = new BuildEnvironment(Context);
 var buildPlan = BuildPlan.Load(env);
 
 Information("");
@@ -148,27 +147,6 @@ void InstallDotNetSdk(BuildEnvironment env, BuildPlan plan, string version, stri
 Task("InstallDotNetCoreSdk")
     .Does(() =>
 {
-    if (!useGlobalDotNetSdk)
-    {
-        InstallDotNetSdk(env, buildPlan,
-            version: buildPlan.DotNetVersion,
-            installFolder: env.Folders.DotNetSdk);
-
-        foreach (var runtimeVersion in buildPlan.DotNetSharedRuntimeVersions)
-        {
-            InstallDotNetSdk(env, buildPlan,
-                version: runtimeVersion,
-                installFolder: env.Folders.DotNetSdk,
-                sharedRuntime: true);
-        }
-
-        // Add non-legacy .NET SDK to PATH
-        var oldPath = Environment.GetEnvironmentVariable("PATH");
-        var newPath = env.Folders.DotNetSdk + (string.IsNullOrEmpty(oldPath) ? "" : System.IO.Path.PathSeparator + oldPath);
-        Environment.SetEnvironmentVariable("PATH", newPath);
-        Information("PATH: {0}", Environment.GetEnvironmentVariable("PATH"));
-    }
-
     if (AllowLegacyTests())
     {
         // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
@@ -181,7 +159,7 @@ Task("InstallDotNetCoreSdk")
     // Disable the first time run experience. We don't need to expand all of .NET Core just to build OmniSharp.
     Environment.SetEnvironmentVariable("DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "true");
 
-    Run(env.DotNetCommand, "--info");
+    Run("dotnet", "--info");
 });
 
 Task("ValidateMono")
@@ -394,7 +372,6 @@ Task("PrepareTestAssets:CommonTestAssets")
 
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetCoreVerbosity.Minimal
         });
@@ -410,7 +387,6 @@ Task("PrepareTestAssets:RestoreOnlyTestAssets")
 
         DotNetCoreRestore(new DotNetCoreRestoreSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetCoreVerbosity.Minimal
         });
@@ -427,7 +403,6 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
 
         DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
         {
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = folder,
             Verbosity = DotNetCoreVerbosity.Minimal
         });
@@ -761,7 +736,6 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
                 .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
                 .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion),
-            ToolPath = env.DotNetCommand,
             WorkingDirectory = env.WorkingDirectory,
             Verbosity = DotNetCoreVerbosity.Minimal,
         });
@@ -912,7 +886,7 @@ Task("Default")
 Teardown(context =>
 {
     // Ensure that we shutdown all build servers used by the CLI during build.
-    Run(env.DotNetCommand, "build-server shutdown");
+    Run("dotnet", "build-server shutdown");
 });
 
 /// <summary>

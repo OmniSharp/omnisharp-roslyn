@@ -131,7 +131,6 @@ void DownloadFileAndUnzip(string url, string folder)
 
 public class Folders
 {
-    public string DotNetSdk { get; }
     public string LegacyDotNetSdk { get; }
     public string Mono { get; }
     public string MSBuild { get; }
@@ -157,7 +156,6 @@ public class Folders
 
     public Folders(string workingDirectory)
     {
-        this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
         this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
         this.Mono = PathHelper.Combine(workingDirectory, ".mono");
         this.MSBuild = PathHelper.Combine(workingDirectory, ".msbuild");
@@ -202,7 +200,6 @@ public class BuildEnvironment
     public string WorkingDirectory { get; }
     public Folders Folders { get; }
 
-    public string DotNetCommand { get; }
     public string LegacyDotNetCommand { get; }
 
     public string ShellCommand { get; }
@@ -214,15 +211,10 @@ public class BuildEnvironment
 
     public GitVersion VersionInfo { get; }
 
-    public BuildEnvironment(bool useGlobalDotNetSdk, ICakeContext context)
+    public BuildEnvironment(ICakeContext context)
     {
         this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
-
-        this.DotNetCommand = useGlobalDotNetSdk
-            ? "dotnet"
-            : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
-        if (Platform.Current.IsWindows) this.DotNetCommand += ".exe";
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
         if (Platform.Current.IsWindows) this.LegacyDotNetCommand += ".exe";

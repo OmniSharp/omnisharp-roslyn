@@ -127,10 +127,7 @@ namespace TestUtility
 
         private static IDotNetCliService CreateDotNetCliService(DotNetCliVersion dotNetCliVersion, ILoggerFactory loggerFactory, IEventEmitter eventEmitter)
         {
-            var dotnetPath = Path.Combine(
-                TestAssets.Instance.RootFolder,
-                dotNetCliVersion.GetFolderName(),
-                "dotnet");
+            var dotnetPath = dotNetCliVersion.GetFolderName(TestAssets.Instance.RootFolder);
 
             if (!File.Exists(dotnetPath))
             {
