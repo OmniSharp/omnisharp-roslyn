@@ -103,3 +103,51 @@ jobs:
       - template: ./.pipelines/artifacts.yml
         parameters:
           Artifacts: $(Artifacts)
+  - job: Release
+    pool:
+      vmImage: "Ubuntu-16.04"
+    dependsOn:
+      - macOS
+      - Linux
+      - Windows
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          downloadType: 'single'
+          artifactName: Packages
+          buildType: 'current'
+          downloadPath: '$(System.ArtifactsDirectory)/packages/'
+      # - task: AzureFileCopy@2
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      - task: GitHubRelease@0
+        displayName: 'GitHub release (edit)'
+        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+        inputs:
+          gitHubConnection: github
+          repositoryName: OmniSharp/omnisharp-roslyn
+          action: edit
+          tag: '$(Build.SourceBranchName)'
+          title: '$(Build.SourceBranchName)'
+          assets: '$(System.ArtifactsDirectory)/packages/**/*'
+          assetUploadMode: replace
+          # releaseNotesSource: input
+          # releaseNotes: asdfasdf12
+          # isDraft: true
+          # isPreRelease: true
+          # addChangeLog: false
+      # - task: DotNetCoreCLI@2
+      #   displayName: 'Push NuGet packages to myget.org'
+      #   inputs:
+      #     command: push
+      #     nuGetFeedType: external
+      #     packagesToPush: ${{ format('{0}/nuget/*.nupkg;!{0}/nuget/*.symbols.nupkg', parameters.Artifacts) }}
+      #     publishFeedCredentials: myget.org
+      #   condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+      # - task: DotNetCoreCLI@2
+      #   displayName: 'Push NuGet packages to nuget.org'
+      #   inputs:
+      #     command: push
+      #     nuGetFeedType: external
+      #     packagesToPush: ${{ format('{0}/nuget/*.nupkg;!{0}/nuget/*.symbols.nupkg', parameters.Artifacts) }}
+      #     publishFeedCredentials: nuget.org
+      #   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
