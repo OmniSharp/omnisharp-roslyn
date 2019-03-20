@@ -133,6 +133,8 @@ jobs:
           az storage blob upload-batch --destination "releases" --source $(System.ArtifactsDirectory)/deployment/ --account-name roslynomnisharp --account-key $BLOB_KEY
         displayName: Upload to Azure Storage
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+        env:
+          BLOB_KEY: $(BLOB_KEY)
       - task: GitHubRelease@0
         displayName: 'GitHub release (edit)'
         condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
