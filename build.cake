@@ -793,7 +793,6 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 
 Task("PublishWindowsBuilds")
     .IsDependentOn("Setup")
-    .WithCriteria(() => Platform.Current.IsWindows)
     .Does(() =>
 {
     foreach (var project in buildPlan.HostProjects)
