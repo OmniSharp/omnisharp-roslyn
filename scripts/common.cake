@@ -210,6 +210,7 @@ public class BuildEnvironment
     public string ShellScriptFileExtension { get; }
 
     public MonoRuntime[] MonoRuntimes { get; }
+    public MonoRuntime[] BuildMonoRuntimes { get; }
     public MonoRuntime CurrentMonoRuntime { get; }
 
     public GitVersion VersionInfo { get; }
@@ -219,9 +220,9 @@ public class BuildEnvironment
         this.WorkingDirectory = context.Environment.WorkingDirectory.FullPath;
         this.Folders = new Folders(this.WorkingDirectory);
 
-        this.DotNetCommand = useGlobalDotNetSdk	
-            ? "dotnet"	
-            : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");	
+        this.DotNetCommand = useGlobalDotNetSdk
+            ? "dotnet"
+            : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
         if (Platform.Current.IsWindows) this.DotNetCommand += ".exe";
 
         this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
@@ -230,7 +231,6 @@ public class BuildEnvironment
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
-
         this.MonoRuntimes = new []
         {
             new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono"),
@@ -241,14 +241,19 @@ public class BuildEnvironment
         if (Platform.Current.IsMacOS)
         {
             this.CurrentMonoRuntime = this.MonoRuntimes[0];
+            this.BuildMonoRuntimes = new [] { this.CurrentMonoRuntime };
         }
-        else if (Platform.Current.IsLinux && Platform.Current.Is32Bit)
+        else if (Platform.Current.IsLinux)
         {
-            this.CurrentMonoRuntime = this.MonoRuntimes[1];
-        }
-        else if (Platform.Current.IsLinux && Platform.Current.Is64Bit)
-        {
-            this.CurrentMonoRuntime = this.MonoRuntimes[2];
+            if (Platform.Current.Is32Bit)
+            {
+                this.CurrentMonoRuntime = this.MonoRuntimes[1];
+            }
+            else if (Platform.Current.Is64Bit)
+            {
+                this.CurrentMonoRuntime = this.MonoRuntimes[2];
+            }
+            this.BuildMonoRuntimes = this.MonoRuntimes.Skip(1).ToArray();
         }
 
         VersionInfo = GetGitVersionFromEnvironment(context);

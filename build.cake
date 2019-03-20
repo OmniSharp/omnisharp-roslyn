@@ -733,7 +733,7 @@ Task("PublishMonoBuilds")
 
         if (publishAll)
         {
-            foreach (var monoRuntime in env.MonoRuntimes)
+            foreach (var monoRuntime in env.BuildMonoRuntimes)
             {
                 PublishMonoBuildForPlatform(project, monoRuntime, env, buildPlan);
             }
