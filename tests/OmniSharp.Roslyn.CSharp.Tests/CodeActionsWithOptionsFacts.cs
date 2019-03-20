@@ -182,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             Assert.DoesNotContain("Pull 'Foo' up -> Pull members up to base type...", response);
         }
 
-        [Fact(Skip = "This feature isn't available before roslyn analyzers are available, extract interface is action to one of analysis.")]
+        [Fact]
         public async Task Can_extract_interface()
         {
             const string code =

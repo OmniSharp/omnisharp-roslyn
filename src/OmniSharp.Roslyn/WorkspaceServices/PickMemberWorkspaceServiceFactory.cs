@@ -1,6 +1,5 @@
 using System.Composition;
 using System.Reflection;
-using Castle.DynamicProxy;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Host.Mef;
 
@@ -13,9 +12,8 @@ namespace OmniSharp
         public IWorkspaceService CreateService(HostWorkspaceServices workspaceServices)
         {
             // Generates proxy class to get around issue that IPickMembersService is internal at this point.
-            ProxyGenerator generator = new ProxyGenerator();
             var internalType = Assembly.Load("Microsoft.CodeAnalysis.Features").GetType("Microsoft.CodeAnalysis.PickMembers.IPickMembersService");
-            return (IWorkspaceService)generator.CreateInterfaceProxyWithoutTarget(internalType, new[] { typeof(IWorkspaceService)}, new PickMemberWorkspaceService());
+            return (IWorkspaceService)typeof(DispatchProxy).GetMethod(nameof(DispatchProxy.Create)).MakeGenericMethod(internalType, typeof(PickMemberWorkspaceService)).Invoke(null, null);
         }
     }
 }
