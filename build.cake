@@ -783,6 +783,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 }
 
 Task("PublishWindowsBuilds")
+    .WithCriteria(() => Platform.Current.IsWindows)
     .IsDependentOn("Setup")
     .Does(() =>
 {
