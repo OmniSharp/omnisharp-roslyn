@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Models.CodeCheck;
+using OmniSharp.Models.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
@@ -45,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData(false)]
         public async Task CheckAllFiles(bool roslynAnalyzersEnabled)
         {
-            using(var host = GetHost(roslynAnalyzersEnabled))
+            using (var host = GetHost(roslynAnalyzersEnabled))
             {
                 host.AddFilesToWorkspace(
                     new TestFile("a.cs", "class C1 { int n = true; }"),
@@ -63,7 +64,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [InlineData(false)]
         public async Task WhenFileIsDeletedFromWorkSpaceThenResultsAreNotReturnedAnyMore(bool roslynAnalyzersEnabled)
         {
-            using(var host = GetHost(roslynAnalyzersEnabled))
+            using (var host = GetHost(roslynAnalyzersEnabled))
             {
                 host.AddFilesToWorkspace(new TestFile("a.cs", "class C1 { int n = true; }"));
                 await host.RequestCodeCheckAsync();
@@ -83,13 +84,47 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task AnalysisSupportBuiltInIDEAnalysers()
         {
-            using(var host = GetHost(roslynAnalyzersEnabled: true))
+            using (var host = GetHost(roslynAnalyzersEnabled: true))
             {
                 host.AddFilesToWorkspace(
                     new TestFile("a.cs", "class C1 { int n = true; }"));
 
                 var quickFixes = await host.RequestCodeCheckAsync("a.cs");
                 Assert.Contains(quickFixes.QuickFixes, x => x.Text.Contains("IDE0044"));
+            }
+        }
+
+        [Fact]
+        public async Task WhenUnusedImportExistsWithoutAnalyzersEnabled_ThenReturnEmptyTags()
+        {
+            using (var host = GetHost(roslynAnalyzersEnabled: false))
+            {
+                host.AddFilesToWorkspace(
+                    new TestFile("returnemptytags.cs", @"using System.IO;"));
+
+                var quickFixResponse = await host.RequestCodeCheckAsync("returnemptytags.cs");
+
+                var allDiagnostics = quickFixResponse.QuickFixes.OfType<DiagnosticLocation>();
+
+                Assert.Empty(allDiagnostics.SelectMany(x => x.Tags));
+            }
+        }
+
+        [Fact]
+        public async Task WhenUnusedImportIsFoundAndAnalyzersEnabled_ThenReturnUnnecessaryTag()
+        {
+            using (var host = GetHost(roslynAnalyzersEnabled: true))
+            {
+                host.AddFilesToWorkspace(
+                    new TestFile("returnidetags.cs", @"using System.IO;"));
+
+                var quickFixResponse = await host.RequestCodeCheckAsync("returnidetags.cs");
+
+                Assert.Contains("Unnecessary", quickFixResponse
+                    .QuickFixes
+                    .OfType<DiagnosticLocation>()
+                    .Single(x => x.Id == "IDE0005")
+                    .Tags);
             }
         }
     }
