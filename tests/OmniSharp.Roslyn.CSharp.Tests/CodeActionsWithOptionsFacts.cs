@@ -198,13 +198,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     string PropertyHere { get; set; }
                 }
 
-                public class Class1
+                public class Class1 : IClass1
                 {
                     public string PropertyHere { get; set; }
                 }
                 ";
-            var response = await RunRefactoringAsync(code, "Extract interface...");
+            var response = await RunRefactoringAsync(code, "Extract Interface...");
 
+            var foo = ((ModifiedFileResponse)response.Changes.First()).Buffer;
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
@@ -217,7 +218,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             //
             // In case it's exposed by roslyn team these services can be simplified.
             // Steps are likely following:
-            // - Remove Castle.Core (proxies not needed)
+            // - Remove proxies
             // - Replace ExportWorkspaceServiceFactoryWithAssemblyQualifiedName with Microsoft.CodeAnalysis.Host.Mef.ExportWorkspaceServiceAttribute
             // - Fix proxy classes to implement IPickMembersService / IExtractInterfaceOptionsService ... instead of proxy and reflection.
             // - Remove all factories using ExportWorkspaceServiceFactoryWithAssemblyQualifiedName and factory itself.
@@ -233,12 +234,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private static string TrimLines(string source)
         {
-            return string.Join("\n", source.Split('\n').Select(s => s.Trim())).Replace("\n","").Replace("\r","");
+            return string.Join("", source.Split('\n').Select(s => s.Trim()));
         }
 
         private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false)
         {
-            var refactorings = await FindRefactoringsAsync(code);
+            var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(true));
             Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
 
             var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;

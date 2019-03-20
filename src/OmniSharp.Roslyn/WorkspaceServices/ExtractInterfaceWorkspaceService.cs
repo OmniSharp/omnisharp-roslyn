@@ -15,7 +15,6 @@ namespace OmniSharp
             // IExtractInterfaceOptionsService and extract interface results are internal types -> workaround with proxy.
             // This service simply passes all members through as selected and doesn't try show UI.
             // When roslyn exposes this interface and members -> remove this workaround.
-
             var resultTypeInternal = Assembly.Load("Microsoft.CodeAnalysis.Features").GetType("Microsoft.CodeAnalysis.ExtractInterface.ExtractInterfaceOptionsResult");
             var enumType = resultTypeInternal.GetNestedTypes().Single(x => x.Name == "ExtractLocation");
 
@@ -31,8 +30,7 @@ namespace OmniSharp
                     toSameFileEnumValue
                 });
 
-            var fromResultMethod = typeof(Task).GetMethod("FromResult").MakeGenericMethod(resultTypeInternal).Invoke(null, new[] { resultObject });
-            return resultObject;
+            return typeof(Task).GetMethod("FromResult").MakeGenericMethod(resultTypeInternal).Invoke(null, new[] { resultObject });
         }
     }
 }
