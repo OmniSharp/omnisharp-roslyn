@@ -20,7 +20,6 @@ namespace OmniSharp
             var type = Assembly.Load(typeAssembly).GetType(typeName)
                 ?? throw new InvalidOperationException($"Could not resolve '{typeName} from '{typeAssembly}'");
 
-            Console.WriteLine($"Resolved to type: {type.AssemblyQualifiedName}");
             this.ServiceType = type.AssemblyQualifiedName;
             this.Layer = layer ?? throw new ArgumentNullException(nameof(layer));
         }
