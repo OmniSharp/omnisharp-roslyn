@@ -88,19 +88,10 @@ Task("Cleanup")
     DirectoryHelper.Create(env.Folders.ArtifactsScripts);
 });
 
-Task("GitVersion")
-    .WithCriteria(!BuildSystem.IsLocalBuild)
-    .Does(() => {
-        GitVersion(new GitVersionSettings{
-            OutputType = GitVersionOutput.BuildServer
-        });
-    });
-
 /// <summary>
 ///  Pre-build setup tasks.
 /// </summary>
 Task("Setup")
-    .IsDependentOn("GitVersion")
     .IsDependentOn("ValidateMono")
     .IsDependentOn("InstallDotNetCoreSdk")
     .IsDependentOn("InstallMonoAssets")
@@ -742,7 +733,7 @@ Task("PublishMonoBuilds")
 
         if (publishAll)
         {
-            foreach (var monoRuntime in env.MonoRuntimes)
+            foreach (var monoRuntime in env.BuildMonoRuntimes)
             {
                 PublishMonoBuildForPlatform(project, monoRuntime, env, buildPlan);
             }

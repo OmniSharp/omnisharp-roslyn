@@ -1,0 +1,39 @@
+parameters:
+  Artifacts: $(Build.ArtifactStagingDirectory)
+steps:
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Logs
+    condition: always()
+    inputs:
+      PathtoPublish: "$(Artifacts)/logs/"
+      ArtifactName: "Logs - $(system.phaseName)"
+      ArtifactType: "Container"
+    env:
+      Artifacts: ${{ parameters.Artifacts }}
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Packages
+    # condition: always()
+    inputs:
+      PathtoPublish: "$(Artifacts)/package/"
+      ArtifactName: "Packages"
+      ArtifactType: "Container"
+    env:
+      Artifacts: ${{ parameters.Artifacts }}
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Deployment
+    # condition: always()
+    inputs:
+      PathtoPublish: "$(Artifacts)/deployment/"
+      ArtifactName: "Deployment"
+      ArtifactType: "Container"
+    env:
+      Artifacts: ${{ parameters.Artifacts }}
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Scripts
+    # condition: always()
+    inputs:
+      PathtoPublish: "$(Artifacts)/scripts/"
+      ArtifactName: "Scripts - $(system.phaseName)"
+      ArtifactType: "Container"
+    env:
+      Artifacts: ${{ parameters.Artifacts }}
