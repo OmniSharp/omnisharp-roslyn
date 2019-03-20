@@ -28,7 +28,7 @@ jobs:
           NuGetVersion: $(NuGetVersion)
 
   - job: macOS
-    pool: 
+    pool:
       vmImage: "macOS-10.13"
     dependsOn: GitVersion
     variables:
@@ -57,7 +57,7 @@ jobs:
         displayName: 'Build'
 
   - job: Linux
-    pool: 
+    pool:
       vmImage: "Ubuntu-16.04"
     dependsOn: GitVersion
     variables:
@@ -90,7 +90,7 @@ jobs:
         displayName: 'Build'
 
   - job: Windows
-    pool: 
+    pool:
       vmImage: "VS2017-Win2016"
     dependsOn: GitVersion
     steps:
@@ -104,3 +104,6 @@ jobs:
           pushNuget: false
       - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
         displayName: 'Build'
+      - template: ./.pipelines/artifacts.yml
+        parameters:
+          Artifacts: $(Build.SourcesDirectory)/artifacts/
