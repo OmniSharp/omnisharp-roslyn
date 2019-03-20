@@ -15,30 +15,12 @@ steps:
     # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/package/"
-      ArtifactName: "Packages - $(system.phaseName)"
-      ArtifactType: "Container"
-    env:
-      Artifacts: ${{ parameters.Artifacts }}
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Packages (single)?
-    # condition: always()
-    inputs:
-      PathtoPublish: "$(Artifacts)/package/"
       ArtifactName: "Packages"
       ArtifactType: "Container"
     env:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Deployment
-    # condition: always()
-    inputs:
-      PathtoPublish: "$(Artifacts)/deployment/"
-      ArtifactName: "Deployment - $(system.phaseName)"
-      ArtifactType: "Container"
-    env:
-      Artifacts: ${{ parameters.Artifacts }}
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Deployment (single)?
     # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/deployment/"
