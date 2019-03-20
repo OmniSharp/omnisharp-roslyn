@@ -116,13 +116,13 @@ jobs:
           downloadType: 'single'
           artifactName: Packages
           buildType: 'current'
-          downloadPath: '$(System.ArtifactsDirectory)/packages/'
+          downloadPath: '$(System.ArtifactsDirectory)'
       - task: DownloadBuildArtifacts@0
         inputs:
           downloadType: 'single'
           artifactName: Deployment
           buildType: 'current'
-          downloadPath: '$(System.ArtifactsDirectory)/deployment/'
+          downloadPath: '$(System.ArtifactsDirectory)'
       - script: |
           AZ_REPO=$(lsb_release -cs)
           echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
