@@ -12,7 +12,7 @@ steps:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Packages
-    condition: always()
+    # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/package/"
       ArtifactName: "Packages - $(system.phaseName)"
@@ -21,7 +21,7 @@ steps:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Packages (single)?
-    condition: always()
+    # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/package/"
       ArtifactName: "Packages"
@@ -30,7 +30,7 @@ steps:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Deployment
-    condition: always()
+    # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/deployment/"
       ArtifactName: "Deployment - $(system.phaseName)"
@@ -39,7 +39,7 @@ steps:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Deployment (single)?
-    condition: always()
+    # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/deployment/"
       ArtifactName: "Deployment"
@@ -48,7 +48,7 @@ steps:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
     displayName: Publish Scripts
-    condition: always()
+    # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/scripts/"
       ArtifactName: "Scripts - $(system.phaseName)"
