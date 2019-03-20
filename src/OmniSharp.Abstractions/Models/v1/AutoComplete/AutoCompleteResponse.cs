@@ -8,6 +8,7 @@ namespace OmniSharp.Models.AutoComplete
         /// </summary>
         public string CompletionText { get; set; }
         public string Description { get; set; }
+
         /// <summary>
         /// The text that should be displayed in the auto-complete UI.
         /// </summary>

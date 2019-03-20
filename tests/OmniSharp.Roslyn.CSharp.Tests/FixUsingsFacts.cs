@@ -250,7 +250,7 @@ namespace OmniSharp
                     Line = point.Line,
                     Column = point.Offset,
                     FileName = TestFileName,
-                    Text = "`classX` is ambiguous"
+                    Text = "`classX` is ambiguous. Namespaces: using nsA; using nsB;",
                 }
             };
 

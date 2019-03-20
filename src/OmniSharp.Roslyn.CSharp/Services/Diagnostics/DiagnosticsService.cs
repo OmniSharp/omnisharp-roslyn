@@ -1,26 +1,25 @@
+using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Mef;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.Workers.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 {
     [OmniSharpHandler(OmniSharpEndpoints.Diagnostics, LanguageNames.CSharp)]
     public class DiagnosticsService : IRequestHandler<DiagnosticsRequest, DiagnosticsResponse>
     {
-        private readonly CSharpDiagnosticService _diagnostics;
         private readonly DiagnosticEventForwarder _forwarder;
-        private readonly OmniSharpWorkspace _workspace;
+        private readonly ICsDiagnosticWorker _diagWorker;
 
         [ImportingConstructor]
-        public DiagnosticsService(OmniSharpWorkspace workspace, DiagnosticEventForwarder forwarder, CSharpDiagnosticService diagnostics)
+        public DiagnosticsService(DiagnosticEventForwarder forwarder, ICsDiagnosticWorker diagWorker)
         {
             _forwarder = forwarder;
-            _workspace = workspace;
-            _diagnostics = diagnostics;
+            _diagWorker = diagWorker;
         }
 
         public Task<DiagnosticsResponse> Handle(DiagnosticsRequest request)
@@ -30,11 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _forwarder.IsEnabled = true;
             }
 
-            var documents = request.FileName != null
-                ? new [] { request.FileName }
-                : _workspace.CurrentSolution.Projects.SelectMany(project => project.Documents.Select(x => x.FilePath));
-
-            _diagnostics.QueueDiagnostics(documents.ToArray());
+            _diagWorker.QueueAllDocumentsForDiagnostics();
 
             return Task.FromResult(new DiagnosticsResponse());
         }
