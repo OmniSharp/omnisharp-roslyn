@@ -1,0 +1,50 @@
+parameters:
+  # Configuration: Release
+  Verbosity: Normal
+  DotNetVersion: "2.2.103"
+  CakeVersion: "0.32.1"
+  NuGetVersion: "4.9.2"
+  pushNuget: false
+steps:
+  - task: DownloadBuildArtifacts@0
+    displayName: "Download GitVersion Variables"
+    inputs:
+      specificBuildWithTriggering: true
+      downloadType: single
+      artifactName: gitversion
+      pipelineId: GitVersion
+      targetPath: "$(Build.ArtifactStagingDirectory)/gitversion/"
+  - task: RocketSurgeonsGuild.variable-tools.DeserializeVariables.DeserializeVariables@1
+    displayName: 'Deserialize GitVersion'
+    inputs:
+      jsonfiles: $(Build.ArtifactStagingDirectory)/gitversion/**/gitversion.json
+  - task: DotNetCoreInstaller@0
+    displayName: Install dotnet $(DotNetVersion)
+    inputs:
+      packageType: 'sdk'
+      version: ${{ parameters.DotNetVersion }}
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet install cake'
+    inputs:
+      command: custom
+      custom: tool
+      arguments: 'install -g Cake.Tool --version $(CakeVersion)'
+      workingDirectory: '$(Build.ArtifactStagingDirectory)'
+    env:
+      CakeVersion: ${{ parameters.CakeVersion }}
+  - task: NuGetToolInstaller@0
+    displayName: "Get NuGet"
+    inputs:
+      versionSpec: ${{ parameters.NuGetVersion }}
+  - task: NuGetCommand@2
+    displayName: 'Cake restore packages.config'
+    inputs:
+      command: custom
+      feedsToUse: config
+      arguments: install tools/packages.config -ExcludeVersion -OutputDirectory tools
+  # - script: build.ps1
+  # - template: ../publish-artifacts.yml
+  #   parameters:
+  #     Configuration: ${{ parameters.Configuration }}
+  # - ${{ if eq(parameters.pushNuget, 'true') }}:
+  # - template: ../standard/nuget-push.yml

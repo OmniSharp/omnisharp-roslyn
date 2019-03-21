@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -152,7 +153,9 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var work = queue.TakeWork();
 
             var pendingTask = queue.WaitForResultsAsync(work);
-            pendingTask.Wait(TimeSpan.FromMilliseconds(100));
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+            pendingTask.Wait(cts.Token);
 
             Assert.True(pendingTask.IsCompleted);
             Assert.Contains("Timeout before work got ready", loggerFactory.Logger.RecordedMessages.Single());

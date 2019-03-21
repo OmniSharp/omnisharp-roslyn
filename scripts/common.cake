@@ -1,4 +1,4 @@
-#addin "Newtonsoft.Json"
+#addin "nuget:?package=Newtonsoft.Json&version=11.0.2"
 #tool "nuget:?package=GitVersion.CommandLine&prerelease&version=4.0.0-beta0012"
 
 #load "platform.cake"
@@ -210,6 +210,7 @@ public class BuildEnvironment
     public string ShellScriptFileExtension { get; }
 
     public MonoRuntime[] MonoRuntimes { get; }
+    public MonoRuntime[] BuildMonoRuntimes { get; }
     public MonoRuntime CurrentMonoRuntime { get; }
 
     public GitVersion VersionInfo { get; }
@@ -230,7 +231,6 @@ public class BuildEnvironment
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
         this.ShellScriptFileExtension = Platform.Current.IsWindows ? "ps1" : "sh";
-
         this.MonoRuntimes = new []
         {
             new MonoRuntime("osx", this.Folders.MonoRuntimeMacOS, "mono"),
@@ -241,18 +241,105 @@ public class BuildEnvironment
         if (Platform.Current.IsMacOS)
         {
             this.CurrentMonoRuntime = this.MonoRuntimes[0];
+            this.BuildMonoRuntimes = new [] { this.CurrentMonoRuntime };
         }
-        else if (Platform.Current.IsLinux && Platform.Current.Is32Bit)
+        else if (Platform.Current.IsLinux)
         {
-            this.CurrentMonoRuntime = this.MonoRuntimes[1];
-        }
-        else if (Platform.Current.IsLinux && Platform.Current.Is64Bit)
-        {
-            this.CurrentMonoRuntime = this.MonoRuntimes[2];
+            if (Platform.Current.Is32Bit)
+            {
+                this.CurrentMonoRuntime = this.MonoRuntimes[1];
+            }
+            else if (Platform.Current.Is64Bit)
+            {
+                this.CurrentMonoRuntime = this.MonoRuntimes[2];
+            }
+            this.BuildMonoRuntimes = this.MonoRuntimes.Skip(1).ToArray();
         }
 
-        VersionInfo = context.GitVersion();
+        VersionInfo = GetGitVersionFromEnvironment(context);
     }
+
+    private static bool HasGitVer(ICakeContext context)
+    {
+        var envVars = context.EnvironmentVariables();
+        return envVars.Keys.Join(GitVersionKeys, z => z, z => z, (a, b) => a, StringComparer.OrdinalIgnoreCase).Any();
+    }
+
+    private static GitVersion GetGitVersionFromEnvironment(ICakeContext context)
+    {
+        if (HasGitVer(context))
+        {
+            var environmentVariables = context.Environment.GetEnvironmentVariables();
+            return new GitVersion()
+            {
+                Major = int.Parse(GetGitVersionValue(environmentVariables, "Major")),
+                Minor = int.Parse(GetGitVersionValue(environmentVariables, "Minor")),
+                Patch = int.Parse(GetGitVersionValue(environmentVariables, "Patch")),
+                PreReleaseTag = GetGitVersionValue(environmentVariables, "PreReleaseTag"),
+                PreReleaseTagWithDash = GetGitVersionValue(environmentVariables, "PreReleaseTagWithDash"),
+                PreReleaseLabel = GetGitVersionValue(environmentVariables, "PreReleaseLabel"),
+                PreReleaseNumber = GetGitVersionNullableInt(environmentVariables, "PreReleaseNumber"),
+                BuildMetaData = GetGitVersionValue(environmentVariables, "BuildMetaData"),
+                BuildMetaDataPadded = GetGitVersionValue(environmentVariables, "BuildMetaDataPadded"),
+                FullBuildMetaData = GetGitVersionValue(environmentVariables, "FullBuildMetaData"),
+                MajorMinorPatch = GetGitVersionValue(environmentVariables, "MajorMinorPatch"),
+                SemVer = GetGitVersionValue(environmentVariables, "SemVer"),
+                LegacySemVer = GetGitVersionValue(environmentVariables, "LegacySemVer"),
+                LegacySemVerPadded = GetGitVersionValue(environmentVariables, "LegacySemVerPadded"),
+                AssemblySemVer = GetGitVersionValue(environmentVariables, "AssemblySemVer"),
+                FullSemVer = GetGitVersionValue(environmentVariables, "FullSemVer"),
+                InformationalVersion = GetGitVersionValue(environmentVariables, "InformationalVersion"),
+                BranchName = GetGitVersionValue(environmentVariables, "BranchName"),
+                Sha = GetGitVersionValue(environmentVariables, "Sha"),
+                NuGetVersion = GetGitVersionValue(environmentVariables, "NuGetVersion"),
+                CommitsSinceVersionSource = GetGitVersionNullableInt(environmentVariables, "CommitsSinceVersionSource"),
+                CommitsSinceVersionSourcePadded = GetGitVersionValue(environmentVariables, "CommitsSinceVersionSourcePadded"),
+                CommitDate = GetGitVersionValue(environmentVariables, "CommitDate"),
+            };
+        }
+        else
+        {
+            return context.GitVersion();
+        }
+    }
+
+    private static string GetGitVersionValue(IDictionary<string, string> environmentVariables, string key)
+    {
+        var value = environmentVariables.FirstOrDefault(x => x.Key.Equals($"GitVersion_{key}", StringComparison.OrdinalIgnoreCase));
+        return value.Value;
+    }
+
+    private static int? GetGitVersionNullableInt(IDictionary<string, string> environmentVariables, string key)
+    {
+        var value = GetGitVersionValue(environmentVariables, key);
+        return string.IsNullOrWhiteSpace(value) ? null : int.Parse(value) as int?;
+    }
+
+    private static readonly string[] GitVersionKeys = {
+        "GITVERSION_MAJOR",
+        "GITVERSION_MINOR",
+        "GITVERSION_PATCH",
+        "GITVERSION_PRERELEASETAG",
+        "GITVERSION_PRERELEASETAGWITHDASH",
+        "GITVERSION_PRERELEASELABEL",
+        "GITVERSION_PRERELEASENUMBER",
+        "GITVERSION_BUILDMETADATA",
+        "GITVERSION_BUILDMETADATAPADDED",
+        "GITVERSION_FULLBUILDMETADATA",
+        "GITVERSION_MAJORMINORPATCH",
+        "GITVERSION_SEMVER",
+        "GITVERSION_LEGACYSEMVER",
+        "GITVERSION_LEGACYSEMVERPADDED",
+        "GITVERSION_ASSEMBLYSEMVER",
+        "GITVERSION_FULLSEMVER",
+        "GITVERSION_INFORMATIONALVERSION",
+        "GITVERSION_BRANCHNAME",
+        "GITVERSION_SHA",
+        "GITVERSION_NUGETVERSION",
+        "GITVERSION_COMMITSSINCEVERSIONSOURCE",
+        "GITVERSION_COMMITSSINCEVERSIONSOURCEPADDED",
+        "GITVERSION_COMMITDATE",
+    };
 }
 
 /// <summary>
