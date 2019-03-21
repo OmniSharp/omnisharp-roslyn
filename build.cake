@@ -813,10 +813,19 @@ Task("PublishWindowsBuilds")
     }
 });
 
+Task("PublishNuGet")
+    .Does(() => {
+        DotNetCorePack(".", new DotNetCorePackSettings() {
+            Configuration = "Release",
+            OutputDirectory = "./artifacts/nuget/"
+        });
+    });
+
 Task("Publish")
     .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
-    .IsDependentOn("PublishWindowsBuilds");
+    .IsDependentOn("PublishWindowsBuilds")
+    .IsDependentOn("PublishNuGet");
 
 /// <summary>
 ///  Execute the run script.

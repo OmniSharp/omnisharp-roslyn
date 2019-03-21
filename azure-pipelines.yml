@@ -112,15 +112,24 @@ jobs:
       - Windows
     steps:
       - task: DownloadBuildArtifacts@0
+        displayName: Download Packages
         inputs:
           downloadType: 'single'
           artifactName: Packages
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
       - task: DownloadBuildArtifacts@0
+        displayName: Download Deployment
         inputs:
           downloadType: 'single'
           artifactName: Deployment
+          buildType: 'current'
+          downloadPath: '$(System.ArtifactsDirectory)'
+      - task: DownloadBuildArtifacts@0
+        displayName: Download NuGet
+        inputs:
+          downloadType: 'single'
+          artifactName: NuGet
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
       - script: |
