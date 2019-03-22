@@ -16,7 +16,6 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     <PackageReference Include="System.ComponentModel.Composition" />
-    <PackageReference Include="System.Reflection.DispatchProxy" Version="4.5.1" />
+    <PackageReference Include="System.Reflection.DispatchProxy" />
   </ItemGroup>
-
 </Project>
