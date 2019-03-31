@@ -146,17 +146,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             Console.WriteLine(null); // This is CS0162, unreachable code.
                         }
                     }");
-                var ruleService = host.GetExport<RulesetsForProjects>();
+                // var ruleService = host.GetExport<RulesetsForProjects>();
 
-                var projectIds = AddProjectWitFile(host, testFile);
+                // var projectIds = AddProjectWitFile(host, testFile);
 
-                var testRules = CreateRules("CS0162", ReportDiagnostic.Hidden);
+                // var testRules = CreateRules("CS0162", ReportDiagnostic.Hidden);
 
-                ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
-                    "",
-                    new ReportDiagnostic(),
-                    testRules.ToImmutableDictionary(),
-                    new ImmutableArray<RuleSetInclude>()));
+                // ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                //     "",
+                //     new ReportDiagnostic(),
+                //     testRules.ToImmutableDictionary(),
+                //     new ImmutableArray<RuleSetInclude>()));
 
                 var result = await host.RequestCodeCheckAsync();
 
@@ -170,18 +170,18 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             using (var host = GetHost())
             {
                 var testFile = new TestFile("testFile_2.cs", "class _this_is_invalid_test_class_name { int n = true; }");
-                var ruleService = host.GetExport<RulesetsForProjects>();
+                // var ruleService = host.GetExport<RulesetsForProjects>();
 
                 var testAnalyzerRef = new TestAnalyzerReference("TS1100");
 
                 var projectIds = AddProjectWitFile(host, testFile, testAnalyzerRef);
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
 
-                ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
-                    "",
-                    new ReportDiagnostic(),
-                    testRules.ToImmutableDictionary(),
-                    new ImmutableArray<RuleSetInclude>()));
+                // ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                //     "",
+                //     new ReportDiagnostic(),
+                //     testRules.ToImmutableDictionary(),
+                //     new ImmutableArray<RuleSetInclude>()));
 
                 var result = await host.RequestCodeCheckAsync("testFile_2.cs");
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
@@ -204,7 +204,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 var testFile = new TestFile("testFile_3.cs", "class _this_is_invalid_test_class_name { int n = true; }");
 
-                var ruleService = host.GetExport<RulesetsForProjects>();
+                // var ruleService = host.GetExport<RulesetsForProjects>();
 
                 var testAnalyzerRef = new TestAnalyzerReference("TS1101");
 
@@ -212,11 +212,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
 
-                ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
-                    "",
-                    new ReportDiagnostic(),
-                    testRules.ToImmutableDictionary(),
-                    new ImmutableArray<RuleSetInclude>()));
+                // ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                //     "",
+                //     new ReportDiagnostic(),
+                //     testRules.ToImmutableDictionary(),
+                //     new ImmutableArray<RuleSetInclude>()));
 
                 var result = await host.RequestCodeCheckAsync("testFile_3.cs");
                 Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -229,7 +229,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             using (var host = GetHost())
             {
                 var testFile = new TestFile("testFile_4.cs", "class _this_is_invalid_test_class_name { int n = true; }");
-                var ruleService = host.GetExport<RulesetsForProjects>();
+                // var ruleService = host.GetExport<RulesetsForProjects>();
 
                 var testAnalyzerRef = new TestAnalyzerReference("TS1101", isEnabledByDefault: false);
 
@@ -237,11 +237,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
 
-                ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
-                    "",
-                    new ReportDiagnostic(),
-                    testRules.ToImmutableDictionary(),
-                    new ImmutableArray<RuleSetInclude>()));
+                // ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
+                //     "",
+                //     new ReportDiagnostic(),
+                //     testRules.ToImmutableDictionary(),
+                //     new ImmutableArray<RuleSetInclude>()));
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));

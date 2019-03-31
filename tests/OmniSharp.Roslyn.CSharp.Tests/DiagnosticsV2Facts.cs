@@ -44,7 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
         private CSharpDiagnosticWorkerWithAnalyzers CreateDiagnosticService(DiagnosticEventForwarder forwarder)
         {
-            return new CSharpDiagnosticWorkerWithAnalyzers(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder, new RulesetsForProjects());
+            return new CSharpDiagnosticWorkerWithAnalyzers(SharedOmniSharpTestHost.Workspace, Enumerable.Empty<ICodeActionProvider>(), this.LoggerFactory, forwarder);
         }
 
         [Theory(Skip = "Test needs to be updated for service changes")]
