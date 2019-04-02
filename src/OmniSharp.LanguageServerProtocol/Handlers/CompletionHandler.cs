@@ -81,7 +81,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 WantKind = true,
                 WantDocumentationForEveryCompletionResult = true,
                 WantReturnType = true,
-                WantSnippet =_capability.CompletionItem.SnippetSupport,
+                WantSnippet =_capability.CompletionItem?.SnippetSupport ?? false
             };
 
             var omnisharpResponse = await _autoCompleteHandler.Handle(omnisharpRequest);
