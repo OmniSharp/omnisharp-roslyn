@@ -90,6 +90,7 @@ Task("Cleanup")
 
 Task("GitVersion")
     .WithCriteria(!BuildSystem.IsLocalBuild)
+    .WithCriteria(!TFBuild.IsRunningOnTFS)
     .Does(() => {
         GitVersion(new GitVersionSettings{
             OutputType = GitVersionOutput.BuildServer
@@ -742,7 +743,7 @@ Task("PublishMonoBuilds")
 
         if (publishAll)
         {
-            foreach (var monoRuntime in env.MonoRuntimes)
+            foreach (var monoRuntime in env.BuildMonoRuntimes)
             {
                 PublishMonoBuildForPlatform(project, monoRuntime, env, buildPlan);
             }
@@ -792,8 +793,8 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
 }
 
 Task("PublishWindowsBuilds")
-    .IsDependentOn("Setup")
     .WithCriteria(() => Platform.Current.IsWindows)
+    .IsDependentOn("Setup")
     .Does(() =>
 {
     foreach (var project in buildPlan.HostProjects)

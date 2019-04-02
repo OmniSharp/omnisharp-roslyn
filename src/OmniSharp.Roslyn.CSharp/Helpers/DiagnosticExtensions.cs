@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using OmniSharp.Models.Diagnostics;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,6 +9,9 @@ namespace OmniSharp.Helpers
 {
     internal static class DiagnosticExtensions
     {
+        private static readonly ImmutableHashSet<string> _tagFilter =
+            ImmutableHashSet.Create<string>("Unnecessary");
+
         internal static DiagnosticLocation ToDiagnosticLocation(this Diagnostic diagnostic)
         {
             var span = diagnostic.Location.GetMappedLineSpan();
@@ -20,6 +24,10 @@ namespace OmniSharp.Helpers
                 EndColumn = span.EndLinePosition.Character,
                 Text = $"{diagnostic.GetMessage()} ({diagnostic.Id})",
                 LogLevel = diagnostic.Severity.ToString(),
+                Tags = diagnostic
+                    .Descriptor.CustomTags
+                    .Where(x => _tagFilter.Contains(x))
+                    .ToArray(),
                 Id = diagnostic.Id
             };
         }
