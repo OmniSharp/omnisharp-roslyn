@@ -40,7 +40,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line),
                 Buffer = request.NewName,
-                WantsTextChanges = true
+                WantsTextChanges = true,
+                ApplyTextChanges = false
             };
 
             var omnisharpResponse = await _renameHandler.Handle(omnisharpRequest);
