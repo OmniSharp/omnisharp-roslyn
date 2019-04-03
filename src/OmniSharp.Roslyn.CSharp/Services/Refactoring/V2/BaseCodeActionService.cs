@@ -98,11 +98,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         private static IEnumerable<AvailableCodeAction> FilterBlacklistedCodeActions(IEnumerable<AvailableCodeAction> codeActions)
         {
             // Most of actions with UI works fine with defaults, however there's few exceptions:
-            return codeActions.Where(x =>
-                x.CodeAction.GetType().Name != "GenerateTypeCodeActionWithOption" &&        // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
-                x.CodeAction.GetType().Name != "ChangeSignatureCodeAction" &&               // Blacklisted because cannot be used without proper UI.
-                x.CodeAction.GetType().Name != "PullMemberUpWithDialogCodeAction"           // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
-            );
+            return codeActions.Where(x => {
+                var actionName = x.CodeAction.GetType().Name;
+
+                return  actionName != "GenerateTypeCodeActionWithOption" &&         // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
+                        actionName != "ChangeSignatureCodeAction" &&                // Blacklisted because cannot be used without proper UI.
+                        actionName != "PullMemberUpWithDialogCodeAction";           // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
+            });
         }
 
         private TextSpan GetTextSpan(ICodeActionRequest request, SourceText sourceText)
