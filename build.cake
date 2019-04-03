@@ -663,7 +663,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     // Copy MSBuild runtime and libraries
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", msbuildFolder);
 
-    var msbuildBinFolder = CombinePaths(msubildFolder, "bin", "15.0");
+    var msbuildBinFolder = CombinePaths(msbuildFolder, "bin", "15.0");
 
     // Copy dependencies of Mono build
     FileHelper.Copy(
