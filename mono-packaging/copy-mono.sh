@@ -170,6 +170,7 @@ _copy_runtime_assets() {
     local mono_lib_path=""
     local mono_etc_path=""
     local libMonoPosixHelper_name=""
+    local libMonoBtlsShared_name=""
 
     if [ "$os" = "$OS_MAC" ]; then
         mono_base_path=/Library/Frameworks/Mono.framework/Versions/Current
@@ -183,14 +184,17 @@ _copy_runtime_assets() {
         mono_lib_path=/usr/lib
         mono_etc_path=/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.so
+        libMonoBtlsShared_name=libmono-btls-shared.so
     fi
 
     local mono_libMonoPosixHelper_path=$mono_lib_path/$libMonoPosixHelper_name
+    local mono_libMonoBtlsShared_path=$mono_lib_path/$libMonoBtlsShared_name
     local mono_config_path=$mono_etc_path/config
     local mono_machine_config_path=$mono_etc_path/4.5/machine.config
 
     _verify_file "$mono_runtime_path"
     _verify_file "$mono_libMonoPosixHelper_path"
+    _verify_file "$mono_libMonoBtlsShared_path"
     _verify_file "$mono_config_path"
     _verify_file "$mono_machine_config_path"
 
@@ -209,11 +213,13 @@ _copy_runtime_assets() {
 
     target_runtime_path=$target_bin_path/mono
     target_libMonoPosixHelper_path=$target_lib_path/$libMonoPosixHelper_name
+    target_libMonoBtlsShared_path=$target_lib_path/$libMonoBtlsShared_name
     target_config_path=$target_etc_path/config
     target_machine_config_path=$target_etc_path/mono/4.5/machine.config
 
     cp "$mono_runtime_path" "$target_runtime_path"
     cp "$mono_libMonoPosixHelper_path" "$target_libMonoPosixHelper_path"
+    cp "$mono_libMonoBtlsShared_path" "$target_libMonoBtlsShared_path"
     cp "$mono_config_path" "$target_config_path"
     cp "$mono_machine_config_path" "$target_machine_config_path"
 
