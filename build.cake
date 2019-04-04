@@ -386,6 +386,26 @@ Task("CreateMSBuildFolder")
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.exe"));
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.exe.config"));
     FileHelper.Delete(CombinePaths(compilersTargetFolder, "vbc.rsp"));
+
+     FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
+        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.batteries_green.dll"),
+        overwrite: true);
 });
 
 /// <summary>
@@ -658,9 +678,33 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
 {
     DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
 
-    // Copy MSBuild runtime and libraries
-    DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
+    var msbuildFolder = CombinePaths(outputFolder, "msbuild");
 
+    // Copy MSBuild runtime and libraries
+    DirectoryHelper.Copy($"{env.Folders.MSBuild}", msbuildFolder);
+
+    var msbuildBinFolder = CombinePaths(msbuildFolder, "bin", "15.0");
+
+    // Copy dependencies of Mono build
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.core.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        overwrite: true);
+
+    FileHelper.Copy(
+        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
+        destination: CombinePaths(msbuildBinFolder, "SQLitePCLRaw.batteries_green.dll"),
+        overwrite: true);
 }
 
 void CopyExtraDependencies(BuildEnvironment env, string outputFolder)
