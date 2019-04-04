@@ -273,7 +273,7 @@ Task("CreateMSBuildFolder")
     {
         Information("Copying MSBuild runtime...");
 
-        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net46");
+        var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
         DirectoryHelper.Copy(msbuildSourceFolder, msbuild15BinTargetFolder, copySubDirectories: false);
 
         var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "15.0");
@@ -284,7 +284,7 @@ Task("CreateMSBuildFolder")
         foreach (var library in msbuildLibraries)
         {
             var libraryFileName = library + ".dll";
-            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net46", libraryFileName);
+            var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
             var libraryTargetPath = CombinePaths(msbuild15BinTargetFolder, libraryFileName);
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
