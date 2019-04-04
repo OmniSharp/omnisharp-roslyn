@@ -25,7 +25,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             }
 
             var extensionsPath = path;
-            var toolsPath = Path.Combine(extensionsPath, "15.0", "Bin");
+            var toolsPath = Path.Combine(extensionsPath, "Current", "Bin");
             var roslynPath = Path.Combine(toolsPath, "Roslyn");
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);

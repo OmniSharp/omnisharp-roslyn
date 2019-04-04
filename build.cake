@@ -256,8 +256,8 @@ Task("CreateMSBuildFolder")
 {
     DirectoryHelper.ForceCreate(env.Folders.MSBuild);
 
-    var msbuild15TargetFolder = CombinePaths(env.Folders.MSBuild, "15.0");
-    var msbuild15BinTargetFolder = CombinePaths(msbuild15TargetFolder, "Bin");
+    var msbuildCurrentTargetFolder = CombinePaths(env.Folders.MSBuild, "Current");
+    var msbuildCurrentBinTargetFolder = CombinePaths(msbuildCurrentTargetFolder, "Bin");
 
     var msbuildLibraries = new []
     {
@@ -274,10 +274,10 @@ Task("CreateMSBuildFolder")
         Information("Copying MSBuild runtime...");
 
         var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
-        DirectoryHelper.Copy(msbuildSourceFolder, msbuild15BinTargetFolder, copySubDirectories: false);
+        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
 
         var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "current");
-        DirectoryHelper.Copy(msbuild15SourceFolder, msbuild15TargetFolder);
+        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
 
         Information("Copying MSBuild libraries...");
 
@@ -285,7 +285,7 @@ Task("CreateMSBuildFolder")
         {
             var libraryFileName = library + ".dll";
             var librarySourcePath = CombinePaths(env.Folders.Tools, library, "lib", "net472", libraryFileName);
-            var libraryTargetPath = CombinePaths(msbuild15BinTargetFolder, libraryFileName);
+            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
 
@@ -296,10 +296,10 @@ Task("CreateMSBuildFolder")
         Information("Copying Mono MSBuild runtime...");
 
         var msbuildSourceFolder = env.Folders.MonoMSBuildRuntime;
-        DirectoryHelper.Copy(msbuildSourceFolder, msbuild15BinTargetFolder, copySubDirectories: false);
+        DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
 
         var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "15.0");
-        DirectoryHelper.Copy(msbuild15SourceFolder, msbuild15TargetFolder);
+        DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
 
         Information("Copying MSBuild libraries...");
 
@@ -307,7 +307,7 @@ Task("CreateMSBuildFolder")
         {
             var libraryFileName = library + ".dll";
             var librarySourcePath = CombinePaths(env.Folders.MonoMSBuildLib, libraryFileName);
-            var libraryTargetPath = CombinePaths(msbuild15BinTargetFolder, libraryFileName);
+            var libraryTargetPath = CombinePaths(msbuildCurrentBinTargetFolder, libraryFileName);
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
 
@@ -317,7 +317,7 @@ Task("CreateMSBuildFolder")
     // Copy MSBuild SDK Resolver and DotNetHostResolver
     Information("Copying MSBuild SDK resolver...");
     var sdkResolverSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.DotNet.MSBuildSdkResolver", "lib", sdkResolverTFM);
-    var sdkResolverTargetFolder = CombinePaths(msbuild15BinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
+    var sdkResolverTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "SdkResolvers", "Microsoft.DotNet.MSBuildSdkResolver");
     DirectoryHelper.ForceCreate(sdkResolverTargetFolder);
     FileHelper.Copy(
         source: CombinePaths(sdkResolverSourceFolder, "Microsoft.DotNet.MSBuildSdkResolver.dll"),
@@ -344,11 +344,11 @@ Task("CreateMSBuildFolder")
 
     FileHelper.Copy(
         source: CombinePaths(nugetBuildTasksBinariesFolder, "NuGet.Build.Tasks.dll"),
-        destination: CombinePaths(msbuild15BinTargetFolder, "NuGet.Build.Tasks.dll"));
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "NuGet.Build.Tasks.dll"));
 
     FileHelper.Copy(
         source: CombinePaths(nugetBuildTasksTargetsFolder, "NuGet.targets"),
-        destination: CombinePaths(msbuild15BinTargetFolder, "NuGet.targets"));
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "NuGet.targets"));
 
     // Copy dependencies of NuGet.Build.Tasks
     var nugetPackages = new []
@@ -358,7 +358,7 @@ Task("CreateMSBuildFolder")
         "NuGet.Configuration",
         "NuGet.Frameworks",
         "NuGet.ProjectModel",
-        "NuGet.Protocol",
+        "NuGet.Protocol",   
         "NuGet.Versioning"
     };
 
@@ -368,13 +368,13 @@ Task("CreateMSBuildFolder")
 
         FileHelper.Copy(
             source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net472", binaryName),
-            destination: CombinePaths(msbuild15BinTargetFolder, binaryName));
+            destination: CombinePaths(msbuildCurrentBinTargetFolder, binaryName));
     }
 
     // Copy content of Microsoft.Net.Compilers
     Information("Copying Microsoft.Net.Compilers...");
     var compilersSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Net.Compilers", "tools");
-    var compilersTargetFolder = CombinePaths(msbuild15BinTargetFolder, "Roslyn");
+    var compilersTargetFolder = CombinePaths(msbuildCurrentBinTargetFolder, "Roslyn");
 
     DirectoryHelper.Copy(compilersSourceFolder, compilersTargetFolder);
 
@@ -389,22 +389,22 @@ Task("CreateMSBuildFolder")
 
      FileHelper.Copy(
         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
-        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.core.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.core.dll"),
         overwrite: true);
 
     FileHelper.Copy(
         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
-        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
         overwrite: true);
 
     FileHelper.Copy(
         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
-        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.batteries_v2.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_v2.dll"),
         overwrite: true);
 
     FileHelper.Copy(
         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
-        destination: CombinePaths(msbuild15BinTargetFolder, "SQLitePCLRaw.batteries_green.dll"),
+        destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_green.dll"),
         overwrite: true);
 });
 
