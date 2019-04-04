@@ -276,7 +276,7 @@ Task("CreateMSBuildFolder")
         var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
         DirectoryHelper.Copy(msbuildSourceFolder, msbuild15BinTargetFolder, copySubDirectories: false);
 
-        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "15.0");
+        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "current");
         DirectoryHelper.Copy(msbuild15SourceFolder, msbuild15TargetFolder);
 
         Information("Copying MSBuild libraries...");
