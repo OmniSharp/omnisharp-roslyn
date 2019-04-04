@@ -339,7 +339,7 @@ Task("CreateMSBuildFolder")
 
     // Copy content of NuGet.Build.Tasks
     var nugetBuildTasksFolder = CombinePaths(env.Folders.Tools, "NuGet.Build.Tasks");
-    var nugetBuildTasksBinariesFolder = CombinePaths(nugetBuildTasksFolder, "lib", "net46");
+    var nugetBuildTasksBinariesFolder = CombinePaths(nugetBuildTasksFolder, "lib", "net472");
     var nugetBuildTasksTargetsFolder = CombinePaths(nugetBuildTasksFolder, "runtimes", "any", "native");
 
     FileHelper.Copy(
@@ -367,7 +367,7 @@ Task("CreateMSBuildFolder")
         var binaryName = nugetPackage + ".dll";
 
         FileHelper.Copy(
-            source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net46", binaryName),
+            source: CombinePaths(env.Folders.Tools, nugetPackage, "lib", "net472", binaryName),
             destination: CombinePaths(msbuild15BinTargetFolder, binaryName));
     }
 
@@ -684,6 +684,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", msbuildFolder);
 
     var msbuildBinFolder = CombinePaths(msbuildFolder, "bin", "15.0");
+    EnsureDirectoryExists(msbuildBinFolder);
 
     // Copy dependencies of Mono build
     FileHelper.Copy(
@@ -727,26 +728,23 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
-    // Copy dependencies of Mono build
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
-        destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
-        overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
-        destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
-        overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
-        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
-        overwrite: true);
-
-    FileHelper.Copy(
-        source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
-        destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_green.dll"),
-        overwrite: true);
+     // Copy dependencies of Mono build
+     FileHelper.Copy(
+         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
+         destination: CombinePaths(outputFolder, "SQLitePCLRaw.core.dll"),
+         overwrite: true);
+     FileHelper.Copy(
+         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.provider.e_sqlite3.net45", "lib", "net45", "SQLitePCLRaw.provider.e_sqlite3.dll"),
+         destination: CombinePaths(outputFolder, "SQLitePCLRaw.provider.e_sqlite3.dll"),
+         overwrite: true);
+     FileHelper.Copy(
+         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_v2.dll"),
+         destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_v2.dll"),
+         overwrite: true);
+     FileHelper.Copy(
+         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
+         destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_green.dll"),
+         overwrite: true);
 
     return outputFolder;
 }
