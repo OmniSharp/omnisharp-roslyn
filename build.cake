@@ -289,7 +289,7 @@ Task("CreateMSBuildFolder")
             FileHelper.Copy(librarySourcePath, libraryTargetPath);
         }
 
-        sdkResolverTFM = "net46";
+        sdkResolverTFM = "net472";
     }
     else
     {
