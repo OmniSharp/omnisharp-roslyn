@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -145,6 +146,21 @@ namespace OmniSharp.MSBuild.Tests
                 var libpath = string.Format($"{Path.Combine(testProject.Directory, "ExternAlias.App")}{Path.DirectorySeparatorChar}../ExternAlias.Lib/bin/Debug/netstandard2.0/ExternAlias.Lib.dll");
                 Assert.True(projectFileInfo.ReferenceAliases.ContainsKey(libpath));
                 Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
+            }
+        }
+
+        [Fact]
+        public async Task ProjectInfoContainRulesetInformation()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectWithRulesets"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "ProjectWithRulesets.csproj");
+
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+
+                Assert.NotNull(projectFileInfo?.RuleSet);
+                Assert.Contains(projectFileInfo.RuleSet.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
             }
         }
     }
