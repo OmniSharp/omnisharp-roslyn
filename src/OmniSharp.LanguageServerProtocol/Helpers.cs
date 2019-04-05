@@ -96,12 +96,26 @@ namespace OmniSharp.LanguageServerProtocol
             return new Position(location.line, location.column);
         }
 
+        public static Position ToPosition(OmniSharp.Models.V2.Point point)
+        {
+            return new Position(point.Line, point.Column);
+        }
+
         public static Range ToRange((int column, int line) start, (int column, int line) end)
         {
             return new Range()
             {
                 Start = new Position(start.line, start.column),
                 End = new Position(end.line, end.column)
+            };
+        }
+
+        public static Range ToRange(OmniSharp.Models.V2.Range range)
+        {
+            return new Range()
+            {
+                Start = ToPosition(range.Start),
+                End = ToPosition(range.End)
             };
         }
     }

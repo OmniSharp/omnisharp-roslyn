@@ -57,19 +57,20 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             var edits = changes.Values.SelectMany(edit => edit.ToList());
 
-            var documentEdits = omnisharpResponse.Changes.Select(x => new TextDocumentEdit
-            {
-                Edits = new Container<TextEdit>(edits),
-                TextDocument = new VersionedTextDocumentIdentifier
+            var documentEdits = omnisharpResponse.Changes.Select(x => new WorkspaceEditDocumentChange(
+                new TextDocumentEdit
                 {
-                    Uri = Helpers.ToUri(x.FileName)
-                }
-            });
+                    Edits = new Container<TextEdit>(edits),
+                    TextDocument = new VersionedTextDocumentIdentifier
+                    {
+                        Uri = Helpers.ToUri(x.FileName)
+                    }
+                }));
 
             return new WorkspaceEdit
             {
                 Changes = changes,
-                DocumentChanges = new Container<TextDocumentEdit>(documentEdits)
+                DocumentChanges = new Container<WorkspaceEditDocumentChange>(documentEdits)
             };
         }
 

@@ -2,7 +2,13 @@
 All changes to the project will be documented in this file.
 
 ## [1.32.12] - not released yet
-* Include constant values in `/typelookup` responses ([omnisharp-vscode#2857](https://github.com/OmniSharp/omnisharp-vscode/issues/2857), PR: [#1420](https://github.com/OmniSharp/omnisharp-roslyn/pull/1420))
+* Added experimental support for Roslyn analyzers and code fixes (PR: [#1076](https://github.com/OmniSharp/omnisharp-roslyn/pull/1076))
+* Included constant values in `/typelookup` responses ([omnisharp-vscode#2857](https://github.com/OmniSharp/omnisharp-vscode/issues/2857), PR: [#1420](https://github.com/OmniSharp/omnisharp-roslyn/pull/1420))
+* Fixed transient documents not disappearing on project update  (PR: [#1159](https://github.com/OmniSharp/omnisharp-roslyn/pull/1159))
+* When fixing usings, return namespaces associated with ambiguous result (PR: [#1169](https://github.com/OmniSharp/omnisharp-roslyn/pull/1169))
+* Fixed refusing HTTP connections ([#1274](https://github.com/OmniSharp/omnisharp-roslyn/issues/1274), PR: [#1361](https://github.com/OmniSharp/omnisharp-roslyn/pull/1361))
+* Fixed find references for indexer properties (PR: [#1399](https://github.com/OmniSharp/omnisharp-roslyn/pull/1399))
+* Added Roslyn 'tags' to diagnostic response (PR: [#1410](https://github.com/OmniSharp/omnisharp-roslyn/pull/1410))
 
 ## [1.32.11] - 2019-02-27
 * Updated to Roslyn `3.0.0-beta4-19126-05` to match VS 16.0p4 ([#1413](https://github.com/OmniSharp/omnisharp-roslyn/issues/1413), PR: [#1414](https://github.com/OmniSharp/omnisharp-roslyn/pull/1414))
