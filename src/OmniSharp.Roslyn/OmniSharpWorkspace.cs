@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -154,6 +155,19 @@ namespace OmniSharp
                     }
                 }
             }
+        }
+
+        public void UpdateRulesetsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> newRules)
+        {
+            var project = this.CurrentSolution.GetProject(projectId);
+            var existingRules = project.CompilationOptions.SpecificDiagnosticOptions;
+            var distinctRulesWithProjectSpecificRules = newRules.Concat(existingRules.Where(x => !newRules.Keys.Contains(x.Key)));
+
+            var updatedProject = project.WithCompilationOptions(
+                project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules)
+            );
+
+            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules));
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
@@ -386,6 +400,6 @@ namespace OmniSharp
         private Task OnWaitForProjectModelReadyAsync(string filePath)
         {
             return Task.WhenAll(_waitForProjectModelReadyHandlers.Select(h => h(filePath)));
-        }  
+        }
     }
 }

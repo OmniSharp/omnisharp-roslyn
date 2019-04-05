@@ -151,9 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectId = AddProjectWitFile(host, testFile);
                 var testRules = CreateRules("CS0162", ReportDiagnostic.Hidden);
 
-                var project = host.Workspace.CurrentSolution.GetProject(projectId);
-
-                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync();
 
@@ -173,9 +171,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
 
-                var project = host.Workspace.CurrentSolution.GetProject(projectId);
-
-                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_2.cs");
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
@@ -204,9 +200,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
 
-                var project = host.Workspace.CurrentSolution.GetProject(projectId);
-
-                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_3.cs");
                 Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -226,9 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
 
-                var project = host.Workspace.CurrentSolution.GetProject(projectId);
-
-                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -245,17 +237,15 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var testAnalyzerRef = new TestAnalyzerReference("TS1101", isEnabledByDefault: false);
 
                 var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
-                var project = host.Workspace.CurrentSolution.GetProject(projectId);
 
                 var testRulesOriginal = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
-                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRulesOriginal.ToImmutableDictionary());
+                host.Workspace.UpdateRulesetsForProject(projectId, testRulesOriginal.ToImmutableDictionary());
                 await host.RequestCodeCheckAsync("testFile_4.cs");
 
                 var testRulesUpdated = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
-                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRulesUpdated.ToImmutableDictionary());
+                host.Workspace.UpdateRulesetsForProject(projectId, testRulesUpdated.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
-                var foobar = result.QuickFixes.ToList();
                 Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
             }
         }

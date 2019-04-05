@@ -430,12 +430,13 @@ namespace OmniSharp.MSBuild
             }
 
             UpdateSourceFiles(project, projectFileInfo.SourceFiles);
-            UpdateProjectWithRulesets(project, projectFileInfo);
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
+
+            UpdateProjectWithRulesets(project, projectFileInfo);
         }
 
         private void UpdateProjectWithRulesets(Project project, ProjectFileInfo projectFileInfo)
@@ -443,7 +444,7 @@ namespace OmniSharp.MSBuild
             if (projectFileInfo.RuleSet?.SpecificDiagnosticOptions == null)
                 return;
 
-            RulesetUtils.UpdateProjectWithRulesets(_workspace, project, projectFileInfo.RuleSet.SpecificDiagnosticOptions);
+            _workspace.UpdateRulesetsForProject(project.Id, projectFileInfo.RuleSet.SpecificDiagnosticOptions);
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
