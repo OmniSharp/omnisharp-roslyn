@@ -168,7 +168,6 @@ namespace OmniSharp
             );
 
             OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules));
-            //await RaiseWorkspaceChangedEventAsync(WorkspaceChangeKind.ProjectChanged, CurrentSolution, CurrentSolution, projectId);
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
