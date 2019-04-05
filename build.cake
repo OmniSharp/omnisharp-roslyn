@@ -406,6 +406,12 @@ Task("CreateMSBuildFolder")
         source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
         destination: CombinePaths(msbuildCurrentBinTargetFolder, "SQLitePCLRaw.batteries_green.dll"),
         overwrite: true);
+
+    var msbuild15TargetFolder = CombinePaths(env.Folders.MSBuild, "15.0");
+    if (!Platform.Current.IsWindows)
+    {
+        DirectoryHelper.Copy(msbuildCurrentTargetFolder, msbuild15TargetFolder);
+    }
 });
 
 /// <summary>
