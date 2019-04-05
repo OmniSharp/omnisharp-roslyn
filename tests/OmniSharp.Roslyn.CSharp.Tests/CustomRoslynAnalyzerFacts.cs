@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -237,13 +238,17 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var testAnalyzerRef = new TestAnalyzerReference("TS1101", isEnabledByDefault: false);
 
                 var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
-
                 var testRulesOriginal = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
                 host.Workspace.UpdateRulesetsForProject(projectId, testRulesOriginal.ToImmutableDictionary());
                 await host.RequestCodeCheckAsync("testFile_4.cs");
 
-                var testRulesUpdated = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
+                var testRulesUpdated = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
+
+                var workspaceUpdatedCheck = new AutoResetEvent(false);
+                host.Workspace.WorkspaceChanged += (_, e) => { if (e.Kind == WorkspaceChangeKind.ProjectChanged) { workspaceUpdatedCheck.Set(); } };
                 host.Workspace.UpdateRulesetsForProject(projectId, testRulesUpdated.ToImmutableDictionary());
+
+                Assert.True(workspaceUpdatedCheck.WaitOne(timeout: TimeSpan.FromSeconds(3)));
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -255,7 +260,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var analyzerReferences = testAnalyzerRef == null ? default :
                 new AnalyzerReference[] { testAnalyzerRef }.ToImmutableArray();
 
-            return  TestHelpers.AddProjectToWorkspace(
+            return TestHelpers.AddProjectToWorkspace(
                             host.Workspace,
                             "project.csproj",
                             new[] { "netcoreapp2.1" },
