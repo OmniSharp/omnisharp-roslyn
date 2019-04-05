@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
     <ProjectReference Include="..\TestUtility\TestUtility.csproj" />
   </ItemGroup>

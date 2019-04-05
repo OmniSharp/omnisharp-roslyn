@@ -443,20 +443,7 @@ namespace OmniSharp.MSBuild
             if (projectFileInfo.RuleSet?.SpecificDiagnosticOptions == null)
                 return;
 
-            var existingRules = project.CompilationOptions.SpecificDiagnosticOptions;
-            var newRules = projectFileInfo.RuleSet.SpecificDiagnosticOptions;
-            var distinctRulesWithProjectSpecificRules = newRules.Concat(existingRules.Where(x => !newRules.Keys.Contains(x.Key)));
-
-            var updatedProject = project.WithCompilationOptions(
-                project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules)
-            );
-
-            var updatedSolution = _workspace
-                .CurrentSolution
-                .WithProjectCompilationOptions(
-                    project.Id, project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules));
-
-            _workspace.TryApplyChanges(updatedSolution);
+            RulesetUtils.UpdateProjectWithRulesets(_workspace, project, projectFileInfo.RuleSet.SpecificDiagnosticOptions);
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)

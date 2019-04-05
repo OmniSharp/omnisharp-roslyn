@@ -60,7 +60,7 @@ namespace OmniSharp.MSBuild
             globalProperties.AddPropertyOverride(PropertyNames.Platform, options.Platform, propertyOverrides, logger);
 
             if (propertyOverrides.TryGetValue(PropertyNames.BypassFrameworkInstallChecks, out var value))
-            {
+                {
                 globalProperties.Add(PropertyNames.BypassFrameworkInstallChecks, value);
             }
 
