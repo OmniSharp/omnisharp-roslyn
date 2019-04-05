@@ -153,13 +153,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged )
+                || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged)
             {
                 QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
             }
-            else if(changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved)
+            else if (changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved)
             {
                 _currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _);
+            }
+            else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded
+                || changeEvent.Kind == WorkspaceChangeKind.ProjectChanged
+                || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
+            {
+                _logger.LogInformation($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
+                var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
+                QueueForAnalysis(projectDocumentIds);
             }
         }
 

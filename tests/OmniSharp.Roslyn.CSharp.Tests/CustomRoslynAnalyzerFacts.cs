@@ -235,6 +235,31 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             }
         }
 
+        [Fact]
+        public async Task WhenDiagnosticsRulesAreUpdated_ThenReAnalyzerFilesInProject()
+        {
+            using (var host = GetHost())
+            {
+                var testFile = new TestFile("testFile_4.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+
+                var testAnalyzerRef = new TestAnalyzerReference("TS1101", isEnabledByDefault: false);
+
+                var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
+                var project = host.Workspace.CurrentSolution.GetProject(projectId);
+
+                var testRulesOriginal = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
+                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRulesOriginal.ToImmutableDictionary());
+                await host.RequestCodeCheckAsync("testFile_4.cs");
+
+                var testRulesUpdated = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
+                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRulesUpdated.ToImmutableDictionary());
+
+                var result = await host.RequestCodeCheckAsync("testFile_4.cs");
+                var foobar = result.QuickFixes.ToList();
+                Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
+            }
+        }
+
         private ProjectId AddProjectWitFile(OmniSharpTestHost host, TestFile testFile, TestAnalyzerReference testAnalyzerRef = null)
         {
             var analyzerReferences = testAnalyzerRef == null ? default :

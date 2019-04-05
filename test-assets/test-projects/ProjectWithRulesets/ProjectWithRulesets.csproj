@@ -6,5 +6,4 @@
     <LangVersion>7.1</LangVersion>
     <CodeAnalysisRuleSet>default.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
 </Project>
