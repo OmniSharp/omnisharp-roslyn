@@ -219,19 +219,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             using (var host = GetHost())
             {
                 var testFile = new TestFile("testFile_4.cs", "class _this_is_invalid_test_class_name { int n = true; }");
-                // var ruleService = host.GetExport<RulesetsForProjects>();
 
                 var testAnalyzerRef = new TestAnalyzerReference("TS1101", isEnabledByDefault: false);
 
-                var projectIds = AddProjectWitFile(host, testFile, testAnalyzerRef);
+                var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
 
-                // ruleService.AddOrUpdateRuleset(projectIds.Single(), new RuleSet(
-                //     "",
-                //     new ReportDiagnostic(),
-                //     testRules.ToImmutableDictionary(),
-                //     new ImmutableArray<RuleSetInclude>()));
+                var project = host.Workspace.CurrentSolution.GetProject(projectId);
+
+                RulesetUtils.UpdateProjectWithRulesets(host.Workspace, project, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
