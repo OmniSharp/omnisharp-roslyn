@@ -276,7 +276,7 @@ Task("CreateMSBuildFolder")
         var msbuildSourceFolder = CombinePaths(env.Folders.Tools, "Microsoft.Build.Runtime", "contentFiles", "any", "net472");
         DirectoryHelper.Copy(msbuildSourceFolder, msbuildCurrentBinTargetFolder, copySubDirectories: false);
 
-        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "current");
+        var msbuild15SourceFolder = CombinePaths(msbuildSourceFolder, "Current");
         DirectoryHelper.Copy(msbuild15SourceFolder, msbuildCurrentTargetFolder);
 
         Information("Copying MSBuild libraries...");
@@ -636,8 +636,7 @@ Task("Test")
         foreach (var testProject in buildPlan.TestProjects)
         {
             PrintBlankLine();
-
-            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net461");
+            var instanceFolder = CombinePaths(env.Folders.Bin, configuration, testProject, "net472");
 
             // Copy xunit executable to test folder to solve path errors
             var xunitToolsFolder = CombinePaths(env.Folders.Tools, "xunit.runner.console", "tools", "net452");
@@ -651,7 +650,7 @@ Task("Test")
             if (Platform.Current.IsWindows)
             {
                 Run(xunitInstancePath, arguments, instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net461");
+                    .ExceptionOnError($"Test {testProject} failed for net472");
             }
             else
             {
@@ -664,7 +663,7 @@ Task("Test")
                 // By default, the run script launches OmniSharp. To launch our Mono runtime
                 // with xUnit rather than OmniSharp, we pass '--no-omnisharp'
                 Run(runScript, $"--no-omnisharp \"{xunitInstancePath}\" {arguments}", instanceFolder)
-                    .ExceptionOnError($"Test {testProject} failed for net461");
+                    .ExceptionOnError($"Test {testProject} failed for net472");
             }
         }
     }
