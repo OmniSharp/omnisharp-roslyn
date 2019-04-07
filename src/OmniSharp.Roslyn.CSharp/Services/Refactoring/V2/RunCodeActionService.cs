@@ -171,7 +171,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                             var newFilePath = GetNewFilePath(newDocument.Name, oldDocument.FilePath);
                             var text = await oldDocument.GetTextAsync();
                             var temp = solution.RemoveDocument(documentId);
-                            solution = temp.AddDocument(documentId, newDocument.Name, text, oldDocument.Folders, newFilePath);
+                            solution = temp.AddDocument(DocumentId.CreateNewId(oldDocument.Project.Id, newDocument.Name), newDocument.Name, text, oldDocument.Folders, newFilePath);
 
                             filePathToResponseMap[filePath] = new RenamedFileResponse(oldDocument.FilePath, newFilePath);
                             filePathToResponseMap[newFilePath] = new OpenFileResponse(newFilePath);
