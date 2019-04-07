@@ -67,10 +67,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             {
                 if (o is ApplyChangesOperation applyChangesOperation)
                 {
-                    var fileChanges = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges, request.WantsAllCodeActionOperations);
+                    var fileChangesResult = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges, request.WantsAllCodeActionOperations);
 
-                    changes.AddRange(fileChanges);
-                    solution = this.Workspace.CurrentSolution;
+                    changes.AddRange(fileChangesResult.FileChanges);
+                    solution = fileChangesResult.Solution;
                 }
 
                 if (request.WantsAllCodeActionOperations)
@@ -95,8 +95,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             };
         }
 
-        private async Task<IEnumerable<FileOperationResponse>> GetFileChangesAsync(Solution newSolution, Solution oldSolution, string directory, bool wantTextChanges, bool wantsAllCodeActionOperations)
+        private async Task<(Solution Solution, IEnumerable<FileOperationResponse> FileChanges)> GetFileChangesAsync(Solution newSolution, Solution oldSolution, string directory, bool wantTextChanges, bool wantsAllCodeActionOperations)
         {
+            var solution = oldSolution;
             var filePathToResponseMap = new Dictionary<string, FileOperationResponse>();
             var solutionChanges = newSolution.GetChanges(oldSolution);
 
@@ -146,6 +147,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                         }
 
                         this.Workspace.AddDocument(documentId, projectChange.ProjectId, newFilePath, newDocument.SourceCodeKind);
+                        solution = this.Workspace.CurrentSolution;
                     }
                     else
                     {
@@ -166,7 +168,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                     {
                         if (wantsAllCodeActionOperations)
                         {
-                            var newFilePath = Path.Combine(directory, newDocument.Name);
+                            var newFilePath = GetNewFilePath(newDocument.Name, oldDocument.FilePath);
+                            var text = await oldDocument.GetTextAsync();
+                            var temp = solution.RemoveDocument(documentId);
+                            solution = temp.AddDocument(documentId, newDocument.Name, text, oldDocument.Folders, newFilePath);
+
                             filePathToResponseMap[filePath] = new RenamedFileResponse(oldDocument.FilePath, newFilePath);
                             filePathToResponseMap[newFilePath] = new OpenFileResponse(newFilePath);
                         }
@@ -198,7 +204,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 }
             }
 
-            return filePathToResponseMap.Values;
+            return (solution, filePathToResponseMap.Values);
+        }
+
+        private static string GetNewFilePath(string newFileName, string currentFilePath)
+        {
+            var directory = Path.GetDirectoryName(currentFilePath);
+            return Path.Combine(directory, newFileName);
         }
     }
 }
