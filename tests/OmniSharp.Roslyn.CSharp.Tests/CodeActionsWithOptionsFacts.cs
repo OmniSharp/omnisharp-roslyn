@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -106,27 +107,27 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public string PropertyHere { get; set; }
                 }";
 
-            // Be aware that if used with newer .NET framework than omnisharp uses (4.6).
-            // this will result more modern result with HashCode.Combine(PropertyHere);
-            const string expected =
-                @"
+            var hashCodeImplementation = Environment.Version.Major >= 4 && Environment.Version.Minor > 6 ?
+                "HashCode.Combine(PropertyHere)" : "1887327142 + EqualityComparer<string>.Default.GetHashCode(PropertyHere)";
+
+            string expected =
+                $@"
                 using System.Collections.Generic;
                 public class Class1
-                {
-                    public string PropertyHere { get; set; }
+                {{
+                    public string PropertyHere {{ get; set; }}
                     public override bool Equals(object obj)
-                    {
+                    {{
                         return obj is Class1 @class &&
                            PropertyHere == @class.PropertyHere;
-                    }
+                    }}
                     public override int GetHashCode()
-                    {
-                        return 1887327142 + EqualityComparer<string>.Default.GetHashCode(PropertyHere);
-                    }
-                }
+                    {{
+                        return {hashCodeImplementation};
+                    }}
+                }}
                 ";
             var response = await RunRefactoringAsync(code, "Generate Equals and GetHashCode...");
-
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
