@@ -2,8 +2,8 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <MSBuildPackageVersion>15.8.166</MSBuildPackageVersion>
-    <NuGetPackageVersion>4.8.0</NuGetPackageVersion>
+    <MSBuildPackageVersion>16.0.461</MSBuildPackageVersion>
+    <NuGetPackageVersion>5.0.0-rtm.5856</NuGetPackageVersion>
     <RoslynPackageVersion>3.0.0-beta4-19126-05</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
@@ -67,7 +67,7 @@
     <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
     <PackageReference Update="System.Composition" Version="1.0.31" />
     <PackageReference Update="System.Reflection.Metadata" Version="1.4.2" />
-    <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.5.24" />
+    <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.9.0" />
     <PackageReference Update="System.ValueTuple" Version="4.4.0" />
 
     <PackageReference Update="System.Reactive" Version="4.1.2" />
