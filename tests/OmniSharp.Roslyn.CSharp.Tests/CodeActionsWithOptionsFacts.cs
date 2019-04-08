@@ -107,12 +107,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public string PropertyHere { get; set; }
                 }";
 
-            var hashCodeImplementation = Environment.Version.Major >= 4 && Environment.Version.Minor > 6 ?
+            var is472OrNewer = Environment.Version.Major >= 4 && Environment.Version.Minor > 6;
+
+            var hashCodeImplementation = is472OrNewer ?
                 "HashCode.Combine(PropertyHere)" : "1887327142 + EqualityComparer<string>.Default.GetHashCode(PropertyHere)";
 
             string expected =
                 $@"
+                {(is472OrNewer ? "using System;" : "")}
                 using System.Collections.Generic;
+
                 public class Class1
                 {{
                     public string PropertyHere {{ get; set; }}
