@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
@@ -20,6 +20,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit" />
     <PackageReference Include="Microsoft.Build" ExcludeAssets="Runtime" PrivateAssets="all" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
