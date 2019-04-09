@@ -28,8 +28,7 @@ namespace OmniSharp.Stdio.Logging
                 }
             };
 
-            // don't block the logger
-            _writer.WriteLineAsync(packet);
+            _writer.WriteLine(packet);
         }
     }
 }
