@@ -1,6 +1,6 @@
 language: csharp
 sudo: required
-dist: trusty
+dist: xenial
 env:
   global:
   - secure: m2PtYwYOhaK0uFMZ19ZxApZwWZeAIq1dS//jx/5I3txpIWD+TfycQMAWYxycFJ/GJkeVF29P4Zz1uyS2XKKjPJpp2Pds98FNQyDv3OftpLAVa0drsjfhurVlBmSdrV7GH6ncKfvhd+h7KVK5vbZc+NeR4dH7eNvN/jraS//AMJg=
@@ -82,15 +82,15 @@ before_deploy:
   # Only deploy OSX-specific OmniSharp from the OSX.
   # All other builds should be deployed by Linux CI.
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    rm artifacts/package/omnisharp-osx.tar.gz
-    rm artifacts/package/omnisharp-osx.zip
+    rm -f artifacts/package/omnisharp-osx.tar.gz
+    rm -f artifacts/package/omnisharp-osx.zip
   elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    rm artifacts/package/mono.tar.gz
-    rm artifacts/package/mono.zip
-    rm artifacts/package/omnisharp-linux-x86.tar.gz
-    rm artifacts/package/omnisharp-linux-x64.tar.gz
-    rm artifacts/package/omnisharp-linux-x86.zip
-    rm artifacts/package/omnisharp-linux-x64.zip
+    rm -f artifacts/package/mono.tar.gz
+    rm -f artifacts/package/mono.zip
+    rm -f artifacts/package/omnisharp-linux-x86.tar.gz
+    rm -f artifacts/package/omnisharp-linux-x64.tar.gz
+    rm -f artifacts/package/omnisharp-linux-x86.zip
+    rm -f artifacts/package/omnisharp-linux-x64.zip
   fi
 deploy:
   provider: releases
