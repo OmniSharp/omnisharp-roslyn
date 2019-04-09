@@ -189,7 +189,7 @@ _copy_runtime_assets() {
         mono_etc_path=/etc/mono
         libMonoPosixHelper_name=libMonoPosixHelper.so
         libMonoBtlsShared_name=libmono-btls-shared.so
-        libMonoSystemNative_name=libmono-system-native.so.0.0.0.dylib
+        libMonoSystemNative_name=libmono-system-native.so.0.0.0.so
         libMonoSystemNative_target_name=libmono-system-native.so
     fi
 
