@@ -170,12 +170,9 @@ _copy_runtime_assets() {
     local mono_lib_path=""
     local mono_etc_path=""
     local libMonoPosixHelper_name=""
-<<<<<<< HEAD
-=======
     local libMonoBtlsShared_name=""
     local libMonoSystemNative_name=""
     local libMonoSystemNative_target_name=""
->>>>>>> e044ff96... Copy libmonosystemnative
 
     if [ "$os" = "$OS_MAC" ]; then
         mono_base_path=/Library/Frameworks/Mono.framework/Versions/Current
