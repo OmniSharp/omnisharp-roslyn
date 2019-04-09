@@ -6,6 +6,8 @@
     <RootNamespace>OmniSharp</RootNamespace>
   </PropertyGroup>
 
+  <Import Project="../../build/netfx.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
     <ProjectReference Include="..\OmniSharp.Roslyn\OmniSharp.Roslyn.csproj" />

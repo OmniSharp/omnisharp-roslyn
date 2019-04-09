@@ -6,6 +6,8 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
+  <Import Project="../../build/netfx.props" />
+
   <ItemGroup>
     <None Include="..\app.config" Link="app.config" />
   </ItemGroup>

@@ -5,6 +5,8 @@
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
+    <Import Project="../../build/netfx.props" />
+
     <ItemGroup>
         <ProjectReference Include="..\OmniSharp.LanguageServerProtocol\OmniSharp.LanguageServerProtocol.csproj" />
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />

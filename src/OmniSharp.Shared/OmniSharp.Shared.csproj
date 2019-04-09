@@ -6,6 +6,8 @@
         <RootNamespace>OmniSharp</RootNamespace>
     </PropertyGroup>
 
+    <Import Project="../../build/netfx.props" />
+
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Configuration" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />

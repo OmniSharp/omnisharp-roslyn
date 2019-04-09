@@ -5,6 +5,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
+  <Import Project="../../build/netfx.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />

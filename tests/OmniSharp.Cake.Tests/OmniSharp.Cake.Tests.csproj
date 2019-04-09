@@ -6,6 +6,8 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
+  <Import Project="../../build/netfx.props" />
+
   <ItemGroup>
     <EmbeddedResource Include="TestAssets\single.cake.g.txt" />
     <EmbeddedResource Include="TestAssets\single.cake.txt" />
