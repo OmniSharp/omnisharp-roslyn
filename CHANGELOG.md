@@ -1,6 +1,11 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.16] - net released yet
+* Enabled outline support from LSP (PR: [#1411](https://github.com/OmniSharp/omnisharp-roslyn/pull/1411))
+* .NET Core 3 support (PR: [#1450](https://github.com/OmniSharp/omnisharp-roslyn/pull/1450))
+* Upgraded to Microsoft.CodeAnalysis 3.1 (PR: [#1448](https://github.com/OmniSharp/omnisharp-roslyn/pull/1448))
+
 ## [1.32.12] - not released yet
 * Added experimental support for Roslyn analyzers and code fixes (PR: [#1076](https://github.com/OmniSharp/omnisharp-roslyn/pull/1076))
 * Included constant values in `/typelookup` responses ([omnisharp-vscode#2857](https://github.com/OmniSharp/omnisharp-vscode/issues/2857), PR: [#1420](https://github.com/OmniSharp/omnisharp-roslyn/pull/1420))
