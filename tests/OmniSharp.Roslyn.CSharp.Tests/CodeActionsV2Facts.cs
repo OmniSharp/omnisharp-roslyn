@@ -256,6 +256,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.Equal(2, changes.Length);
                 Assert.Equal(FileModificationType.Renamed, changes[0].ModificationType);
                 Assert.Contains("Class1.cs", ((RenamedFileResponse)changes[0]).NewFileName);
+                Assert.False(File.Exists(((RenamedFileResponse)changes[0]).FileName), "The old renamed file exists - even though it should not.");
+                Assert.True(File.Exists(((RenamedFileResponse)changes[0]).NewFileName), "The new renamed file doesn't exist - even though it should.");
                 Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
             }
         }
