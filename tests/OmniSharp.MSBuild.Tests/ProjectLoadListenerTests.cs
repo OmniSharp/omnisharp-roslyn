@@ -37,15 +37,14 @@ namespace OmniSharp.MSBuild.Tests
             // Arrange
 
             const string targetFramework = "net461";
-            var expectedTFM = GetHashedTargetFramework(targetFramework);
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
             projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
 
             // Act
-            var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);
+            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
 
             // Assert
-            Assert.Equal(expectedTFM, tfm.First().Value);
+            Assert.Equal(targetFramework, tfm.First());
         }
 
         [Fact]
@@ -53,15 +52,14 @@ namespace OmniSharp.MSBuild.Tests
         {
             // Arrange
             const string targetFramework = "v4.6.1";
-            var expectedTFM = GetHashedTargetFramework(targetFramework);
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
             projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, targetFramework);
 
             // Act
-            var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);
+            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
 
             // Assert
-            Assert.Equal(expectedTFM, tfm.First().Value);
+            Assert.Equal(targetFramework, tfm.First());
         }
 
         [Fact]
@@ -69,16 +67,15 @@ namespace OmniSharp.MSBuild.Tests
         {
             // Arrange
             const string targetFramework = "v4.6.1";
-            var expectedTFM = GetHashedTargetFramework(targetFramework);
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
             projectInstance.SetProperty(ProjectLoadListener.TargetFramework, targetFramework);
             projectInstance.SetProperty(ProjectLoadListener.TargetFrameworkVersion, "Unexpected");
 
             // Act
-            var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);
+            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
 
             // Assert
-            Assert.Equal(expectedTFM, tfm.First().Value);
+            Assert.Equal(targetFramework, tfm.First());
         }
 
         [Fact]
@@ -88,7 +85,7 @@ namespace OmniSharp.MSBuild.Tests
             var projectInstance = new ProjectInstance(ProjectRootElement.Create());
 
             // Act
-            var tfm = ProjectLoadListener.GetHashedTargetFrameworks(projectInstance);
+            var tfm = ProjectLoadListener.GetTargetFrameworks(projectInstance);
 
             // Assert
             Assert.Empty(tfm);
@@ -98,7 +95,7 @@ namespace OmniSharp.MSBuild.Tests
         public async Task The_target_framework_is_emitted()
         {
             // Arrange
-            var expectedTFM = GetHashedTargetFramework("netcoreapp2.1");
+            var expectedTFM = "netcoreapp2.1";
             var messages = new List<ProjectConfigurationMessage>();
             var emitter = new ProjectLoadTestEventEmitter(messages);
 
@@ -134,7 +131,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var expectedGuid = "A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower();
                 Assert.Single(messages);
-                Assert.Equal(messages[0].ProjectGuid, expectedGuid);
+                Assert.Equal(messages[0].ProjectId, expectedGuid);
             }
         }
 
@@ -157,7 +154,7 @@ namespace OmniSharp.MSBuild.Tests
                 var projectFileContent = File.ReadAllText(Directory.GetFiles(testProject.Directory, "*.csproj").Single());
                 var expectedGuid = GetHashedReference($"Filename: HelloWorld.csproj\n{projectFileContent}");
                 Assert.Single(messages);
-                Assert.Equal(messages[0].ProjectGuid, expectedGuid);
+                Assert.Equal(messages[0].ProjectId, expectedGuid);
             }
         }
 
@@ -205,8 +202,8 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Single(messages);
                 var tfm = messages[0].TargetFrameworks.ToArray();
                 Assert.Equal(2, tfm.Count());
-                Assert.Equal(tfm[0], GetHashedTargetFramework("netstandard1.3"));
-                Assert.Equal(tfm[1], GetHashedTargetFramework("netstandard2.0"));
+                Assert.Equal("netstandard1.3", tfm[0]);
+                Assert.Equal("netstandard2.0",tfm[1]);
             }
         }
 
@@ -230,11 +227,6 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Single(messages[0].FileExtensions);
                 Assert.Equal(messages[0].FileExtensions.First(), GetHashedFileExtension(".cs"));
             }
-        }
-
-        private string GetHashedTargetFramework(string targetFramework)
-        {
-            return _tfmAndFileHashingAlgorithm.HashInput(targetFramework).Value;
         }
 
         private string GetHashedFileExtension(string fileExtension)
