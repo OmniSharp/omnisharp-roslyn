@@ -19,7 +19,12 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             if (projectFileInfo.AllowUnsafeCode)
             {
-                result = result.WithAllowUnsafe(true);
+                result = result.WithAllowUnsafe(true).WithGeneralDiagnosticOption(ReportDiagnostic.Error);
+            }
+
+            if (projectFileInfo.TreatWarningsAsErrors)
+            {
+                result = result.WithGeneralDiagnosticOption(ReportDiagnostic.Error);
             }
 
             if (projectFileInfo.NullableContextOptions != result.NullableContextOptions)
