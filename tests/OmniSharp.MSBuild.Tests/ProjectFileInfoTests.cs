@@ -57,7 +57,7 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("obj/Debug/netcoreapp2.1/", projectFileInfo.IntermediateOutputPath.EnsureForwardSlashes());
                 Assert.Equal(3, projectFileInfo.SourceFiles.Length); // Program.cs, AssemblyInfo.cs, AssemblyAttributes.cs
                 Assert.Equal(LanguageVersion.CSharp7_1, projectFileInfo.LanguageVersion);
-                Assert.Equal(true, projectFileInfo.TreatWarningsAsErrors);
+                Assert.True(projectFileInfo.TreatWarningsAsErrors);
                 Assert.Equal("Debug", projectFileInfo.Configuration);
                 Assert.Equal("AnyCPU", projectFileInfo.Platform);
 
