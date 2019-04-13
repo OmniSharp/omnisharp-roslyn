@@ -683,7 +683,7 @@ void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolde
 {
     DirectoryHelper.Copy(sourceFolder, outputFolder, copySubDirectories: false);
 
-    var msbuildFolder = CombinePaths(outputFolder, "msbuild");
+    var msbuildFolder = CombinePaths(outputFolder, ".msbuild");
 
     // Copy MSBuild runtime and libraries
     DirectoryHelper.Copy($"{env.Folders.MSBuild}", msbuildFolder);
@@ -830,7 +830,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     }
 
     // Copy MSBuild to output
-    DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, "msbuild"));
+    DirectoryHelper.Copy($"{env.Folders.MSBuild}", CombinePaths(outputFolder, ".msbuild"));
 
     CopyExtraDependencies(env, outputFolder);
 
