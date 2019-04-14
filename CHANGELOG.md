@@ -2,7 +2,7 @@
 All changes to the project will be documented in this file.
 
 ## [1.32.19] - not yet released
-* Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1458](https://github.com/OmniSharp/omnisharp-roslyn/pull/1454))
+* Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
 
 ## [1.32.18] - 2019-04-12
 * Renamed `ProjectGuid` to `ProjectId` and no longer hash target framework names on `ProjectConfigurationMessage` (PR: [#1454](https://github.com/OmniSharp/omnisharp-roslyn/pull/1454))
