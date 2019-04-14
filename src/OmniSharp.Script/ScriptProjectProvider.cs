@@ -40,7 +40,7 @@ namespace OmniSharp.Script
             "System.Threading.Tasks"
         };
 
-        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Script);
+        private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.CSharp8, DocumentationMode.Parse, SourceCodeKind.Script);
 
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
         private readonly Lazy<CSharpCommandLineArguments> _commandLineArgs;
