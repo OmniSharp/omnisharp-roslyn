@@ -34,8 +34,8 @@ namespace OmniSharp.MSBuild
         {
             try
             {
-                var projectGuid = GetProjectId(args);
-                var hashedTargetFrameworks = GetHashedTargetFrameworks(args.ProjectInstance);
+                var projectId = GetProjectId(args);
+                var targetFrameworks = GetTargetFrameworks(args.ProjectInstance);
 
                 if (args.References == null)
                 {
@@ -45,7 +45,7 @@ namespace OmniSharp.MSBuild
                 var hashedReferences = GetHashedReferences(args);
                 var hashedFileExtensions = GetUniqueHashedFileExtensions(args);
 
-                _eventEmitter.ProjectInformation(projectGuid, hashedTargetFrameworks, hashedReferences, hashedFileExtensions);
+                _eventEmitter.ProjectInformation(projectId, targetFrameworks, hashedReferences, hashedFileExtensions);
             }
             catch (Exception ex)
             {
@@ -80,7 +80,7 @@ namespace OmniSharp.MSBuild
         }
 
         // Internal for testing
-        internal static IEnumerable<HashedString> GetHashedTargetFrameworks(ProjectInstance projectInstance)
+        internal static IEnumerable<string> GetTargetFrameworks(ProjectInstance projectInstance)
         {
             var targetFrameworks = projectInstance.GetPropertyValue(TargetFrameworks);
             if (string.IsNullOrEmpty(targetFrameworks))
@@ -96,11 +96,10 @@ namespace OmniSharp.MSBuild
             {
                 return targetFrameworks.Split(';')
                     .Where(tfm => !string.IsNullOrWhiteSpace(tfm))
-                    .Select(tfm => tfm.ToLower())
-                    .Select(_tfmAndFileHashingAlgorithm.HashInput);
+                    .Select(tfm => tfm.ToLower());
             }
 
-            return new List<HashedString>();
+            return new List<string>();
         }
     }
 }
