@@ -52,24 +52,24 @@ install:
     brew install libuv
   fi
 - export PATH="$PWD/.dotnet:$PATH"
-after_success: |
-  if [[ "$TRAVIS_OS_NAME" == "linux" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]; then
-    AZ_REPO=$(lsb_release -cs)
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
-      sudo tee /etc/apt/sources.list.d/azure-cli.list
-    curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-    sudo apt-get install apt-transport-https
-    sudo apt-get update && sudo apt-get install azure-cli
+# after_success: |
+#   if [[ "$TRAVIS_OS_NAME" == "linux" && $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]]; then
+#     AZ_REPO=$(lsb_release -cs)
+#     echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
+#       sudo tee /etc/apt/sources.list.d/azure-cli.list
+#     curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+#     sudo apt-get install apt-transport-https
+#     sudo apt-get update && sudo apt-get install azure-cli
 
-    # Only update "latest" version if we have all of the builds
-    #deploymentDir="artifacts/deployment"
-    #if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
-    #   [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
-    #   [ -e $deploymentDir/"omnisharp-linux-x64.zip" ]; then
-      
-      az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
-    #fi
-  fi
+#     # Only update "latest" version if we have all of the builds
+#     #deploymentDir="artifacts/deployment"
+#     #if [ -e $deploymentDir/"omnisharp-osx.zip" ] && \
+#     #   [ -e $deploymentDir/"omnisharp-linux-x86.zip" ] && \
+#     #   [ -e $deploymentDir/"omnisharp-linux-x64.zip" ]; then
+
+#       az storage blob upload-batch --destination "releases" --source artifacts/deployment --account-name roslynomnisharp --account-key $BLOB_KEY
+#     #fi
+#   fi
 notifications:
   slack:
     rooms:
@@ -97,7 +97,7 @@ deploy:
   api_key:
     secure: EsRemh0XwJc3jhIjaxSuAhcm0AGjFwa3HO6oWzJOoupX0l+HV5CxrJqui//sqJ/jK4nnwNcTfMyMFTAz2t6nWCmuwuezTncty/uNTXE0Whe+3WWc/BakfEdBrCfnRhGhwQ5EW2Y6BasuF0f/hpjnucqpNxcKmKOZvThzv93bmSA=
   file_glob: true
-  file: 
+  file:
     - artifacts/package/*.tar.gz
     - artifacts/package/*.zip
   skip_cleanup: true
