@@ -1,6 +1,10 @@
 assembly-versioning-scheme: MajorMinor
 mode: ContinuousDeployment
-branches: {}
+branches:
+  master:
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
 ignore:
   sha: []
 continuous-delivery-fallback-tag: beta
+commit-message-incrementing: Disabled
