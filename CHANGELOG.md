@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.32.xx] - not yet released
 * Fixed logging for OmniSharp HTTP server (PR: [#1456](https://github.com/OmniSharp/omnisharp-roslyn/pull/1456))
+* Fixed OmniSharp hanging on wildcard Nuget package references (PR: [#1473](https://github.com/OmniSharp/omnisharp-roslyn/pull/1473))
 
 ## [1.32.18] - 2019-04-12
 * Renamed `ProjectGuid` to `ProjectId` and no longer hash target framework names on `ProjectConfigurationMessage` (PR: [#1454](https://github.com/OmniSharp/omnisharp-roslyn/pull/1454))
