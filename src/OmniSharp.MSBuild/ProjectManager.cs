@@ -352,8 +352,6 @@ namespace OmniSharp.MSBuild
         {
             _logger.LogInformation($"Adding project '{projectFileInfo.FilePath}'");
 
-            _logger.LogDebug(JObject.FromObject(projectFileInfo).ToString());
-
             _projectFiles.Add(projectFileInfo);
 
             var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
