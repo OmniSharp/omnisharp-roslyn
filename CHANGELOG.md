@@ -1,6 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.xx] - not yet released
+* Fixed logging for OmniSharp HTTP server (PR: [#1456](https://github.com/OmniSharp/omnisharp-roslyn/pull/1456))
+
+## [1.32.18] - 2019-04-12
+* Renamed `ProjectGuid` to `ProjectId` and no longer hash target framework names on `ProjectConfigurationMessage` (PR: [#1454](https://github.com/OmniSharp/omnisharp-roslyn/pull/1454))
+
+## [1.32.17] - 2019-04-12
+* Fixed a bug in embedded MSBuild 16 path detection (PR: [#1457](https://github.com/OmniSharp/omnisharp-roslyn/pull/1457))
+
 ## [1.32.16] - 2019-04-10
 * .NET Core 3.0 support (PR: [#1450](https://github.com/OmniSharp/omnisharp-roslyn/pull/1450))
 * Upgraded to Roslyn `3.1.0-beta2-19205-01` (PR: [#1448](https://github.com/OmniSharp/omnisharp-roslyn/pull/1448))
