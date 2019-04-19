@@ -348,37 +348,25 @@ namespace OmniSharp.MSBuild
 
         private void AddProject(ProjectFileInfo projectFileInfo)
         {
-            try
+            _logger.LogInformation($"Adding project '{projectFileInfo.FilePath}'");
+
+            _logger.LogDebug(JObject.FromObject(projectFileInfo).ToString());
+
+            _projectFiles.Add(projectFileInfo);
+
+            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
+
+            if (projectFileInfo.RuleSet != null)
+                _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
+
+            var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
+
+            if (!_workspace.TryApplyChanges(newSolution))
             {
-                _logger.LogInformation($"Adding project '{projectFileInfo.FilePath}'");
-
-                _logger.LogDebug(JObject.FromObject(projectFileInfo).ToString());
-
-                _projectFiles.Add(projectFileInfo);
-
-                var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
-
-                if (projectFileInfo.RuleSet != null)
-                    _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
-
-                var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
-
-                if (!_workspace.TryApplyChanges(newSolution))
-                {
-                    _logger.LogError($"Failed to add project to workspace: '{projectFileInfo.FilePath}'");
-                }
-
-                WatchProjectFiles(projectFileInfo);
+                _logger.LogError($"Failed to add project to workspace: '{projectFileInfo.FilePath}'");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to add project {projectFileInfo.FilePath}, error: {ex}");
 
-                if(ex is ReflectionTypeLoadException rtlEx)
-                {
-                    _logger.LogError($"Loader exceptions: {string.Join(",", rtlEx.LoaderExceptions.Select(e => e.ToString()))}");
-                }
-            }
+            WatchProjectFiles(projectFileInfo);
         }
 
         private void WatchProjectFiles(ProjectFileInfo projectFileInfo)
