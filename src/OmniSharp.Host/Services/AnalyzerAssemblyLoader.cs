@@ -18,11 +18,7 @@ namespace OmniSharp.Host.Services
     public class AnalyzerAssemblyLoader : IAnalyzerAssemblyLoader
     {
         private readonly string _baseDirectory;
-
-        internal readonly Task DeleteLeftoverDirectoriesTask;
-
-        private readonly Lazy<(string directory, Mutex)> _shadowCopyDirectoryAndMutex;
-
+        private readonly Lazy<string> _shadowCopyDirectoryAndMutex;
         private int _assemblyDirectoryId;
 
         private readonly object _guard = new object();
@@ -37,7 +33,7 @@ namespace OmniSharp.Host.Services
         {
             _baseDirectory = Path.Combine(Path.GetTempPath(), "CodeAnalysis", "AnalyzerShadowCopies");
 
-            _shadowCopyDirectoryAndMutex = new Lazy<(string directory, Mutex)>(
+            _shadowCopyDirectoryAndMutex = new Lazy<string>(
                 () => CreateUniqueDirectoryForProcess(), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
@@ -61,6 +57,7 @@ namespace OmniSharp.Host.Services
         {
             return LoadFromPathUncheckedCore(fullPath);
         }
+
         private Assembly LoadFromPathUncheckedCore(string fullPath, AssemblyIdentity identity = null)
         {
             // Check if we have already loaded an assembly with the same identity or from the given path.
@@ -218,22 +215,20 @@ namespace OmniSharp.Host.Services
         {
             int directoryId = Interlocked.Increment(ref _assemblyDirectoryId);
 
-            string directory = Path.Combine(_shadowCopyDirectoryAndMutex.Value.directory, directoryId.ToString());
+            string directory = Path.Combine(_shadowCopyDirectoryAndMutex.Value, directoryId.ToString());
 
             Directory.CreateDirectory(directory);
             return directory;
         }
 
-        private (string directory, Mutex mutex) CreateUniqueDirectoryForProcess()
+        private string CreateUniqueDirectoryForProcess()
         {
             string guid = Guid.NewGuid().ToString("N").ToLowerInvariant();
             string directory = Path.Combine(_baseDirectory, guid);
 
-            var mutex = new Mutex(initiallyOwned: false, name: guid);
-
             Directory.CreateDirectory(directory);
 
-            return (directory, mutex);
+            return directory;
         }
 
         private static AssemblyIdentity TryGetAssemblyIdentity(string filePath)
