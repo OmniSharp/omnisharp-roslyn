@@ -27,6 +27,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
         {
             _logger = loggerFactory.CreateLogger<CachingCodeFixProviderForProjects>();
             _workspace = workspace;
+
+            _workspace.WorkspaceChanged += (__, workspaceEvent) =>
+            {
+                if (workspaceEvent.Kind == WorkspaceChangeKind.ProjectAdded ||
+                    workspaceEvent.Kind == WorkspaceChangeKind.ProjectChanged ||
+                    workspaceEvent.Kind == WorkspaceChangeKind.ProjectReloaded ||
+                    workspaceEvent.Kind == WorkspaceChangeKind.ProjectRemoved)
+                {
+                    _cache.TryRemove(workspaceEvent.ProjectId, out _);
+                }
+            };
         }
 
         public IEnumerable<CodeFixProvider> GetAllCodeFixesForProject(ProjectId projectId)
