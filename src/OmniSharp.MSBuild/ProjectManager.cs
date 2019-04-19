@@ -121,12 +121,12 @@ namespace OmniSharp.MSBuild
                 var csProjFiles = Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).ToList();
                 if (csProjFiles.Count > 0)
                 {
-                    foreach(string csProjFile in csProjFiles)
+                    foreach (string csProjFile in csProjFiles)
                     {
                         if (_projectsRequestedOnDemand.TryAdd(csProjFile, 0 /*unused*/))
                         {
                             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(csProjFile), false);
-                            QueueProjectUpdate(csProjFile, allowAutoRestore:true, projectIdInfo);
+                            QueueProjectUpdate(csProjFile, allowAutoRestore: true, projectIdInfo);
                         }
                     }
 
@@ -134,7 +134,7 @@ namespace OmniSharp.MSBuild
                 }
 
                 projectDir = Path.GetDirectoryName(projectDir);
-            } while(projectDir != null);
+            } while (projectDir != null);
 
             // Wait for all queued projects to load to ensure that workspace is fully up to date before this method completes.
             // If the project for the document was loaded before and there are no other projects to load at the moment, the call below will be no-op.
@@ -350,27 +350,34 @@ namespace OmniSharp.MSBuild
 
         private void AddProject(ProjectFileInfo projectFileInfo)
         {
-            _logger.LogInformation($"Adding project '{projectFileInfo.FilePath}'");
-
-            _logger.LogDebug(JObject.FromObject(projectFileInfo).ToString());
-
-            _projectFiles.Add(projectFileInfo);
-
-            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
-
-            _codeFixesForProject.LoadFrom(projectInfo);
-
-            if(projectFileInfo.RuleSet != null)
-                _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
-
-            var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
-
-            if (!_workspace.TryApplyChanges(newSolution))
+            try
             {
-                _logger.LogError($"Failed to add project to workspace: '{projectFileInfo.FilePath}'");
-            }
+                _logger.LogInformation($"Adding project '{projectFileInfo.FilePath}'");
 
-            WatchProjectFiles(projectFileInfo);
+                _logger.LogDebug(JObject.FromObject(projectFileInfo).ToString());
+
+                _projectFiles.Add(projectFileInfo);
+
+                var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
+
+                _codeFixesForProject.LoadFrom(projectInfo);
+
+                if (projectFileInfo.RuleSet != null)
+                    _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
+
+                var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
+
+                if (!_workspace.TryApplyChanges(newSolution))
+                {
+                    _logger.LogError($"Failed to add project to workspace: '{projectFileInfo.FilePath}'");
+                }
+
+                WatchProjectFiles(projectFileInfo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to add project {projectFileInfo.FilePath}, error: {ex}");
+            }
         }
 
         private void WatchProjectFiles(ProjectFileInfo projectFileInfo)
