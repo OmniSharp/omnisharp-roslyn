@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp;
 using OmniSharp.Eventing;
+using OmniSharp.Host.Services;
 using OmniSharp.MSBuild.Discovery;
 using OmniSharp.Options;
 using OmniSharp.Services;
@@ -27,6 +28,7 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             ILoggerFactory loggerFactory,
             IAssemblyLoader assemblyLoader,
+            IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             IMemoryCache memoryCache,
             ISharedTextWriter sharedTextWriter,
             IMSBuildLocator msbuildLocator,
@@ -47,7 +49,7 @@ namespace TestUtility
             AddService(dotNetCliService);
             AddService(configuration);
             AddService(optionsMonitor);
-            _services[typeof(IAnalyzerAssemblyLoader)] = assemblyLoader;
+            AddService(analyzerAssemblyLoader);
         }
 
         public static IServiceProvider Create(
@@ -69,9 +71,10 @@ namespace TestUtility
             var msbuildLocator = CreateMSBuildLocator(loggerFactory, assemblyLoader);
             var optionsMonitor = CreateOptionsMonitor(configuration);
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
+            var analyzerAssemblyLoader = new AnalyzerAssemblyLoader();
 
             return new TestServiceProvider(
-                environment, loggerFactory, assemblyLoader, memoryCache, sharedTextWriter,
+                environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, memoryCache, sharedTextWriter,
                 msbuildLocator, eventEmitter, dotNetCliService, configuration, optionsMonitor);
         }
 
@@ -80,6 +83,7 @@ namespace TestUtility
             IOmniSharpEnvironment environment,
             ILoggerFactory loggerFactory,
             IAssemblyLoader assemblyLoader,
+            IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             IMSBuildLocator msbuildLocator,
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
@@ -94,7 +98,7 @@ namespace TestUtility
             var sharedTextWriter = CreateSharedTextWriter(testOutput);
 
             return new TestServiceProvider(
-                environment, loggerFactory, assemblyLoader, memoryCache, sharedTextWriter,
+                environment, loggerFactory, assemblyLoader, analyzerAssemblyLoader, memoryCache, sharedTextWriter,
                 msbuildLocator, eventEmitter, dotNetCliService, configuration, optionsMonitor);
         }
 
