@@ -29,7 +29,7 @@ namespace OmniSharp.Tests
         [Fact]
         public async Task ProjectFileInfoCollection()
         {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithRulesets"))
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
             using (var host = CreateMSBuildTestHost(testProject.Directory))
             {
                 var project = host.Workspace.CurrentSolution.Projects.Single();

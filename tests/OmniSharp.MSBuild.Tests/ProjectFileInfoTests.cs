@@ -153,9 +153,9 @@ namespace OmniSharp.MSBuild.Tests
         public async Task ProjectInfoContainRulesetInformation()
         {
             using (var host = CreateOmniSharpHost())
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectWithRulesets"))
+            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectWithAnalyzers"))
             {
-                var projectFilePath = Path.Combine(testProject.Directory, "ProjectWithRulesets.csproj");
+                var projectFilePath = Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj");
 
                 var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
 
