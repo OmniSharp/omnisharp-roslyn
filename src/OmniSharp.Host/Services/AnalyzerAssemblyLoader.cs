@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// This is simplified version from roslyn codebase, originated from https://github.com/dotnet/roslyn/blob/master/src/Compilers/Shared/ShadowCopyAnalyzerAssemblyLoader.cs
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
