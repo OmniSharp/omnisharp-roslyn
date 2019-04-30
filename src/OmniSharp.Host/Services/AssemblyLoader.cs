@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis;
 
 namespace OmniSharp.Services
 {
-    internal class AssemblyLoader : IAssemblyLoader, IAnalyzerAssemblyLoader
+    internal class AssemblyLoader : IAssemblyLoader
     {
         private static readonly ConcurrentDictionary<string, Assembly> AssemblyCache = new ConcurrentDictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger _logger;
@@ -17,11 +17,6 @@ namespace OmniSharp.Services
         public AssemblyLoader(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<AssemblyLoader>();
-        }
-
-        public void AddDependencyLocation(string fullPath)
-        {
-            LoadFrom(fullPath);
         }
 
         public Assembly Load(AssemblyName name)
@@ -95,11 +90,6 @@ namespace OmniSharp.Services
 
             _logger.LogTrace($"Assembly loaded from path: {assemblyPath}");
             return assembly;
-        }
-
-        public Assembly LoadFromPath(string fullPath)
-        {
-            return LoadFrom(fullPath);
         }
     }
 }
