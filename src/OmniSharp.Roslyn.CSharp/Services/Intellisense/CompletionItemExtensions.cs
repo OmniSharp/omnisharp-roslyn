@@ -25,14 +25,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         private const string SymbolKind = nameof(SymbolKind);
         private const string SymbolName = nameof(SymbolName);
         private const string Symbols = nameof(Symbols);
-
+        private static readonly Type _symbolCompletionItemType;
         private static MethodInfo _getSymbolsAsync;
         private static readonly PropertyInfo _getProviderName;
 
         static CompletionItemExtensions()
         {
-            var symbolCompletionItemType = typeof(CompletionItem).GetTypeInfo().Assembly.GetType(SymbolCompletionItem);
-            _getSymbolsAsync = symbolCompletionItemType.GetMethod(GetSymbolsAsync, BindingFlags.Public | BindingFlags.Static);
+            _symbolCompletionItemType = typeof(CompletionItem).GetTypeInfo().Assembly.GetType(SymbolCompletionItem);
+            _getSymbolsAsync = _symbolCompletionItemType.GetMethod(GetSymbolsAsync, BindingFlags.Public | BindingFlags.Static);
 
             _getProviderName = typeof(CompletionItem).GetProperty(ProviderName, BindingFlags.NonPublic | BindingFlags.Instance);
         }
@@ -47,8 +47,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             return GetProviderName(item) == ObjectCreationCompletionProvider;
         }
 
-        public static IEnumerable<ISymbol> GetCompletionSymbols(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
+        public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
+            if (completionItem.GetType() == _symbolCompletionItemType)
+            {
+                var decodedSymbolsTask = _getSymbolsAsync.InvokeStatic<Task<ImmutableArray<ISymbol>>>(new object[] { completionItem, document, default(CancellationToken) });
+                if (decodedSymbolsTask != null)
+                {
+                    return await decodedSymbolsTask;
+                }
+            }
+
             var properties = completionItem.Properties;
 
             // if the completion provider encoded symbols into Properties, we can return them

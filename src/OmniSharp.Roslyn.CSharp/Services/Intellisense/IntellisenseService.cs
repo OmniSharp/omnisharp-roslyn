@@ -60,7 +60,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                         var preselect = item.Rules.MatchPriority == MatchPriority.Preselect;
                         if (completionText.IsValidCompletionFor(wordToComplete))
                         {
-                            var symbols = item.GetCompletionSymbols(recommendedSymbols, document);
+                            var symbols = await item.GetCompletionSymbolsAsync(recommendedSymbols, document);
                             if (symbols.Any())
                             {
                                 foreach (var symbol in symbols)
