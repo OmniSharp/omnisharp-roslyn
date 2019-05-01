@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace OmniSharp.Utilities
 {
@@ -8,5 +9,13 @@ namespace OmniSharp.Utilities
             => array.IsDefault
                 ? ImmutableArray<T>.Empty
                 : array;
+
+        public static ImmutableArray<T> AsImmutableOrNull<T>(this IEnumerable<T> items)
+        {
+            if (items == null)
+                return default;
+ 
+            return ImmutableArray.CreateRange<T>(items);
+        }
     }
 }
