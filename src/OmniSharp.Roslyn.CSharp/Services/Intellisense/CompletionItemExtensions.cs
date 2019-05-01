@@ -34,14 +34,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             var symbolCompletionItemType = typeof(CompletionItem).GetTypeInfo().Assembly.GetType(SymbolCompletionItem);
             _getSymbolsAsync = symbolCompletionItemType.GetMethod(GetSymbolsAsync, BindingFlags.Public | BindingFlags.Static);
 
-            _getProviderName = typeof(CompletionItem).GetProperty("ProviderName", BindingFlags.NonPublic | BindingFlags.Instance);
-            
+            _getProviderName = typeof(CompletionItem).GetProperty(ProviderName, BindingFlags.NonPublic | BindingFlags.Instance);
+        }
+
+        private static string GetProviderName(CompletionItem item)
+        {
+            return (string)_getProviderName.GetValue(item);
         }
 
         public static bool IsObjectCreationCompletionItem(this CompletionItem item)
         {
-            var properties = item.Properties;
-            return properties.TryGetValue(ProviderName, out var provider) && provider == ObjectCreationCompletionProvider;
+            return GetProviderName(item) == ObjectCreationCompletionProvider;
         }
 
         public static IEnumerable<ISymbol> GetCompletionSymbols(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
@@ -49,7 +52,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             var properties = completionItem.Properties;
 
             // for SymbolCompletionProvider, use the logic of extracting information from recommended symbols
-            var providerName = (string)_getProviderName.GetValue(completionItem);
+            var providerName = GetProviderName(completionItem);
             if (providerName == SymbolCompletionProvider)
             {
                 return recommendedSymbols.Where(x => x.Name == properties[SymbolName] && (int)x.Kind == int.Parse(properties[SymbolKind])).Distinct();
@@ -66,8 +69,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
 
         public static bool UseDisplayTextAsCompletionText(this CompletionItem completionItem)
         {
-            return completionItem.Properties.TryGetValue(ProviderName, out var provider)
-                && (provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == ParitalMethodCompletionProvider);
+            var provider = GetProviderName(completionItem);
+            return provider == NamedParameterCompletionProvider || provider == OverrideCompletionProvider || provider == ParitalMethodCompletionProvider;
         }
 
         public static bool TryGetInsertionText(this CompletionItem completionItem, out string insertionText)
