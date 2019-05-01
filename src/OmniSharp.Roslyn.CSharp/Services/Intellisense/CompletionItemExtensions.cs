@@ -51,17 +51,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
         {
             var properties = completionItem.Properties;
 
-            // for SymbolCompletionProvider, use the logic of extracting information from recommended symbols
-            var providerName = GetProviderName(completionItem);
-            if (providerName == SymbolCompletionProvider)
+            // if the completion provider encoded symbols into Properties, we can return them
+            if (properties.ContainsKey(SymbolName) && properties.ContainsKey(SymbolName))
             {
                 return recommendedSymbols.Where(x => x.Name == properties[SymbolName] && (int)x.Kind == int.Parse(properties[SymbolKind])).Distinct();
-            }
-
-            // if the completion provider encoded symbols into Properties, we can return them
-            if (properties.ContainsKey(SymbolName))
-            {
-                return recommendedSymbols.Where(x => x.Name == properties[SymbolName]);
             }
 
             return Enumerable.Empty<ISymbol>();
