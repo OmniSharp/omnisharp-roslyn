@@ -26,7 +26,8 @@ namespace OmniSharp.MSBuild.Tests
                 using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
                 {
                     //await RestoreProject(testProject);
-                    await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory);
+                    //await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory);
+                    await host.RestoreProject(testProject);
 
                     var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
                     var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
@@ -41,7 +42,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task ProjectFileInfoCollection()
+        public async Task LoadProjectWithNewCompilationOptions()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
             using (var host = CreateMSBuildTestHost(testProject.Directory))

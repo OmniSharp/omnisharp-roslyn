@@ -485,7 +485,7 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create)
+            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create || changeType == FileChangeType.Change)
             {
                 // Only add cs files. Also, make sure the path is a file, and not a directory name that happens to end in ".cs"
                 if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase) && File.Exists(path))
