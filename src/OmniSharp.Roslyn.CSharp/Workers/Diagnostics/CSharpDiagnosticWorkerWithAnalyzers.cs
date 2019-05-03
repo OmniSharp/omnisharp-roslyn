@@ -150,24 +150,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged)
+            switch(changeEvent.Kind)
             {
-                QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
-            }
-            else if (changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved)
-            {
-                _currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _);
-            }
-            else if (changeEvent.Kind == WorkspaceChangeKind.ProjectAdded
-                || changeEvent.Kind == WorkspaceChangeKind.ProjectChanged
-                || changeEvent.Kind == WorkspaceChangeKind.ProjectReloaded)
-            {
-                _logger.LogInformation($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
-                var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
-                QueueForAnalysis(projectDocumentIds);
+                case WorkspaceChangeKind.DocumentChanged:
+                case WorkspaceChangeKind.DocumentAdded:
+                case WorkspaceChangeKind.DocumentReloaded:
+                case WorkspaceChangeKind.DocumentInfoChanged:
+                    QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
+                    break;
+                case WorkspaceChangeKind.DocumentRemoved:
+                    _currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _);
+                    break;
+                case WorkspaceChangeKind.ProjectAdded:
+                case WorkspaceChangeKind.ProjectChanged:
+                case WorkspaceChangeKind.ProjectReloaded:
+                    _logger.LogInformation($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
+                    var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
+                    QueueForAnalysis(projectDocumentIds);
+                    break;
             }
         }
 

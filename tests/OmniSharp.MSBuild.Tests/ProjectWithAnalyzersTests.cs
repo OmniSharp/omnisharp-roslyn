@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
@@ -22,10 +23,11 @@ namespace OmniSharp.MSBuild.Tests
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
             {
-                await RestoreProject(testProject);
-
                 using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
                 {
+                    //await RestoreProject(testProject);
+                    await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory);
+
                     var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
                     var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
