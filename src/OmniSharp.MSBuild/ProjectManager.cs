@@ -24,6 +24,7 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
+using System.Reflection;
 
 namespace OmniSharp.MSBuild
 {
@@ -55,7 +56,6 @@ namespace OmniSharp.MSBuild
         private readonly ConcurrentDictionary<string, int/*unused*/> _projectsRequestedOnDemand;
         private readonly ProjectLoader _projectLoader;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly CachingCodeFixProviderForProjects _codeFixesForProject;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
         private const int LoopDelay = 100; // milliseconds
         private readonly BufferBlock<ProjectToUpdate> _queue;
@@ -75,7 +75,6 @@ namespace OmniSharp.MSBuild
             PackageDependencyChecker packageDependencyChecker,
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
-            CachingCodeFixProviderForProjects codeFixesForProject,
             IAnalyzerAssemblyLoader assemblyLoader,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
@@ -90,7 +89,6 @@ namespace OmniSharp.MSBuild
             _projectsRequestedOnDemand = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             _projectLoader = projectLoader;
             _workspace = workspace;
-            _codeFixesForProject = codeFixesForProject;
             _eventSinks = eventSinks;
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
@@ -352,8 +350,6 @@ namespace OmniSharp.MSBuild
             _projectFiles.Add(projectFileInfo);
 
             var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
-
-            _codeFixesForProject.LoadFrom(projectInfo);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
