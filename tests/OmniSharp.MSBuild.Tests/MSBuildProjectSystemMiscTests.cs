@@ -25,17 +25,5 @@ namespace OmniSharp.Tests
             Assert.True(collection.TryGetValue(searchProjectPath, out var outInfo));
             Assert.NotNull(outInfo);
         }
-
-        [Fact]
-        public async Task ProjectFileInfoCollection()
-        {
-            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
-            {
-                var project = host.Workspace.CurrentSolution.Projects.Single();
-
-                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021");
-            }
-        }
     }
 }

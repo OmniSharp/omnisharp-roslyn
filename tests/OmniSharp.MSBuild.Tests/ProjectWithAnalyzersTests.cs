@@ -38,6 +38,18 @@ namespace OmniSharp.MSBuild.Tests
             }
         }
 
+        [Fact]
+        public async Task ProjectFileInfoCollection()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var project = host.Workspace.CurrentSolution.Projects.Single();
+
+                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021");
+            }
+        }
+
         private static async Task RestoreProject(ITestProject testProject)
         {
             await new DotNetCliService(new LoggerFactory(), NullEventEmitter.Instance).RestoreAsync(testProject.Directory);
