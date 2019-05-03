@@ -35,7 +35,21 @@ namespace TestUtility
                 {
                     FileName = file,
                     ChangeType = FileChangeType.Create
+                })
+                .ToList();
+
+            filesChangeRequests.Add(new FilesChangedRequest()
+                {
+                    FileName = Path.Combine(testProject.Directory, "obj", "Debug", "netcoreapp2.1"),
+                    ChangeType = FileChangeType.Create
                 });
+
+            filesChangeRequests.AddRange(Directory.GetFiles(Path.Combine(testProject.Directory, "obj", "Debug", "netcoreapp2.1"))
+                .Select(file => new FilesChangedRequest()
+                {
+                    FileName = file,
+                    ChangeType = FileChangeType.Create
+                }));
 
             await fileChangedService.Handle(filesChangeRequests);
 

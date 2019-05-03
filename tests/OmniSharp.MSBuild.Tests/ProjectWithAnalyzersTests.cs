@@ -25,9 +25,10 @@ namespace OmniSharp.MSBuild.Tests
             {
                 using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
                 {
-                    //await RestoreProject(testProject);
-                    //await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory);
                     await host.RestoreProject(testProject);
+
+                    // TODO: Remove this before merge ...
+                    Thread.Sleep(5 * 1000);
 
                     var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
                     var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
