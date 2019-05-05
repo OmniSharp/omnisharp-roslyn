@@ -1,8 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using OmniSharp.MSBuild.ProjectFile;
-using OmniSharp.MSBuild.Tests;
-using TestUtility;
+﻿using OmniSharp.MSBuild.ProjectFile;
 using Xunit;
 
 namespace OmniSharp.Tests
