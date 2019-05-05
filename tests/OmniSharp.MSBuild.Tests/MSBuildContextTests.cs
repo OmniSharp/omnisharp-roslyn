@@ -7,12 +7,8 @@ using Xunit;
 
 namespace OmniSharp.Tests
 {
-    public class MSBuildProjectSystemMiscTests: AbstractMSBuildTestFixture
+    public class MSBuildContextTests
     {
-        public MSBuildProjectSystemMiscTests(Xunit.Abstractions.ITestOutputHelper output) : base(output)
-        {
-        }
-
         [Fact]
         public void Project_path_is_case_insensitive()
         {
