@@ -38,7 +38,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.BuildCommand
         public string Arguments
         {
             get {
-                return ("/m ") + "/nologo /v:q /property:GenerateFullPaths=true \"" + ProjectFile + "\"";
+                if (!string.IsNullOrEmpty(ProjectFile))
+                {
+                    return ("/m ") + "/nologo /v:q /property:GenerateFullPaths=true \"" + ProjectFile + "\"";
+                }
+                else
+                {
+                    return ("/m ") + "/nologo /v:q /property:GenerateFullPaths=true";
+                }
                 //return "build " + ("/m ") + "/nologo /v:q /property:GenerateFullPaths=true \"" + ProjectFile + "\"";
                 //return "build";
             }
