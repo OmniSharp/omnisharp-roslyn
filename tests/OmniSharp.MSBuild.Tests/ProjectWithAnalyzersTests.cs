@@ -26,9 +26,6 @@ namespace OmniSharp.MSBuild.Tests
             {
                 await host.RestoreProject(testProject);
 
-                // TODO: Remove this before merge ...
-                Thread.Sleep(5 * 1000);
-
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
 
                 Assert.NotEmpty(diagnostics.QuickFixes);
