@@ -61,7 +61,7 @@ namespace OmniSharp.MSBuild
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
-        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
+        private readonly IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
         private bool _processingQueue;
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
@@ -93,7 +93,7 @@ namespace OmniSharp.MSBuild
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
-            _assemblyLoader = assemblyLoader;
+            _analyzerAssemblyLoader = assemblyLoader;
             _onDirectoryFileChanged = OnDirectoryFileChanged;
 
             if (_options.LoadProjectsOnDemand)
@@ -349,7 +349,7 @@ namespace OmniSharp.MSBuild
 
             _projectFiles.Add(projectFileInfo);
 
-            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
+            var projectInfo = projectFileInfo.CreateProjectInfo(_analyzerAssemblyLoader);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 

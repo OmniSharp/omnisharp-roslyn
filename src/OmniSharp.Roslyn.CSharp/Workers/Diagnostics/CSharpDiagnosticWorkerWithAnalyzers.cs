@@ -164,7 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
                 case WorkspaceChangeKind.ProjectReloaded:
-                    _logger.LogInformation($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
+                    _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
                     QueueForAnalysis(projectDocumentIds);
                     break;
