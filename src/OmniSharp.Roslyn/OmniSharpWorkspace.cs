@@ -163,10 +163,6 @@ namespace OmniSharp
             var existingRules = project.CompilationOptions.SpecificDiagnosticOptions;
             var distinctRulesWithProjectSpecificRules = newRules.Concat(existingRules.Where(x => !newRules.Keys.Contains(x.Key)));
 
-            var updatedProject = project.WithCompilationOptions(
-                project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules)
-            );
-
             OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules));
         }
 
