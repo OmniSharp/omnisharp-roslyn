@@ -49,6 +49,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<string> Analyzers { get; }
             public RuleSet RuleSet { get; }
             public ImmutableDictionary<string, string> ReferenceAliases { get; }
+            public bool TreatWarningsAsErrors { get; }
 
             private ProjectData()
             {
@@ -81,6 +82,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> suppressedDiagnosticIds,
                 bool signAssembly,
                 string assemblyOriginatorKeyFile,
+                bool treatWarningsAsErrors,
                 RuleSet ruleset)
                 : this()
             {
@@ -108,6 +110,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 SignAssembly = signAssembly;
                 AssemblyOriginatorKeyFile = assemblyOriginatorKeyFile;
+                TreatWarningsAsErrors = treatWarningsAsErrors;
                 RuleSet = ruleset;
             }
 
@@ -132,11 +135,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> references,
                 ImmutableArray<PackageReference> packageReferences,
                 ImmutableArray<string> analyzers,
+                bool treatWarningsAsErrors,
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases)
                 : this(guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                       configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode,
-                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, ruleset)
+                      documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, ruleset)
             {
                 SourceFiles = sourceFiles.EmptyIfDefault();
                 ProjectReferences = projectReferences.EmptyIfDefault();
@@ -177,11 +181,12 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(project.GetPropertyValue(PropertyNames.NoWarn));
                 var signAssembly = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
                 var assemblyOriginatorKeyFile = project.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
+                var treatWarningsAsErrors = PropertyConverter.ToBoolean(project.GetPropertyValue(PropertyNames.TreatWarningsAsErrors), defaultValue: false);
 
                 return new ProjectData(
                     guid, name, assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks, outputKind, languageVersion, nullableContextOptions, allowUnsafeCode,
-                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, ruleset: null);
+                    documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds, signAssembly, assemblyOriginatorKeyFile, treatWarningsAsErrors, ruleset: null);
             }
 
             public static ProjectData Create(MSB.Execution.ProjectInstance projectInstance)
@@ -214,6 +219,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 var preprocessorSymbolNames = PropertyConverter.ToPreprocessorSymbolNames(projectInstance.GetPropertyValue(PropertyNames.DefineConstants));
                 var suppressedDiagnosticIds = PropertyConverter.ToSuppressedDiagnosticIds(projectInstance.GetPropertyValue(PropertyNames.NoWarn));
                 var signAssembly = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.SignAssembly), defaultValue: false);
+                var treatWarningsAsErrors = PropertyConverter.ToBoolean(projectInstance.GetPropertyValue(PropertyNames.TreatWarningsAsErrors), defaultValue: false);
                 var assemblyOriginatorKeyFile = projectInstance.GetPropertyValue(PropertyNames.AssemblyOriginatorKeyFile);
 
                 var ruleset = ResolveRulesetIfAny(projectInstance);
@@ -266,7 +272,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                     configuration, platform, targetFramework, targetFrameworks,
                     outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, ruleset, referenceAliases.ToImmutableDictionary());
+                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, treatWarningsAsErrors, ruleset, referenceAliases.ToImmutableDictionary());
             }
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)
