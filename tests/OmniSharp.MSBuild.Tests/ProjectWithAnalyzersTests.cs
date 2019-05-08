@@ -11,6 +11,7 @@ using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
+using static OmniSharp.MSBuild.Tests.ProjectLoadListenerTests;
 
 namespace OmniSharp.MSBuild.Tests
 {
@@ -72,8 +73,10 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectRulesetFileIsChangedThenUpdateRulesAccordingly()
         {
+            var emitter = new ProjectLoadTestEventEmitter();
+
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 var csprojFile = Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj");
                 var csprojFileXml = XDocument.Load(csprojFile);
@@ -84,6 +87,8 @@ namespace OmniSharp.MSBuild.Tests
 
                 await NotifyFileChanged(host, csprojFile);
 
+                emitter.WaitForProjectUpdate();
+
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
             }
@@ -92,8 +97,10 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task WhenProjectRulesetFileRuleIsUpdatedThenUpdateRulesAccordingly()
         {
+            var emitter = new ProjectLoadTestEventEmitter();
+
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 var rulesetFile = Path.Combine(testProject.Directory, "default.ruleset");
                 var ruleFileXml = XDocument.Load(rulesetFile);
@@ -103,6 +110,8 @@ namespace OmniSharp.MSBuild.Tests
                 ruleFileXml.Save(rulesetFile);
 
                 await NotifyFileChanged(host, rulesetFile);
+
+                emitter.WaitForProjectUpdate();
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
