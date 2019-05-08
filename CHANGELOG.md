@@ -1,9 +1,15 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.32.xx] - not yet released
-* Fixed logging for OmniSharp HTTP server (PR: [#1456](https://github.com/OmniSharp/omnisharp-roslyn/pull/1456))
-* Fixed OmniSharp hanging on wildcard Nuget package references (PR: [#1473](https://github.com/OmniSharp/omnisharp-roslyn/pull/1473))
+## [1.32.20] - not yet released
+* Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
+
+## [1.32.19] - 2019-05-01
+* Updated to Roslyn `3.1.0-beta4-19251-02` (PR: [#1479](https://github.com/OmniSharp/omnisharp-roslyn/pull/1479))
+* Shadow copy Roslyn analyzers in order to not lock them ([#1465](https://github.com/OmniSharp/omnisharp-roslyn/issues/1465), PR: [#1474](https://github.com/OmniSharp/omnisharp-roslyn/pull/1474))
+* Fixed logging output for OmniSharp HTTP server ([#1466](https://github.com/OmniSharp/omnisharp-roslyn/issues/1446), PR: [#1456](https://github.com/OmniSharp/omnisharp-roslyn/pull/1456))
+* Fixed OmniSharp hanging on wildcard Nuget package references ([omnisharp-vscode#3009](https://github.com/OmniSharp/omnisharp-vscode/issues/3009), PR: [#1473](https://github.com/OmniSharp/omnisharp-roslyn/pull/1473))
+* OmniSharp now uses correct 4.7.2 framework sku to prompt for installation of .NET 4.7.2 if missing ([#1468](https://github.com/OmniSharp/omnisharp-roslyn/issues/1468), PR: [#1469](https://github.com/OmniSharp/omnisharp-roslyn/pull/1469))
 
 ## [1.32.18] - 2019-04-12
 * Renamed `ProjectGuid` to `ProjectId` and no longer hash target framework names on `ProjectConfigurationMessage` (PR: [#1454](https://github.com/OmniSharp/omnisharp-roslyn/pull/1454))
