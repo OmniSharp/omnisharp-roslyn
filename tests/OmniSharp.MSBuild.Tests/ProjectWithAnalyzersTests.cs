@@ -1,9 +1,12 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
+using OmniSharp.FileWatching;
+using OmniSharp.Models.FilesChanged;
 using OmniSharp.Services;
 using TestUtility;
 using Xunit;
@@ -64,6 +67,52 @@ namespace OmniSharp.MSBuild.Tests
 
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
             }
+        }
+
+        [Fact]
+        public async Task WhenProjectRulesetFileIsChangedThenUpdateRulesAccordingly()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var csprojFile = Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj");
+                var csprojFileXml = XDocument.Load(csprojFile);
+
+                csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset";
+
+                await NotifyFileChanged(host, csprojFile);
+
+                var project = host.Workspace.CurrentSolution.Projects.Single();
+                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
+            }
+        }
+
+        [Fact]
+        public async Task WhenProjectRulesetFileRuleIsUpdatedThenUpdateRulesAccordingly()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var rulesetFile = Path.Combine(testProject.Directory, "default.ruleset");
+                var ruleFileXml = XDocument.Load(rulesetFile);
+
+                ruleFileXml.Descendants("Rule").Single().Attribute("Action").Value = "Error";
+
+                await NotifyFileChanged(host, rulesetFile);
+
+                var project = host.Workspace.CurrentSolution.Projects.Single();
+                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
+            }
+        }
+
+        private static async Task NotifyFileChanged(OmniSharpTestHost host, string file)
+        {
+            await host.GetFilesChangedService().Handle(new[] {
+                    new FilesChangedRequest() {
+                    FileName = file,
+                    ChangeType = FileChangeType.Change
+                    }
+                });
         }
 
         private static async Task RestoreProject(ITestProject testProject)

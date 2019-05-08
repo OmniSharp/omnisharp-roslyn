@@ -22,11 +22,12 @@ namespace TestUtility
         public static WorkspaceInformationService GetWorkspaceInformationService(this OmniSharpTestHost host)
             => host.GetRequestHandler<WorkspaceInformationService>(OmniSharpEndpoints.WorkspaceInformation, "Projects");
 
+        public static OnFilesChangedService GetFilesChangedService(this OmniSharpTestHost host)
+            => host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
+
         public static async Task<OmniSharpTestHost> RestoreProject(this OmniSharpTestHost host, ITestProject testProject)
         {
             await host.GetExport<IDotNetCliService>().RestoreAsync(testProject.Directory);
-
-            var fileChangedService = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
 
             var assetPath = Path.Combine(testProject.Directory, "obj");
 
@@ -37,7 +38,7 @@ namespace TestUtility
                     ChangeType = FileChangeType.Create
                 });
 
-            await fileChangedService.Handle(filesChangeRequests);
+            await host.GetFilesChangedService().Handle(filesChangeRequests);
 
             return host;
         }
