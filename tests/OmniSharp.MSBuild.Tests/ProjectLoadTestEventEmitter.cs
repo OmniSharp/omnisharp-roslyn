@@ -27,7 +27,6 @@ namespace OmniSharp.MSBuild.Tests
             public ExportDescriptorProvider[] AsExportDescriptionProvider(ILoggerFactory loggerFactory)
             {
                 var listener = new ProjectLoadListener(loggerFactory, this);
-                new AutoResetEvent(false);
 
                 return new ExportDescriptorProvider[]
                 {

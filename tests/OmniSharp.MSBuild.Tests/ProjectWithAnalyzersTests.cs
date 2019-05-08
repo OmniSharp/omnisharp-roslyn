@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -78,12 +79,8 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                var csprojFile = Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj");
-                var csprojFileXml = XDocument.Load(csprojFile);
-
-                csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset";
-
-                csprojFileXml.Save(csprojFile);
+                var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
+                    csprojFileXml => csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset");
 
                 await NotifyFileChanged(host, csprojFile);
 
@@ -102,20 +99,24 @@ namespace OmniSharp.MSBuild.Tests
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
             using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                var rulesetFile = Path.Combine(testProject.Directory, "default.ruleset");
-                var ruleFileXml = XDocument.Load(rulesetFile);
+                var ruleFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "default.ruleset"),
+                    ruleXml => ruleXml.Descendants("Rule").Single().Attribute("Action").Value = "Error");
 
-                ruleFileXml.Descendants("Rule").Single().Attribute("Action").Value = "Error";
-
-                ruleFileXml.Save(rulesetFile);
-
-                await NotifyFileChanged(host, rulesetFile);
+                await NotifyFileChanged(host, ruleFile);
 
                 emitter.WaitForProjectUpdate();
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
             }
+        }
+
+        private string ModifyXmlFileInPlace(string file, Action<XDocument> docUpdateAction)
+        {
+            var xmlFile = XDocument.Load(file);
+            docUpdateAction(xmlFile);
+            xmlFile.Save(file);
+            return file;
         }
 
         private static async Task NotifyFileChanged(OmniSharpTestHost host, string file)
