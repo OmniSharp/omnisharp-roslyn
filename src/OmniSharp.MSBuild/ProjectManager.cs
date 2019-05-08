@@ -435,10 +435,7 @@ namespace OmniSharp.MSBuild
 
         private void UpdateProjectWithRulesets(Project project, ProjectFileInfo projectFileInfo)
         {
-            if (projectFileInfo.RuleSet?.SpecificDiagnosticOptions == null)
-                return;
-
-            _workspace.UpdateRulesetsForProject(project.Id, projectFileInfo.RuleSet.SpecificDiagnosticOptions);
+            _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)

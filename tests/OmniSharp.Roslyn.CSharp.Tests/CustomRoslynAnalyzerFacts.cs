@@ -152,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectId = AddProjectWitFile(host, testFile);
                 var testRules = CreateRules("CS0162", ReportDiagnostic.Hidden);
 
-                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync();
 
@@ -172,7 +172,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Hidden);
 
-                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_2.cs");
                 Assert.Contains(result.QuickFixes.OfType<DiagnosticLocation>(), f => f.Text.Contains(testAnalyzerRef.Id.ToString()) && f.LogLevel == "Hidden");
@@ -201,7 +201,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
 
-                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_3.cs");
                 Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -221,7 +221,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var testRules = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
 
-                host.Workspace.UpdateRulesetsForProject(projectId, testRules.ToImmutableDictionary());
+                host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRules.ToImmutableDictionary());
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
@@ -239,14 +239,14 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var projectId = AddProjectWitFile(host, testFile, testAnalyzerRef);
                 var testRulesOriginal = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Error);
-                host.Workspace.UpdateRulesetsForProject(projectId, testRulesOriginal.ToImmutableDictionary());
+                host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRulesOriginal.ToImmutableDictionary());
                 await host.RequestCodeCheckAsync("testFile_4.cs");
 
                 var testRulesUpdated = CreateRules(testAnalyzerRef.Id.ToString(), ReportDiagnostic.Suppress);
 
                 var workspaceUpdatedCheck = new AutoResetEvent(false);
                 host.Workspace.WorkspaceChanged += (_, e) => { if (e.Kind == WorkspaceChangeKind.ProjectChanged) { workspaceUpdatedCheck.Set(); } };
-                host.Workspace.UpdateRulesetsForProject(projectId, testRulesUpdated.ToImmutableDictionary());
+                host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRulesUpdated.ToImmutableDictionary());
 
                 Assert.True(workspaceUpdatedCheck.WaitOne(timeout: TimeSpan.FromSeconds(3)));
 

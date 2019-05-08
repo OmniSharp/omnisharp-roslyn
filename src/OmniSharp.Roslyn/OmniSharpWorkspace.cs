@@ -157,13 +157,10 @@ namespace OmniSharp
             }
         }
 
-        public void UpdateRulesetsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> newRules)
+        public void UpdateDiagnosticOptionsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> rules)
         {
             var project = this.CurrentSolution.GetProject(projectId);
-            var existingRules = project.CompilationOptions.SpecificDiagnosticOptions;
-            var distinctRulesWithProjectSpecificRules = newRules.Concat(existingRules.Where(x => !newRules.Keys.Contains(x.Key)));
-
-            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(distinctRulesWithProjectSpecificRules));
+            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)

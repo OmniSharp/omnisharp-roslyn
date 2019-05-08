@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 result = result.WithNullableContextOptions(projectFileInfo.NullableContextOptions);
             }
 
-            result = result.WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds));
+            result = result.WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
@@ -42,6 +43,15 @@ namespace OmniSharp.MSBuild.ProjectFile
             }
 
             return result;
+        }
+
+        public static ImmutableDictionary<string, ReportDiagnostic> GetDiagnosticOptions(this ProjectFileInfo projectFileInfo)
+        {
+            var defaultSuppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
+
+            var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
+
+            return specificRules.Concat(defaultSuppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToImmutableDictionary();
         }
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)
