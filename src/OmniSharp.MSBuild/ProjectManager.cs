@@ -429,12 +429,6 @@ namespace OmniSharp.MSBuild
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
-
-            UpdateProjectWithRulesets(project, projectFileInfo);
-        }
-
-        private void UpdateProjectWithRulesets(Project project, ProjectFileInfo projectFileInfo)
-        {
             _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
         }
 

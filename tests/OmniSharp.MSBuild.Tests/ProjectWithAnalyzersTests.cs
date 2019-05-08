@@ -80,6 +80,8 @@ namespace OmniSharp.MSBuild.Tests
 
                 csprojFileXml.Descendants("CodeAnalysisRuleSet").Single().Value = "witherrorlevel.ruleset";
 
+                csprojFileXml.Save(csprojFile);
+
                 await NotifyFileChanged(host, csprojFile);
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
@@ -97,6 +99,8 @@ namespace OmniSharp.MSBuild.Tests
                 var ruleFileXml = XDocument.Load(rulesetFile);
 
                 ruleFileXml.Descendants("Rule").Single().Attribute("Action").Value = "Error";
+
+                ruleFileXml.Save(rulesetFile);
 
                 await NotifyFileChanged(host, rulesetFile);
 
