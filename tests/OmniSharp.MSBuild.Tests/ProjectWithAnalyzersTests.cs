@@ -54,7 +54,7 @@ namespace OmniSharp.MSBuild.Tests
         }
 
         [Fact]
-        public async Task LoadProjectWithNewCompilationOptions()
+        public async Task WhenProjectIsLoadedThenItContainsCustomRulesetsFromCsproj()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
             using (var host = CreateMSBuildTestHost(testProject.Directory))
