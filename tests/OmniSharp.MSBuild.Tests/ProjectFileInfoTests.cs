@@ -155,20 +155,5 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
             }
         }
-
-        [Fact]
-        public async Task ProjectInfoContainRulesetInformation()
-        {
-            using (var host = CreateOmniSharpHost())
-            using (var testProject = await _testAssets.GetTestProjectAsync("ProjectWithAnalyzers"))
-            {
-                var projectFilePath = Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj");
-
-                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
-
-                Assert.NotNull(projectFileInfo?.RuleSet);
-                Assert.Contains(projectFileInfo.RuleSet.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
-            }
-        }
     }
 }

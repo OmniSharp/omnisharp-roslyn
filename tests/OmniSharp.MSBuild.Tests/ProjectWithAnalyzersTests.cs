@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Eventing;
 using OmniSharp.Services;
@@ -61,7 +62,7 @@ namespace OmniSharp.MSBuild.Tests
             {
                 var project = host.Workspace.CurrentSolution.Projects.Single();
 
-                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021");
+                Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Warn);
             }
         }
 
