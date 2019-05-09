@@ -159,7 +159,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
-                    _currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _);
+                    if(!_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
+                    {
+                        _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
+                    };
                     break;
                 case WorkspaceChangeKind.ProjectAdded:
                 case WorkspaceChangeKind.ProjectChanged:
