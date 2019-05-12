@@ -321,7 +321,6 @@ namespace OmniSharp
 
         protected override void ApplyDocumentAdded(DocumentInfo info, SourceText text)
         {
-            var project = this.CurrentSolution.GetProject(info.Id.ProjectId);
             var fullPath = info.FilePath;
 
             this.OnDocumentAdded(info);
@@ -390,11 +389,23 @@ namespace OmniSharp
             return Task.WhenAll(_waitForProjectModelReadyHandlers.Select(h => h(filePath)));
         }
 
-        public void AddAnalyzerReference(ProjectId id, ImmutableArray<AnalyzerFileReference> analyzerReferences)
+        public void SetAnalyzerReferences(ProjectId id, ImmutableArray<AnalyzerFileReference> analyzerReferences)
         {
-            foreach(var analyzerReference in analyzerReferences)
+            var project = this.CurrentSolution.GetProject(id);
+
+            var refsToAdd = analyzerReferences.Where(newRef => project.AnalyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
+            var refsToRemove = project.AnalyzerReferences.Where(newRef => analyzerReferences.All(oldRef => oldRef.Display != newRef.Display));
+
+            foreach(var toAdd in refsToAdd)
             {
-                base.OnAnalyzerReferenceAdded(id, analyzerReference);
+                _logger.LogInformation($"Adding analyzer reference: {toAdd.FullPath}");
+                base.OnAnalyzerReferenceAdded(id, toAdd);
+            }
+
+            foreach(var toRemove in refsToRemove)
+            {
+                _logger.LogInformation($"Removing analyzer reference: {toRemove.FullPath}");
+                base.OnAnalyzerReferenceRemoved(id, toRemove);
             }
         }
     }
