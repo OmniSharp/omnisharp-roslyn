@@ -25,6 +25,7 @@ using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using System.Reflection;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace OmniSharp.MSBuild
 {
@@ -425,6 +426,13 @@ namespace OmniSharp.MSBuild
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
+
+            var analyzerFileReferences = projectFileInfo.Analyzers
+                .Select(analyzerReferencePath => new AnalyzerFileReference(analyzerReferencePath, _assemblyLoader))
+                .ToImmutableArray();
+
+            _workspace.AddAnalyzerReference(project.Id, analyzerFileReferences);
+
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
         }
 

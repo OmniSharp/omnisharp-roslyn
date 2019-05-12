@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.FileWatching;
@@ -386,6 +388,14 @@ namespace OmniSharp
         private Task OnWaitForProjectModelReadyAsync(string filePath)
         {
             return Task.WhenAll(_waitForProjectModelReadyHandlers.Select(h => h(filePath)));
-        }  
+        }
+
+        public void AddAnalyzerReference(ProjectId id, ImmutableArray<AnalyzerFileReference> analyzerReferences)
+        {
+            foreach(var analyzerReference in analyzerReferences)
+            {
+                base.OnAnalyzerReferenceAdded(id, analyzerReference);
+            }
+        }
     }
 }
