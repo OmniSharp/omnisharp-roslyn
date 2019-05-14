@@ -79,7 +79,7 @@ namespace OmniSharp
                 try
                 {
                     LoggerExtensions.LogInformation(logger, $"Invoking Workspace Options Provider: {providerName}");
-                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue.FormattingOptions);
+                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue);
                 }
                 catch (Exception e)
                 {
