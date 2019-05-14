@@ -9,5 +9,7 @@ namespace OmniSharp.Options
         public FormattingOptions FormattingOptions { get; set; } = new FormattingOptions();
 
         public FileOptions FileOptions { get; set; } = new FileOptions();
+
+        public RenameOptions RenameOptions { get; set; } = new RenameOptions();
     }
 }
