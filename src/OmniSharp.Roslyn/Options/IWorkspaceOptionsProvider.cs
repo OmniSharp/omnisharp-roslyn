@@ -7,9 +7,4 @@ namespace OmniSharp.Roslyn.Options
     {
         OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omniSharpOptions);
     }
-
-    //public interface IWorkspaceOptionsProvider<FormattingOptions>
-    //{
-    //    OptionSet Process(OptionSet optionSet, FormattingOptions options);
-    //}
 }
