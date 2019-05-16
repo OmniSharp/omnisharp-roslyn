@@ -77,30 +77,27 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
-        public async Task WaitForResultsAsync(ImmutableArray<DocumentId> documentIds)
+        public async Task WaitForResultsAsync(DocumentId documentId)
         {
             var items = new List<(DateTime modified, CancellationTokenSource workDoneSource)>();
 
-            foreach (var documentId in documentIds)
+            if (_currentWork.ContainsKey(documentId))
             {
-                if (_currentWork.ContainsKey(documentId))
-                {
-                    items.Add(_currentWork[documentId]);
-                }
-                else if (_workQueue.ContainsKey(documentId))
-                {
-                    items.Add(_workQueue[documentId]);
-                }
+                items.Add(_currentWork[documentId]);
+            }
+            else if (_workQueue.ContainsKey(documentId))
+            {
+                items.Add(_workQueue[documentId]);
             }
 
             await Task.WhenAll(items.Select(item =>
                                 Task.Delay(_maximumDelayWhenWaitingForResults, item.workDoneSource.Token)
-                                .ContinueWith(task => LogTimeouts(task, documentIds))));
+                                .ContinueWith(task => LogTimeouts(task, documentId))));
         }
 
         // This logs wait's for documentId diagnostics that continue without getting current version from analyzer.
         // This happens on larger solutions during initial load or situations where analysis slows down remarkably.
-        private void LogTimeouts(Task task, IEnumerable<DocumentId> documentIds)
+        private void LogTimeouts(Task task, DocumentId documentIds)
         {
             if (!task.IsCanceled) _logger.LogDebug($"Timeout before work got ready for one of documents {string.Join(",", documentIds)}.");
         }
