@@ -23,12 +23,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         private readonly Func<DateTime> _utcNow;
         private readonly int _maximumDelayWhenWaitingForResults;
-        private readonly ILogger<AnalyzerWorkQueue> _logger;
 
-        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15*1000)
+        public AnalyzerWorkQueue(Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15*1000)
         {
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
-            _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
             _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
         }
 
@@ -123,5 +121,4 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return Task.Delay(_maximumDelayWhenWaitingForResults, _foregroundWorkPending.Token);
         }
     }
-
 }

@@ -1,241 +1,212 @@
-// using System;
-// using System.Collections.Immutable;
-// using System.Linq;
-// using System.Threading;
-// using System.Threading.Tasks;
-// using Microsoft.CodeAnalysis;
-// using Microsoft.Extensions.Logging;
-// using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
-// using Xunit;
+using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
+using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
+using Xunit;
 
-// namespace OmniSharp.Roslyn.CSharp.Tests
-// {
-//     public class AnalyzerWorkerQueueFacts
-//     {
-//         private class Logger : ILogger
-//         {
-//             public IDisposable BeginScope<TState>(TState state)
-//             {
-//                 return null;
-//             }
+namespace OmniSharp.Roslyn.CSharp.Tests
+{
+    public class AnalyzerWorkerQueueFacts
+    {
+        [Theory]
+        [InlineData(AnalyzerWorkType.Background)]
+        [InlineData(AnalyzerWorkType.Foreground)]
+        public void WhenItemsAreAddedButThrotlingIsntOverNoWorkShouldBeReturned(AnalyzerWorkType workType)
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var document = CreateTestDocumentId();
 
-//             public bool IsEnabled(LogLevel logLevel) => true;
+            queue.PutWork(new [] { document }, workType);
+            Assert.Empty(queue.TakeWork(workType));
+        }
 
-//             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-//             {
-//                 RecordedMessages = RecordedMessages.Add(state.ToString());
-//             }
+        [Theory]
+        [InlineData(AnalyzerWorkType.Background)]
+        [InlineData(AnalyzerWorkType.Foreground)]
+        public void WhenWorksIsAddedToQueueThenTheyWillBeReturned(AnalyzerWorkType workType)
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var document = CreateTestDocumentId();
 
-//             public ImmutableArray<string> RecordedMessages { get; set; } = ImmutableArray.Create<string>();
-//         }
+            queue.PutWork(new [] { document }, workType);
 
-//         private class LoggerFactory : ILoggerFactory
-//         {
-//             public Logger Logger { get; } = new Logger();
+            now = PassOverThrotlingPeriod(now);
+            var work = queue.TakeWork(workType);
 
-//             public void AddProvider(ILoggerProvider provider)
-//             {
-//             }
+            Assert.Contains(document, work);
+            Assert.Empty(queue.TakeWork(workType));
+        }
 
-//             public ILogger CreateLogger(string categoryName)
-//             {
-//                 return Logger;
-//             }
+        [Theory]
+        [InlineData(AnalyzerWorkType.Background)]
+        [InlineData(AnalyzerWorkType.Foreground)]
+        public void WhenSameItemIsAddedMultipleTimesInRowThenThrottleItemAsOne(AnalyzerWorkType workType)
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var document = CreateTestDocumentId();
 
-//             public void Dispose()
-//             {
-//             }
-//         }
+            queue.PutWork(new [] { document }, workType);
+            queue.PutWork(new [] { document }, workType);
+            queue.PutWork(new [] { document }, workType);
 
-//         [Fact]
-//         public void WhenItemsAreAddedButThrotlingIsntOverNoWorkShouldBeReturned()
-//         {
-//             var now = DateTime.UtcNow;
-//             var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
-//             var document = CreateTestDocumentId();
+            Assert.Empty(queue.TakeWork(workType));
 
-//             queue.PutWork(document);
-//             Assert.Empty(queue.TakeWork());
-//         }
+            now = PassOverThrotlingPeriod(now);
 
-//         [Fact]
-//         public void WhenWorksIsAddedToQueueThenTheyWillBeReturned()
-//         {
-//             var now = DateTime.UtcNow;
-//             var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
-//             var document = CreateTestDocumentId();
+            Assert.Contains(document, queue.TakeWork(workType));
+            Assert.Empty(queue.TakeWork(workType));
+        }
 
-//             queue.PutWork(document);
+        private static DateTime PassOverThrotlingPeriod(DateTime now) => now.AddSeconds(30);
 
-//             now = PassOverThrotlingPeriod(now);
-//             var work = queue.TakeWork();
+        [Fact]
+        public void WhenForegroundWorkIsAddedThenWaitNextIterationOfItReady()
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 500);
+            var document = CreateTestDocumentId();
 
-//             Assert.Contains(document, work);
-//             Assert.Empty(queue.TakeWork());
-//         }
+            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
 
-//         [Fact]
-//         public void WhenSameItemIsAddedMultipleTimesInRowThenThrottleItemAsOne()
-//         {
-//             var now = DateTime.UtcNow;
-//             var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
-//             var document = CreateTestDocumentId();
+            var pendingTask = queue.WaitForegroundWorkComplete();
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
-//             queue.PutWork(document);
-//             queue.PutWork(document);
-//             queue.PutWork(document);
+            Assert.False(pendingTask.IsCompleted);
 
-//             Assert.Empty(queue.TakeWork());
+            now = PassOverThrotlingPeriod(now);
 
-//             now = PassOverThrotlingPeriod(now);
+            var work = queue.TakeWork(AnalyzerWorkType.Foreground);
+            queue.ForegroundWorkComplete();
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            Assert.True(pendingTask.IsCompleted);
+        }
 
-//             Assert.Contains(document, queue.TakeWork());
-//             Assert.Empty(queue.TakeWork());
-//         }
+        [Fact]
+        public void WhenForegroundWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 500);
+            var document = CreateTestDocumentId();
 
-//         private static DateTime PassOverThrotlingPeriod(DateTime now) => now.AddSeconds(30);
+            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
 
-//         [Fact]
-//         public void WhenWorkIsAddedThenWaitNextIterationOfItReady()
-//         {
-//             var now = DateTime.UtcNow;
-//             var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
-//             var document = CreateTestDocumentId();
+            now = PassOverThrotlingPeriod(now);
 
-//             queue.PutWork(document);
+            var work = queue.TakeWork(AnalyzerWorkType.Foreground);
 
-//             var pendingTask = queue.WaitForegroundWorkDone(document);
-//             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            var pendingTask = queue.WaitForegroundWorkComplete();
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
-//             Assert.False(pendingTask.IsCompleted);
+            Assert.False(pendingTask.IsCompleted);
+            queue.ForegroundWorkComplete();
+            pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            Assert.True(pendingTask.IsCompleted);
+        }
 
-//             now = PassOverThrotlingPeriod(now);
+        [Fact]
+        public void WhenWorkIsWaitedButTimeoutForWaitIsExceededAllowContinue()
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 20);
+            var document = CreateTestDocumentId();
 
-//             var work = queue.TakeWork();
-//             queue.MarkWorkAsCompleteForDocumentId(document);
-//             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
-//             Assert.True(pendingTask.IsCompleted);
-//         }
+            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
 
-//         [Fact]
-//         public void WhenWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
-//         {
-//             var now = DateTime.UtcNow;
-//             var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
-//             var document = CreateTestDocumentId();
+            now = PassOverThrotlingPeriod(now);
+            var work = queue.TakeWork(AnalyzerWorkType.Foreground);
 
-//             queue.PutWork(document);
+            var pendingTask = queue.WaitForegroundWorkComplete();
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+            pendingTask.Wait(cts.Token);
 
-//             now = PassOverThrotlingPeriod(now);
+            Assert.True(pendingTask.IsCompleted);
+        }
 
-//             var work = queue.TakeWork();
+        [Fact]
+        public async Task WhenMultipleThreadsAreConsumingAnalyzerWorkerQueueItWorksAsExpected()
+        {
+            var now = DateTime.UtcNow;
 
-//             var pendingTask = queue.WaitForegroundWorkDone(work.First());
-//             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
+            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 1000);
 
-//             Assert.False(pendingTask.IsCompleted);
-//             queue.MarkWorkAsCompleteForDocumentId(document);
-//             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
-//             Assert.True(pendingTask.IsCompleted);
-//         }
+            var parallelQueues =
+                Enumerable.Range(0, 10)
+                    .Select(_ =>
+                        Task.Run(() => {
+                            var document = CreateTestDocumentId();
 
-//         [Fact]
-//         public void WhenWorkIsWaitedButTimeoutForWaitIsExceededAllowContinue()
-//         {
-//             var now = DateTime.UtcNow;
-//             var loggerFactory = new LoggerFactory();
-//             var queue = new AnalyzerWorkQueue(loggerFactory, utcNow: () => now, timeoutForPendingWorkMs: 20);
-//             var document = CreateTestDocumentId();
+                            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
 
-//             queue.PutWork(document);
+                            now = PassOverThrotlingPeriod(now);
 
-//             now = PassOverThrotlingPeriod(now);
-//             var work = queue.TakeWork();
+                            var work = queue.TakeWork(AnalyzerWorkType.Foreground);
 
-//             var pendingTask = queue.WaitForegroundWorkDone(work.First());
-//             var cts = new CancellationTokenSource();
-//             cts.CancelAfter(TimeSpan.FromSeconds(5));
-//             pendingTask.Wait(cts.Token);
+                            var pendingTask = queue.WaitForegroundWorkComplete();
 
-//             Assert.True(pendingTask.IsCompleted);
-//             Assert.Contains("Timeout before work got ready", loggerFactory.Logger.RecordedMessages.Single());
-//         }
+                            queue.WaitForegroundWorkComplete();
 
-//         [Fact]
-//         public async Task WhenMultipleThreadsAreConsumingAnalyzerWorkerQueueItWorksAsExpected()
-//         {
-//             var now = DateTime.UtcNow;
+                            pendingTask.Wait(TimeSpan.FromMilliseconds(300));
+                    }))
+                    .ToArray();
 
-//             var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 1000);
+            await Task.WhenAll(parallelQueues);
 
-//             var parallelQueues =
-//                 Enumerable.Range(0, 10)
-//                     .Select(_ =>
-//                         Task.Run(() => {
-//                             var document = CreateTestDocumentId();
+            Assert.Empty(queue.TakeWork(AnalyzerWorkType.Foreground));
+        }
 
-//                             queue.PutWork(document);
+        [Fact]
+        public async Task WhenWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
+        {
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var document = CreateTestDocumentId();
 
-//                             now = PassOverThrotlingPeriod(now);
-//                             var work = queue.TakeWork();
+            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
 
-//                             var pendingTask = queue.WaitForegroundWorkDone(work.First());
+            now = PassOverThrotlingPeriod(now);
 
-//                             foreach (var workDoc in work)
-//                             {
-//                                 queue.MarkWorkAsCompleteForDocumentId(workDoc);
-//                             }
+            var work = queue.TakeWork(AnalyzerWorkType.Foreground);
+            var waitingCall = Task.Run(async () => await queue.WaitForegroundWorkComplete());
+            await Task.Delay(50);
 
-//                             pendingTask.Wait(TimeSpan.FromMilliseconds(300));
-//                     }))
-//                     .ToArray();
+            // User updates code -> document is queued again during period when theres already api call waiting
+            // to continue.
+            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
 
-//             await Task.WhenAll(parallelQueues);
+            // First iteration of work is done.
+            queue.ForegroundWorkComplete();
 
-//             Assert.Empty(queue.TakeWork());
-//         }
+            // Waiting call continues because it's iteration of work is done, even when theres next
+            // already waiting.
+            await waitingCall;
 
-//         [Fact]
-//         public async Task WhenWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
-//         {
-//             var now = DateTime.UtcNow;
-//             var loggerFactory = new LoggerFactory();
-//             var queue = new AnalyzerWorkQueue(loggerFactory, utcNow: () => now);
-//             var document = CreateTestDocumentId();
+            Assert.True(waitingCall.IsCompleted);
+        }
 
-//             queue.PutWork(document);
+        [Fact]
+        public async Task WhenBackgroundWorkIsAdded_DontWaitIt()
+        {
+            throw new NotImplementedException();
+        }
 
-//             now = PassOverThrotlingPeriod(now);
+        private DocumentId CreateTestDocumentId()
+        {
+            var projectInfo = ProjectInfo.Create(
+                id: ProjectId.CreateNewId(),
+                version: VersionStamp.Create(),
+                name: "testProject",
+                assemblyName: "AssemblyName",
+                language: LanguageNames.CSharp);
 
-//             var work = queue.TakeWork();
-//             var waitingCall = Task.Run(async () => await queue.WaitForegroundWorkDone(work.First()));
-//             await Task.Delay(50);
-
-//             // User updates code -> document is queued again during period when theres already api call waiting
-//             // to continue.
-//             queue.PutWork(document);
-
-//             // First iteration of work is done.
-//             queue.MarkWorkAsCompleteForDocumentId(document);
-
-//             // Waiting call continues because it's iteration of work is done, even when theres next
-//             // already waiting.
-//             await waitingCall;
-
-//             Assert.True(waitingCall.IsCompleted);
-//             Assert.Empty(loggerFactory.Logger.RecordedMessages);
-//         }
-
-//         private DocumentId CreateTestDocumentId()
-//         {
-//             var projectInfo = ProjectInfo.Create(
-//                 id: ProjectId.CreateNewId(),
-//                 version: VersionStamp.Create(),
-//                 name: "testProject",
-//                 assemblyName: "AssemblyName",
-//                 language: LanguageNames.CSharp);
-
-//             return DocumentId.CreateNewId(projectInfo.Id);
-//         }
-//     }
-// }
+            return DocumentId.CreateNewId(projectInfo.Id);
+        }
+    }
+}
