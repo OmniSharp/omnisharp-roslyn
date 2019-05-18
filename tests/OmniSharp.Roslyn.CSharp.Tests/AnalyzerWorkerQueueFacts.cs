@@ -104,7 +104,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             queue.PutWork(document);
 
-            var pendingTask = queue.WaitForResultsAsync(document);
+            var pendingTask = queue.WaitForegroundWorkDone(document);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
@@ -130,7 +130,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var work = queue.TakeWork();
 
-            var pendingTask = queue.WaitForResultsAsync(work.First());
+            var pendingTask = queue.WaitForegroundWorkDone(work.First());
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
@@ -152,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             now = PassOverThrotlingPeriod(now);
             var work = queue.TakeWork();
 
-            var pendingTask = queue.WaitForResultsAsync(work.First());
+            var pendingTask = queue.WaitForegroundWorkDone(work.First());
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(5));
             pendingTask.Wait(cts.Token);
@@ -179,7 +179,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             now = PassOverThrotlingPeriod(now);
                             var work = queue.TakeWork();
 
-                            var pendingTask = queue.WaitForResultsAsync(work.First());
+                            var pendingTask = queue.WaitForegroundWorkDone(work.First());
 
                             foreach (var workDoc in work)
                             {
@@ -208,7 +208,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             now = PassOverThrotlingPeriod(now);
 
             var work = queue.TakeWork();
-            var waitingCall = Task.Run(async () => await queue.WaitForResultsAsync(work.First()));
+            var waitingCall = Task.Run(async () => await queue.WaitForegroundWorkDone(work.First()));
             await Task.Delay(50);
 
             // User updates code -> document is queued again during period when theres already api call waiting

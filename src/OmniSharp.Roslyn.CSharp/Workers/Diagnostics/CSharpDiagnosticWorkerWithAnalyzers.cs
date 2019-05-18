@@ -100,7 +100,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
         {
             if(documentIds.Length == 1)
-                await _workQueue.WaitForResultsAsync(documentIds[0]);
+                await _workQueue.WaitForegroundWorkComplete();
 
             return _currentDiagnosticResults
                 .Where(x => documentIds.Any(docId => docId == x.Key))
@@ -144,12 +144,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds)
+        private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)
         {
-            foreach (var document in documentIds)
-            {
-                _workQueue.PutWork(document);
-            }
+            _workQueue.PutWork(documentIds, workType);
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
@@ -159,7 +156,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded
                 || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged )
             {
-                QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
+                QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId), AnalyzerWorkType.Foreground);
             }
             else if(changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved)
             {
@@ -245,14 +242,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             catch (Exception ex)
             {
                 _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
-                _workQueue.MarkWorkAsCompleteForDocumentId(document.Id);
+                _workQueue.ForegroundWorkComplete();
             }
         }
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
         {
             _currentDiagnosticResults[document.Id] = (project.Name, diagnosticsWithAnalyzers);
-            _workQueue.MarkWorkAsCompleteForDocumentId(document.Id);
+            _workQueue.ForegroundWorkComplete();
             EmitDiagnostics(_currentDiagnosticResults[document.Id].diagnostics);
         }
 
@@ -274,7 +271,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics()
         {
             var documentIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
-            QueueForAnalysis(documentIds);
+            QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
             return documentIds;
         }
 

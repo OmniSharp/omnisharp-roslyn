@@ -12,13 +12,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 {
     public class AnalyzerWorkQueue
     {
-        private readonly int _throttlingMs = 300;
+        private readonly TimeSpan _foregroundThrottling = TimeSpan.FromMilliseconds(300);
+        private readonly TimeSpan _backgroundThrottling = TimeSpan.FromMilliseconds(2000);
 
-        private readonly ConcurrentDictionary<DocumentId, (DateTime modified, CancellationTokenSource workDoneSource)> _workQueue =
-            new ConcurrentDictionary<DocumentId, (DateTime modified, CancellationTokenSource workDoneSource)>();
-
-        private readonly ConcurrentDictionary<DocumentId, (DateTime modified,  CancellationTokenSource workDoneSource)> _currentWork =
-            new ConcurrentDictionary<DocumentId, (DateTime modified, CancellationTokenSource workDoneSource)>();
+        private ImmutableHashSet<DocumentId> _backgroundWork = ImmutableHashSet<DocumentId>.Empty;
+        private ImmutableHashSet<DocumentId> _foregroundWork = ImmutableHashSet<DocumentId>.Empty;
+        private DateTime _foregroundWorkThrottlingBeginStamp = DateTime.UtcNow;
+        private DateTime _backgroundThrottlingBeginStamp = DateTime.UtcNow;
+        private CancellationTokenSource _foregroundWorkPending = new CancellationTokenSource();
 
         private readonly Func<DateTime> _utcNow;
         private readonly int _maximumDelayWhenWaitingForResults;
@@ -26,80 +27,100 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15*1000)
         {
-            utcNow = utcNow ?? (() => DateTime.UtcNow);
+            _utcNow = utcNow ?? (() => DateTime.UtcNow);
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
-            _utcNow = utcNow;
             _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
         }
 
-        public void PutWork(DocumentId documentId)
+        public void PutWork(IReadOnlyCollection<DocumentId> documentIds, AnalyzerWorkType workType)
         {
-            _workQueue.AddOrUpdate(documentId,
-                (modified: DateTime.UtcNow, new CancellationTokenSource()),
-                (_, oldValue) => (modified: DateTime.UtcNow, oldValue.workDoneSource));
-        }
-
-        public ImmutableArray<DocumentId> TakeWork()
-        {
-            lock (_workQueue)
+            if(workType == AnalyzerWorkType.Background)
             {
-                var now = _utcNow();
-                var currentWork = _workQueue
-                    .Where(x => ThrottlingPeriodNotActive(x.Value.modified, now))
-                    .OrderByDescending(x => x.Value.modified)
-                    .Take(50)
-                    .ToImmutableArray();
+                if(_backgroundWork.IsEmpty)
+                    _backgroundThrottlingBeginStamp = _utcNow();
 
-                foreach (var work in currentWork)
-                {
-                    _workQueue.TryRemove(work.Key, out _);
-                    _currentWork.TryAdd(work.Key, work.Value);
-                }
+                _backgroundWork = _backgroundWork.Union(documentIds);
+            }
+            else
+            {
+                if(_foregroundWork.IsEmpty)
+                    _foregroundWorkThrottlingBeginStamp = _utcNow();
 
-                return currentWork.Select(x => x.Key).ToImmutableArray();
+                if(_foregroundWorkPending == null)
+                    _foregroundWorkPending = new CancellationTokenSource();
+
+                _foregroundWork = _foregroundWork.Union(documentIds);
             }
         }
 
-        private bool ThrottlingPeriodNotActive(DateTime modified, DateTime now)
+        public IReadOnlyCollection<DocumentId> TakeWork(AnalyzerWorkType workType)
         {
-            return (now - modified).TotalMilliseconds >= _throttlingMs;
+            if(workType == AnalyzerWorkType.Foreground)
+            {
+                return TakeForegroundWork();
+            }
+            else
+            {
+                return TakeBackgroundWork();
+            }
         }
 
-        public void MarkWorkAsCompleteForDocumentId(DocumentId documentId)
+        private IReadOnlyCollection<DocumentId> TakeForegroundWork()
         {
-            if(_currentWork.TryGetValue(documentId, out var work))
+            if (IsForegroundThrottlingActive() || _foregroundWork.IsEmpty)
+                return ImmutableHashSet<DocumentId>.Empty;
+
+            lock (_foregroundWork)
             {
-                work.workDoneSource.Cancel();
-                _currentWork.TryRemove(documentId, out _);
+                var currentWork = _foregroundWork;
+                _foregroundWork = ImmutableHashSet<DocumentId>.Empty;
+                return currentWork;
+            }
+        }
+
+        private IReadOnlyCollection<DocumentId> TakeBackgroundWork()
+        {
+            if (IsBackgroundThrottlineActive() || _backgroundWork.IsEmpty)
+                return ImmutableHashSet<DocumentId>.Empty;
+
+            lock (_backgroundWork)
+            {
+                var currentWork = _foregroundWork;
+                _backgroundWork = ImmutableHashSet<DocumentId>.Empty;
+                return currentWork;
+            }
+        }
+
+        private bool IsForegroundThrottlingActive()
+        {
+            return (_utcNow() - _foregroundWorkThrottlingBeginStamp).TotalMilliseconds <= _foregroundThrottling.TotalMilliseconds;
+        }
+
+        private bool IsBackgroundThrottlineActive()
+        {
+            return (_utcNow() - _backgroundThrottlingBeginStamp).TotalMilliseconds <= _backgroundThrottling.TotalMilliseconds;
+        }
+
+        public void ForegroundWorkComplete()
+        {
+            lock(_foregroundWork)
+            {
+                if(_foregroundWorkPending == null)
+                    return;
+
+                _foregroundWorkPending.Cancel();
             }
         }
 
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
-        public async Task WaitForResultsAsync(DocumentId documentId)
+        public Task WaitForegroundWorkComplete()
         {
-            var items = new List<(DateTime modified, CancellationTokenSource workDoneSource)>();
+            if(_foregroundWorkPending == null && _foregroundWork.IsEmpty)
+                return Task.CompletedTask;
 
-            if (_currentWork.ContainsKey(documentId))
-            {
-                items.Add(_currentWork[documentId]);
-            }
-            else if (_workQueue.ContainsKey(documentId))
-            {
-                items.Add(_workQueue[documentId]);
-            }
-
-            await Task.WhenAll(items.Select(item =>
-                                Task.Delay(_maximumDelayWhenWaitingForResults, item.workDoneSource.Token)
-                                .ContinueWith(task => LogTimeouts(task, documentId))));
-        }
-
-        // This logs wait's for documentId diagnostics that continue without getting current version from analyzer.
-        // This happens on larger solutions during initial load or situations where analysis slows down remarkably.
-        private void LogTimeouts(Task task, DocumentId documentIds)
-        {
-            if (!task.IsCanceled) _logger.LogDebug($"Timeout before work got ready for one of documents {string.Join(",", documentIds)}.");
+            return Task.Delay(_maximumDelayWhenWaitingForResults, _foregroundWorkPending.Token);
         }
     }
 
