@@ -81,13 +81,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             });
         }
 
-        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
-        {
-            var documentIds = GetDocumentIdsFromPaths(documentPaths);
-            QueueForAnalysis(documentIds);
-            return documentIds;
-        }
-
         public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
             await InitializeWithWorkspaceDocumentsIfNotYetDone();
@@ -124,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var solution = _workspace.CurrentSolution;
 
                     var currentWorkGroupedByProjects = _workQueue
-                        .TakeWork()
+                        .TakeWork(AnalyzerWorkType.Foreground)
                         .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
                         .Where(x => x.projectId != null)
                         .GroupBy(x => x.projectId, x => x.documentId)

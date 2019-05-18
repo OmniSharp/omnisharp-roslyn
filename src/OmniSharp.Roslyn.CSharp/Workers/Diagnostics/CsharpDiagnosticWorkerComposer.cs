@@ -63,10 +63,5 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             return _implementation.QueueAllDocumentsForDiagnostics();
         }
-
-        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
-        {
-            return _implementation.QueueForDiagnosis(documentPaths);
-        }
     }
 }

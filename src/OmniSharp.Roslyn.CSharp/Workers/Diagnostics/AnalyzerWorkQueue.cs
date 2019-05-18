@@ -85,7 +85,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             lock (_backgroundWork)
             {
-                var currentWork = _foregroundWork;
+                var currentWork = _backgroundWork;
                 _backgroundWork = ImmutableHashSet<DocumentId>.Empty;
                 return currentWork;
             }
@@ -117,7 +117,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // like it's syncronous even that actual analysis may take a while.
         public Task WaitForegroundWorkComplete()
         {
-            if(_foregroundWorkPending == null && _foregroundWork.IsEmpty)
+            if(_foregroundWorkPending == null || _foregroundWork.IsEmpty)
                 return Task.CompletedTask;
 
             return Task.Delay(_maximumDelayWhenWaitingForResults, _foregroundWorkPending.Token);
