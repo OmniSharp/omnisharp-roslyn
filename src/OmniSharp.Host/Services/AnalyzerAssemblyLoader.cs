@@ -29,8 +29,8 @@ namespace OmniSharp.Host.Services
         private readonly Dictionary<string, Assembly> _loadedAssembliesByPath = new Dictionary<string, Assembly>();
         private readonly Dictionary<string, AssemblyIdentity> _loadedAssemblyIdentitiesByPath = new Dictionary<string, AssemblyIdentity>();
         private readonly Dictionary<AssemblyIdentity, Assembly> _loadedAssembliesByIdentity = new Dictionary<AssemblyIdentity, Assembly>();
-
         private readonly Dictionary<string, HashSet<string>> _knownAssemblyPathsBySimpleName = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        private int _hookedAssemblyResolve;
 
         public AnalyzerAssemblyLoader()
         {
@@ -63,6 +63,7 @@ namespace OmniSharp.Host.Services
 
         private Assembly LoadFromPathUncheckedCore(string fullPath, AssemblyIdentity identity = null)
         {
+
             // Check if we have already loaded an assembly with the same identity or from the given path.
             Assembly loadedAssembly = null;
             lock (_guard)
@@ -147,14 +148,6 @@ namespace OmniSharp.Host.Services
             return identity;
         }
 
-        private Assembly LoadFromPathImpl(string fullPath)
-        {
-            string assemblyDirectory = CreateUniqueDirectoryForAssembly();
-            string shadowCopyPath = CopyFileAndResources(fullPath, assemblyDirectory);
-
-            return Assembly.LoadFrom(shadowCopyPath);
-        }
-
         private static string CopyFileAndResources(string fullPath, string assemblyDirectory)
         {
             string fileNameWithExtension = Path.GetFileName(fullPath);
@@ -230,8 +223,72 @@ namespace OmniSharp.Host.Services
             string directory = Path.Combine(_baseDirectory, guid);
 
             Directory.CreateDirectory(directory);
-
             return directory;
+        }
+
+        private Assembly LoadFromPathImpl(string originalPath)
+        {
+            string assemblyDirectory = CreateUniqueDirectoryForAssembly();
+            string shadowCopyPath = CopyFileAndResources(originalPath, assemblyDirectory);
+
+            if (Interlocked.CompareExchange(ref _hookedAssemblyResolve, 0, 1) == 0)
+            {
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            }
+
+            return Assembly.LoadFrom(shadowCopyPath);
+        }
+
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            try
+            {
+                return Load(AppDomain.CurrentDomain.ApplyPolicy(args.Name));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public Assembly Load(string displayName)
+        {
+            if (!AssemblyIdentity.TryParseDisplayName(displayName, out var requestedIdentity))
+            {
+                return null;
+            }
+
+            ImmutableArray<string> candidatePaths;
+            lock (_guard)
+            {
+
+                // First, check if this loader already loaded the requested assembly:
+                if (_loadedAssembliesByIdentity.TryGetValue(requestedIdentity, out var existingAssembly))
+                {
+                    return existingAssembly;
+                }
+                // Second, check if an assembly file of the same simple name was registered with the loader:
+                if (!_knownAssemblyPathsBySimpleName.TryGetValue(requestedIdentity.Name, out var pathList))
+                {
+                    return null;
+                }
+
+                candidatePaths = pathList.ToImmutableArray();
+            }
+
+            // Multiple assemblies of the same simple name but different identities might have been registered.
+            // Load the one that matches the requested identity (if any).
+            foreach (var candidatePath in candidatePaths)
+            {
+                var candidateIdentity = GetOrAddAssemblyIdentity(candidatePath);
+
+                if (requestedIdentity.Equals(candidateIdentity))
+                {
+                    return LoadFromPathUncheckedCore(candidatePath, candidateIdentity);
+                }
+            }
+
+            return null;
         }
 
         private static AssemblyIdentity TryGetAssemblyIdentity(string filePath)
