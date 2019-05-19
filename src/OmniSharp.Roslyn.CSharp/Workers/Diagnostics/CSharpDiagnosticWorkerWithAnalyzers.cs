@@ -59,7 +59,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
 
-            Task.Factory.StartNew(Worker, TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
         }
 
         private Task InitializeWithWorkspaceDocumentsIfNotYetDone()
@@ -93,8 +94,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
         {
             if(documentIds.Length == 1)
+            {
+                _workQueue.TryPromote(documentIds.Single());
                 await _workQueue.WaitForegroundWorkComplete();
-
+            }
             return _currentDiagnosticResults
                 .Where(x => documentIds.Any(docId => docId == x.Key))
                 .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
@@ -108,7 +111,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .ToImmutableArray();
         }
 
-        private async Task Worker()
+        private async Task Worker(AnalyzerWorkType workType)
         {
             while (true)
             {
@@ -117,7 +120,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var solution = _workspace.CurrentSolution;
 
                     var currentWorkGroupedByProjects = _workQueue
-                        .TakeWork(AnalyzerWorkType.Foreground)
+                        .TakeWork(workType)
                         .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
                         .Where(x => x.projectId != null)
                         .GroupBy(x => x.projectId, x => x.documentId)

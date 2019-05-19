@@ -20,34 +20,39 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private DateTime _foregroundWorkThrottlingBeginStamp = DateTime.UtcNow;
         private DateTime _backgroundThrottlingBeginStamp = DateTime.UtcNow;
         private CancellationTokenSource _foregroundWorkPending = new CancellationTokenSource();
-
+        private readonly ILogger<AnalyzerWorkQueue> _logger;
         private readonly Func<DateTime> _utcNow;
         private readonly int _maximumDelayWhenWaitingForResults;
+        private readonly object _queueLock = new Object();
 
-        public AnalyzerWorkQueue(Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15*1000)
+        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15*1000)
         {
+            _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
             _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
         }
 
         public void PutWork(IReadOnlyCollection<DocumentId> documentIds, AnalyzerWorkType workType)
         {
-            if(workType == AnalyzerWorkType.Background)
+            lock(_queueLock)
             {
-                if(_backgroundWork.IsEmpty)
-                    _backgroundThrottlingBeginStamp = _utcNow();
+                if(workType == AnalyzerWorkType.Background)
+                {
+                    if(_backgroundWork.IsEmpty)
+                        _backgroundThrottlingBeginStamp = _utcNow();
 
-                _backgroundWork = _backgroundWork.Union(documentIds);
-            }
-            else
-            {
-                if(_foregroundWork.IsEmpty)
-                    _foregroundWorkThrottlingBeginStamp = _utcNow();
+                    _backgroundWork = _backgroundWork.Union(documentIds);
+                }
+                else
+                {
+                    if(_foregroundWork.IsEmpty)
+                        _foregroundWorkThrottlingBeginStamp = _utcNow();
 
-                if(_foregroundWorkPending == null)
-                    _foregroundWorkPending = new CancellationTokenSource();
+                    if(_foregroundWorkPending == null)
+                        _foregroundWorkPending = new CancellationTokenSource();
 
-                _foregroundWork = _foregroundWork.Union(documentIds);
+                    _foregroundWork = _foregroundWork.Union(documentIds);
+                }
             }
         }
 
@@ -68,7 +73,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             if (IsForegroundThrottlingActive() || _foregroundWork.IsEmpty)
                 return ImmutableHashSet<DocumentId>.Empty;
 
-            lock (_foregroundWork)
+            lock (_queueLock)
             {
                 var currentWork = _foregroundWork;
                 _foregroundWork = ImmutableHashSet<DocumentId>.Empty;
@@ -81,7 +86,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             if (IsBackgroundThrottlineActive() || _backgroundWork.IsEmpty)
                 return ImmutableHashSet<DocumentId>.Empty;
 
-            lock (_backgroundWork)
+            lock (_queueLock)
             {
                 var currentWork = _backgroundWork;
                 _backgroundWork = ImmutableHashSet<DocumentId>.Empty;
@@ -101,7 +106,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public void ForegroundWorkComplete()
         {
-            lock(_foregroundWork)
+            lock(_queueLock)
             {
                 if(_foregroundWorkPending == null)
                     return;
@@ -115,10 +120,30 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         // like it's syncronous even that actual analysis may take a while.
         public Task WaitForegroundWorkComplete()
         {
-            if(_foregroundWorkPending == null || _foregroundWork.IsEmpty)
+            if(_foregroundWorkPending == null && _foregroundWork.IsEmpty)
                 return Task.CompletedTask;
 
-            return Task.Delay(_maximumDelayWhenWaitingForResults, _foregroundWorkPending.Token);
+            return Task.Delay(_maximumDelayWhenWaitingForResults, _foregroundWorkPending.Token)
+                .ContinueWith(task => LogTimeouts(task));
+        }
+
+        public bool TryPromote(DocumentId id)
+        {
+            lock(_queueLock)
+            {
+                if(_backgroundWork.Contains(id))
+                {
+                    _foregroundWork = _foregroundWork.Add(id);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void LogTimeouts(Task task)
+        {
+            if (!task.IsCanceled) _logger.LogWarning($"Timeout before work got ready for foreground analysis queue.");
         }
     }
 }

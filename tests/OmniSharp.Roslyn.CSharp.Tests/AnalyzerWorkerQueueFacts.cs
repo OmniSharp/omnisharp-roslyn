@@ -12,16 +12,51 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 {
     public class AnalyzerWorkerQueueFacts
     {
+        private class Logger : ILogger
+        {
+            public IDisposable BeginScope<TState>(TState state)
+            {
+                return null;
+            }
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            {
+                RecordedMessages = RecordedMessages.Add(state.ToString());
+            }
+
+            public ImmutableArray<string> RecordedMessages { get; set; } = ImmutableArray.Create<string>();
+        }
+
+        private class LoggerFactory : ILoggerFactory
+        {
+            public Logger Logger { get; } = new Logger();
+
+            public void AddProvider(ILoggerProvider provider)
+            {
+            }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return Logger;
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
         [Theory]
         [InlineData(AnalyzerWorkType.Background)]
         [InlineData(AnalyzerWorkType.Foreground)]
         public void WhenItemsAreAddedButThrotlingIsntOverNoWorkShouldBeReturned(AnalyzerWorkType workType)
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, workType);
+            queue.PutWork(new[] { document }, workType);
             Assert.Empty(queue.TakeWork(workType));
         }
 
@@ -31,10 +66,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenWorksIsAddedToQueueThenTheyWillBeReturned(AnalyzerWorkType workType)
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, workType);
+            queue.PutWork(new[] { document }, workType);
 
             now = PassOverThrotlingPeriod(now);
             var work = queue.TakeWork(workType);
@@ -49,12 +84,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenSameItemIsAddedMultipleTimesInRowThenThrottleItemAsOne(AnalyzerWorkType workType)
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, workType);
-            queue.PutWork(new [] { document }, workType);
-            queue.PutWork(new [] { document }, workType);
+            queue.PutWork(new[] { document }, workType);
+            queue.PutWork(new[] { document }, workType);
+            queue.PutWork(new[] { document }, workType);
 
             Assert.Empty(queue.TakeWork(workType));
 
@@ -70,10 +105,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenForegroundWorkIsAddedThenWaitNextIterationOfItReady()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 500);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             var pendingTask = queue.WaitForegroundWorkComplete();
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
@@ -92,10 +127,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenForegroundWorkIsUnderAnalysisOutFromQueueThenWaitUntilNextIterationOfItIsReady()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 500);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 500);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             now = PassOverThrotlingPeriod(now);
 
@@ -114,10 +149,11 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public void WhenWorkIsWaitedButTimeoutForWaitIsExceededAllowContinue()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 20);
+            var loggerFactory = new LoggerFactory();
+            var queue = new AnalyzerWorkQueue(loggerFactory, utcNow: () => now, timeoutForPendingWorkMs: 20);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             now = PassOverThrotlingPeriod(now);
             var work = queue.TakeWork(AnalyzerWorkType.Foreground);
@@ -128,6 +164,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             pendingTask.Wait(cts.Token);
 
             Assert.True(pendingTask.IsCompleted);
+            Assert.Contains("Timeout before work got ready", loggerFactory.Logger.RecordedMessages.Single());
         }
 
         [Fact]
@@ -135,15 +172,16 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             var now = DateTime.UtcNow;
 
-            var queue = new AnalyzerWorkQueue(utcNow: () => now, timeoutForPendingWorkMs: 1000);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now, timeoutForPendingWorkMs: 1000);
 
             var parallelQueues =
                 Enumerable.Range(0, 10)
                     .Select(_ =>
-                        Task.Run(() => {
+                        Task.Run(() =>
+                        {
                             var document = CreateTestDocumentId();
 
-                            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
+                            queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
                             now = PassOverThrotlingPeriod(now);
 
@@ -154,7 +192,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             queue.WaitForegroundWorkComplete();
 
                             pendingTask.Wait(TimeSpan.FromMilliseconds(300));
-                    }))
+                        }))
                     .ToArray();
 
             await Task.WhenAll(parallelQueues);
@@ -166,10 +204,10 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task WhenWorkIsAddedAgainWhenPreviousIsAnalysing_ThenDontWaitAnotherOneToGetReady()
         {
             var now = DateTime.UtcNow;
-            var queue = new AnalyzerWorkQueue(utcNow: () => now);
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
             var document = CreateTestDocumentId();
 
-            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             now = PassOverThrotlingPeriod(now);
 
@@ -179,7 +217,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             // User updates code -> document is queued again during period when theres already api call waiting
             // to continue.
-            queue.PutWork(new [] { document }, AnalyzerWorkType.Foreground);
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             // First iteration of work is done.
             queue.ForegroundWorkComplete();
@@ -192,7 +230,25 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task WhenBackgroundWorkIsAdded_DontWaitIt()
+        public Task WhenBackgroundWorkIsAdded_DontWaitIt()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public Task WhenSingleFileIsPromoted_ThenPromoteItFromBackgroundQueueToForeground()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public Task WhenFileIsntAtBackgroundQueueAndTriedToBePromoted_ThenDontDoNothing()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public Task WhenFileIsProcessingInBackgroundQueue_ThenPromoteItAsForeground()
         {
             throw new NotImplementedException();
         }
