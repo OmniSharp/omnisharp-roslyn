@@ -5,8 +5,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
-  <Import Project="../../build/netfx.props" />
-
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
     <ProjectReference Include="..\OmniSharp.DotNet.ProjectModel\OmniSharp.DotNet.ProjectModel.csproj" />
@@ -14,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Dotnet.Script.DependencyModel" />
     <PackageReference Include="Dotnet.Script.DependencyModel.NuGet" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />

@@ -4,9 +4,8 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
-  <Import Project="../../build/netfx.props" />
-
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.Packaging" />

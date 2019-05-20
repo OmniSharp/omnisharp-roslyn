@@ -6,8 +6,6 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
-  <Import Project="../../build/netfx.props" />
-
   <ItemGroup>
     <EmbeddedResource Include="TestAssets\single.cake.g.txt" />
     <EmbeddedResource Include="TestAssets\single.cake.txt" />
@@ -25,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit" />

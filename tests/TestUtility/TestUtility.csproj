@@ -5,8 +5,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
-  <Import Project="../../build/netfx.props" />
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
     <ProjectReference Include="..\..\src\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
@@ -19,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="xunit" />
