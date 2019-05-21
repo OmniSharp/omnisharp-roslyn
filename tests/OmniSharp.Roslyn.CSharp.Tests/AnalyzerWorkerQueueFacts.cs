@@ -230,27 +230,67 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public Task WhenBackgroundWorkIsAdded_DontWaitIt()
+        public void WhenBackgroundWorkIsAdded_DontWaitIt()
         {
-            throw new NotImplementedException();
+            var queue = new AnalyzerWorkQueue(new LoggerFactory());
+            var document = CreateTestDocumentId();
+
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Background);
+
+            Assert.True(queue.WaitForegroundWorkComplete().IsCompleted);
         }
 
         [Fact]
-        public Task WhenSingleFileIsPromoted_ThenPromoteItFromBackgroundQueueToForeground()
+        public void WhenSingleFileIsPromoted_ThenPromoteItFromBackgroundQueueToForeground()
         {
-            throw new NotImplementedException();
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
+            var document = CreateTestDocumentId();
+
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Background);
+
+            queue.TryPromote(document);
+
+            now = PassOverThrotlingPeriod(now);
+
+            Assert.NotEmpty(queue.TakeWork(AnalyzerWorkType.Foreground));
         }
 
         [Fact]
-        public Task WhenFileIsntAtBackgroundQueueAndTriedToBePromoted_ThenDontDoNothing()
+        public void WhenFileIsntAtBackgroundQueueAndTriedToBePromoted_ThenDontDoNothing()
         {
-            throw new NotImplementedException();
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
+            var document = CreateTestDocumentId();
+
+            queue.TryPromote(document);
+
+            now = PassOverThrotlingPeriod(now);
+
+            Assert.Empty(queue.TakeWork(AnalyzerWorkType.Foreground));
         }
 
         [Fact]
-        public Task WhenFileIsProcessingInBackgroundQueue_ThenPromoteItAsForeground()
+        public void WhenFileIsProcessingInBackgroundQueue_ThenPromoteItAsForeground()
         {
-            throw new NotImplementedException();
+            var now = DateTime.UtcNow;
+            var queue = new AnalyzerWorkQueue(new LoggerFactory(), utcNow: () => now);
+            var document = CreateTestDocumentId();
+
+            queue.PutWork(new[] { document }, AnalyzerWorkType.Background);
+
+            now = PassOverThrotlingPeriod(now);
+
+            var activeWork = queue.TakeWork(AnalyzerWorkType.Background);
+
+            queue.TryPromote(document);
+
+            now = PassOverThrotlingPeriod(now);
+
+            var foregroundWork = queue.TakeWork(AnalyzerWorkType.Foreground);
+
+            Assert.NotEmpty(foregroundWork);
+            Assert.NotEmpty(activeWork);
         }
 
         private DocumentId CreateTestDocumentId()

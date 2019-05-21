@@ -84,9 +84,12 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public void WorkComplete(AnalyzerWorkType workType)
         {
-            _queues[workType].WorkPendingToken?.Cancel();
-            _queues[workType].WorkPendingToken = null;
-            _queues[workType].WorkExecuting = ImmutableHashSet<DocumentId>.Empty;
+            lock (_queueLock)
+            {
+                _queues[workType].WorkPendingToken?.Cancel();
+                _queues[workType].WorkPendingToken = null;
+                _queues[workType].WorkExecuting = ImmutableHashSet<DocumentId>.Empty;
+            }
         }
 
         // Omnisharp V2 api expects that it can request current information of diagnostics any time,
@@ -108,7 +111,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             if (_queues[AnalyzerWorkType.Background].WorkWaitingToExecute.Contains(id) || _queues[AnalyzerWorkType.Background].WorkExecuting.Contains(id))
             {
-                PutWork(new [] { id }, AnalyzerWorkType.Foreground);
+                PutWork(new[] { id }, AnalyzerWorkType.Foreground);
                 return true;
             }
 
