@@ -16,4 +16,8 @@
         <ProjectReference Include="..\OmniSharp.Cake\OmniSharp.Cake.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    </ItemGroup>
+
 </Project>
