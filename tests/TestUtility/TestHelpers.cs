@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
@@ -121,7 +122,7 @@ namespace TestUtility
 
         public static Dictionary<string, string> GetConfigurationDataWithAnalyzerConfig(bool roslynAnalyzersEnabled = false, Dictionary<string, string> existingConfiguration = null)
         {
-            if(existingConfiguration == null)
+            if (existingConfiguration == null)
             {
                 return new Dictionary<string, string>() { { "RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString() } };
             }
@@ -130,7 +131,18 @@ namespace TestUtility
             copyOfExistingConfigs.Add("RoslynExtensionsOptions:EnableAnalyzersSupport", roslynAnalyzersEnabled.ToString());
 
             return copyOfExistingConfigs;
+        }
 
+        public static async Task WaitUntil(Func<Task<bool>> condition, int frequency = 25, int timeout = -1)
+        {
+            var waitTask = Task.Run(async () =>
+            {
+                while (!await condition()) await Task.Delay(frequency);
+            });
+
+            if (waitTask != await Task.WhenAny(waitTask,
+                    Task.Delay(timeout)))
+                throw new TimeoutException();
         }
     }
 }

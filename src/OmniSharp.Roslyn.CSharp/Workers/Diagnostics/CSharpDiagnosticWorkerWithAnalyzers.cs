@@ -131,6 +131,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         await AnalyzeProject(solution, projectGroup);
                     }
 
+                    if(currentWorkGroupedByProjects.Any())
+                        _workQueue.WorkComplete(workType);
+
                     await Task.Delay(50);
                 }
                 catch (Exception ex)
@@ -238,14 +241,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             catch (Exception ex)
             {
                 _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
-                _workQueue.ForegroundWorkComplete();
             }
         }
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
         {
             _currentDiagnosticResults[document.Id] = (project.Name, diagnosticsWithAnalyzers);
-            _workQueue.ForegroundWorkComplete();
             EmitDiagnostics(_currentDiagnosticResults[document.Id].diagnostics);
         }
 

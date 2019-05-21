@@ -118,7 +118,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             now = PassOverThrotlingPeriod(now);
 
             var work = queue.TakeWork(AnalyzerWorkType.Foreground);
-            queue.ForegroundWorkComplete();
+            queue.WorkComplete(AnalyzerWorkType.Foreground);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }
@@ -140,7 +140,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
 
             Assert.False(pendingTask.IsCompleted);
-            queue.ForegroundWorkComplete();
+            queue.WorkComplete(AnalyzerWorkType.Foreground);
             pendingTask.Wait(TimeSpan.FromMilliseconds(50));
             Assert.True(pendingTask.IsCompleted);
         }
@@ -220,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             queue.PutWork(new[] { document }, AnalyzerWorkType.Foreground);
 
             // First iteration of work is done.
-            queue.ForegroundWorkComplete();
+            queue.WorkComplete(AnalyzerWorkType.Foreground);
 
             // Waiting call continues because it's iteration of work is done, even when theres next
             // already waiting.
