@@ -98,7 +98,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             using (var host = GetHost())
             {
-                var testFile = new TestFile("testFile.cs", "class _this_is_invalid_test_class_name { int n = true; }");
+                var testFile = new TestFile("testFile.cs", "public class _this_is_invalid_test_class_name {}");
 
                 host.AddFilesToWorkspace(testFile);
 
@@ -106,7 +106,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AddProjectWitFile(host, testFile, testAnalyzerRef);
 
-                var result = await host.RequestCodeCheckAsync();
+                var result = await host.RequestCodeCheckAsync("testFile.cs");
                 Assert.Contains(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
             }
         }
