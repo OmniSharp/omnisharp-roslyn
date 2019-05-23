@@ -3,6 +3,7 @@ All changes to the project will be documented in this file.
 
 ## [1.32.20] - not yet released
 * Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
+* Updated to Roslyn `3.1.0 beta4-19266-03` to match VS dev16.1 (PR: [#1504](https://github.com/OmniSharp/omnisharp-roslyn/pull/1504))
 
 ## [1.32.19] - 2019-05-01
 * Updated to Roslyn `3.1.0-beta4-19251-02` (PR: [#1479](https://github.com/OmniSharp/omnisharp-roslyn/pull/1479))
