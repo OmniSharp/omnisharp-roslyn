@@ -71,7 +71,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFileName == project.FilePath);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath);
             }
         }
 

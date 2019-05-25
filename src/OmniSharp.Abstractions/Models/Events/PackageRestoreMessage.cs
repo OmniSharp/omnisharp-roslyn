@@ -8,6 +8,6 @@ namespace OmniSharp.Models.Events
 
     public class ProjectAnalyzedMessage
     {
-        public string ProjectFileName { get; set; }
+        public string ProjectFilePath { get; set; }
     }
 }
