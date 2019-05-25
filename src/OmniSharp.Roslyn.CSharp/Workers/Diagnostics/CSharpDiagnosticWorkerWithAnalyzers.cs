@@ -129,10 +129,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     foreach (var projectGroup in currentWorkGroupedByProjects)
                     {
                         await AnalyzeProject(solution, projectGroup);
-                    }
 
-                    if(currentWorkGroupedByProjects.Any())
-                        _workQueue.WorkComplete(workType);
+                        if(workType == AnalyzerWorkType.Background)
+                        {
+                            var projectPath = solution.GetProject(projectGroup.Key).FilePath;
+                            _forwarder.ProjectAnalyzedInBackground(projectPath);
+                        }
+                    }
 
                     await Task.Delay(50);
                 }

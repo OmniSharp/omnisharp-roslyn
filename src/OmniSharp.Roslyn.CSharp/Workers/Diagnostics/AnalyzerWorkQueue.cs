@@ -64,13 +64,13 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public IReadOnlyCollection<DocumentId> TakeWork(AnalyzerWorkType workType)
         {
-            var queue = _queues[workType];
-
-            if (IsThrottlingActive(queue) || queue.WorkWaitingToExecute.IsEmpty)
-                return ImmutableHashSet<DocumentId>.Empty;
-
             lock (_queueLock)
             {
+                var queue = _queues[workType];
+
+                if (IsThrottlingActive(queue) || queue.WorkWaitingToExecute.IsEmpty)
+                    return ImmutableHashSet<DocumentId>.Empty;
+
                 queue.WorkExecuting = queue.WorkWaitingToExecute;
                 queue.WorkWaitingToExecute = ImmutableHashSet<DocumentId>.Empty;
                 return queue.WorkExecuting;
@@ -86,6 +86,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             lock (_queueLock)
             {
+                if(_queues[workType].WorkExecuting.IsEmpty)
+                    return;
+
                 _queues[workType].WorkPendingToken?.Cancel();
                 _queues[workType].WorkPendingToken = null;
                 _queues[workType].WorkExecuting = ImmutableHashSet<DocumentId>.Empty;
