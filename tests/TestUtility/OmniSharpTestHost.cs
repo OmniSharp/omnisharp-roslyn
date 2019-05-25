@@ -13,6 +13,7 @@ using OmniSharp;
 using OmniSharp.Cake;
 using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
+using OmniSharp.Eventing;
 using OmniSharp.Mef;
 using OmniSharp.Models.WorkspaceInformation;
 using OmniSharp.MSBuild;
@@ -102,11 +103,12 @@ namespace TestUtility
             IEnumerable<KeyValuePair<string, string>> configurationData = null,
             DotNetCliVersion dotNetCliVersion = DotNetCliVersion.Current,
             IEnumerable<ExportDescriptorProvider> additionalExports = null,
-            [CallerMemberName] string callerName = "")
+            [CallerMemberName] string callerName = "",
+            IEventEmitter eventEmitter = null)
         {
             var environment = new OmniSharpEnvironment(path, logLevel: LogLevel.Trace);
 
-            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion);
+            var serviceProvider = TestServiceProvider.Create(testOutput, environment, configurationData, dotNetCliVersion, eventEmitter);
 
             return Create(serviceProvider, additionalExports, callerName);
         }

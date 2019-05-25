@@ -27,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             var testFile = new TestFile(filename, "class C { int n = true; }");
 
-            var emitter = new DiagnosticTestEmitter();
+            var emitter = new TestEventEmitter<DiagnosticMessage>();
             var forwarder = new DiagnosticEventForwarder(emitter)
             {
                 IsEnabled = true
@@ -58,7 +58,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
 
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
-            var emitter = new DiagnosticTestEmitter();
+            var emitter = new TestEventEmitter<DiagnosticMessage>();
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
 
@@ -82,7 +82,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var testFile2 = new TestFile(filename2, "class C2 { int n = true; }");
             SharedOmniSharpTestHost.AddFilesToWorkspace(testFile1, testFile2);
 
-            var emitter = new DiagnosticTestEmitter();
+            var emitter = new TestEventEmitter<DiagnosticMessage>();
             var forwarder = new DiagnosticEventForwarder(emitter);
             var service = CreateDiagnosticService(forwarder);
 
