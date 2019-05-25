@@ -37,8 +37,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             _queues = new Dictionary<AnalyzerWorkType, Queue>
             {
-                { AnalyzerWorkType.Foreground, new Queue(TimeSpan.FromMilliseconds(300)) },
-                { AnalyzerWorkType.Background, new Queue(TimeSpan.FromMilliseconds(2000)) }
+                { AnalyzerWorkType.Foreground, new Queue(TimeSpan.FromMilliseconds(150)) },
+                { AnalyzerWorkType.Background, new Queue(TimeSpan.FromMilliseconds(1500)) }
             };
 
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();

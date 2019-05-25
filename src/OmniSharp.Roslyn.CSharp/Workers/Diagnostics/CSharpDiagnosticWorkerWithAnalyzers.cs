@@ -137,6 +137,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                         }
                     }
 
+                    _workQueue.WorkComplete(workType);
+
                     await Task.Delay(50);
                 }
                 catch (Exception ex)
