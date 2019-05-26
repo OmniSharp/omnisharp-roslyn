@@ -129,9 +129,9 @@ namespace TestUtility
             return (THandler)_handlers[(name, languageName)].Value;
         }
 
-        public void AddFilesToWorkspace(params TestFile[] testFiles)
+        public IEnumerable<ProjectId> AddFilesToWorkspace(params TestFile[] testFiles)
         {
-            TestHelpers.AddProjectToWorkspace(
+            var projects = TestHelpers.AddProjectToWorkspace(
                 this.Workspace,
                 "project.json",
                 new[] { "dnx451", "dnxcore50" },
@@ -141,6 +141,8 @@ namespace TestUtility
             {
                 TestHelpers.AddCsxProjectToWorkspace(Workspace, csxFile);
             }
+
+            return projects;
         }
 
         public void ClearWorkspace()

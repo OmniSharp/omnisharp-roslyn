@@ -95,7 +95,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             }
         }
 
-        // Omnisharp V2 api expects that it can request current information of diagnostics any time,
+        // Omnisharp V2 api expects that it can request current information of diagnostics any time (single file/current document),
         // however analysis is worker based and is eventually ready. This method is used to make api look
         // like it's syncronous even that actual analysis may take a while.
         public Task WaitForegroundWorkComplete()

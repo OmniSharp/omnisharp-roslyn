@@ -63,5 +63,10 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             return _implementation.QueueAllDocumentsForDiagnostics();
         }
+
+        public ImmutableArray<DocumentId> QueueDocumentsOfProjectsForDiagnostics(ImmutableArray<ProjectId> projectIds)
+        {
+            return _implementation.QueueDocumentsOfProjectsForDiagnostics(projectIds);
+        }
     }
 }

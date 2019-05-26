@@ -283,5 +283,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
             return await GetDiagnosticsByDocumentIds(allDocumentsIds);
         }
+
+        public ImmutableArray<DocumentId> QueueDocumentsOfProjectsForDiagnostics(ImmutableArray<ProjectId> projectIds)
+        {
+            var documentIds = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents.Select(x => x.Id)).ToImmutableArray();
+            QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
+            return documentIds;
+        }
     }
 }
