@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.ReAnalyze;
 using OmniSharp.Mef;
 using OmniSharp.Models;
@@ -18,12 +19,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly ICsDiagnosticWorker _diagWorker;
         private readonly OmniSharpWorkspace _workspace;
+        private readonly ILogger<ReAnalyzeService> _logger;
 
         [ImportingConstructor]
-        public ReAnalyzeService(ICsDiagnosticWorker diagWorker, OmniSharpWorkspace workspace)
+        public ReAnalyzeService(ICsDiagnosticWorker diagWorker, OmniSharpWorkspace workspace, ILoggerFactory loggerFactory)
         {
             _diagWorker = diagWorker;
             _workspace = workspace;
+            _logger = loggerFactory.CreateLogger<ReAnalyzeService>();
         }
 
         public Task<ReanalyzeResponse> Handle(ReAnalyzeRequest request)
@@ -36,12 +39,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var projectIds = WhenRequestIsProjectFileItselfGetFilesFromIt(request.CurrentOpenFilePathAsContext, currentSolution)
                     ?? GetDocumentsFromProjectWhereDocumentIs(request.CurrentOpenFilePathAsContext, currentSolution);
 
+                _logger.LogInformation($"Queue analysis for project(s) {string.Join(", ", projectIds)}");
+
                 _diagWorker.QueueDocumentsOfProjectsForDiagnostics(projectIds);
             }
             else
             {
+                _logger.LogInformation($"Queue analysis for all projects.");
                 _diagWorker.QueueAllDocumentsForDiagnostics();
             }
+
             return Task.FromResult(new ReanalyzeResponse());
         }
 
