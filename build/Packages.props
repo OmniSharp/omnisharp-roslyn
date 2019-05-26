@@ -4,7 +4,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>16.0.461</MSBuildPackageVersion>
     <NuGetPackageVersion>5.0.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.1.0-beta4-19251-02</RoslynPackageVersion>
+    <RoslynPackageVersion>3.1.0-beta4-19266-03</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
