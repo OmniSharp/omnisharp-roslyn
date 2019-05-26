@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Models.Events;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -128,13 +129,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     foreach (var projectGroup in currentWorkGroupedByProjects)
                     {
+                        var projectPath = solution.GetProject(projectGroup.Key).FilePath;
+
+                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Started);
+
                         await AnalyzeProject(solution, projectGroup);
 
-                        if(workType == AnalyzerWorkType.Background)
-                        {
-                            var projectPath = solution.GetProject(projectGroup.Key).FilePath;
-                            _forwarder.ProjectAnalyzedInBackground(projectPath);
-                        }
+                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Ready);
                     }
 
                     _workQueue.WorkComplete(workType);
@@ -146,6 +147,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     _logger.LogError($"Analyzer worker failed: {ex}");
                 }
             }
+        }
+
+        private void EventIfBackgroundWork(AnalyzerWorkType workType, string projectPath, ProjectDiagnosticStatus status)
+        {
+            if (workType == AnalyzerWorkType.Background)
+                _forwarder.ProjectAnalyzedInBackground(projectPath, status);
         }
 
         private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)

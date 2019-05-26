@@ -23,9 +23,9 @@ namespace OmniSharp.Roslyn
             _emitter.Emit(EventTypes.Diagnostic, message);
         }
 
-        public void ProjectAnalyzedInBackground(string projectFileName)
+        public void ProjectAnalyzedInBackground(string projectFileName, ProjectDiagnosticStatus status)
         {
-            _emitter.Emit(EventTypes.ProjectAnalyzed, new ProjectAnalyzedMessage { ProjectFilePath = projectFileName });
+            _emitter.Emit(EventTypes.ProjectDiagnosticStatus, new ProjectDiagnosticStatusMessage { ProjectFilePath = projectFileName, Status = status });
         }
     }
 }

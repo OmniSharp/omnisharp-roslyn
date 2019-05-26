@@ -5,9 +5,4 @@ namespace OmniSharp.Models.Events
         public string FileName { get; set; }
         public bool Succeeded { get; set; }
     }
-
-    public class ProjectAnalyzedMessage
-    {
-        public string ProjectFilePath { get; set; }
-    }
 }

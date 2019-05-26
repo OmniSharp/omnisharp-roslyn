@@ -14,12 +14,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
     public class ReAnalysisFacts
     {
         private readonly ITestOutputHelper _testOutput;
-        private readonly TestEventEmitter<ProjectAnalyzedMessage> _eventListener;
+        private readonly TestEventEmitter<ProjectDiagnosticStatusMessage> _eventListener;
 
         public ReAnalysisFacts(ITestOutputHelper testOutput)
         {
             _testOutput = testOutput;
-            _eventListener = new TestEventEmitter<ProjectAnalyzedMessage>();
+            _eventListener = new TestEventEmitter<ProjectDiagnosticStatusMessage>();
         }
 
 
@@ -71,7 +71,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest());
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
@@ -92,7 +93,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     CurrentOpenFilePathAsContext = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
                 });
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
@@ -113,7 +115,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     CurrentOpenFilePathAsContext = project.FilePath
                 });
 
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
+                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Ready);
             }
         }
 
