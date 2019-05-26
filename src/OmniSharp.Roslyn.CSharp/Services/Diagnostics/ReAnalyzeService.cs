@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Composition;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -27,14 +28,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         public Task<ReanalyzeResponse> Handle(ReAnalyzeRequest request)
         {
+
             if(!string.IsNullOrEmpty(request.CurrentOpenFilePathAsContext))
             {
                 var currentSolution = _workspace.CurrentSolution;
 
-                var projectIds = currentSolution
-                    .GetDocumentIdsWithFilePath(request.CurrentOpenFilePathAsContext)
-                    .Select(docId => currentSolution.GetDocument(docId).Project.Id)
-                    .ToImmutableArray();
+                var projectIds = WhenRequestIsProjectFileItselfGetFilesFromIt(request.CurrentOpenFilePathAsContext, currentSolution)
+                    ?? GetDocumentsFromProjectWhereDocumentIs(request.CurrentOpenFilePathAsContext, currentSolution);
 
                 _diagWorker.QueueDocumentsOfProjectsForDiagnostics(projectIds);
             }
@@ -43,6 +43,32 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _diagWorker.QueueAllDocumentsForDiagnostics();
             }
             return Task.FromResult(new ReanalyzeResponse());
+        }
+
+        private ImmutableArray<ProjectId>? WhenRequestIsProjectFileItselfGetFilesFromIt(string currentOpenFilePathAsContext, Solution currentSolution)
+        {
+            var projects = currentSolution.Projects.Where(x => CompareProjectPath(currentOpenFilePathAsContext, x)).Select(x => x.Id).ToImmutableArray();
+
+            if(!projects.Any())
+                return null;
+
+            return projects;
+        }
+
+        private static bool CompareProjectPath(string currentOpenFilePathAsContext, Project x)
+        {
+            return String.Compare(
+                x.FilePath,
+                currentOpenFilePathAsContext,
+                StringComparison.InvariantCultureIgnoreCase) == 0;
+        }
+
+        private static ImmutableArray<ProjectId> GetDocumentsFromProjectWhereDocumentIs(string currentOpenFilePathAsContext, Solution currentSolution)
+        {
+            return currentSolution
+                .GetDocumentIdsWithFilePath(currentOpenFilePathAsContext)
+                .Select(docId => currentSolution.GetDocument(docId).Project.Id)
+                .ToImmutableArray();
         }
     }
 }

@@ -76,7 +76,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task WhenReanalyzeIsExecutedForFileInProject_ThenOnlyAnalyzeSelectedProject()
+        public async Task WhenReanalyzeIsExecutedForFileInProject_ThenOnlyAnalyzeProject()
         {
             using (var host = GetHost())
             {
@@ -84,9 +84,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var projectAId = host.AddFilesToWorkspace(new TestFile("a.cs", "public class A { }")).First();
                 var projectA =  host.Workspace.CurrentSolution.GetProject(projectAId);
-
-                var projectBId = host.AddFilesToWorkspace(new TestFile("b.cs", "public class B { }")).First();
-                var projectB =  host.Workspace.CurrentSolution.GetProject(projectBId);
 
                 _eventListener.Clear();
 
@@ -96,17 +93,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 });
 
                 await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath);
-                Assert.DoesNotContain(_eventListener.Messages, x => x.ProjectFilePath == projectB.FilePath);
-
-                _eventListener.Clear();
-
-                await reAnalyzeHandler.Handle(new ReAnalyzeRequest
-                {
-                    CurrentOpenFilePathAsContext = projectB.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
-                });
-
-                await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectB.FilePath);
-                Assert.DoesNotContain(_eventListener.Messages, x => x.ProjectFilePath == projectA.FilePath);
             }
         }
 
