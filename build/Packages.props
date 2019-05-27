@@ -4,7 +4,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>16.0.461</MSBuildPackageVersion>
     <NuGetPackageVersion>5.0.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.1.0-beta4-19251-02</RoslynPackageVersion>
+    <RoslynPackageVersion>3.1.0-beta4-19266-03</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
@@ -48,6 +48,7 @@
     <PackageReference Update="Microsoft.Extensions.Options" Version="2.1.1" />
     <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
 
+    <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.1" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="15.7.2" />
     <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="15.7.2" />
     <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
@@ -60,7 +61,7 @@
     <PackageReference Update="Nuget.ProjectModel" Version="$(NuGetPackageVersion)" />
     <PackageReference Update="Nuget.Versioning" Version="$(NuGetPackageVersion)" />
 
-    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.12.0" />
+    <PackageReference Update="OmniSharp.Extensions.LanguageServer" Version="0.12.1" />
 
     <PackageReference Update="SQLitePCLRaw.bundle_green" Version="1.1.2" />
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
