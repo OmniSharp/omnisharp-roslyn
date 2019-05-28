@@ -75,7 +75,7 @@ namespace OmniSharp.MSBuild
             PackageDependencyChecker packageDependencyChecker,
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
-            IAnalyzerAssemblyLoader assemblyLoader,
+            IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
@@ -93,7 +93,7 @@ namespace OmniSharp.MSBuild
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
-            _analyzerAssemblyLoader = assemblyLoader;
+            _analyzerAssemblyLoader = analyzerAssemblyLoader;
             _onDirectoryFileChanged = OnDirectoryFileChanged;
 
             if (_options.LoadProjectsOnDemand)
@@ -217,10 +217,9 @@ namespace OmniSharp.MSBuild
                     // update or add project
                     _failedToLoadProjectFiles.Remove(currentProject.FilePath);
 
-                    ProjectFileInfo projectFileInfo;
                     ProjectLoadedEventArgs loadedEventArgs;
 
-                    if (_projectFiles.TryGetValue(currentProject.FilePath, out projectFileInfo))
+                    if (_projectFiles.TryGetValue(currentProject.FilePath, out ProjectFileInfo projectFileInfo))
                     {
                         (projectFileInfo, loadedEventArgs) = ReloadProject(projectFileInfo);
                         if (projectFileInfo == null)

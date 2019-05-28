@@ -17,6 +17,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
 
             compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
+            compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
 
             if (projectFileInfo.AllowUnsafeCode)
             {
@@ -27,8 +28,6 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 compilationOptions = compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error);
             }
-
-            compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
 
             if (projectFileInfo.NullableContextOptions != compilationOptions.NullableContextOptions)
             {
