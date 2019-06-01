@@ -119,9 +119,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             {
                 case "disable": return NullableContextOptions.Disable;
                 case "enable": return NullableContextOptions.Enable;
-                case "safeonly": return NullableContextOptions.SafeOnly;
                 case "warnings": return NullableContextOptions.Warnings;
-                case "safeonlywarnings": return NullableContextOptions.SafeOnlyWarnings;
                 default: return NullableContextOptions.Disable;
             }
         }
