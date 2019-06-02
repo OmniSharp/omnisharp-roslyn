@@ -13,4 +13,7 @@
         <ProjectReference Include="..\OmniSharp.Stdio\OmniSharp.Stdio.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    </ItemGroup>
 </Project>
