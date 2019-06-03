@@ -66,7 +66,7 @@ jobs:
       vmImage: "Ubuntu-16.04"
     dependsOn: GitVersion
     variables:
-      MONO_VERSION: 5.16.0
+      MONO_VERSION: 5.18.1
     steps:
       - template: ./.pipelines/init.yml
         parameters:
