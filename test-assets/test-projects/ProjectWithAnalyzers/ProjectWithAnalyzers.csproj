@@ -4,7 +4,9 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>7.1</LangVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesPath>./nugets/</RestorePackagesPath>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
+  </ItemGroup>
 </Project>

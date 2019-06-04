@@ -20,11 +20,24 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     {
         private readonly ConcurrentDictionary<ProjectId, IEnumerable<CodeFixProvider>> _cache = new ConcurrentDictionary<ProjectId, IEnumerable<CodeFixProvider>>();
         private readonly ILogger<CachingCodeFixProviderForProjects> _logger;
+        private readonly OmniSharpWorkspace _workspace;
 
         [ImportingConstructor]
-        public CachingCodeFixProviderForProjects(ILoggerFactory loggerFactory)
+        public CachingCodeFixProviderForProjects(ILoggerFactory loggerFactory, OmniSharpWorkspace workspace)
         {
             _logger = loggerFactory.CreateLogger<CachingCodeFixProviderForProjects>();
+            _workspace = workspace;
+
+            _workspace.WorkspaceChanged += (__, workspaceEvent) =>
+            {
+                if (workspaceEvent.Kind == WorkspaceChangeKind.ProjectAdded ||
+                    workspaceEvent.Kind == WorkspaceChangeKind.ProjectChanged ||
+                    workspaceEvent.Kind == WorkspaceChangeKind.ProjectReloaded ||
+                    workspaceEvent.Kind == WorkspaceChangeKind.ProjectRemoved)
+                {
+                    _cache.TryRemove(workspaceEvent.ProjectId, out _);
+                }
+            };
         }
 
         public IEnumerable<CodeFixProvider> GetAllCodeFixesForProject(ProjectId projectId)
@@ -32,10 +45,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             if (_cache.ContainsKey(projectId))
                 return _cache[projectId];
 
-            return Enumerable.Empty<CodeFixProvider>();
+            var project = _workspace.CurrentSolution.GetProject(projectId);
+
+            if (project == null)
+            {
+                _cache.TryRemove(projectId, out _);
+                return Enumerable.Empty<CodeFixProvider>();
+            }
+
+            return LoadFrom(project);
         }
 
-        public void LoadFrom(ProjectInfo project)
+        private ImmutableArray<CodeFixProvider> LoadFrom(Project project)
         {
             var codeFixes = project.AnalyzerReferences
                 .OfType<AnalyzerFileReference>()
@@ -67,6 +88,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
                 .ToImmutableArray();
 
             _cache.AddOrUpdate(project.Id, codeFixes, (_, __) => codeFixes);
+
+            return codeFixes;
         }
     }
 }
