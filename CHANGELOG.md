@@ -13,6 +13,7 @@ All changes to the project will be documented in this file.
         }
     }
     ```
+* Fixed a regression on declaration name completion (PR: [#1520](https://github.com/OmniSharp/omnisharp-roslyn/pull/1520))
 
 ## [1.32.20] - 2019-06-03
 * Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
