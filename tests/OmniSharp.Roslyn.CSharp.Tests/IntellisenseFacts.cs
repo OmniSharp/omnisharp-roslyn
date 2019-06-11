@@ -142,7 +142,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                             System.Guid.gu$$
                         }
                     }";
-            
+
             var completions = await FindCompletionsAsync(filename, input);
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "NewGuid");
         }
@@ -284,6 +284,24 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             var completions = await FindCompletionsAsync(filename, source);
             ContainsCompletions(completions.Select(c => c.CompletionText).Take(1), "text");
         }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task Returns_declaration_names(string filename)
+        {
+            const string source =
+                @"
+public class MyClass
+{
+    MyClass m$$
+}
+                ";
+
+            var completions = await FindCompletionsAsync(filename, source);
+            ContainsCompletions(completions.Select(c => c.CompletionText), "my", "myClass", "My", "MyClass");
+        }
+
 
         [Theory]
         [InlineData("dummy.cs")]

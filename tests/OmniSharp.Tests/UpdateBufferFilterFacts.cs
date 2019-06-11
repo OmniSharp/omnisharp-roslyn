@@ -59,7 +59,7 @@ namespace OmniSharp.Tests
             {
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "test2.cs", Buffer = "interface I {}" });
 
-                Assert.Equal(2, host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs").Length);
+                Assert.Single(host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs"));
                 var docId = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("test2.cs").FirstOrDefault();
                 Assert.NotNull(docId);
                 var sourceText = await host.Workspace.CurrentSolution.GetDocument(docId).GetTextAsync();
@@ -82,7 +82,7 @@ namespace OmniSharp.Tests
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "transient.cs", Buffer = "interface I {}" });
 
                 var docIds = host.Workspace.CurrentSolution.GetDocumentIdsWithFilePath("transient.cs");
-                Assert.Equal(2, docIds.Length);
+                Assert.Single(docIds);
 
                 // simulate a project system adding the file for real
                 var project1 = host.Workspace.CurrentSolution.Projects.First();
