@@ -10,6 +10,7 @@ using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
+using OmniSharp.Services;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -246,7 +247,7 @@ class C {
                             NewLine = "\n",
                             IndentationSize = 1
                         }
-                    });
+                    }, new OmniSharpEnvironment());
 
                 var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
 
