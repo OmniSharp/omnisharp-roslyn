@@ -5,6 +5,8 @@ namespace OmniSharp.Roslyn.Options
 {
     public interface IWorkspaceOptionsProvider
     {
-        OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omniSharpOptions);
+        OptionSet Process(OptionSet optionSet, FormattingOptions options, IOmniSharpEnvironment omnisharpEnvironment);
+
+        int Order { get; }
     }
 }
