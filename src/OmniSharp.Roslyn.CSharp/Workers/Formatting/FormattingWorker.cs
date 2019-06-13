@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.VisualStudio.CodingConventions;
 using OmniSharp.Models;
+using OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
@@ -78,14 +82,16 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end)
         {
-            var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), document.Project.Solution.Workspace.Options);
+            var optionSet = await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath);
+            var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), optionSet);
 
             return await TextChanges.GetAsync(newDocument, document);
         }
 
         public static async Task<string> GetFormattedText(Document document)
         {
-            var newDocument = await Formatter.FormatAsync(document, document.Project.Solution.Workspace.Options);
+            var optionSet = await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath);
+            var newDocument = await Formatter.FormatAsync(document, optionSet);
             var text = await newDocument.GetTextAsync();
 
             return text.ToString();
@@ -93,7 +99,8 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 
         public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document)
         {
-            var newDocument = await Formatter.FormatAsync(document, document.Project.Solution.Workspace.Options);
+            var optionSet = await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath);
+            var newDocument = await Formatter.FormatAsync(document, optionSet);
 
             return await TextChanges.GetAsync(newDocument, document);
         }
