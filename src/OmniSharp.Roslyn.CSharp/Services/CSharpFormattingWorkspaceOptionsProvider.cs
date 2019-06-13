@@ -96,9 +96,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
         }
 
-        public OptionSet Process(OptionSet workOptionSet, FormattingOptions options, IOmniSharpEnvironment omnisharpEnvironment)
+        public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions options, IOmniSharpEnvironment omnisharpEnvironment)
         {
-            return GetOptions(workOptionSet, options);
+            return GetOptions(currentOptionSet, options.FormattingOptions);
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using OmniSharp.Mef;
 using OmniSharp.Models.Format;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Formatting;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting
@@ -12,11 +13,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     public class FormatRangeService : IRequestHandler<FormatRangeRequest, FormatRangeResponse>
     {
         private readonly OmniSharpWorkspace _workspace;
+        private readonly OmniSharpOptions _omnisharpOptions;
 
         [ImportingConstructor]
-        public FormatRangeService(OmniSharpWorkspace workspace)
+        public FormatRangeService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions)
         {
             _workspace = workspace;
+            _omnisharpOptions = omnisharpOptions;
         }
 
         public async Task<FormatRangeResponse> Handle(FormatRangeRequest request)
@@ -32,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
             var end = text.Lines.GetPosition(new LinePosition(request.EndLine, request.EndColumn));
             var syntaxTree = await document.GetSyntaxRootAsync();
             var tokenStart = syntaxTree.FindToken(start).FullSpan.Start;
-            var changes = await FormattingWorker.GetFormattingChanges(document, tokenStart, end);
+            var changes = await FormattingWorker.GetFormattingChanges(document, tokenStart, end, _omnisharpOptions);
 
             return new FormatRangeResponse()
             {

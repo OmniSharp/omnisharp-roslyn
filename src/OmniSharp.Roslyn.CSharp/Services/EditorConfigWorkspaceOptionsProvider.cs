@@ -14,9 +14,11 @@ namespace OmniSharp.Roslyn.CSharp.Services
     {
         public int Order => -100;
 
-        public OptionSet Process(OptionSet workOptionSet, FormattingOptions options, IOmniSharpEnvironment omnisharpEnvironment)
+        public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omnisharpOptions, IOmniSharpEnvironment omnisharpEnvironment)
         {
-            var changedOptionSet = workOptionSet.WithEditorConfigOptions(omnisharpEnvironment.TargetDirectory).GetAwaiter().GetResult();
+            if (!omnisharpOptions.FormattingOptions.EnableEditorConfigSupport) return currentOptionSet;
+
+            var changedOptionSet = currentOptionSet.WithEditorConfigOptions(omnisharpEnvironment.TargetDirectory).GetAwaiter().GetResult();
             return changedOptionSet;
         }
     }

@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.CodingConventions;
 using OmniSharp.Models;
+using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig;
 using OmniSharp.Roslyn.Utilities;
 
@@ -16,7 +17,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
 {
     public static class FormattingWorker
     {
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChangesAfterKeystroke(Document document, int position, char character, OmniSharpOptions omnisharpOptions)
         {
             if (character == '\n')
             {
@@ -26,7 +27,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 var targetLine = lines[lines.GetLineFromPosition(position).LineNumber - 1];
                 if (!string.IsNullOrWhiteSpace(targetLine.Text.ToString(targetLine.Span)))
                 {
-                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End);
+                    return await GetFormattingChanges(document, targetLine.Start, targetLine.End, omnisharpOptions);
                 }
             }
             else if (character == '}' || character == ';')
@@ -36,7 +37,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
                 var node = FindFormatTarget(root, position);
                 if (node != null)
                 {
-                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End);
+                    return await GetFormattingChanges(document, node.FullSpan.Start, node.FullSpan.End, omnisharpOptions);
                 }
             }
 
@@ -80,26 +81,32 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Formatting
             return null;
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattingChanges(Document document, int start, int end, OmniSharpOptions omnisharpOptions)
         {
-            var optionSet = await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath);
+            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath)
+                : document.Project.Solution.Workspace.Options;
             var newDocument = await Formatter.FormatAsync(document, TextSpan.FromBounds(start, end), optionSet);
 
             return await TextChanges.GetAsync(newDocument, document);
         }
 
-        public static async Task<string> GetFormattedText(Document document)
+        public static async Task<string> GetFormattedText(Document document, OmniSharpOptions omnisharpOptions)
         {
-            var optionSet = await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath);
+            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath)
+                : document.Project.Solution.Workspace.Options;
             var newDocument = await Formatter.FormatAsync(document, optionSet);
             var text = await newDocument.GetTextAsync();
 
             return text.ToString();
         }
 
-        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document)
+        public static async Task<IEnumerable<LinePositionSpanTextChange>> GetFormattedTextChanges(Document document, OmniSharpOptions omnisharpOptions)
         {
-            var optionSet = await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath);
+            var optionSet = omnisharpOptions.FormattingOptions.EnableEditorConfigSupport
+                ? await document.Project.Solution.Workspace.Options.WithEditorConfigOptions(document.FilePath)
+                : document.Project.Solution.Workspace.Options;
             var newDocument = await Formatter.FormatAsync(document, optionSet);
 
             return await TextChanges.GetAsync(newDocument, document);
