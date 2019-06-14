@@ -1,4 +1,5 @@
 ﻿using System.Composition;
+using System.IO;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
@@ -18,7 +19,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
         {
             if (!omnisharpOptions.FormattingOptions.EnableEditorConfigSupport) return currentOptionSet;
 
-            var changedOptionSet = currentOptionSet.WithEditorConfigOptions(omnisharpEnvironment.TargetDirectory).GetAwaiter().GetResult();
+            // this is a dummy file that doesn't exist, but we simply want to tell .editorconfig to load *.cs specific settings
+            var filePath = Path.Combine(omnisharpEnvironment.TargetDirectory, "omnisharp.cs");
+            var changedOptionSet = currentOptionSet.WithEditorConfigOptions(filePath).GetAwaiter().GetResult();
             return changedOptionSet;
         }
     }

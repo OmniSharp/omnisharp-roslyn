@@ -75,7 +75,8 @@ namespace OmniSharp
             IOmniSharpEnvironment omnisharpEnvironment)
         {
             // run all workspace options providers
-            foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>().OrderBy(x => x.Order))
+            var workspaceOptionsProviders = compositionHost.GetExports<IWorkspaceOptionsProvider>().OrderBy(x => x.Order);
+            foreach (var workspaceOptionsProvider in workspaceOptionsProviders)
             {
                 var providerName = workspaceOptionsProvider.GetType().FullName;
 
