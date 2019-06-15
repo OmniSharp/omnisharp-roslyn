@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using OmniSharp.Models.CodeFormat;
 using OmniSharp.Options;
@@ -16,21 +18,59 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Fact]
-        public async Task FormatRespectsDefaultIndentationSize()
+        public async Task FormatRespectsDefaultSettings()
         {
-            var testFile = new TestFile("dummy.cs", "namespace Bar\n{\nclass Foo {}\n}");
+            var testFile = new TestFile("dummy.cs", "class Foo\n{\n public Foo()\n}\n}");
+            var expected = "class Foo\n{\n    public Foo()\n}\n}";
 
-            using (var host = CreateOmniSharpHost(testFile))
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string> { ["FormattingOptions:EnableEditorConfigSupport"] = "true" }))
             {
-                var omnisharpOptions = new OmniSharpOptions();
-                omnisharpOptions.FormattingOptions.EnableEditorConfigSupport = true;
-                
                 var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
 
                 var request = new CodeFormatRequest { FileName = testFile.FileName };
                 var response = await requestHandler.Handle(request);
 
-                Assert.Equal("namespace Bar\n{\n    class Foo { }\n}", response.Buffer);
+                Assert.Equal(expected, response.Buffer);
+            }
+        }
+
+        [Fact]
+        public async Task FormatRespectsSharedSettings()
+        {
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, "dummy.cs"), "class Foo\n{\n    public Foo()\n}\n}");
+            var expected = "class Foo\n{\n public Foo()\n}\n}";
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string> { ["FormattingOptions:EnableEditorConfigSupport"] = "true" }))
+            {
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal(expected, response.Buffer);
+            }
+        }
+
+        [Fact]
+        public async Task FormatRespectsCSharpSettings()
+        {
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, "dummy.cs"), @"
+class Foo { }
+class Bar : Foo { }
+");
+            var expected = @"
+class Foo { }
+class Bar:Foo { }
+";
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string> { ["FormattingOptions:EnableEditorConfigSupport"] = "true" }))
+            {
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal(expected, response.Buffer);
             }
         }
     }

@@ -1,0 +1,14 @@
+root = true
+
+[*]
+indent_style = space
+
+[*.{cs,csx}]
+indent_size = 1
+charset = utf-8-bom
+
+[*.{cs}]
+
+[*.cs]
+csharp_space_after_colon_in_inheritance_clause = false
+csharp_space_before_colon_in_inheritance_clause = false
