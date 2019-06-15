@@ -2,9 +2,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Models;
 using OmniSharp.Models.CodeFormat;
+using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting;
+using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -113,8 +116,8 @@ class Foo
             {
                 var result = await host.RequestCodeCheckAsync();
 
-                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("IDE0049"));
-                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text.Contains("IDE0008"));
+                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Use framework type (IDE0049)");
+                Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Use explicit type instead of 'var' (IDE0008)");
             }
         }
 
@@ -144,6 +147,97 @@ class Foo
 
                 Assert.Contains(result.QuickFixes.Where(x => x.FileName == testFile.FileName), f => f.Text == "Naming rule violation: Missing prefix: 'xxx_' (IDE1006)");
             }
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RespectNamingConventions_InOfferedRefactorings(string filename)
+        {
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), @"public class Foo
+{
+    public Foo(string something)
+    {
+    }
+}");
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
+                ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
+            }, TestAssets.Instance.TestFilesFolder))
+            {
+                var getRequestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
+                var getRequest = new GetCodeActionsRequest
+                {
+                    Line = 2,
+                    Column = 31,
+                    FileName = testFile.FileName
+                };
+
+                var getResponse = await getRequestHandler.Handle(getRequest);
+                Assert.NotNull(getResponse.CodeActions);
+                Assert.Contains(getResponse.CodeActions, f => f.Name == "Create and initialize field 'xxx_something'");
+            }
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RespectNamingConventions_InRanRefactorings(string filename)
+        {
+            const string code =
+                @"public class Foo
+                {
+                    public Foo(string something)
+                    {
+                    }
+                }";
+            const string expected =
+                @"public class Foo
+                {
+                    private readonly System.String xxx_something;
+
+                    public Foo(string something)
+                    {
+                        xxx_something = something;
+                    }
+                }";
+
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), code);
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
+                ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
+            }, TestAssets.Instance.TestFilesFolder))
+            {
+                var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+
+                var runRequest = new RunCodeActionRequest
+                {
+                    Line = 2,
+                    Column = 31,
+                    FileName = testFile.FileName,
+                    Identifier = "Create and initialize field 'xxx_something'",
+                    WantsTextChanges = false,
+                    WantsAllCodeActionOperations = true,
+                    Buffer = testFile.Content.Code
+                };
+                var runResponse = await runRequestHandler.Handle(runRequest);
+
+                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+            }
+        }
+
+        private static void AssertIgnoringIndent(string expected, string actual)
+        {
+            Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
+        }
+
+        private static string TrimLines(string source)
+        {
+            return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
         }
     }
 }
