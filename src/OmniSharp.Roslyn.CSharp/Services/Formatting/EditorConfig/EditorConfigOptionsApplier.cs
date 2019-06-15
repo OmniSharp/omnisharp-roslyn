@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.VisualStudio.CodingConventions;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
@@ -20,7 +21,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
         static EditorConfigOptionsApplier()
         {
             _optionsWithStorage = new List<(IOption, OptionStorageLocation, MethodInfo)>();
-            _optionsWithStorage.AddRange(GetPropertyBasedOptionsWithStorageFromTypes(typeof(FormattingOptions), typeof(CSharpFormattingOptions)));
+            _optionsWithStorage.AddRange(GetPropertyBasedOptionsWithStorageFromTypes(typeof(FormattingOptions), typeof(CSharpFormattingOptions), typeof(SimplificationOptions)));
             _optionsWithStorage.AddRange(GetFieldBasedOptionsWithStorageFromTypes(typeof(CodeStyleOptions), typeof(CSharpFormattingOptions).Assembly.GetType("Microsoft.CodeAnalysis.CSharp.CodeStyle.CSharpCodeStyleOptions")));
         }
 
@@ -41,17 +42,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
 
         internal static IEnumerable<(IOption, OptionStorageLocation, MethodInfo)> GetPropertyBasedOptionsWithStorageFromTypes(params Type[] types)
             => types
-                .SelectMany(t => t.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.GetProperty))
+                .SelectMany(t => t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.GetProperty))
                 .Where(p => typeof(IOption).IsAssignableFrom(p.PropertyType)).Select(p => (IOption)p.GetValue(null))
                 .Select(GetOptionWithStorage).Where(ows => ows.Item2 != null);
 
         internal static IEnumerable<(IOption, OptionStorageLocation, MethodInfo)> GetFieldBasedOptionsWithStorageFromTypes(params Type[] types)
-        {
-            return types
+            => types
                 .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
                 .Where(p => typeof(IOption).IsAssignableFrom(p.FieldType)).Select(p => (IOption)p.GetValue(null))
                 .Select(GetOptionWithStorage).Where(ows => ows.Item2 != null);
-        }
 
         internal static (IOption, OptionStorageLocation, MethodInfo) GetOptionWithStorage(IOption option)
         {
@@ -64,7 +63,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
         }
 
         internal static bool IsEditorConfigStorage(OptionStorageLocation storageLocation)
-            => storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation");
+            => storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation") ||
+               storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.NamingStylePreferenceEditorConfigStorageLocation");
 
         internal static bool TryGetConventionValue((IOption, OptionStorageLocation, MethodInfo) optionWithStorage, ICodingConventionsSnapshot codingConventions, out object value)
         {
