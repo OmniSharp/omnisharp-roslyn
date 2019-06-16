@@ -230,6 +230,56 @@ class Foo
             }
         }
 
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RespectNamingConventions_InNamingStyleCodeFixProvider(string filename)
+        {
+            const string code =
+                @"public class Foo
+                {
+                    private readonly System.String something;
+
+                    public Foo()
+                    {
+                    }
+                }";
+            const string expected =
+                @"public class Foo
+                {
+                    private readonly System.String xxx_something;
+
+                    public Foo()
+                    {
+                    }
+                }";
+
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), code);
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
+                ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
+            }, TestAssets.Instance.TestFilesFolder))
+            {
+                var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+
+                var runRequest = new RunCodeActionRequest
+                {
+                    Line = 2,
+                    Column = 54,
+                    FileName = testFile.FileName,
+                    Identifier = "NamingStyleCodeFixProvider",
+                    WantsTextChanges = false,
+                    WantsAllCodeActionOperations = true,
+                    Buffer = testFile.Content.Code
+                };
+                var runResponse = await runRequestHandler.Handle(runRequest);
+
+                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+            }
+        }
+
         private static void AssertIgnoringIndent(string expected, string actual)
         {
             Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
