@@ -236,13 +236,16 @@ class C {
 
             using (var host = CreateOmniSharpHost(testFile))
             {
-                var optionsProvider = new CSharpWorkspaceOptionsProvider();
+                var optionsProvider = new CSharpFormattingWorkspaceOptionsProvider();
 
                 host.Workspace.Options = optionsProvider.Process(host.Workspace.Options,
-                    new FormattingOptions
+                    new OmniSharpOptions
                     {
-                        NewLine = "\n",
-                        IndentationSize = 1
+                        FormattingOptions = new FormattingOptions
+                        {
+                            NewLine = "\n",
+                            IndentationSize = 1
+                        }
                     });
 
                 var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
