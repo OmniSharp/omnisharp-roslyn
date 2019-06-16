@@ -131,8 +131,8 @@ namespace TestUtility
         {
             TestHelpers.AddProjectToWorkspace(
                 this.Workspace,
-                "project.json",
-                new[] { "dnx451", "dnxcore50" },
+                "project.csproj",
+                new[] { "net472" },
                 testFiles.Where(f => f.FileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)).ToArray());
 
             foreach (var csxFile in testFiles.Where(f => f.FileName.EndsWith(".csx", StringComparison.OrdinalIgnoreCase)))

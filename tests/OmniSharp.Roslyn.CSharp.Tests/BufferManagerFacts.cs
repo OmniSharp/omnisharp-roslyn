@@ -25,19 +25,16 @@ namespace OmniSharp.Tests
         {
             using (var host = CreateOmniSharpHost(new TestFile("test.cs", "class C {}")))
             {
-                Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
+                Assert.Single(host.Workspace.CurrentSolution.Projects);
                 Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents);
-                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { });
-                Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
+                Assert.Single(host.Workspace.CurrentSolution.Projects);
                 Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents);
-                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents);
 
                 await host.Workspace.BufferManager.UpdateBufferAsync(new Request() { FileName = "", Buffer = "enum E {}" });
-                Assert.Equal(2, host.Workspace.CurrentSolution.Projects.Count());
+                Assert.Single(host.Workspace.CurrentSolution.Projects);
                 Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(0).Documents);
-                Assert.Single(host.Workspace.CurrentSolution.Projects.ElementAt(1).Documents);
             }
         }
 

@@ -1,6 +1,20 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.32.21] - not yet released
+* Added support for various renaming options - renaming any symbol can now propagate to comments or strings, and renaming a method symbol can also rename its overloads. They can be set via OmniSharp configuration, such as `omnisharp.json` file (they are disabled by default). (PR: [#1495](https://github.com/OmniSharp/omnisharp-roslyn/pull/1495))
+
+    ```JSON
+    {
+        "RenameOptions": {
+            "RenameInComments": true,
+            "RenameOverloads": true,
+            "RenameInStrings": true
+        }
+    }
+    ```
+* Fixed a regression on declaration name completion (PR: [#1520](https://github.com/OmniSharp/omnisharp-roslyn/pull/1520))
+
 ## [1.32.20] - 2019-06-03
 * Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
 * Updated to Roslyn `3.2.0-beta3-19281-01` to match VS dev16.2p2 (PR: [#1511](https://github.com/OmniSharp/omnisharp-roslyn/pull/1511))
