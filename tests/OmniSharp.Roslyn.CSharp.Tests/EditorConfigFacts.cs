@@ -68,11 +68,39 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task CanBeDisabled(string filename)
+        {
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), @"
+class Foo { }
+class Bar  :  Foo { }
+");
+            var expected = @"
+class Foo { }
+class Bar : Foo { }
+";
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "false"
+            }, TestAssets.Instance.TestFilesFolder))
+            {
+                var requestHandler = host.GetRequestHandler<CodeFormatService>(OmniSharpEndpoints.CodeFormat);
+
+                var request = new CodeFormatRequest { FileName = testFile.FileName };
+                var response = await requestHandler.Handle(request);
+
+                Assert.Equal(expected, response.Buffer);
+            }
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task RespectsCSharpFormatSettings(string filename)
         {
             var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), @"
 class Foo { }
-class Bar : Foo { }
+class Bar  :  Foo { }
 ");
             var expected = @"
 class Foo { }
@@ -156,7 +184,7 @@ class Foo
         {
             var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), @"public class Foo
 {
-    public Foo(string something)
+    public Foo(string som$$ething)
     {
     }
 }");
@@ -167,11 +195,12 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
+                var point = testFile.Content.GetPointFromPosition();
                 var getRequestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
                 var getRequest = new GetCodeActionsRequest
                 {
-                    Line = 2,
-                    Column = 31,
+                    Line = point.Line,
+                    Column = point.Offset,
                     FileName = testFile.FileName
                 };
 
@@ -184,12 +213,12 @@ class Foo
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
-        public async Task RespectNamingConventions_InRanRefactorings(string filename)
+        public async Task RespectNamingConventions_InExecutedCodeActions(string filename)
         {
             const string code =
                 @"public class Foo
                 {
-                    public Foo(string something)
+                    public Foo(string som$$ething)
                     {
                     }
                 }";
@@ -212,12 +241,12 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
+                var point = testFile.Content.GetPointFromPosition();
                 var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
-
                 var runRequest = new RunCodeActionRequest
                 {
-                    Line = 2,
-                    Column = 31,
+                    Line = point.Line,
+                    Column = point.Offset,
                     FileName = testFile.FileName,
                     Identifier = "Create and initialize field 'xxx_something'",
                     WantsTextChanges = false,
@@ -238,7 +267,7 @@ class Foo
             const string code =
                 @"public class Foo
                 {
-                    private readonly System.String something;
+                    private readonly System.String som$$ething;
 
                     public Foo()
                     {
@@ -262,12 +291,12 @@ class Foo
                 ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
             }, TestAssets.Instance.TestFilesFolder))
             {
+                var point = testFile.Content.GetPointFromPosition();
                 var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
-
                 var runRequest = new RunCodeActionRequest
                 {
-                    Line = 2,
-                    Column = 54,
+                    Line = point.Line,
+                    Column = point.Offset,
                     FileName = testFile.FileName,
                     Identifier = "NamingStyleCodeFixProvider",
                     WantsTextChanges = false,
