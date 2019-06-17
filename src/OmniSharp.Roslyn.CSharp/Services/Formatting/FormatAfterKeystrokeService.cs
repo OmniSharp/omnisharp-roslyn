@@ -2,6 +2,7 @@ using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmniSharp.Mef;
 using OmniSharp.Models.Format;
@@ -15,12 +16,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly OmniSharpOptions _omnisharpOptions;
+        private readonly ILoggerFactory _loggerFactory;
 
         [ImportingConstructor]
-        public FormatAfterKeystrokeService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions)
+        public FormatAfterKeystrokeService(OmniSharpWorkspace workspace, OmniSharpOptions omnisharpOptions, ILoggerFactory loggerFactory)
         {
             _workspace = workspace;
             _omnisharpOptions = omnisharpOptions;
+            _loggerFactory = loggerFactory;
         }
 
         public async Task<FormatRangeResponse> Handle(FormatAfterKeystrokeRequest request)
@@ -33,7 +36,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting
 
             var text = await document.GetTextAsync();
             int position = text.Lines.GetPosition(new LinePosition(request.Line, request.Column));
-            var changes = await FormattingWorker.GetFormattingChangesAfterKeystroke(document, position, request.Char, _omnisharpOptions);
+            var changes = await FormattingWorker.GetFormattingChangesAfterKeystroke(document, position, request.Char, _omnisharpOptions, _loggerFactory);
 
             return new FormatRangeResponse()
             {

@@ -3,13 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.CodingConventions;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
 {
     internal static class EditorConfigOptionExtensions
     {
-        public static async Task<OptionSet> WithEditorConfigOptions(this OptionSet optionSet, string path)
+        public static async Task<OptionSet> WithEditorConfigOptions(this OptionSet optionSet, string path, ILoggerFactory loggerFactory)
         {
             if (!Path.IsPathRooted(path))
             {
@@ -17,13 +18,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
             }
 
             var codingConventionsManager = CodingConventionsManagerFactory.CreateCodingConventionsManager();
-            var optionsApplier = new EditorConfigOptionsApplier();
+            var optionsApplier = new EditorConfigOptionsApplier(loggerFactory);
             var context = await codingConventionsManager.GetConventionContextAsync(path, CancellationToken.None);
 
             if (context != null && context.CurrentConventions != null)
             {
                 return optionsApplier.ApplyConventions(optionSet, context.CurrentConventions, LanguageNames.CSharp);
             }
+
 
             return optionSet;
         }

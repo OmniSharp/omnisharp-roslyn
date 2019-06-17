@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.CodingConventions;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
@@ -17,6 +18,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
     internal class EditorConfigOptionsApplier
     {
         private static readonly List<(IOption, OptionStorageLocation, MethodInfo)> _optionsWithStorage;
+        private readonly ILogger _logger;
 
         static EditorConfigOptionsApplier()
         {
@@ -25,16 +27,32 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
             _optionsWithStorage.AddRange(GetFieldBasedOptionsWithStorageFromTypes(typeof(CodeStyleOptions), typeof(CSharpFormattingOptions).Assembly.GetType("Microsoft.CodeAnalysis.CSharp.CodeStyle.CSharpCodeStyleOptions")));
         }
 
+        public EditorConfigOptionsApplier(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<EditorConfigOptionsApplier>();
+        }
+
         public OptionSet ApplyConventions(OptionSet optionSet, ICodingConventionsSnapshot codingConventions, string languageName)
         {
-            foreach (var optionWithStorage in _optionsWithStorage)
+            try
             {
-                if (TryGetConventionValue(optionWithStorage, codingConventions, out var value))
+                var adjustedConventions = codingConventions.AllRawConventions.ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
+                _logger.LogDebug($"All raw discovered .editorconfig options: {string.Join(Environment.NewLine, adjustedConventions.Select(kvp => $"{kvp.Key}={kvp.Value}"))}");
+
+                foreach (var optionWithStorage in _optionsWithStorage)
                 {
-                    var option = optionWithStorage.Item1;
-                    var optionKey = new OptionKey(option, option.IsPerLanguage ? languageName : null);
-                    optionSet = optionSet.WithChangedOption(optionKey, value);
+                    if (TryGetConventionValue(optionWithStorage, adjustedConventions, out var value))
+                    {
+                        var option = optionWithStorage.Item1;
+                        _logger.LogTrace($"Applying .editorconfig option {option.Name}");
+                        var optionKey = new OptionKey(option, option.IsPerLanguage ? languageName : null);
+                        optionSet = optionSet.WithChangedOption(optionKey, value);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "There was an error when applying .editorconfig options.");
             }
 
             return optionSet;
@@ -66,12 +84,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
             => storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation") ||
                storageLocation.GetType().FullName.StartsWith("Microsoft.CodeAnalysis.Options.NamingStylePreferenceEditorConfigStorageLocation");
 
-        internal static bool TryGetConventionValue((IOption, OptionStorageLocation, MethodInfo) optionWithStorage, ICodingConventionsSnapshot codingConventions, out object value)
+        internal static bool TryGetConventionValue((IOption, OptionStorageLocation, MethodInfo) optionWithStorage, Dictionary<string, string> adjustedConventions, out object value)
         {
             var (option, editorConfigStorage, tryGetOptionMethod) = optionWithStorage;
             value = null;
 
-            var adjustedConventions = codingConventions.AllRawConventions.ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
             var args = new object[] { option, adjustedConventions, option.Type, value };
 
             var isOptionPresent = (bool)tryGetOptionMethod.Invoke(editorConfigStorage, args);
