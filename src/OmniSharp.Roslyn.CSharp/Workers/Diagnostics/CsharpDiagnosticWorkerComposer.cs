@@ -34,12 +34,11 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
             DiagnosticEventForwarder forwarder,
-            RulesetsForProjects rulesetsForProjects,
             OmniSharpOptions options)
         {
             if(options.RoslynExtensionsOptions.EnableAnalyzersSupport)
             {
-                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder, rulesetsForProjects);
+                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder);
             }
             else
             {

@@ -61,11 +61,10 @@ namespace OmniSharp.MSBuild
         private readonly BufferBlock<ProjectToUpdate> _queue;
         private readonly CancellationTokenSource _processLoopCancellation;
         private readonly Task _processLoopTask;
-        private readonly IAnalyzerAssemblyLoader _assemblyLoader;
+        private readonly IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
         private bool _processingQueue;
 
         private readonly FileSystemNotificationCallback _onDirectoryFileChanged;
-        private readonly RulesetsForProjects _rulesetsForProjects;
 
         public ProjectManager(
             ILoggerFactory loggerFactory,
@@ -76,8 +75,7 @@ namespace OmniSharp.MSBuild
             PackageDependencyChecker packageDependencyChecker,
             ProjectLoader projectLoader,
             OmniSharpWorkspace workspace,
-            RulesetsForProjects rulesetsForProjects,
-            IAnalyzerAssemblyLoader assemblyLoader,
+            IAnalyzerAssemblyLoader analyzerAssemblyLoader,
             ImmutableArray<IMSBuildEventSink> eventSinks)
         {
             _logger = loggerFactory.CreateLogger<ProjectManager>();
@@ -95,9 +93,8 @@ namespace OmniSharp.MSBuild
             _queue = new BufferBlock<ProjectToUpdate>();
             _processLoopCancellation = new CancellationTokenSource();
             _processLoopTask = Task.Run(() => ProcessLoopAsync(_processLoopCancellation.Token));
-            _assemblyLoader = assemblyLoader;
+            _analyzerAssemblyLoader = analyzerAssemblyLoader;
             _onDirectoryFileChanged = OnDirectoryFileChanged;
-            _rulesetsForProjects = rulesetsForProjects;
 
             if (_options.LoadProjectsOnDemand)
             {
@@ -124,7 +121,7 @@ namespace OmniSharp.MSBuild
                         if (_projectsRequestedOnDemand.TryAdd(csProjFile, 0 /*unused*/))
                         {
                             var projectIdInfo = new ProjectIdInfo(ProjectId.CreateNewId(csProjFile), false);
-                            QueueProjectUpdate(csProjFile, allowAutoRestore: true, projectIdInfo);
+                            QueueProjectUpdate(csProjFile, allowAutoRestore: true, projectId: projectIdInfo);
                         }
                     }
 
@@ -220,10 +217,9 @@ namespace OmniSharp.MSBuild
                     // update or add project
                     _failedToLoadProjectFiles.Remove(currentProject.FilePath);
 
-                    ProjectFileInfo projectFileInfo;
                     ProjectLoadedEventArgs loadedEventArgs;
 
-                    if (_projectFiles.TryGetValue(currentProject.FilePath, out projectFileInfo))
+                    if (_projectFiles.TryGetValue(currentProject.FilePath, out ProjectFileInfo projectFileInfo))
                     {
                         (projectFileInfo, loadedEventArgs) = ReloadProject(projectFileInfo);
                         if (projectFileInfo == null)
@@ -352,10 +348,7 @@ namespace OmniSharp.MSBuild
 
             _projectFiles.Add(projectFileInfo);
 
-            var projectInfo = projectFileInfo.CreateProjectInfo(_assemblyLoader);
-
-            if (projectFileInfo.RuleSet != null)
-                _rulesetsForProjects.AddOrUpdateRuleset(projectFileInfo.Id, projectFileInfo.RuleSet);
+            var projectInfo = projectFileInfo.CreateProjectInfo(_analyzerAssemblyLoader);
 
             var newSolution = _workspace.CurrentSolution.AddProject(projectInfo);
 
@@ -375,6 +368,14 @@ namespace OmniSharp.MSBuild
             {
                 QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: true, projectFileInfo.ProjectIdInfo);
             });
+
+            if (projectFileInfo.RuleSet?.FilePath != null)
+            {
+                _fileSystemWatcher.Watch(projectFileInfo.RuleSet.FilePath, (file, changeType) =>
+                {
+                    QueueProjectUpdate(projectFileInfo.FilePath, allowAutoRestore: false, projectFileInfo.ProjectIdInfo);
+                });
+            }
 
             if (!string.IsNullOrEmpty(projectFileInfo.ProjectAssetsFile))
             {
@@ -425,7 +426,9 @@ namespace OmniSharp.MSBuild
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
+
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
+            _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
@@ -472,7 +475,7 @@ namespace OmniSharp.MSBuild
                 }
             }
 
-            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create)
+            if (changeType == FileChangeType.Unspecified || changeType == FileChangeType.Create || changeType == FileChangeType.Change)
             {
                 // Only add cs files. Also, make sure the path is a file, and not a directory name that happens to end in ".cs"
                 if (string.Equals(Path.GetExtension(path), ".cs", StringComparison.CurrentCultureIgnoreCase) && File.Exists(path))

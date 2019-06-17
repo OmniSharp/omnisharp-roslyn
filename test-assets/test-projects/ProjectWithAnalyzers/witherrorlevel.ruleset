@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Rules for ClassLibrary21" Description="Code analysis rules for ClassLibrary21.csproj." ToolsVersion="15.0">
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1021" Action="Error" />
+  </Rules>
+</RuleSet>
