@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.IO;
 using System.Linq;
@@ -154,6 +155,12 @@ namespace OmniSharp
                     }
                 }
             }
+        }
+
+        public void UpdateDiagnosticOptionsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> rules)
+        {
+            var project = this.CurrentSolution.GetProject(projectId);
+            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
         }
 
         private ProjectInfo CreateMiscFilesProject(string language)
@@ -386,6 +393,6 @@ namespace OmniSharp
         private Task OnWaitForProjectModelReadyAsync(string filePath)
         {
             return Task.WhenAll(_waitForProjectModelReadyHandlers.Select(h => h(filePath)));
-        }  
+        }
     }
 }
