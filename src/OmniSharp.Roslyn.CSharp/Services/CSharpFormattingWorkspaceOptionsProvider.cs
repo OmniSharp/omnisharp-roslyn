@@ -9,7 +9,7 @@ using RoslynFormattingOptions = Microsoft.CodeAnalysis.Formatting.FormattingOpti
 namespace OmniSharp.Roslyn.CSharp.Services
 {
     [Export(typeof(IWorkspaceOptionsProvider)), Shared]
-    public class CSharpWorkspaceOptionsProvider : IWorkspaceOptionsProvider
+    public class CSharpFormattingWorkspaceOptionsProvider : IWorkspaceOptionsProvider
     {
         private static OptionSet GetOptions(OptionSet optionSet, FormattingOptions formattingOptions)
         {
@@ -93,9 +93,6 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
         }
 
-        public OptionSet Process(OptionSet workOptionSet, FormattingOptions options)
-        {
-            return GetOptions(workOptionSet, options);
-        }
+        public OptionSet Process(OptionSet workOptionSet, OmniSharpOptions omniSharpOptions) => GetOptions(workOptionSet, omniSharpOptions.FormattingOptions);
     }
 }

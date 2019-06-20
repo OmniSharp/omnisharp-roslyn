@@ -4,7 +4,7 @@ namespace OmniSharp
     {
         public static bool ZeroBasedIndices = false;
 
-        public const string RoslynVersion = "3.1.0.0";
+        public const string RoslynVersion = "3.2.0.0";
         public const string RoslynPublicKeyToken = "31bf3856ad364e35";
 
         public readonly static string RoslynFeatures = GetRoslynAssemblyFullName("Microsoft.CodeAnalysis.Features");

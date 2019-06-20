@@ -34,16 +34,6 @@ namespace OmniSharp.Eventing
                 });
         }
 
-        public static void ProjectAnalyzed(this IEventEmitter emitter, string projectPath)
-        {
-            emitter.Emit(
-                EventTypes.PackageRestoreFinished,
-                new PackageRestoreMessage
-                {
-                    FileName = projectPath,
-                });
-        }
-
         public static void UnresolvedDepdendencies(this IEventEmitter emitter, string projectFilePath, IEnumerable<PackageDependency> unresolvedDependencies)
         {
             emitter.Emit(

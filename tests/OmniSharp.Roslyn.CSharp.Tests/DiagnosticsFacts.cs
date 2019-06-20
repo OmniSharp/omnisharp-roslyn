@@ -2,9 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using OmniSharp.Models.CodeCheck;
 using OmniSharp.Models.Diagnostics;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -66,7 +64,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     new TestFile("a.cs", "class C1 { int n = true; }"),
                     new TestFile("b.cs", "class C2 { int n = true; }"));
 
-                await TestHelpers.WaitUntil(async () => (await host.RequestCodeCheckAsync()).QuickFixes.Any(), 50, timeout: 5000);
+                await TestHelpers.WaitUntil(async () => (await host.RequestCodeCheckAsync()).QuickFixes.Any(), 50, timeout: 15000);
 
                 var quickFixes = await host.RequestCodeCheckAsync();
 

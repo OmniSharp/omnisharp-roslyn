@@ -4,7 +4,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>16.0.461</MSBuildPackageVersion>
     <NuGetPackageVersion>5.0.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.1.0-beta4-19266-03</RoslynPackageVersion>
+    <RoslynPackageVersion>3.2.0-beta3-19281-01</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
@@ -14,6 +14,7 @@
     <PackageReference Update="Dotnet.Script.DependencyModel" Version="0.6.1" />
     <PackageReference Update="Dotnet.Script.DependencyModel.NuGet" Version="0.6.2" />
 
+    <PackageReference Update="Humanizer" Version="2.2.0" />
     <PackageReference Update="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
 
     <PackageReference Update="Microsoft.AspNetCore.Diagnostics" Version="2.1.1" />
@@ -31,6 +32,7 @@
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
+    <PackageReference Update="Microsoft.CodeAnalysis.FlowAnalysis.Utilities" Version="2.9.3-beta1.19271.2+23ca1e2d" />
     <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
 
     <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="2.1.1" />
