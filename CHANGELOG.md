@@ -80,7 +80,7 @@ All changes to the project will be documented in this file.
 * Fixed MSBuild discovery path (1.32.7 regression) (PR: [#1337](https://github.com/OmniSharp/omnisharp-roslyn/pull/1337))
 
 ## [1.32.7] - 2018-11-12
-* It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317)) 
+* It's now possible to override the default location of OmniSharp's global folder (%USERPROFILE%\.omnisharp or ~/.omnisharp.) with an OMNISHARPHOME environment variable (PR: [#1317](https://github.com/OmniSharp/omnisharp-roslyn/pull/1317))
 * OmniSharp no longer searches for `config.json` in its source directory to load configuration (PR: [#1319](https://github.com/OmniSharp/omnisharp-roslyn/pull/1319))
 * Fixed a regression introduced in 1.32.4, that prevented find symbol endpoint from working for CSX projects (PR: [#1321](https://github.com/OmniSharp/omnisharp-roslyn/pull/1321))
 * Improved MSBuild discovery for future scenarios (PR: [#1328](https://github.com/OmniSharp/omnisharp-roslyn/pull/1328))
@@ -119,7 +119,7 @@ All changes to the project will be documented in this file.
 * Performance improvements for line mappings when working with `.cake` files. (PR: [#1226](https://github.com/OmniSharp/omnisharp-roslyn/pull/1226))
 * Fixed a bug where a new debug session could not be started after a previous one failed due to build error. (PR: [#1239](https://github.com/OmniSharp/omnisharp-roslyn/pull/1239))
 * Upgraded dependencies (PR: [#1237](https://github.com/OmniSharp/omnisharp-roslyn/pull/1237))
-  * Upgraded to .NET Core SDK 2.1.505
+  * Upgraded to .NET Core SDK 2.1.700
   * Upgraded to Microsoft.AspNetCore.* version 2.1.1
   * Upgraded to Microsoft.Extensions.* version 2.1.1
   * Upgraded to MSBuild 15.7
