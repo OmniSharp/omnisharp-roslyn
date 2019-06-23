@@ -11,13 +11,10 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Mef;
 using OmniSharp.Models;
-using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
-using OmniSharp.Utilities;
 using RunCodeActionRequest = OmniSharp.Models.V2.CodeActions.RunCodeActionRequest;
 using RunCodeActionResponse = OmniSharp.Models.V2.CodeActions.RunCodeActionResponse;
 
@@ -28,8 +25,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
     {
         private readonly IAssemblyLoader _loader;
         private readonly Lazy<Assembly> _workspaceAssembly;
-
-        private const string RenameDocumentOperation = "Microsoft.CodeAnalysis.CodeActions.RenameDocumentOperation";
 
         [ImportingConstructor]
         public RunCodeActionService(
@@ -56,37 +51,44 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
             }
 
             Logger.LogInformation($"Applying code action: {availableAction.GetTitle()}");
-
-            var operations = await availableAction.GetOperationsAsync(CancellationToken.None);
-
-            var solution = this.Workspace.CurrentSolution;
             var changes = new List<FileOperationResponse>();
-            var directory = Path.GetDirectoryName(request.FileName);
 
-            foreach (var o in operations)
+            try
             {
-                if (o is ApplyChangesOperation applyChangesOperation)
-                {
-                    var fileChangesResult = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges, request.WantsAllCodeActionOperations);
+                var operations = await availableAction.GetOperationsAsync(CancellationToken.None);
 
-                    changes.AddRange(fileChangesResult.FileChanges);
-                    solution = fileChangesResult.Solution;
-                }
+                var solution = this.Workspace.CurrentSolution;
+                var directory = Path.GetDirectoryName(request.FileName);
 
-                if (request.WantsAllCodeActionOperations)
+                foreach (var o in operations)
                 {
-                    if (o is OpenDocumentOperation openDocumentOperation)
+                    if (o is ApplyChangesOperation applyChangesOperation)
                     {
-                        var document = solution.GetDocument(openDocumentOperation.DocumentId);
-                        changes.Add(new OpenFileResponse(document.FilePath));
+                        var fileChangesResult = await GetFileChangesAsync(applyChangesOperation.ChangedSolution, solution, directory, request.WantsTextChanges, request.WantsAllCodeActionOperations);
+
+                        changes.AddRange(fileChangesResult.FileChanges);
+                        solution = fileChangesResult.Solution;
+                    }
+
+                    if (request.WantsAllCodeActionOperations)
+                    {
+                        if (o is OpenDocumentOperation openDocumentOperation)
+                        {
+                            var document = solution.GetDocument(openDocumentOperation.DocumentId);
+                            changes.Add(new OpenFileResponse(document.FilePath));
+                        }
                     }
                 }
-            }
 
-            if (request.ApplyTextChanges)
+                if (request.ApplyTextChanges)
+                {
+                    // Will this fail if FileChanges.GetFileChangesAsync(...) added files to the workspace?
+                    this.Workspace.TryApplyChanges(solution);
+                }
+            }
+            catch (Exception e)
             {
-                // Will this fail if FileChanges.GetFileChangesAsync(...) added files to the workspace?
-                this.Workspace.TryApplyChanges(solution);
+                Logger.LogError(e, $"An error occurred when running a code action: {availableAction.GetTitle()}");
             }
 
             return new RunCodeActionResponse

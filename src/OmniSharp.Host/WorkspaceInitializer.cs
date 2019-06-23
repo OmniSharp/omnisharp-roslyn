@@ -1,5 +1,6 @@
 using System;
 using System.Composition.Hosting;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ namespace OmniSharp
             var workspace = compositionHost.GetExport<OmniSharpWorkspace>();
             var options = serviceProvider.GetRequiredService<IOptionsMonitor<OmniSharpOptions>>();
             var configuration = serviceProvider.GetRequiredService<IConfigurationRoot>();
+            var omnisharpEnvironment = serviceProvider.GetRequiredService<IOmniSharpEnvironment>();
 
             var projectEventForwarder = compositionHost.GetExport<ProjectEventForwarder>();
             projectEventForwarder.Initialize();
@@ -50,7 +52,7 @@ namespace OmniSharp
                 }
             }
 
-            ProvideWorkspaceOptions(compositionHost, workspace, options, logger);
+            ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
 
             // Mark the workspace as initialized
             workspace.Initialized = true;
@@ -59,7 +61,7 @@ namespace OmniSharp
             // run workspace options providers automatically
             options.OnChange(o =>
             {
-                ProvideWorkspaceOptions(compositionHost, workspace, options, logger);
+                ProvideWorkspaceOptions(compositionHost, workspace, options, logger, omnisharpEnvironment);
             });
 
             logger.LogInformation("Configuration finished.");
@@ -69,21 +71,23 @@ namespace OmniSharp
             CompositionHost compositionHost,
             OmniSharpWorkspace workspace,
             IOptionsMonitor<OmniSharpOptions> options,
-            ILogger logger)
+            ILogger logger,
+            IOmniSharpEnvironment omnisharpEnvironment)
         {
             // run all workspace options providers
-            foreach (var workspaceOptionsProvider in compositionHost.GetExports<IWorkspaceOptionsProvider>())
+            var workspaceOptionsProviders = compositionHost.GetExports<IWorkspaceOptionsProvider>().OrderBy(x => x.Order);
+            foreach (var workspaceOptionsProvider in workspaceOptionsProviders)
             {
                 var providerName = workspaceOptionsProvider.GetType().FullName;
 
                 try
                 {
-                    LoggerExtensions.LogInformation(logger, $"Invoking Workspace Options Provider: {providerName}");
-                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue);
+                    LoggerExtensions.LogInformation(logger, $"Invoking Workspace Options Provider: {providerName}, Order: {workspaceOptionsProvider.Order}");
+                    workspace.Options = workspaceOptionsProvider.Process(workspace.Options, options.CurrentValue, omnisharpEnvironment);
                 }
                 catch (Exception e)
                 {
-                    var message = $"The workspace options provider '{providerName}' threw exception during initialization.";
+                    var message = $"The workspace options provider '{providerName}' threw exception during execution.";
                     logger.LogError(e, message);
                 }
             }

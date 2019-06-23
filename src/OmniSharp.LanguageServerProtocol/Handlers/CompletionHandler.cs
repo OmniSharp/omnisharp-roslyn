@@ -80,7 +80,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Line = Convert.ToInt32(request.Position.Line),
                 WantKind = true,
                 WantDocumentationForEveryCompletionResult = true,
-                WantReturnType = true
+                WantReturnType = true,
+                WantSnippet =_capability.CompletionItem?.SnippetSupport ?? false
             };
 
             var omnisharpResponse = await _autoCompleteHandler.Handle(omnisharpRequest);
@@ -88,6 +89,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             var completions = new Dictionary<string, List<CompletionItem>>();
             foreach (var response in omnisharpResponse)
             {
+                var isSnippet  = !string.IsNullOrEmpty(response.Snippet);
+                var text       = isSnippet ? response.Snippet : response.CompletionText;
+                var textFormat = isSnippet ? InsertTextFormat.Snippet : InsertTextFormat.PlainText;
+
                 var completionItem = new CompletionItem {
                     Label = response.CompletionText,
                     Detail = !string.IsNullOrEmpty(response.ReturnType) ?
@@ -95,7 +100,8 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                             $"{response.ReturnType} {response.DisplayText}",
                     Documentation = response.Description,
                     Kind = GetCompletionItemKind(response.Kind),
-                    InsertText = response.CompletionText,
+                    InsertText = text,
+                    InsertTextFormat = textFormat,
                 };
 
                 if(!completions.ContainsKey(completionItem.Label))

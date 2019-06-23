@@ -307,7 +307,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     Column = range.Start.Offset,
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
-                    Selection = GetSelection(range),
+                    Selection = range.GetSelection(),
                 };
 
                 var response = await requestHandler.Handle(request);
@@ -331,7 +331,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Line = range.Start.Line,
                     Column = range.Start.Offset,
-                    Selection = GetSelection(range),
+                    Selection = range.GetSelection(),
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
                     Identifier = identifier,
@@ -341,20 +341,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 return await requestHandler.Handle(request);
             }
-        }
-
-        private static Range GetSelection(TextRange range)
-        {
-            if (range.IsEmpty)
-            {
-                return null;
-            }
-
-            return new Range
-            {
-                Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
-                End = new Point { Line = range.End.Line, Column = range.End.Offset }
-            };
         }
     }
 }
