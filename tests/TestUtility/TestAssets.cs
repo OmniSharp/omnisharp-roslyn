@@ -15,6 +15,7 @@ namespace TestUtility
         public string TestProjectsFolder { get; }
         public string TestBinariesFolder { get; }
         public string TestScriptsFolder { get; }
+        public string TestFilesFolder { get; }
 
         private TestAssets()
         {
@@ -25,6 +26,7 @@ namespace TestUtility
             TestProjectsFolder = Path.Combine(TestAssetsFolder, "test-projects");
             TestScriptsFolder = Path.Combine(TestAssetsFolder, "test-scripts");
             TestBinariesFolder = Path.Combine(TestAssetsFolder, "binaries");
+            TestFilesFolder = Path.Combine(TestAssetsFolder, "test-files");
         }
 
         private static string FindRootFolder()
