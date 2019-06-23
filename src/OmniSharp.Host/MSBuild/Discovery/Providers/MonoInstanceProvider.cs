@@ -103,7 +103,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
             var localMSBuildPath = FindLocalMSBuildDirectory();
             if (localMSBuildPath != null)
             {
-                var localRoslynPath = Path.Combine(localMSBuildPath, "15.0", "Bin", "Roslyn");
+                var localRoslynPath = Path.Combine(localMSBuildPath, "Current", "Bin", "Roslyn");
                 propertyOverrides.Add("CscToolPath", localRoslynPath);
                 propertyOverrides.Add("CscToolExe", "csc.exe");
             }

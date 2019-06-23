@@ -38,7 +38,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             };
         }
 
-        public async Task<LocationOrLocations> Handle(DefinitionParams request, CancellationToken token)
+        public async Task<LocationOrLocationLinks> Handle(DefinitionParams request, CancellationToken token)
         {
             var omnisharpRequest = new GotoDefinitionRequest()
             {
@@ -51,10 +51,10 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
 
             if (string.IsNullOrWhiteSpace(omnisharpResponse.FileName))
             {
-                return new LocationOrLocations();
+                return new LocationOrLocationLinks();
             }
 
-            return new LocationOrLocations(new Location()
+            return new LocationOrLocationLinks(new Location()
             {
                 Uri = ToUri(omnisharpResponse.FileName),
                 Range = ToRange((omnisharpResponse.Column, omnisharpResponse.Line))

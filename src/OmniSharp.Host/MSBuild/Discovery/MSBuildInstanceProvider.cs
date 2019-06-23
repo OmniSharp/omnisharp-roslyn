@@ -63,8 +63,8 @@ namespace OmniSharp.MSBuild.Discovery
 
         protected static string FindLocalMSBuildDirectory()
         {
-            // If OmniSharp is running normally, MSBuild is located in an 'msbuild' folder beneath OmniSharp.exe.
-            var msbuildDirectory = Path.Combine(AppContext.BaseDirectory, "msbuild");
+            // If OmniSharp is running normally, MSBuild is located in an '.msbuild' folder beneath OmniSharp.exe.
+            var msbuildDirectory = Path.Combine(AppContext.BaseDirectory, ".msbuild");
 
             if (!Directory.Exists(msbuildDirectory))
             {

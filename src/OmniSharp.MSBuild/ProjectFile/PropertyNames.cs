@@ -38,6 +38,7 @@
         public const string TargetFrameworkRootPath = nameof(TargetFrameworkRootPath);
         public const string TargetFrameworks = nameof(TargetFrameworks);
         public const string TargetPath = nameof(TargetPath);
+        public const string TreatWarningsAsErrors = nameof(TreatWarningsAsErrors);
         public const string VisualStudioVersion = nameof(VisualStudioVersion);
         public const string VsInstallRoot = nameof(VsInstallRoot);
     }

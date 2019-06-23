@@ -1,4 +1,5 @@
 using System.Composition;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
 using Microsoft.CodeAnalysis.Options;
@@ -9,8 +10,10 @@ using RoslynFormattingOptions = Microsoft.CodeAnalysis.Formatting.FormattingOpti
 namespace OmniSharp.Roslyn.CSharp.Services
 {
     [Export(typeof(IWorkspaceOptionsProvider)), Shared]
-    public class CSharpWorkspaceOptionsProvider : IWorkspaceOptionsProvider
+    public class CSharpFormattingWorkspaceOptionsProvider : IWorkspaceOptionsProvider
     {
+        public int Order => 0;
+
         private static OptionSet GetOptions(OptionSet optionSet, FormattingOptions formattingOptions)
         {
             return optionSet
@@ -93,9 +96,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
             }
         }
 
-        public OptionSet Process(OptionSet workOptionSet, FormattingOptions options)
+        public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions options, IOmniSharpEnvironment omnisharpEnvironment)
         {
-            return GetOptions(workOptionSet, options);
+            return GetOptions(currentOptionSet, options.FormattingOptions);
         }
     }
 }

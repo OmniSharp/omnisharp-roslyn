@@ -25,7 +25,7 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             }
 
             var extensionsPath = path;
-            var toolsPath = Path.Combine(extensionsPath, "15.0", "Bin");
+            var toolsPath = Path.Combine(extensionsPath, "Current", "Bin");
             var roslynPath = Path.Combine(toolsPath, "Roslyn");
 
             var propertyOverrides = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -82,13 +82,21 @@ namespace OmniSharp.MSBuild.Discovery.Providers
             }
 
             var monoXBuild15DirPath = Path.Combine(monoXBuildDirPath, "15.0");
-            if (!Directory.Exists(monoXBuild15DirPath))
+            if (Directory.Exists(monoXBuild15DirPath))
             {
-                return false;
+                path = monoXBuildDirPath;
+                return true;
             }
 
-            path = monoXBuildDirPath;
-            return true;
+
+            var monoXBuildCurrentDirPath = Path.Combine(monoXBuildDirPath, "Current");
+            if (Directory.Exists(monoXBuildCurrentDirPath))
+            {
+                path = monoXBuildDirPath;
+                return true;
+            }
+
+            return false;
         }
 
         private static bool TryGetMonoXBuildFrameworksPath(out string path)

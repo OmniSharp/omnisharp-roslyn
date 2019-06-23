@@ -21,7 +21,7 @@ namespace OmniSharp.Stdio.Eventing
                 Body = args
             };
 
-            _writer.WriteLineAsync(packet);
+            _writer.WriteLine(packet);
         }
     }
 }

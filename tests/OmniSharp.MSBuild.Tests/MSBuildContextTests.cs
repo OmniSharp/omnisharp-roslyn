@@ -1,4 +1,4 @@
-using OmniSharp.MSBuild.ProjectFile;
+﻿using OmniSharp.MSBuild.ProjectFile;
 using Xunit;
 
 namespace OmniSharp.Tests

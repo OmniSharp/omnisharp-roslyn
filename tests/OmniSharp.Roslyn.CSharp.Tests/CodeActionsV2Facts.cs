@@ -135,6 +135,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate variable 'Console' -> Generate field 'Class1.Console'",
                 "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
                 "Generate variable 'Console' -> Generate local 'Console'",
+                "Generate variable 'Console' -> Generate parameter 'Console'",
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
@@ -147,6 +148,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate variable 'Console' -> Generate field 'Class1.Console'",
                 "Generate variable 'Console' -> Generate read-only field 'Class1.Console'",
                 "Generate variable 'Console' -> Generate local 'Console'",
+                "Generate variable 'Console' -> Generate parameter 'Console'",
                 "Generate type 'Console' -> Generate class 'Console' in new file",
                 "Generate type 'Console' -> Generate class 'Console'",
                 "Generate type 'Console' -> Generate nested class 'Console'",
@@ -256,6 +258,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.Equal(2, changes.Length);
                 Assert.Equal(FileModificationType.Renamed, changes[0].ModificationType);
                 Assert.Contains("Class1.cs", ((RenamedFileResponse)changes[0]).NewFileName);
+                Assert.False(File.Exists(((RenamedFileResponse)changes[0]).FileName), "The old renamed file exists - even though it should not.");
+                Assert.True(File.Exists(((RenamedFileResponse)changes[0]).NewFileName), "The new renamed file doesn't exist - even though it should.");
                 Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
             }
         }
@@ -303,7 +307,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     Column = range.Start.Offset,
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
-                    Selection = GetSelection(range),
+                    Selection = range.GetSelection(),
                 };
 
                 var response = await requestHandler.Handle(request);
@@ -327,7 +331,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     Line = range.Start.Line,
                     Column = range.Start.Offset,
-                    Selection = GetSelection(range),
+                    Selection = range.GetSelection(),
                     FileName = BufferPath,
                     Buffer = testFile.Content.Code,
                     Identifier = identifier,
@@ -337,20 +341,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 return await requestHandler.Handle(request);
             }
-        }
-
-        private static Range GetSelection(TextRange range)
-        {
-            if (range.IsEmpty)
-            {
-                return null;
-            }
-
-            return new Range
-            {
-                Start = new Point { Line = range.Start.Line, Column = range.Start.Offset },
-                End = new Point { Line = range.End.Line, Column = range.End.Offset }
-            };
         }
     }
 }

@@ -6,7 +6,7 @@ steps:
     condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/logs/"
-      ArtifactName: "Logs - $(system.phaseName)"
+      ArtifactName: "logs - $(system.phaseName)"
       ArtifactType: "Container"
     env:
       Artifacts: ${{ parameters.Artifacts }}
@@ -15,7 +15,7 @@ steps:
     # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/package/"
-      ArtifactName: "Packages"
+      ArtifactName: "packages"
       ArtifactType: "Container"
     env:
       Artifacts: ${{ parameters.Artifacts }}
@@ -24,7 +24,7 @@ steps:
     # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/deployment/"
-      ArtifactName: "Deployment"
+      ArtifactName: "deployment"
       ArtifactType: "Container"
     env:
       Artifacts: ${{ parameters.Artifacts }}
@@ -42,7 +42,7 @@ steps:
     # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/scripts/"
-      ArtifactName: "Scripts - $(system.phaseName)"
+      ArtifactName: "scripts - $(system.phaseName)"
       ArtifactType: "Container"
     env:
       Artifacts: ${{ parameters.Artifacts }}

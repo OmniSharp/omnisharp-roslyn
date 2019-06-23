@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,35 +14,48 @@ namespace OmniSharp.MSBuild.ProjectFile
     {
         public static CSharpCompilationOptions CreateCompilationOptions(this ProjectFileInfo projectFileInfo)
         {
-            var result = new CSharpCompilationOptions(projectFileInfo.OutputKind);
+            var compilationOptions = new CSharpCompilationOptions(projectFileInfo.OutputKind);
 
-            result = result.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
+            compilationOptions = compilationOptions.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
+            compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(projectFileInfo.GetDiagnosticOptions());
 
             if (projectFileInfo.AllowUnsafeCode)
             {
-                result = result.WithAllowUnsafe(true);
+                compilationOptions = compilationOptions.WithAllowUnsafe(true).WithGeneralDiagnosticOption(ReportDiagnostic.Error);
             }
 
-            if (projectFileInfo.NullableContextOptions != result.NullableContextOptions)
+            if (projectFileInfo.TreatWarningsAsErrors)
             {
-                result = result.WithNullableContextOptions(projectFileInfo.NullableContextOptions);
+                compilationOptions = compilationOptions.WithGeneralDiagnosticOption(ReportDiagnostic.Error);
             }
 
-            result = result.WithSpecificDiagnosticOptions(CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds));
+            if (projectFileInfo.NullableContextOptions != compilationOptions.NullableContextOptions)
+            {
+                compilationOptions = compilationOptions.WithNullableContextOptions(projectFileInfo.NullableContextOptions);
+            }
 
             if (projectFileInfo.SignAssembly && !string.IsNullOrEmpty(projectFileInfo.AssemblyOriginatorKeyFile))
             {
                 var keyFile = Path.Combine(projectFileInfo.Directory, projectFileInfo.AssemblyOriginatorKeyFile);
-                result = result.WithStrongNameProvider(new DesktopStrongNameProvider())
+                compilationOptions = compilationOptions.WithStrongNameProvider(new DesktopStrongNameProvider())
                                .WithCryptoKeyFile(keyFile);
             }
 
             if (!string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile))
             {
-                result = result.WithXmlReferenceResolver(XmlFileResolver.Default);
+                compilationOptions = compilationOptions.WithXmlReferenceResolver(XmlFileResolver.Default);
             }
 
-            return result;
+            return compilationOptions;
+        }
+
+        public static ImmutableDictionary<string, ReportDiagnostic> GetDiagnosticOptions(this ProjectFileInfo projectFileInfo)
+        {
+            var defaultSuppressions = CompilationOptionsHelper.GetDefaultSuppressedDiagnosticOptions(projectFileInfo.SuppressedDiagnosticIds);
+
+            var specificRules = projectFileInfo.RuleSet?.SpecificDiagnosticOptions ?? ImmutableDictionary<string, ReportDiagnostic>.Empty;
+
+            return specificRules.Concat(defaultSuppressions.Where(x => !specificRules.Keys.Contains(x.Key))).ToImmutableDictionary();
         }
 
         public static ProjectInfo CreateProjectInfo(this ProjectFileInfo projectFileInfo, IAnalyzerAssemblyLoader analyzerAssemblyLoader)

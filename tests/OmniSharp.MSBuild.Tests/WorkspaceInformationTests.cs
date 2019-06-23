@@ -225,5 +225,21 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Contains(project.SourceFiles, fileName => fileName.EndsWith("GrammarParser.cs"));
             }    
         }
+
+        [Fact]
+        public async Task ProjectWithWildcardPackageReference()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithWildcardPackageReference"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory))
+            {
+                var workspaceInfo = await host.RequestMSBuildWorkspaceInfoAsync();
+
+                Assert.NotNull(workspaceInfo.Projects);
+                var project = Assert.Single(workspaceInfo.Projects);
+
+                Assert.Equal("ProjectWithWildcardPackageReference.csproj", Path.GetFileName(project.Path));
+                Assert.Equal(3, project.SourceFiles.Count);
+            }
+        }
     }
 }

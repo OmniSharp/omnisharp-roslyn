@@ -6,13 +6,13 @@
     "1.1.2"
   ],
   "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
-  "RequiredMonoVersion": "5.8.0.0",
-  "DownloadURL": "https://omnisharpdownload.blob.core.windows.net/ext",
-  "MonoRuntimeMacOS": "mono.macOS-5.12.0.301.zip",
-  "MonoRuntimeLinux32": "mono.linux-x86-5.12.0.301.zip",
-  "MonoRuntimeLinux64": "mono.linux-x86_64-5.12.0.301.zip",
-  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-5.12.0.301.zip",
-  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-5.12.0.301.zip",
+  "RequiredMonoVersion": "5.18.0.0",
+  "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
+  "MonoRuntimeMacOS": "mono.macOS-5.18.1.0.zip",
+  "MonoRuntimeLinux32": "mono.linux-x86-5.18.1.0.zip",
+  "MonoRuntimeLinux64": "mono.linux-x86_64-5.18.1.0.zip",
+  "MonoMSBuildRuntime": "Microsoft.Build.Runtime.Mono-5.18.1.0.zip",
+  "MonoMSBuildLib": "Microsoft.Build.Lib.Mono-5.18.1.0.zip",
   "HostProjects": [
     "OmniSharp.Stdio.Driver",
     "OmniSharp.Http.Driver"
