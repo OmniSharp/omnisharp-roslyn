@@ -9,7 +9,9 @@ namespace OmniSharp.Roslyn.CSharp.Services
     [Export(typeof(IWorkspaceOptionsProvider)), Shared]
     public class RenameWorkspaceOptionsProvider : IWorkspaceOptionsProvider
     {
-        public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omniSharpOptions) =>
+        public int Order => 100;
+
+        public OptionSet Process(OptionSet currentOptionSet, OmniSharpOptions omniSharpOptions, IOmniSharpEnvironment omnisharpEnvironment) =>
             currentOptionSet
                .WithChangedOption(RoslynRenameOptions.RenameInComments, omniSharpOptions.RenameOptions.RenameInComments)
                .WithChangedOption(RoslynRenameOptions.RenameInStrings, omniSharpOptions.RenameOptions.RenameInStrings)

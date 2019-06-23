@@ -4,7 +4,7 @@
   <PropertyGroup>
     <MSBuildPackageVersion>16.0.461</MSBuildPackageVersion>
     <NuGetPackageVersion>5.0.0</NuGetPackageVersion>
-    <RoslynPackageVersion>3.2.0-beta3-19281-01</RoslynPackageVersion>
+    <RoslynPackageVersion>3.2.0-beta4-19319-04</RoslynPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
   </PropertyGroup>
 
@@ -32,7 +32,6 @@
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(RoslynPackageVersion)" />
     <PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(RoslynPackageVersion)" />
-    <PackageReference Update="Microsoft.CodeAnalysis.FlowAnalysis.Utilities" Version="2.9.3-beta1.19271.2+23ca1e2d" />
     <PackageReference Update="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(RoslynPackageVersion)" />
 
     <PackageReference Update="Microsoft.Extensions.Caching.Memory" Version="2.1.1" />
@@ -53,6 +52,7 @@
     <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.1" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="15.7.2" />
     <PackageReference Update="Microsoft.TestPlatform.TranslationLayer" Version="15.7.2" />
+    <PackageReference Update="Microsoft.VisualStudio.CodingConventions" Version="1.1.20180503.2" />
     <PackageReference Update="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.14.114" />
     <PackageReference Update="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.12" />
 
@@ -69,6 +69,7 @@
     <PackageReference Update="System.Collections.Immutable" Version="1.4.0" />
     <PackageReference Update="System.ComponentModel.Composition" Version="4.5.0" />
     <PackageReference Update="System.Composition" Version="1.0.31" />
+    <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
     <PackageReference Update="System.Reflection.Metadata" Version="1.4.2" />
     <PackageReference Update="System.Threading.Tasks.Dataflow" Version="4.9.0" />
     <PackageReference Update="System.ValueTuple" Version="4.4.0" />

@@ -59,9 +59,9 @@ namespace TestUtility
         protected OmniSharpTestHost CreateOmniSharpHost(params TestFile[] testFiles) => 
             CreateOmniSharpHost(testFiles, null);
 
-        protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IEnumerable<KeyValuePair<string, string>> configurationData)
+        protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IEnumerable<KeyValuePair<string, string>> configurationData, string path = null)
         {
-            var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput, configurationData: configurationData);
+            var host = OmniSharpTestHost.Create(path: path, testOutput: this.TestOutput, configurationData: configurationData);
 
             if (testFiles.Length > 0)
             {
