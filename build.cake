@@ -358,7 +358,7 @@ Task("CreateMSBuildFolder")
         "NuGet.Configuration",
         "NuGet.Frameworks",
         "NuGet.ProjectModel",
-        "NuGet.Protocol",   
+        "NuGet.Protocol",
         "NuGet.Versioning"
     };
 
@@ -810,7 +810,7 @@ string PublishWindowsBuild(string project, BuildEnvironment env, BuildPlan plan,
     {
         DotNetCorePublish(projectFileName, new DotNetCorePublishSettings()
         {
-            Runtime = rid,
+            // Runtime = rid, // TODO: With everything today do we need to publish this with a rid?  This appears to be legacy bit when we used to push for all supported dotnet core rids.
             Configuration = configuration,
             OutputDirectory = outputFolder,
             MSBuildSettings = new DotNetCoreMSBuildSettings()
@@ -870,10 +870,19 @@ Task("PublishWindowsBuilds")
     }
 });
 
+Task("PublishNuGet")
+    .Does(() => {
+        DotNetCorePack(".", new DotNetCorePackSettings() {
+            Configuration = "Release",
+            OutputDirectory = "./artifacts/nuget/"
+        });
+    });
+
 Task("Publish")
     .IsDependentOn("Build")
     .IsDependentOn("PublishMonoBuilds")
-    .IsDependentOn("PublishWindowsBuilds");
+    .IsDependentOn("PublishWindowsBuilds")
+    .IsDependentOn("PublishNuGet");
 
 /// <summary>
 ///  Execute the run script.

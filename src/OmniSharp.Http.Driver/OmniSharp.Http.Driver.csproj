@@ -8,7 +8,7 @@
         <PreserveCompilationContext>true</PreserveCompilationContext>
         <RuntimeIdentifiers>win7-x64;win7-x86</RuntimeIdentifiers>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\OmniSharp.Http\OmniSharp.Http.csproj" />
     </ItemGroup>
