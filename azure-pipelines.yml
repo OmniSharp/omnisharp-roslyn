@@ -133,6 +133,22 @@ jobs:
           artifactName: 'nuget'
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
+      - task: DotNetCoreCLI@2
+        displayName: 'Push NuGet packages to myget.org'
+        inputs:
+          command: push
+          nuGetFeedType: external
+          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          publishFeedCredentials: myget.org
+        # condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+      - task: DotNetCoreCLI@2
+        displayName: 'Push NuGet packages to nuget.org'
+        inputs:
+          command: push
+          nuGetFeedType: external
+          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          publishFeedCredentials: nuget.org
+        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
           AZ_REPO=$(lsb_release -cs)
           echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
@@ -161,19 +177,3 @@ jobs:
           # isDraft: true
           # isPreRelease: true
           # addChangeLog: false
-      - task: DotNetCoreCLI@2
-        displayName: 'Push NuGet packages to myget.org'
-        inputs:
-          command: push
-          nuGetFeedType: external
-          packagesToPush: '**/*.nupkg'
-          publishFeedCredentials: myget.org
-        # condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-      - task: DotNetCoreCLI@2
-        displayName: 'Push NuGet packages to nuget.org'
-        inputs:
-          command: push
-          nuGetFeedType: external
-          packagesToPush: '**/*.nupkg'
-          publishFeedCredentials: nuget.org
-        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
