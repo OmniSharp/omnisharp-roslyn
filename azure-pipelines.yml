@@ -112,6 +112,10 @@ jobs:
       - Linux
       - Windows
     steps:
+      - task: NuGetToolInstaller@1
+        displayName: 'Install NuGet'
+        inputs:
+          versionSpec: $(NuGetVersion)
       - task: DownloadBuildArtifacts@0
         displayName: Download Packages
         inputs:
@@ -133,10 +137,6 @@ jobs:
           artifactName: 'nuget'
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
-      - task: NuGetToolInstaller@1
-        displayName: 'Install NuGet'
-        inputs:
-          versionSpec: $(NuGetVersion)
       - task: NuGetCommand@2
         displayName: 'Push NuGet packages to myget.org'
         inputs:
@@ -144,7 +144,7 @@ jobs:
           nuGetFeedType: external
           packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
           publishFeedCredentials: myget.org
-        # condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+        condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       - task: NuGetCommand@2
         displayName: 'Push NuGet packages to nuget.org'
         inputs:
