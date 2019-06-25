@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
+        <TargetFrameworks>net472;netcoreapp2.1;netstandard2.0</TargetFrameworks>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <RootNamespace>OmniSharp</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
