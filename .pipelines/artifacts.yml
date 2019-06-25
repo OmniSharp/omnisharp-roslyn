@@ -33,7 +33,7 @@ steps:
     # condition: always()
     inputs:
       PathtoPublish: "$(Artifacts)/nuget/"
-      ArtifactName: "NuGet"
+      ArtifactName: "nuget"
       ArtifactType: "Container"
     env:
       Artifacts: ${{ parameters.Artifacts }}
