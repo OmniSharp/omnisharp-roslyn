@@ -133,21 +133,23 @@ jobs:
           artifactName: 'nuget'
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
-      - task: DotNetCoreCLI@2
+      - task: NuGetToolInstaller@1
+        displayName: 'Install NuGet'
+        inputs:
+          versionSpec: $(NuGetVersion)
+      - task: NuGetPublisher@0
         displayName: 'Push NuGet packages to myget.org'
         inputs:
-          command: push
           nuGetFeedType: external
-          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
-          publishFeedCredentials: myget.org
+          searchPattern: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          connectedServiceName: myget.org
         # condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-      - task: DotNetCoreCLI@2
+      - task: NuGetPublisher@0
         displayName: 'Push NuGet packages to nuget.org'
         inputs:
-          command: push
           nuGetFeedType: external
-          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
-          publishFeedCredentials: nuget.org
+          searchPattern: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          connectedServiceName:  nuget.org
         condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
           AZ_REPO=$(lsb_release -cs)
