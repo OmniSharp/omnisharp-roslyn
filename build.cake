@@ -871,10 +871,17 @@ Task("PublishWindowsBuilds")
 });
 
 Task("PublishNuGet")
+    .IsDependentOn("InstallDotNetCoreSdk")
     .Does(() => {
         DotNetCorePack(".", new DotNetCorePackSettings() {
             Configuration = "Release",
-            OutputDirectory = "./artifacts/nuget/"
+            OutputDirectory = "./artifacts/nuget/",
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .SetConfiguration(configuration)
+                .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
+                .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
+                .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion),
         });
     });
 
