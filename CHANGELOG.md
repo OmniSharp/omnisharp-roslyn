@@ -1,7 +1,22 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.32.21] - not yet released
+## [1.33.0] - not yet released
+* Added support for `.editorconfig` files to control formatting settings, analyzers, coding styles and naming conventions. The feature is currently opt-into and needs to be enabled using OmniSharp configuration ([#31](https://github.com/OmniSharp/omnisharp-roslyn/issues/31), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1526))
+
+    ```JSON
+    {
+        "FormattingOptions": {
+            "EnableEditorConfigSupport": true
+        }
+    }
+    ```
+* Analyzers improvements (PR: [#1440](https://github.com/OmniSharp/omnisharp-roslyn/pull/1440)) 
+	* Dynamically loaded / modifiable rulesets instead without full restart on omnisharp after every change
+	* Reanalyze updated projects
+	* Built-int Roslyn diagnostics can be controlled by rulesets even when analyzers are not enabled
+	* Faster analysis since project isn't updated every time
+	* When project is restored it is re-analyzed with correct dependencies
 * Added support for various renaming options - renaming any symbol can now propagate to comments or strings, and renaming a method symbol can also rename its overloads. They can be set via OmniSharp configuration, such as `omnisharp.json` file (they are disabled by default). (PR: [#1495](https://github.com/OmniSharp/omnisharp-roslyn/pull/1495))
 
     ```JSON
@@ -15,6 +30,8 @@ All changes to the project will be documented in this file.
     ```
 * Fixed a regression on declaration name completion (PR: [#1520](https://github.com/OmniSharp/omnisharp-roslyn/pull/1520))
 * Update to Roslyn `3.2.0-beta4-19319-04` (PR: [#1527](https://github.com/OmniSharp/omnisharp-roslyn/pull/1527))
+* Added snippets support in LSP mode (PR: [#1422](https://github.com/OmniSharp/omnisharp-roslyn/pull/1422))
+* Fixed renaming in LSP mode (PR: [#1423](https://github.com/OmniSharp/omnisharp-roslyn/pull/1423))
 
 ## [1.32.20] - 2019-06-03
 * Added support for `TreatWarningsAsErrors` in csproj files (PR: [#1459](https://github.com/OmniSharp/omnisharp-roslyn/pull/1459))
