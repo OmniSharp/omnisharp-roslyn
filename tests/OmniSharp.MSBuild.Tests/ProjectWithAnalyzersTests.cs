@@ -43,15 +43,20 @@ namespace OmniSharp.MSBuild.Tests
         public async Task WhenProjectHasAnalyzersItDoesntLockAnalyzerDlls()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
+                // TODO: Restore when host is running doesn't reload new analyzer references yet, move this
+                // after host start after that is fixed.
                 await RestoreProject(testProject);
-                var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
-                Assert.NotEmpty(analyzerReferences);
+                using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
+                {
+                    var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
-                // This should not throw when analyzers are shadow copied.
-                Directory.Delete(Path.Combine(testProject.Directory, "./nugets"), true);
+                    Assert.NotEmpty(analyzerReferences);
+
+                    // This should not throw when analyzers are shadow copied.
+                    Directory.Delete(Path.Combine(testProject.Directory, "./nugets"), true);
+                }
             }
         }
 
@@ -127,7 +132,7 @@ namespace OmniSharp.MSBuild.Tests
                 emitter.WaitForProjectUpdate();
                 await host.RestoreProject(testProject);
 
-                // Todo: This can be removed and replaced with wait for event once they are added as output from analyzers.
+                // Todo: This can be removed and replaced with wait for event (project analyzed eg.) once they are available.
                 await Task.Delay(2000);
 
                 var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
