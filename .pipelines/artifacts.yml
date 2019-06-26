@@ -29,6 +29,15 @@ steps:
     env:
       Artifacts: ${{ parameters.Artifacts }}
   - task: PublishBuildArtifacts@1
+    displayName: Publish NuGet
+    # condition: always()
+    inputs:
+      PathtoPublish: "$(Artifacts)/nuget/"
+      ArtifactName: "nuget"
+      ArtifactType: "Container"
+    env:
+      Artifacts: ${{ parameters.Artifacts }}
+  - task: PublishBuildArtifacts@1
     displayName: Publish Scripts
     # condition: always()
     inputs:

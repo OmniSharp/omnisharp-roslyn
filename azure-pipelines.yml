@@ -41,10 +41,9 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-          pushNuget: false
       - script: |
-          curl -o mono5.18.pkg https://download.mono-project.com/archive/5.18.1/macos-10-universal/MonoFramework-MDK-5.18.1.0.macos10.xamarin.universal.pkg
-          sudo installer -pkg mono5.18.pkg -target /
+          curl -o mono.pkg https://download.mono-project.com/archive/$MONO_VERSION/macos-10-universal/MonoFramework-MDK-$MONO_VERSION.0.macos10.xamarin.universal.pkg
+          sudo installer -pkg mono.pkg -target /
           sudo cp -rf /Library/Frameworks/Mono.framework/Versions/$MONO_VERSION/ /Library/Frameworks/Mono.framework/Versions/Current/
           MONOPREFIX=/Library/Frameworks/Mono.framework/Versions/$MONO_VERSION
           echo "##vso[task.setvariable variable=DYLD_FALLBACK_LIBRARY_PATH;]$MONOPREFIX/lib:/lib:/usr/lib:$DYLD_LIBRARY_FALLBACK_PATH"
@@ -74,7 +73,6 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-          pushNuget: false
       - script: |
           sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
           sudo apt install apt-transport-https ca-certificates
@@ -101,7 +99,6 @@ jobs:
           CakeVersion: $(CakeVersion)
           DotNetVersion: $(DotNetVersion)
           NuGetVersion: $(NuGetVersion)
-          pushNuget: false
       - powershell: .\build.ps1 -configuration Release -verbosity Verbose -target All -publish-all -archive
         displayName: 'Build'
       - template: ./.pipelines/artifacts.yml
@@ -115,18 +112,47 @@ jobs:
       - Linux
       - Windows
     steps:
+      - task: NuGetToolInstaller@1
+        displayName: 'Install NuGet'
+        inputs:
+          versionSpec: $(NuGetVersion)
       - task: DownloadBuildArtifacts@0
+        displayName: Download Packages
         inputs:
           downloadType: 'single'
           artifactName: 'packages'
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
       - task: DownloadBuildArtifacts@0
+        displayName: Download Deployment
         inputs:
           downloadType: 'single'
           artifactName: 'deployment'
           buildType: 'current'
           downloadPath: '$(System.ArtifactsDirectory)'
+      - task: DownloadBuildArtifacts@0
+        displayName: Download NuGet
+        inputs:
+          downloadType: 'single'
+          artifactName: 'nuget'
+          buildType: 'current'
+          downloadPath: '$(System.ArtifactsDirectory)'
+      - task: NuGetCommand@2
+        displayName: 'Push NuGet packages to myget.org'
+        inputs:
+          command: push
+          nuGetFeedType: external
+          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          publishFeedCredentials: myget.org
+        condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+      - task: NuGetCommand@2
+        displayName: 'Push NuGet packages to nuget.org'
+        inputs:
+          command: push
+          nuGetFeedType: external
+          packagesToPush: '$(System.ArtifactsDirectory)/nuget/**/*.nupkg'
+          publishFeedCredentials: nuget.org
+        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       - script: |
           AZ_REPO=$(lsb_release -cs)
           echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
@@ -155,19 +181,3 @@ jobs:
           # isDraft: true
           # isPreRelease: true
           # addChangeLog: false
-      # - task: DotNetCoreCLI@2
-      #   displayName: 'Push NuGet packages to myget.org'
-      #   inputs:
-      #     command: push
-      #     nuGetFeedType: external
-      #     packagesToPush: ${{ format('{0}/nuget/*.nupkg;!{0}/nuget/*.symbols.nupkg', parameters.Artifacts) }}
-      #     publishFeedCredentials: myget.org
-      #   condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-      # - task: DotNetCoreCLI@2
-      #   displayName: 'Push NuGet packages to nuget.org'
-      #   inputs:
-      #     command: push
-      #     nuGetFeedType: external
-      #     packagesToPush: ${{ format('{0}/nuget/*.nupkg;!{0}/nuget/*.symbols.nupkg', parameters.Artifacts) }}
-      #     publishFeedCredentials: nuget.org
-      #   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
