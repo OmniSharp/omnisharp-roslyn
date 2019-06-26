@@ -1,10 +1,9 @@
 parameters:
   # Configuration: Release
   Verbosity: Normal
-  DotNetVersion: "2.2.103"
+  DotNetVersion: "2.2.300"
   CakeVersion: "0.32.1"
   NuGetVersion: "4.9.2"
-  pushNuget: false
 steps:
   - task: DownloadBuildArtifacts@0
     displayName: "Download GitVersion Variables"
@@ -42,9 +41,3 @@ steps:
       command: custom
       feedsToUse: config
       arguments: install tools/packages.config -ExcludeVersion -OutputDirectory tools
-  # - script: build.ps1
-  # - template: ../publish-artifacts.yml
-  #   parameters:
-  #     Configuration: ${{ parameters.Configuration }}
-  # - ${{ if eq(parameters.pushNuget, 'true') }}:
-  # - template: ../standard/nuget-push.yml

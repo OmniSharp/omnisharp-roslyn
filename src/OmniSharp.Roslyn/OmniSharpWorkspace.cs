@@ -158,6 +158,12 @@ namespace OmniSharp
             }
         }
 
+        public void UpdateDiagnosticOptionsForProject(ProjectId projectId, ImmutableDictionary<string, ReportDiagnostic> rules)
+        {
+            var project = this.CurrentSolution.GetProject(projectId);
+            OnCompilationOptionsChanged(projectId,  project.CompilationOptions.WithSpecificDiagnosticOptions(rules));
+        }
+
         private ProjectInfo CreateMiscFilesProject(string language)
         {
             string assemblyName = Guid.NewGuid().ToString("N");

@@ -28,7 +28,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpWorkspace _workspace;
-        private readonly RulesetsForProjects _rulesetsForProjects;
 
         // This is workaround.
         // Currently roslyn doesn't expose official way to use IDE analyzers during analysis.
@@ -40,8 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            DiagnosticEventForwarder forwarder,
-            RulesetsForProjects rulesetsForProjects)
+            DiagnosticEventForwarder forwarder)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
@@ -49,7 +47,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             _forwarder = forwarder;
             _workspace = workspace;
-            _rulesetsForProjects = rulesetsForProjects;
 
             _workspaceAnalyzerOptionsConstructor = Assembly
                 .Load("Microsoft.CodeAnalysis.Features")
@@ -153,16 +150,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
         {
-            if (changeEvent.Kind == WorkspaceChangeKind.DocumentChanged
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentAdded
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentReloaded
-                || changeEvent.Kind == WorkspaceChangeKind.DocumentInfoChanged )
+            switch(changeEvent.Kind)
             {
-                QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
-            }
-            else if(changeEvent.Kind == WorkspaceChangeKind.DocumentRemoved)
-            {
-                _currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _);
+                case WorkspaceChangeKind.DocumentChanged:
+                case WorkspaceChangeKind.DocumentAdded:
+                case WorkspaceChangeKind.DocumentReloaded:
+                case WorkspaceChangeKind.DocumentInfoChanged:
+                    QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
+                    break;
+                case WorkspaceChangeKind.DocumentRemoved:
+                    if(!_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
+                    {
+                        _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
+                    };
+                    break;
+                case WorkspaceChangeKind.ProjectAdded:
+                case WorkspaceChangeKind.ProjectChanged:
+                case WorkspaceChangeKind.ProjectReloaded:
+                    _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
+                    var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
+                    QueueForAnalysis(projectDocumentIds);
+                    break;
             }
         }
 
@@ -170,29 +178,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             try
             {
-                // TODO: This should be moved that project rulesets are updated
-                // to workspace projects itself when project is updated/loaded/manipulated and so on.
-                // It also causes these inderictions and multiple steps to collect work with projects / documents.
-                var projectOriginal = solution.GetProject(documentsGroupedByProject.Key);
-
-                var projectWithOptions = projectOriginal.WithCompilationOptions(
-                        _rulesetsForProjects.BuildCompilationOptionsWithCurrentRules(projectOriginal));
+                var project = solution.GetProject(documentsGroupedByProject.Key);
 
                 var allAnalyzers = _providers
                     .SelectMany(x => x.CodeDiagnosticAnalyzerProviders)
-                    .Concat(projectWithOptions.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(projectWithOptions.Language)))
+                    .Concat(project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)))
                     .ToImmutableArray();
 
-                var compiled = await projectWithOptions
+                var compiled = await project
                     .GetCompilationAsync();
 
                 var workspaceAnalyzerOptions =
-                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { projectWithOptions.AnalyzerOptions, projectWithOptions.Solution.Options, projectWithOptions.Solution });
+                    (AnalyzerOptions)_workspaceAnalyzerOptionsConstructor.Invoke(new object[] { project.AnalyzerOptions, project.Solution.Options, project.Solution });
 
                 foreach (var documentId in documentsGroupedByProject)
                 {
-                    var document = projectWithOptions.GetDocument(documentId);
-                    await AnalyzeDocument(projectWithOptions, allAnalyzers, compiled, workspaceAnalyzerOptions, document);
+                    var document = project.GetDocument(documentId);
+                    await AnalyzeDocument(project, allAnalyzers, compiled, workspaceAnalyzerOptions, document);
                 }
             }
             catch (Exception ex)

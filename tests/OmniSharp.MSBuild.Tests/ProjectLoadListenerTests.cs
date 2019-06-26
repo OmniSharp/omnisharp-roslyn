@@ -22,8 +22,8 @@ namespace OmniSharp.MSBuild.Tests
 {
     public partial class ProjectLoadListenerTests : AbstractMSBuildTestFixture
     {
-        private VsTfmAndFileExtHashingAlgorithm _tfmAndFileHashingAlgorithm;
-        private VsReferenceHashingAlgorithm _referenceHashingAlgorithm;
+        private readonly VsTfmAndFileExtHashingAlgorithm _tfmAndFileHashingAlgorithm;
+        private readonly VsReferenceHashingAlgorithm _referenceHashingAlgorithm;
 
         public ProjectLoadListenerTests(ITestOutputHelper output) : base(output)
         {
@@ -96,20 +96,13 @@ namespace OmniSharp.MSBuild.Tests
         {
             // Arrange
             var expectedTFM = "netcoreapp2.1";
-            var messages = new List<ProjectConfigurationMessage>();
-            var emitter = new ProjectLoadTestEventEmitter(messages);
-
-            var listener = new ProjectLoadListener(LoggerFactory, emitter);
-            var exports = new ExportDescriptorProvider[]
-            {
-                MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
+            var emitter = new ProjectLoadTestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(messages);
-                Assert.Equal(messages[0].TargetFrameworks.First(), expectedTFM);
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal(emitter.ReceivedMessages[0].TargetFrameworks.First(), expectedTFM);
             }
         }
 
@@ -117,21 +110,14 @@ namespace OmniSharp.MSBuild.Tests
         public async Task If_there_is_a_solution_file_the_project_guid_present_in_it_is_emitted()
         {
             // Arrange
-            var messages = new List<ProjectConfigurationMessage>();
-            var emitter = new ProjectLoadTestEventEmitter(messages);
-
-            var listener = new ProjectLoadListener(LoggerFactory, emitter);
-            var exports = new ExportDescriptorProvider[]
-            {
-                MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
+            var emitter = new ProjectLoadTestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectAndSolution"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 var expectedGuid = "A4C2694D-AEB4-4CB1-8951-5290424EF883".ToLower();
-                Assert.Single(messages);
-                Assert.Equal(messages[0].ProjectId, expectedGuid);
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal(emitter.ReceivedMessages[0].ProjectId, expectedGuid);
             }
         }
 
@@ -139,45 +125,31 @@ namespace OmniSharp.MSBuild.Tests
         public async Task If_there_is_no_solution_file_the_hash_of_project_file_content_and_name_is_emitted()
         {
             // Arrange
-            var messages = new List<ProjectConfigurationMessage>();
-            var emitter = new ProjectLoadTestEventEmitter(messages);
-
-            var listener = new ProjectLoadListener(LoggerFactory, emitter);
-            var exports = new ExportDescriptorProvider[]
-            {
-                MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
+            var emitter = new ProjectLoadTestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
                 var projectFileContent = File.ReadAllText(Directory.GetFiles(testProject.Directory, "*.csproj").Single());
                 var expectedGuid = GetHashedReference($"Filename: HelloWorld.csproj\n{projectFileContent}");
-                Assert.Single(messages);
-                Assert.Equal(messages[0].ProjectId, expectedGuid);
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Equal(emitter.ReceivedMessages[0].ProjectId, expectedGuid);
             }
         }
 
         [Fact]
         public async Task Given_a_restored_project_the_references_are_emitted()
         {
-            var messages = new List<ProjectConfigurationMessage>();
-            var emitter = new ProjectLoadTestEventEmitter(messages);
+            var emitter = new ProjectLoadTestEventEmitter();
 
-            var listener = new ProjectLoadListener(LoggerFactory, emitter);
-            var exports = new ExportDescriptorProvider[]
-            {
-                MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
-            
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
             {
                 var dotnetCliService = new DotNetCliService(LoggerFactory, emitter);
                 await dotnetCliService.RestoreAsync(testProject.Directory);
-                using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+                using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
                 {
-                    Assert.Single(messages);
-                    Assert.NotEmpty(messages[0].References.Where(reference => reference == GetHashedReference("system.core")));
+                    Assert.Single(emitter.ReceivedMessages);
+                    Assert.NotEmpty(emitter.ReceivedMessages[0].References.Where(reference => reference == GetHashedReference("system.core")));
                 }
             }
         }
@@ -186,21 +158,13 @@ namespace OmniSharp.MSBuild.Tests
         [Fact]
         public async Task If_there_are_multiple_target_frameworks_they_are_emitted()
         {
-            // Arrange
-            var messages = new List<ProjectConfigurationMessage>();
-            var emitter = new ProjectLoadTestEventEmitter(messages);
-
-            var listener = new ProjectLoadListener(LoggerFactory, emitter);
-            var exports = new ExportDescriptorProvider[]
-            {
-                MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
+            var emitter = new ProjectLoadTestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMultiTFMLib/Lib"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(messages);
-                var tfm = messages[0].TargetFrameworks.ToArray();
+                Assert.Single(emitter.ReceivedMessages);
+                var tfm = emitter.ReceivedMessages[0].TargetFrameworks.ToArray();
                 Assert.Equal(2, tfm.Count());
                 Assert.Equal("netstandard1.3", tfm[0]);
                 Assert.Equal("netstandard2.0",tfm[1]);
@@ -211,21 +175,14 @@ namespace OmniSharp.MSBuild.Tests
         public async Task The_hashed_references_of_the_source_files_are_emitted()
         {
             // Arrange
-            var messages = new List<ProjectConfigurationMessage>();
-            var emitter = new ProjectLoadTestEventEmitter(messages);
-
-            var listener = new ProjectLoadListener(LoggerFactory, emitter);
-            var exports = new ExportDescriptorProvider[]
-            {
-                MefValueProvider.From<IMSBuildEventSink>(listener)
-            };
+            var emitter = new ProjectLoadTestEventEmitter();
 
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("HelloWorld"))
-            using (var host = CreateMSBuildTestHost(testProject.Directory, exports))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory)))
             {
-                Assert.Single(messages);
-                Assert.Single(messages[0].FileExtensions);
-                Assert.Equal(messages[0].FileExtensions.First(), GetHashedFileExtension(".cs"));
+                Assert.Single(emitter.ReceivedMessages);
+                Assert.Single(emitter.ReceivedMessages[0].FileExtensions);
+                Assert.Equal(emitter.ReceivedMessages[0].FileExtensions.First(), GetHashedFileExtension(".cs"));
             }
         }
 

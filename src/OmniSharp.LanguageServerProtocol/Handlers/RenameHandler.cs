@@ -39,38 +39,29 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 RenameTo = request.NewName,
                 Column = Convert.ToInt32(request.Position.Character),
                 Line = Convert.ToInt32(request.Position.Line),
-                Buffer = request.NewName
+                Buffer = request.NewName,
+                WantsTextChanges = true,
+                ApplyTextChanges = false
             };
 
             var omnisharpResponse = await _renameHandler.Handle(omnisharpRequest);
 
             if (omnisharpResponse.ErrorMessage != null)
             {
+                return new WorkspaceEdit();
             }
 
-            var changes = omnisharpResponse.Changes.ToDictionary(change => Helpers.ToUri(change.FileName),
+            var changes = omnisharpResponse.Changes.ToDictionary(change => 
+                Helpers.ToUri(change.FileName),
                 x => x.Changes.Select(edit => new TextEdit
                 {
                     NewText = edit.NewText,
                     Range = Helpers.ToRange((edit.StartColumn, edit.StartLine), (edit.EndColumn, edit.EndLine))
                 }));
 
-            var edits = changes.Values.SelectMany(edit => edit.ToList());
-
-            var documentEdits = omnisharpResponse.Changes.Select(x => new WorkspaceEditDocumentChange(
-                new TextDocumentEdit
-                {
-                    Edits = new Container<TextEdit>(edits),
-                    TextDocument = new VersionedTextDocumentIdentifier
-                    {
-                        Uri = Helpers.ToUri(x.FileName)
-                    }
-                }));
-
             return new WorkspaceEdit
             {
-                Changes = changes,
-                DocumentChanges = new Container<WorkspaceEditDocumentChange>(documentEdits)
+                Changes = changes
             };
         }
 
