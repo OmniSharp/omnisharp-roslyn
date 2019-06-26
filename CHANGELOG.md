@@ -3,13 +3,12 @@ All changes to the project will be documented in this file.
 
 ## [1.33.0] - not yet released
 * Added support for `.editorconfig` files to control formatting settings, analyzers, coding styles and naming conventions. The feature is currently opt-into and needs to be enabled using OmniSharp configuration ([#31](https://github.com/OmniSharp/omnisharp-roslyn/issues/31), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1526))
-
     ```JSON
-    {
-        "FormattingOptions": {
-            "EnableEditorConfigSupport": true
+        {
+            "FormattingOptions": {
+                "EnableEditorConfigSupport": true
+            }
         }
-    }
     ```
 * Analyzers improvements (PR: [#1440](https://github.com/OmniSharp/omnisharp-roslyn/pull/1440)) 
 	* Dynamically loaded / modifiable rulesets instead without full restart on omnisharp after every change
@@ -18,7 +17,6 @@ All changes to the project will be documented in this file.
 	* Faster analysis since project isn't updated every time
 	* When project is restored it is re-analyzed with correct dependencies
 * Added support for various renaming options - renaming any symbol can now propagate to comments or strings, and renaming a method symbol can also rename its overloads. They can be set via OmniSharp configuration, such as `omnisharp.json` file (they are disabled by default). (PR: [#1495](https://github.com/OmniSharp/omnisharp-roslyn/pull/1495))
-
     ```JSON
     {
         "RenameOptions": {
