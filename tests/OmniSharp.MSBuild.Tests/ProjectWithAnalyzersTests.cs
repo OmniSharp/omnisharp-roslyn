@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
@@ -42,20 +43,15 @@ namespace OmniSharp.MSBuild.Tests
         public async Task WhenProjectHasAnalyzersItDoesntLockAnalyzerDlls()
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
             {
-                // TODO: Restore when host is running doesn't reload new analyzer references yet, move this
-                // after host start after that is fixed.
                 await RestoreProject(testProject);
+                var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
 
-                using (var host = CreateMSBuildTestHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
-                {
-                    var analyzerReferences = host.Workspace.CurrentSolution.Projects.Single().AnalyzerReferences.ToList();
+                Assert.NotEmpty(analyzerReferences);
 
-                    Assert.NotEmpty(analyzerReferences);
-
-                    // This should not throw when analyzers are shadow copied.
-                    Directory.Delete(Path.Combine(testProject.Directory, "./nugets"), true);
-                }
+                // This should not throw when analyzers are shadow copied.
+                Directory.Delete(Path.Combine(testProject.Directory, "./nugets"), true);
             }
         }
 
@@ -108,6 +104,35 @@ namespace OmniSharp.MSBuild.Tests
 
                 var project = host.Workspace.CurrentSolution.Projects.Single();
                 Assert.Contains(project.CompilationOptions.SpecificDiagnosticOptions, x => x.Key == "CA1021" && x.Value == ReportDiagnostic.Error);
+            }
+        }
+
+        [Fact]
+        public async Task WhenNewAnalyzerReferenceIsAdded_ThenAutomaticallyUseItWithoutRestart()
+        {
+            var emitter = new ProjectLoadTestEventEmitter();
+
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithAnalyzers"))
+            using (var host = CreateMSBuildTestHost(testProject.Directory, emitter.AsExportDescriptionProvider(LoggerFactory), configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled: true)))
+            {
+                var csprojFile = ModifyXmlFileInPlace(Path.Combine(testProject.Directory, "ProjectWithAnalyzers.csproj"),
+                    csprojFileXml =>
+                    {
+                        var referencesGroup = csprojFileXml.Descendants("ItemGroup").FirstOrDefault();
+                        referencesGroup.Add(new XElement("PackageReference", new XAttribute("Include", "Roslynator.Analyzers"), new XAttribute("Version", "2.1.0")));
+                    });
+
+                await NotifyFileChanged(host, csprojFile);
+
+                emitter.WaitForProjectUpdate();
+                await host.RestoreProject(testProject);
+
+                // Todo: This can be removed and replaced with wait for event once they are added as output from analyzers.
+                await Task.Delay(2000);
+
+                var diagnostics = await host.RequestCodeCheckAsync(Path.Combine(testProject.Directory, "Program.cs"));
+
+                Assert.Contains(diagnostics.QuickFixes, x => x.Text.Contains("RCS1102")); // Analysis result from roslynator.
             }
         }
 
