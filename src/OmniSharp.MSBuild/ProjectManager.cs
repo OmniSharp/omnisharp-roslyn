@@ -25,6 +25,7 @@ using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
 using System.Reflection;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace OmniSharp.MSBuild
 {
@@ -170,8 +171,15 @@ namespace OmniSharp.MSBuild
         {
             while (true)
             {
-                await Task.Delay(LoopDelay, cancellationToken);
-                ProcessQueue(cancellationToken);
+                try
+                {
+                    await Task.Delay(LoopDelay, cancellationToken);
+                    ProcessQueue(cancellationToken);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"Error occurred while processing project updates: {ex}");
+                }
             }
         }
 
@@ -426,9 +434,19 @@ namespace OmniSharp.MSBuild
             UpdateParseOptions(project, projectFileInfo.LanguageVersion, projectFileInfo.PreprocessorSymbolNames, !string.IsNullOrWhiteSpace(projectFileInfo.DocumentationFile));
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
+            UpdateAnalyzerReferences(projectFileInfo, project);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
+        }
+
+        private void UpdateAnalyzerReferences(ProjectFileInfo projectFileInfo, Project project)
+        {
+            var analyzerFileReferences = projectFileInfo.Analyzers
+                .Select(analyzerReferencePath => new AnalyzerFileReference(analyzerReferencePath, _analyzerAssemblyLoader))
+                .ToImmutableArray();
+
+            _workspace.SetAnalyzerReferences(project.Id, analyzerFileReferences);
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
