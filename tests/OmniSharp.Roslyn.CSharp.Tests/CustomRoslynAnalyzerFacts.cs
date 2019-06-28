@@ -71,6 +71,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
             public override void Initialize(AnalysisContext context)
             {
+                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
+                context.EnableConcurrentExecution();
                 context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
             }
 
