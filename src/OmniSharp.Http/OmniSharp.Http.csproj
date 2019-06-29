@@ -6,7 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\OmniSharp.DotNet\OmniSharp.DotNet.csproj" />
         <ProjectReference Include="..\OmniSharp.DotNetTest\OmniSharp.DotNetTest.csproj" />
         <ProjectReference Include="..\OmniSharp.Host\OmniSharp.Host.csproj" />
         <ProjectReference Include="..\OmniSharp.MSBuild\OmniSharp.MSBuild.csproj" />
