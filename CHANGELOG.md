@@ -53,7 +53,7 @@ All changes to the project will be documented in this file.
     }
     ```
 * Fixed a regression on declaration name completion (PR: [#1520](https://github.com/OmniSharp/omnisharp-roslyn/pull/1520))
-* Update to Roslyn `3.2.0-beta4-19326-12` (PR: [#1534](https://github.com/OmniSharp/omnisharp-roslyn/pull/1534))
+* Update to Roslyn `3.3.0-beta1-19328-01` (PR: [#1534](https://github.com/OmniSharp/omnisharp-roslyn/pull/1535))
 * Added snippets support in LSP mode (PR: [#1422](https://github.com/OmniSharp/omnisharp-roslyn/pull/1422))
 * Fixed renaming in LSP mode (PR: [#1423](https://github.com/OmniSharp/omnisharp-roslyn/pull/1423))
 
