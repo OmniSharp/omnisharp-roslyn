@@ -104,6 +104,11 @@ jobs:
       - template: ./.pipelines/artifacts.yml
         parameters:
           Artifacts: $(Artifacts)
+      - task: RichCodeNavIndexer@0
+        inputs:
+          serviceConnection: 'omnisharp-rich-code-nav'
+          githubServiceConnection: 'github'
+          languages: csharp
   - job: Release
     pool:
       vmImage: "Ubuntu-16.04"
