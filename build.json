@@ -21,7 +21,6 @@
     "OmniSharp.Roslyn.CSharp.Tests",
     "OmniSharp.Http.Tests",
     "OmniSharp.Stdio.Tests",
-    "OmniSharp.DotNet.Tests",
     "OmniSharp.DotNetTest.Tests",
     "OmniSharp.Tests",
     "OmniSharp.Cake.Tests"

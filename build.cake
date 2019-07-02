@@ -26,52 +26,6 @@ Information("Current platform: {0}", Platform.Current);
 Information("");
 
 /// <summary>
-/// Checks the current platform to determine whether we allow legacy tests to run.
-/// </summary>
-bool AllowLegacyTests()
-{
-    var platform = Platform.Current;
-
-    if (platform.IsMacOS && TravisCI.IsRunningOnTravisCI) return false;
-
-    if (platform.IsWindows)
-    {
-        return true;
-    }
-
-    // On macOS, only run legacy tests on Sierra or lower
-    if (platform.IsMacOS)
-    {
-        return platform.Version.Major == 10
-            && platform.Version.Minor <= 12;
-    }
-
-    if (platform.IsLinux)
-    {
-        var version = platform.Version?.ToString();
-
-        // Taken from https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh
-        switch (platform.DistroName)
-        {
-            case "alpine":   return version == "3.4.3";
-            case "centos":   return version == "7.0";
-            case "debian":   return version == "8.0";
-            case "fedora":   return version == "23" || version == "24";
-            case "opensuse": return version == "13.2" || version == "42.1";
-            case "rhel":     return version == "7.0";
-            case "ubuntu":   return version == "14.4" || version == "16.4" || version == "16.10";
-        }
-    }
-
-    return false;
-}
-
-if (!AllowLegacyTests())
-{
-    Information("Legacy project.json tests will not be run");
-}
-
-/// <summary>
 ///  Clean artifacts.
 /// </summary>
 Task("Cleanup")
@@ -177,15 +131,6 @@ Task("InstallDotNetCoreSdk")
         var newPath = env.Folders.DotNetSdk + (string.IsNullOrEmpty(oldPath) ? "" : System.IO.Path.PathSeparator + oldPath);
         Environment.SetEnvironmentVariable("PATH", newPath);
         Information("PATH: {0}", Environment.GetEnvironmentVariable("PATH"));
-    }
-
-    if (AllowLegacyTests())
-    {
-        // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
-        InstallDotNetSdk(env, buildPlan,
-            version: buildPlan.LegacyDotNetVersion,
-            installFolder: env.Folders.LegacyDotNetSdk,
-            noPath: true);
     }
 
     // Disable the first time run experience. We don't need to expand all of .NET Core just to build OmniSharp.
@@ -469,36 +414,6 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
         });
     });
 
-Task("PrepareTestAssets:LegacyTestAssets")
-    .WithCriteria(() => AllowLegacyTests())
-    .IsDependeeOf("PrepareTestAssets")
-    .DoesForEach(buildPlan.LegacyTestAssets, (project) =>
-    {
-        var platform = Platform.Current;
-        if (platform.IsMacOS && platform.Version.Major == 10 && platform.Version.Minor == 12)
-        {
-            // Trick to allow older .NET Core SDK to run on Sierra.
-            Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", "osx.10.11-x64");
-        }
-
-        Information("Restoring and building project.json: {0}...", project);
-
-        var folder = CombinePaths(env.Folders.TestAssets, "legacy-test-projects", project);
-
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
-        {
-            ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
-        });
-
-        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
-        {
-            ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder
-        });
-    });
-
 Task("PrepareTestAssets:CakeTestAssets")
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.CakeTestAssets, (project) =>
@@ -582,13 +497,6 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    if (!AllowLegacyTests())
-    {
-        Environment.SetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS", "True");
-    }
-
-    try
-    {
         foreach (var testProject in buildPlan.TestProjects)
         {
             PrintBlankLine();
@@ -622,11 +530,6 @@ Task("Test")
                     .ExceptionOnError($"Test {testProject} failed for net472");
             }
         }
-    }
-    finally
-    {
-        Environment.SetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS", null);
-    }
 });
 
 void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
