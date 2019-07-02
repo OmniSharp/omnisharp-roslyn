@@ -56,28 +56,6 @@ namespace OmniSharp.DotNetTest.Tests
             }
         }
 
-        [ConditionalTheory(typeof(IsLegacyTest))]
-        [InlineData(LegacyXunitTestProject, TestProgram, 7, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.Test")]
-        [InlineData(LegacyXunitTestProject, TestProgram, 15, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData(LegacyXunitTestProject, TestProgram, 23, 20, true, xunit, XunitTestMethod, "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData(LegacyXunitTestProject, TestProgram, 28, 21, false, "", "", "")]
-        [InlineData(LegacyNUnitTestProject, TestProgram, 7, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.Test")]
-        [InlineData(LegacyNUnitTestProject, TestProgram, 14, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.DataDrivenTest1")]
-        [InlineData(LegacyNUnitTestProject, TestProgram, 21, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.DataDrivenTest2")]
-        [InlineData(LegacyNUnitTestProject, TestProgram, 27, 20, true, nunit, NUnitTestMethod, "Main.Test.MainTest.SourceDataDrivenTest")]
-        [InlineData(LegacyNUnitTestProject, TestProgram, 32, 20, false, "", "", "")]
-        public async Task LegacyFindTestMethods(string projectName, string fileName, int line, int column, bool expectToFind, string expectedTestFramework, string expectedFeatureName, string expectedMethodName)
-        {
-            using (var testProject = await this._testAssets.GetTestProjectAsync(projectName, legacyProject: true))
-            using (var host = CreateOmniSharpHost(testProject.Directory, ConfigurationData, DotNetCliVersion.Legacy))
-            {
-                var filePath = Path.Combine(testProject.Directory, fileName);
-
-                await AssertWithMemberTree(host, filePath, line, column, expectToFind, expectedFeatureName, expectedMethodName);
-                await AssertWithCodeStructure(host, filePath, line, column, expectToFind, expectedTestFramework, expectedMethodName);
-            }
-        }
-
         private async Task AssertWithMemberTree(OmniSharpTestHost host, string filePath, int line, int column, bool expectToFind, string expectedFeatureName, string expectedMethodName)
         {
             var containingMember = await GetContainingMemberAsync(host, filePath, line, column);

@@ -362,7 +362,6 @@ public class BuildPlan
     public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
-    public string[] LegacyTestAssets { get; set; }
     public string[] CakeTestAssets { get; set; }
     public string[] WindowsOnlyTestAssets { get; set; }
     public string[] RestoreOnlyTestAssets { get; set; }
