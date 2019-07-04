@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using OmniSharp.Eventing;
 using OmniSharp.Models.Events;
 using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
+using System.Threading;
 
 namespace OmniSharp.Roslyn
 {
@@ -15,8 +17,7 @@ namespace OmniSharp.Roslyn
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEventEmitter _emitter;
-        private readonly ISet<SimpleWorkspaceEvent> _queue = new HashSet<SimpleWorkspaceEvent>();
-        private readonly object _lock = new object();
+        private readonly ConcurrentDictionary<SimpleWorkspaceEvent, object> _eventLocks;
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
@@ -28,6 +29,7 @@ namespace OmniSharp.Roslyn
             _projectSystems = projectSystems;
             _workspace = workspace;
             _emitter = emitter;
+            _eventLocks = new ConcurrentDictionary<SimpleWorkspaceEvent, object>();
         }
 
         public void Initialize()
@@ -37,46 +39,47 @@ namespace OmniSharp.Roslyn
 
         private void OnWorkspaceChanged(object source, WorkspaceChangeEventArgs args)
         {
-            SimpleWorkspaceEvent e = null;
+            SimpleWorkspaceEvent workspaceEvent = null;
 
             switch (args.Kind)
             {
                 case WorkspaceChangeKind.ProjectAdded:
-                    e = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectAdded);
+                    workspaceEvent = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectAdded);
                     break;
                 case WorkspaceChangeKind.ProjectChanged:
                 case WorkspaceChangeKind.ProjectReloaded:
-                    e = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectChanged);
+                    workspaceEvent = new SimpleWorkspaceEvent(args.NewSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectChanged);
                     break;
                 case WorkspaceChangeKind.ProjectRemoved:
-                    e = new SimpleWorkspaceEvent(args.OldSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectRemoved);
+                    workspaceEvent = new SimpleWorkspaceEvent(args.OldSolution.GetProject(args.ProjectId).FilePath, EventTypes.ProjectRemoved);
                     break;
+                default:
+                    return;
             }
 
-            if (e != null)
+            var added = false;
+            lock (_eventLocks.GetOrAdd(workspaceEvent, (_) => { added = true; return new object(); }))
             {
-                lock (_lock)
+                // We are already processing a similar event, no need send it again
+                if (added)
                 {
-                    var removed = _queue.Remove(e);
-                    _queue.Add(e);
-                    if (!removed)
+                    object payload = null;
+
+                    try
                     {
-                        Task.Factory.StartNew(async () =>
+                        if (workspaceEvent.EventType != EventTypes.ProjectRemoved)
                         {
-                            await Task.Delay(500);
+                            // Project information should be up-to-date so there's no need to wait.
+                            // TODO: Use AsyncLock (or SemaphoreSlim) instead of lock to allow async/await.
+                            payload = GetProjectInformationAsync(workspaceEvent.FileName)
+                                .GetAwaiter().GetResult();
+                        }
 
-                            object payload = null;
-                            if (e.EventType != EventTypes.ProjectRemoved)
-                            {
-                                payload = await GetProjectInformationAsync(e.FileName);
-                            }
-
-                            lock (_lock)
-                            {
-                                _queue.Remove(e);
-                                _emitter.Emit(e.EventType, payload);
-                            }
-                        });
+                        _emitter.Emit(workspaceEvent.EventType, payload);
+                    }
+                    finally
+                    {
+                        _eventLocks.TryRemove(workspaceEvent, out _);
                     }
                 }
             }
@@ -109,13 +112,10 @@ namespace OmniSharp.Roslyn
                 EventType = eventType;
             }
 
-            public override bool Equals(object obj)
-            {
-                var other = obj as SimpleWorkspaceEvent;
-                return other != null
+            public override bool Equals(object obj) =>
+                obj is SimpleWorkspaceEvent other
                     && EventType == other.EventType
                     && FileName == other.FileName;
-            }
 
             public override int GetHashCode() =>
                 EventType?.GetHashCode() * 23 + FileName?.GetHashCode() ?? 0;
