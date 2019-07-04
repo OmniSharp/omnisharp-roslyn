@@ -28,7 +28,6 @@ namespace OmniSharp.DotNet
     public class DotNetProjectSystem : IProjectSystem
     {
         private const string CompilationConfiguration = "Debug";
-
         private readonly IOmniSharpEnvironment _environment;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IDotNetCliService _dotNetCliService;
@@ -37,7 +36,6 @@ namespace OmniSharp.DotNet
         private readonly IFileSystemWatcher _fileSystemWatcher;
         private readonly ILogger _logger;
         private readonly ProjectStatesCache _projectStates;
-
         private DotNetWorkspace _workspaceContext;
         private bool _enableRestorePackages;
 
@@ -66,6 +64,7 @@ namespace OmniSharp.DotNet
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new string[] { ".cs" };
         public bool EnabledByDefault { get; } = false;
+        public bool Initialized { get; private set; }
 
         Task<object> IProjectSystem.GetWorkspaceModelAsync(WorkspaceInformationRequest request)
         {
@@ -103,6 +102,8 @@ namespace OmniSharp.DotNet
 
         public void Initalize(IConfiguration configuration)
         {
+            if (Initialized) return;
+
             _logger.LogInformation($"Initializing in {_environment.TargetDirectory}");
 
             if (!bool.TryParse(configuration["enablePackageRestore"], out _enableRestorePackages))
@@ -115,6 +116,8 @@ namespace OmniSharp.DotNet
             _workspaceContext = new DotNetWorkspace(_environment.TargetDirectory);
 
             Update(allowRestore: true);
+            
+            Initialized = true;
         }
 
         public void Update(bool allowRestore)

@@ -35,6 +35,7 @@ namespace OmniSharp.Plugins
         public string Language { get; }
         public IEnumerable<string> Extensions { get; }
         public bool EnabledByDefault { get; } = true;
+        public bool Initialized { get; private set; }
 
         public Task<TResponse> Handle<TRequest, TResponse>(string endpoint, TRequest request)
         {
@@ -101,6 +102,8 @@ namespace OmniSharp.Plugins
 
         public void Initalize(IConfiguration configuration)
         {
+            if (Initialized) return;
+            Initialized = true;
             Task.Run(() => Run());
         }
 
