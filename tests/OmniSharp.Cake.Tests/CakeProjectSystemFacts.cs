@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -71,6 +72,20 @@ namespace OmniSharp.Cake.Tests
             }
         }
 
+        [Fact]
+        public async Task DoesntParticipateInWorkspaceInfoResponseWhenDisabled()
+        {
+            using (var testProject = await TestAssets.Instance.GetTestProjectAsync("CakeProject", shadowCopy: false))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
+            {
+                ["cake:enabled"] = "false"
+            }))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                Assert.Null(workspaceInfo);
+            }
+        }
+
         private static async Task<CakeContextModelCollection> GetWorkspaceInfoAsync(OmniSharpTestHost host)
         {
             var service = host.GetWorkspaceInformationService();
@@ -81,6 +96,8 @@ namespace OmniSharp.Cake.Tests
             };
 
             var response = await service.Handle(request);
+
+            if (!response.ContainsKey("Cake")) return null;
 
             return (CakeContextModelCollection)response["Cake"];
         }

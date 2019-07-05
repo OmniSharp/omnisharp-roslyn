@@ -22,16 +22,13 @@ namespace OmniSharp.Script
     public class ScriptProjectSystem : IProjectSystem
     {
         private const string CsxExtension = ".csx";
-
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects = new ConcurrentDictionary<string, ProjectInfo>();
         private readonly ScriptContextProvider _scriptContextProvider;
         private readonly OmniSharpWorkspace _workspace;
         private readonly IOmniSharpEnvironment _env;
         private readonly ILogger _logger;
         private readonly IFileSystemWatcher _fileSystemWatcher;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly FileSystemHelper _fileSystemHelper;
-
         private ScriptOptions _scriptOptions;
         private Lazy<ScriptContext> _scriptContext;
 
@@ -41,7 +38,6 @@ namespace OmniSharp.Script
         {
             _workspace = workspace;
             _env = env;
-            _loggerFactory = loggerFactory;
             _fileSystemWatcher = fileSystemWatcher;
             _fileSystemHelper = fileSystemHelper;
             _logger = loggerFactory.CreateLogger<ScriptProjectSystem>();
@@ -52,9 +48,12 @@ namespace OmniSharp.Script
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { CsxExtension };
         public bool EnabledByDefault { get; } = true;
+        public bool Initialized { get; private set; }
 
         public void Initalize(IConfiguration configuration)
         {
+            if (Initialized) return;
+
             _scriptOptions = new ScriptOptions();
             ConfigurationBinder.Bind(configuration, _scriptOptions);
 
@@ -84,6 +83,8 @@ namespace OmniSharp.Script
 
             // Watch CSX files in order to add/remove them in workspace
             _fileSystemWatcher.Watch(CsxExtension, OnCsxFileChanged);
+
+            Initialized = true;
         }
 
         private void OnCsxFileChanged(string filePath, FileChangeType changeType)
