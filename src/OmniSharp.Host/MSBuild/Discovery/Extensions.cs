@@ -90,6 +90,11 @@ namespace OmniSharp.MSBuild.Discovery
             if (i.DiscoveryType == DiscoveryType.StandAlone)
                 score--;
 
+            if (i.Version.Major >= 16)
+                score++;
+            else
+                score--;
+
             return score;
         }
     }
