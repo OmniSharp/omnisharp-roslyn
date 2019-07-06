@@ -23,7 +23,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("15.1.2.3"),
+                    Version.Parse("16.1.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
@@ -50,7 +50,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Valid Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("15.3.2.1"),
+                    Version.Parse("16.3.2.1"),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetInvalidMsBuildInstance(),
@@ -59,7 +59,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Another Valid Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("15.1.2.3"),
+                    Version.Parse("16.1.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ).AddDotNetCoreToFakeInstance(),
                 GetStandAloneMSBuildInstance()
@@ -89,7 +89,7 @@ namespace OmniSharp.MSBuild.Tests
                 new MSBuildInstance(
                     "Test Instance",
                     TestIO.GetRandomTempFolderPath(),
-                    Version.Parse("15.1.2.3"),
+                    Version.Parse("16.1.2.3"),
                     DiscoveryType.VisualStudioSetup
                 ),
                 GetStandAloneMSBuildInstance()
@@ -108,12 +108,39 @@ namespace OmniSharp.MSBuild.Tests
             msbuildLocator.DeleteFakeInstancesFolders();
         }
 
+        [Fact]
+        public void StandAloneIsPreferredOverVS2017()
+        {
+            var msBuildInstances = new[]
+            {
+                new MSBuildInstance(
+                    "Test Instance",
+                    TestIO.GetRandomTempFolderPath(),
+                    Version.Parse("15.1.2.3"),
+                    DiscoveryType.VisualStudioSetup
+                ),
+                GetStandAloneMSBuildInstance()
+            };
+
+            var msbuildLocator = new MSFakeLocator(msBuildInstances);
+            var logger = LoggerFactory.CreateLogger(nameof(StandAloneIsPreferredOverVS2017));
+
+            // test
+            msbuildLocator.RegisterDefaultInstance(logger);
+
+            Assert.NotNull(msbuildLocator.RegisteredInstance);
+            Assert.Same(msBuildInstances[1], msbuildLocator.RegisteredInstance);
+
+            // clean up
+            msbuildLocator.DeleteFakeInstancesFolders();
+        }
+
         private static MSBuildInstance GetStandAloneMSBuildInstance()
         {
             return new MSBuildInstance(
                 "Stand Alone :(",
                 TestIO.GetRandomTempFolderPath(),
-                Version.Parse("99.0.0.0"),
+                Version.Parse("16.0.0.0"),
                 DiscoveryType.StandAlone
             );
         }
