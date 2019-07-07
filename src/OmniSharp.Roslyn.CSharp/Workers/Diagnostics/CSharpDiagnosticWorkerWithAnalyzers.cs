@@ -46,7 +46,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
-            _workQueue = new AnalyzerWorkQueue(loggerFactory, timeoutAssertForPendingWorkMs: options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
+            _workQueue = new AnalyzerWorkQueue(loggerFactory, timeoutForPendingWorkMs: options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
 
             _forwarder = forwarder;
             _options = options;

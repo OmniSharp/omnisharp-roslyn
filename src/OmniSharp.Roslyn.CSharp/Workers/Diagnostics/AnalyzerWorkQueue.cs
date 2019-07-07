@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly int _maximumDelayWhenWaitingForResults;
         private readonly object _queueLock = new object();
 
-        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, int timeoutAssertForPendingWorkMs, Func<DateTime> utcNow = null)
+        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, int timeoutForPendingWorkMs, Func<DateTime> utcNow = null)
         {
             _queues = new Dictionary<AnalyzerWorkType, Queue>
             {
@@ -41,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
-            _maximumDelayWhenWaitingForResults = timeoutAssertForPendingWorkMs;
+            _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
         }
 
         public void PutWork(IReadOnlyCollection<DocumentId> documentIds, AnalyzerWorkType workType)
