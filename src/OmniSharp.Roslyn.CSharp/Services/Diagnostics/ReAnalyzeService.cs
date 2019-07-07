@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Immutable;
 using System.Composition;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Abstractions.Models.V1.ReAnalyze;
 using OmniSharp.Mef;
-using OmniSharp.Models;
-using OmniSharp.Models.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
@@ -37,16 +34,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 var currentSolution = _workspace.CurrentSolution;
 
                 var projectIds = WhenRequestIsProjectFileItselfGetFilesFromIt(request.CurrentOpenFilePathAsContext, currentSolution)
-                    ?? GetDocumentsFromProjectWhereDocumentIs(request.CurrentOpenFilePathAsContext, currentSolution);
+                    ?? GetProjectIdsFromDocumentFilePaths(request.CurrentOpenFilePathAsContext, currentSolution);
 
                 _logger.LogInformation($"Queue analysis for project(s) {string.Join(", ", projectIds)}");
 
-                _diagWorker.QueueDocumentsOfProjectsForDiagnostics(projectIds);
+                _diagWorker.QueueDocumentsForDiagnostics(projectIds);
             }
             else
             {
                 _logger.LogInformation($"Queue analysis for all projects.");
-                _diagWorker.QueueAllDocumentsForDiagnostics();
+                _diagWorker.QueueDocumentsForDiagnostics();
             }
 
             return Task.FromResult(new ReanalyzeResponse());
@@ -70,11 +67,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
-        private static ImmutableArray<ProjectId> GetDocumentsFromProjectWhereDocumentIs(string currentOpenFilePathAsContext, Solution currentSolution)
+        private static ImmutableArray<ProjectId> GetProjectIdsFromDocumentFilePaths(string currentOpenFilePathAsContext, Solution currentSolution)
         {
             return currentSolution
                 .GetDocumentIdsWithFilePath(currentOpenFilePathAsContext)
                 .Select(docId => currentSolution.GetDocument(docId).Project.Id)
+                .Distinct()
                 .ToImmutableArray();
         }
     }

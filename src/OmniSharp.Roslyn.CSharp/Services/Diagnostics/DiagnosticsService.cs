@@ -29,7 +29,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 _forwarder.IsEnabled = true;
             }
 
-            _diagWorker.QueueAllDocumentsForDiagnostics();
+            _diagWorker.QueueDocumentsForDiagnostics();
 
             return Task.FromResult(new DiagnosticsResponse());
         }

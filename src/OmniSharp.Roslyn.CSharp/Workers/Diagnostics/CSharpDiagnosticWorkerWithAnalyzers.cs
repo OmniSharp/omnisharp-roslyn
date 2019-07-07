@@ -75,7 +75,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             .ContinueWith(_ => Task.Delay(50))
             .ContinueWith(_ =>
             {
-                var documentIds = QueueAllDocumentsForDiagnostics();
+                var documentIds = QueueDocumentsForDiagnostics();
                 _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
             });
         }
@@ -279,7 +279,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics()
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
         {
             var documentIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
             QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
@@ -293,7 +293,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return await GetDiagnosticsByDocumentIds(allDocumentsIds);
         }
 
-        public ImmutableArray<DocumentId> QueueDocumentsOfProjectsForDiagnostics(ImmutableArray<ProjectId> projectIds)
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
             var documentIds = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents.Select(x => x.Id)).ToImmutableArray();
             QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
