@@ -9,6 +9,7 @@ using OmniSharp.Models.Events;
 using OmniSharp.Models.ProjectInformation;
 using OmniSharp.Services;
 using System.Threading;
+using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn
 {
@@ -17,7 +18,7 @@ namespace OmniSharp.Roslyn
     {
         private readonly OmniSharpWorkspace _workspace;
         private readonly IEventEmitter _emitter;
-        private readonly ConcurrentDictionary<SimpleWorkspaceEvent, object> _eventLocks;
+        private readonly ConcurrentDictionary<SimpleWorkspaceEvent, AsyncLock> _eventLocks;
         private readonly IEnumerable<IProjectSystem> _projectSystems;
 
         [ImportingConstructor]
@@ -29,7 +30,7 @@ namespace OmniSharp.Roslyn
             _projectSystems = projectSystems;
             _workspace = workspace;
             _emitter = emitter;
-            _eventLocks = new ConcurrentDictionary<SimpleWorkspaceEvent, object>();
+            _eventLocks = new ConcurrentDictionary<SimpleWorkspaceEvent, AsyncLock>();
         }
 
         public void Initialize()
@@ -37,7 +38,7 @@ namespace OmniSharp.Roslyn
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
         }
 
-        private void OnWorkspaceChanged(object source, WorkspaceChangeEventArgs args)
+        private async void OnWorkspaceChanged(object source, WorkspaceChangeEventArgs args)
         {
             SimpleWorkspaceEvent workspaceEvent = null;
 
@@ -58,7 +59,7 @@ namespace OmniSharp.Roslyn
             }
 
             var added = false;
-            lock (_eventLocks.GetOrAdd(workspaceEvent, (_) => { added = true; return new object(); }))
+            using (await _eventLocks.GetOrAdd(workspaceEvent, _ => { added = true; return new AsyncLock(); }).LockAsync())
             {
                 // We are already processing a similar event, no need send it again
                 if (added)
@@ -70,9 +71,7 @@ namespace OmniSharp.Roslyn
                         if (workspaceEvent.EventType != EventTypes.ProjectRemoved)
                         {
                             // Project information should be up-to-date so there's no need to wait.
-                            // TODO: Use AsyncLock (or SemaphoreSlim) instead of lock to allow async/await.
-                            payload = GetProjectInformationAsync(workspaceEvent.FileName)
-                                .GetAwaiter().GetResult();
+                            payload = await GetProjectInformationAsync(workspaceEvent.FileName);
                         }
 
                         _emitter.Emit(workspaceEvent.EventType, payload);
