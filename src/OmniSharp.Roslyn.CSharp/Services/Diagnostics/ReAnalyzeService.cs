@@ -29,12 +29,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         public Task<ReanalyzeResponse> Handle(ReAnalyzeRequest request)
         {
 
-            if(!string.IsNullOrEmpty(request.CurrentOpenFilePathAsContext))
+            if(!string.IsNullOrEmpty(request.FileName))
             {
                 var currentSolution = _workspace.CurrentSolution;
 
-                var projectIds = WhenRequestIsProjectFileItselfGetFilesFromIt(request.CurrentOpenFilePathAsContext, currentSolution)
-                    ?? GetProjectIdsFromDocumentFilePaths(request.CurrentOpenFilePathAsContext, currentSolution);
+                var projectIds = WhenRequestIsProjectFileItselfGetFilesFromIt(request.FileName, currentSolution)
+                    ?? GetProjectIdsFromDocumentFilePaths(request.FileName, currentSolution);
 
                 _logger.LogInformation($"Queue analysis for project(s) {string.Join(", ", projectIds)}");
 
@@ -49,9 +49,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return Task.FromResult(new ReanalyzeResponse());
         }
 
-        private ImmutableArray<ProjectId>? WhenRequestIsProjectFileItselfGetFilesFromIt(string currentOpenFilePathAsContext, Solution currentSolution)
+        private ImmutableArray<ProjectId>? WhenRequestIsProjectFileItselfGetFilesFromIt(string FileName, Solution currentSolution)
         {
-            var projects = currentSolution.Projects.Where(x => CompareProjectPath(currentOpenFilePathAsContext, x)).Select(x => x.Id).ToImmutableArray();
+            var projects = currentSolution.Projects.Where(x => CompareProjectPath(FileName, x)).Select(x => x.Id).ToImmutableArray();
 
             if(!projects.Any())
                 return null;
@@ -59,18 +59,18 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return projects;
         }
 
-        private static bool CompareProjectPath(string currentOpenFilePathAsContext, Project x)
+        private static bool CompareProjectPath(string FileName, Project x)
         {
             return String.Compare(
                 x.FilePath,
-                currentOpenFilePathAsContext,
+                FileName,
                 StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
-        private static ImmutableArray<ProjectId> GetProjectIdsFromDocumentFilePaths(string currentOpenFilePathAsContext, Solution currentSolution)
+        private static ImmutableArray<ProjectId> GetProjectIdsFromDocumentFilePaths(string FileName, Solution currentSolution)
         {
             return currentSolution
-                .GetDocumentIdsWithFilePath(currentOpenFilePathAsContext)
+                .GetDocumentIdsWithFilePath(FileName)
                 .Select(docId => currentSolution.GetDocument(docId).Project.Id)
                 .Distinct()
                 .ToImmutableArray();

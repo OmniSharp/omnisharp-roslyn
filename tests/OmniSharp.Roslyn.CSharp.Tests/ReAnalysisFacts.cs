@@ -90,7 +90,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest
                 {
-                    CurrentOpenFilePathAsContext = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
+                    FileName = projectA.Documents.Single(x => x.FilePath.EndsWith("a.cs")).FilePath
                 });
 
                 await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == projectA.FilePath && x.Status == ProjectDiagnosticStatus.Started);
@@ -112,7 +112,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 await reAnalyzeHandler.Handle(new ReAnalyzeRequest
                 {
-                    CurrentOpenFilePathAsContext = project.FilePath
+                    FileName = project.FilePath
                 });
 
                 await _eventListener.ExpectForEmitted(x => x.ProjectFilePath == project.FilePath && x.Status == ProjectDiagnosticStatus.Started);
