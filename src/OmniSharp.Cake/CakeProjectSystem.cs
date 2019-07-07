@@ -36,13 +36,12 @@ namespace OmniSharp.Cake
         private readonly ILogger<CakeProjectSystem> _logger;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projects;
         private readonly Lazy<CSharpCompilationOptions> _compilationOptions;
-
         private CakeOptions _options;
-
         public string Key { get; } = "Cake";
         public string Language { get; } = Constants.LanguageNames.Cake;
         public IEnumerable<string> Extensions { get; } = new[] { ".cake" };
         public bool EnabledByDefault { get; } = true;
+        public bool Initialized { get; private set; }
 
         [ImportingConstructor]
         public CakeProjectSystem(
@@ -70,6 +69,8 @@ namespace OmniSharp.Cake
 
         public void Initalize(IConfiguration configuration)
         {
+            if (Initialized) return;
+
             _options = new CakeOptions();
             configuration.Bind(_options);
 
@@ -103,6 +104,8 @@ namespace OmniSharp.Cake
 
             // Watch .cake files
             _fileSystemWatcher.Watch(".cake", OnCakeFileChanged);
+
+            Initialized = true;
         }
 
         private void AddCakeFile(string cakeFilePath)

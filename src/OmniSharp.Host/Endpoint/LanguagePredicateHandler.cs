@@ -16,7 +16,7 @@ namespace OmniSharp.Endpoint
 
         public string GetLanguageForFilePath(string filePath)
         {
-            foreach (var projectSystem in _projectSystems)
+            foreach (var projectSystem in _projectSystems.Where(project => project.Initialized))
             {
                 if (projectSystem.Extensions.Any(extension => filePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase)))
                 {

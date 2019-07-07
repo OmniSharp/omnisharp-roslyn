@@ -186,6 +186,20 @@ namespace OmniSharp.Script.Tests
             }
         }
 
+        [Fact]
+        public async Task DoesntParticipateInWorkspaceInfoResponseWhenDisabled()
+        {
+            using (var testProject = TestAssets.Instance.GetTestScript("SingleCsiScript"))
+            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: new Dictionary<string, string>
+            {
+                ["script:enabled"] = "false"
+            }))
+            {
+                var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                Assert.Null(workspaceInfo);
+            }
+        }
+
         private string GetMsCorlibPath() => Assembly.Load(new AssemblyName("mscorlib"))?.Location;
 
         private void VerifyCorLib(ScriptContextModel project, bool expected = true)
@@ -207,6 +221,8 @@ namespace OmniSharp.Script.Tests
             };
 
             var response = await service.Handle(request);
+
+            if (!response.ContainsKey("Script")) return null;
 
             return (ScriptContextModelCollection)response["Script"];
         }

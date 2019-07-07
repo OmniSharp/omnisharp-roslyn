@@ -41,19 +41,16 @@ namespace OmniSharp.MSBuild
         private readonly ILogger _logger;
         private readonly IAnalyzerAssemblyLoader _assemblyLoader;
         private readonly ImmutableArray<IMSBuildEventSink> _eventSinks;
-        private readonly object _gate = new object();
-        private readonly Queue<ProjectFileInfo> _projectsToProcess;
-
         private PackageDependencyChecker _packageDependencyChecker;
         private ProjectManager _manager;
         private ProjectLoader _loader;
         private MSBuildOptions _options;
         private string _solutionFileOrRootPath;
-
         public string Key { get; } = "MsBuild";
         public string Language { get; } = LanguageNames.CSharp;
         public IEnumerable<string> Extensions { get; } = new[] { ".cs" };
         public bool EnabledByDefault { get; } = true;
+        public bool Initialized { get; private set; }
 
         [ImportingConstructor]
         public ProjectSystem(
@@ -82,13 +79,14 @@ namespace OmniSharp.MSBuild
             _fileSystemHelper = fileSystemHelper;
             _loggerFactory = loggerFactory;
             _eventSinks = eventSinks.ToImmutableArray();
-            _projectsToProcess = new Queue<ProjectFileInfo>();
             _logger = loggerFactory.CreateLogger<ProjectSystem>();
             _assemblyLoader = assemblyLoader;
         }
 
         public void Initalize(IConfiguration configuration)
         {
+            if (Initialized) return;
+            
             _options = new MSBuildOptions();
             ConfigurationBinder.Bind(configuration, _options);
 
@@ -105,6 +103,7 @@ namespace OmniSharp.MSBuild
             _loader = new ProjectLoader(_options, _environment.TargetDirectory, _propertyOverrides, _loggerFactory, _sdksPathResolver);
 
             _manager = new ProjectManager(_loggerFactory, _options, _eventEmitter, _fileSystemWatcher, _metadataFileReferenceCache, _packageDependencyChecker, _loader, _workspace, _assemblyLoader, _eventSinks);
+            Initialized = true;
 
             if (_options.LoadProjectsOnDemand)
             {
