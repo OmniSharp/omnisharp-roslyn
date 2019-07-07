@@ -1,7 +1,10 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.33.0] - not yet released
+## [1.33.1] - not released yet
+* Fixed a bug where some internal services didn't respect the disabling of a project system ([#1543](https://github.com/OmniSharp/omnisharp-roslyn/pull/1543))
+
+## [1.33.0] - 2019-07-01
 * Added support for `.editorconfig` files to control formatting settings, analyzers, coding styles and naming conventions. The feature is currently opt-into and needs to be enabled using OmniSharp configuration ([#31](https://github.com/OmniSharp/omnisharp-roslyn/issues/31), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1526))
     ```JSON
         {
@@ -27,7 +30,7 @@ All changes to the project will be documented in this file.
     }
     ```
 * Fixed a regression on declaration name completion (PR: [#1520](https://github.com/OmniSharp/omnisharp-roslyn/pull/1520))
-* Update to Roslyn `3.2.0-beta4-19319-04` (PR: [#1527](https://github.com/OmniSharp/omnisharp-roslyn/pull/1527))
+* Update to Roslyn `3.2.0-beta4-19326-12` (PR: [#1534](https://github.com/OmniSharp/omnisharp-roslyn/pull/1534))
 * Added snippets support in LSP mode (PR: [#1422](https://github.com/OmniSharp/omnisharp-roslyn/pull/1422))
 * Fixed renaming in LSP mode (PR: [#1423](https://github.com/OmniSharp/omnisharp-roslyn/pull/1423))
 

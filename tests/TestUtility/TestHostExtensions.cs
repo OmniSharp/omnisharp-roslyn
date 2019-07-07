@@ -54,6 +54,8 @@ namespace TestUtility
 
             var response = await service.Handle(request);
 
+            if (!response.ContainsKey("MsBuild")) return null;
+
             return (MSBuildWorkspaceInfo)response["MsBuild"];
         }
 

@@ -607,14 +607,7 @@ Task("Build")
 {
     try
     {
-        if (Platform.Current.IsWindows)
-        {
-            BuildWithDotNetCli(env, configuration);
-        }
-        else
-        {
-            BuildWithMSBuild(env, configuration);
-        }
+        BuildWithDotNetCli(env, configuration);
     }
     catch
     {
@@ -731,8 +724,6 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyExtraDependencies(env, outputFolder);
 
-    Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
-
      // Copy dependencies of Mono build
      FileHelper.Copy(
          source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
@@ -750,6 +741,8 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
          source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
          destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_green.dll"),
          overwrite: true);
+
+    Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }

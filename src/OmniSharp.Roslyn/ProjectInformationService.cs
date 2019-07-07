@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 using OmniSharp.Mef;
 using OmniSharp.Models.ProjectInformation;
@@ -23,7 +24,7 @@ namespace OmniSharp
         {
             var response = new ProjectInformationResponse();
 
-            foreach (var projectSystem in _projectSystems)
+            foreach (var projectSystem in _projectSystems.Where(project => project.Initialized))
             {
                 var project = await projectSystem.GetProjectModelAsync(request.FileName);
                 response.Add($"{projectSystem.Key}Project", project);
