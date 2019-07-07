@@ -28,6 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             new ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)>();
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
+        private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
 
         // This is workaround.
@@ -40,13 +41,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            DiagnosticEventForwarder forwarder)
+            DiagnosticEventForwarder forwarder,
+            OmniSharpOptions options)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
-            _workQueue = new AnalyzerWorkQueue(loggerFactory);
+            _workQueue = new AnalyzerWorkQueue(loggerFactory, timeoutAssertForPendingWorkMs: options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
 
             _forwarder = forwarder;
+            _options = options;
             _workspace = workspace;
 
             _workspaceAnalyzerOptionsConstructor = Assembly
@@ -217,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             try
             {
                 // There's real possibility that bug in analyzer causes analysis hang at document.
-                var perDocumentTimeout = new CancellationTokenSource(10 * 1000);
+                var perDocumentTimeout = new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs);
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
 

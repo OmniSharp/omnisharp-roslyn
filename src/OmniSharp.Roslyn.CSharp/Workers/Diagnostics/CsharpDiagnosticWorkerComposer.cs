@@ -38,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             if(options.RoslynExtensionsOptions.EnableAnalyzersSupport)
             {
-                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder);
+                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder, options);
             }
             else
             {

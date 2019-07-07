@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -31,9 +29,9 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         private readonly ILogger<AnalyzerWorkQueue> _logger;
         private readonly Func<DateTime> _utcNow;
         private readonly int _maximumDelayWhenWaitingForResults;
-        private readonly object _queueLock = new Object();
+        private readonly object _queueLock = new object();
 
-        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, Func<DateTime> utcNow = null, int timeoutForPendingWorkMs = 15 * 1000)
+        public AnalyzerWorkQueue(ILoggerFactory loggerFactory, int timeoutAssertForPendingWorkMs, Func<DateTime> utcNow = null)
         {
             _queues = new Dictionary<AnalyzerWorkType, Queue>
             {
@@ -43,7 +41,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
             _logger = loggerFactory.CreateLogger<AnalyzerWorkQueue>();
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
-            _maximumDelayWhenWaitingForResults = timeoutForPendingWorkMs;
+            _maximumDelayWhenWaitingForResults = timeoutAssertForPendingWorkMs;
         }
 
         public void PutWork(IReadOnlyCollection<DocumentId> documentIds, AnalyzerWorkType workType)
@@ -111,7 +109,6 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         public bool TryPromote(DocumentId id)
         {
-
             if (_queues[AnalyzerWorkType.Background].WorkWaitingToExecute.Contains(id) || _queues[AnalyzerWorkType.Background].WorkExecuting.Contains(id))
             {
                 PutWork(new[] { id }, AnalyzerWorkType.Foreground);
@@ -123,7 +120,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
 
         private void LogTimeouts(Task task)
         {
-            if (!task.IsCanceled) _logger.LogWarning($"Timeout before work got ready for foreground analysis queue.");
+            if (!task.IsCanceled) _logger.LogWarning($"Timeout before work got ready for foreground analysis queue. This is assertion to prevent complete api hang in case of error.");
         }
     }
 }

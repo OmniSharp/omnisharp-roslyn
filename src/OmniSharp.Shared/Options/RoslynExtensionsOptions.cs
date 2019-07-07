@@ -8,6 +8,7 @@ namespace OmniSharp.Options
     public class RoslynExtensionsOptions
     {
         public bool EnableAnalyzersSupport { get; set; }
+        public int DocumentAnalysisTimeoutMs { get; set; } = 10 * 1000;
 
         public string[] LocationPaths { get; set; }
 
@@ -27,7 +28,7 @@ namespace OmniSharp.Options
                     normalizePaths.Add(Path.Combine(env.TargetDirectory, locationPath));
                 }
             }
-            
+
             return normalizePaths;
         }
     }
