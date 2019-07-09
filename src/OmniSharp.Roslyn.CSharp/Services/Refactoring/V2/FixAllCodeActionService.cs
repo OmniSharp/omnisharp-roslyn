@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 
@@ -30,22 +31,45 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             var provider = WellKnownFixAllProviders.BatchFixer;
 
-            foreach(var project in _workspace.CurrentSolution.Projects)
+            var solution = _workspace.CurrentSolution;
+            var projects = _workspace.CurrentSolution.Projects;
+
+            foreach (var project in projects)
             {
                 var allCodefixesForProject = _codeFixProvider.GetAllCodeFixesForProject(project.Id);
 
-                foreach(var codeFix in allCodefixesForProject.Where(x => x.GetFixAllProvider() != null))
+                foreach (var codeFix in allCodefixesForProject.Where(x => x.GetFixAllProvider() != null))
                 {
+                    var matchingDiagnostics = diagnostics.Where(x => codeFix.FixableDiagnosticIds.Any(id => id == x.diagnostic.Id));
+
                     var fixAllContext = new FixAllContext(
                         project,
-                        provider,
+                        codeFix,
                         FixAllScope.Project,
-                        codeFix.,
-                        new string[] { descriptor.Id },
-                        new FixAllDiagnosticProvider(diagnostics.Select(x => x.diagnostic).ToImmutableArray()),
+                        matchingDiagnostics.First().diagnostic.Id,
+                        matchingDiagnostics.Select(x => x.diagnostic.Id),
+                        new FixAllDiagnosticProvider(matchingDiagnostics.Select(x => x.diagnostic).ToImmutableArray()),
                         CancellationToken.None);
+
+                    var fixes = await provider.GetFixAsync(fixAllContext);
+
+                    var operations = await fixes.GetOperationsAsync(CancellationToken.None);
+
+                    foreach (var o in operations)
+                    {
+                        if (o is ApplyChangesOperation applyChangesOperation)
+                        {
+                            solution = applyChangesOperation.ChangedSolution;
+                            _workspace.TryApplyChanges(solution);
+                        }
+                    }
                 }
             }
+        }
+
+        private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
+        {
+            return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
         }
 
         private class FixAllDiagnosticProvider : FixAllContext.DiagnosticProvider
