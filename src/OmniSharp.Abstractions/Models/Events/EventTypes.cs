@@ -11,5 +11,7 @@ namespace OmniSharp.Models.Events
         public const string PackageRestoreFinished = nameof(PackageRestoreFinished);
         public const string UnresolvedDependencies = nameof(UnresolvedDependencies);
         public const string ProjectConfiguration = nameof(ProjectConfiguration);
+        public const string ProjectDiagnosticStatus = nameof(ProjectDiagnosticStatus);
+
     }
 }

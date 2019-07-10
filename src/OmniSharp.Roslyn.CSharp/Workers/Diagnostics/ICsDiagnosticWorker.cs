@@ -8,7 +8,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
     {
         Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths);
         Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync();
-        ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentsPaths);
-        ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics();
+        ImmutableArray<DocumentId> QueueDocumentsForDiagnostics();
+        ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectId);
     }
 }
