@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -435,6 +435,7 @@ namespace OmniSharp.MSBuild
             UpdateProjectReferences(project, projectFileInfo.ProjectReferences);
             UpdateReferences(project, projectFileInfo.ProjectReferences, projectFileInfo.References);
             UpdateAnalyzerReferences(projectFileInfo, project);
+            UpdateAdditionalFiles(project, projectFileInfo.AdditionalFiles);
 
             _workspace.TryPromoteMiscellaneousDocumentsToProject(project);
             _workspace.UpdateDiagnosticOptionsForProject(project.Id, projectFileInfo.GetDiagnosticOptions());
@@ -447,6 +448,23 @@ namespace OmniSharp.MSBuild
                 .ToImmutableArray();
 
             _workspace.SetAnalyzerReferences(project.Id, analyzerFileReferences);
+        }
+
+        private void UpdateAdditionalFiles(Project project, IList<string> additionalFiles)
+        {
+            var currentAdditionalDocuments = project.AdditionalDocuments;
+            foreach (var document in currentAdditionalDocuments)
+            {
+                _workspace.RemoveAdditionalDocument(document.Id);
+            }
+
+            foreach (var file in additionalFiles)
+            {
+                 if (File.Exists(file))
+                 {
+                    _workspace.AddAdditionalDocument(project.Id, file);
+                 }
+            }
         }
 
         private void UpdateSourceFiles(Project project, IList<string> sourceFiles)
