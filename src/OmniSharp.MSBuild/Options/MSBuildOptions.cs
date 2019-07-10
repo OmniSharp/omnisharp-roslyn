@@ -1,6 +1,6 @@
 namespace OmniSharp.Options
 {
-    internal class MSBuildOptions
+    public class MSBuildOptions
     {
         public string ToolsVersion { get; set; }
         public string VisualStudioVersion { get; set; }

@@ -79,6 +79,10 @@ namespace OmniSharp.MSBuild.Discovery
         {
             var score = 0;
 
+            // user override gets highest priority
+            if (i.DiscoveryType == DiscoveryType.UserOverride)
+                return int.MaxValue;
+
             if (i.HasDotNetSdksResolvers())
                 score++;
 
@@ -90,6 +94,7 @@ namespace OmniSharp.MSBuild.Discovery
             if (i.DiscoveryType == DiscoveryType.StandAlone)
                 score--;
 
+            // VS 2019 should be preferred
             if (i.Version.Major >= 16)
                 score++;
             else
