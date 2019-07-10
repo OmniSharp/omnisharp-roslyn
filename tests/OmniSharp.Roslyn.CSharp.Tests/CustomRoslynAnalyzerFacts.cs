@@ -251,7 +251,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 host.Workspace.WorkspaceChanged += (_, e) => { if (e.Kind == WorkspaceChangeKind.ProjectChanged) { workspaceUpdatedCheck.Set(); } };
                 host.Workspace.UpdateDiagnosticOptionsForProject(projectId, testRulesUpdated.ToImmutableDictionary());
 
-                Assert.True(workspaceUpdatedCheck.WaitOne(timeout: TimeSpan.FromSeconds(3)));
+                Assert.True(workspaceUpdatedCheck.WaitOne(timeout: TimeSpan.FromSeconds(15)));
 
                 var result = await host.RequestCodeCheckAsync("testFile_4.cs");
                 Assert.DoesNotContain(result.QuickFixes, f => f.Text.Contains(testAnalyzerRef.Id.ToString()));
