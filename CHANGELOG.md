@@ -1,6 +1,9 @@
 # Changelog
 All changes to the project will be documented in this file.
 
+## [1.33.1] - not released yet
+* Fixed a bug where some internal services didn't respect the disabling of a project system ([#1543](https://github.com/OmniSharp/omnisharp-roslyn/pull/1543))
+
 ## [1.33.0] - 2019-07-01
 * Added support for `.editorconfig` files to control formatting settings, analyzers, coding styles and naming conventions. The feature is currently opt-into and needs to be enabled using OmniSharp configuration ([#31](https://github.com/OmniSharp/omnisharp-roslyn/issues/31), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1526))
     ```JSON
