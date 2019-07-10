@@ -458,7 +458,8 @@ namespace OmniSharp.MSBuild
                 _workspace.RemoveAdditionalDocument(document.Id);
             }
 
-            foreach (var file in additionalFiles) {
+            foreach (var file in additionalFiles)
+            {
                  if (File.Exists(file))
                  {
                     _workspace.AddAdditionalDocument(project.Id, file);
