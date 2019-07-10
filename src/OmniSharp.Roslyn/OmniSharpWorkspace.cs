@@ -190,7 +190,7 @@ namespace OmniSharp
         public DocumentId AddDocument(DocumentId documentId, ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
             var loader = new OmniSharpTextLoader(filePath);
-            var documentInfo = DocumentInfo.Create(documentId, filePath, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
 
             this.AddDocument(documentInfo);
 
@@ -413,6 +413,19 @@ namespace OmniSharp
                 _logger.LogInformation($"Removing analyzer reference: {toRemove.FullPath}");
                 base.OnAnalyzerReferenceRemoved(id, toRemove);
             }
+        }
+
+        public void AddAdditionalDocument(ProjectId projectId, string filePath)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
+            var loader = new OmniSharpTextLoader(filePath);
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader);
+            OnAdditionalDocumentAdded(documentInfo);
+        }
+
+        public void RemoveAdditionalDocument(DocumentId documentId)
+        {
+            OnAdditionalDocumentRemoved(documentId);
         }
     }
 }
