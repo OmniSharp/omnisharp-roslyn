@@ -12,10 +12,8 @@ using Xunit.Abstractions;
 
 namespace OmniSharp.Roslyn.CSharp.Tests
 {
-    public class CodeActionsV2Facts : AbstractTestFixture
+    public class CodeActionsV2Facts : AbstractCodeActionsTestFixture
     {
-        private readonly string BufferPath = $"{Path.DirectorySeparatorChar}somepath{Path.DirectorySeparatorChar}buffer.cs";
-
         public CodeActionsV2Facts(ITestOutputHelper output)
             : base(output)
         {
@@ -88,7 +86,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 public class c {public c() {Guid.NewGuid();}}";
 
-            var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings", roslynAnalyzersEnabled: roslynAnalyzersEnabled);
+            var response = await RunRefactoringAsync(code, "Remove Unnecessary Usings", isAnalyzersEnabled: roslynAnalyzersEnabled);
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
@@ -184,7 +182,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         Console.Write(""should be using System;"");
                     }
                 }";
-            var response = await RunRefactoringAsync(code, "Extract Method", roslynAnalyzersEnabled: roslynAnalyzersEnabled);
+            var response = await RunRefactoringAsync(code, "Extract Method", isAnalyzersEnabled: roslynAnalyzersEnabled);
             AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
@@ -194,7 +192,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_generate_type_and_return_name_of_new_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMissingType"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host =  OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
@@ -235,7 +233,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         public async Task Can_send_rename_and_fileOpen_responses_when_codeAction_renames_file(bool roslynAnalyzersEnabled)
         {
             using (var testProject = await TestAssets.Instance.GetTestProjectAsync("ProjectWithMismatchedFileName"))
-            using (var host = CreateOmniSharpHost(testProject.Directory, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
+            using (var host = OmniSharpTestHost.Create(testProject.Directory, testOutput: TestOutput, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled)))
             {
                 var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
                 var document = host.Workspace.CurrentSolution.Projects.First().Documents.First();
@@ -261,85 +259,6 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 Assert.False(File.Exists(((RenamedFileResponse)changes[0]).FileName), "The old renamed file exists - even though it should not.");
                 Assert.True(File.Exists(((RenamedFileResponse)changes[0]).NewFileName), "The new renamed file doesn't exist - even though it should.");
                 Assert.Equal(FileModificationType.Opened, changes[1].ModificationType);
-            }
-        }
-
-        private static void AssertIgnoringIndent(string expected, string actual)
-        {
-            Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
-        }
-
-        private static string TrimLines(string source)
-        {
-            return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
-        }
-
-        private async Task<RunCodeActionResponse> RunRefactoringAsync(string code, string refactoringName, bool wantsChanges = false, bool roslynAnalyzersEnabled = false)
-        {
-            var refactorings = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
-            Assert.Contains(refactoringName, refactorings.Select(a => a.Name));
-
-            var identifier = refactorings.First(action => action.Name.Equals(refactoringName)).Identifier;
-            return await RunRefactoringsAsync(code, identifier, wantsChanges);
-        }
-
-        private async Task<IEnumerable<string>> FindRefactoringNamesAsync(string code, bool roslynAnalyzersEnabled = false)
-        {
-            var codeActions = await FindRefactoringsAsync(code, configurationData: TestHelpers.GetConfigurationDataWithAnalyzerConfig(roslynAnalyzersEnabled));
-
-            return codeActions.Select(a => a.Name);
-        }
-
-        private async Task<IEnumerable<OmniSharpCodeAction>> FindRefactoringsAsync(string code, IDictionary<string, string> configurationData = null)
-        {
-            var testFile = new TestFile(BufferPath, code);
-
-            using (var host = CreateOmniSharpHost(new[] { testFile }, configurationData))
-            {
-                var requestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
-
-                var span = testFile.Content.GetSpans().Single();
-                var range = testFile.Content.GetRangeFromSpan(span);
-
-                var request = new GetCodeActionsRequest
-                {
-                    Line = range.Start.Line,
-                    Column = range.Start.Offset,
-                    FileName = BufferPath,
-                    Buffer = testFile.Content.Code,
-                    Selection = range.GetSelection(),
-                };
-
-                var response = await requestHandler.Handle(request);
-
-                return response.CodeActions;
-            }
-        }
-
-        private async Task<RunCodeActionResponse> RunRefactoringsAsync(string code, string identifier, bool wantsChanges = false)
-        {
-            var testFile = new TestFile(BufferPath, code);
-
-            using (var host = CreateOmniSharpHost(testFile))
-            {
-                var requestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
-
-                var span = testFile.Content.GetSpans().Single();
-                var range = testFile.Content.GetRangeFromSpan(span);
-
-                var request = new RunCodeActionRequest
-                {
-                    Line = range.Start.Line,
-                    Column = range.Start.Offset,
-                    Selection = range.GetSelection(),
-                    FileName = BufferPath,
-                    Buffer = testFile.Content.Code,
-                    Identifier = identifier,
-                    WantsTextChanges = wantsChanges,
-                    WantsAllCodeActionOperations = true
-                };
-
-                return await requestHandler.Handle(request);
             }
         }
     }

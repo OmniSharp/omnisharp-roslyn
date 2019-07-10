@@ -76,6 +76,8 @@
 
     <PackageReference Update="System.Reactive" Version="4.1.2" />
 
+    <PackageReference Update="System.Reflection.DispatchProxy" Version="4.5.1" />
+
     <PackageReference Update="xunit.runner.visualstudio" Version="$(XunitPackageVersion)" />
     <PackageReference Update="xunit" Version="$(XunitPackageVersion)" />
   </ItemGroup>

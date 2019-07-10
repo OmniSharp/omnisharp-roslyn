@@ -90,13 +90,21 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
             var distinctActions = codeActions.GroupBy(x => x.Title).Select(x => x.First());
 
-            // Be sure to filter out any code actions that inherit from CodeActionWithOptions.
-            // This isn't a great solution and might need changing later, but every Roslyn code action
-            // derived from this type tries to display a dialog. For now, this is a reasonable solution.
-            var availableActions = ConvertToAvailableCodeAction(distinctActions)
-                .Where(a => !a.CodeAction.GetType().GetTypeInfo().IsSubclassOf(typeof(CodeActionWithOptions)));
+            var availableActions = ConvertToAvailableCodeAction(distinctActions);
 
-            return availableActions;
+            return FilterBlacklistedCodeActions(availableActions);
+        }
+
+        private static IEnumerable<AvailableCodeAction> FilterBlacklistedCodeActions(IEnumerable<AvailableCodeAction> codeActions)
+        {
+            // Most of actions with UI works fine with defaults, however there's few exceptions:
+            return codeActions.Where(x => {
+                var actionName = x.CodeAction.GetType().Name;
+
+                return  actionName != "GenerateTypeCodeActionWithOption" &&         // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
+                        actionName != "ChangeSignatureCodeAction" &&                // Blacklisted because cannot be used without proper UI.
+                        actionName != "PullMemberUpWithDialogCodeAction";           // Blacklisted because doesn't give additional value over non UI generate type (when defaults used.)
+            });
         }
 
         private TextSpan GetTextSpan(ICodeActionRequest request, SourceText sourceText)
