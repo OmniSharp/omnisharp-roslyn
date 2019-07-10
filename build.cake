@@ -558,49 +558,6 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
     DotNetCoreMSBuild("OmniSharp.sln", settings);
 }
 
-void BuildWithMSBuild(BuildEnvironment env, string configuration)
-{
-    Information("Building OmniSharp.sln with MSBuild...");
-
-    var logFileNameBase = CombinePaths(env.Folders.ArtifactsLogs, "OmniSharp-build");
-    var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic
-        ? MSBuildBinaryLogImports.Embed
-        : MSBuildBinaryLogImports.None;
-
-    MSBuild("OmniSharp.sln", settings =>
-    {
-        settings.WorkingDirectory = env.WorkingDirectory;
-
-        settings.ArgumentCustomization = args =>
-            args.Append("/restore");
-
-        settings.AddFileLogger(
-            new MSBuildFileLogger {
-                AppendToLogFile = false,
-                LogFile = logFileNameBase + ".log",
-                ShowTimestamp = true,
-                Verbosity = Verbosity.Diagnostic,
-                PerformanceSummaryEnabled = true,
-                SummaryDisabled = false
-            }
-        );
-
-        settings.BinaryLogger = new MSBuildBinaryLogSettings {
-            Enabled = true,
-            FileName = logFileNameBase + ".binlog",
-            Imports = projectImports
-        };
-
-        settings
-            .SetConfiguration(configuration)
-            .SetVerbosity(Verbosity.Minimal)
-            .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
-            .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
-            .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
-            .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
-    });
-}
-
 Task("Build")
     .IsDependentOn("Setup")
     .Does(() =>
