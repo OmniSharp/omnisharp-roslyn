@@ -1,7 +1,8 @@
 # Changelog
 All changes to the project will be documented in this file.
 
-## [1.33.1] - not released yet
+## [1.34.0] - not yet released
+* According to [official Microsoft .NET Core support policy](https://dotnet.microsoft.com/platform/support/policy/dotnet-core), .NET Core 1.0 and 1.1 (`project.json`-based .NET Core flavors) have reached end of life and went out of support on 27 June 2019. OmniSharp features to support that, which have been obsolete and disabled by default since version 1.32.2 (2018-08-07), are now completely removed.
 * Fixed a bug where some internal services didn't respect the disabling of a project system ([#1543](https://github.com/OmniSharp/omnisharp-roslyn/pull/1543))
 
 ## [1.33.0] - 2019-07-01

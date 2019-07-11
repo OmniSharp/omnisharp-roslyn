@@ -132,7 +132,6 @@ void DownloadFileAndUnzip(string url, string folder)
 public class Folders
 {
     public string DotNetSdk { get; }
-    public string LegacyDotNetSdk { get; }
     public string Mono { get; }
     public string MSBuild { get; }
     public string Tools { get; }
@@ -158,7 +157,6 @@ public class Folders
     public Folders(string workingDirectory)
     {
         this.DotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet");
-        this.LegacyDotNetSdk = PathHelper.Combine(workingDirectory, ".dotnet-legacy");
         this.Mono = PathHelper.Combine(workingDirectory, ".mono");
         this.MSBuild = PathHelper.Combine(workingDirectory, ".msbuild");
         this.Tools = PathHelper.Combine(workingDirectory, "tools");
@@ -203,7 +201,6 @@ public class BuildEnvironment
     public Folders Folders { get; }
 
     public string DotNetCommand { get; }
-    public string LegacyDotNetCommand { get; }
 
     public string ShellCommand { get; }
     public string ShellArgument { get; }
@@ -224,9 +221,6 @@ public class BuildEnvironment
             ? "dotnet"
             : PathHelper.Combine(this.Folders.DotNetSdk, "dotnet");
         if (Platform.Current.IsWindows) this.DotNetCommand += ".exe";
-
-        this.LegacyDotNetCommand = PathHelper.Combine(this.Folders.LegacyDotNetSdk, "dotnet");
-        if (Platform.Current.IsWindows) this.LegacyDotNetCommand += ".exe";
 
         this.ShellCommand = Platform.Current.IsWindows ? "powershell" : "bash";
         this.ShellArgument = Platform.Current.IsWindows ? "-NoProfile /Command" : "-C";
@@ -351,7 +345,6 @@ public class BuildPlan
     public string DotNetChannel { get; set; }
     public string DotNetVersion { get; set; }
     public string[] DotNetSharedRuntimeVersions { get; set; }
-    public string LegacyDotNetVersion { get; set; }
     public string RequiredMonoVersion { get; set; }
     public string DownloadURL { get; set; }
     public string MonoRuntimeMacOS { get; set; }
@@ -362,7 +355,6 @@ public class BuildPlan
     public string[] HostProjects { get; set; }
     public string[] TestProjects { get; set; }
     public string[] TestAssets { get; set; }
-    public string[] LegacyTestAssets { get; set; }
     public string[] CakeTestAssets { get; set; }
     public string[] WindowsOnlyTestAssets { get; set; }
     public string[] RestoreOnlyTestAssets { get; set; }
