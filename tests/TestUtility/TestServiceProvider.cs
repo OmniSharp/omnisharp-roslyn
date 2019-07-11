@@ -116,7 +116,7 @@ namespace TestUtility
 
             // We need to set the "UseLegacySdkResolver" for tests because
             // MSBuild's SDK resolver will not be able to locate the .NET Core SDKs
-            // that we install locally in the ".dotnet" and ".dotnet-legacy" directories.
+            // that we install locally in the ".dotnet" directory.
             // This property will cause the MSBuild project loader to set the
             // MSBuildSDKsPath environment variable to the correct path "Sdks" folder
             // within the appropriate .NET Core SDK.

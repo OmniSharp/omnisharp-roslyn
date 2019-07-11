@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp;
 using OmniSharp.Cake;
-using OmniSharp.DotNet;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.Eventing;
 using OmniSharp.Mef;
@@ -31,7 +30,6 @@ namespace TestUtility
         {
             typeof(OmniSharpEndpoints).GetTypeInfo().Assembly, // OmniSharp.Abstractions
             typeof(HostHelpers).GetTypeInfo().Assembly, // OmniSharp.Host
-            typeof(DotNetProjectSystem).GetTypeInfo().Assembly, // OmniSharp.DotNet
             typeof(RunTestRequest).GetTypeInfo().Assembly, // OmniSharp.DotNetTest
             typeof(ProjectSystem).GetTypeInfo().Assembly, // OmniSharp.MSBuild
             typeof(ScriptProjectSystem).GetTypeInfo().Assembly, // OmniSharp.Script
