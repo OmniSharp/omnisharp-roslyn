@@ -54,7 +54,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 // TODO: Range?  We don't currently have that!
                 // Range =
-                Contents = new MarkedStringsOrMarkupContent(new MarkedStringContainer(omnisharpResponse.Type, omnisharpResponse.Documentation))
+                Contents = new MarkedStringsOrMarkupContent(new MarkedStringContainer(Helpers.EscapeMarkdown(omnisharpResponse.Type), Helpers.EscapeMarkdown(omnisharpResponse.Documentation)))
             };
         }
 
