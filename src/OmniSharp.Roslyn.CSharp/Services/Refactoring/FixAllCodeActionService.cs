@@ -12,6 +12,7 @@ using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
+using OmniSharp.Roslyn.Utilities;
 using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
@@ -39,9 +40,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var diagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
 
-            var solution = _workspace.CurrentSolution;
+            var solutionAfterChanges = _workspace.CurrentSolution;
             var projects = _workspace.CurrentSolution.Projects;
-            var changes = new List<SolutionChanges>();
 
             foreach (var project in projects)
             {
@@ -82,23 +82,27 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         {
                             Console.WriteLine($"Applying {o.Title}");
 
-                            solution = applyChangesOperation.ChangedSolution;
-
-                            var newChanges = solution.GetChanges(_workspace.CurrentSolution);
-
-                            if(_workspace.TryApplyChanges(solution))
-                            {
-                                Console.WriteLine("Adding changes.");
-                                changes.Add(newChanges);
-                            }
+                            solutionAfterChanges = applyChangesOperation.ChangedSolution;
                         }
                     }
                 }
             }
 
-            return new FixAllResponse {
-                Changes = changes.SelectMany(x => x.)
+            var getChangedDocumentIds = solutionAfterChanges.GetChanges(_workspace.CurrentSolution).GetProjectChanges().SelectMany(x => x.GetChangedDocuments());
+
+            var currentSolution = _workspace.CurrentSolution;
+
+            var changes = await Task.WhenAll(getChangedDocumentIds
+                .Select(async x => (changes: await TextChanges.GetAsync(solutionAfterChanges.GetDocument(x),currentSolution.GetDocument(x)), document: solutionAfterChanges.GetDocument(x))));
+
+            if (_workspace.TryApplyChanges(solutionAfterChanges))
+            {
+                Console.WriteLine("Applied changes.");
             }
+
+            return new FixAllResponse {
+                Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes }).ToList()
+            };
         }
 
         public async Task<FixAllResponse> Handle(FixAllRequest request)
