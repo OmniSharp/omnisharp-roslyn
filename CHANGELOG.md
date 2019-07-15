@@ -22,6 +22,7 @@ All changes to the project will be documented in this file.
         }
     ```
 * Added support for *AdditionalFiles* in csproj files ([#1510](https://github.com/OmniSharp/omnisharp-roslyn/issues/1510), PR: [#1547](https://github.com/OmniSharp/omnisharp-roslyn/pull/1547))
+* Fixed a bug in *.editorconfig* where formatting settings were not correctly passed into external code fixes ([#1558](https://github.com/OmniSharp/omnisharp-roslyn/issues/1558), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1559))
 
 ## [1.33.0] - 2019-07-01
 * Added support for `.editorconfig` files to control formatting settings, analyzers, coding styles and naming conventions. The feature is currently opt-into and needs to be enabled using OmniSharp configuration ([#31](https://github.com/OmniSharp/omnisharp-roslyn/issues/31), PR: [#1526](https://github.com/OmniSharp/omnisharp-roslyn/pull/1526))
