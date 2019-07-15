@@ -18,7 +18,7 @@ using OmniSharp.Services;
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
     [OmniSharpHandler(OmniSharpEndpoints.FixAll, LanguageNames.CSharp)]
-    public class FixAllCodeActionService: IRequestHandler<FixAllRequest, FixAllResponse>
+    public class FixAllCodeActionService : IRequestHandler<FixAllRequest, FixAllResponse>
     {
         private readonly ICsDiagnosticWorker _diagnosticWorker;
         private readonly CachingCodeFixProviderForProjects _codeFixProvider;
@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             _diagnosticWorker = diagnosticWorker;
             _codeFixProvider = codeFixProvider;
             _workspace = workspace;
-            this._providers = providers;
+            _providers = providers;
         }
 
         public async Task<FixAllResponse> FixAll()
@@ -39,70 +39,78 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             // https://csharp.hotexamples.com/examples/-/FixAllContext/-/php-fixallcontext-class-examples.html
 
             var diagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
+            var solutionBeforeChanges = _workspace.CurrentSolution;
 
-            var solutionAfterChanges = _workspace.CurrentSolution;
             var projects = _workspace.CurrentSolution.Projects;
 
             foreach (var project in projects)
             {
                 var allCodefixesForProject =
                     _providers.SelectMany(provider => provider.CodeFixProviders)
-                        .Concat(_codeFixProvider.GetAllCodeFixesForProject(project.Id));
+                        .Concat(_codeFixProvider.GetAllCodeFixesForProject(project.Id))
+                        .Where(x => x.GetFixAllProvider() != null);
 
-                foreach (var codeFix in allCodefixesForProject.Where(x => x.GetFixAllProvider() != null))
+                var codeFixesWithMatchingDiagnostics = allCodefixesForProject
+                    .Select(codeFix => (codeFix, diagnostics: diagnostics.Where(x => HasFix(codeFix, x.diagnostic.Id))))
+                    .Where(x => x.diagnostics.Any());
+
+                foreach (var codeFixWithDiagnostics in codeFixesWithMatchingDiagnostics)
                 {
-                    var matchingDiagnostics = diagnostics.Where(x => codeFix.FixableDiagnosticIds.Any(id => id == x.diagnostic.Id)).GroupBy(x => x.diagnostic.Id).Select(x => x.First());
-
-                    if (!matchingDiagnostics.Any())
-                        continue;
-
-                    var fixAllContext = new FixAllContext(
-                        project.Documents.First(),
-                        codeFix,
+                    try
+                    {
+                        // TODO: Provider should only return diagnostics from correct context.
+                        var fixAllContext = new FixAllContext(
+                        project,
+                        codeFixWithDiagnostics.codeFix,
                         FixAllScope.Project,
-                        matchingDiagnostics.First().diagnostic.Id,
-                        matchingDiagnostics.Select(x => x.diagnostic.Id),
-                        new FixAllDiagnosticProvider(matchingDiagnostics.Select(x => x.diagnostic).ToImmutableArray()),
+                        codeFixWithDiagnostics.codeFix.FixableDiagnosticIds.First(),
+                        codeFixWithDiagnostics.diagnostics.Select(x => x.diagnostic.Id),
+                        new FixAllDiagnosticProvider(codeFixWithDiagnostics.diagnostics.Select(x => x.diagnostic).ToImmutableArray()),
                         CancellationToken.None);
 
-                    var provider = codeFix.GetFixAllProvider();
+                        var provider = codeFixWithDiagnostics.codeFix.GetFixAllProvider();
 
-                    var fixes = await provider.GetFixAsync(fixAllContext);
+                        var fixes = await provider.GetFixAsync(fixAllContext);
 
-                    if (fixes == default)
-                        continue;
+                        if (fixes == default)
+                            continue;
 
-                    var operations = await fixes.GetOperationsAsync(CancellationToken.None);
 
-                    foreach (var o in operations)
-                    {
-                        Console.WriteLine($"Operation {o.Title}");
+                        var operations = await fixes.GetOperationsAsync(CancellationToken.None);
 
-                        if (o is ApplyChangesOperation applyChangesOperation)
+                        foreach (var o in operations)
                         {
-                            Console.WriteLine($"Applying {o.Title}");
+                            Console.WriteLine($"Operation {o.Title}");
 
-                            solutionAfterChanges = applyChangesOperation.ChangedSolution;
+                            if (o is ApplyChangesOperation applyChangesOperation)
+                            {
+                                Console.WriteLine($"Applying {o.Title}");
+                                o.Apply(_workspace, CancellationToken.None);
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
                     }
                 }
             }
 
-            var getChangedDocumentIds = solutionAfterChanges.GetChanges(_workspace.CurrentSolution).GetProjectChanges().SelectMany(x => x.GetChangedDocuments());
-
             var currentSolution = _workspace.CurrentSolution;
 
+            var changesX = solutionBeforeChanges.GetChanges(currentSolution).GetProjectChanges().ToList();
+
+            var getChangedDocumentIds = solutionBeforeChanges.GetChanges(currentSolution).GetProjectChanges().SelectMany(x => x.GetChangedDocuments());
+
             var changes = await Task.WhenAll(getChangedDocumentIds
-                .Select(async x => (changes: await TextChanges.GetAsync(solutionAfterChanges.GetDocument(x),currentSolution.GetDocument(x)), document: solutionAfterChanges.GetDocument(x))));
+                .Select(async x => (changes: await TextChanges.GetAsync(currentSolution.GetDocument(x), solutionBeforeChanges.GetDocument(x)), document: currentSolution.GetDocument(x))));
 
-            if (_workspace.TryApplyChanges(solutionAfterChanges))
+            var foo = new FixAllResponse
             {
-                Console.WriteLine("Applied changes.");
-            }
-
-            return new FixAllResponse {
-                Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes }).ToList()
+                Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes.ToList() }).ToList()
             };
+
+            return foo;
         }
 
         public async Task<FixAllResponse> Handle(FixAllRequest request)
@@ -131,7 +139,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             }
 
             public override Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken cancellationToken)
-                => Task.FromResult<IEnumerable<Diagnostic>>(_diagnostics);
+                => Task.FromResult(_diagnostics.Where(x => string.Compare(x.Location.GetMappedLineSpan().Path, document.FilePath, true) == 0));
 
             public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
                 => Task.FromResult<IEnumerable<Diagnostic>>(_diagnostics);
@@ -143,14 +151,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
     {
     }
 
-    public class FixAllResponse: IAggregateResponse
+    public class FixAllResponse : IAggregateResponse
     {
         public FixAllResponse()
         {
             Changes = new List<ModifiedFileResponse>();
         }
 
-        public List<ModifiedFileResponse> Changes { get; set; }
+        public IEnumerable<ModifiedFileResponse> Changes { get; set; }
+        public IEnumerable<string> WhatIsThisShit { get; set; } = new List<string>() { "SomethingHere" };
 
         public IAggregateResponse Merge(IAggregateResponse response) { return response; }
     }
