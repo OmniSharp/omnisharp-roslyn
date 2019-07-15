@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -118,6 +119,48 @@ class Bar:Foo { }
                 var response = await requestHandler.Handle(request);
 
                 Assert.Equal(expected, response.Buffer);
+            }
+        }
+
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
+        public async Task RespectsCSharpFormatSettings_InExecutedCodeActions(string filename)
+        {
+            // omnisharp.json sets spacing to true (1 space)
+            // but .editorconfig sets it to false (0 spaces)
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, filename), @"
+class Foo { }
+class Bar $$   :    Foo { }
+");
+            var expected = @"
+class Foo { }
+class Bar:Foo { }
+";
+            using (var host = CreateOmniSharpHost(new[] { testFile }, new Dictionary<string, string>
+            {
+                ["FormattingOptions:EnableEditorConfigSupport"] = "true",
+                ["FormattingOptions:SpaceAfterColonInBaseTypeDeclaration"] = "true", // this should be ignored because .editorconfig gets higher priority
+                ["FormattingOptions:SpaceBeforeColonInBaseTypeDeclaration"] = "true", // this should be ignored because .editorconfig gets higher priority
+                ["RoslynExtensionsOptions:EnableAnalyzersSupport"] = "true"
+            }, TestAssets.Instance.TestFilesFolder))
+            {
+                var point = testFile.Content.GetPointFromPosition();
+                var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var runRequest = new RunCodeActionRequest
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = testFile.FileName,
+                    Identifier = "Fix formatting",
+                    WantsTextChanges = false,
+                    WantsAllCodeActionOperations = true,
+                    Buffer = testFile.Content.Code
+                };
+                var runResponse = await runRequestHandler.Handle(runRequest);
+
+                Assert.Equal(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer, ignoreLineEndingDifferences: true);
             }
         }
 
