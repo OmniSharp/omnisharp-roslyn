@@ -357,11 +357,6 @@ class Foo
             Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
         }
 
-        //private static void AssertIgnoringLineEnding(string expected, string actual)
-        //{
-        //    Assert.Equal(expected.Replace("\r\n", "\n"), actual.Replace("\r\n", "\n"),);
-        //}
-
         private static string TrimLines(string source)
         {
             return string.Join("\n", source.Split('\n').Select(s => s.Trim()));
