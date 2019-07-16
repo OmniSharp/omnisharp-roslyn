@@ -28,7 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     class C {}
                 "));
 
-                var handler = host.GetRequestHandler<FixAllCodeActionService>(OmniSharpEndpoints.FixAll);
+                var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
                 await handler.Handle(new FixAllRequest());
 

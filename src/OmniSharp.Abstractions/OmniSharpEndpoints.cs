@@ -34,8 +34,8 @@ namespace OmniSharp
         public const string WorkspaceInformation = "/projects";
         public const string ProjectInformation = "/project";
         public const string FixUsings = "/fixusings";
-        public const string FixAll = "/fixall";
-
+        public const string RunFixAll = "/runfixall";
+        public const string GetFixAll = "/getfixall";
         public const string CheckAliveStatus = "/checkalivestatus";
         public const string CheckReadyStatus = "/checkreadystatus";
         public const string StopServer = "/stopserver";

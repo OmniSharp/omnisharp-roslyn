@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -17,8 +17,8 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
-    [OmniSharpHandler(OmniSharpEndpoints.FixAll, LanguageNames.CSharp)]
-    public class FixAllCodeActionService : IRequestHandler<FixAllRequest, FixAllResponse>
+    [OmniSharpHandler(OmniSharpEndpoints.RunFixAll, LanguageNames.CSharp)]
+    public class RunFixAllCodeActionService : IRequestHandler<FixAllRequest, FixAllResponse>
     {
         private readonly ICsDiagnosticWorker _diagnosticWorker;
         private readonly CachingCodeFixProviderForProjects _codeFixProvider;
@@ -26,7 +26,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         private readonly IEnumerable<ICodeActionProvider> _providers;
 
         [ImportingConstructor]
-        public FixAllCodeActionService(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
+        public RunFixAllCodeActionService(ICsDiagnosticWorker diagnosticWorker, CachingCodeFixProviderForProjects codeFixProvider, OmniSharpWorkspace workspace, [ImportMany] IEnumerable<ICodeActionProvider> providers)
         {
             _diagnosticWorker = diagnosticWorker;
             _codeFixProvider = codeFixProvider;
@@ -75,7 +75,6 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         if (fixes == default)
                             continue;
 
-
                         var operations = await fixes.GetOperationsAsync(CancellationToken.None);
 
                         foreach (var o in operations)
@@ -98,19 +97,26 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var currentSolution = _workspace.CurrentSolution;
 
-            var changesX = solutionBeforeChanges.GetChanges(currentSolution).GetProjectChanges().ToList();
-
             var getChangedDocumentIds = solutionBeforeChanges.GetChanges(currentSolution).GetProjectChanges().SelectMany(x => x.GetChangedDocuments());
 
             var changes = await Task.WhenAll(getChangedDocumentIds
                 .Select(async x => (changes: await TextChanges.GetAsync(currentSolution.GetDocument(x), solutionBeforeChanges.GetDocument(x)), document: currentSolution.GetDocument(x))));
 
-            var foo = new FixAllResponse
+
+            var asd = new FixAllResponse()
             {
-                Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes.ToList() }).ToList()
+                TestSerialize = new ModifiedFileResponse("foo") {},
+                Changes = new [] { new ModifiedFileResponse("foo") { Changes = new [] { new LinePositionSpanTextChange() { NewText = "newText" }}}}
             };
 
-            return foo;
+            return asd;
+
+            // var foo = new FixAllResponse
+            // {
+            //     Changes = changes.Select(x => new ModifiedFileResponse(x.document.FilePath) { Changes = x.changes.ToList() }).ToList()
+            // };
+
+            // return foo;
         }
 
         public async Task<FixAllResponse> Handle(FixAllRequest request)
@@ -146,7 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         }
     }
 
-    [OmniSharpEndpoint(OmniSharpEndpoints.FixAll, typeof(FixAllRequest), typeof(FixAllResponse))]
+    [OmniSharpEndpoint(OmniSharpEndpoints.RunFixAll, typeof(FixAllRequest), typeof(FixAllResponse))]
     public class FixAllRequest : SimpleFileRequest
     {
     }
@@ -157,6 +163,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             Changes = new List<ModifiedFileResponse>();
         }
+
+        public ModifiedFileResponse TestSerialize { get; set; }
 
         public IEnumerable<ModifiedFileResponse> Changes { get; set; }
         public IEnumerable<string> WhatIsThisShit { get; set; } = new List<string>() { "SomethingHere" };
