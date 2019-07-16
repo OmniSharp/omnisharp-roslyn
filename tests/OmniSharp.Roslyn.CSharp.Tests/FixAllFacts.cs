@@ -30,7 +30,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
-                await handler.Handle(new FixAllRequest());
+                await handler.Handle(new RunFixAllRequest());
 
                 var docs = host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents);
 
