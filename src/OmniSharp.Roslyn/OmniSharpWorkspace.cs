@@ -195,7 +195,11 @@ namespace OmniSharp
         public DocumentId AddDocument(DocumentId documentId, Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
             var projectFolder = Path.GetDirectoryName(project.FilePath);
-            var folder = Path.GetDirectoryName(filePath).Substring(projectFolder.Length).TrimStart(new[] { '\\', '/' });
+            string folder = null;
+            if (projectFolder != null && filePath.StartsWith(projectFolder))
+            {
+                folder = Path.GetDirectoryName(filePath).Substring(projectFolder.Length).TrimStart(new[] { '\\', '/' });
+            }
 
             var loader = new OmniSharpTextLoader(filePath);
             var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: string.IsNullOrWhiteSpace(folder) ? null : new string[] { folder }, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
