@@ -72,8 +72,6 @@ A number of build-related options, including folder names for different entities
 **DotNetVersion**: The .NET Core SDK version used for the build. Can be used to pin to a specific version.
   Using the string `Latest` will retrieve the latest version.
 
-**LegacyDotNetVersion**: The .NET Core SDK version used to restore packages for various test assets that are project.json-based.
-
 # Artifacts generated
 
 * OmniSharp binaries for specified runtimes `artifacts/publish/OmniSharp/{platform}/`

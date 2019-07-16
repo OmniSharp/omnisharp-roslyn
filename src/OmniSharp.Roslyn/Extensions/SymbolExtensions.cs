@@ -207,7 +207,7 @@ namespace OmniSharp.Extensions
         {
             // Traverse up until we find a named type that is parented by the namespace
             var topLevelNamedType = symbol;
-            while (topLevelNamedType.ContainingSymbol != symbol.ContainingNamespace ||
+            while (!Equals(topLevelNamedType.ContainingSymbol, symbol.ContainingNamespace) ||
                 topLevelNamedType.Kind != SymbolKind.NamedType)
             {
                 topLevelNamedType = topLevelNamedType.ContainingSymbol;

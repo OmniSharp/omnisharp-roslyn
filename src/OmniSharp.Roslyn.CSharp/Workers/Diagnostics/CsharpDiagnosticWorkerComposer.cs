@@ -38,7 +38,7 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
         {
             if(options.RoslynExtensionsOptions.EnableAnalyzersSupport)
             {
-                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder);
+                _implementation = new CSharpDiagnosticWorkerWithAnalyzers(workspace, providers, loggerFactory, forwarder, options);
             }
             else
             {
@@ -58,14 +58,14 @@ namespace OmniSharp.Roslyn.CSharp.Workers.Diagnostics
             return _implementation.GetDiagnostics(documentPaths);
         }
 
-        public ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics()
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
         {
-            return _implementation.QueueAllDocumentsForDiagnostics();
+            return _implementation.QueueDocumentsForDiagnostics();
         }
 
-        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
         {
-            return _implementation.QueueForDiagnosis(documentPaths);
+            return _implementation.QueueDocumentsForDiagnostics(projectIds);
         }
     }
 }

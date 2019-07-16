@@ -1,10 +1,7 @@
 ﻿using System.Composition;
 using System.IO;
-using System.Threading;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.CodingConventions;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig;
 using OmniSharp.Roslyn.Options;
@@ -16,7 +13,7 @@ namespace OmniSharp.Roslyn.CSharp.Services
     {
         private readonly ILoggerFactory _loggerFactory;
 
-        public int Order => -100;
+        public int Order => 200;
 
         [ImportingConstructor]
         public EditorConfigWorkspaceOptionsProvider(ILoggerFactory loggerFactory)

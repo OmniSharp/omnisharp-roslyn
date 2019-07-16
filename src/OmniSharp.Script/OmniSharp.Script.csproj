@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmniSharp.Abstractions\OmniSharp.Abstractions.csproj" />
-    <ProjectReference Include="..\OmniSharp.DotNet.ProjectModel\OmniSharp.DotNet.ProjectModel.csproj" />
     <ProjectReference Include="..\OmniSharp.Roslyn.CSharp\OmniSharp.Roslyn.CSharp.csproj" />
   </ItemGroup>
 

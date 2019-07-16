@@ -69,9 +69,9 @@ namespace OmniSharp.MSBuild.Discovery.Providers
                 return NoInstances;
             }
 
-            if (monoVersion < new Version("5.2.0"))
+            if (monoVersion < new Version("5.18.1"))
             {
-                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 5.2.0");
+                Logger.LogDebug($"Found Mono MSBuild but it could not be used because it is version {monoVersion} and in needs to be >= 5.18.1");
                 return NoInstances;
             }
 
@@ -112,7 +112,7 @@ Try installing MSBuild into Mono (e.g. 'sudo apt-get install msbuild') to enable
                 new MSBuildInstance(
                     nameof(DiscoveryType.Mono),
                     toolsPath,
-                    new Version(15, 0),
+                    new Version(16, 0),
                     DiscoveryType.Mono,
                     propertyOverrides.ToImmutable()));
         }

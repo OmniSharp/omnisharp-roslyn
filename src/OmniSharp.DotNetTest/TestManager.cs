@@ -12,7 +12,6 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using NuGet.Versioning;
-using OmniSharp.DotNetTest.Legacy;
 using OmniSharp.DotNetTest.Models;
 using OmniSharp.DotNetTest.Models.Events;
 using OmniSharp.Eventing;
@@ -64,9 +63,12 @@ namespace OmniSharp.DotNetTest
 
             var version = dotNetCli.GetVersion(workingDirectory);
 
-            return dotNetCli.IsLegacy(version)
-                ? new LegacyTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory)
-                : (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory);
+            if (dotNetCli.IsLegacy(version))
+            {
+                throw new NotSupportedException("Legacy .NET SDK is not supported");
+            }
+            
+            return (TestManager)new VSTestManager(project, workingDirectory, dotNetCli, version, eventEmitter, loggerFactory);
         }
 
         protected abstract string GetCliTestArguments(int port, int parentProcessId);
@@ -76,7 +78,7 @@ namespace OmniSharp.DotNetTest
 
         public virtual RunTestResponse RunTest(string[] methodNames, string testFrameworkName, string targetFrameworkVersion)
         { 
-                throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public abstract GetTestStartInfoResponse GetTestStartInfo(string methodName, string testFrameworkName, string targetFrameworkVersion);

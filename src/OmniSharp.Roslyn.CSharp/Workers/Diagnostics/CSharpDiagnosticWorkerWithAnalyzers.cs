@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Helpers;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Models.Events;
 using OmniSharp.Options;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -27,6 +28,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             new ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)>();
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
+        private readonly OmniSharpOptions _options;
         private readonly OmniSharpWorkspace _workspace;
 
         // This is workaround.
@@ -39,13 +41,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             OmniSharpWorkspace workspace,
             [ImportMany] IEnumerable<ICodeActionProvider> providers,
             ILoggerFactory loggerFactory,
-            DiagnosticEventForwarder forwarder)
+            DiagnosticEventForwarder forwarder,
+            OmniSharpOptions options)
         {
             _logger = loggerFactory.CreateLogger<CSharpDiagnosticWorkerWithAnalyzers>();
             _providers = providers.ToImmutableArray();
-            _workQueue = new AnalyzerWorkQueue(loggerFactory);
+            _workQueue = new AnalyzerWorkQueue(loggerFactory, timeoutForPendingWorkMs: options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs * 3);
 
             _forwarder = forwarder;
+            _options = options;
             _workspace = workspace;
 
             _workspaceAnalyzerOptionsConstructor = Assembly
@@ -56,7 +60,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
             _workspace.WorkspaceChanged += OnWorkspaceChanged;
 
-            Task.Factory.StartNew(Worker, TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Foreground), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => Worker(AnalyzerWorkType.Background), TaskCreationOptions.LongRunning);
         }
 
         private Task InitializeWithWorkspaceDocumentsIfNotYetDone()
@@ -73,16 +78,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             .ContinueWith(_ => Task.Delay(50))
             .ContinueWith(_ =>
             {
-                var documentIds = QueueAllDocumentsForDiagnostics();
+                var documentIds = QueueDocumentsForDiagnostics();
                 _logger.LogInformation($"Solution initialized -> queue all documents for code analysis. Initial document count: {documentIds.Length}.");
             });
-        }
-
-        public ImmutableArray<DocumentId> QueueForDiagnosis(ImmutableArray<string> documentPaths)
-        {
-            var documentIds = GetDocumentIdsFromPaths(documentPaths);
-            QueueForAnalysis(documentIds);
-            return documentIds;
         }
 
         public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
@@ -96,8 +94,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
         {
-            await _workQueue.WaitForResultsAsync(documentIds);
-
+            if(documentIds.Length == 1)
+            {
+                _workQueue.TryPromote(documentIds.Single());
+                await _workQueue.WaitForegroundWorkComplete();
+            }
             return _currentDiagnosticResults
                 .Where(x => documentIds.Any(docId => docId == x.Key))
                 .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
@@ -111,7 +112,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 .ToImmutableArray();
         }
 
-        private async Task Worker()
+        private async Task Worker(AnalyzerWorkType workType)
         {
             while (true)
             {
@@ -120,7 +121,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     var solution = _workspace.CurrentSolution;
 
                     var currentWorkGroupedByProjects = _workQueue
-                        .TakeWork()
+                        .TakeWork(workType)
                         .Select(documentId => (projectId: solution.GetDocument(documentId)?.Project?.Id, documentId))
                         .Where(x => x.projectId != null)
                         .GroupBy(x => x.projectId, x => x.documentId)
@@ -128,8 +129,16 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     foreach (var projectGroup in currentWorkGroupedByProjects)
                     {
+                        var projectPath = solution.GetProject(projectGroup.Key).FilePath;
+
+                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Started);
+
                         await AnalyzeProject(solution, projectGroup);
+
+                        EventIfBackgroundWork(workType, projectPath, ProjectDiagnosticStatus.Ready);
                     }
+
+                    _workQueue.WorkComplete(workType);
 
                     await Task.Delay(50);
                 }
@@ -140,12 +149,15 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds)
+        private void EventIfBackgroundWork(AnalyzerWorkType workType, string projectPath, ProjectDiagnosticStatus status)
         {
-            foreach (var document in documentIds)
-            {
-                _workQueue.PutWork(document);
-            }
+            if (workType == AnalyzerWorkType.Background)
+                _forwarder.ProjectAnalyzedInBackground(projectPath, status);
+        }
+
+        private void QueueForAnalysis(ImmutableArray<DocumentId> documentIds, AnalyzerWorkType workType)
+        {
+            _workQueue.PutWork(documentIds, workType);
         }
 
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs changeEvent)
@@ -156,7 +168,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 case WorkspaceChangeKind.DocumentAdded:
                 case WorkspaceChangeKind.DocumentReloaded:
                 case WorkspaceChangeKind.DocumentInfoChanged:
-                    QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId));
+                    QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId), AnalyzerWorkType.Foreground);
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
                     if(!_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
@@ -169,7 +181,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 case WorkspaceChangeKind.ProjectReloaded:
                     _logger.LogDebug($"Project {changeEvent.ProjectId} updated, reanalyzing it's diagnostics.");
                     var projectDocumentIds = _workspace.CurrentSolution.GetProject(changeEvent.ProjectId).Documents.Select(x => x.Id).ToImmutableArray();
-                    QueueForAnalysis(projectDocumentIds);
+                    QueueForAnalysis(projectDocumentIds, AnalyzerWorkType.Background);
                     break;
             }
         }
@@ -208,7 +220,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             try
             {
                 // There's real possibility that bug in analyzer causes analysis hang at document.
-                var perDocumentTimeout = new CancellationTokenSource(10 * 1000);
+                var perDocumentTimeout = new CancellationTokenSource(_options.RoslynExtensionsOptions.DocumentAnalysisTimeoutMs);
 
                 var documentSemanticModel = await document.GetSemanticModelAsync(perDocumentTimeout.Token);
 
@@ -246,14 +258,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             catch (Exception ex)
             {
                 _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
-                _workQueue.MarkWorkAsCompleteForDocumentId(document.Id);
             }
         }
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
         {
             _currentDiagnosticResults[document.Id] = (project.Name, diagnosticsWithAnalyzers);
-            _workQueue.MarkWorkAsCompleteForDocumentId(document.Id);
             EmitDiagnostics(_currentDiagnosticResults[document.Id].diagnostics);
         }
 
@@ -272,10 +282,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             }
         }
 
-        public ImmutableArray<DocumentId> QueueAllDocumentsForDiagnostics()
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics()
         {
             var documentIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
-            QueueForAnalysis(documentIds);
+            QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
             return documentIds;
         }
 
@@ -284,6 +294,13 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             await InitializeWithWorkspaceDocumentsIfNotYetDone();
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();
             return await GetDiagnosticsByDocumentIds(allDocumentsIds);
+        }
+
+        public ImmutableArray<DocumentId> QueueDocumentsForDiagnostics(ImmutableArray<ProjectId> projectIds)
+        {
+            var documentIds = projectIds.SelectMany(projectId => _workspace.CurrentSolution.GetProject(projectId).Documents.Select(x => x.Id)).ToImmutableArray();
+            QueueForAnalysis(documentIds, AnalyzerWorkType.Background);
+            return documentIds;
         }
     }
 }

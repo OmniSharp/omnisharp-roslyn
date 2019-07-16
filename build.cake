@@ -26,52 +26,6 @@ Information("Current platform: {0}", Platform.Current);
 Information("");
 
 /// <summary>
-/// Checks the current platform to determine whether we allow legacy tests to run.
-/// </summary>
-bool AllowLegacyTests()
-{
-    var platform = Platform.Current;
-
-    if (platform.IsMacOS && TravisCI.IsRunningOnTravisCI) return false;
-
-    if (platform.IsWindows)
-    {
-        return true;
-    }
-
-    // On macOS, only run legacy tests on Sierra or lower
-    if (platform.IsMacOS)
-    {
-        return platform.Version.Major == 10
-            && platform.Version.Minor <= 12;
-    }
-
-    if (platform.IsLinux)
-    {
-        var version = platform.Version?.ToString();
-
-        // Taken from https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh
-        switch (platform.DistroName)
-        {
-            case "alpine":   return version == "3.4.3";
-            case "centos":   return version == "7.0";
-            case "debian":   return version == "8.0";
-            case "fedora":   return version == "23" || version == "24";
-            case "opensuse": return version == "13.2" || version == "42.1";
-            case "rhel":     return version == "7.0";
-            case "ubuntu":   return version == "14.4" || version == "16.4" || version == "16.10";
-        }
-    }
-
-    return false;
-}
-
-if (!AllowLegacyTests())
-{
-    Information("Legacy project.json tests will not be run");
-}
-
-/// <summary>
 ///  Clean artifacts.
 /// </summary>
 Task("Cleanup")
@@ -177,15 +131,6 @@ Task("InstallDotNetCoreSdk")
         var newPath = env.Folders.DotNetSdk + (string.IsNullOrEmpty(oldPath) ? "" : System.IO.Path.PathSeparator + oldPath);
         Environment.SetEnvironmentVariable("PATH", newPath);
         Information("PATH: {0}", Environment.GetEnvironmentVariable("PATH"));
-    }
-
-    if (AllowLegacyTests())
-    {
-        // Install legacy .NET Core SDK (used to 'dotnet restore' project.json test projects)
-        InstallDotNetSdk(env, buildPlan,
-            version: buildPlan.LegacyDotNetVersion,
-            installFolder: env.Folders.LegacyDotNetSdk,
-            noPath: true);
     }
 
     // Disable the first time run experience. We don't need to expand all of .NET Core just to build OmniSharp.
@@ -469,36 +414,6 @@ Task("PrepareTestAssets:WindowsOnlyTestAssets")
         });
     });
 
-Task("PrepareTestAssets:LegacyTestAssets")
-    .WithCriteria(() => AllowLegacyTests())
-    .IsDependeeOf("PrepareTestAssets")
-    .DoesForEach(buildPlan.LegacyTestAssets, (project) =>
-    {
-        var platform = Platform.Current;
-        if (platform.IsMacOS && platform.Version.Major == 10 && platform.Version.Minor == 12)
-        {
-            // Trick to allow older .NET Core SDK to run on Sierra.
-            Environment.SetEnvironmentVariable("DOTNET_RUNTIME_ID", "osx.10.11-x64");
-        }
-
-        Information("Restoring and building project.json: {0}...", project);
-
-        var folder = CombinePaths(env.Folders.TestAssets, "legacy-test-projects", project);
-
-        DotNetCoreRestore(new DotNetCoreRestoreSettings()
-        {
-            ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder,
-            Verbosity = DotNetCoreVerbosity.Minimal
-        });
-
-        DotNetCoreBuild(folder, new DotNetCoreBuildSettings()
-        {
-            ToolPath = env.LegacyDotNetCommand,
-            WorkingDirectory = folder
-        });
-    });
-
 Task("PrepareTestAssets:CakeTestAssets")
     .IsDependeeOf("PrepareTestAssets")
     .DoesForEach(buildPlan.CakeTestAssets, (project) =>
@@ -558,63 +473,13 @@ void BuildWithDotNetCli(BuildEnvironment env, string configuration)
     DotNetCoreMSBuild("OmniSharp.sln", settings);
 }
 
-void BuildWithMSBuild(BuildEnvironment env, string configuration)
-{
-    Information("Building OmniSharp.sln with MSBuild...");
-
-    var logFileNameBase = CombinePaths(env.Folders.ArtifactsLogs, "OmniSharp-build");
-    var projectImports = Context.Log.Verbosity == Verbosity.Verbose || Context.Log.Verbosity == Verbosity.Diagnostic
-        ? MSBuildBinaryLogImports.Embed
-        : MSBuildBinaryLogImports.None;
-
-    MSBuild("OmniSharp.sln", settings =>
-    {
-        settings.WorkingDirectory = env.WorkingDirectory;
-
-        settings.ArgumentCustomization = args =>
-            args.Append("/restore");
-
-        settings.AddFileLogger(
-            new MSBuildFileLogger {
-                AppendToLogFile = false,
-                LogFile = logFileNameBase + ".log",
-                ShowTimestamp = true,
-                Verbosity = Verbosity.Diagnostic,
-                PerformanceSummaryEnabled = true,
-                SummaryDisabled = false
-            }
-        );
-
-        settings.BinaryLogger = new MSBuildBinaryLogSettings {
-            Enabled = true,
-            FileName = logFileNameBase + ".binlog",
-            Imports = projectImports
-        };
-
-        settings
-            .SetConfiguration(configuration)
-            .SetVerbosity(Verbosity.Minimal)
-            .WithProperty("PackageVersion", env.VersionInfo.NuGetVersion)
-            .WithProperty("AssemblyVersion", env.VersionInfo.AssemblySemVer)
-            .WithProperty("FileVersion", env.VersionInfo.AssemblySemVer)
-            .WithProperty("InformationalVersion", env.VersionInfo.InformationalVersion);
-    });
-}
-
 Task("Build")
     .IsDependentOn("Setup")
     .Does(() =>
 {
     try
     {
-        if (Platform.Current.IsWindows)
-        {
-            BuildWithDotNetCli(env, configuration);
-        }
-        else
-        {
-            BuildWithMSBuild(env, configuration);
-        }
+        BuildWithDotNetCli(env, configuration);
     }
     catch
     {
@@ -632,13 +497,6 @@ Task("Test")
     .IsDependentOn("PrepareTestAssets")
     .Does(() =>
 {
-    if (!AllowLegacyTests())
-    {
-        Environment.SetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS", "True");
-    }
-
-    try
-    {
         foreach (var testProject in buildPlan.TestProjects)
         {
             PrintBlankLine();
@@ -672,11 +530,6 @@ Task("Test")
                     .ExceptionOnError($"Test {testProject} failed for net472");
             }
         }
-    }
-    finally
-    {
-        Environment.SetEnvironmentVariable("OMNISHARP_NO_LEGACY_TESTS", null);
-    }
 });
 
 void CopyMonoBuild(BuildEnvironment env, string sourceFolder, string outputFolder)
@@ -731,8 +584,6 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
 
     CopyExtraDependencies(env, outputFolder);
 
-    Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
-
      // Copy dependencies of Mono build
      FileHelper.Copy(
          source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.core", "lib", "net45", "SQLitePCLRaw.core.dll"),
@@ -750,6 +601,8 @@ string PublishMonoBuild(string project, BuildEnvironment env, BuildPlan plan, st
          source: CombinePaths(env.Folders.Tools, "SQLitePCLRaw.bundle_green", "lib", "net45", "SQLitePCLRaw.batteries_green.dll"),
          destination: CombinePaths(outputFolder, "SQLitePCLRaw.batteries_green.dll"),
          overwrite: true);
+
+    Package(project, "mono", outputFolder, env.Folders.ArtifactsPackage, env.Folders.DeploymentPackage);
 
     return outputFolder;
 }

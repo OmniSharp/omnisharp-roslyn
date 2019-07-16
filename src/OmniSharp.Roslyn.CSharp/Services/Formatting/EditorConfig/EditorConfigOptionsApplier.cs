@@ -76,7 +76,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
                 ? option.StorageLocations.FirstOrDefault(IsEditorConfigStorage)
                 : null;
 
-            var tryGetOptionMethod = editorConfigStorage?.GetType().GetMethod("TryGetOption");
+            var tryGetOptionMethod = editorConfigStorage?.GetType().GetMethod("TryGetOption", new[] { typeof(IReadOnlyDictionary<string, string>), typeof(Type), typeof(object).MakeByRefType() });
             return (option, editorConfigStorage, tryGetOptionMethod);
         }
 
@@ -89,10 +89,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Formatting.EditorConfig
             var (option, editorConfigStorage, tryGetOptionMethod) = optionWithStorage;
             value = null;
 
-            var args = new object[] { option, adjustedConventions, option.Type, value };
+            var args = new object[] { adjustedConventions, option.Type, value };
 
             var isOptionPresent = (bool)tryGetOptionMethod.Invoke(editorConfigStorage, args);
-            value = args[3];
+            value = args[2];
 
             return isOptionPresent;
         }

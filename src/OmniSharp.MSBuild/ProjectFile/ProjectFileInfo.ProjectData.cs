@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -47,6 +47,7 @@ namespace OmniSharp.MSBuild.ProjectFile
             public ImmutableArray<string> References { get; }
             public ImmutableArray<PackageReference> PackageReferences { get; }
             public ImmutableArray<string> Analyzers { get; }
+            public ImmutableArray<string> AdditionalFiles { get; }
             public RuleSet RuleSet { get; }
             public ImmutableDictionary<string, string> ReferenceAliases { get; }
             public bool TreatWarningsAsErrors { get; }
@@ -63,6 +64,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 References = ImmutableArray<string>.Empty;
                 PackageReferences = ImmutableArray<PackageReference>.Empty;
                 Analyzers = ImmutableArray<string>.Empty;
+                AdditionalFiles = ImmutableArray<string>.Empty;
                 ReferenceAliases = ImmutableDictionary<string, string>.Empty;
             }
 
@@ -135,6 +137,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 ImmutableArray<string> references,
                 ImmutableArray<PackageReference> packageReferences,
                 ImmutableArray<string> analyzers,
+                ImmutableArray<string> additionalFiles,
                 bool treatWarningsAsErrors,
                 RuleSet ruleset,
                 ImmutableDictionary<string, string> referenceAliases)
@@ -147,6 +150,7 @@ namespace OmniSharp.MSBuild.ProjectFile
                 References = references.EmptyIfDefault();
                 PackageReferences = packageReferences.EmptyIfDefault();
                 Analyzers = analyzers.EmptyIfDefault();
+                AdditionalFiles = additionalFiles.EmptyIfDefault();
                 ReferenceAliases = referenceAliases;
             }
 
@@ -266,13 +270,14 @@ namespace OmniSharp.MSBuild.ProjectFile
 
                 var packageReferences = GetPackageReferences(projectInstance.GetItems(ItemNames.PackageReference));
                 var analyzers = GetFullPaths(projectInstance.GetItems(ItemNames.Analyzer));
+                var additionalFiles = GetFullPaths(projectInstance.GetItems(ItemNames.AdditionalFiles));
 
                 return new ProjectData(guid, name,
                     assemblyName, targetPath, outputPath, intermediateOutputPath, projectAssetsFile,
                     configuration, platform, targetFramework, targetFrameworks,
                     outputKind, languageVersion, nullableContextOptions, allowUnsafeCode, documentationFile, preprocessorSymbolNames, suppressedDiagnosticIds,
                     signAssembly, assemblyOriginatorKeyFile,
-                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, treatWarningsAsErrors, ruleset, referenceAliases.ToImmutableDictionary());
+                    sourceFiles, projectReferences, references.ToImmutable(), packageReferences, analyzers, additionalFiles, treatWarningsAsErrors, ruleset, referenceAliases.ToImmutableDictionary());
             }
 
             private static RuleSet ResolveRulesetIfAny(MSB.Execution.ProjectInstance projectInstance)

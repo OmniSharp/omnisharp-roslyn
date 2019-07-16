@@ -5,7 +5,6 @@
   "DotNetSharedRuntimeVersions": [
     "1.1.2"
   ],
-  "LegacyDotNetVersion": "1.0.0-preview2-1-003177",
   "RequiredMonoVersion": "5.18.0.0",
   "DownloadURL": "https://roslynomnisharp.blob.core.windows.net/ext",
   "MonoRuntimeMacOS": "mono.macOS-5.18.1.0.zip",
@@ -22,7 +21,6 @@
     "OmniSharp.Roslyn.CSharp.Tests",
     "OmniSharp.Http.Tests",
     "OmniSharp.Stdio.Tests",
-    "OmniSharp.DotNet.Tests",
     "OmniSharp.DotNetTest.Tests",
     "OmniSharp.Tests",
     "OmniSharp.Cake.Tests"
@@ -40,12 +38,6 @@
     "SolutionWithSignedProject",
     "ProjectWithMultiTFMLib",
     "ExternAlias"
-  ],
-  "LegacyTestAssets": [
-    "LegacyNUnitTestProject",
-    "LegacyXunitTestProject",
-    "LegacyMSTestProject",
-    "LegacyProjectJsonApp"
   ],
   "CakeTestAssets": [
     "CakeProject"

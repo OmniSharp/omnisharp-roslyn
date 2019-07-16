@@ -73,7 +73,7 @@ namespace OmniSharp
                     _sb.Append(arg);
                     RenderSnippetEndMarker();
 
-                    if (arg != last)
+                    if (!Equals(arg, last))
                     {
                         _sb.Append(", ");
                     }
@@ -107,7 +107,7 @@ namespace OmniSharp
                     _sb.Append(parameter.ToDisplayString(_format));
                     RenderSnippetEndMarker();
 
-                    if (parameter != last)
+                    if (!Equals(parameter, last))
                     {
                         _sb.Append(", ");
                     }
@@ -127,7 +127,7 @@ namespace OmniSharp
             {
                 var arg = typeArguments[i];
                 var param = typeParameters[i];
-                if (arg == param)
+                if (Equals(arg, param))
                 {
                     // this type parameter has not been resolved
                     nonInferredTypeArguments.Add(arg);
