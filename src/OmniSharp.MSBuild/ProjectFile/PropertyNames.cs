@@ -29,6 +29,7 @@
         public const string ProjectGuid = nameof(ProjectGuid);
         public const string ProjectName = nameof(ProjectName);
         public const string _ResolveReferenceDependencies = nameof(_ResolveReferenceDependencies);
+        public const string RootNamespace = nameof(RootNamespace);
         public const string RoslynTargetsPath = nameof(RoslynTargetsPath);
         public const string SignAssembly = nameof(SignAssembly);
         public const string SkipCompilerExecution = nameof(SkipCompilerExecution);

@@ -490,7 +490,7 @@ namespace OmniSharp.MSBuild
                     continue;
                 }
 
-                _workspace.AddDocument(project.Id, sourceFile);
+                _workspace.AddDocument(project, sourceFile);
             }
 
             // Removing any remaining documents from the project.

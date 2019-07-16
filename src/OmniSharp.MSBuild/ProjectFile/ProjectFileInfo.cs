@@ -53,6 +53,8 @@ namespace OmniSharp.MSBuild.ProjectFile
         public ImmutableArray<string> AdditionalFiles => _data.AdditionalFiles;
         public ImmutableDictionary<string, string> ReferenceAliases => _data.ReferenceAliases;
         public bool TreatWarningsAsErrors => _data.TreatWarningsAsErrors;
+        public string DefaultNamespace => _data.DefaultNamespace;
+
         public ProjectIdInfo ProjectIdInfo { get; }
 
         private ProjectFileInfo(

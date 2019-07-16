@@ -182,17 +182,25 @@ namespace OmniSharp
 
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
-            var documentId = DocumentId.CreateNewId(projectId);
-            this.AddDocument(documentId, projectId, filePath, sourceCodeKind);
-            return documentId;
+            var project = this.CurrentSolution.GetProject(projectId);
+            return AddDocument(project, filePath, sourceCodeKind);
         }
 
-        public DocumentId AddDocument(DocumentId documentId, ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        public DocumentId AddDocument(Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
-            var loader = new OmniSharpTextLoader(filePath);
-            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
+            var documentId = DocumentId.CreateNewId(project.Id);
+            return AddDocument(documentId, project, filePath, sourceCodeKind);
+        }
 
-            this.AddDocument(documentInfo);
+        public DocumentId AddDocument(DocumentId documentId, Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var projectFolder = Path.GetDirectoryName(project.FilePath);
+            var folder = Path.GetDirectoryName(filePath).Substring(projectFolder.Length).TrimStart(new[] { '\\', '/' });
+
+            var loader = new OmniSharpTextLoader(filePath);
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: string.IsNullOrWhiteSpace(folder) ? null : new string[] { folder }, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
+
+            AddDocument(documentInfo);
 
             return documentId;
         }
