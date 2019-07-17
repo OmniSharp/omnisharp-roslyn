@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
+using OmniSharp.FileSystem;
 using OmniSharp.FileWatching;
 using OmniSharp.Roslyn;
 using OmniSharp.Roslyn.Utilities;
@@ -212,15 +213,19 @@ namespace OmniSharp
 
         internal DocumentId AddDocument(DocumentId documentId, Project project, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
-            var projectFolder = Path.GetDirectoryName(project.FilePath);
+            // find the relative path from project file to our document 
+            var relativeDocumentPath = FileSystemHelper.GetRelativePath(Path.GetDirectoryName(filePath), Path.GetDirectoryName(project.FilePath));
+
+            // only set document's folders if
+            // 1. relative path was computed
+            // 2. path is not pointing any level up
             IEnumerable<string> folders = null;
-            if (projectFolder != null && filePath.StartsWith(projectFolder))
+            if (relativeDocumentPath != null && !relativeDocumentPath.StartsWith(".."))
             {
-                folders = Path.GetDirectoryName(filePath).Substring(projectFolder.Length).TrimStart(new[] { '\\', '/' }).Split(new[] { '\\', '/' });
+                folders = relativeDocumentPath?.Split(new[] { Path.DirectorySeparatorChar });
             }
 
             var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: folders, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
-
             AddDocument(documentInfo);
 
             return documentId;
