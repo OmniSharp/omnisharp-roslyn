@@ -186,6 +186,13 @@ namespace OmniSharp
             return AddDocument(project, filePath, sourceCodeKind);
         }
 
+        public DocumentId AddDocument(ProjectId projectId, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
+            var project = this.CurrentSolution.GetProject(projectId);
+            return AddDocument(documentId, project, filePath, loader, sourceCodeKind);
+        }
+
         public DocumentId AddDocument(Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
             var documentId = DocumentId.CreateNewId(project.Id);
@@ -194,15 +201,25 @@ namespace OmniSharp
 
         public DocumentId AddDocument(DocumentId documentId, Project project, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
+            return AddDocument(documentId, project, filePath, new OmniSharpTextLoader(filePath), sourceCodeKind);
+        }
+
+        internal DocumentId AddDocument(DocumentId documentId, ProjectId projectId, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
+            var project = this.CurrentSolution.GetProject(projectId);
+            return AddDocument(documentId, project, filePath, loader, sourceCodeKind);
+        }
+
+        internal DocumentId AddDocument(DocumentId documentId, Project project, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
+        {
             var projectFolder = Path.GetDirectoryName(project.FilePath);
-            string folder = null;
+            IEnumerable<string> folders = null;
             if (projectFolder != null && filePath.StartsWith(projectFolder))
             {
-                folder = Path.GetDirectoryName(filePath).Substring(projectFolder.Length).TrimStart(new[] { '\\', '/' });
+                folders = Path.GetDirectoryName(filePath).Substring(projectFolder.Length).TrimStart(new[] { '\\', '/' }).Split(new[] { '\\', '/' });
             }
 
-            var loader = new OmniSharpTextLoader(filePath);
-            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: string.IsNullOrWhiteSpace(folder) ? null : new string[] { folder }, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
+            var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: folders, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
 
             AddDocument(documentInfo);
 
