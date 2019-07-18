@@ -133,6 +133,7 @@ namespace TestUtility
 
         public IEnumerable<ProjectId> AddFilesToWorkspace(string folderPath, params TestFile[] testFiles)
         {
+            folderPath = folderPath ?? Directory.GetCurrentDirectory();
             var projects = TestHelpers.AddProjectToWorkspace(
                 Workspace,
                 Path.Combine(folderPath, "project.csproj"),

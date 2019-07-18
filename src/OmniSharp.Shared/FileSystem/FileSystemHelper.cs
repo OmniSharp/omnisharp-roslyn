@@ -51,7 +51,7 @@ namespace OmniSharp.FileSystem
             if (!Path.IsPathRooted(basePath) || !Path.IsPathRooted(fullPath)) return null;
 
             // if they are the same, abort
-            if (fullPath == basePath) return null;
+            if (fullPath.Equals(basePath, StringComparison.Ordinal)) return null;
 
             if (!Path.HasExtension(basePath) && !basePath.EndsWith(s_directorySeparatorChar))
             {

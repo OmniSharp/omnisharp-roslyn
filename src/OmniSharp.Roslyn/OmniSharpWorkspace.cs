@@ -213,16 +213,28 @@ namespace OmniSharp
 
         internal DocumentId AddDocument(DocumentId documentId, Project project, string filePath, TextLoader loader, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
         {
-            // find the relative path from project file to our document 
-            var relativeDocumentPath = FileSystemHelper.GetRelativePath(Path.GetDirectoryName(filePath), Path.GetDirectoryName(project.FilePath));
+            var basePath = Path.GetDirectoryName(project.FilePath);
+            var fullPath = Path.GetDirectoryName(filePath);
 
-            // only set document's folders if
-            // 1. relative path was computed
-            // 2. path is not pointing any level up
             IEnumerable<string> folders = null;
-            if (relativeDocumentPath != null && !relativeDocumentPath.StartsWith(".."))
+
+            // folder computation is best effort. in case of exceptions, we back out because it's not essential for core features
+            try
             {
-                folders = relativeDocumentPath?.Split(new[] { Path.DirectorySeparatorChar });
+                // find the relative path from project file to our document 
+                var relativeDocumentPath = FileSystemHelper.GetRelativePath(fullPath, basePath);
+
+                // only set document's folders if
+                // 1. relative path was computed
+                // 2. path is not pointing any level up
+                if (relativeDocumentPath != null && !relativeDocumentPath.StartsWith(".."))
+                {
+                    folders = relativeDocumentPath?.Split(new[] { Path.DirectorySeparatorChar });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"An error occurred when computing a relative path from {basePath} to {fullPath}. Document at {filePath} will be processed without folder structure.");
             }
 
             var documentInfo = DocumentInfo.Create(documentId, Path.GetFileName(filePath), folders: folders, filePath: filePath, loader: loader, sourceCodeKind: sourceCodeKind);
