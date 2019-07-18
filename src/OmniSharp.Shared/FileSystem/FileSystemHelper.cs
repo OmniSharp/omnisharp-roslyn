@@ -44,7 +44,16 @@ namespace OmniSharp.FileSystem
 
         public static string GetRelativePath(string fullPath, string basePath)
         {
-            if (!basePath.EndsWith(s_directorySeparatorChar))
+            // if any of them is not set, abort
+            if (string.IsNullOrWhiteSpace(basePath) || string.IsNullOrWhiteSpace(fullPath)) return null;
+
+            // paths must be rooted
+            if (!Path.IsPathRooted(basePath) || !Path.IsPathRooted(fullPath)) return null;
+
+            // if they are the same, abort
+            if (fullPath == basePath) return null;
+
+            if (!Path.HasExtension(basePath) && !basePath.EndsWith(s_directorySeparatorChar))
             {
                 basePath += Path.DirectorySeparatorChar;
             }
