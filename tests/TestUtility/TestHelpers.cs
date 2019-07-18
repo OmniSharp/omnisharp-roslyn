@@ -59,20 +59,13 @@ namespace TestUtility
                     language: LanguageNames.CSharp,
                     filePath: filePath,
                     metadataReferences: references,
-                    analyzerReferences: analyzerRefs);
+                    analyzerReferences: analyzerRefs).WithDefaultNamespace("OmniSharpTest");
 
                 workspace.AddProject(projectInfo);
 
                 foreach (var testFile in testFiles)
                 {
-                    var documentInfo = DocumentInfo.Create(
-                        id: DocumentId.CreateNewId(projectInfo.Id),
-                        name: testFile.FileName,
-                        sourceCodeKind: SourceCodeKind.Regular,
-                        loader: TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)),
-                        filePath: testFile.FileName);
-
-                    workspace.AddDocument(documentInfo);
+                    workspace.AddDocument(projectInfo.Id, testFile.FileName, TextLoader.From(TextAndVersion.Create(testFile.Content.Text, versionStamp)), SourceCodeKind.Regular);
                 }
 
                 projectsIds.Add(projectInfo.Id);

@@ -65,7 +65,7 @@ namespace TestUtility
 
             if (testFiles.Length > 0)
             {
-                host.AddFilesToWorkspace(testFiles);
+                host.AddFilesToWorkspace(path, testFiles);
             }
 
             return host;

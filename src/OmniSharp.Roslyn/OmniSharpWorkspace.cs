@@ -94,16 +94,6 @@ namespace OmniSharp
             OnMetadataReferenceRemoved(projectId, metadataReference);
         }
 
-        public void AddDocument(DocumentInfo documentInfo)
-        {
-            // if the file has already been added as a misc file,
-            // because of a possible race condition between the updates of the project systems,
-            // remove the misc file and add the document as required
-            TryRemoveMiscellaneousDocument(documentInfo.FilePath);
-
-            OnDocumentAdded(documentInfo);
-        }
-
         public DocumentId TryAddMiscellaneousDocument(string filePath, string language)
         {
             if (GetDocument(filePath) != null)
@@ -179,6 +169,16 @@ namespace OmniSharp
 
             AddProject(projectInfo);
             return projectInfo;
+        }
+
+        public void AddDocument(DocumentInfo documentInfo)
+        {
+            // if the file has already been added as a misc file,
+            // because of a possible race condition between the updates of the project systems,
+            // remove the misc file and add the document as required
+            TryRemoveMiscellaneousDocument(documentInfo.FilePath);
+
+            OnDocumentAdded(documentInfo);
         }
 
         public DocumentId AddDocument(ProjectId projectId, string filePath, SourceCodeKind sourceCodeKind = SourceCodeKind.Regular)
