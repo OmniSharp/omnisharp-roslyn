@@ -10,7 +10,7 @@ using OmniSharp.Models.AutoComplete;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class CompletionHandler : ICompletionHandler
+    class OmniSharpCompletionHandler : ICompletionHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -18,7 +18,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>>>())
                 if (handler != null)
-                    yield return new CompletionHandler(handler, selector);
+                    yield return new OmniSharpCompletionHandler(handler, selector);
         }
 
         private CompletionCapability _capability;
@@ -65,7 +65,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             return CompletionItemKind.Property;
         }
 
-        public CompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
+        public OmniSharpCompletionHandler(Mef.IRequestHandler<AutoCompleteRequest, IEnumerable<AutoCompleteResponse>> autoCompleteHandler, DocumentSelector documentSelector)
         {
             _autoCompleteHandler = autoCompleteHandler;
             _documentSelector = documentSelector;

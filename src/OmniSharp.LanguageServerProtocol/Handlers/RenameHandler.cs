@@ -11,13 +11,13 @@ using OmniSharp.Models.Rename;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal class RenameHandler : IRenameHandler
+    internal class OmniSharpRenameHandler : IRenameHandler
     {
         private readonly Mef.IRequestHandler<RenameRequest, RenameResponse> _renameHandler;
         private readonly DocumentSelector _documentSelector;
         private RenameCapability _capability;
 
-        public RenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
+        public OmniSharpRenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
         {
             _renameHandler = renameHandler;
             _documentSelector = documentSelector;
@@ -28,7 +28,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<RenameRequest, RenameResponse>>())
                 if (handler != null)
-                    yield return new RenameHandler(handler, selector);
+                    yield return new OmniSharpRenameHandler(handler, selector);
         }
 
         public async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
@@ -51,7 +51,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 return new WorkspaceEdit();
             }
 
-            var changes = omnisharpResponse.Changes.ToDictionary(change => 
+            var changes = omnisharpResponse.Changes.ToDictionary(change =>
                 Helpers.ToUri(change.FileName),
                 x => x.Changes.Select(edit => new TextEdit
                 {

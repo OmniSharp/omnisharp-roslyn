@@ -10,21 +10,21 @@ using OmniSharp.Models.TypeLookup;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class HoverHandler : IHoverHandler
+    class OmniSharpHoverHandler : IHoverHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse>>())
                 if (handler != null)
-                    yield return new HoverHandler(handler, selector);
+                    yield return new OmniSharpHoverHandler(handler, selector);
         }
 
         private HoverCapability _capability;
         private readonly Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
         private readonly DocumentSelector _documentSelector;
 
-        public HoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
+        public OmniSharpHoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
         {
             _definitionHandler = definitionHandler;
             _documentSelector = documentSelector;

@@ -18,7 +18,7 @@ using OmniSharp.Models.UpdateBuffer;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class TextDocumentSyncHandler : ITextDocumentSyncHandler
+    class OmniSharpTextDocumentSyncHandler : ITextDocumentSyncHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(
             RequestHandlers handlers,
@@ -33,7 +33,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 // TODO: Fix once cake has working support for incremental
                 var documentSyncKind = TextDocumentSyncKind.Incremental;
                 if (selector.ToString().IndexOf(".cake") > -1) documentSyncKind = TextDocumentSyncKind.Full;
-                yield return new TextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace);
+                yield return new OmniSharpTextDocumentSyncHandler(openHandler, closeHandler, bufferHandler, selector, documentSyncKind, workspace);
             }
         }
 
@@ -45,7 +45,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<UpdateBufferRequest, object> _bufferHandler;
         private readonly OmniSharpWorkspace _workspace;
 
-        public TextDocumentSyncHandler(
+        public OmniSharpTextDocumentSyncHandler(
             Mef.IRequestHandler<FileOpenRequest, FileOpenResponse> openHandler,
             Mef.IRequestHandler<FileCloseRequest, FileCloseResponse> closeHandler,
             Mef.IRequestHandler<UpdateBufferRequest, object> bufferHandler,

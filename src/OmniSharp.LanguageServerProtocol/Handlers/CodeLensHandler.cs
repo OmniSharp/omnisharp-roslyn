@@ -15,7 +15,7 @@ using OmniSharp.Models.MembersTree;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class CodeLensHandler : ICodeLensHandler, ICodeLensResolveHandler
+    internal sealed class OmniSharpCodeLensHandler : ICodeLensHandler, ICodeLensResolveHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -24,7 +24,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     Mef.IRequestHandler<MembersTreeRequest, FileMemberTree>,
                     Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse>>())
             {
-                yield return new CodeLensHandler(membersAsTreeHandler, findUsagesHandler, selector);
+                yield return new OmniSharpCodeLensHandler(membersAsTreeHandler, findUsagesHandler, selector);
             }
         }
 
@@ -33,7 +33,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
         private readonly DocumentSelector _documentSelector;
 
-        public CodeLensHandler(
+        public OmniSharpCodeLensHandler(
             Mef.IRequestHandler<MembersTreeRequest, FileMemberTree> membersAsTreeHandler,
             Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler,
             DocumentSelector documentSelector)

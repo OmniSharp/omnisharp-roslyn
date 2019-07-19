@@ -12,14 +12,14 @@ using OmniSharp.Models.V2.CodeStructure;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class DocumentSymbolHandler : IDocumentSymbolHandler
+    internal sealed class OmniSharpDocumentSymbolHandler : IDocumentSymbolHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
             foreach (var (selector, handler) in handlers
                 .OfType<Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse>>())
                 if (handler != null)
-                    yield return new DocumentSymbolHandler(handler, selector);
+                    yield return new OmniSharpDocumentSymbolHandler(handler, selector);
         }
 
         private DocumentSymbolCapability _capability;
@@ -46,7 +46,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             { OmniSharp.Models.V2.SymbolKinds.Unknown, SymbolKind.Class },
         };
 
-        public DocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
+        public OmniSharpDocumentSymbolHandler(Mef.IRequestHandler<CodeStructureRequest, CodeStructureResponse> codeStructureHandler, DocumentSelector documentSelector)
         {
             _codeStructureHandler = codeStructureHandler;
             _documentSelector = documentSelector;
