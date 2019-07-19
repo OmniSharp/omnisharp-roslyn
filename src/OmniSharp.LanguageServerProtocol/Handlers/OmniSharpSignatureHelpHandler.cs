@@ -11,16 +11,18 @@ using OmniSharp.Models.SignatureHelp;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal class OmniSharpSignatureHelpHandler : ISignatureHelpHandler
+    internal class OmniSharpSignatureHelpHandler : SignatureHelpHandler
     {
         private readonly Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> _signatureHandler;
-        private readonly DocumentSelector _documentSelector;
-        private SignatureHelpCapability _capability;
 
         public OmniSharpSignatureHelpHandler(Mef.IRequestHandler<SignatureHelpRequest, SignatureHelpResponse> signatureHandler, DocumentSelector documentSelector)
+            : base(new SignatureHelpRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+                TriggerCharacters = new[] { ".", "?", "[" }
+            })
         {
             _signatureHandler = signatureHandler;
-            _documentSelector = documentSelector;
         }
 
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -31,7 +33,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpSignatureHelpHandler(handler, selector);
         }
 
-        public async Task<SignatureHelp> Handle(SignatureHelpParams request, CancellationToken token)
+        public async override Task<SignatureHelp> Handle(SignatureHelpParams request, CancellationToken token)
         {
             var omnisharpRequest = new SignatureHelpRequest
             {
@@ -66,19 +68,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 ActiveSignature = omnisharpResponse.ActiveSignature,
                 Signatures = signatures
             };
-        }
-
-        public SignatureHelpRegistrationOptions GetRegistrationOptions()
-        {
-            return new SignatureHelpRegistrationOptions
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public void SetCapability(SignatureHelpCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

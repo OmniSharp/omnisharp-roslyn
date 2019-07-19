@@ -11,16 +11,18 @@ using OmniSharp.Models.Rename;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal class OmniSharpRenameHandler : IRenameHandler
+    internal class OmniSharpRenameHandler : RenameHandler
     {
         private readonly Mef.IRequestHandler<RenameRequest, RenameResponse> _renameHandler;
-        private readonly DocumentSelector _documentSelector;
-        private RenameCapability _capability;
 
         public OmniSharpRenameHandler(Mef.IRequestHandler<RenameRequest, RenameResponse> renameHandler, DocumentSelector documentSelector)
+            : base(new RenameRegistrationOptions()
+            {
+                DocumentSelector = documentSelector,
+                PrepareProvider = false
+            })
         {
             _renameHandler = renameHandler;
-            _documentSelector = documentSelector;
         }
 
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
@@ -31,7 +33,7 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpRenameHandler(handler, selector);
         }
 
-        public async Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
+        public async override Task<WorkspaceEdit> Handle(RenameParams request, CancellationToken token)
         {
             var omnisharpRequest = new RenameRequest
             {
@@ -63,19 +65,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
             {
                 Changes = changes
             };
-        }
-
-        public RenameRegistrationOptions GetRegistrationOptions()
-        {
-            return new RenameRegistrationOptions
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public void SetCapability(RenameCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

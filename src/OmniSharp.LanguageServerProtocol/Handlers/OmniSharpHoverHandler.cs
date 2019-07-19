@@ -10,7 +10,7 @@ using OmniSharp.Models.TypeLookup;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    class OmniSharpHoverHandler : IHoverHandler
+    class OmniSharpHoverHandler : HoverHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -20,25 +20,18 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpHoverHandler(handler, selector);
         }
 
-        private HoverCapability _capability;
         private readonly Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> _definitionHandler;
-        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpHoverHandler(Mef.IRequestHandler<TypeLookupRequest, TypeLookupResponse> definitionHandler, DocumentSelector documentSelector)
+            : base(new TextDocumentRegistrationOptions()
+            {
+                DocumentSelector = documentSelector
+            })
         {
             _definitionHandler = definitionHandler;
-            _documentSelector = documentSelector;
         }
 
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public async Task<Hover> Handle(HoverParams request, CancellationToken token)
+        public async override Task<Hover> Handle(HoverParams request, CancellationToken token)
         {
             var omnisharpRequest = new TypeLookupRequest()
             {
@@ -56,11 +49,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 // Range =
                 Contents = new MarkedStringsOrMarkupContent(new MarkedStringContainer(omnisharpResponse.Type, omnisharpResponse.Documentation))
             };
-        }
-
-        public void SetCapability(HoverCapability capability)
-        {
-            _capability = capability;
         }
     }
 }

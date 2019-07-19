@@ -12,7 +12,7 @@ using OmniSharp.Models.FindUsages;
 
 namespace OmniSharp.LanguageServerProtocol.Handlers
 {
-    internal sealed class OmniSharpReferencesHandler : IReferencesHandler
+    internal sealed class OmniSharpReferencesHandler : ReferencesHandler
     {
         public static IEnumerable<IJsonRpcHandler> Enumerate(RequestHandlers handlers)
         {
@@ -22,17 +22,18 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                     yield return new OmniSharpReferencesHandler(handler, selector);
         }
 
-        private ReferencesCapability _capability;
         private readonly Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> _findUsagesHandler;
-        private readonly DocumentSelector _documentSelector;
 
         public OmniSharpReferencesHandler(Mef.IRequestHandler<FindUsagesRequest, QuickFixResponse> findUsagesHandler, DocumentSelector documentSelector)
+            : base(new TextDocumentRegistrationOptions()
+            {
+                DocumentSelector = documentSelector
+            })
         {
             _findUsagesHandler = findUsagesHandler;
-            _documentSelector = documentSelector;
         }
 
-        public async Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
+        public async override Task<LocationContainer> Handle(ReferenceParams request, CancellationToken token)
         {
             var omnisharpRequest = new FindUsagesRequest
             {
@@ -50,19 +51,6 @@ namespace OmniSharp.LanguageServerProtocol.Handlers
                 Uri = Helpers.ToUri(x.FileName),
                 Range = x.ToRange()
             }).ToArray();
-        }
-
-        public TextDocumentRegistrationOptions GetRegistrationOptions()
-        {
-            return new TextDocumentRegistrationOptions()
-            {
-                DocumentSelector = _documentSelector
-            };
-        }
-
-        public void SetCapability(ReferencesCapability capability)
-        {
-            _capability = capability;
         }
     }
 }
