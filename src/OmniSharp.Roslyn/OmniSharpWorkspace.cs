@@ -487,10 +487,8 @@ namespace OmniSharp
                     onDefaultNamespaceChanged.Invoke(this, new object[] { projectChanges.ProjectId, projectChanges.NewProject.DefaultNamespace });
                 }
             }
-            else
-            {
-                base.ApplyProjectChanges(projectChanges);
-            }
+
+            base.ApplyProjectChanges(projectChanges);
         }
     }
 }
