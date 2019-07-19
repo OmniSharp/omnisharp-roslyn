@@ -45,6 +45,35 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         }
 
         [Theory]
+        [InlineData("LiveChanged", "Bar.cs")]
+        [InlineData("LiveChanged.Foo", "Foo", "Bar.cs")]
+        [InlineData("LiveChanged.Foo.Bar", "Foo", "Bar", "Baz.cs")]
+        public async Task RespectFolderName_InOfferedRefactorings_AfterLiveChange(string expectedNamespace, params string[] relativePath)
+        {
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, Path.Combine(relativePath)), @"namespace Xx$$x { }");
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, null, path: TestAssets.Instance.TestFilesFolder))
+            {
+                var point = testFile.Content.GetPointFromPosition();
+                var getRequestHandler = host.GetRequestHandler<GetCodeActionsService>(OmniSharpEndpoints.V2.GetCodeActions);
+
+                var changedSolution = host.Workspace.CurrentSolution.WithProjectDefaultNamespace(host.Workspace.CurrentSolution.Projects.ElementAt(0).Id, "LiveChanged");
+                host.Workspace.TryApplyChanges(changedSolution);
+
+                var getRequest = new GetCodeActionsRequest
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = testFile.FileName
+                };
+
+                var getResponse = await getRequestHandler.Handle(getRequest);
+                Assert.NotNull(getResponse.CodeActions);
+                Assert.Contains(getResponse.CodeActions, f => f.Name == $"Change namespace to '{expectedNamespace}'");
+            }
+        }
+
+        [Theory]
         [InlineData("OmniSharpTest", "Bar.cs")]
         [InlineData("OmniSharpTest.Foo", "Foo", "Bar.cs")]
         [InlineData("OmniSharpTest.Foo.Bar", "Foo", "Bar", "Baz.cs")]
@@ -57,6 +86,39 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             {
                 var point = testFile.Content.GetPointFromPosition();
                 var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+                var runRequest = new RunCodeActionRequest
+                {
+                    Line = point.Line,
+                    Column = point.Offset,
+                    FileName = testFile.FileName,
+                    Identifier = $"Change namespace to '{expectedNamespace}'",
+                    WantsTextChanges = false,
+                    WantsAllCodeActionOperations = true,
+                    Buffer = testFile.Content.Code
+                };
+                var runResponse = await runRequestHandler.Handle(runRequest);
+
+                AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
+            }
+        }
+
+        [Theory]
+        [InlineData("LiveChanged", "Bar.cs")]
+        [InlineData("LiveChanged.Foo", "Foo", "Bar.cs")]
+        [InlineData("LiveChanged.Foo.Bar", "Foo", "Bar", "Baz.cs")]
+        public async Task RespectFolderName_InExecutedCodeActions_AfterLiveChange(string expectedNamespace, params string[] relativePath)
+        {
+            var expected = "namespace " + expectedNamespace + " { }";
+            var testFile = new TestFile(Path.Combine(TestAssets.Instance.TestFilesFolder, Path.Combine(relativePath)), @"namespace Xx$$x { }");
+
+            using (var host = CreateOmniSharpHost(new[] { testFile }, null, TestAssets.Instance.TestFilesFolder))
+            {
+                var point = testFile.Content.GetPointFromPosition();
+                var runRequestHandler = host.GetRequestHandler<RunCodeActionService>(OmniSharpEndpoints.V2.RunCodeAction);
+
+                var changedSolution = host.Workspace.CurrentSolution.WithProjectDefaultNamespace(host.Workspace.CurrentSolution.Projects.ElementAt(0).Id, "LiveChanged");
+                host.Workspace.TryApplyChanges(changedSolution);
+
                 var runRequest = new RunCodeActionRequest
                 {
                     Line = point.Line,
