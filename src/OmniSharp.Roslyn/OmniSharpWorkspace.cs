@@ -473,5 +473,23 @@ namespace OmniSharp
         {
             OnAdditionalDocumentRemoved(documentId);
         }
+
+        protected override void ApplyProjectChanges(ProjectChanges projectChanges)
+        {
+            // since Roslyn currently doesn't handle DefaultNamespace changes via ApplyProjectChanges
+            // and OnDefaultNamespaceChanged is internal, we use reflection for now
+            if (projectChanges.NewProject.DefaultNamespace != projectChanges.OldProject.DefaultNamespace)
+            {
+                var onDefaultNamespaceChanged = this.GetType().GetMethod("OnDefaultNamespaceChanged", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (onDefaultNamespaceChanged != null)
+                {
+                    onDefaultNamespaceChanged.Invoke(this, new object[] { projectChanges.ProjectId, projectChanges.NewProject.DefaultNamespace });
+                }
+            }
+            else
+            {
+                base.ApplyProjectChanges(projectChanges);
+            }
+        }
     }
 }

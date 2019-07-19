@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using OmniSharp.Models;
 using OmniSharp.Models.V2.CodeActions;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
@@ -69,6 +71,23 @@ namespace OmniSharp.Roslyn.CSharp.Tests
 
                 AssertIgnoringIndent(expected, ((ModifiedFileResponse)runResponse.Changes.First()).Buffer);
             }
+        }
+
+        [Fact]
+        public void CheckIfOnDefaultNamespaceChangedIsAvailableInRoslyn()
+        {
+            // This tracks the availability of OnDefaultNamespaceChanged on the Workspace
+            // at the moment it's not and we need to manually sync default namespace after it changes
+            // when OmniSharp is running by having reflection in
+            // protected override void ApplyProjectChanges(ProjectChanges projectChanges)
+            // once it's fixed in Roslyn we can get rid of this test
+            var onDefaultNamespaceChanged = typeof(OmniSharpWorkspace).GetMethod("OnDefaultNamespaceChanged", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(onDefaultNamespaceChanged);
+
+            var parameters = onDefaultNamespaceChanged.GetParameters();
+            Assert.Equal(2, parameters.Count());
+            Assert.Equal(typeof(ProjectId), parameters[0].ParameterType);
+            Assert.Equal(typeof(string), parameters[1].ParameterType);
         }
 
         private static void AssertIgnoringIndent(string expected, string actual)
