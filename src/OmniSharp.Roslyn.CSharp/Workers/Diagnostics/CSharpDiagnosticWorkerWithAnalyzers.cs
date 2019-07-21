@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -235,12 +235,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 }
                 else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
                 {
-                    var semanticDiagnosticsWithAnalyzers = await compiled
-                        .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
+                    var compilationWithAnalyzers = compiled.WithAnalyzers(allAnalyzers, new CompilationWithAnalyzersOptions(workspaceAnalyzerOptions, null, false, false, false));
+
+                    var semanticDiagnosticsWithAnalyzers = await compilationWithAnalyzers
                         .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token);
 
-                    var syntaxDiagnosticsWithAnalyzers = await compiled
-                        .WithAnalyzers(allAnalyzers, workspaceAnalyzerOptions)
+                    var syntaxDiagnosticsWithAnalyzers = await compilationWithAnalyzers
                         .GetAnalyzerSyntaxDiagnosticsAsync(documentSemanticModel.SyntaxTree, perDocumentTimeout.Token);
 
                     diagnostics = semanticDiagnosticsWithAnalyzers
