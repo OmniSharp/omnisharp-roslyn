@@ -21,7 +21,7 @@ namespace OmniSharp.MSBuild.ProjectFile
 
             if (projectFileInfo.AllowUnsafeCode)
             {
-                compilationOptions = compilationOptions.WithAllowUnsafe(true).WithGeneralDiagnosticOption(ReportDiagnostic.Error);
+                compilationOptions = compilationOptions.WithAllowUnsafe(true);
             }
 
             if (projectFileInfo.TreatWarningsAsErrors)
