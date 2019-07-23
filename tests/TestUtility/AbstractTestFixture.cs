@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Composition.Hosting.Core;
 using Microsoft.Extensions.Logging;
 using TestUtility.Logging;
@@ -17,6 +17,7 @@ namespace TestUtility
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
+            TestHelpers.SetDefaultCulture();
             TestOutput = output;
             LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
@@ -24,6 +25,7 @@ namespace TestUtility
 
         protected AbstractTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
         {
+            TestHelpers.SetDefaultCulture();
             TestOutput = output;
             LoggerFactory = new LoggerFactory()
                 .AddXunit(output);

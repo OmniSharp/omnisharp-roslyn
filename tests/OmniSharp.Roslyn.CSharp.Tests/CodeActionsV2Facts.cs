@@ -152,8 +152,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 "Generate type 'Console' -> Generate nested class 'Console'",
                 "Extract Method"
             };
-
-            Assert.Equal(expected, refactorings);
+            Assert.Equal(expected.OrderBy(x => x), refactorings.OrderBy(x => x));
         }
 
         [Theory]

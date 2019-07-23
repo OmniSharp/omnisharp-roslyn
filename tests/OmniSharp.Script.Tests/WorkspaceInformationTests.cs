@@ -77,35 +77,44 @@ namespace OmniSharp.Script.Tests
         public async Task CsiScriptWithFileCreatedAfterStartingServer()
         {
             using (var testProject = TestAssets.Instance.GetTestScript("EmptyScript"))
-            using (var host = CreateOmniSharpHost(testProject.Directory))
             {
-                var workspaceInfo = await GetWorkspaceInfoAsync(host);
-                Assert.Empty(workspaceInfo.Projects);
+                using (var host = CreateOmniSharpHost(testProject.Directory))
+                {
+                    var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                    // ScriptProjectSystem is not initialized here.
+                    // That is workspaceInfo is null.
+                    Assert.Null(workspaceInfo);
+                }
 
                 var filePath = testProject.AddDisposableFile("main.csx");
-                var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
-                await service.Handle(new[]
+
+                // Recreate the host and initialize ScriptProjectSystem.
+                using (var host = CreateOmniSharpHost(testProject.Directory))
                 {
-                    new FilesChangedRequest
+                    var service = host.GetRequestHandler<OnFilesChangedService>(OmniSharpEndpoints.FilesChanged);
+                    await service.Handle(new[]
                     {
-                        FileName = filePath,
-                        ChangeType = FileWatching.FileChangeType.Create
-                    }
-                });
+                        new FilesChangedRequest
+                        {
+                            FileName = filePath,
+                            ChangeType = FileWatching.FileChangeType.Create
+                        }
+                    });
 
-                // back off for 2 seconds to let the watcher and workspace process new projects
-                await Task.Delay(2000);
+                    // back off for 2 seconds to let the watcher and workspace process new projects
+                    await Task.Delay(2000);
 
-                workspaceInfo = await GetWorkspaceInfoAsync(host);
-                var project = Assert.Single(workspaceInfo.Projects);
+                    var workspaceInfo = await GetWorkspaceInfoAsync(host);
+                    var project = Assert.Single(workspaceInfo.Projects);
 
-                Assert.Equal("main.csx", Path.GetFileName(project.Path));
+                    Assert.Equal("main.csx", Path.GetFileName(project.Path));
 
-                // should have reference to mscorlib
-                VerifyCorLib(project);
+                    // should have reference to mscorlib
+                    VerifyCorLib(project);
 
-                // default globals object
-                Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
+                    // default globals object
+                    Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
+                }
             }
         }
 

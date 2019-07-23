@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ namespace TestUtility
 
         protected AbstractCodeActionsTestFixture(ITestOutputHelper output, string fileTypeExtension = ".cs")
         {
+            TestHelpers.SetDefaultCulture();
             TestOutput = output;
 
             _fileTypeExtension = fileTypeExtension;
