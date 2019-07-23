@@ -267,7 +267,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void OnAnalyzerException(Exception ex, DiagnosticAnalyzer analyzer, Diagnostic diagnostic)
         {
-            _logger.LogError($"Exception in diagnostic analyzer." +
+            _logger.LogDebug($"Exception in diagnostic analyzer." +
                 $"\n            analyzer: {analyzer}" +
                 $"\n            diagnostic: {diagnostic}" +
                 $"\n            exception: {ex.Message}");
