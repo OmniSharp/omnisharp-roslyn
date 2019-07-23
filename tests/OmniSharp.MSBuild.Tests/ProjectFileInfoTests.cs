@@ -155,5 +155,21 @@ namespace OmniSharp.MSBuild.Tests
                 Assert.Equal("abc", projectFileInfo.ReferenceAliases[libpath]);
             }
         }
+
+        [Fact]
+        public async Task AllowUnsafe()
+        {
+            using (var host = CreateOmniSharpHost())
+            using (var testProject = await _testAssets.GetTestProjectAsync("AllowUnsafe"))
+            {
+                var projectFilePath = Path.Combine(testProject.Directory, "AllowUnsafe.csproj");
+                var projectFileInfo = CreateProjectFileInfo(host, testProject, projectFilePath);
+                Assert.True(projectFileInfo.AllowUnsafeCode);
+
+                var compilationOptions = projectFileInfo.CreateCompilationOptions();
+                Assert.True(compilationOptions.AllowUnsafe);
+                Assert.Equal(ReportDiagnostic.Default, compilationOptions.GeneralDiagnosticOption);
+            }
+        }
     }
 }
