@@ -235,7 +235,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                 }
                 else if (allAnalyzers.Any()) // Analyzers cannot be called with empty analyzer list.
                 {
-                    var compilationWithAnalyzers = compiled.WithAnalyzers(allAnalyzers, new CompilationWithAnalyzersOptions(workspaceAnalyzerOptions, null, false, false, false));
+                    var compilationWithAnalyzers = compiled.WithAnalyzers(allAnalyzers, new CompilationWithAnalyzersOptions(workspaceAnalyzerOptions,
+                        onAnalyzerException: OnAnalyzerException,
+                        concurrentAnalysis: false,
+                        logAnalyzerExecutionTime: false,
+                        reportSuppressedDiagnostics: false));
 
                     var semanticDiagnosticsWithAnalyzers = await compilationWithAnalyzers
                         .GetAnalyzerSemanticDiagnosticsAsync(documentSemanticModel, filterSpan: null, perDocumentTimeout.Token);
@@ -259,6 +263,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             {
                 _logger.LogError($"Analysis of document {document.Name} failed or cancelled by timeout: {ex.Message}, analysers: {string.Join(", ", allAnalyzers)}");
             }
+        }
+
+        private void OnAnalyzerException(Exception ex, DiagnosticAnalyzer analyzer, Diagnostic diagnostic)
+        {
+            _logger.LogError($"Exception in diagnostic analyzer." +
+                $"\n            analyzer: {analyzer}" +
+                $"\n            diagnostic: {diagnostic}" +
+                $"\n            exception: {ex.Message}");
         }
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
