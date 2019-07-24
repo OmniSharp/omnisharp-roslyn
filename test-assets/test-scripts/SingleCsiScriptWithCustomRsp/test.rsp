@@ -1,2 +1,2 @@
-/u:System.Web
-/r:System.Web
+/u:System.Xml
+/r:System.Xml
