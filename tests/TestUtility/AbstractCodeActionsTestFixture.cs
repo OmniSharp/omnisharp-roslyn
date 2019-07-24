@@ -24,7 +24,6 @@ namespace TestUtility
 
         protected AbstractCodeActionsTestFixture(ITestOutputHelper output, string fileTypeExtension = ".cs")
         {
-            TestHelpers.SetDefaultCulture();
             TestOutput = output;
 
             _fileTypeExtension = fileTypeExtension;

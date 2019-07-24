@@ -17,7 +17,6 @@ namespace TestUtility
 
         protected AbstractTestFixture(ITestOutputHelper output)
         {
-            TestHelpers.SetDefaultCulture();
             TestOutput = output;
             LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
@@ -25,7 +24,6 @@ namespace TestUtility
 
         protected AbstractTestFixture(ITestOutputHelper output, SharedOmniSharpHostFixture sharedOmniSharpHostFixture)
         {
-            TestHelpers.SetDefaultCulture();
             TestOutput = output;
             LoggerFactory = new LoggerFactory()
                 .AddXunit(output);
