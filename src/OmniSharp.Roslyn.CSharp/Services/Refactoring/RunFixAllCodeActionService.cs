@@ -27,19 +27,19 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         public async Task<RunFixAllResponse> FixAll()
         {
             var solutionBeforeChanges = Workspace.CurrentSolution;
-            var projects = Workspace.CurrentSolution.Projects;
+            var projectIds = solutionBeforeChanges.Projects.Select(x => x.Id);
 
-            foreach (var project in projects)
+            foreach (var projectId in projectIds)
             {
-                foreach (var codeFixWithDiagnostics in await GetAvailableCodeFixes(project.Id))
+                foreach (var codeFixWithDiagnostics in await GetAvailableCodeFixes(projectId))
                 {
                     try
                     {
                         var fixAllContext = new FixAllContext(
-                            project,
+                            Workspace.CurrentSolution.GetProject(projectId),
                             codeFixWithDiagnostics.CodeFixProvider,
                             FixAllScope.Project,
-                            codeFixWithDiagnostics.CodeFixProvider.FixableDiagnosticIds.First(),
+                            string.Join("_", codeFixWithDiagnostics.MatchingDiagnostics.Select(x => x.Id)),
                             codeFixWithDiagnostics.MatchingDiagnostics.Select(x => x.Id),
                             codeFixWithDiagnostics,
                             CancellationToken.None
@@ -56,7 +56,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         {
                             if (o is ApplyChangesOperation applyChangesOperation)
                             {
-                                o.Apply(Workspace, CancellationToken.None);
+                                applyChangesOperation.Apply(Workspace, CancellationToken.None);
+                                //Workspace.TryApplyChanges(applyChangesOperation.ChangedSolution);
                             }
                         }
                     }
