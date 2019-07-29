@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using OmniSharp.Models;
-using OmniSharp.Models.V2;
-using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using TestUtility;
 using Xunit;
 using Xunit.Abstractions;
@@ -41,7 +35,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
                 ";
             var response = await RunRefactoringAsync(code, "Generate constructor...");
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -71,7 +65,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
                 ";
             var response = await RunRefactoringAsync(code, "Generate overrides...");
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -95,7 +89,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }
                 ";
             var response = await RunRefactoringAsync(code, "Generate Equals(object)...");
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]
@@ -187,7 +181,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 ";
             var response = await RunRefactoringAsync(code, "Extract Interface...");
 
-            AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
+            AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
 
         [Fact]

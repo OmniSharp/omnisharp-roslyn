@@ -28,12 +28,12 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     class C {}
                 "));
 
-                var expected =
-                @"
-                    using System.IO;
+                // var expected =
+                // @"
+                //     using System.IO;
 
-                    internal class C { }
-                ";
+                //     internal class C { }
+                // ";
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 

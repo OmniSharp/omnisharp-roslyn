@@ -28,16 +28,6 @@ namespace TestUtility
             _fileTypeExtension = fileTypeExtension;
         }
 
-        protected void AssertIgnoringIndent(string expected, string actual)
-        {
-            Assert.Equal(TrimLines(expected), TrimLines(actual), false, true, true);
-        }
-
-        private static string TrimLines(string source)
-        {
-            return string.Join("", source.Split('\n').Select(s => s.Trim()));
-        }
-
         protected OmniSharpTestHost CreateOmniSharpHost(TestFile[] testFiles, IEnumerable<KeyValuePair<string, string>> configurationData = null)
         {
             var host = OmniSharpTestHost.Create(path: null, testOutput: this.TestOutput, configurationData: configurationData);
