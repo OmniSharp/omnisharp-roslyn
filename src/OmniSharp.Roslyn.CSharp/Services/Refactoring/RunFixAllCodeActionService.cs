@@ -17,6 +17,7 @@ using OmniSharp.Services;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 {
+
     [OmniSharpHandler(OmniSharpEndpoints.RunFixAll, LanguageNames.CSharp)]
     public class RunFixAllCodeActionService : FixAllCodeActionBase, IRequestHandler<RunFixAllRequest, RunFixAllResponse>
     {
@@ -39,7 +40,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                         var fixAllContext = new FixAllContext(
                             Workspace.CurrentSolution.GetProject(projectId),
                             codeFixWithDiagnostics.CodeFixProvider,
-                            FixAllScope.Project,
+                            Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Project,
                             string.Join("_", codeFixWithDiagnostics.MatchingDiagnostics.Select(x => x.Id)),
                             codeFixWithDiagnostics.MatchingDiagnostics.Select(x => x.Id),
                             codeFixWithDiagnostics,

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         [Fact]
         public async Task WhenFileContainsFixableIssuesWithAnalyzersEnabled_ThenFixThemAll()
         {
-            using(var host = GetHost(true))
+            using (var host = GetHost(true))
             {
                 var originalText =
                 @"
@@ -43,9 +44,38 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 await handler.Handle(new RunFixAllRequest());
 
                 var docAfterUpdate = host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).First(x => x.FilePath.EndsWith("a.cs"));
-                var text =  await docAfterUpdate.GetTextAsync();
+                var text = await docAfterUpdate.GetTextAsync();
 
                 AssertUtils.AssertIgnoringIndent(originalText, expectedText);
+            }
+        }
+
+        [Fact]
+        public Task WhenFixAllIsScopedToDocument_ThenOnlyFixDocumentInsteadOfEverything()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public async Task WhenAvailableFixAllActionsAreRequested_ThenReturnThemAtResponse()
+        {
+            using (var host = GetHost(true))
+            {
+                host.AddFilesToWorkspace(new TestFile("a.cs",
+                    @"
+                    using System.IO;
+                    class C {}
+                "));
+
+                var handler = host.GetRequestHandler<GetFixAllCodeActionService>(OmniSharpEndpoints.GetFixAll);
+
+                var result = await handler.Handle(new GetFixAllRequest()
+                {
+                    Scope = FixAllScope.Solution
+                });
+
+                Assert.Contains(result.Items, x => x.Id == "IDE0055" && x.Message.Contains("Fix formatting"));
+                Assert.Contains(result.Items, x => x.Id == "IDE0040" && x.Message.Contains("Accessibility modifiers required"));
             }
         }
 

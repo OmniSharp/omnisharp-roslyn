@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
-using OmniSharp.Services;
 using OmniSharp.Utilities;
 
 namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2

@@ -1,6 +1,6 @@
 namespace OmniSharp.Abstractions.Models.V1.FixAll
 {
-    public enum RunFixAllScope
+    public enum FixAllScope
     {
         Document = 0,
         Project = 1,

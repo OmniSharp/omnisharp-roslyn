@@ -3,8 +3,8 @@ using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
-using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -21,9 +21,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public async Task<GetFixAllResponse> Handle(GetFixAllRequest request)
         {
-            var allProjectIds = Workspace.CurrentSolution.Projects.Select(x => x.Id);
+            var projectIdsInScope = GetProjectIdsInScope(request);
 
-            var availableFixes = await Task.WhenAll(allProjectIds.Select(id => GetAvailableCodeFixes(id)));
+            var availableFixes = await Task.WhenAll(projectIdsInScope.Select(id => GetAvailableCodeFixes(id)));
 
             var distinctDiagnosticsThatCanBeFixed = availableFixes
                 .SelectMany(x => x)
@@ -35,32 +35,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             return new GetFixAllResponse(distinctDiagnosticsThatCanBeFixed);
         }
-    }
 
-    public class GetFixAllResponse
-    {
-        public GetFixAllResponse(IEnumerable<FixAllItem> fixableItems)
+        private IEnumerable<ProjectId> GetProjectIdsInScope(GetFixAllRequest request)
         {
-            Items = fixableItems;
+            var currentSolution = Workspace.CurrentSolution;
+
+            if(request.Scope == FixAllScope.Solution)
+                return currentSolution.Projects.Select(x => x.Id);
+
+            return currentSolution
+                .GetDocumentIdsWithFilePath(request.FileName)
+                .Select(x => x.ProjectId);
         }
-
-        public IEnumerable<FixAllItem> Items { get; set; }
-    }
-
-    public class FixAllItem
-    {
-        public FixAllItem(string id, string message)
-        {
-            Id = id;
-            Message = message;
-        }
-
-        public string Id { get; set; }
-        public string Message { get; set; }
-    }
-
-    [OmniSharpEndpoint(OmniSharpEndpoints.GetFixAll, typeof(GetFixAllRequest), typeof(GetFixAllResponse))]
-    public class GetFixAllRequest: SimpleFileRequest
-    {
     }
 }
