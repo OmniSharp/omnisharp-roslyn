@@ -12,18 +12,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
     public class AvailableFixAllDiagnosticProvider : FixAllContext.DiagnosticProvider
     {
-        public AvailableFixAllDiagnosticProvider(CodeFixProvider provider, IEnumerable<Diagnostic> matchingDiagnostics)
+        protected AvailableFixAllDiagnosticProvider(CodeFixProvider provider, IEnumerable<Diagnostic> diagnostics)
         {
             CodeFixProvider = provider;
-            MatchingDiagnostics = matchingDiagnostics.ToImmutableArray();
-            FixAllProvider = provider.GetFixAllProvider() ?? throw new InvalidOperationException($"{nameof(AvailableFixAllDiagnosticProvider)} should not be constructed without {nameof(provider.GetFixAllProvider)}");
+            FixAllProvider = provider.GetFixAllProvider();
+            MatchingDiagnostics = diagnostics.Where(x => HasFix(provider, x.Id)).ToImmutableArray();
         }
 
         public ImmutableArray<Diagnostic> MatchingDiagnostics { get; }
         public CodeFixProvider CodeFixProvider { get; }
         public FixAllProvider FixAllProvider { get; }
 
-        // TODO: Provider should only return diagnostics from correct context.
         public override Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken cancellationToken)
         {
             return Task.FromResult<IEnumerable<Diagnostic>>(MatchingDiagnostics);
@@ -34,5 +33,23 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
         public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken cancellationToken)
             => Task.FromResult<IEnumerable<Diagnostic>>(MatchingDiagnostics);
+
+        private static bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
+        {
+            return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
+        }
+
+        public static AvailableFixAllDiagnosticProvider CreateOrDefault(CodeFixProvider provider, IEnumerable<Diagnostic> diagnostics)
+        {
+            if(provider.GetFixAllProvider() == default)
+                return null;
+
+            var result = new AvailableFixAllDiagnosticProvider(provider, diagnostics.Where(x => HasFix(provider, x.Id)));
+
+            if(!result.MatchingDiagnostics.Any())
+                return null;
+
+            return result;
+        }
     }
 }

@@ -62,7 +62,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
             using (var host = GetHost(true))
             {
                 host.AddFilesToWorkspace(new TestFile("a.cs",
-                    @"
+                @"
                     using System.IO;
                     class C {}
                 "));

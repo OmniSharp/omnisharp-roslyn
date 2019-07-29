@@ -4,7 +4,6 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
@@ -30,20 +29,12 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             var diagnostics = await _diagnosticWorker.GetAllDiagnosticsAsync();
 
-            var allCodefixesForProject =
+            return
                 _providers.SelectMany(provider => provider.CodeFixProviders)
                     .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
-                    .Where(x => x.GetFixAllProvider() != null);
-
-            return allCodefixesForProject
-                .Select(codeFix => new AvailableFixAllDiagnosticProvider(codeFix, diagnostics.Where(x => HasFix(codeFix, x.diagnostic.Id)).Select(x => x.diagnostic)))
-                .Where(x => x.MatchingDiagnostics.Any())
-                .ToImmutableArray();
-        }
-
-        private bool HasFix(CodeFixProvider codeFixProvider, string diagnosticId)
-        {
-            return codeFixProvider.FixableDiagnosticIds.Any(id => id == diagnosticId);
+                    .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics.Select(d => d.diagnostic)))
+                    .Where(x => x != default)
+                    .ToImmutableArray();
         }
     }
 }
