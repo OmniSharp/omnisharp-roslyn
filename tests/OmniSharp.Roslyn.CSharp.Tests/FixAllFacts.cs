@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring;
 using TestUtility;
 using Xunit;
@@ -22,29 +23,29 @@ namespace OmniSharp.Roslyn.CSharp.Tests
         {
             using(var host = GetHost(true))
             {
-                host.AddFilesToWorkspace(new TestFile("a.cs",
+                var originalText =
                 @"
                     using System.IO;
                     class C {}
-                "));
+                ";
 
-                // var expected =
-                // @"
-                //     using System.IO;
+                var expectedText =
+                @"
+                    using System.IO;
 
-                //     internal class C { }
-                // ";
+                    internal class C { }
+                ";
+
+                host.AddFilesToWorkspace(new TestFile("a.cs", originalText));
 
                 var handler = host.GetRequestHandler<RunFixAllCodeActionService>(OmniSharpEndpoints.RunFixAll);
 
                 await handler.Handle(new RunFixAllRequest());
 
-                var docs = host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents);
+                var docAfterUpdate = host.Workspace.CurrentSolution.Projects.SelectMany(x => x.Documents).First(x => x.FilePath.EndsWith("a.cs"));
+                var text =  await docAfterUpdate.GetTextAsync();
 
-                foreach(var doc in docs)
-                {
-                    var text = await doc.GetTextAsync();
-                }
+                AssertUtils.AssertIgnoringIndent(originalText, expectedText);
             }
         }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using OmniSharp.Abstractions.Models.V1.FixAll;
 using OmniSharp.Mef;
 using OmniSharp.Models;
 using OmniSharp.Roslyn.CSharp.Services.Refactoring.V2;
@@ -85,22 +86,5 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
         {
             return await FixAll();
         }
-    }
-
-    [OmniSharpEndpoint(OmniSharpEndpoints.RunFixAll, typeof(RunFixAllRequest), typeof(RunFixAllResponse))]
-    public class RunFixAllRequest : SimpleFileRequest
-    {
-    }
-
-    public class RunFixAllResponse : IAggregateResponse
-    {
-        public RunFixAllResponse()
-        {
-            Changes = new List<ModifiedFileResponse>();
-        }
-
-        public IEnumerable<ModifiedFileResponse> Changes { get; set; }
-
-        public IAggregateResponse Merge(IAggregateResponse response) { return response; }
     }
 }
