@@ -27,10 +27,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
 
             var distinctDiagnosticsThatCanBeFixed = availableFixes
                 .SelectMany(x => x)
-                .SelectMany(x => x.MatchingDiagnostics)
-                .GroupBy(x => x.Id)
+                .SelectMany(x => x.GetAvailableFixableDiagnostics())
+                .GroupBy(x => x.id)
                 .Select(x => x.First())
-                .Select(x => new FixAllItem(x.Id, x.GetMessage()))
+                .Select(x => new FixAllItem(x.message, x.message))
                 .ToArray();
 
             return new GetFixAllResponse(distinctDiagnosticsThatCanBeFixed);

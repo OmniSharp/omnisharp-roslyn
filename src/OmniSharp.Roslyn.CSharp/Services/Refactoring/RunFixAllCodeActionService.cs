@@ -37,12 +37,14 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
                 {
                     try
                     {
+                        var fixableIds = codeFixWithDiagnostics.GetAvailableFixableDiagnostics().Select(x => x.id);
+
                         var fixAllContext = new FixAllContext(
                             Workspace.CurrentSolution.GetProject(projectId),
                             codeFixWithDiagnostics.CodeFixProvider,
                             Microsoft.CodeAnalysis.CodeFixes.FixAllScope.Project,
-                            string.Join("_", codeFixWithDiagnostics.MatchingDiagnostics.Select(x => x.Id)),
-                            codeFixWithDiagnostics.MatchingDiagnostics.Select(x => x.Id),
+                            string.Join("_", fixableIds),
+                            fixableIds,
                             codeFixWithDiagnostics,
                             CancellationToken.None
                         );

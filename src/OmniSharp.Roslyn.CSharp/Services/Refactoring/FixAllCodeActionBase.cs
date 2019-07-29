@@ -31,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return
                 _providers.SelectMany(provider => provider.CodeFixProviders)
                     .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
-                    .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics.SelectMany(d => d.Diagnostics)))
+                    .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics))
                     .Where(x => x != default)
                     .ToImmutableArray();
         }

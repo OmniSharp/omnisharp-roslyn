@@ -110,6 +110,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
         {
             return documentPaths
                 .Select(docPath => _workspace.GetDocumentId(docPath))
+                .Where(x => x != default)
                 .ToImmutableArray();
         }
 
