@@ -32,8 +32,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     }
 
                     public string PropertyHere { get; set; }
-                }
-                ";
+                }";
             var response = await RunRefactoringAsync(code, "Generate constructor...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
@@ -45,6 +44,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 @"public class Class1[||]
                 {
                 }";
+
             const string expected =
                 @"public class Class1
                 {
@@ -62,8 +62,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     {
                         return base.ToString();
                     }
-                }
-                ";
+                }";
+
             var response = await RunRefactoringAsync(code, "Generate overrides...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
@@ -76,6 +76,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 {
                     public string PropertyHere { get; set; }
                 }";
+
             const string expected =
                 @"public class Class1
                 {
@@ -86,8 +87,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                         return obj is Class1 @class &&
                                PropertyHere == @class.PropertyHere;
                     }
-                }
-                ";
+                }";
+
             var response = await RunRefactoringAsync(code, "Generate Equals(object)...");
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
         }
@@ -150,8 +151,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                     public string Foo[||] { get; set; }
                 }
 
-                public class BaseClass {}
-";
+                public class BaseClass {}";
 
             var response = await FindRefactoringNamesAsync(code);
 
@@ -168,8 +168,7 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 }";
 
             const string expected =
-                @"
-                public interface IClass1
+                @"public interface IClass1
                 {
                     string PropertyHere { get; set; }
                 }
@@ -177,8 +176,8 @@ namespace OmniSharp.Roslyn.CSharp.Tests
                 public class Class1 : IClass1
                 {
                     public string PropertyHere { get; set; }
-                }
-                ";
+                }";
+
             var response = await RunRefactoringAsync(code, "Extract Interface...");
 
             AssertUtils.AssertIgnoringIndent(expected, ((ModifiedFileResponse)response.Changes.First()).Buffer);
