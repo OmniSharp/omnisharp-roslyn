@@ -12,11 +12,8 @@ using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions;
-using OmniSharp.Helpers;
 using OmniSharp.Mef;
 using OmniSharp.Models.V2.CodeActions;
-using OmniSharp.Options;
-using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using OmniSharp.Roslyn.CSharp.Workers.Diagnostics;
 using OmniSharp.Services;
 using OmniSharp.Utilities;
@@ -120,10 +117,10 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring.V2
 
         private async Task CollectCodeFixesActions(Document document, TextSpan span, List<CodeAction> codeActions)
         {
-            var diagnosticsWithProjects = await this.diagnostics.GetDiagnostics(ImmutableArray.Create(document.FilePath));
+            var diagnosticsWithProjects = await diagnostics.GetDiagnostics(ImmutableArray.Create(document.FilePath));
 
             var groupedBySpan = diagnosticsWithProjects
-                    .Select(x => x.diagnostic)
+                    .SelectMany(x => x.Diagnostics)
                     .Where(diagnostic => span.IntersectsWith(diagnostic.Location.SourceSpan))
                     .GroupBy(diagnostic => diagnostic.Location.SourceSpan);
 

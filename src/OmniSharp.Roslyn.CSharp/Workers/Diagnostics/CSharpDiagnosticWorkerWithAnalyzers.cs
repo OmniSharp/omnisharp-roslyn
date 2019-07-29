@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -24,8 +24,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
     {
         private readonly AnalyzerWorkQueue _workQueue;
         private readonly ILogger<CSharpDiagnosticWorkerWithAnalyzers> _logger;
-        private readonly ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)> _currentDiagnosticResults =
-            new ConcurrentDictionary<DocumentId, (string projectName, ImmutableArray<Diagnostic> diagnostics)>();
+        private readonly ConcurrentDictionary<DocumentId, DocumentDiagnostics> _currentDiagnosticResultLookup =
+            new ConcurrentDictionary<DocumentId, DocumentDiagnostics>();
         private readonly ImmutableArray<ICodeActionProvider> _providers;
         private readonly DiagnosticEventForwarder _forwarder;
         private readonly OmniSharpOptions _options;
@@ -83,7 +83,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             });
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnostics(ImmutableArray<string> documentPaths)
+        public async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnostics(ImmutableArray<string> documentPaths)
         {
             await InitializeWithWorkspaceDocumentsIfNotYetDone();
 
@@ -92,16 +92,17 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return await GetDiagnosticsByDocumentIds(documentIds);
         }
 
-        private async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
+        private async Task<ImmutableArray<DocumentDiagnostics>> GetDiagnosticsByDocumentIds(ImmutableArray<DocumentId> documentIds)
         {
             if(documentIds.Length == 1)
             {
                 _workQueue.TryPromote(documentIds.Single());
                 await _workQueue.WaitForegroundWorkComplete();
             }
-            return _currentDiagnosticResults
-                .Where(x => documentIds.Any(docId => docId == x.Key))
-                .SelectMany(x => x.Value.diagnostics, (k, v) => ((k.Value.projectName, v)))
+
+            return documentIds
+                .Where(x => _currentDiagnosticResultLookup.ContainsKey(x))
+                .Select(x => _currentDiagnosticResultLookup[x])
                 .ToImmutableArray();
         }
 
@@ -140,7 +141,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
                     _workQueue.WorkComplete(workType);
 
-                    await Task.Delay(50);
+                        await Task.Delay(50);
                 }
                 catch (Exception ex)
                 {
@@ -171,7 +172,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
                     QueueForAnalysis(ImmutableArray.Create(changeEvent.DocumentId), AnalyzerWorkType.Foreground);
                     break;
                 case WorkspaceChangeKind.DocumentRemoved:
-                    if(!_currentDiagnosticResults.TryRemove(changeEvent.DocumentId, out _))
+                    if(!_currentDiagnosticResultLookup.TryRemove(changeEvent.DocumentId, out _))
                     {
                         _logger.LogDebug($"Tried to remove non existent document from analysis, document: {changeEvent.DocumentId}");
                     };
@@ -275,8 +276,8 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
 
         private void UpdateCurrentDiagnostics(Project project, Document document, ImmutableArray<Diagnostic> diagnosticsWithAnalyzers)
         {
-            _currentDiagnosticResults[document.Id] = (project.Name, diagnosticsWithAnalyzers);
-            EmitDiagnostics(_currentDiagnosticResults[document.Id].diagnostics);
+            _currentDiagnosticResultLookup[document.Id] = new DocumentDiagnostics(document.Id, document.FilePath, project.Id, project.Name, diagnosticsWithAnalyzers);
+            EmitDiagnostics(_currentDiagnosticResultLookup[document.Id].Diagnostics);
         }
 
         private void EmitDiagnostics(ImmutableArray<Diagnostic> results)
@@ -301,7 +302,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Diagnostics
             return documentIds;
         }
 
-        public async Task<ImmutableArray<(string projectName, Diagnostic diagnostic)>> GetAllDiagnosticsAsync()
+        public async Task<ImmutableArray<DocumentDiagnostics>> GetAllDiagnosticsAsync()
         {
             await InitializeWithWorkspaceDocumentsIfNotYetDone();
             var allDocumentsIds = _workspace.CurrentSolution.Projects.SelectMany(x => x.DocumentIds).ToImmutableArray();

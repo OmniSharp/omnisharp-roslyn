@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -32,7 +31,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Refactoring
             return
                 _providers.SelectMany(provider => provider.CodeFixProviders)
                     .Concat(_codeFixProvider.GetAllCodeFixesForProject(projectId))
-                    .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics.Select(d => d.diagnostic)))
+                    .Select(x => AvailableFixAllDiagnosticProvider.CreateOrDefault(x, diagnostics.SelectMany(d => d.Diagnostics)))
                     .Where(x => x != default)
                     .ToImmutableArray();
         }

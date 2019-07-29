@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using OmniSharp.Models.Diagnostics;
+using OmniSharp.Roslyn.CSharp.Services.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace OmniSharp.Helpers
 {
@@ -32,9 +32,10 @@ namespace OmniSharp.Helpers
             };
         }
 
-        internal static IEnumerable<DiagnosticLocation> DistinctDiagnosticLocationsByProject(this IEnumerable<(string projectName, Diagnostic diagnostic)> diagnostics)
+        internal static IEnumerable<DiagnosticLocation> DistinctDiagnosticLocationsByProject(this IEnumerable<DocumentDiagnostics> documentDiagnostic)
         {
-            return diagnostics
+            return documentDiagnostic
+                .SelectMany(x => x.Diagnostics, (parent, child) => (projectName: parent.ProjectName, diagnostic: child))
                 .Select(x => new
                 {
                     location = x.diagnostic.ToDiagnosticLocation(),
