@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Models;
 using OmniSharp.Models.Diagnostics;
@@ -117,6 +118,13 @@ namespace OmniSharp.LanguageServerProtocol
                 Start = ToPosition(range.Start),
                 End = ToPosition(range.End)
             };
+        }
+
+        public static string EscapeMarkdown(string markdown)
+        {
+            if (markdown == null)
+                return null;
+            return Regex.Replace(markdown, @"([\\`\*_\{\}\[\]\(\)#+\-\.!])", @"\$1");
         }
     }
 }

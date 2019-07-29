@@ -67,9 +67,9 @@ namespace OmniSharp.Script.Tests
                 Assert.Equal(typeof(CommandLineScriptGlobals), project.GlobalsType);
 
                 // should have RSP inherited settings
-                VerifyAssemblyReference(project, "system.web");
+                VerifyAssemblyReference(project, "system.xml");
                 var commonUsingStatement = Assert.Single(project.CommonUsings);
-                Assert.Equal("System.Web", commonUsingStatement);
+                Assert.Equal("System.Xml", commonUsingStatement);
             }
         }
 
