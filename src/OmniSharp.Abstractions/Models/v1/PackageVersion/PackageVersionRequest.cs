@@ -23,7 +23,7 @@ namespace OmniSharp.Models.PackageVersion
 
         /// <summary>
         /// Include pre-release version numbers
-        /// <summary>
+        /// </summary>
         public bool IncludePrerelease { get; set; } = true;
     }
 }
